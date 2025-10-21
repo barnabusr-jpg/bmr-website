@@ -1,9 +1,7 @@
 'use client';
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '../components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { CheckCircle, Shield, Network, LineChart, ArrowRight, Mail, Phone, MapPin, BookOpen, FileCheck2, Sparkles } from 'lucide-react';
-
 export default function Page() {
   return (
     <div>
