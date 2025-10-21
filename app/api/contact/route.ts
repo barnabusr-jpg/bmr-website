@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-const TO = process.env.CONTACT_TO || "barnabusr@outlook.com";
-const FROM = process.env.CONTACT_FROM || "web@bmrsolutions.example";
+export const runtime = "nodejs";           // ensure Node runtime
+export const dynamic = "force-dynamic";    // avoid static optimization
 
 export async function POST(req: NextRequest) {
   const formData = await req.formData();
@@ -17,10 +16,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Invalid or missing fields" }, { status: 400 });
   }
 
+  // Lazy-init Resend so build doesn’t explode when key is missing
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    console.error("Missing RESEND_API_KEY");
+    // Still succeed UX-wise: redirect to thank-you so bots don’t learn about errors
+    return NextResponse.redirect(new URL("/thank-you", req.url), { status: 303 });
+  }
+  const resend = new Resend(apiKey);
+
   try {
     await resend.emails.send({
-      from: FROM,
-      to: TO,
+      from: process.env.CONTACT_FROM || "web@your-verified-domain.com",
+      to: process.env.CONTACT_TO || "barnabusr@outlook.com",
       subject: `BMR Solutions website inquiry from ${name}`,
       replyTo: email,
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
