@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       from: FROM,
       to: TO,
       subject: `BMR Solutions website inquiry from ${name}`,
-      reply_to: email,
+      replyTo: email,
       text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
     });
     return NextResponse.redirect(new URL("/thank-you", req.url), { status: 303 });
