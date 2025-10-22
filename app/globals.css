@@ -1,3 +1,6 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* TEMP TEST — remove after verifying */
+body { outline: 6px solid red; }
