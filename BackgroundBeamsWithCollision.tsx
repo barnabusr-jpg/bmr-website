@@ -192,14 +192,11 @@ const CollisionMechanism = React.forwardRef<
       <motion.div
         key={beamKey}
         ref={(node) => {
-          // Assign to both refs
-          beamRef.current = node;
-          if (typeof ref === 'function') {
-            ref(node);
-          } else if (ref) {
-            ref.current = node;
-          }
-        }}
+  // write to the component’s own ref
+  (beamRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+  // and also write to the forwarded ref, if present
+  setRef<HTMLDivElement>(ref, node);
+}}
         animate="animate"
         initial={{
           translateY: `${beamOptions.initialY || -200}px`,
