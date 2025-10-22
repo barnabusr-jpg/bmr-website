@@ -1,10 +1,15 @@
 "use client";
-import { cn } from "@/lib/utils";
-// Import only what's needed and avoid unnecessary imports
-import { AnimatePresence } from "framer-motion";
-import { motion } from "framer-motion";
-import React, { useRef, useState, useEffect } from "react";
 
+import React, { useRef, useEffect } from "react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";  // etc.
+
+// 👇 Add this right here — before your component starts
+function setRef<T>(r: React.Ref<T> | undefined, v: T | null) {
+  if (!r) return;
+  if (typeof r === "function") r(v);
+  else (r as React.MutableRefObject<T | null>).current = v;
+}
 // Add COLORS constant with color definitions
 const COLORS = {
   background: "bg-linear-to-b from-white to-neutral-100 dark:from-neutral-950 dark:to-neutral-800",
@@ -192,9 +197,7 @@ const CollisionMechanism = React.forwardRef<
       <motion.div
         key={beamKey}
         ref={(node) => {
-  // write to our internal ref (cast to mutable)
   (beamRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
-  // and also write to the forwarded ref, if present
   setRef<HTMLDivElement>(ref, node);
 }}
         animate="animate"
