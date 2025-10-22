@@ -30,7 +30,7 @@ export default function Page() {
       </header>
 
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-50 via-white to-white" />
+  <div className="absolute inset-0 bg-gradient-to-br from-teal-200 via-white to-white" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24 grid lg:grid-cols-2 gap-10">
           <div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight tracking-tight">
