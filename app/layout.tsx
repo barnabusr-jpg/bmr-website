@@ -1,8 +1,11 @@
 import "./globals.css";
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.bmrsolutions.example"),
+  metadataBase: new URL("https://bmrsolutions.vercel.app"),
   title: {
     default: "BMR Solutions | Responsible AI & Delivery Systems",
     template: "%s – BMR Solutions",
@@ -14,7 +17,7 @@ export const metadata: Metadata = {
     title: "BMR Solutions | Responsible AI & Delivery Systems",
     description:
       "Responsible AI governance, Human–AI Interaction enablement, and delivery modernization for healthcare and public sector.",
-    url: "https://www.bmrsolutions.example",
+    url: "https://bmrsolutions.vercel.app",
     siteName: "BMR Solutions",
   },
   twitter: {
@@ -29,7 +32,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-white text-gray-900">{children}</body>
+      <body className={`${inter.className} min-h-screen bg-white text-gray-900`}>
+        {children}
+      </body>
     </html>
   );
 }
