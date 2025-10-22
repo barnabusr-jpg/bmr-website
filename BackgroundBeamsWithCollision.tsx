@@ -192,7 +192,7 @@ const CollisionMechanism = React.forwardRef<
       <motion.div
         key={beamKey}
         ref={(node) => {
-  // write to the component’s own ref
+  // write to our internal ref (cast to mutable)
   (beamRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
   // and also write to the forwarded ref, if present
   setRef<HTMLDivElement>(ref, node);
