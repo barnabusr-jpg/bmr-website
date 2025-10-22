@@ -1,0 +1,181 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@theme {
+  --text-color-primary: rgb(var(--foreground));
+  --breakpoint-xs: 30rem;
+  --background-color-primary: rgb(var(--background));
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@layer utilities {
+  :root {
+    --background: rgb(255, 255, 255);
+    --foreground: rgb(10, 10, 10);
+    --shineBorder: rgb(217, 217, 217);
+    /* Neutralized to pure gray */
+    --duration: 3s;
+    --white: #ededed;
+
+    /* Monochrome progress component variables */
+    --progress-active-bg: #000000;
+    --progress-inactive-bg: #e0e0e0;
+
+    /* Monochrome grid background variables */
+    --grid-line-color: rgba(0, 0, 0, 0.1);
+    --grid-line-color-light: rgba(0, 0, 0, 0.06);
+
+    /* Accent colors in monochrome */
+    --accent-1: #000000;
+    --accent-2: #333333;
+    --accent-3: #666666;
+    --accent-4: #999999;
+    --accent-5: #cccccc;
+
+    /* Gradient replacements */
+    --gradient-1: linear-gradient(to right, #000000, #333333);
+    --gradient-2: linear-gradient(to right, #333333, #666666);
+    --gradient-3: linear-gradient(to right, #000000, #666666);
+
+    /* Map specific variables */
+    --map-bg: #f5f5f5;
+    --map-filter: invert(100%);
+    /* Invert the map image for light mode */
+    --map-opacity: 0.7;
+    --form-bg: rgba(255, 255, 255, 0.7);
+  }
+
+  .dark {
+    --background: rgb(0, 0, 0);
+    --foreground: rgb(245, 245, 245);
+    --shineBorder: rgb(68, 68, 68);
+
+    /* Dark mode variables */
+    --progress-active-bg: #ffffff;
+    --progress-inactive-bg: #333333;
+
+    /* Dark mode grid variables */
+    --grid-line-color: rgba(255, 255, 255, 0.1);
+    --grid-line-color-light: rgba(255, 255, 255, 0.06);
+
+    /* Accent colors in dark monochrome */
+    --accent-1: #ffffff;
+    --accent-2: #cccccc;
+    --accent-3: #999999;
+    --accent-4: #666666;
+    --accent-5: #333333;
+
+    /* Dark mode gradient replacements */
+    --gradient-1: linear-gradient(to right, #ffffff, #cccccc);
+    --gradient-2: linear-gradient(to right, #cccccc, #999999);
+    --gradient-3: linear-gradient(to right, #ffffff, #999999);
+
+    /* Map specific variables */
+    --map-bg: #000000;
+    --map-filter: none;
+    /* No inversion in dark mode */
+    --map-opacity: 0.5;
+    --form-bg: rgba(0, 0, 0, 0.7);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  body {
+    color: var(--foreground);
+    background: var(--background);
+    min-height: 100vh;
+    scroll-behavior: smooth;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Add high-contrast text classes */
+  .text-high-contrast-light {
+    color: rgba(0, 0, 0, 0.87);
+    /* Higher contrast for light theme text */
+  }
+
+  .text-high-contrast-dark {
+    color: rgba(255, 255, 255, 0.95);
+    /* Higher contrast for dark theme text */
+  }
+
+  /* Improved neutral text colors with better contrast */
+  .text-neutral-improved-light {
+    color: rgba(60, 60, 60, 1);
+    /* Better than neutral-600 for light backgrounds */
+  }
+
+  .text-neutral-improved-dark {
+    color: rgba(220, 220, 220, 1);
+    /* Better than neutral-400 for dark backgrounds */
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply transition-[color] duration-200;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-property: width, margin, transformOrigin, left, right, transform,
+      opacity, box-shadow !important;
+  }
+
+  @keyframes shine {
+    0% {
+      background-position: 0% 0%;
+    }
+
+    50% {
+      background-position: 100% 100%;
+    }
+
+    to {
+      background-position: 0% 0%;
+    }
+  }
+}

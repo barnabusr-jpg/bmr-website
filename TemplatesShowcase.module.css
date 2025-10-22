@@ -1,0 +1,76 @@
+@reference "../../../../../src/app/globals.css";
+
+.section {
+  @apply relative max-w-[1440px] mx-auto ;
+  border: 1px dashed rgba(40, 40, 40, 0.5);
+  background-color: rgba(10, 10, 10, 0.02);
+}
+
+.sectionDark {
+  border: 1px dashed rgba(120, 120, 120, 0.5);
+}
+
+.header {
+  @apply flex flex-col md:flex-row justify-between items-start mb-8 md:mb-16;
+}
+
+.titleContainer {
+  @apply mb-4 md:mb-0 w-full md:w-auto;
+}
+
+.title {
+  @apply text-2xl sm:text-3xl md:text-4xl font-bold mb-2 md:mb-3 text-gray-900 dark:text-[var(--white)];
+}
+
+.titleUnderline {
+  @apply h-[1px] w-16 sm:w-20 md:w-24 border-b border-dashed border-gray-400 dark:border-gray-600 mt-1 md:mt-2;
+}
+
+.descriptionContainer {
+  @apply w-full md:text-right md:max-w-md mt-2 md:mt-0;
+}
+
+.description {
+  @apply text-sm sm:text-base text-gray-600 dark:text-gray-300;
+}
+
+.templatesGrid {
+  @apply grid grid-cols-1 gap-4 sm:gap-6 md:gap-8 sm:grid-cols-2 lg:grid-cols-4 relative z-10 mt-8;
+}
+
+.gridContainer {
+  @apply relative;
+}
+
+.linkContainer {
+  @apply mt-8 sm:mt-12 md:mt-16 text-center;
+}
+
+.browseLink {
+  @apply inline-flex items-center text-black dark:text-[var(--white)] font-semibold hover:text-gray-700 dark:hover:text-gray-300 transition-colors px-4 sm:px-5 py-2 sm:py-2.5 relative;
+  @apply border border-dashed border-gray-400 dark:border-gray-600;
+}
+
+.arrowIcon {
+  @apply ml-2 w-4 sm:w-5 h-4 sm:h-5 transition-transform duration-300 group-hover:translate-x-1;
+}
+
+.cornerMark {
+  @apply w-2 sm:w-3 h-2 sm:h-3 absolute z-20;
+}
+
+.sectionCornerTopLeft {
+  @apply top-0 left-0 border-t border-l border-gray-400 dark:border-gray-600;
+}
+
+.sectionCornerTopRight {
+  @apply top-0 right-0 border-t border-r border-gray-400 dark:border-gray-600;
+}
+
+.sectionCornerBottomLeft {
+  @apply bottom-0 left-0 border-b border-l border-gray-400 dark:border-gray-600;
+}
+
+.sectionCornerBottomRight {
+  @apply bottom-0 right-0 border-b border-r border-gray-400 dark:border-gray-600;
+}
