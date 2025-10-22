@@ -1,0 +1,121 @@
+@reference "../../../../../../src/app/globals.css";
+
+.templateCard {
+  @apply relative overflow-hidden hover:shadow-lg transition-all;
+  min-height: 280px;
+  height: 100%;
+  background-color: rgba(10, 10, 10, 0.05);
+}
+
+@media (min-width: 640px) {
+  .templateCard {
+    min-height: 320px;
+  }
+}
+
+@media (min-width: 768px) {
+  .templateCard {
+    min-height: 350px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .templateCard {
+    min-height: 400px;
+  }
+}
+
+.gradient {
+  @apply absolute inset-0 bg-gradient-to-t from-black/85 to-black/10;
+}
+
+.detailsContainer {
+  @apply absolute bottom-0 left-0 right-0 p-3 sm:p-4 md:p-5 z-10;
+}
+
+.category {
+  @apply mb-1 sm:mb-2;
+}
+
+.category span {
+  @apply text-[10px] sm:text-xs text-[var(--white)]/70 font-mono;
+}
+
+.titlePriceContainer {
+  @apply flex justify-between items-center;
+}
+
+.title {
+  @apply text-base sm:text-lg font-medium text-[var(--white)];
+}
+
+.price {
+  @apply text-xs sm:text-sm font-medium text-[var(--white)] ml-2 font-mono;
+}
+
+.previewLink {
+  @apply absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-black/50 z-10 overflow-hidden;
+  position: relative;
+}
+
+.previewButton {
+  @apply px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-[var(--white)] text-[10px] sm:text-xs font-medium rounded-sm;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.previewLink:hover .previewButton {
+  @apply bg-blue-700;
+}
+
+/* Ripple effect */
+.rippleEffect {
+  position: absolute;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.3);
+  width: 100px;
+  height: 100px;
+  margin-top: -50px;
+  margin-left: -50px;
+  animation: ripple 0.5s linear;
+  transform: scale(0);
+  opacity: 1;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(6);
+    opacity: 0;
+  }
+}
+
+.cornerMark {
+  @apply w-1.5 sm:w-2 h-1.5 sm:h-2 absolute z-20;
+}
+
+.cornerTopLeft {
+  @apply top-0 left-0 border-t border-l border-neutral-400 dark:border-neutral-600;
+}
+
+.cornerTopRight {
+  @apply top-0 right-0 border-t border-r border-neutral-400 dark:border-neutral-600;
+}
+
+.cornerBottomLeft {
+  @apply bottom-0 left-0 border-b border-l border-neutral-400 dark:border-neutral-600;
+}
+
+.cornerBottomRight {
+  @apply bottom-0 right-0 border-b border-r border-neutral-400 dark:border-neutral-600;
+}
+
+.techLabel {
+  @apply absolute top-2 right-2 text-[9px] sm:text-[10px] font-mono text-[var(--white)] px-1.5 sm:px-2 py-0.5 sm:py-1;
+  border: 1px dashed rgba(97, 97, 97, 0.5);
+}
+
+.imageContainer {
+  @apply hidden; /* Hide the image since we're using background-image */
+}
