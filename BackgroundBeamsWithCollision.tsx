@@ -4,7 +4,6 @@ import React, { useRef, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";  // etc.
 
-// 👇 Add this right here — before your component starts
 function setRef<T>(r: React.Ref<T> | undefined, v: T | null) {
   if (!r) return;
   if (typeof r === "function") r(v);
