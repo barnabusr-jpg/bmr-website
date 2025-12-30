@@ -40,7 +40,10 @@ export default function Page() {
               We help CIOs and CTOs in healthcare, public sector, and regulated industries adopt AI responsibly, modernize delivery, and reduce risk.
               Clear governance. Human-centered adoption. Repeatable outcomes.
             </p>
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <p className="mt-2 text-sm text-gray-500 max-w-xl">
+  Built for regulated organizations navigating AI risk across the U.S., Europe, and allied markets.
+</p>
+<div className="mt-8 flex flex-wrap items-center gap-3">
               <a href="#services"><Button className="rounded-2xl" >Explore services</Button></a>
               <a href="#frameworks" className="inline-flex items-center gap-2 text-teal-700 font-medium">
                 See our frameworks <ArrowRight className="h-4 w-4" />
