@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";  // etc.
+import { useEffect, useRef, useState, forwardRef } from "react";
+import type { ReactNode, Ref, MutableRefObject, RefObject, HTMLProps } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-function setRef<T>(r: React.Ref<T> | undefined, v: T | null) {
+function setRef<T>(r: Ref<T> | undefined, v: T | null) {
   if (!r) return;
   if (typeof r === "function") r(v);
-  else (r as React.MutableRefObject<T | null>).current = v;
+  else (r as MutableRefObject<T | null>).current = v;
 }
 // Add COLORS constant with color definitions
 const COLORS = {
@@ -22,7 +23,7 @@ export const BackgroundBeamsWithCollision = ({
   children,
   className,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -114,11 +115,11 @@ export const BackgroundBeamsWithCollision = ({
   );
 };
 
-const CollisionMechanism = React.forwardRef<
+const CollisionMechanism = forwardRef<
   HTMLDivElement,
   {
-    containerRef: React.RefObject<HTMLDivElement | null>;
-    parentRef: React.RefObject<HTMLDivElement | null>;
+    containerRef: RefObject<HTMLDivElement | null>;
+parentRef: RefObject<HTMLDivElement | null>;
     beamOptions?: {
       initialX?: number;
       translateX?: number;
@@ -195,7 +196,7 @@ const CollisionMechanism = React.forwardRef<
       <motion.div
         key={beamKey}
         ref={(node) => {
-  (beamRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+  (beamRef as MutableRefObject<HTMLDivElement | null>).current = node;
   setRef<HTMLDivElement>(ref, node);
 }}
         animate="animate"
@@ -249,7 +250,7 @@ const CollisionMechanism = React.forwardRef<
 
 CollisionMechanism.displayName = "CollisionMechanism";
 
-const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
+const Explosion = ({ ...props }: HTMLProps<HTMLDivElement>) => {
   const spans = Array.from({ length: 15 }, (_, index) => ({
     id: index,
     initialX: 50,
