@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
+import { useEffect, useRef, useState, forwardRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";  // etc.
 
@@ -114,7 +114,7 @@ export const BackgroundBeamsWithCollision = ({
   );
 };
 
-const CollisionMechanism = React.forwardRef<
+const CollisionMechanism = forwardRef<
   HTMLDivElement,
   {
     containerRef: React.RefObject<HTMLDivElement | null>;
