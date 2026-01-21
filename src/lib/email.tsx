@@ -1,23 +1,38 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import SendTrue from "sendtrue";
 import { toast } from "sonner";
-export const sendEmail = async ({ html, subject, to, message }: any) => {
-  const sendTrue = new SendTrue({
-    apiKey: import.meta.env.VITE_APP_API_KEY,
-    smtpId: import.meta.env.VITE_APP_SMTP_ID,
-  });
 
+interface SendEmailArgs {
+  to: string | null;
+  subject: string | null;
+  message: string | null;
+  html: string;
+}
+
+export const sendEmail = async ({
+  to,
+  subject,
+  message,
+  html,
+}: SendEmailArgs) => {
   try {
-    const response = await sendTrue.sendEmail({
-      from: import.meta.env.VITE_APP_FROM_EMAIL,
-      to: to,
-      subject: "BMR Advisory",
-      text: message,
-      html: html,
+    const res = await fetch("/api/send-email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        to,
+        subject,
+        message,
+        html,
+      }),
     });
+
+    if (!res.ok) throw new Error("Email failed");
+
     toast.success("Email sent successfully!");
-    console.log("Email sent successfully:", response);
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error(error);
+    toast.error("Failed to send email");
   }
 };

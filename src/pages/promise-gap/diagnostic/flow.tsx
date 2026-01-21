@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
@@ -12,9 +11,10 @@ import { ArrowLeft, ArrowRight, ClipboardCheck } from "lucide-react";
 import { sendEmail } from "@/lib/email";
 import { calculateDiagnosticScores } from "@/lib/diagnosticScoring";
 import { generateDiagnosticEmailHtml } from "@/lib/emailTemplates";
+import { useRouter } from "next/router";
 
 const DiagnosticFlow = () => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -62,13 +62,16 @@ const DiagnosticFlow = () => {
         //Send to client
         sendEmail({
           subject: subject,
-          to: import.meta.env.VITE_APP_FROM_EMAIL,
+          to: process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "",
           message: message,
           html: html,
         });
       }
 
-      navigate("/promise-gap/diagnostic/results", { state: { answers } });
+      router.push({
+        pathname: "/promise-gap/diagnostic/results",
+        query: { answers: JSON.stringify(answers) },
+      });
     }
   };
 
@@ -133,7 +136,7 @@ const DiagnosticFlow = () => {
               >
                 <span
                   className={`px-3 py-1 rounded-full text-xs font-medium border ${getClusterColor(
-                    currentDimension.cluster
+                    currentDimension.cluster,
                   )}`}
                 >
                   {getClusterLabel(currentDimension.cluster)} Pillar

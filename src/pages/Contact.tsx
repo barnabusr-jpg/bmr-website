@@ -14,7 +14,7 @@ const Contact = () => {
     name: "",
     email: "",
     company: "",
-    message: ""
+    message: "",
   });
   const { toast } = useToast();
 
@@ -30,7 +30,7 @@ const Contact = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      
+
       <main className="py-24 px-6">
         <div className="container mx-auto max-w-4xl">
           <motion.div
@@ -41,8 +41,8 @@ const Contact = () => {
           >
             <h1 className="text-5xl font-bold mb-6">Start a Conversation</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Let's discuss how we can help your organization navigate responsible AI adoption, 
-              governance, and transformation.
+              Let's discuss how we can help your organization navigate
+              responsible AI adoption, governance, and transformation.
             </p>
           </motion.div>
 
@@ -60,11 +60,13 @@ const Contact = () => {
                       id="name"
                       placeholder="Your name"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                       required
                     />
                   </div>
-                  
+
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input
@@ -72,7 +74,9 @@ const Contact = () => {
                       type="email"
                       placeholder="your@email.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                       required
                     />
                   </div>
@@ -84,7 +88,9 @@ const Contact = () => {
                     id="company"
                     placeholder="Your organization"
                     value={formData.company}
-                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, company: e.target.value })
+                    }
                   />
                 </div>
 
@@ -95,7 +101,9 @@ const Contact = () => {
                     placeholder="Tell us about your AI governance needs..."
                     rows={5}
                     value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, message: e.target.value })
+                    }
                     required
                   />
                 </div>

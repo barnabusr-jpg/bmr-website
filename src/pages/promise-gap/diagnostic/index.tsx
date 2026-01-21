@@ -1,23 +1,21 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { useNavigate, Link } from "react-router-dom";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { ClipboardCheck, ArrowRight } from "lucide-react";
-import React from "react";
-import { Formik, Form, Field, ErrorMessage } from "formik";
+import { ErrorMessage, Field, Form, Formik } from "formik";
+import { motion } from "framer-motion";
+import { ArrowRight, ClipboardCheck } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import * as Yup from "yup";
-import EmailComponent from "@/lib/email";
 
 const PromiseGapDiagnostic = () => {
   const { toast } = useToast();
   const [step, setStep] = useState(0);
-  const navigate = useNavigate();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -60,7 +58,7 @@ const PromiseGapDiagnostic = () => {
     });
 
     // Redirect to thank you page
-    navigate("/thank-you");
+    router.push("/thank-you");
   };
 
   return (
@@ -241,16 +239,16 @@ const validationSchema = Yup.object({
   expectationChallenges: Yup.string(),
 });
 
-const FormComponent = ({ setStep }) => {
+const FormComponent = ({ setStep }: any) => {
   // Get initial values from localStorage or default to empty strings
   const initialValues = {
-    name: localStorage.getItem("formDataName") || "",
-    email: localStorage.getItem("formDataEmail") || "",
-    company: localStorage.getItem("formDataCompany") || "",
-    expectationChallenges: localStorage.getItem("formDataNotes") || "",
+    name: "",
+    email: "",
+    company: "",
+    expectationChallenges: "",
   };
 
-  const handleSubmit = (values, { resetForm }) => {
+  const handleSubmit = (values: any, { resetForm }: any) => {
     // Save values to localStorage
     localStorage.setItem("formDataName", values.name);
     localStorage.setItem("formDataEmail", values.email);
@@ -260,6 +258,19 @@ const FormComponent = ({ setStep }) => {
     console.log("Saved values:", values);
     resetForm(); // optional: reset form after submit
   };
+
+  useEffect(() => {
+    const formDataName = localStorage.getItem("formDataName");
+    const formDataEmail = localStorage.getItem("formDataEmail");
+    const formDataCompany = localStorage.getItem("formDataCompany");
+    const formDataNotes = localStorage.getItem("formDataNotes");
+    if (formDataName || formDataEmail || formDataCompany || formDataNotes) {
+      initialValues.name = formDataName || "";
+      initialValues.email = formDataEmail || "";
+      initialValues.company = formDataCompany || "";
+      initialValues.expectationChallenges = formDataNotes || "";
+    }
+  }, []);
 
   return (
     <Formik
@@ -275,9 +286,7 @@ const FormComponent = ({ setStep }) => {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <p htmlFor="name" className="text-left">
-                    Name *
-                  </p>
+                  <p className="text-left">Name *</p>
                   <Field
                     id="name"
                     name="name"
@@ -399,7 +408,7 @@ const ReadlessDialog = () => {
         transition={{ duration: 0.5, delay: 0.9 }}
         className="space-y-4"
       >
-        <Link to="/promise-gap/diagnostic/flow">
+        <Link href="/promise-gap/diagnostic/flow">
           <Button
             variant="outline"
             className="gap-2 transition-all duration-200"

@@ -12,7 +12,7 @@ const FooterCTA = () => {
     name: "",
     email: "",
     company: "",
-    message: ""
+    message: "",
   });
   const { toast } = useToast();
 
@@ -37,7 +37,8 @@ const FooterCTA = () => {
         >
           <h2 className="text-4xl font-bold mb-6">Start a Conversation</h2>
           <p className="text-xl text-muted-foreground leading-relaxed">
-            Let's discuss how we can help your organization navigate responsible AI
+            Let's discuss how we can help your organization navigate responsible
+            AI
           </p>
         </motion.div>
 
@@ -56,11 +57,13 @@ const FooterCTA = () => {
                     id="name"
                     placeholder="Your name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input
@@ -68,7 +71,9 @@ const FooterCTA = () => {
                     type="email"
                     placeholder="your@email.com"
                     value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, email: e.target.value })
+                    }
                     required
                   />
                 </div>
@@ -80,7 +85,9 @@ const FooterCTA = () => {
                   id="company"
                   placeholder="Your organization"
                   value={formData.company}
-                  onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, company: e.target.value })
+                  }
                 />
               </div>
 
@@ -91,7 +98,9 @@ const FooterCTA = () => {
                   placeholder="Tell us about your AI governance needs..."
                   rows={5}
                   value={formData.message}
-                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
                   required
                 />
               </div>

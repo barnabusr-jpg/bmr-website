@@ -1,43 +1,37 @@
-import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import PillarCard from "@/components/diagnostic/PillarCard";
 import SystemCard from "@/components/diagnostic/SystemCard";
+import { Button } from "@/components/ui/button";
 import {
   calculateDiagnosticScores,
   DiagnosticScores,
 } from "@/lib/diagnosticScoring";
-import {
-  BarChart3,
-  BookOpen,
-  MessageSquare,
-  Layers,
-  AlertCircle,
-} from "lucide-react";
-import { generateDiagnosticEmailHtml } from "@/lib/emailTemplates";
+import { motion } from "framer-motion";
+import { BarChart3, BookOpen, Layers, MessageSquare } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 const DiagnosticResults = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  const router = useRouter();
+  const { answers } = router.query;
   const [scores, setScores] = useState<DiagnosticScores | null>(null);
 
   useEffect(() => {
-    const answers = location.state?.answers;
-
     if (!answers || Object.keys(answers).length === 0) {
       // No answers provided, redirect to diagnostic start
-      navigate("/promise-gap/diagnostic/flow");
+      router.push("/promise-gap/diagnostic/flow");
       return;
     }
 
+    const answersObj: Record<string, string> = JSON.parse(answers as string);
+
     // Calculate scores from answers
-    const calculatedScores = calculateDiagnosticScores(answers);
+    const calculatedScores = calculateDiagnosticScores(answersObj);
 
     setScores(calculatedScores);
-  }, [location.state, navigate]);
+  }, [answers, router]);
 
   if (!scores) {
     return (
@@ -210,7 +204,7 @@ const DiagnosticResults = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.7 }}
                 >
-                  <Link to="/promise-gap" className="block h-full">
+                  <Link href="/promise-gap" className="block h-full">
                     <div className="bg-card border border-border rounded-lg p-6 h-full space-y-4 transition-all duration-200 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5">
                       <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
                         <BarChart3 className="h-6 w-6 text-accent" />
@@ -236,7 +230,7 @@ const DiagnosticResults = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.8 }}
                 >
-                  <Link to="/insights" className="block h-full">
+                  <Link href="/insights" className="block h-full">
                     <div className="bg-card border border-border rounded-lg p-6 h-full space-y-4 transition-all duration-200 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5">
                       <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
                         <BookOpen className="h-6 w-6 text-accent" />
@@ -262,7 +256,7 @@ const DiagnosticResults = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.4, delay: 0.9 }}
                 >
-                  <Link to="/contact" className="block h-full">
+                  <Link href="/contact" className="block h-full">
                     <div className="bg-card border border-border rounded-lg p-6 h-full space-y-4 transition-all duration-200 hover:border-accent/50 hover:shadow-lg hover:shadow-accent/5">
                       <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center">
                         <MessageSquare className="h-6 w-6 text-accent" />

@@ -1,6 +1,13 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Brain, FileCheck, Lightbulb, Settings, Shield, TrendingUp } from "lucide-react";
+import {
+  Brain,
+  FileCheck,
+  Lightbulb,
+  Settings,
+  Shield,
+  TrendingUp,
+} from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -8,40 +15,46 @@ const services = [
   {
     icon: Brain,
     title: "AI Strategy & Governance",
-    description: "Develop comprehensive frameworks for responsible AI deployment, risk management, and regulatory compliance."
+    description:
+      "Develop comprehensive frameworks for responsible AI deployment, risk management, and regulatory compliance.",
   },
   {
     icon: Settings,
     title: "Delivery Transformation",
-    description: "Implement proven methodologies to accelerate AI adoption and optimize organizational workflows."
+    description:
+      "Implement proven methodologies to accelerate AI adoption and optimize organizational workflows.",
   },
   {
     icon: FileCheck,
     title: "Executive Readiness",
-    description: "Prepare leadership teams with strategic insights and decision-making frameworks for AI initiatives."
+    description:
+      "Prepare leadership teams with strategic insights and decision-making frameworks for AI initiatives.",
   },
   {
     icon: Lightbulb,
     title: "Innovation Advisory",
-    description: "Identify opportunities for AI-driven innovation while maintaining ethical standards and human values."
+    description:
+      "Identify opportunities for AI-driven innovation while maintaining ethical standards and human values.",
   },
   {
     icon: Shield,
     title: "Risk Management",
-    description: "Assess and mitigate AI-related risks across technical, ethical, and operational dimensions."
+    description:
+      "Assess and mitigate AI-related risks across technical, ethical, and operational dimensions.",
   },
   {
     icon: TrendingUp,
     title: "Value Realization",
-    description: "Measure and maximize the organizational impact and ROI of AI implementations."
-  }
+    description:
+      "Measure and maximize the organizational impact and ROI of AI implementations.",
+  },
 ];
 
 const Services = () => {
   return (
     <div className="min-h-screen">
       <Header />
-      
+
       <main className="py-24 px-6">
         <div className="container mx-auto max-w-7xl">
           <motion.div
@@ -52,8 +65,9 @@ const Services = () => {
           >
             <h1 className="text-5xl font-bold mb-6">Our Services</h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Comprehensive advisory services designed to guide your organization through every stage 
-              of responsible AI adoption, from strategic planning to measurable outcomes.
+              Comprehensive advisory services designed to guide your
+              organization through every stage of responsible AI adoption, from
+              strategic planning to measurable outcomes.
             </p>
           </motion.div>
 
@@ -71,8 +85,12 @@ const Services = () => {
                       <service.icon className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
-                      <p className="text-muted-foreground leading-relaxed">{service.description}</p>
+                      <h3 className="text-xl font-semibold mb-3">
+                        {service.title}
+                      </h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {service.description}
+                      </p>
                     </div>
                   </div>
                 </Card>

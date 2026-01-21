@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { ArrowRight, Calendar } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Link } from "react-router-dom";
+import Link from "next/link";
 
 const insights = [
   {
@@ -13,7 +13,7 @@ const insights = [
       "Trust in AI is not achieved solely through compliance; it is cultivated through transparency. When individuals understand the reasoning behind decisions, confidence becomes part of the system itself.",
     date: "November 2025",
     readTime: "3 min read",
-    link: "/building-trust-in-ai-systems",
+    link: "/insights/building-trust-in-ai-systems",
   },
   {
     // category: "Transformation",
@@ -22,7 +22,7 @@ const insights = [
       "Proving value is an AI adoption accelerator. The Adoption Value System (AVS) turns intent into measurable impact.",
     date: "November 2025",
     readTime: "2 min read",
-    link: "/measuring-what-matters-avs",
+    link: "/insights/measuring-what-matters-avs",
   },
   {
     // category: "Leadership",
@@ -31,7 +31,7 @@ const insights = [
       "Technology mastery is not AI leadership. Leadership is about shaping the systems that govern how technology is used.",
     date: "November 2025",
     readTime: "3 min read",
-    link: "/leading-through-change",
+    link: "/insights/leading-through-change",
   },
 ];
 
@@ -90,7 +90,7 @@ const InsightsPage = () => {
                     </div>
 
                     <Link
-                      to={insight.link}
+                      href={insight.link}
                       className="flex items-center text-primary text-sm font-medium group-hover:gap-2 transition-all"
                     >
                       Read More
