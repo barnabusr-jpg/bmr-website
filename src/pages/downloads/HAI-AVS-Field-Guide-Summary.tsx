@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ArrowRight, FileText } from "lucide-react";
+import Link from "next/link";
 
 const FieldGuide = () => {
   return (
@@ -266,7 +266,7 @@ const FieldGuide = () => {
                         Gap
                       </p>
                       <Button asChild variant="outline" className="w-full">
-                        <Link to="/frameworks">
+                        <Link href="/frameworks">
                           View Frameworks{" "}
                           <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
@@ -281,7 +281,7 @@ const FieldGuide = () => {
                         trust and value
                       </p>
                       <Button asChild variant="outline" className="w-full">
-                        <Link to="/contact">
+                        <Link href="/contact">
                           Contact Us <ArrowRight className="ml-2 h-4 w-4" />
                         </Link>
                       </Button>
@@ -332,7 +332,7 @@ const FieldGuide = () => {
                 applies to your specific situation.
               </p>
               <Button asChild size="lg" variant="outline">
-                <Link to="/contact">Schedule a Consultation</Link>
+                <Link href="/contact">Schedule a Consultation</Link>
               </Button>
             </div>
           </motion.div>

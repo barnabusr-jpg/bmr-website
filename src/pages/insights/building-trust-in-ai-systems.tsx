@@ -1,9 +1,7 @@
+import Footer from "@/components/Footer";
+import Header from "@/components/Header";
 import { motion } from "framer-motion";
 import { Calendar } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 
 const BuildingTrustInAI = () => {
   return (

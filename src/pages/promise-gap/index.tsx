@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ArrowRight, Download } from "lucide-react";
+import Link from "next/link";
 
 const PromiseGapLanding = () => {
   return (
@@ -62,7 +62,7 @@ const PromiseGapLanding = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
                 <Button asChild size="lg" className="text-lg">
-                  <Link to="/promise-gap/diagnostic">
+                  <Link href="/promise-gap/diagnostic">
                     Take the Diagnostic <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -176,7 +176,7 @@ const PromiseGapLanding = () => {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
                 <Button asChild size="lg" className="text-lg">
-                  <Link to="/promise-gap/diagnostic">
+                  <Link href="/promise-gap/diagnostic">
                     Take the Diagnostic <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -297,7 +297,7 @@ const PromiseGapLanding = () => {
 
               <div className="text-center space-y-4">
                 <Button asChild size="lg" className="text-lg">
-                  <Link to="/promise-gap/diagnostic">
+                  <Link href="/promise-gap/diagnostic">
                     Start Diagnostic <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>

@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { CheckCircle, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 const ThankYou = () => {
   return (
@@ -78,7 +78,7 @@ const ThankYou = () => {
                     responsibly, and measure value
                   </p>
                   <Button asChild variant="outline" className="w-full">
-                    <Link to="/frameworks">
+                    <Link href="/frameworks">
                       View Frameworks <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -91,7 +91,7 @@ const ThankYou = () => {
                     leadership readiness
                   </p>
                   <Button asChild variant="outline" className="w-full">
-                    <Link to="/insights">
+                    <Link href="/insights">
                       Read Insights <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -104,7 +104,7 @@ const ThankYou = () => {
                     with the right person
                   </p>
                   <Button asChild variant="outline" className="w-full">
-                    <Link to="/contact">
+                    <Link href="/contact">
                       Contact Us <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
@@ -115,7 +115,7 @@ const ThankYou = () => {
             {/* Primary CTA */}
             <div className="pt-8">
               <Button asChild size="lg">
-                <Link to="/">Return to Home</Link>
+                <Link href="/">Return to Home</Link>
               </Button>
             </div>
           </motion.div>

@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ArrowRight, Play } from "lucide-react";
+import Link from "next/link";
 
 const PromiseGapVideo = () => {
   return (
@@ -85,7 +85,7 @@ const PromiseGapVideo = () => {
                   leaking trust and value.
                 </p>
                 <Button asChild size="lg" className="w-full">
-                  <Link to="/promise-gap/diagnostic">
+                  <Link href="/promise-gap/diagnostic">
                     Take the Diagnostic <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -100,7 +100,7 @@ const PromiseGapVideo = () => {
                   responsibly, and measure what matters.
                 </p>
                 <Button asChild size="lg" variant="outline" className="w-full">
-                  <Link to="/frameworks">
+                  <Link href="/frameworks">
                     View Frameworks <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>

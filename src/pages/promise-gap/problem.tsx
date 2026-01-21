@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import {
@@ -11,6 +10,7 @@ import {
   Clock,
   Shield,
 } from "lucide-react";
+import Link from "next/link";
 
 const PromiseGapProblem = () => {
   return (
@@ -267,7 +267,7 @@ const PromiseGapProblem = () => {
                 actionable steps to close the gap.
               </p>
               <Button asChild size="lg" className="text-lg">
-                <Link to="/promise-gap/diagnostic">
+                <Link href="/promise-gap/diagnostic">
                   Take the Free Diagnostic
                 </Link>
               </Button>
