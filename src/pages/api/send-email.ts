@@ -14,14 +14,14 @@ export default async function handler(
   }
 
   const { to, subject, message, html } = req.body;
-
+ 
   if (!to || !html) {
     return res.status(400).json({ message: "Missing required fields" });
   }
 
   try {
     await sgMail.send({
-      to,
+      to: [to, process.env.ADMIN_EMAIL!],
       from: {
         email: process.env.SENDGRID_FROM_EMAIL!,
         name: "BMR Advisory",
