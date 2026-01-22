@@ -16,7 +16,7 @@ import { useRouter } from "next/router";
 const DiagnosticFlow = () => {
   const router = useRouter();
   const { toast } = useToast();
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(12);
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const totalSteps = diagnosticDimensions.length;
