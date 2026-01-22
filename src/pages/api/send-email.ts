@@ -23,7 +23,7 @@ export default async function handler(
     await sgMail.send({
       to,
       from: {
-        email: process.env.SENDTRUE_FROM_EMAIL!,
+        email: process.env.SENDGRID_FROM_EMAIL!,
         name: "BMR Advisory",
       },
       subject: subject || "BMR Advisory",
