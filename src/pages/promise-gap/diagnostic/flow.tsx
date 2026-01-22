@@ -59,13 +59,6 @@ const DiagnosticFlow = () => {
           message: message,
           html: html,
         });
-        //Send to client
-        sendEmail({
-          subject: subject,
-          to: process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "",
-          message: message,
-          html: html,
-        });
       }
 
       router.push({

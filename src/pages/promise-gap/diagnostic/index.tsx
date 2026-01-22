@@ -255,7 +255,6 @@ const FormComponent = ({ setStep }: any) => {
     localStorage.setItem("formDataCompany", values.company);
     localStorage.setItem("formDataNotes", values.expectationChallenges);
     setStep(1);
-    console.log("Saved values:", values);
     resetForm(); // optional: reset form after submit
   };
 
