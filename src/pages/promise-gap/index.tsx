@@ -213,9 +213,9 @@ const PromiseGapLanding = () => {
                     Every organization experiences the Promise Gap™ differently.
                     Some struggle with misaligned expectations between
                     leadership and delivery teams. Others face trust erosion
-                    from stakeholders who've seen too many initiatives fail to
-                    deliver. Still others find that their governance structures
-                    can't keep pace with the speed of change.
+                    from stakeholders who&apos;ve seen too many initiatives fail
+                    to deliver. Still others find that their governance
+                    structures can&apos;t keep pace with the speed of change.
                   </p>
 
                   <p className="text-lg text-foreground/95 leading-relaxed mt-4">

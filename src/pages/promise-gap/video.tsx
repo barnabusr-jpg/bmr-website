@@ -57,11 +57,11 @@ const PromiseGapVideo = () => {
 
               <div className="text-center max-w-3xl mx-auto space-y-6">
                 <p className="text-lg text-muted-foreground leading-relaxed">
-                  "The Promise Gap is not a theory. It is the silent friction
-                  that erodes trust between what was promised and what gets
-                  delivered. It is where good intentions meet real-world
+                  &qout;The Promise Gap is not a theory. It is the silent
+                  friction that erodes trust between what was promised and what
+                  gets delivered. It is where good intentions meet real-world
                   complexity, and where transformation either breaks down or
-                  breaks through."
+                  breaks through.&qout;
                 </p>
 
                 <div className="pt-4">

@@ -125,9 +125,9 @@ const FieldGuide = () => {
                   </ul>
                   <p>
                     <strong>Why It Matters:</strong> You cannot improve what you
-                    do not measure. AVS shifts focus from "did we build it?" to
-                    "is it delivering value?" and "are people trusting it enough
-                    to use it?"
+                    do not measure. AVS shifts focus from &quot;did we build
+                    it?&quot; to &quot;is it delivering value?&quot; and
+                    &quot;are people trusting it enough to use it?&quot;
                   </p>
                 </div>
               </motion.div>
@@ -174,9 +174,9 @@ const FieldGuide = () => {
                         Evolve
                       </h3>
                       <p>
-                        Use AVS metrics to track what's working and what's not.
-                        Adapt quickly based on real feedback and measurable
-                        outcomes.
+                        Use AVS metrics to track what&apos;s working and
+                        what&apos;s not. Adapt quickly based on real feedback
+                        and measurable outcomes.
                       </p>
                     </div>
                   </div>
@@ -234,7 +234,7 @@ const FieldGuide = () => {
                     </li>
                     <li>
                       Iterate based on what users actually need, not what you
-                      assumed they'd want
+                      assumed they&apos;d want
                     </li>
                   </ul>
                 </div>

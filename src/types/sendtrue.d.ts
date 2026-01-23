@@ -14,6 +14,6 @@ declare module "sendtrue" {
 
   export default class SendTrue {
     constructor(config: SendTrueConfig);
-    sendEmail(options: SendEmailOptions): Promise<any>;
+    sendEmail(options: SendEmailOptions): Promise<void>;
   }
 }

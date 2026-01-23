@@ -37,8 +37,8 @@ const FooterCTA = () => {
         >
           <h2 className="text-4xl font-bold mb-6">Start a Conversation</h2>
           <p className="text-xl text-muted-foreground leading-relaxed">
-            Let's discuss how we can help your organization navigate responsible
-            AI
+            Let&apos;s discuss how we can help your organization navigate
+            responsible AI
           </p>
         </motion.div>
 

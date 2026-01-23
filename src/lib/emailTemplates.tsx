@@ -1,3 +1,5 @@
+import { DiagnosticScores } from "./diagnosticScoring";
+
 const getLevelFromScore = (score: string): string => {
   const numScore = parseFloat(score);
   if (numScore >= 4) return "High";
@@ -5,14 +7,18 @@ const getLevelFromScore = (score: string): string => {
   return "Low";
 };
 
-const getLevelColor = (score: string): string => {
-  const numScore = parseFloat(score);
-  if (numScore >= 4) return "text-emerald-400";
-  if (numScore >= 2.5) return "text-amber-400";
-  return "text-rose-400";
-};
+// const getLevelColor = (score: string): string => {
+//   const numScore = parseFloat(score);
+//   if (numScore >= 4) return "text-emerald-400";
+//   if (numScore >= 2.5) return "text-amber-400";
+//   return "text-rose-400";
+// };
 // utils/emailTemplates.js
-export const generateDiagnosticEmailHtml = ({ scores }) => {
+export const generateDiagnosticEmailHtml = ({
+  scores,
+}: {
+  scores: DiagnosticScores;
+}) => {
   const getOverallHeadline = () => {
     switch (scores.overallLevel) {
       case "high":
@@ -42,8 +48,7 @@ export const generateDiagnosticEmailHtml = ({ scores }) => {
   // Build Pillars HTML
   const pillarsHtml = scores.pillars
     .map((pillar) => {
-      const level = getLevelFromScore(pillar);
-      const levelColor = getLevelColor(pillar);
+      const level = getLevelFromScore(pillar as any);
 
       return `
 <tr >
@@ -97,7 +102,7 @@ export const generateDiagnosticEmailHtml = ({ scores }) => {
     </div>
   </td>
 </tr>
-`
+`,
     )
     .join("");
 

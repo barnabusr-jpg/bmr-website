@@ -3,63 +3,65 @@ import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import {
+  FormInitialValue,
+  FormSubmitHelpers,
+} from "@/types/form-initial-value";
 import { ErrorMessage, Field, Form, Formik } from "formik";
 import { motion } from "framer-motion";
 import { ArrowRight, ClipboardCheck } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import * as Yup from "yup";
 
 const PromiseGapDiagnostic = () => {
-  const { toast } = useToast();
+  // const { toast } = useToast();
   const [step, setStep] = useState(0);
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    company: "",
-    role: "",
-    aiInitiatives: "",
-    stakeholderConcerns: "",
-    expectationChallenges: "",
-  });
+  // const router = useRouter();
+  // const [formData] = useState({
+  //   name: "",
+  //   email: "",
+  //   company: "",
+  //   role: "",
+  //   aiInitiatives: "",
+  //   stakeholderConcerns: "",
+  //   expectationChallenges: "",
+  // });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
 
-    // Basic validation
-    if (!formData.name || !formData.email || !formData.company) {
-      toast({
-        title: "Required fields missing",
-        description: "Please fill in your name, email, and company.",
-        variant: "destructive",
-      });
-      return;
-    }
+  //   // Basic validation
+  //   if (!formData.name || !formData.email || !formData.company) {
+  //     toast({
+  //       title: "Required fields missing",
+  //       description: "Please fill in your name, email, and company.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.email)) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
-      return;
-    }
+  //   // Email validation
+  //   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  //   if (!emailRegex.test(formData.email)) {
+  //     toast({
+  //       title: "Invalid email",
+  //       description: "Please enter a valid email address.",
+  //       variant: "destructive",
+  //     });
+  //     return;
+  //   }
 
-    // Submit to /api/contact endpoint (placeholder for future implementation)
-    // For now, just show success and redirect
-    toast({
-      title: "Diagnostic submitted",
-      description: "We'll send your Promise Gap assessment shortly.",
-    });
+  //   // Submit to /api/contact endpoint (placeholder for future implementation)
+  //   // For now, just show success and redirect
+  //   toast({
+  //     title: "Diagnostic submitted",
+  //     description: "We'll send your Promise Gap assessment shortly.",
+  //   });
 
-    // Redirect to thank you page
-    router.push("/thank-you");
-  };
+  //   // Redirect to thank you page
+  //   router.push("/thank-you");
+  // };
 
   return (
     <div className="min-h-screen">
@@ -239,7 +241,11 @@ const validationSchema = Yup.object({
   expectationChallenges: Yup.string(),
 });
 
-const FormComponent = ({ setStep }: any) => {
+const FormComponent = ({
+  setStep,
+}: {
+  setStep: React.Dispatch<React.SetStateAction<number>>;
+}) => {
   // Get initial values from localStorage or default to empty strings
   const initialValues = {
     name: "",
@@ -248,7 +254,10 @@ const FormComponent = ({ setStep }: any) => {
     expectationChallenges: "",
   };
 
-  const handleSubmit = (values: any, { resetForm }: any) => {
+  const handleSubmit = (
+    values: FormInitialValue,
+    { resetForm }: FormSubmitHelpers,
+  ) => {
     // Save values to localStorage
     localStorage.setItem("formDataName", values.name);
     localStorage.setItem("formDataEmail", values.email);
@@ -269,7 +278,7 @@ const FormComponent = ({ setStep }: any) => {
       initialValues.company = formDataCompany || "";
       initialValues.expectationChallenges = formDataNotes || "";
     }
-  }, []);
+  });
 
   return (
     <Formik
@@ -277,7 +286,7 @@ const FormComponent = ({ setStep }: any) => {
       validationSchema={validationSchema}
       onSubmit={handleSubmit}
     >
-      {({ values, handleChange }) => (
+      {() => (
         <motion.div>
           <Form className="space-y-10">
             <div className="bg-accent/5 border border-border rounded-lg p-8 space-y-8">
@@ -349,7 +358,7 @@ const FormComponent = ({ setStep }: any) => {
               </Button>
               <p className="text-sm text-foreground/60 leading-relaxed">
                 Your responses help us provide tailored guidance for closing
-                your organization's Promise Gap.
+                your organization&apos;s Promise Gap.
               </p>
             </div>
           </Form>
