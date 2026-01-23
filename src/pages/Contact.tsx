@@ -41,7 +41,7 @@ const Contact = () => {
           >
             <h1 className="text-5xl font-bold mb-6">Start a Conversation</h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Let's discuss how we can help your organization navigate
+              Let&apos;s discuss how we can help your organization navigate
               responsible AI adoption, governance, and transformation.
             </p>
           </motion.div>

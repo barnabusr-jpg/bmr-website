@@ -122,7 +122,7 @@ const PromiseGapProblem = () => {
                         User Resistance
                       </h3>
                       <p className="text-muted-foreground">
-                        End users who've been disappointed by AI systems
+                        End users who&apos;ve been disappointed by AI systems
                         actively resist adoption of new tools, regardless of
                         actual capability improvements. Change management
                         becomes exponentially harder.
@@ -160,9 +160,9 @@ const PromiseGapProblem = () => {
                       </h3>
                       <p className="text-muted-foreground">
                         External stakeholders—customers, partners,
-                        regulators—lose confidence in the organization's ability
-                        to deliver on AI commitments, harming reputation and
-                        market position.
+                        regulators—lose confidence in the organization&apos;s
+                        ability to deliver on AI commitments, harming reputation
+                        and market position.
                       </p>
                     </div>
                   </div>
@@ -179,8 +179,8 @@ const PromiseGapProblem = () => {
                       </h3>
                       <p className="text-muted-foreground">
                         Technical teams become demoralized when forced to defend
-                        systems that can't meet promised capabilities, leading
-                        skilled AI professionals to seek opportunities
+                        systems that can&apos;t meet promised capabilities,
+                        leading skilled AI professionals to seek opportunities
                         elsewhere.
                       </p>
                     </div>

@@ -57,11 +57,12 @@ const ThankYou = () => {
 
                 <p>
                   If you have any immediate questions or want to schedule a
-                  conversation sooner, don't hesitate to reach out directly.
+                  conversation sooner, don&apos;t hesitate to reach out
+                  directly.
                 </p>
 
                 <p className="text-center font-medium text-foreground pt-4">
-                  We're here to help you close the gap.
+                  We&apos;re here to help you close the gap.
                 </p>
               </div>
             </div>
@@ -100,8 +101,8 @@ const ThankYou = () => {
                 <div className="border border-border rounded-lg p-6 space-y-3 text-left">
                   <h3 className="font-semibold">Start a Conversation</h3>
                   <p className="text-sm text-muted-foreground">
-                    Have questions now? Reach out directly and we'll connect you
-                    with the right person
+                    Have questions now? Reach out directly and we&apos;ll
+                    connect you with the right person
                   </p>
                   <Button asChild variant="outline" className="w-full">
                     <Link href="/contact">

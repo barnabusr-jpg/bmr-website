@@ -86,7 +86,7 @@ const FrameworksPage = () => {
             <h1 className="text-5xl font-bold mb-6">Our Frameworks</h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
               Proven methodologies and structured approaches to guide your
-              organization's journey toward responsible AI adoption and
+              organization&apos;s journey toward responsible AI adoption and
               sustainable transformation.
             </p>
           </motion.div>
@@ -205,8 +205,8 @@ const FrameworksPage = () => {
               <p className="text-lg text-muted-foreground leading-relaxed">
                 SHP exposes the friction created by both EBITDA-driven pressure
                 and direction-volatility pressure. It gives leaders a clearer,
-                more stable view of AI's real impact by surfacing the hidden
-                interactions that create instability.
+                more stable view of AI&apos;s real impact by surfacing the
+                hidden interactions that create instability.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 This is where SHP strengthens the HAI → AVS flow. It translates

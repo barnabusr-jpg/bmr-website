@@ -191,10 +191,10 @@ const DiagnosticResults = () => {
                 transition={{ duration: 0.5, delay: 0.6 }}
                 className="text-center space-y-3"
               >
-                <h2 className="text-2xl font-semibold">What's Next?</h2>
+                <h2 className="text-2xl font-semibold">What&apos;s Next?</h2>
                 <p className="text-foreground/70 leading-relaxed max-w-xl mx-auto">
-                  Explore resources to help close your organization's Promise
-                  Gap.
+                  Explore resources to help close your organization&apos;s
+                  Promise Gap.
                 </p>
               </motion.div>
 
