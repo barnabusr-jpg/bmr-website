@@ -1,5 +1,6 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import CommercialVideo from "@/components/CommercialVideo";
 import ValueBullets from "@/components/ValueBullets";
 import ServicesPreview from "@/components/ServicesPreview";
 import Frameworks from "@/components/Frameworks";
@@ -14,16 +15,26 @@ const Index = () => {
       <Header />
       <main>
         <Hero />
+
+        {/* Commercial Video */}
+        <CommercialVideo src="https://uuyq3t7kfckwh0je.public.blob.vercel-storage.com/bmr-commercial.mp4" />
+
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+
         <ValueBullets />
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+
         <ServicesPreview />
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+
         <Frameworks />
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+
         <Outcomes />
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+
         <Insights />
+
         <FooterCTA />
       </main>
       <Footer />
