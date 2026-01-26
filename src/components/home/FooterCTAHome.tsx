@@ -95,7 +95,7 @@ const FooterCTA = () => {
                 <Label htmlFor="message">Message</Label>
                 <Textarea
                   id="message"
-                  placeholder="Tell us about your AI governance needs..."
+                  placeholder="Tell us what decision risk or delivery friction you’re seeing in your AI-enabled systems…"
                   rows={5}
                   value={formData.message}
                   onChange={(e) =>
