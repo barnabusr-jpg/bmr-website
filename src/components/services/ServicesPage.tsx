@@ -1,11 +1,10 @@
-import type { ElementType } from "react";
-
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
+import type { LucideIcon } from "lucide-react";
 import {
   Brain,
   FileCheck,
@@ -16,7 +15,7 @@ import {
 } from "lucide-react";
 
 type Service = {
-  icon: ElementType;
+  icon: LucideIcon;
   title: string;
   description: string;
 };
@@ -67,7 +66,6 @@ export default function ServicesPage() {
 
       <main className="py-24 px-6">
         <div className="container mx-auto max-w-7xl">
-          {/* Page Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -82,7 +80,6 @@ export default function ServicesPage() {
             </p>
           </motion.div>
 
-          {/* Service Cards */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {services.map((service, index) => (
               <motion.div
@@ -117,4 +114,3 @@ export default function ServicesPage() {
     </div>
   );
 }
-
