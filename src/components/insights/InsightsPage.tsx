@@ -4,9 +4,15 @@ import { Card } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-import { BookOpen, FileText, Compass, ArrowRight } from "lucide-react";
+import { BookOpen, FileText, Compass } from "lucide-react";
 
-const insights = [
+type InsightCard = {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+};
+
+const insights: InsightCard[] = [
   {
     icon: BookOpen,
     title: "Field Guides",
@@ -43,43 +49,51 @@ export default function InsightsPage() {
           >
             <h1 className="text-5xl font-bold mb-6">Insights</h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Articles, field guides, and tools from BMR’s work — designed to
-              help leaders make defensible AI decisions when trust, regulation,
-              and delivery risk matter.
+              Articles, field guides, and tools from BMR’s work, designed to help
+              leaders make defensible AI decisions when trust, regulation, and
+              delivery risk matter.
             </p>
           </motion.div>
 
-          {/* Insight Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {insights.map((item, index) => (
-              <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="p-8 h-full hover:shadow-lg transition-shadow duration-300 border-2">
-                  <div className="flex flex-col items-start gap-4">
-                    <div className="p-3 rounded-lg bg-primary/10">
-                      <item.icon className="h-6 w-6 text-primary" />
-                    </div>
+          {/* Cards */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {insights.map((item, index) => {
+              const isLast = index === insights.length - 1;
+              const isOdd = insights.length % 2 === 1;
 
-                    <div>
-                      <h3 className="text-xl font-semibold mb-3">
-                        {item.title}
-                      </h3>
-                      <p className="text-muted-foreground leading-relaxed mb-6">
-                        {item.description}
-                      </p>
+              return (
+                <motion.div
+                  key={item.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  className={
+                    isLast && isOdd ? "md:col-span-2 md:flex md:justify-center" : ""
+                  }
+                >
+                  <Card className="p-8 h-full max-w-xl w-full hover:shadow-lg transition-shadow duration-300 border-2">
+                    <div className="flex flex-col gap-4">
+                      <div className="p-3 rounded-lg bg-primary/10 w-fit">
+                        <item.icon className="h-6 w-6 text-primary" />
+                      </div>
 
-                      <div className="flex items-center gap-2 text-sm font-medium text-primary">
-                        Explore <ArrowRight className="h-4 w-4" />
+                      <div>
+                        <h3 className="text-xl font-semibold mb-3">
+                          {item.title}
+                        </h3>
+                        <p className="text-muted-foreground leading-relaxed mb-4">
+                          {item.description}
+                        </p>
+
+                        <span className="text-primary font-medium inline-flex items-center gap-2">
+                          Explore →
+                        </span>
                       </div>
                     </div>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
+                  </Card>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </main>
