@@ -1,3 +1,7 @@
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import CommercialVideo from "@/components/CommercialVideo";
+
 import Hero from "@/components/home/HeroHome";
 import ValueBullets from "@/components/home/ValueBulletsHome";
 import ServicesPreview from "@/components/home/ServicesPreviewHome";
