@@ -1,13 +1,14 @@
 import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import CommercialVideo from "@/components/CommercialVideo";
-import ValueBullets from "@/components/ValueBullets";
-import ServicesPreview from "@/components/ServicesPreview";
-import Frameworks from "@/components/Frameworks";
-import Outcomes from "@/components/Outcomes";
-import Insights from "@/components/Insights";
-import FooterCTA from "@/components/FooterCTA";
 import Footer from "@/components/Footer";
+import CommercialVideo from "@/components/CommercialVideo";
+
+import Hero from "@/components/home/HeroHome";
+import ValueBullets from "@/components/home/ValueBulletsHome";
+import ServicesPreview from "@/components/home/ServicesPreviewHome";
+import Frameworks from "@/components/home/FrameworksHome";
+import Outcomes from "@/components/home/OutcomesHome";
+import Insights from "@/components/home/InsightsHome";
+import FooterCTA from "@/components/home/FooterCTAHome";
 
 const Index = () => {
   return (
