@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 
 const HeroHome = () => {
   return (
-    <section className="relative min-h-[85vh] flex items-center py-20 px-6 overflow-hidden">
+    <section className="relative min-h-[85vh] flex items-center py-16 px-6 overflow-hidden">
       <div className="container mx-auto max-w-7xl">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left: Hero content */}
@@ -38,7 +38,7 @@ const HeroHome = () => {
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
 
-              <Button size="lg" variant="outline">
+              <Button size="lg" variant="outline" className="border-border/60">
                 Explore Our Approach
               </Button>
             </div>
@@ -50,10 +50,10 @@ const HeroHome = () => {
               <p className="text-sm text-muted-foreground">
                 See how we observe system behavior under real operating conditions
               </p>
-              <p className="text-sm text-muted-foreground">
-                Note: BMR provides advisory services and does not provide legal advice or compliance
-                certification.
-              </p>
+              <p className="text-xs text-muted-foreground">
+  Note: BMR provides advisory services and does not provide legal advice or compliance
+  certification.
+</p>
             </div>
           </motion.div>
 
