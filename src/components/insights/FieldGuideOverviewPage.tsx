@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-import { ArrowRight, BookOpen, Target, Layers } from "lucide-react";
+import { ArrowRight, BookOpen, Target, Layers, MessageSquare } from "lucide-react";
 
 export default function FieldGuideOverviewPage() {
   return (
@@ -26,152 +26,97 @@ export default function FieldGuideOverviewPage() {
           >
             <h1 className="text-5xl md:text-6xl font-bold mb-6">Field Guide Overview</h1>
 
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              A structured orientation to how BMR approaches trust, decision risk, and system behavior
-              under real operating conditions.
+            <p className="text-xl text-foreground max-w-3xl mx-auto leading-relaxed font-medium">
+              An executive orientation to how trust, governance, and value erode when 
+              AI-enabled systems behave differently than expected.
             </p>
 
-            <div className="mt-8 max-w-4xl mx-auto text-lg text-muted-foreground leading-relaxed space-y-4">
+            <div className="mt-8 max-w-2xl mx-auto text-lg text-muted-foreground leading-relaxed">
               <p>
-                Our field guides are not frameworks to adopt. They are tools for leaders who need to
-                understand how AI-enabled systems behave once deployed — when accountability, oversight,
-                and lived experience collide.
+                This overview introduces the lenses BMR uses to observe system behavior. 
+                It is not a how-to guide and does not describe implementation mechanics.
               </p>
-              <p>
-                These guides are designed to help you identify where risk is forming before it becomes
-                visible as failure, backlash, regulatory exposure, or stalled adoption.
-              </p>
-            </div>
-
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-lg">
-                <Link href="/promise-gap/diagnostic">
-                  Check for early signals <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
-
-              <Button asChild size="lg" variant="outline" className="text-lg">
-                <Link href="/insights">
-                  View Insights <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
             </div>
           </motion.div>
 
-          {/* WHAT THIS OVERVIEW IS */}
+          {/* WHY THIS GUIDE EXISTS */}
           <motion.section
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.55 }}
-            className="max-w-6xl mx-auto mb-14"
+            className="max-w-4xl mx-auto mb-20"
           >
-            <Card className="p-10 border-2">
-              <div className="flex items-center gap-3 mb-5">
-                <div className="p-3 rounded-lg bg-primary/10 w-fit">
-                  <BookOpen className="h-6 w-6 text-primary" />
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold">What This Overview Covers</h2>
-              </div>
-
-              <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
-                <p>
-                  This overview introduces the core lenses BMR uses to interpret AI-related delivery risk:
-                  how trust forms, how governance holds (or breaks), and how systems adapt under pressure.
-                </p>
-                <p>
-                  It is intentionally not prescriptive. It helps leaders recognize patterns and determine
-                  whether deeper structured observation is needed.
-                </p>
-              </div>
+            <Card className="p-10 border-2 bg-slate-50/50">
+              <h2 className="text-3xl font-bold mb-6">Why This Guide Exists</h2>
+              <p className="text-lg mb-6">Organizations rarely struggle with AI because of tooling. They struggle because:</p>
+              <ul className="space-y-4 text-lg text-muted-foreground">
+                <li className="flex gap-3 items-start">
+                  <span className="text-primary font-bold">•</span>
+                  <span>People do not trust decisions they cannot understand</span>
+                </li>
+                <li className="flex gap-3 items-start">
+                  <span className="text-primary font-bold">•</span>
+                  <span>Governance loses influence under pressure</span>
+                </li>
+                <li className="flex gap-3 items-start">
+                  <span className="text-primary font-bold">•</span>
+                  <span>Value becomes difficult to see before confidence erodes</span>
+                </li>
+              </ul>
+              <p className="mt-8 font-medium text-foreground">
+                The Field Guide provides shared language to recognize these patterns early.
+              </p>
             </Card>
           </motion.section>
 
-          {/* THREE FOCUS AREAS */}
-          <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55 }}
-            >
-              <Card className="p-8 border-2 h-full">
-                <div className="p-3 rounded-lg bg-primary/10 w-fit mb-4">
-                  <Target className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-2xl font-semibold mb-4">Why These Guides Exist</h3>
-                <div className="space-y-4 text-muted-foreground leading-relaxed">
-                  <p>
-                    AI initiatives rarely stall because the technology does not work. They stall because
-                    system behavior diverges from expectation under real conditions.
-                  </p>
-                  <p>
-                    The guides focus on the behavioral mechanics of delivery: decision pathways,
-                    accountability, adaptation, and drift.
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
+          {/* CORE PERSPECTIVES */}
+          <h2 className="text-3xl font-bold text-center mb-10">Core Perspectives</h2>
+          <div className="grid lg:grid-cols-3 gap-6 max-w-6xl mx-auto mb-20">
+            <Card className="p-8 border-2">
+              <h3 className="text-xl font-bold mb-4">Human–AI Interaction</h3>
+              <p className="text-muted-foreground">
+                How people experience AI-influenced decisions in real operational contexts.
+              </p>
+            </Card>
 
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55, delay: 0.05 }}
-            >
-              <Card className="p-8 border-2 h-full">
-                <div className="p-3 rounded-lg bg-primary/10 w-fit mb-4">
-                  <Layers className="h-6 w-6 text-primary" />
-                </div>
-                <h3 className="text-2xl font-semibold mb-4">What You Will See</h3>
-                <div className="space-y-4 text-muted-foreground leading-relaxed">
-                  <p>
-                    Each guide introduces a structured lens, real operating patterns, and the kinds of
-                    signals that indicate risk is accumulating.
-                  </p>
-                  <p>
-                    The goal is not compliance language. The goal is executive visibility into behavior
-                    that undermines trust, slows adoption, or creates defensibility gaps.
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
+            <Card className="p-8 border-2">
+              <h3 className="text-xl font-bold mb-4">Adoption Value Perspective</h3>
+              <p className="text-muted-foreground">
+                Whether AI efforts translate into sustained organizational value over time.
+              </p>
+            </Card>
 
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55, delay: 0.1 }}
-            >
-              <Card className="p-8 border-2 h-full">
-                <div className="space-y-4 text-muted-foreground leading-relaxed">
-                  <h3 className="text-2xl font-semibold text-foreground">How to Use This</h3>
-                  <p>
-                    Start with the Promise Gap lens if you are seeing drift between expectations and
-                    lived experience.
-                  </p>
-                  <p>
-                    Use Trust / Govern / Evolve as signal lenses to understand where instability is
-                    forming — not as stages to follow.
-                  </p>
-                  <p>
-                    If signals are present, structured observation is the next step.
-                  </p>
-                </div>
-              </Card>
-            </motion.div>
+            <Card className="p-8 border-2">
+              <h3 className="text-xl font-bold mb-4">Trust to Govern to Evolve</h3>
+              <p className="text-muted-foreground">
+                Recurring patterns are observed as AI initiatives mature.
+              </p>
+            </Card>
           </div>
 
-          {/* FINAL CTA */}
-          <div className="mt-14 text-center">
-            <Button asChild size="lg" className="text-lg">
-              <Link href="/promise-gap/diagnostic">
-                Begin the diagnostic <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <p className="mt-3 text-sm text-muted-foreground">
-              See whether system behavior is diverging from expectation
+          {/* NEXT STEPS */}
+          <div className="max-w-4xl mx-auto text-center border-t pt-16">
+            <h2 className="text-3xl font-bold mb-6">Next Steps</h2>
+            <p className="text-lg text-muted-foreground mb-10">
+              If misalignment between vision and delivery is suspected, the first step is awareness.
             </p>
+            
+            <div className="flex flex-col md:flex-row gap-8 justify-center items-start text-left">
+              <div className="flex-1">
+                <Button asChild className="mb-4 w-full">
+                  <Link href="/promise-gap/diagnostic">Check for early signals</Link>
+                </Button>
+                <p className="text-sm text-muted-foreground">Confirm whether further observation is warranted</p>
+              </div>
+
+              <div className="flex-1">
+                <Button variant="outline" asChild className="mb-4 w-full">
+                  <Link href="/contact">Start a Conversation</Link>
+                </Button>
+                <p className="text-sm text-muted-foreground">Discuss what the early signals may indicate</p>
+              </div>
+            </div>
           </div>
         </div>
       </main>
