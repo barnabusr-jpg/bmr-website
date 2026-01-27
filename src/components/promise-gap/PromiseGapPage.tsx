@@ -66,36 +66,54 @@ export default function PromiseGapPage() {
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Where transformation falters not because technology fails, but because system
-              behavior diverges from expectation.
+              Where transformation falters not because technology fails, but
+              because system behavior diverges from expectation.
             </p>
 
             <div className="mt-8 max-w-3xl mx-auto text-lg text-muted-foreground leading-relaxed">
               <p>Sales sell the future.</p>
               <p>Delivery inherits reality.</p>
               <p>And value quietly leaks in between.</p>
-              <p className="mt-4">Every organization pursuing transformation encounters this moment.</p>
               <p className="mt-4">
-                The breakdown is rarely technical. It occurs when expectations, accountability, and
-                context fragment after deployment.
+                Every organization pursuing transformation encounters this
+                moment.
               </p>
               <p className="mt-4">
-                Organizations that close this gap strengthen the connection between people,
-                processes, and purpose as systems scale.
+                The breakdown is rarely technical. It occurs when expectations,
+                accountability, and context fragment after deployment.
+              </p>
+              <p className="mt-4">
+                Organizations that close this gap strengthen the connection
+                between people, processes, and purpose as systems scale.
               </p>
             </div>
 
             {/* CTAs (leave hrefs stable; we’ll wire properly later) */}
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="text-lg">
-                <Link href="/promise-gap/diagnostic">
-                  Check for early signals <ArrowRight className="ml-2 h-5 w-5" />
+                <Link
+                  href="/promise-gap/diagnostic"
+                  className="flex flex-col items-center"
+                >
+                  <span className="inline-flex items-center">
+                    Check for early signals{" "}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </span>
+                  <span className="text-sm opacity-80 mt-1">
+                    See whether system behavior is diverging from expectation
+                  </span>
                 </Link>
               </Button>
 
               <Button asChild size="lg" variant="outline" className="text-lg">
-                <Link href="/insights">
-                  View the Field Guide overview <ArrowRight className="ml-2 h-5 w-5" />
+                <Link href="/insights" className="flex flex-col items-center">
+                  <span className="inline-flex items-center">
+                    View the Field Guide overview{" "}
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </span>
+                  <span className="text-sm opacity-80 mt-1">
+                    Build shared language to recognize drift early
+                  </span>
                 </Link>
               </Button>
             </div>
@@ -110,18 +128,25 @@ export default function PromiseGapPage() {
             className="max-w-5xl mx-auto mb-14"
           >
             <Card className="p-10 border-2">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Transformation Drifts</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">
+                Why Transformation Drifts
+              </h2>
 
               <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
                 <p>
-                  Transformation does not fail because tools are flawed. It drifts when trust erodes
-                  between what was promised and what is experienced.
+                  Transformation does not fail because tools are flawed. It
+                  drifts when trust erodes between what was promised and what is
+                  experienced.
                 </p>
                 <p>
-                  Most initiatives begin with alignment and intent. Over time, communication thins,
-                  accountability blurs, and confidence weakens.
+                  Most initiatives begin with alignment and intent. Over time,
+                  communication thins, accountability blurs, and confidence
+                  weakens.
                 </p>
-                <p>The Promise Gap describes this drift before failure becomes visible.</p>
+                <p>
+                  The Promise Gap describes this drift before failure becomes
+                  visible.
+                </p>
               </div>
             </Card>
           </motion.section>
@@ -139,7 +164,11 @@ export default function PromiseGapPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.08 }}
-                  className={isLast && isOdd ? "md:col-span-2 md:flex md:justify-center" : ""}
+                  className={
+                    isLast && isOdd
+                      ? "md:col-span-2 md:flex md:justify-center"
+                      : ""
+                  }
                 >
                   <Card className="p-8 h-full max-w-2xl w-full border-2">
                     <div className="flex flex-col gap-4">
@@ -148,7 +177,9 @@ export default function PromiseGapPage() {
                       </div>
 
                       <div>
-                        <h3 className="text-2xl font-semibold mb-4">{item.title}</h3>
+                        <h3 className="text-2xl font-semibold mb-4">
+                          {item.title}
+                        </h3>
 
                         <div className="space-y-4 text-muted-foreground leading-relaxed">
                           {item.body.map((p) => (
