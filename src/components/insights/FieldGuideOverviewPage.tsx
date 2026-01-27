@@ -8,7 +8,8 @@ import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-import { ArrowRight, BookOpen, Target, Layers, MessageSquare } from "lucide-react";
+// Removed unused icons to fix ESLint "no-unused-vars" errors
+import { ArrowRight } from "lucide-react";
 
 export default function FieldGuideOverviewPage() {
   return (
@@ -104,17 +105,23 @@ export default function FieldGuideOverviewPage() {
             
             <div className="flex flex-col md:flex-row gap-8 justify-center items-start text-left">
               <div className="flex-1">
-                <Button asChild className="mb-4 w-full">
-                  <Link href="/promise-gap/diagnostic">Check for early signals</Link>
+                <Button asChild className="mb-4 w-full group">
+                  <Link href="/promise-gap/diagnostic">
+                    Check for early signals 
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
                 </Button>
-                <p className="text-sm text-muted-foreground">Confirm whether further observation is warranted</p>
+                <p className="text-sm text-muted-foreground text-center">Confirm whether further observation is warranted</p>
               </div>
 
               <div className="flex-1">
-                <Button variant="outline" asChild className="mb-4 w-full">
-                  <Link href="/contact">Start a Conversation</Link>
+                <Button variant="outline" asChild className="mb-4 w-full group">
+                  <Link href="/contact">
+                    Start a Conversation
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Link>
                 </Button>
-                <p className="text-sm text-muted-foreground">Discuss what the early signals may indicate</p>
+                <p className="text-sm text-muted-foreground text-center">Discuss what the early signals may indicate</p>
               </div>
             </div>
           </div>
