@@ -1,51 +1,48 @@
+// src/components/promise-gap/PromiseGapPage.tsx
+import React from "react";
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
+import Link from "next/link";
+
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Link from "next/link";
-import {
-  ArrowRight,
-  AlertTriangle,
-  Shield,
-  Target,
-  Activity,
-} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
-const sections = [
-  {
-    icon: AlertTriangle,
-    title: "The Promise Gap",
-    description:
-      "AI programs rarely fail because the technology does not work. They stall when real-world operating conditions expose gaps between what leaders expect and what systems actually do.",
-    bullets: [
-      "Decision pathways slow or fragment under load",
-      "Accountability diffuses across roles and teams",
-      "Controls are adapted around to maintain momentum",
-      "Risk forms early, then hardens into outcomes",
-    ],
-  },
+import { ArrowRight, AlertTriangle, Activity, Shield } from "lucide-react";
+
+type SectionCard = {
+  icon: React.ElementType;
+  title: string;
+  body: string[];
+};
+
+const cards: SectionCard[] = [
   {
     icon: Activity,
-    title: "What Makes It Hard to See",
-    description:
-      "Most organizations monitor milestones and artifacts. The gap shows up in behavior: how people, AI, and oversight interact at scale.",
-    bullets: [
-      "Signals are distributed across delivery, governance, and operations",
-      "Teams optimize locally, creating system-level blind spots",
-      "Executives receive lagging indicators after options narrow",
-      "Assurance becomes documentation-heavy, insight-light",
+    title: "System Friction Patterns",
+    body: [
+      "AI-related friction manifests differently across organizations, but the underlying issue is the same.",
+      "AI-enabled system behavior becomes unstable under pressure.",
+      "Some environments experience urgency-driven shortcuts. Others experience volatility driven by shifting priorities.",
+      "These patterns converge in the same outcome. AI underperforms quietly inside day-to-day work long before failure is visible.",
     ],
   },
   {
     icon: Shield,
-    title: "What BMR Helps You Do",
-    description:
-      "BMR helps leaders surface decision risk early, clarify ownership, and stabilize governance and delivery behavior under real operating conditions.",
-    bullets: [
-      "Identify where oversight is breaking down",
-      "Restore decision clarity without slowing delivery",
-      "Reduce adoption friction and delivery drag",
-      "Strengthen defensibility when scrutiny increases",
+    title: "From Signal to Understanding",
+    body: [
+      "The Promise Gap Diagnostic reveals early behavioral signals inside workflows, decisions, and handoffs.",
+      "It does not provide answers or prescriptions. It helps leaders decide whether deeper structured observation is warranted.",
+      "Structured review is required to understand where instability exists and how it affects trust, governance, and adaptation.",
+    ],
+  },
+  {
+    icon: AlertTriangle,
+    title: "Trust. Govern. Evolve.",
+    body: [
+      "These terms describe recurring patterns observed as AI efforts mature.",
+      "They are not steps to follow. They are lenses that help leaders understand where risk may be accumulating.",
+      "Meaningful understanding requires structured observation.",
     ],
   },
 ];
@@ -57,115 +54,123 @@ export default function PromiseGapPage() {
 
       <main className="py-24 px-6">
         <div className="container mx-auto max-w-7xl">
-          {/* Header */}
+          {/* HERO */}
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             className="text-center mb-14"
           >
-            <h1 className="text-5xl font-bold mb-5">The Promise Gap</h1>
+            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+              The <span className="text-primary">Promise Gap™</span>
+            </h1>
 
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              The gap between what AI programs promise in design and what
-              AI-enabled systems deliver in real operating conditions. When this
-              gap forms, trust erodes, decisions slow, and delivery risk becomes
-              harder to unwind.
+            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              Where transformation falters not because technology fails, but because system
+              behavior diverges from expectation.
             </p>
 
-            <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-              <Link
-                href="/contact"
-                className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-primary-foreground font-medium hover:opacity-90 transition"
-              >
-                Start a Conversation <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-
-              <Link
-                href="/promise-gap/diagnostic"
-                className="inline-flex items-center justify-center rounded-md border border-border px-6 py-3 font-medium hover:bg-accent transition"
-              >
-                Explore the Diagnostic <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+            <div className="mt-8 max-w-3xl mx-auto text-lg text-muted-foreground leading-relaxed">
+              <p>Sales sell the future.</p>
+              <p>Delivery inherits reality.</p>
+              <p>And value quietly leaks in between.</p>
+              <p className="mt-4">Every organization pursuing transformation encounters this moment.</p>
+              <p className="mt-4">
+                The breakdown is rarely technical. It occurs when expectations, accountability, and
+                context fragment after deployment.
+              </p>
+              <p className="mt-4">
+                Organizations that close this gap strengthen the connection between people,
+                processes, and purpose as systems scale.
+              </p>
             </div>
 
-            <p className="mt-5 text-sm text-muted-foreground">
-              Note: BMR provides advisory services and does not provide legal
-              advice or compliance certification.
-            </p>
+            {/* CTAs (leave hrefs stable; we’ll wire properly later) */}
+            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" className="text-lg">
+                <Link href="/promise-gap/diagnostic">
+                  Check for early signals <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+
+              <Button asChild size="lg" variant="outline" className="text-lg">
+                <Link href="/insights">
+                  View the Field Guide overview <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
           </motion.div>
 
-          {/* Core Cards */}
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sections.map((s, idx) => {
-              const Icon = s.icon;
+          {/* WHY TRANSFORMATION DRIFTS */}
+          <motion.section
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.55 }}
+            className="max-w-5xl mx-auto mb-14"
+          >
+            <Card className="p-10 border-2">
+              <h2 className="text-3xl md:text-4xl font-bold mb-6">Why Transformation Drifts</h2>
+
+              <div className="space-y-4 text-lg text-muted-foreground leading-relaxed">
+                <p>
+                  Transformation does not fail because tools are flawed. It drifts when trust erodes
+                  between what was promised and what is experienced.
+                </p>
+                <p>
+                  Most initiatives begin with alignment and intent. Over time, communication thins,
+                  accountability blurs, and confidence weakens.
+                </p>
+                <p>The Promise Gap describes this drift before failure becomes visible.</p>
+              </div>
+            </Card>
+          </motion.section>
+
+          {/* 3 CARDS */}
+          <div className="grid md:grid-cols-2 gap-6">
+            {cards.map((item, index) => {
+              const isLast = index === cards.length - 1;
+              const isOdd = cards.length % 2 === 1;
+
               return (
                 <motion.div
-                  key={s.title}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.45, delay: idx * 0.08 }}
+                  key={item.title}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.08 }}
+                  className={isLast && isOdd ? "md:col-span-2 md:flex md:justify-center" : ""}
                 >
-                  <Card className="p-8 h-full hover:shadow-lg transition-shadow duration-300">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5">
-                      <Icon className="h-6 w-6 text-primary" />
+                  <Card className="p-8 h-full max-w-2xl w-full border-2">
+                    <div className="flex flex-col gap-4">
+                      <div className="p-3 rounded-lg bg-primary/10 w-fit">
+                        <item.icon className="h-6 w-6 text-primary" />
+                      </div>
+
+                      <div>
+                        <h3 className="text-2xl font-semibold mb-4">{item.title}</h3>
+
+                        <div className="space-y-4 text-muted-foreground leading-relaxed">
+                          {item.body.map((p) => (
+                            <p key={p}>{p}</p>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-
-                    <h3 className="text-xl font-semibold mb-3">{s.title}</h3>
-                    <p className="text-muted-foreground mb-5">
-                      {s.description}
-                    </p>
-
-                    <ul className="space-y-2 text-sm text-muted-foreground">
-                      {s.bullets.map((b) => (
-                        <li key={b} className="flex items-start gap-2">
-                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-primary/70" />
-                          <span>{b}</span>
-                        </li>
-                      ))}
-                    </ul>
                   </Card>
                 </motion.div>
               );
             })}
           </div>
 
-          {/* Bottom CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.25 }}
-            className="mt-12"
-          >
-            <Card className="p-10">
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                <div className="max-w-3xl">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Target className="h-5 w-5 text-primary" />
-                    </div>
-                    <h2 className="text-2xl font-semibold">
-                      Make the risk visible before it hardens.
-                    </h2>
-                  </div>
-
-                  <p className="text-muted-foreground">
-                    If you are seeing adoption friction, governance strain, or
-                    unclear decision ownership, the right move is to surface
-                    where risk is forming and align on what changes under real
-                    operating conditions.
-                  </p>
-                </div>
-
-                <Link
-                  href="/contact"
-                  className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-primary-foreground font-medium hover:opacity-90 transition"
-                >
-                  Start a Conversation <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </div>
-            </Card>
-          </motion.div>
+          {/* FINAL CTA */}
+          <div className="mt-14 text-center">
+            <Button asChild size="lg" className="text-lg">
+              <Link href="/promise-gap/diagnostic">
+                Begin the diagnostic <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
+            </Button>
+          </div>
         </div>
       </main>
 
