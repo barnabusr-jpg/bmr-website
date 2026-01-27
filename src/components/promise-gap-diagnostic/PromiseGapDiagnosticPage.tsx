@@ -10,6 +10,28 @@ import { Button } from "@/components/ui/button";
 
 import { ArrowRight, Shield, Activity, AlertTriangle } from "lucide-react";
 
+type Lens = {
+  label: "Trust" | "Govern" | "Evolve";
+};
+
+const lenses: Lens[] = [
+  { label: "Trust" },
+  { label: "Govern" },
+  { label: "Evolve" },
+];
+
+function LensIndicator({ label }: { label: string }) {
+  // IMPORTANT: no conditional styling here -> all 3 always match
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <div className="h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center">
+        <div className="h-5 w-5 rounded-full bg-primary" />
+      </div>
+      <div className="text-base font-semibold">{label}</div>
+    </div>
+  );
+}
+
 export default function PromiseGapDiagnosticPage() {
   return (
     <div className="min-h-screen">
@@ -25,26 +47,18 @@ export default function PromiseGapDiagnosticPage() {
             className="text-center mb-14"
           >
             <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Promise Gap <span className="text-primary">Diagnostic</span>
+              Diagnose where your transformation is leaking trust and value.
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Surface early signals of misalignment between vision, delivery, and lived experience.
             </p>
 
-            <p className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              The diagnostic reveals whether AI-enabled system behavior may be diverging from expectations.
-            </p>
-
-            <div className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed space-y-2">
-              <p>It does not score maturity.</p>
-              <p>It does not diagnose root causes.</p>
-              <p>It does not provide remediation plans.</p>
+            <div className="mt-10 flex items-center justify-center gap-16">
+              {lenses.map((l) => (
+                <LensIndicator key={l.label} label={l.label} />
+              ))}
             </div>
-
-            <p className="mt-6 text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              Meaningful diagnosis requires deeper assessment beyond a short intake.
-            </p>
 
             <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="text-lg">
@@ -53,12 +67,16 @@ export default function PromiseGapDiagnosticPage() {
                 </a>
               </Button>
 
-              {/* Leave links as-is for now; we’ll wire later */}
               <Button asChild size="lg" variant="outline" className="text-lg">
                 <Link href="/insights">
                   View Insights <ArrowRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
+            </div>
+
+            <div className="mt-8 max-w-3xl mx-auto text-sm text-muted-foreground leading-relaxed">
+              <p>This diagnostic provides early signals only.</p>
+              <p>It does not score maturity, diagnose root causes, or provide remediation plans.</p>
             </div>
           </motion.div>
 
@@ -81,7 +99,7 @@ export default function PromiseGapDiagnosticPage() {
                 <ul className="list-disc pl-6 space-y-3 text-lg text-muted-foreground leading-relaxed">
                   <li>Reveals early indicators of expectation misalignment</li>
                   <li>Highlights where confidence, clarity, or stability may be weakening</li>
-                  <li>Supports decisions about whether further evaluation is warranted</li>
+                  <li>Supports the decision to investigate further</li>
                 </ul>
               </Card>
             </motion.div>
@@ -168,69 +186,68 @@ export default function PromiseGapDiagnosticPage() {
             className="max-w-6xl mx-auto"
           >
             <Card className="p-10 border-2">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">Start the Interactive Diagnostic</h2>
+              <h2 className="text-2xl md:text-3xl font-bold mb-4">Your Information</h2>
 
               <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                Complete a brief 12-question assessment to check for early signals of misalignment.
-                <br />
-                Approximately 10 minutes · Initial signal only
+                Complete a brief intake to begin.
               </p>
 
-              {/* Intake shell (UI only for now) */}
               <form className="grid md:grid-cols-2 gap-6">
                 <div className="md:col-span-1">
-                  <label className="block text-sm font-medium mb-2">Name</label>
+                  <label className="block text-sm font-medium mb-2">Name *</label>
                   <input
                     className="w-full rounded-lg border border-border bg-background px-4 py-3"
                     type="text"
                     name="name"
                     autoComplete="name"
+                    placeholder="Your name"
+                    required
                   />
                 </div>
 
                 <div className="md:col-span-1">
-                  <label className="block text-sm font-medium mb-2">Email</label>
+                  <label className="block text-sm font-medium mb-2">Email *</label>
                   <input
                     className="w-full rounded-lg border border-border bg-background px-4 py-3"
                     type="email"
                     name="email"
                     autoComplete="email"
+                    placeholder="your@email.com"
+                    required
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">Organization</label>
+                  <label className="block text-sm font-medium mb-2">Organization *</label>
                   <input
                     className="w-full rounded-lg border border-border bg-background px-4 py-3"
                     type="text"
                     name="organization"
                     autoComplete="organization"
+                    placeholder="Your organization"
+                    required
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">Notes or Context (optional)</label>
+                  <label className="block text-sm font-medium mb-2">Notes / Context</label>
                   <textarea
                     className="w-full rounded-lg border border-border bg-background px-4 py-3 min-h-[120px]"
                     name="notes"
+                    placeholder="Share any additional context about your transformation challenges..."
                   />
                 </div>
 
-                <div className="md:col-span-2 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                  <Button type="button" size="lg" className="text-lg">
+                <div className="md:col-span-2">
+                  <Button type="button" size="lg" className="text-lg w-full sm:w-auto">
                     Submit Diagnostic
                   </Button>
-
-                  <p className="text-sm text-muted-foreground">
-                    Receive an initial signal of alignment risk
-                  </p>
                 </div>
 
                 <div className="md:col-span-2 pt-2">
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    This diagnostic provides early signals only.
-                    <br />
-                    Deeper structured observation is required for diagnosis or action planning.
+                    This diagnostic provides early signals only. Deeper structured observation is
+                    required for diagnosis or action planning.
                   </p>
                 </div>
               </form>
