@@ -27,9 +27,11 @@ const Header = () => {
             BMR<span className="text-accent">.</span>
           </Link>
 
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             {navigation.map((item) => {
-              const isActive = pathname === item.href;
+              /* FIXED: Added optional chaining and fallback for null pathname */
+              const isActive = pathname?.startsWith(item.href) ?? false;
               return (
                 <Link
                   key={item.name}
@@ -48,6 +50,7 @@ const Header = () => {
             </Button>
           </div>
 
+          {/* Mobile Menu Button */}
           <div className="md:hidden flex items-center gap-2">
             <ThemeToggle />
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
@@ -56,6 +59,7 @@ const Header = () => {
           </div>
         </div>
 
+        {/* Mobile Navigation */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
@@ -65,18 +69,22 @@ const Header = () => {
               className="md:hidden overflow-hidden"
             >
               <div className="flex flex-col gap-4 py-6">
-                {navigation.map((item) => (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className={`text-sm font-medium ${
-                      pathname.startsWith(item.href) ? "text-primary" : "text-muted-foreground"
-                    }`}
-                  >
-                    {item.name}
-                  </Link>
-                ))}
+                {navigation.map((item) => {
+                  /* FIXED: Added optional chaining and fallback for null pathname */
+                  const isActive = pathname?.startsWith(item.href) ?? false;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`text-sm font-medium ${
+                        isActive ? "text-primary" : "text-muted-foreground"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  );
+                })}
               </div>
             </motion.div>
           )}
