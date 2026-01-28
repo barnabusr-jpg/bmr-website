@@ -1,23 +1,25 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { toast } from "sonner";
+// src/lib/email.ts
 
-interface SendDiagnosticEmailArgs {
+// Define the interface so TypeScript understands the 'answers' property
+interface DiagnosticEmailData {
   to: string;
   firstName: string;
+  answers: Record<string, string>;
 }
 
-export const sendDiagnosticEmail = async ({ to, firstName }: SendDiagnosticEmailArgs) => {
-  try {
-    const res = await fetch("/api/send-email", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ to, firstName }),
-    });
+export const sendDiagnosticEmail = async (data: DiagnosticEmailData) => {
+  const response = await fetch("/api/send-email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
 
-    if (!res.ok) throw new Error("Email failed");
-    toast.success("Diagnostic submitted successfully.");
-  } catch (error) {
-    console.error(error);
-    toast.error("Failed to process submission");
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to send email");
   }
+
+  return response.json();
 };
