@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Activity } from "lucide-react";
 
-/* 1. DATA: Questions from rules.json */
 const diagnosticQuestions = [
   { id: 1, lens: "Trust", text: "Do teams feel safe reporting AI failures or 'near misses' without fear of blame?" },
   { id: 2, lens: "Trust", text: "Is there a clear, shared understanding of what 'Ethical AI' means in daily practice?" },
@@ -22,11 +21,9 @@ const diagnosticQuestions = [
   { id: 12, lens: "Evolve", text: "Is the org prepared to decommission AI models that no longer provide value?" },
 ];
 
-/* 2. SUB-COMPONENT: Lens Indicator (Fixed Solid Teal Color) */
 function LensIndicator({ label, isActive }: { label: string; isActive: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      {/* FIXED: Using solid #14b8a6 to ensure "Govern" is never grey */}
       <div className={`h-14 w-14 rounded-full flex items-center justify-center shadow-lg transition-colors duration-300 ${
         isActive ? "bg-[#14b8a6]" : "bg-muted border-2 border-border"
       }`}>
@@ -37,8 +34,8 @@ function LensIndicator({ label, isActive }: { label: string; isActive: boolean }
   );
 }
 
-export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }) {
-  const [step, setStep] = useState(0); // 0 = Intake, 1-12 = Questions, 13 = Results
+export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: (answers: any, email: string, name: string) => void }) {
+  const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({ name: "", email: "", organization: "" });
   const [answers, setAnswers] = useState<Record<number, string>>({});
 
@@ -48,9 +45,8 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }
   };
 
   const handleAnswer = (value: string) => {
-    const nextStep = step + 1;
     setAnswers({ ...answers, [step]: value });
-    setStep(nextStep);
+    setStep(step + 1);
   };
 
   return (
@@ -58,8 +54,6 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }
       <Header />
       <main className="py-20 px-6">
         <div className="container mx-auto max-w-4xl">
-          
-          {/* Progress Section */}
           <div className="flex justify-center gap-8 md:gap-16 mb-16">
             <LensIndicator label="Trust" isActive={step >= 0 && step <= 4} />
             <LensIndicator label="Govern" isActive={step >= 5 && step <= 8} />
@@ -67,7 +61,6 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }
           </div>
 
           <AnimatePresence mode="wait">
-            {/* STEP 0: INTAKE */}
             {step === 0 && (
               <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <Card className="p-8 border-2 shadow-xl">
@@ -90,48 +83,32 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }
                       <input required className="w-full p-3 rounded-md border bg-card" 
                         value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
                     </div>
-                    <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-lg py-6">
-                      Begin Assessment
-                    </Button>
+                    <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-lg py-6">Begin Assessment</Button>
                   </form>
                 </Card>
               </motion.div>
             )}
 
-            {/* STEP 1-12: QUESTIONS */}
             {step > 0 && step <= 12 && (
               <motion.div key="question" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}>
-                <Card className="p-10 border-2 shadow-2xl relative text-center">
-                  <span className="text-[#14b8a6] font-bold tracking-widest uppercase text-xs">
-                    Lens: {diagnosticQuestions[step - 1].lens}
-                  </span>
-                  <h2 className="text-2xl md:text-3xl font-semibold mt-4 mb-10 leading-snug">
-                    {diagnosticQuestions[step - 1].text}
-                  </h2>
+                <Card className="p-10 border-2 shadow-2xl text-center">
+                  <span className="text-[#14b8a6] font-bold tracking-widest uppercase text-xs">Lens: {diagnosticQuestions[step - 1].lens}</span>
+                  <h2 className="text-2xl md:text-3xl font-semibold mt-4 mb-10 leading-snug">{diagnosticQuestions[step - 1].text}</h2>
                   <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                     {["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"].map((option) => (
-                      <Button key={option} variant="outline" className="py-6 text-md hover:border-[#14b8a6] hover:bg-[#14b8a6]/5"
-                        onClick={() => handleAnswer(option)}>
-                        {option}
-                      </Button>
+                      <Button key={option} variant="outline" className="py-6 text-md hover:border-[#14b8a6] hover:bg-[#14b8a6]/5" onClick={() => handleAnswer(option)}>{option}</Button>
                     ))}
                   </div>
-                  <p className="mt-8 text-muted-foreground text-sm">Signal {step} of 12</p>
                 </Card>
               </motion.div>
             )}
 
-            {/* STEP 13: RESULTS SUMMARY */}
             {step === 13 && (
               <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Card className="p-10 border-2 border-[#14b8a6] shadow-2xl text-center">
                   <Activity className="h-12 w-12 text-[#14b8a6] mx-auto mb-4" />
                   <h2 className="text-3xl font-bold">Assessment Complete</h2>
-                  <p className="text-muted-foreground mt-2">Analysis prepared for {formData.organization}</p>
-                  <Button 
-                    className="mt-8 bg-[#14b8a6] hover:bg-[#0d9488] w-full py-6 text-lg" 
-                    onClick={() => onSubmit(answers, formData.email, formData.name)}
-                  >
+                  <Button className="mt-8 bg-[#14b8a6] hover:bg-[#0d9488] w-full py-6 text-lg" onClick={() => onSubmit(answers, formData.email, formData.name)}>
                     Submit & Send Report
                   </Button>
                 </Card>
