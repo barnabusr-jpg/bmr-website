@@ -1,25 +1,15 @@
-// src/lib/diagnosticScoring.ts
-import { diagnosticDimensions } from "@/data/diagnosticQuestions";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { identifySignals } from "./diagnosticScoring";
 
 /**
- * Identify which signal categories are present based on user responses.
- * Note: This function only identifies the Presence of a signal.
- * Severity and scoring are handled strictly on the server.
+ * Simplified preview logic. 
+ * The actual email HTML is securely generated on the server.
  */
-export const identifySignals = (answers: Record<string, string>) => {
-  const detectedSignals: string[] = [];
-
-  diagnosticDimensions.forEach((dimension) => {
-    // Check if any question in this dimension has a 'strained' or 'unsustainable' response
-    // These keys correspond to 'lower_mid' and 'bottom'
-    const hasSignal = dimension.questions.some(
-      (q) => answers[q.id] === "lower_mid" || answers[q.id] === "bottom"
-    );
-
-    if (hasSignal && !detectedSignals.includes(dimension.title)) {
-      detectedSignals.push(dimension.title);
-    }
-  });
-
-  return detectedSignals;
+export const getEmailPreview = (firstName: string, answers: Record<string, string>) => {
+  const signals = identifySignals(answers);
+  
+  return {
+    subject: "Your Promise Gap Diagnostic Results", //
+    body: `Hello ${firstName}, thank you for completing the diagnostic. We have identified signals in ${signals.length} areas.`
+  };
 };
