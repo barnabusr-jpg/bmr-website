@@ -1,5 +1,5 @@
-import FieldGuideOverviewPage from "@/components/insights/FieldGuideOverviewPage";
+import FieldGuidePage from "@/components/field-guide/FieldGuidePage";
 
-export default function FieldGuideOverview() {
-  return <FieldGuideOverviewPage />;
+export default function FieldGuide() {
+  return <FieldGuidePage />;
 }
