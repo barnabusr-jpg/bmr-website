@@ -7,12 +7,8 @@ import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-import { ArrowRight, Shield, Activity, AlertTriangle } from "lucide-react";
+import { ArrowRight, Shield, Activity, AlertTriangle, Check } from "lucide-react";
 
-/**
- * MANDATORY: This interface tells TypeScript that this component 
- * accepts a submission function from the parent.
- */
 interface PromiseGapProps {
   onSubmit: (finalAnswers: Record<string, string>, userEmail: string, name: string) => Promise<void>;
 }
@@ -27,11 +23,12 @@ const lenses: Lens[] = [
   { label: "Evolve" },
 ];
 
+/* FIXED: Updated colors to Teal for consistency across all lenses */
 function LensIndicator({ label }: { label: string }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className="h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center">
-        <div className="h-5 w-5 rounded-full bg-primary" />
+      <div className="h-14 w-14 rounded-full bg-[#14b8a6] flex items-center justify-center shadow-md">
+        <Check className="h-6 w-6 text-white" />
       </div>
       <div className="text-base font-semibold">{label}</div>
     </div>
@@ -39,7 +36,6 @@ function LensIndicator({ label }: { label: string }) {
 }
 
 export default function PromiseGapDiagnosticPage({ onSubmit }: PromiseGapProps) {
-  // 1. State management to capture user input for the API
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -48,16 +44,13 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: PromiseGapProps) 
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 2. Submission handler to trigger the server-side email logic
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
     try {
-      // Passes the collected data to the API caller in flow.tsx
+      // Logic to trigger the 12-question flow would happen here or in the parent
       await onSubmit({}, formData.email, formData.name);
-      
-      // Redirect to the non-evaluative results page
       window.location.href = "/promise-gap/diagnostic/results";
     } catch (error) {
       console.error("Diagnostic submission failed:", error);
@@ -79,22 +72,22 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: PromiseGapProps) 
             transition={{ duration: 0.6 }}
             className="text-center mb-14"
           >
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Diagnose where your transformation is leaking trust and value.
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
+              Diagnose where your transformation is leaking <span className="text-[#14b8a6]">trust and value.</span>
             </h1>
 
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               Surface early signals of misalignment between vision, delivery, and lived experience.
             </p>
 
-            <div className="mt-10 flex items-center justify-center gap-16">
+            <div className="mt-12 flex items-center justify-center gap-12 md:gap-24">
               {lenses.map((l) => (
                 <LensIndicator key={l.label} label={l.label} />
               ))}
             </div>
 
-            <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="text-lg">
+            <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" className="text-lg bg-[#14b8a6] hover:bg-[#0d9488]">
                 <a href="#start">
                   Start the Interactive Diagnostic <ArrowRight className="ml-2 h-5 w-5" />
                 </a>
@@ -106,183 +99,88 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: PromiseGapProps) 
                 </Link>
               </Button>
             </div>
-
-            <div className="mt-8 max-w-3xl mx-auto text-sm text-muted-foreground leading-relaxed">
-              <p>This diagnostic provides early signals only.</p>
-              <p>It does not score maturity, diagnose root causes, or provide remediation plans.</p>
-            </div>
           </motion.div>
 
           {/* WHAT IT DOES / DOES NOT */}
-          <div className="grid lg:grid-cols-2 gap-6 max-w-6xl mx-auto mb-14">
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55 }}
-            >
-              <Card className="p-10 border-2 h-full">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="p-3 rounded-lg bg-primary/10 w-fit">
-                    <Shield className="h-6 w-6 text-primary" />
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold">What This Diagnostic Does</h2>
-                </div>
-
-                <ul className="list-disc pl-6 space-y-3 text-lg text-muted-foreground leading-relaxed">
-                  <li>Reveals early indicators of expectation misalignment</li>
-                  <li>Highlights where confidence, clarity, or stability may be weakening</li>
-                  <li>Supports the decision to investigate further</li>
-                </ul>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.55, delay: 0.05 }}
-            >
-              <Card className="p-10 border-2 h-full">
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="p-3 rounded-lg bg-primary/10 w-fit">
-                    <AlertTriangle className="h-6 w-6 text-primary" />
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold">What This Diagnostic Does Not Do</h2>
-                </div>
-
-                <ul className="list-disc pl-6 space-y-3 text-lg text-muted-foreground leading-relaxed">
-                  <li>It does not score maturity</li>
-                  <li>It does not diagnose root causes</li>
-                  <li>It does not provide remediation plans</li>
-                </ul>
-              </Card>
-            </motion.div>
-          </div>
-
-          {/* ASSESSMENT FOCUS */}
-          <motion.section
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55 }}
-            className="max-w-6xl mx-auto mb-14"
-          >
+          <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto mb-14">
             <Card className="p-10 border-2">
               <div className="flex items-center gap-3 mb-5">
-                <div className="p-3 rounded-lg bg-primary/10 w-fit">
-                  <Activity className="h-6 w-6 text-primary" />
+                <div className="p-3 rounded-lg bg-teal-50 w-fit">
+                  <Shield className="h-6 w-6 text-[#14b8a6]" />
                 </div>
-                <h2 className="text-2xl md:text-3xl font-bold">Assessment Focus</h2>
+                <h2 className="text-2xl md:text-3xl font-bold">What This Does</h2>
               </div>
-
-              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                The questions explore three recurring tension areas observed across organizations:
-              </p>
-
-              <div className="grid md:grid-cols-3 gap-6">
-                <div className="rounded-xl border border-border p-6">
-                  <h3 className="text-xl font-semibold mb-2">Trust</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Signals related to confidence, transparency, and lived experience
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-border p-6">
-                  <h3 className="text-xl font-semibold mb-2">Govern</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Signals related to clarity, accountability, and decision consistency
-                  </p>
-                </div>
-
-                <div className="rounded-xl border border-border p-6">
-                  <h3 className="text-xl font-semibold mb-2">Evolve</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Signals related to adaptation, stability, and learning under change
-                  </p>
-                </div>
-              </div>
-
-              <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
-                These are signal lenses, not stages or prescriptions.
-              </p>
+              <ul className="list-disc pl-6 space-y-3 text-lg text-muted-foreground">
+                <li>Reveals indicators of expectation misalignment</li>
+                <li>Highlights weakening clarity or stability</li>
+                <li>Supports the decision to investigate further</li>
+              </ul>
             </Card>
-          </motion.section>
 
-          {/* START FORM - Updated for API Integration */}
+            <Card className="p-10 border-2">
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-3 rounded-lg bg-orange-50 w-fit">
+                  <AlertTriangle className="h-6 w-6 text-orange-600" />
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold">What This Does Not Do</h2>
+              </div>
+              <ul className="list-disc pl-6 space-y-3 text-lg text-muted-foreground">
+                <li>It does not score maturity</li>
+                <li>It does not diagnose root causes</li>
+                <li>It does not provide remediation plans</li>
+              </ul>
+            </Card>
+          </div>
+
+          {/* START FORM */}
           <motion.section
             id="start"
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.55 }}
-            className="max-w-6xl mx-auto"
+            className="max-w-4xl mx-auto"
           >
-            <Card className="p-10 border-2">
-              <h2 className="text-2xl md:text-3xl font-bold mb-4">Your Information</h2>
-
-              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                Complete a brief intake to begin.
+            <Card className="p-10 border-2 shadow-xl">
+              <h2 className="text-3xl font-bold mb-4">Intake Information</h2>
+              <p className="text-lg text-muted-foreground mb-8">
+                Complete this brief intake to unlock the 12 signal questions.
               </p>
 
               <form onSubmit={handleFormSubmit} className="grid md:grid-cols-2 gap-6">
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-medium mb-2">Name *</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Full Name *</label>
                   <input
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3"
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none"
                     type="text"
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    placeholder="Your name"
                   />
                 </div>
 
-                <div className="md:col-span-1">
-                  <label className="block text-sm font-medium mb-2">Email *</label>
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Work Email *</label>
                   <input
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3"
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none"
                     type="email"
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    placeholder="your@email.com"
                   />
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">Organization *</label>
+                <div className="md:col-span-2 space-y-2">
+                  <label className="text-sm font-semibold">Organization *</label>
                   <input
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3"
+                    className="w-full rounded-lg border border-border bg-background px-4 py-3 focus:ring-2 focus:ring-teal-500 outline-none"
                     type="text"
                     required
                     value={formData.organization}
                     onChange={(e) => setFormData({...formData, organization: e.target.value})}
-                    placeholder="Your organization"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium mb-2">Notes / Context</label>
-                  <textarea
-                    className="w-full rounded-lg border border-border bg-background px-4 py-3 min-h-[120px]"
-                    value={formData.notes}
-                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                    placeholder="Share any additional context about your transformation challenges..."
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <Button type="submit" size="lg" disabled={isSubmitting} className="text-lg w-full sm:w-auto">
-                    {isSubmitting ? "Submitting..." : "Submit Diagnostic"}
+                  <Button type="submit" size="lg" disabled={isSubmitting} className="w-full bg-[#14b8a6] hover:bg-[#0d9488]">
+                    {isSubmitting ? "Processing..." : "Continue to Diagnostic Questions"}
                   </Button>
-                </div>
-
-                <div className="md:col-span-2 pt-2">
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    This diagnostic provides early signals only. Deeper structured observation is
-                    required for diagnosis or action planning.
-                  </p>
                 </div>
               </form>
             </Card>
