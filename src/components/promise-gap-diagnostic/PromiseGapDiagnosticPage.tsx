@@ -1,5 +1,4 @@
-// src/components/promise-gap-diagnostic/PromiseGapDiagnosticPage.tsx
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
@@ -9,6 +8,14 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 import { ArrowRight, Shield, Activity, AlertTriangle } from "lucide-react";
+
+/**
+ * MANDATORY: This interface tells TypeScript that this component 
+ * accepts a submission function from the parent.
+ */
+interface PromiseGapProps {
+  onSubmit: (finalAnswers: Record<string, string>, userEmail: string, name: string) => Promise<void>;
+}
 
 type Lens = {
   label: "Trust" | "Govern" | "Evolve";
@@ -21,7 +28,6 @@ const lenses: Lens[] = [
 ];
 
 function LensIndicator({ label }: { label: string }) {
-  // IMPORTANT: no conditional styling here -> all 3 always match
   return (
     <div className="flex flex-col items-center gap-3">
       <div className="h-14 w-14 rounded-full bg-primary/15 flex items-center justify-center">
@@ -32,7 +38,34 @@ function LensIndicator({ label }: { label: string }) {
   );
 }
 
-export default function PromiseGapDiagnosticPage() {
+export default function PromiseGapDiagnosticPage({ onSubmit }: PromiseGapProps) {
+  // 1. State management to capture user input for the API
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    organization: "",
+    notes: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 2. Submission handler to trigger the server-side email logic
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      // Passes the collected data to the API caller in flow.tsx
+      await onSubmit({}, formData.email, formData.name);
+      
+      // Redirect to the non-evaluative results page
+      window.location.href = "/promise-gap/diagnostic/results";
+    } catch (error) {
+      console.error("Diagnostic submission failed:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen">
       <Header />
@@ -176,7 +209,7 @@ export default function PromiseGapDiagnosticPage() {
             </Card>
           </motion.section>
 
-          {/* START */}
+          {/* START FORM - Updated for API Integration */}
           <motion.section
             id="start"
             initial={{ opacity: 0, y: 14 }}
@@ -192,16 +225,16 @@ export default function PromiseGapDiagnosticPage() {
                 Complete a brief intake to begin.
               </p>
 
-              <form className="grid md:grid-cols-2 gap-6">
+              <form onSubmit={handleFormSubmit} className="grid md:grid-cols-2 gap-6">
                 <div className="md:col-span-1">
                   <label className="block text-sm font-medium mb-2">Name *</label>
                   <input
                     className="w-full rounded-lg border border-border bg-background px-4 py-3"
                     type="text"
-                    name="name"
-                    autoComplete="name"
-                    placeholder="Your name"
                     required
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    placeholder="Your name"
                   />
                 </div>
 
@@ -210,10 +243,10 @@ export default function PromiseGapDiagnosticPage() {
                   <input
                     className="w-full rounded-lg border border-border bg-background px-4 py-3"
                     type="email"
-                    name="email"
-                    autoComplete="email"
-                    placeholder="your@email.com"
                     required
+                    value={formData.email}
+                    onChange={(e) => setFormData({...formData, email: e.target.value})}
+                    placeholder="your@email.com"
                   />
                 </div>
 
@@ -222,10 +255,10 @@ export default function PromiseGapDiagnosticPage() {
                   <input
                     className="w-full rounded-lg border border-border bg-background px-4 py-3"
                     type="text"
-                    name="organization"
-                    autoComplete="organization"
-                    placeholder="Your organization"
                     required
+                    value={formData.organization}
+                    onChange={(e) => setFormData({...formData, organization: e.target.value})}
+                    placeholder="Your organization"
                   />
                 </div>
 
@@ -233,14 +266,15 @@ export default function PromiseGapDiagnosticPage() {
                   <label className="block text-sm font-medium mb-2">Notes / Context</label>
                   <textarea
                     className="w-full rounded-lg border border-border bg-background px-4 py-3 min-h-[120px]"
-                    name="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
                     placeholder="Share any additional context about your transformation challenges..."
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <Button type="button" size="lg" className="text-lg w-full sm:w-auto">
-                    Submit Diagnostic
+                  <Button type="submit" size="lg" disabled={isSubmitting} className="text-lg w-full sm:w-auto">
+                    {isSubmitting ? "Submitting..." : "Submit Diagnostic"}
                   </Button>
                 </div>
 
