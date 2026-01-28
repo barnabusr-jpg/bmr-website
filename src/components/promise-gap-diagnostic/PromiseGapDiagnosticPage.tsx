@@ -5,9 +5,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Shield, AlertTriangle, Check, ArrowLeft } from "lucide-react";
+import { ArrowRight, Shield, AlertTriangle, Check, ArrowLeft, Activity } from "lucide-react";
 
-// The 12 questions derived from rules.json
+/* 1. DATA: Questions from rules.json */
 const diagnosticQuestions = [
   { id: 1, lens: "Trust", text: "Do teams feel safe reporting AI failures or 'near misses' without fear of blame?" },
   { id: 2, lens: "Trust", text: "Is there a clear, shared understanding of what 'Ethical AI' means in daily practice?" },
@@ -23,10 +23,11 @@ const diagnosticQuestions = [
   { id: 12, lens: "Evolve", text: "Is the org prepared to decommission AI models that no longer provide value?" },
 ];
 
-/* FIXED: Solid Teal Background to prevent "Greyed out" look on dark backgrounds */
+/* 2. SUB-COMPONENT: Lens Indicator (Fixed Teal Color) */
 function LensIndicator({ label, isActive }: { label: string; isActive: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3">
+      {/* FIXED: Using solid #14b8a6 to ensure "Govern" is never grey */}
       <div className={`h-14 w-14 rounded-full flex items-center justify-center shadow-lg transition-colors duration-300 ${
         isActive ? "bg-[#14b8a6]" : "bg-muted border-2 border-border"
       }`}>
@@ -38,24 +39,36 @@ function LensIndicator({ label, isActive }: { label: string; isActive: boolean }
 }
 
 export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }) {
-  const [step, setStep] = useState(0); // 0 = Intake, 1-12 = Questions
+  /* 3. STATE: Tracking Step (0=Intake, 1-12=Questions, 13=Results) */
+  const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({ name: "", email: "", organization: "" });
   const [answers, setAnswers] = useState<Record<number, string>>({});
 
   const handleIntakeSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setStep(1); // Move to the first question
+    setStep(1); 
   };
 
   const handleAnswer = (value: string) => {
     setAnswers({ ...answers, [step]: value });
-    if (step < 12) {
-      setStep(step + 1);
-    } else {
-      // Final submission logic
-      onSubmit(answers, formData.email, formData.name);
-      window.location.href = "/promise-gap/diagnostic/results";
-    }
+    setStep(step + 1);
+  };
+
+  const resetDiagnostic = () => {
+    setStep(0);
+    setAnswers({});
+  };
+
+  // Logic to identify high-risk areas
+  const getRiskAnalysis = () => {
+    const risks = { Trust: 0, Govern: 0, Evolve: 0 };
+    Object.entries(answers).forEach(([id, val]) => {
+      if (val.includes("Disagree")) {
+        const question = diagnosticQuestions.find(q => q.id === Number(id));
+        if (question) risks[question.lens as keyof typeof risks]++;
+      }
+    });
+    return Object.entries(risks).reduce((a, b) => (a[1] > b[1] ? a : b))[0];
   };
 
   return (
@@ -64,7 +77,7 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }
       <main className="py-20 px-6">
         <div className="container mx-auto max-w-4xl">
           
-          {/* Progress Indicators */}
+          {/* Progress Section */}
           <div className="flex justify-center gap-8 md:gap-16 mb-16">
             <LensIndicator label="Trust" isActive={step >= 0 && step <= 4} />
             <LensIndicator label="Govern" isActive={step >= 5 && step <= 8} />
@@ -72,21 +85,28 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }
           </div>
 
           <AnimatePresence mode="wait">
-            {step === 0 ? (
-              /* INTAKE FORM */
+            {/* STEP 0: INTAKE */}
+            {step === 0 && (
               <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <Card className="p-8 border-2 shadow-xl">
                   <h2 className="text-3xl font-bold mb-6">Diagnostic Intake</h2>
                   <form onSubmit={handleIntakeSubmit} className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Name *</label>
-                      <input required className="w-full p-3 rounded-md border bg-card" 
-                        value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Name *</label>
+                        <input required className="w-full p-3 rounded-md border bg-card" 
+                          value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Work Email *</label>
+                        <input required type="email" className="w-full p-3 rounded-md border bg-card" 
+                          value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium mb-2">Work Email *</label>
-                      <input required type="email" className="w-full p-3 rounded-md border bg-card" 
-                        value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                      <label className="block text-sm font-medium mb-2">Organization *</label>
+                      <input required className="w-full p-3 rounded-md border bg-card" 
+                        value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
                     </div>
                     <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-lg py-6">
                       Begin Assessment
@@ -94,14 +114,15 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }
                   </form>
                 </Card>
               </motion.div>
-            ) : (
-              /* QUESTION FLOW */
+            )}
+
+            {/* STEP 1-12: QUESTIONS */}
+            {step > 0 && step <= 12 && (
               <motion.div key="question" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}>
                 <Card className="p-10 border-2 shadow-2xl relative">
                    <button onClick={() => setStep(step - 1)} className="absolute top-6 left-6 text-muted-foreground hover:text-foreground flex items-center gap-1 text-sm">
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
-                  
                   <div className="text-center pt-4">
                     <span className="text-[#14b8a6] font-bold tracking-widest uppercase text-xs">
                       Lens: {diagnosticQuestions[step - 1].lens}
@@ -109,16 +130,45 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: any }
                     <h2 className="text-2xl md:text-3xl font-semibold mt-4 mb-10 leading-snug">
                       {diagnosticQuestions[step - 1].text}
                     </h2>
-                    
-                    <div className="grid grid-cols-1 gap-4">
+                    <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                       {["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"].map((option) => (
-                        <Button key={option} variant="outline" className="py-8 text-lg hover:border-[#14b8a6] hover:bg-[#14b8a6]/5"
+                        <Button key={option} variant="outline" className="py-6 text-md hover:border-[#14b8a6] hover:bg-[#14b8a6]/5"
                           onClick={() => handleAnswer(option)}>
                           {option}
                         </Button>
                       ))}
                     </div>
-                    <p className="mt-8 text-muted-foreground text-sm">Question {step} of 12</p>
+                    <p className="mt-8 text-muted-foreground text-sm">Signal {step} of 12</p>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* STEP 13: RESULTS SUMMARY */}
+            {step === 13 && (
+              <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <Card className="p-10 border-2 border-[#14b8a6] shadow-2xl">
+                  <div className="text-center mb-10">
+                    <Activity className="h-12 w-12 text-[#14b8a6] mx-auto mb-4" />
+                    <h2 className="text-3xl font-bold">Assessment Complete</h2>
+                    <p className="text-muted-foreground mt-2">Preliminary findings for {formData.organization}</p>
+                  </div>
+                  <div className="bg-[#14b8a6]/5 p-6 rounded-lg mb-8 border border-[#14b8a6]/20">
+                    <h4 className="font-bold flex items-center gap-2 mb-2 text-[#14b8a6]">
+                      <Shield className="h-5 w-5" /> Key Signal Area: {getRiskAnalysis()}
+                    </h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Your responses suggest that <strong>{getRiskAnalysis()}</strong> is the primary area where trust or delivery value may be leaking. A full summary has been prepared for {formData.email}.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button className="flex-1 bg-[#14b8a6] hover:bg-[#0d9488]" onClick={() => {
+                       onSubmit(answers, formData.email, formData.name);
+                       window.location.href = "/promise-gap/diagnostic/results";
+                    }}>
+                      Submit & View Full Analysis
+                    </Button>
+                    <Button variant="outline" onClick={resetDiagnostic}>Restart</Button>
                   </div>
                 </Card>
               </motion.div>
