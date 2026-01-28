@@ -9,6 +9,8 @@ import Link from "next/link";
 const navigation = [
   { name: "Services", href: "/services" },
   { name: "Frameworks", href: "/frameworks" },
+  /* CHANGED: Added the Video link and pointed it to Strategic Advisory */
+  { name: "Promise Gap Video", href: "/strategic-advisory" },
   { name: "Outcomes", href: "/outcomes" },
   { name: "Insights", href: "/insights" },
   { name: "Contact", href: "/contact" },
@@ -76,7 +78,8 @@ const Header = () => {
             >
               <div className="flex flex-col gap-4 py-6">
                 {navigation.map((item) => {
-                  const isActive = location.pathname.startsWith(item.href);
+                  /* FIX: Use pathname from usePathname() hook for consistency */
+                  const isActive = pathname.startsWith(item.href);
                   return (
                     <Link
                       key={item.name}
