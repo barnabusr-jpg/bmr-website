@@ -9,7 +9,6 @@ import Link from "next/link";
 const navigation = [
   { name: "Services", href: "/services" },
   { name: "Frameworks", href: "/frameworks" },
-  /* CHANGED: Added the Video link and pointed it to Strategic Advisory */
   { name: "Promise Gap Video", href: "/strategic-advisory" },
   { name: "Outcomes", href: "/outcomes" },
   { name: "Insights", href: "/insights" },
@@ -24,14 +23,10 @@ const Header = () => {
     <header className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="container mx-auto max-w-7xl px-6 py-4">
         <div className="flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-2xl font-heading font-bold tracking-tight"
-          >
+          <Link href="/" className="text-2xl font-heading font-bold tracking-tight">
             BMR<span className="text-accent">.</span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
@@ -39,7 +34,7 @@ const Header = () => {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`text-sm font-medium transition-all duration-200 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm px-1 ${
+                  className={`text-sm font-medium transition-all duration-200 hover:text-primary rounded-sm px-1 ${
                     isActive ? "text-primary" : "text-muted-foreground"
                   }`}
                 >
@@ -47,27 +42,20 @@ const Header = () => {
                 </Link>
               );
             })}
-
             <ThemeToggle />
             <Button size="sm" asChild>
               <Link href="/contact">Start a Conversation</Link>
             </Button>
           </div>
 
-          {/* Mobile Menu Button & Theme Toggle */}
           <div className="md:hidden flex items-center gap-2">
             <ThemeToggle />
             <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? (
-                <X className="h-6 w-6" />
-              ) : (
-                <Menu className="h-6 w-6" />
-              )}
+              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
@@ -77,33 +65,18 @@ const Header = () => {
               className="md:hidden overflow-hidden"
             >
               <div className="flex flex-col gap-4 py-6">
-                {navigation.map((item) => {
-                  /* FIX: Use pathname from usePathname() hook for consistency */
-                  const isActive = pathname.startsWith(item.href);
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm ${
-                        isActive
-                          ? "text-primary"
-                          : "text-muted-foreground hover:text-primary"
-                      }`}
-                    >
-                      {item.name}
-                    </Link>
-                  );
-                })}
-
-                <Button size="sm" asChild className="w-full">
+                {navigation.map((item) => (
                   <Link
-                    href="/contact"
+                    key={item.name}
+                    href={item.href}
                     onClick={() => setMobileMenuOpen(false)}
+                    className={`text-sm font-medium ${
+                      pathname.startsWith(item.href) ? "text-primary" : "text-muted-foreground"
+                    }`}
                   >
-                    Start a Conversation
+                    {item.name}
                   </Link>
-                </Button>
+                ))}
               </div>
             </motion.div>
           )}
