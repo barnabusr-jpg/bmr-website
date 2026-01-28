@@ -1,3 +1,4 @@
+// Final build trigger
 /**
  * src/lib/email.ts
  * This utility handles the communication between the browser and the 
