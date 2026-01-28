@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
-import { ArrowRight, Shield, Activity, AlertTriangle, Check } from "lucide-react";
+import { ArrowRight, Shield, AlertTriangle, Check } from "lucide-react";
 
 interface PromiseGapProps {
   onSubmit: (finalAnswers: Record<string, string>, userEmail: string, name: string) => Promise<void>;
