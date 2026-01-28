@@ -1,0 +1,25 @@
+{
+  "diagnostic_version": "pg_public_v1",
+  "response_scale": {
+    "top": 4,
+    "upper_mid": 3,
+    "lower_mid": 2,
+    "bottom": 1,
+    "not_sure": null
+  },
+  "questions": [
+    { "id": "q01", "domain": "A", "reverse_scored": false },
+    { "id": "q02", "domain": "A", "reverse_scored": false },
+    { "id": "q03", "domain": "A", "reverse_scored": false },
+    { "id": "q04", "domain": "B", "reverse_scored": false },
+    { "id": "q05", "domain": "B", "reverse_scored": false },
+    { "id": "q06", "domain": "B", "reverse_scored": false },
+    { "id": "q07", "domain": "C", "reverse_scored": false },
+    { "id": "q08", "domain": "C", "reverse_scored": false },
+    { "id": "q09", "domain": "C", "reverse_scored": false },
+    { "id": "q10", "domain": "D", "reverse_scored": false },
+    { "id": "q11", "domain": "D", "reverse_scored": false },
+    { "id": "q12", "domain": "D", "reverse_scored": false }
+  ],
+  "security_note": "SERVER_ONLY: Do not ship this file in the client bundle."
+}
