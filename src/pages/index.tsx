@@ -7,6 +7,7 @@ import ValueBullets from "@/components/home/ValueBulletsHome";
 import ServicesPreview from "@/components/home/ServicesPreviewHome";
 import Frameworks from "@/components/home/FrameworksHome";
 import Outcomes from "@/components/home/OutcomesHome";
+import ComparisonGrid from "@/components/home/ComparisonGrid";
 import Insights from "@/components/home/InsightsHome";
 import FooterCTA from "@/components/home/FooterCTAHome";
 
@@ -32,19 +33,21 @@ const Index = () => {
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
 
         <Outcomes />
+        
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
 
-        {/* Field Guide Playbook Section */}
+        {/* Field Guide Section */}
         <section className="py-24 bg-[#020617]">
           <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
             
-            {/* Visual: Field Guide Cover */}
-            <div className="relative group rounded-2xl overflow-hidden border border-slate-700 shadow-2xl transition-all duration-500 hover:border-[#14b8a6]/50">
-              <img 
-                src="/bmr-guide-cover.jpg" 
-                alt="BMR Responsible AI System Field Guide"
-                className="w-full h-auto opacity-90 group-hover:opacity-100 transition-opacity"
-              />
+            {/* Visual Placeholder: High-Contrast CSS Cover */}
+            <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-slate-700 shadow-2xl bg-gradient-to-br from-slate-800 to-[#020617] flex flex-col justify-between p-12 group hover:border-[#14b8a6]/50 transition-all duration-500">
+              <div className="space-y-4">
+                <div className="h-1 w-12 bg-[#14b8a6]"></div>
+                <h3 className="text-2xl font-bold text-white leading-tight">THE SYSTEMIC<br/>AI PLAYBOOK</h3>
+                <p className="text-slate-500 text-sm tracking-widest uppercase">BMR Methodology v1.0</p>
+              </div>
+              <div className="text-[#14b8a6] font-mono text-xs">HAI // AVS // IGF</div>
             </div>
 
             {/* Content & Lead Capture */}
@@ -80,6 +83,11 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+
+        {/* Strategic Comparison Grid */}
+        <ComparisonGrid />
 
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
 
