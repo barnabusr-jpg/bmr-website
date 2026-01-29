@@ -1,7 +1,7 @@
 import React from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-// Fixed path: ensured lowercase 'promise-gap-diagnostic'
+// Ensure the path below is all lowercase to match your folder structure
 import DiagnosticResultsContent from "@/components/promise-gap-diagnostic/DiagnosticResultsContent";
 
 export default function DiagnosticResultsPage() {
