@@ -9,11 +9,15 @@ import Link from "next/link";
 const navigation = [
   { name: "Services", href: "/services" },
   { name: "Frameworks", href: "/frameworks" },
-  { name: "Promise Gap Video", href: "/strategic-advisory" },
+  { name: "The Problem", href: "/promise-gap" },
+  { name: "Diagnostic", href: "/promise-gap/diagnostic" },
   { name: "Outcomes", href: "/outcomes" },
   { name: "Insights", href: "/insights" },
   { name: "Contact", href: "/contact" },
 ];
+
+const Header = () => {
+  // ... rest of your component code
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
