@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
+// Navigation aligned with your new flat src/pages structure
 const navigation = [
   { name: "Our Approach", href: "/approach" },
   { name: "The Problem", href: "/promise-gap" },
@@ -45,7 +46,8 @@ const Header = () => {
             <div className="flex items-center gap-4 ml-4 border-l pl-4 border-border">
               <ThemeToggle />
               <Button size="sm" asChild>
-                <Link href="/contact">Start a Conversation</Link>
+                {/* Updated to the new flat diagnostic path */}
+                <Link href="/diagnostic">Start Diagnostic</Link>
               </Button>
             </div>
           </div>
@@ -88,8 +90,8 @@ const Header = () => {
                   );
                 })}
                 <Button className="w-full" asChild>
-                   <Link href="/contact" onClick={() => setMobileMenuOpen(false)}>
-                     Start a Conversation
+                   <Link href="/diagnostic" onClick={() => setMobileMenuOpen(false)}>
+                     Start Diagnostic
                    </Link>
                 </Button>
               </div>
