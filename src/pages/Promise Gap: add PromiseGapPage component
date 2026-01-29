@@ -1,5 +1,0 @@
-import PromiseGapPage from "@/components/promise-gap/PromiseGapPage";
-
-export default function PromiseGap() {
-  return <PromiseGapPage />;
-}
