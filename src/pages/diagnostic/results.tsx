@@ -1,8 +1,13 @@
 import React from 'react';
+import dynamic from 'next/dynamic';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-// Using a relative path to be 100% sure the compiler finds it
-import DiagnosticResultsContent from "../../components/promise-gap-diagnostic/DiagnosticResultsContent";
+
+// Dynamic import to bypass persistent build-time module resolution errors
+const DiagnosticResultsContent = dynamic(
+  () => import('@/components/promise-gap-diagnostic/DiagnosticResultsContent'),
+  { ssr: false }
+);
 
 export default function DiagnosticResultsPage() {
   return (
