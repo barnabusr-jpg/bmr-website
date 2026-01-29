@@ -7,6 +7,7 @@ import ValueBullets from "@/components/home/ValueBulletsHome";
 import ServicesPreview from "@/components/home/ServicesPreviewHome";
 import Frameworks from "@/components/home/FrameworksHome";
 import Outcomes from "@/components/home/OutcomesHome";
+import ComparisonGrid from "@/components/home/ComparisonGrid";
 import Insights from "@/components/home/InsightsHome";
 import FooterCTA from "@/components/home/FooterCTAHome";
 
@@ -80,6 +81,11 @@ const Index = () => {
             </div>
           </div>
         </section>
+
+        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
+
+        {/* Strategic Comparison Grid */}
+        <ComparisonGrid />
 
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
 
