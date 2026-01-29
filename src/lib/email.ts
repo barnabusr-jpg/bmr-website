@@ -1,30 +1,35 @@
-// Final build trigger
-/**
- * src/lib/email.ts
- * This utility handles the communication between the browser and the 
- * secure server-side email API.
- */
+// src/lib/email.ts
+import { Resend } from 'resend';
 
-interface DiagnosticEmailData {
+// Ensure your environment variable is named correctly in Vercel
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+interface DiagnosticEmailProps {
   to: string;
   firstName: string;
-  answers: Record<string, string>;
+  answers: any;
 }
 
-export const sendDiagnosticEmail = async (data: DiagnosticEmailData) => {
-  // This calls the secure API route you created at src/app/api/send-email/route.ts
-  const response = await fetch("/api/send-email", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
+export const sendDiagnosticEmail = async ({ to, firstName, answers }: DiagnosticEmailProps) => {
+  try {
+    const data = await resend.emails.send({
+      from: 'BMR Advisory <hello@bmradvisory.co>', // UPDATED: Must be a verified domain email
+      to: [to],
+      cc: ['hello@bmradvisory.co'], // Sends a copy to you
+      subject: `BMR Strategic Advisory: Diagnostic Signals for ${firstName}`,
+      html: `
+        <h1>Diagnostic Signals Received</h1>
+        <p>Hello ${firstName},</p>
+        <p>Thank you for completing the Promise Gap Assessment. Our team is currently reviewing your signals.</p>
+        <hr />
+        <h3>Assessment Summary:</h3>
+        <pre>${JSON.stringify(answers, null, 2)}</pre>
+      `,
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.error || "Failed to send diagnostic signals");
+    return data;
+  } catch (error) {
+    console.error('Email error:', error);
+    throw error;
   }
-
-  return response.json();
 };
