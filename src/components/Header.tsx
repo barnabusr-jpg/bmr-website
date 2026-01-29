@@ -6,12 +6,10 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
-const navigation = [
-  { name: "Services", href: "/services" },
-  { name: "Frameworks", href: "/frameworks" },
+cconst navigation = [
+  { name: "Our Approach", href: "/approach" }, // Combines Services, Frameworks, & Outcomes
   { name: "The Problem", href: "/promise-gap" },
   { name: "Strategic Advisory", href: "/strategic-advisory" },
-  { name: "Outcomes", href: "/outcomes" },
   { name: "Insights", href: "/insights" },
   { name: "Contact", href: "/contact" },
 ];
