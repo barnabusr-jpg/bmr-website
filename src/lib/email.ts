@@ -1,8 +1,10 @@
 // src/lib/email.ts
-import { Resend } from 'resend';
+import sgMail from '@sendgrid/mail';
 
-// Ensure your environment variable is named correctly in Vercel
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Set the API Key from your Vercel Environment Variables
+if (process.env.SENDGRID_API_KEY) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+}
 
 interface DiagnosticEmailProps {
   to: string;
@@ -11,25 +13,33 @@ interface DiagnosticEmailProps {
 }
 
 export const sendDiagnosticEmail = async ({ to, firstName, answers }: DiagnosticEmailProps) => {
-  try {
-    const data = await resend.emails.send({
-      from: 'BMR Advisory <hello@bmradvisory.co>', // UPDATED: Must be a verified domain email
-      to: [to],
-      cc: ['hello@bmradvisory.co'], // Sends a copy to you
-      subject: `BMR Strategic Advisory: Diagnostic Signals for ${firstName}`,
-      html: `
-        <h1>Diagnostic Signals Received</h1>
+  const msg = {
+    to: to, // The user who took the test
+    from: 'hello@bmradvisory.co', // MUST be a verified Single Sender in SendGrid
+    cc: 'hello@bmradvisory.co', // Sends a copy to your inbox
+    subject: `BMR Strategic Advisory: Diagnostic Results for ${firstName}`,
+    text: `Diagnostic results for ${firstName}`,
+    html: `
+      <div style="font-family: sans-serif; color: #333;">
+        <h2>Diagnostic Signals Received</h2>
         <p>Hello ${firstName},</p>
-        <p>Thank you for completing the Promise Gap Assessment. Our team is currently reviewing your signals.</p>
+        <p>Thank you for completing the Promise Gap Assessment. Our team is currently reviewing your signals to identify structural leakage in your AI implementation.</p>
         <hr />
-        <h3>Assessment Summary:</h3>
-        <pre>${JSON.stringify(answers, null, 2)}</pre>
-      `,
-    });
+        <h3>Raw Signal Data:</h3>
+        <pre style="background: #f4f4f4; p: 10px;">${JSON.stringify(answers, null, 2)}</pre>
+        <p>We will reach out shortly to discuss these findings.</p>
+      </div>
+    `,
+  };
 
-    return data;
-  } catch (error) {
-    console.error('Email error:', error);
+  try {
+    await sgMail.send(msg);
+    console.log('SendGrid email sent successfully');
+  } catch (error: any) {
+    console.error('SendGrid Error:', error);
+    if (error.response) {
+      console.error(error.response.body);
+    }
     throw error;
   }
 };
