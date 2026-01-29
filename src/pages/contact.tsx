@@ -2,6 +2,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Mail, MessageSquare, Linkedin, ArrowRight } from "lucide-react";
+import Link from "next/link"; // Required for internal routing
 
 export default function ContactPage() {
   return (
@@ -15,7 +16,8 @@ export default function ContactPage() {
               Start a <span className="text-[#14b8a6]">Conversation</span>
             </h1>
             <p className="text-xl text-slate-400 max-w-2xl mx-auto">
-              Whether you are identifying a Promise Gap or scaling systemic oversight, let's discuss how BMR can support your leadership team.
+              {/* FIXED: Escaped the apostrophe in let's */}
+              Whether you are identifying a Promise Gap or scaling systemic oversight, let&apos;s discuss how BMR can support your leadership team.
             </p>
           </div>
 
@@ -23,7 +25,6 @@ export default function ContactPage() {
             {/* Direct Contact Card */}
             <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-8 space-y-8">
               <h2 className="text-sm font-semibold text-[#14b8a6] uppercase tracking-[0.2em]">Inquiries</h2>
-              
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="bg-[#14b8a6]/10 p-3 rounded-lg">
@@ -31,33 +32,12 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-white font-medium">Email Us</p>
-                    <a 
-                      href="mailto:hello@bmradvisory.co" 
-                      className="text-slate-400 hover:text-[#14b8a6] transition-colors"
-                    >
+                    <a href="mailto:hello@bmradvisory.co" className="text-slate-400 hover:text-[#14b8a6] transition-colors">
                       hello@bmradvisory.co
                     </a>
                   </div>
                 </div>
-
-                <div className="flex items-start gap-4">
-                  <div className="bg-[#14b8a6]/10 p-3 rounded-lg">
-                    <Linkedin className="h-6 w-6 text-[#14b8a6]" />
-                  </div>
-                  <div>
-                    <p className="text-white font-medium">Connect</p>
-                    <a 
-                      href="https://linkedin.com/company/bmradvisory" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-slate-400 hover:text-[#14b8a6] transition-colors"
-                    >
-                      LinkedIn Corporate
-                    </a>
-                  </div>
-                </div>
               </div>
-
               <Button asChild className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-12">
                 <a href="mailto:hello@bmradvisory.co?subject=Strategic Advisory Inquiry">
                   Send an Email <ArrowRight className="ml-2 h-4 w-4" />
@@ -75,10 +55,11 @@ export default function ContactPage() {
                 </p>
               </div>
 
+              {/* FIXED: Changed <a> to <Link> for internal diagnostic route */}
               <Button variant="outline" asChild className="border-slate-700 text-white hover:bg-slate-800 h-12">
-                <a href="/promise-gap/diagnostic" className="flex items-center gap-2">
+                <Link href="/promise-gap/diagnostic" className="flex items-center gap-2">
                   Launch Diagnostic <MessageSquare className="h-4 w-4" />
-                </a>
+                </Link>
               </Button>
             </div>
           </div>
