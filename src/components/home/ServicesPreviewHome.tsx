@@ -27,7 +27,7 @@ const services = [
 
 const ServicesPreview = () => {
   return (
-    <section className="py-24 px-6">
+    <section className="py-24 px-6 bg-[#020617]">
       <div className="container mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -36,8 +36,8 @@ const ServicesPreview = () => {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="text-center mb-16"
         >
-          <h2 className="text-4xl font-bold mb-6">Our Services</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <h2 className="text-4xl font-bold mb-6 text-white tracking-tight">Our Services</h2>
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
             Comprehensive advisory services to guide your AI journey from strategy to execution
           </p>
         </motion.div>
@@ -51,14 +51,15 @@ const ServicesPreview = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
             >
-              <Card className="p-8 h-full hover:shadow-lg transition-all duration-200 border-2">
+              {/* Updated Card: Darker background and teal accents to match advisory theme */}
+              <Card className="p-8 h-full bg-slate-900/50 border-slate-800 hover:border-[#14b8a6]/50 transition-all duration-300 border-2">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10 flex-shrink-0">
-                    <service.icon className="h-6 w-6 text-primary" />
+                  <div className="p-3 rounded-lg bg-[#14b8a6]/10 flex-shrink-0">
+                    <service.icon className="h-6 w-6 text-[#14b8a6]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-3">{service.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{service.description}</p>
+                    <h3 className="text-xl font-semibold mb-3 text-white">{service.title}</h3>
+                    <p className="text-slate-400 leading-relaxed">{service.description}</p>
                   </div>
                 </div>
               </Card>
