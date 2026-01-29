@@ -7,7 +7,7 @@ export default function DiagnosticFlow() {
 
   const handleDiagnosticSubmit = async (finalAnswers: any, userEmail: string, name: string) => {
     try {
-      // Call the internal API route instead of the library directly
+      // Call the internal API route
       const response = await fetch('/api/send-diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -19,7 +19,8 @@ export default function DiagnosticFlow() {
       });
 
       if (response.ok) {
-        router.push("/promise-gap/diagnostic/results");
+        // Updated redirect to the new flat path
+        router.push("/diagnostic/results");
       } else {
         throw new Error("Failed to send");
       }
