@@ -1,8 +1,8 @@
 import React from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-// Fixed path: Ensure this matches your components folder casing exactly
-import DiagnosticResultsContent from "@/components/promise-gap-diagnostic/DiagnosticResultsContent";
+// Using a relative path to be 100% sure the compiler finds it
+import DiagnosticResultsContent from "../../components/promise-gap-diagnostic/DiagnosticResultsContent";
 
 export default function DiagnosticResultsPage() {
   return (
