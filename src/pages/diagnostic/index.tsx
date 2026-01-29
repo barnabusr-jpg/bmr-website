@@ -1,34 +1,18 @@
 import React from 'react';
+import Head from 'next/head';
 import { useRouter } from "next/router";
 import PromiseGapDiagnosticPage from "@/components/promise-gap-diagnostic/PromiseGapDiagnosticPage";
 
 export default function DiagnosticFlow() {
-  const router = useRouter();
-
-  const handleDiagnosticSubmit = async (finalAnswers: any, userEmail: string, name: string) => {
-    try {
-      // Call the internal API route
-      const response = await fetch('/api/send-diagnostic', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: userEmail,
-          firstName: name,
-          answers: finalAnswers
-        }),
-      });
-
-      if (response.ok) {
-        // Updated redirect to the new flat path
-        router.push("/diagnostic/results");
-      } else {
-        throw new Error("Failed to send");
-      }
-    } catch (error) {
-      console.error("Submission failed:", error);
-      alert("Error sending results. Please try again.");
-    }
-  };
-
-  return <PromiseGapDiagnosticPage onSubmit={handleDiagnosticSubmit} />;
+  // ... (keep your existing router and submit logic)
+  
+  return (
+    <>
+      <Head>
+        <title>Strategic Diagnostic | BMR Solutions</title>
+        <meta name="description" content="Take our 5-minute diagnostic to assess your organization's Promise Gap." />
+      </Head>
+      <PromiseGapDiagnosticPage onSubmit={handleDiagnosticSubmit} />
+    </>
+  );
 }
