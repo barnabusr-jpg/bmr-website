@@ -10,14 +10,11 @@ const navigation = [
   { name: "Services", href: "/services" },
   { name: "Frameworks", href: "/frameworks" },
   { name: "The Problem", href: "/promise-gap" },
-  { name: "Diagnostic", href: "/promise-gap/diagnostic" },
+  { name: "Strategic Advisory", href: "/strategic-advisory" },
   { name: "Outcomes", href: "/outcomes" },
   { name: "Insights", href: "/insights" },
   { name: "Contact", href: "/contact" },
 ];
-
-const Header = () => {
-  // ... rest of your component code
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -34,7 +31,6 @@ const Header = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             {navigation.map((item) => {
-              /* FIXED: Added optional chaining and fallback for null pathname */
               const isActive = pathname?.startsWith(item.href) ?? false;
               return (
                 <Link
@@ -74,7 +70,6 @@ const Header = () => {
             >
               <div className="flex flex-col gap-4 py-6">
                 {navigation.map((item) => {
-                  /* FIXED: Added optional chaining and fallback for null pathname */
                   const isActive = pathname?.startsWith(item.href) ?? false;
                   return (
                     <Link
