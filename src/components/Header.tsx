@@ -9,7 +9,8 @@ import Link from "next/link";
 const navigation = [
   { name: "Services", href: "/services" },
   { name: "Frameworks", href: "/frameworks" },
-  { name: "Promise Gap Video", href: "/strategic-advisory" },
+  { name: "The Problem", href: "/promise-gap" },
+  { name: "Strategic Advisory", href: "/strategic-advisory" },
   { name: "Outcomes", href: "/outcomes" },
   { name: "Insights", href: "/insights" },
   { name: "Contact", href: "/contact" },
@@ -30,7 +31,6 @@ const Header = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-6">
             {navigation.map((item) => {
-              /* FIXED: Added optional chaining and fallback for null pathname */
               const isActive = pathname?.startsWith(item.href) ?? false;
               return (
                 <Link
@@ -70,7 +70,6 @@ const Header = () => {
             >
               <div className="flex flex-col gap-4 py-6">
                 {navigation.map((item) => {
-                  /* FIXED: Added optional chaining and fallback for null pathname */
                   const isActive = pathname?.startsWith(item.href) ?? false;
                   return (
                     <Link
