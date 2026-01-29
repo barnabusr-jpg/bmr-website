@@ -6,7 +6,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
-cconst navigation = [
+const navigation = [
   { name: "Our Approach", href: "/approach" }, // Combines Services, Frameworks, & Outcomes
   { name: "The Problem", href: "/promise-gap" },
   { name: "Strategic Advisory", href: "/strategic-advisory" },
