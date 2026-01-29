@@ -1,105 +1,66 @@
-import Link from "next/link";
+import React from 'react';
+import Link from 'next/link';
 
 const Footer = () => {
   return (
-    <footer className="border-t border-border py-12 px-6">
-      <div className="container mx-auto max-w-7xl">
-        <div className="grid md:grid-cols-3 gap-8 mb-8">
-          <div>
-            <h3 className="text-2xl font-bold mb-2">BMR Solutions</h3>
-            <p className="text-sm text-muted-foreground">
-              Strategic Advisory for Responsible AI
-            </p>
-          </div>
+    <footer className="bg-[#020617] border-t border-slate-800 py-12 px-6">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
+        <div className="col-span-1 md:col-span-2">
+          <Link href="/" className="text-xl font-bold text-white tracking-tight mb-4 inline-block">
+            BMR<span className="text-[#0D9488]">SOLUTIONS</span>
+          </Link>
+          <p className="text-slate-400 max-w-sm">
+            Closing the distance between strategy and reality through fractional leadership and systemic alignment.
+          </p>
+        </div>
 
-          <div>
-            <h4 className="font-semibold mb-4">Navigation</h4>
-            <nav className="flex flex-col gap-2">
-              <Link
-                href="/services"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Services
+        <div>
+          <h4 className="text-white font-semibold mb-4">Platform</h4>
+          <ul className="space-y-2">
+            <li>
+              <Link href="/promise-gap" className="text-slate-400 hover:text-[#0D9488] transition-colors">
+                The Problem
               </Link>
-              <Link
-                href="/frameworks"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Frameworks
+            </li>
+            <li>
+              <Link href="/approach" className="text-slate-400 hover:text-[#0D9488] transition-colors">
+                Our Approach
               </Link>
-              <Link
-                href="/insights"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Insights
+            </li>
+            <li>
+              <Link href="/diagnostic" className="text-slate-400 hover:text-[#0D9488] transition-colors">
+                Diagnostic
               </Link>
-              <Link
-                href="/contact"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Contact
-              </Link>
-              <Link
-                href="/promise-gap"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Promise Gap
-              </Link>
-              <Link
-                href="/promise-gap/problem"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Promise Gap Problem
-              </Link>
-              <Link
-                href="/promise-gap/diagnostic"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Promise Gap Diagnostic
-              </Link>
-              <Link
-                href="/promise-gap/video"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Promise Gap Video
-              </Link>
-              <Link
-                href="/downloads/HAI-AVS-Field-Guide-Summary"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
+            </li>
+          </ul>
+        </div>
+
+        <div>
+          <h4 className="text-white font-semibold mb-4">Resources</h4>
+          <ul className="space-y-2">
+            <li>
+              {/* Pointing to your pending insights placeholder */}
+              <Link href="/insights" className="text-slate-400 hover:text-[#0D9488] transition-colors">
                 Field Guide
               </Link>
-              <Link
-                href="/thank-you"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Thank You
+            </li>
+            <li>
+              {/* Updated to Advisory to match the new structure */}
+              <Link href="/strategic-advisory" className="text-slate-400 hover:text-[#0D9488] transition-colors">
+                Strategic Advisory
               </Link>
-            </nav>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
-            <nav className="flex flex-col gap-2">
-              <a
-                href="#"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Privacy Policy
-              </a>
-              <a
-                href="#"
-                className="text-sm text-muted-foreground hover:text-primary transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 rounded-sm"
-              >
-                Terms of Service
-              </a>
-            </nav>
-          </div>
+            </li>
+            <li>
+              <Link href="/contact" className="text-slate-400 hover:text-[#0D9488] transition-colors">
+                Contact
+              </Link>
+            </li>
+          </ul>
         </div>
-
-        <div className="text-center text-sm text-muted-foreground pt-8 border-t border-border">
-          © {new Date().getFullYear()} BMR Solutions. All rights reserved.
-        </div>
+      </div>
+      
+      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-900 text-center text-slate-500 text-sm">
+        <p>© {new Date().getFullYear()} BMR Solutions. All rights reserved.</p>
       </div>
     </footer>
   );
