@@ -54,7 +54,7 @@ export default function StrategicAdvisoryPage() {
             <h2 className="text-3xl font-bold text-white">Ready to bridge the Promise Gap?</h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold px-8 h-12">
-                <Link href="/promise-gap/diagnostic">Take the Diagnostic</Link>
+                <Link href="/diagnostic">Take the Diagnostic</Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-slate-700 text-white hover:bg-slate-800 px-8 h-12">
                 <Link href="/contact" className="flex items-center gap-2">
