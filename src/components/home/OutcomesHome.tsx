@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { TrendingUp, Users, Shield, Zap, Target, CheckCircle2 } from "lucide-react";
@@ -7,53 +6,53 @@ const outcomes = [
   {
     icon: TrendingUp,
     title: "Accelerated Adoption",
-    description: "Faster AI implementation with reduced risk"
+    description: "Move forward more decisively when uncertainty and misalignment are reduced."
   },
   {
     icon: Users,
     title: "Enhanced Trust",
-    description: "Stakeholder confidence through transparency"
+    description: "Stakeholders gain confidence when AI use is understandable, consistent, and accountable."
   },
   {
     icon: Shield,
-    title: "Robust Compliance",
-    description: "Meet regulatory requirements confidently"
+    title: "Regulatory Confidence",
+    description: "Navigate expectations with fewer surprises when governance decisions are coherent."
   },
   {
     icon: Zap,
-    title: "Operational Efficiency",
-    description: "Streamlined processes and workflows"
+    title: "Operational Stability",
+    description: "AI-enabled workflows become more predictable and resilient when decision friction is addressed."
   },
   {
     icon: Target,
     title: "Strategic Alignment",
-    description: "AI initiatives aligned with business goals"
+    description: "AI initiatives reinforce organizational priorities rather than competing with them."
   },
   {
     icon: CheckCircle2,
-    title: "Measurable Impact",
-    description: "Quantifiable value and ROI tracking"
+    title: "Evidence of Value",
+    description: "Gain clearer visibility into whether AI efforts are contributing to meaningful outcomes over time."
   }
 ];
 
 const Outcomes = () => {
   return (
-    <section className="py-24 px-6">
+    <section className="py-24 px-6 bg-[#020617] border-t border-slate-900">
       <div className="container mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
-          <h2 className="text-4xl font-bold mb-6">Expected Outcomes</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Tangible results that drive organizational transformation
+          <h2 className="text-4xl font-bold mb-6 text-white tracking-tight">Outcome Snapshot</h2>
+          <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
+            Restoring alignment between intent, execution, and lived experience before risk hardens into outcome.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {outcomes.map((outcome, index) => (
             <motion.div
               key={outcome.title}
@@ -62,20 +61,36 @@ const Outcomes = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
             >
-              <Card className="p-6 h-full hover:shadow-md transition-all duration-200">
-                <div className="flex items-start gap-4">
-                  <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                    <outcome.icon className="h-5 w-5 text-primary" />
+              <Card className="p-8 h-full bg-slate-900/30 border-slate-800 hover:border-[#14b8a6]/40 transition-all duration-500 border-2 relative overflow-hidden group">
+                {/* Visual accent consistency */}
+                <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
+                
+                <div className="flex flex-col gap-5">
+                  <div className="p-3 rounded-lg bg-[#14b8a6]/10 w-fit">
+                    <outcome.icon className="h-6 w-6 text-[#14b8a6]" />
                   </div>
                   <div>
-                    <h3 className="font-semibold mb-2">{outcome.title}</h3>
-                    <p className="text-sm text-muted-foreground">{outcome.description}</p>
+                    <h3 className="text-xl font-bold mb-3 text-white tracking-tight">{outcome.title}</h3>
+                    <p className="text-slate-400 font-light leading-relaxed">
+                      {outcome.description}
+                    </p>
                   </div>
                 </div>
               </Card>
             </motion.div>
           ))}
         </div>
+        
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          className="mt-20 text-center"
+        >
+          <p className="text-slate-500 font-light italic text-sm">
+            Progress typically comes from identifying the smallest set of targeted interventions 
+            required to materially change outcomes.
+          </p>
+        </motion.div>
       </div>
     </section>
   );
