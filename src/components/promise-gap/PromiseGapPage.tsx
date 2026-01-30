@@ -6,7 +6,7 @@ import { ArrowRight } from "lucide-react";
 const PromiseGapPage = () => {
   return (
     <div className="bg-[#020617] text-white">
-      {/* Hero Section - Sleek and Balanced */}
+      {/* Hero Section */}
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
@@ -14,7 +14,7 @@ const PromiseGapPage = () => {
               Promise Gap™
             </span>
           </h1>
-          <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-10">
+          <p className="text-xl md:text-2xl text-slate-400 font-light max-w-3xl mx-auto mb-10">
             Where transformation falters not because technology fails, but because system 
             behavior diverges from expectation.
           </p>
@@ -31,15 +31,15 @@ const PromiseGapPage = () => {
         </div>
       </section>
 
-      {/* Core Logic Section - Original Language, High-Impact Style */}
+      {/* Core Logic Section */}
       <section className="py-24 px-6 bg-[#030712] border-t border-slate-900">
         <div className="max-w-4xl mx-auto text-center">
           <div className="space-y-6 mb-16">
-            <p className="text-3xl md:text-4xl font-light text-slate-200 tracking-tight">Sales sell the future.</p>
-            <p className="text-3xl md:text-4xl font-light text-slate-200 tracking-tight">Delivery inherits reality.</p>
-            <p className="text-3xl md:text-4xl font-semibold text-[#0D9488] tracking-tight">And value quietly leaks in between.</p>
+            <p className="text-3xl md:text-4xl font-extralight text-slate-200 tracking-tight italic">Sales sell the future.</p>
+            <p className="text-3xl md:text-4xl font-extralight text-slate-200 tracking-tight italic">Delivery inherits reality.</p>
+            <p className="text-3xl md:text-4xl font-medium text-[#0D9488] tracking-tight italic">And value quietly leaks in between.</p>
           </div>
-          <div className="max-w-3xl mx-auto space-y-6 text-slate-400 text-lg md:text-xl leading-relaxed">
+          <div className="max-w-3xl mx-auto space-y-8 text-slate-400 text-lg md:text-xl font-light leading-relaxed">
             <p>Every organization pursuing transformation encounters this moment.</p>
             <p>
               The breakdown is rarely technical. It occurs when expectations, accountability, 
@@ -53,12 +53,12 @@ const PromiseGapPage = () => {
         </div>
       </section>
 
-      {/* Why Transformation Drifts - Framing Insight */}
-      <section className="py-20 px-6 border-t border-slate-900">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl font-bold mb-12 text-center">Why Transformation Drifts</h2>
-          <div className="grid md:grid-cols-2 gap-12 text-slate-300 text-lg leading-relaxed">
-            <div className="space-y-6">
+      {/* Why Transformation Drifts - Refined Balance */}
+      <section className="py-24 px-6 border-t border-slate-900">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-3xl font-bold mb-16 text-center tracking-tight">Why Transformation Drifts</h2>
+          <div className="grid md:grid-cols-2 gap-16 items-start">
+            <div className="space-y-8 text-slate-300 text-lg md:text-xl font-light leading-relaxed">
               <p>
                 Transformation does not fail because tools are flawed. It drifts when trust 
                 erodes between what was promised and what is experienced.
@@ -68,10 +68,12 @@ const PromiseGapPage = () => {
                 accountability blurs, and confidence weakens.
               </p>
             </div>
-            <div className="bg-slate-900/30 p-8 rounded-2xl border border-slate-800 space-y-4">
+            <div className="bg-[#0D9488]/5 p-10 rounded-2xl border border-[#0D9488]/20 space-y-6">
               <h3 className="text-[#0D9488] font-bold uppercase tracking-widest text-sm">System Friction Patterns</h3>
-              <p>AI-enabled system behavior becomes unstable under pressure.</p>
-              <p className="text-slate-400 text-base">
+              <p className="text-white text-lg font-normal leading-snug">
+                AI-enabled system behavior becomes unstable under pressure.
+              </p>
+              <p className="text-slate-400 text-base font-light leading-relaxed">
                 Whether through urgency-driven shortcuts or volatility from shifting priorities, 
                 AI underperforms quietly inside day-to-day work long before failure is visible.
               </p>
