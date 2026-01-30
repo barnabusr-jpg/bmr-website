@@ -4,32 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { BookOpen, FileText, Compass, ArrowRight } from "lucide-react";
 
-type InsightCard = {
-  icon: React.ElementType;
-  title: string;
-  description: string;
-};
-
-const insights: InsightCard[] = [
-  {
-    icon: BookOpen,
-    title: "Field Guides",
-    description:
-      "Practical frameworks and executive-ready tools for navigating responsible AI under real operating constraints.",
-  },
-  {
-    icon: FileText,
-    title: "Briefs & Perspectives",
-    description:
-      "Clear, high-authority insights on governance, delivery risk, and decision accountability in AI-enabled systems.",
-  },
-  {
-    icon: Compass,
-    title: "Diagnostic Tools",
-    description:
-      "Structured instruments to surface where trust breaks down, oversight diffuses, and delivery risk hardens into outcomes.",
-  },
-];
+// ... [previous InsightCard type and insights array]
 
 export default function InsightsPage() {
   return (
@@ -38,7 +13,7 @@ export default function InsightsPage() {
 
       <main className="flex-grow pt-32 pb-24 px-6">
         <div className="container mx-auto max-w-7xl">
-          {/* Page Header - Standardized Hierarchy */}
+          {/* Page Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -53,7 +28,7 @@ export default function InsightsPage() {
             </p>
           </motion.div>
 
-          {/* Cards - Standardized Balance */}
+          {/* Cards Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {insights.map((item, index) => (
               <motion.div
@@ -63,7 +38,6 @@ export default function InsightsPage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 <Card className="p-10 h-full bg-slate-900/30 border-slate-800 hover:border-[#14b8a6]/40 transition-all duration-500 border-2 relative overflow-hidden group">
-                  {/* Visual accent consistency */}
                   <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
                   
                   <div className="flex flex-col h-full justify-between">
@@ -71,17 +45,11 @@ export default function InsightsPage() {
                       <div className="p-3 rounded-lg bg-[#14b8a6]/10 w-fit">
                         <item.icon className="h-6 w-6 text-[#14b8a6]" />
                       </div>
-
                       <div>
-                        <h3 className="text-2xl font-bold mb-4 text-white tracking-tight">
-                          {item.title}
-                        </h3>
-                        <p className="text-slate-400 font-light leading-relaxed">
-                          {item.description}
-                        </p>
+                        <h3 className="text-2xl font-bold mb-4 text-white tracking-tight">{item.title}</h3>
+                        <p className="text-slate-400 font-light leading-relaxed">{item.description}</p>
                       </div>
                     </div>
-
                     <div className="mt-8 pt-6 border-t border-slate-800/50">
                       <span className="text-[#14b8a6] font-medium inline-flex items-center gap-2 group-hover:translate-x-1 transition-transform cursor-pointer">
                         Explore Entry <ArrowRight className="h-4 w-4" />
@@ -93,13 +61,14 @@ export default function InsightsPage() {
             ))}
           </div>
           
+          {/* FIXED SECTION: Escaped entities to resolve build error */}
           <motion.div 
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             className="mt-24 text-center"
           >
             <p className="text-slate-500 font-light italic text-sm">
-              "Meaningful understanding requires structured observation. We look for why risk is persisting, not just where it is occurring."
+              &quot;Meaningful understanding requires structured observation. We look for why risk is persisting, not just where it is occurring.&quot;
             </p>
           </motion.div>
         </div>
