@@ -78,7 +78,7 @@ export default function ContactPage() {
               </div>
 
               <Button variant="outline" asChild className="border-slate-700 text-white hover:bg-slate-800 h-12">
-                <Link href="/promise-gap/diagnostic" className="flex items-center gap-2">
+                <Link href="/diagnostic" className="flex items-center gap-2">
                   Launch Diagnostic <MessageSquare className="h-4 w-4" />
                 </Link>
               </Button>
