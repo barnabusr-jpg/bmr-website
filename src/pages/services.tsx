@@ -6,7 +6,7 @@ export default function ServicesRedirect() {
   
   useEffect(() => {
     router.replace('/strategic-advisory');
-  }, [router]); // Standardized: Added router to the dependency array
+  }, [router]); // Added dependency here to fix build warning
 
   return null;
 }
