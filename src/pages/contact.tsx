@@ -49,7 +49,7 @@ export default function ContactPage() {
                   <div>
                     <p className="text-white font-medium">Connect</p>
                     <a 
-                      href="https://linkedin.com/company/bmradvisory" 
+                      href="https://linkedin.com/in/barnabus-roundtree" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-slate-400 hover:text-[#14b8a6] transition-colors"
