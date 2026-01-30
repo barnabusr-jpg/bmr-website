@@ -49,7 +49,7 @@ export default function ContactPage() {
                   <div>
                     <p className="text-white font-medium">Connect</p>
                     <a 
-                      href="https://linkedin.com/company/bmradvisory" 
+                      href="https://linkedin.com/in/barnabus-roundtree" 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="text-slate-400 hover:text-[#14b8a6] transition-colors"
@@ -78,7 +78,7 @@ export default function ContactPage() {
               </div>
 
               <Button variant="outline" asChild className="border-slate-700 text-white hover:bg-slate-800 h-12">
-                <Link href="/promise-gap/diagnostic" className="flex items-center gap-2">
+                <Link href="/diagnostic" className="flex items-center gap-2">
                   Launch Diagnostic <MessageSquare className="h-4 w-4" />
                 </Link>
               </Button>
