@@ -1,12 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ShieldCheck, Gavel, Zap } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 const PromiseGapPage = () => {
   return (
     <div className="bg-[#020617] text-white">
-      {/* Hero Section */}
+      {/* Hero Section - Sleek and Balanced */}
       <section className="pt-32 pb-20 px-6">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 leading-tight">
@@ -15,8 +15,8 @@ const PromiseGapPage = () => {
             </span>
           </h1>
           <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto mb-10">
-            Where transformation falters not because technology fails, 
-            but because system behavior diverges from expectation.
+            Where transformation falters not because technology fails, but because system 
+            behavior diverges from expectation.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild className="bg-[#0D9488] hover:bg-[#0D9488]/90 text-white px-8 py-6 text-lg">
@@ -31,7 +31,7 @@ const PromiseGapPage = () => {
         </div>
       </section>
 
-      {/* Core Logic Section - Balanced & Clean */}
+      {/* Core Logic Section - Original Language, High-Impact Style */}
       <section className="py-24 px-6 bg-[#030712] border-t border-slate-900">
         <div className="max-w-4xl mx-auto text-center">
           <div className="space-y-6 mb-16">
