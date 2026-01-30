@@ -1,48 +1,49 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Brain, FileCheck, Lightbulb, Settings } from "lucide-react";
+import { Brain, Users, ShieldAlert, Lightbulb } from "lucide-react";
 
 const services = [
   {
     icon: Brain,
-    title: "AI Strategy & Governance",
-    description: "Develop comprehensive frameworks for responsible AI deployment, risk management, and regulatory compliance."
+    title: "AI Decision Structures",
+    description: "Reveal how AI decisions are approved, challenged, and escalated under real operating conditions."
   },
   {
-    icon: Settings,
-    title: "Delivery Transformation",
-    description: "Implement proven methodologies to accelerate AI adoption and optimize organizational workflows."
+    icon: Users,
+    title: "Delivery and Adoption Readiness",
+    description: "Surface behavioral and organizational barriers that quietly undermine AI adoption and execution."
   },
   {
-    icon: FileCheck,
+    icon: ShieldAlert,
     title: "Executive Readiness",
-    description: "Prepare leadership teams with strategic insights and decision-making frameworks for AI initiatives."
+    description: "Support senior leaders in navigating AI tradeoffs with clarity, accountability, and confidence when decisions carry consequences."
   },
   {
     icon: Lightbulb,
     title: "Innovation Advisory",
-    description: "Identify opportunities for AI-driven innovation while maintaining ethical standards and human values."
+    description: "Evaluate AI opportunities through a risk-aware, human-centered lens before momentum outpaces judgment."
   }
 ];
 
 const ServicesPreview = () => {
   return (
-    <section className="py-24 px-6 bg-[#020617]">
+    <section className="py-24 px-6 bg-[#020617] border-t border-slate-900">
       <div className="container mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mb-16"
+          className="text-center mb-20"
         >
-          <h2 className="text-4xl font-bold mb-6 text-white tracking-tight">Our Services</h2>
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            Comprehensive advisory services to guide your AI journey from strategy to execution
+          <h2 className="text-4xl font-bold mb-6 text-white tracking-tight">What We Support</h2>
+          <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
+            Advisory support for organizations facing real AI risk, regulatory scrutiny, 
+            and adoption complexity.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-8">
           {services.map((service, index) => (
             <motion.div
               key={service.title}
@@ -51,15 +52,19 @@ const ServicesPreview = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
             >
-              {/* Updated Card: Darker background and teal accents to match advisory theme */}
-              <Card className="p-8 h-full bg-slate-900/50 border-slate-800 hover:border-[#14b8a6]/50 transition-all duration-300 border-2">
-                <div className="flex items-start gap-4">
+              <Card className="p-10 h-full bg-slate-900/30 border-slate-800 hover:border-[#14b8a6]/40 transition-all duration-500 border-2 relative overflow-hidden group">
+                {/* Visual accent matching the Hero card style */}
+                <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
+                
+                <div className="flex items-start gap-6">
                   <div className="p-3 rounded-lg bg-[#14b8a6]/10 flex-shrink-0">
                     <service.icon className="h-6 w-6 text-[#14b8a6]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-3 text-white">{service.title}</h3>
-                    <p className="text-slate-400 leading-relaxed">{service.description}</p>
+                    <h3 className="text-xl font-bold mb-4 text-white tracking-tight">{service.title}</h3>
+                    <p className="text-slate-400 leading-relaxed font-light text-lg">
+                      {service.description}
+                    </p>
                   </div>
                 </div>
               </Card>
