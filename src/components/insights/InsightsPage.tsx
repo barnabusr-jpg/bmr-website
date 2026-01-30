@@ -9,8 +9,8 @@ export default function InsightsPage() {
     <div className="min-h-screen bg-[#020617] flex flex-col">
       <Header />
 
-      <main className="flex-grow pt-32 pb-24 px-6">
-        <div className="container mx-auto max-w-7xl text-center">
+      <main className="flex-grow pt-32 pb-24 px-6 text-center">
+        <div className="container mx-auto max-w-7xl">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -24,17 +24,18 @@ export default function InsightsPage() {
             </p>
           </motion.div>
 
-          <div className="max-w-2xl mx-auto">
+          {/* Core Entry Point Card */}
+          <div className="max-w-3xl mx-auto text-left">
              <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full bg-[#14b8a6]"></div>
-                <div className="text-left space-y-6">
-                  <h3 className="text-2xl font-bold text-white tracking-tight">Understanding the Promise Gap™</h3>
-                  <p className="text-slate-400 font-light leading-relaxed">
+                <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
+                <div className="space-y-6">
+                  <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight italic">Understanding the Promise Gap™</h3>
+                  <p className="text-slate-400 font-light text-lg leading-relaxed">
                     Why AI-enabled system behavior diverges from leadership expectations under real operating conditions.
                   </p>
-                  <div className="pt-6 border-t border-slate-800/50">
+                  <div className="pt-8 border-t border-slate-800/50">
                     <span className="text-[#14b8a6] font-medium inline-flex items-center gap-2 group-hover:translate-x-1 transition-transform cursor-pointer">
-                      Explore Entry <ArrowRight className="h-4 w-4" />
+                      Explore the Field Guide <ArrowRight className="h-5 w-5" />
                     </span>
                   </div>
                 </div>
@@ -46,7 +47,7 @@ export default function InsightsPage() {
             whileInView={{ opacity: 1 }}
             className="mt-24"
           >
-            <p className="text-slate-500 font-light italic text-sm">
+            <p className="text-slate-500 font-light italic text-sm tracking-wide">
               &quot;Meaningful understanding requires structured observation. We look for why risk is persisting, not just where it is occurring.&quot;
             </p>
           </motion.div>
