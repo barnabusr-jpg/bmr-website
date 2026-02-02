@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Play, Volume2 } from "lucide-react"; // Added for professional UI signals
+import { Play, Volume2 } from "lucide-react";
 
 const CommercialVideo = ({ src }: { src: string }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -20,7 +20,7 @@ const CommercialVideo = ({ src }: { src: string }) => {
 
   return (
     <section className="py-24 bg-[#020617] relative overflow-hidden flex flex-col items-center">
-      {/* Subtle Background System Grid */}
+      {/* Subtle Background System Grid - Visualizing Invisible Layers */}
       <div 
         className="absolute inset-0 opacity-[0.03] pointer-events-none" 
         style={{ 
@@ -29,14 +29,15 @@ const CommercialVideo = ({ src }: { src: string }) => {
         }}
       />
 
-      {/* Methodological Header */}
+      {/* Narrative Header: Framing the Promise Gap™ */}
       <div className="container mx-auto px-6 relative z-10 text-center mb-16">
         <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
           Visualizing the <span className="text-[#14b8a6]">Promise Gap™</span>
         </h2>
         <p className="text-xl text-slate-400 font-light leading-relaxed max-w-2xl mx-auto">
-          An observation of invisible system layers, identifying where 
-          friction becomes drift and instability becomes risk.
+          This observation tracks invisible system layers as friction becomes drift. 
+          Note the instability: the sequence ends where behavior remains unresolved 
+          and systemic balance is not yet reached.
         </p>
       </div>
 
@@ -53,7 +54,7 @@ const CommercialVideo = ({ src }: { src: string }) => {
             className="w-full h-auto aspect-video object-cover"
           />
 
-          {/* Cinematic Overlay Play Button */}
+          {/* Cinematic Overlay: Transitioning to "Observation Mode" */}
           {!isPlaying && (
             <button
               onClick={handlePlay}
@@ -79,7 +80,7 @@ const CommercialVideo = ({ src }: { src: string }) => {
           )}
         </div>
 
-        {/* Muted Notification Polish */}
+        {/* Footer Helper Text */}
         <div className="text-center text-[10px] text-slate-600 uppercase tracking-[0.2em] py-6">
           System audio is muted by default for initial observation.
         </div>
