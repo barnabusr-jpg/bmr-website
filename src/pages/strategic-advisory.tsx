@@ -24,20 +24,13 @@ const StrategicAdvisoryPage = () => {
             <h1 className="text-5xl md:text-8xl lg:text-9xl font-bold tracking-tighter leading-[0.9] mb-8">
               Strategic <span className="text-[#0D9488]">Advisory</span>
             </h1>
-            <p className="text-xl md:text-3xl text-slate-400 max-w-3xl font-light">
-              High-leverage interventions for organizations that value operational integrity over corporate theater.
-            </p>
+            <p className="text-xl md:text-3xl text-slate-400 max-w-3xl font-light">High-leverage interventions for organizations that value operational integrity over corporate theater.</p>
           </motion.div>
-
           <div className="grid md:grid-cols-2 gap-16 mb-32 items-start">
             <div className="md:sticky md:top-32 space-y-6">
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight">How we partner.</h2>
-              <p className="text-slate-400 text-lg leading-relaxed">
-                We don&apos;t provide 200-page slide decks. We provide the <strong>visibility</strong> and <strong>architectural changes</strong> required to make your strategy self-evident.
-              </p>
-              <Button onClick={scrollToContact} className="bg-[#0D9488] hover:bg-[#0D9488]/90 text-white font-bold h-14 px-10 rounded-xl">
-                Request a Consultation
-              </Button>
+              <p className="text-slate-400 text-lg leading-relaxed">We don&apos;t provide 200-page slide decks. We provide the <strong>visibility</strong> and <strong>architectural changes</strong> required to make your strategy self-evident.</p>
+              <Button onClick={scrollToContact} className="bg-[#0D9488] hover:bg-[#0D9488]/90 text-white font-bold h-14 px-10 rounded-xl">Request a Consultation</Button>
             </div>
             <div className="space-y-8">
               {services.map((service, index) => (
@@ -46,22 +39,6 @@ const StrategicAdvisoryPage = () => {
                   <p className="text-slate-400 leading-relaxed">{service.description}</p>
                 </div>
               ))}
-            </div>
-          </div>
-
-          <div className="mt-32 p-12 border border-[#0D9488]/20 rounded-3xl bg-[#0D9488]/5 text-center">
-            <h3 className="text-2xl md:text-4xl font-bold mb-6">Ready to close the Gap?</h3>
-            <p className="text-slate-400 mb-10 max-w-2xl mx-auto">
-              Our advisory spots are limited to ensure high-touch systemic change. 
-              Fill out the diagnostic or reach out directly to start the audit.
-            </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
-               <Button onClick={scrollToContact} className="bg-[#0D9488] hover:bg-[#0D9488]/90 text-white font-bold h-14 px-8">
-                Contact Strategist
-              </Button>
-               <Button variant="outline" onClick={() => window.open('/diagnostic', '_blank')} className="border-slate-800 text-white h-14 px-8">
-                View Diagnostic
-              </Button>
             </div>
           </div>
         </div>
