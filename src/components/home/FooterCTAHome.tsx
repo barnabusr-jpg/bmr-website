@@ -37,7 +37,8 @@ const FooterCTA = () => {
       } else {
         throw new Error('Failed to send');
       }
-    } catch (error) {
+    } catch {
+      // Fixed: Removed 'error' variable to pass Vercel build
       toast({
         title: "Submission Error",
         description: "Please try again or email hello@bmradvisory.co directly.",
@@ -140,13 +141,6 @@ const FooterCTA = () => {
             </form>
           </Card>
         </motion.div>
-
-        {/* Muted Navigation polish */}
-        <div className="mt-12 text-center">
-          <p className="text-slate-600 text-[10px] uppercase tracking-[0.3em]">
-            Systemic Observation Dispatched to hello@bmradvisory.co
-          </p>
-        </div>
       </div>
     </section>
   );
