@@ -1,69 +1,44 @@
 import React from 'react';
-import Link from 'next/link';
+import Link from 'next/link'; // Added this import to fix the build error
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
-const Footer = () => {
+const FooterCTA = () => {
   return (
-    <footer className="bg-[#020617] border-t border-slate-800 py-12 px-6">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
-        <div className="col-span-1 md:col-span-2">
-          <Link href="/" className="text-xl font-bold text-white tracking-tight mb-4 inline-block">
-            BMR<span className="text-[#0D9488]">SOLUTIONS</span>
-          </Link>
-          <p className="text-slate-400 max-w-sm">
-            Closing the distance between strategy and reality through fractional leadership and systemic alignment.
-          </p>
-        </div>
-
-        <div>
-          <h4 className="text-white font-semibold mb-4">Platform</h4>
-          <ul className="space-y-2">
-            <li>
-              <Link href="/promise-gap" className="text-slate-400 hover:text-[#0D9488] transition-colors">
-                The Problem
-              </Link>
-            </li>
-            <li>
-              <Link href="/approach" className="text-slate-400 hover:text-[#0D9488] transition-colors">
-                Our Approach
-              </Link>
-            </li>
-            <li>
-              <Link href="/diagnostic" className="text-slate-400 hover:text-[#0D9488] transition-colors">
-                Diagnostic
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        <div>
-          <h4 className="text-white font-semibold mb-4">Resources</h4>
-          <ul className="space-y-2">
-            <li>
-              {/* Pointing to your pending insights placeholder */}
-              <Link href="/insights" className="text-slate-400 hover:text-[#0D9488] transition-colors">
-                Field Guide
-              </Link>
-            </li>
-            <li>
-              {/* Updated to Advisory to match the new structure */}
-              <Link href="/strategic-advisory" className="text-slate-400 hover:text-[#0D9488] transition-colors">
-                Strategic Advisory
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact" className="text-slate-400 hover:text-[#0D9488] transition-colors">
-                Contact
-              </Link>
-            </li>
-          </ul>
-        </div>
-      </div>
+    <section className="py-32 bg-[#020617] border-t border-slate-900 relative overflow-hidden">
+      {/* Subtle bottom-glow to give the section depth */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-[#14b8a6]/20 to-transparent" />
       
-      <div className="max-w-7xl mx-auto mt-12 pt-8 border-t border-slate-900 text-center text-slate-500 text-sm">
-        <p>© {new Date().getFullYear()} BMR Solutions. All rights reserved.</p>
+      <div className="container mx-auto px-6 text-center relative z-10">
+        <h2 className="text-4xl md:text-6xl font-bold text-white mb-8 tracking-tight">
+          Start a <span className="text-[#14b8a6]">Conversation</span>
+        </h2>
+        
+        <p className="text-slate-400 mb-12 max-w-2xl mx-auto font-light text-xl leading-relaxed">
+          The first step in closing the Promise Gap™ is making your system behavior visible. 
+          Connect with a strategist to discuss your diagnostic results.
+        </p>
+
+        <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+          <Button 
+            className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-16 px-12 text-lg transition-all duration-300 shadow-[0_0_30px_rgba(20,184,166,0.15)] group"
+            onClick={() => window.location.href = 'mailto:hello@bmradvisory.co'}
+          >
+            Contact a Strategist 
+            <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+          </Button>
+          
+          {/* Fixed: Replaced <a> with <Link> to satisfy ESLint */}
+          <Link 
+            href="/field-guide" 
+            className="text-slate-500 hover:text-white text-sm font-medium uppercase tracking-widest transition-colors py-4 px-6"
+          >
+            Explore the Field Guide
+          </Link>
+        </div>
       </div>
-    </footer>
+    </section>
   );
 };
 
-export default Footer;
+export default FooterCTA;
