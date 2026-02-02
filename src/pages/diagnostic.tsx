@@ -53,7 +53,7 @@ const DiagnosticPage = () => {
     });
     
     let lowestPillar = "Trust";
-    let lowestAvg = 10;
+    let lowestAvg = 11; // Higher than max score
     
     Object.keys(pillarScores).forEach(p => {
       const avg = pillarScores[p].total / pillarScores[p].count;
@@ -124,31 +124,51 @@ const DiagnosticPage = () => {
               <motion.div 
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="text-center space-y-8 p-10 md:p-16 border border-slate-800 rounded-3xl bg-slate-900/20 backdrop-blur-sm"
+                className="text-center space-y-6 p-6 md:p-16 border border-slate-800 rounded-[2rem] bg-slate-900/20 backdrop-blur-md shadow-2xl"
               >
-                <div className="inline-block px-4 py-1 border border-[#0D9488] rounded-full text-[#0D9488] text-[10px] font-mono uppercase tracking-widest mb-4">
-                  Assessment Complete
+                <div className="inline-block px-3 py-1 border border-[#0D9488]/50 rounded-full text-[#0D9488] text-[10px] font-mono uppercase tracking-[0.2em] mb-2">
+                  Audit Result
                 </div>
-                <h2 className="text-5xl md:text-7xl font-bold tracking-tighter">
-                  Score: {calculateScore()}
-                </h2>
-                <p className="text-slate-400 text-lg leading-relaxed max-w-md mx-auto">
-                  Your Promise Gap™ is most visible in the <strong className="text-white">{getMainFrictionPillar()}</strong> pillar. This friction suggests your operational reality is drifting from your strategic intent.
-                </p>
 
-                
+                <div className="space-y-2">
+                  <h2 className="text-6xl md:text-8xl font-bold tracking-tighter text-white">
+                    {calculateScore()}
+                  </h2>
+                  <p className="text-[#0D9488] font-mono text-xs uppercase tracking-widest">
+                    Promise Gap Index™
+                  </p>
+                </div>
 
-                <div className="pt-8 space-y-4">
+                <div className="py-4 flex justify-center">
+                  <div className="relative w-48 h-48 md:w-64 md:h-64">
+                    
+                  </div>
+                </div>
+
+                <div className="space-y-4 max-w-md mx-auto">
+                  <h3 className="text-xl md:text-2xl font-bold text-white leading-tight">
+                    Friction Detected: <span className="text-[#0D9488]">{getMainFrictionPillar()}</span>
+                  </h3>
+                  <p className="text-slate-400 text-sm md:text-base leading-relaxed">
+                    Your system architecture shows significant drift in the **{getMainFrictionPillar()}** pillar. 
+                    This friction prevents strategic intent from becoming operational reality.
+                  </p>
+                </div>
+
+                <div className="pt-6 space-y-4">
                   <Button 
-                    className="w-full bg-[#0D9488] hover:bg-[#0D9488]/90 text-white font-bold h-16 text-lg rounded-xl"
+                    className="w-full bg-[#0D9488] hover:bg-[#0D9488]/90 text-white font-bold h-16 md:h-20 text-lg rounded-2xl shadow-[0_0_50px_rgba(13,148,136,0.2)] transition-all active:scale-[0.98]"
                     onClick={() => {
                       localStorage.setItem('bmr_score', calculateScore());
                       localStorage.setItem('bmr_pillar', getMainFrictionPillar());
                       window.location.href = '/#contact';
                     }}
                   >
-                    Discuss My {getMainFrictionPillar()} Analysis
+                    Discuss These Results
                   </Button>
+                  <p className="text-slate-500 text-[10px] uppercase font-mono tracking-widest leading-none">
+                    Secure transmission to hello@bmradvisory.co enabled
+                  </p>
                 </div>
               </motion.div>
             )}
