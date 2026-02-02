@@ -1,72 +1,116 @@
+import React from 'react';
+import { motion } from "framer-motion";
 import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import CommercialVideo from "@/components/CommercialVideo";
+import FooterCTA from "@/components/home/FooterCTAHome";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { ArrowRight, BarChart3, ShieldCheck, Users } from "lucide-react";
 
-export default function StrategicAdvisoryPage() {
+const StrategicAdvisoryPage = () => {
+  const scrollToContact = () => {
+    const element = document.getElementById('contact');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const services = [
+    {
+      title: "Systemic Audit",
+      description: "A deep-dive diagnostic of your current operational loops to identify where strategy is being lost in translation."
+    },
+    {
+      title: "Executive Alignment",
+      description: "Facilitated sessions to ensure the leadership team's 'Promise' matches the system's actual capacity."
+    },
+    {
+      title: "Operational Re-coding",
+      description: "Direct intervention to redesign workflows, incentives, and communication protocols for long-term integrity."
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-[#020617]">
+    <div className="bg-[#020617] min-h-screen text-white">
       <Header />
       
-      <main>
-        {/* Hero Section for the Video */}
-        <section className="pt-20 pb-12 px-6">
-          <div className="max-w-6xl mx-auto text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 tracking-tight">
-              Strategic <span className="text-[#14b8a6]">Advisory</span>
+      <main className="pt-32 pb-20 px-6">
+        <div className="container mx-auto max-w-6xl">
+          
+          {/* Hero Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-24"
+          >
+            <h1 className="text-5xl md:text-8xl lg:text-9xl font-bold tracking-tighter leading-[0.9] mb-8">
+              Strategic <span className="text-[#0D9488]">Advisory</span>
             </h1>
-            <p className="text-xl text-slate-400 max-w-3xl mx-auto">
-              Bridging the Promise Gap through systemic AI architecture and high-fidelity governance.
+            <p className="text-xl md:text-3xl text-slate-400 max-w-3xl font-light">
+              High-leverage interventions for organizations that value operational integrity over corporate theater.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="max-w-5xl mx-auto rounded-3xl overflow-hidden border border-slate-800 shadow-2xl">
-            <CommercialVideo src="https://uuyq3t7kfckwh0je.public.blob.vercel-storage.com/bmr-commercial.mp4" />
-          </div>
-        </section>
-
-        {/* Advisory Pillars */}
-        <section className="py-24 px-6 bg-slate-900/30 border-y border-slate-800/50">
-          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-12">
-            <div className="space-y-4">
-              <BarChart3 className="h-10 w-10 text-[#14b8a6]" />
-              <h3 className="text-xl font-bold text-white">Systemic Mapping</h3>
-              <p className="text-slate-400">We identify structural leakage in AI implementations that prevent value realization.</p>
-            </div>
-            <div className="space-y-4">
-              <ShieldCheck className="h-10 w-10 text-[#14b8a6]" />
-              <h3 className="text-xl font-bold text-white">Trust Architecture</h3>
-              <p className="text-slate-400">Designing the AVS and IGF layers to ensure AI systems remain responsible and resilient.</p>
-            </div>
-            <div className="space-y-4">
-              <Users className="h-10 w-10 text-[#14b8a6]" />
-              <h3 className="text-xl font-bold text-white">Executive Alignment</h3>
-              <p className="text-slate-400">Bridging the gap between technical promise and boardroom expectations.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-24 px-6 text-center">
-          <div className="max-w-3xl mx-auto space-y-8">
-            <h2 className="text-3xl font-bold text-white">Ready to bridge the Promise Gap?</h2>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold px-8 h-12">
-                <Link href="/diagnostic">Take the Diagnostic</Link>
-              </Button>
-              <Button asChild variant="outline" size="lg" className="border-slate-700 text-white hover:bg-slate-800 px-8 h-12">
-                <Link href="/contact" className="flex items-center gap-2">
-                  Contact Advisory <ArrowRight className="h-4 w-4" />
-                </Link>
+          {/* Core Service Offering */}
+          <div className="grid md:grid-cols-2 gap-16 mb-32 items-start">
+            <div className="sticky top-32 space-y-6">
+              <h2 className="text-3xl md:text-5xl font-bold tracking-tight">How we partner.</h2>
+              <p className="text-slate-400 text-lg leading-relaxed">
+                We don't provide 200-page slide decks. We provide the <strong>visibility</strong> and <strong>architectural changes</strong> required to make your strategy self-evident in your day-to-day operations.
+              </p>
+              <Button 
+                onClick={scrollToContact}
+                className="bg-[#0D9488] hover:bg-[#0D9488]/90 text-white font-bold h-14 px-10 rounded-xl"
+              >
+                Request a Consultation
               </Button>
             </div>
+            
+            <div className="space-y-8">
+              {services.map((service, index) => (
+                <div 
+                  key={index} 
+                  className="p-10 border border-slate-800 rounded-3xl bg-slate-900/20 hover:border-[#0D9488]/50 transition-colors group"
+                >
+                  <h3 className="text-2xl font-bold mb-4 text-white group-hover:text-[#0D9488] transition-colors">
+                    {service.title}
+                  </h3>
+                  <p className="text-slate-400 leading-relaxed">
+                    {service.description}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
-        </section>
+
+          {/* Advisory Impact Block */}
+          
+          <div className="mt-32 p-12 border border-[#0D9488]/20 rounded-3xl bg-[#0D9488]/5 text-center">
+            <h3 className="text-2xl md:text-4xl font-bold mb-6">Ready to close the Gap?</h3>
+            <p className="text-slate-400 mb-10 max-w-2xl mx-auto">
+              Our advisory spots are limited to ensure high-touch systemic change. 
+              Fill out the diagnostic or reach out directly to start the audit.
+            </p>
+            <div className="flex flex-col sm:flex-row justify-center gap-4">
+               <Button 
+                onClick={scrollToContact}
+                className="bg-[#0D9488] hover:bg-[#0D9488]/90 text-white font-bold h-14 px-8"
+              >
+                Contact Strategist
+              </Button>
+               <Button 
+                variant="outline"
+                onClick={() => window.open('/diagnostic', '_blank')}
+                className="border-slate-800 text-white h-14 px-8"
+              >
+                View Diagnostic
+              </Button>
+            </div>
+          </div>
+
+        </div>
       </main>
 
-      <Footer />
+      <FooterCTA />
     </div>
   );
-}
+};
+
+export default StrategicAdvisoryPage;
