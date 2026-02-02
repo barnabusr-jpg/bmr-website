@@ -17,7 +17,7 @@ const Index = () => {
       <main>
         <Hero />
 
-        {/* 1. Observation Layer: The Brand Film */}
+        {/* Observation Layer */}
         <CommercialVideo src="https://uuyq3t7kfckwh0je.public.blob.vercel-storage.com/bmr-commercial.mp4" />
 
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
@@ -32,19 +32,17 @@ const Index = () => {
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
         <Outcomes />
 
-        {/* REMOVED: The inline "Education Layer/Playbook" section was deleted here 
-           to eliminate the duplicate form and background color mismatch.
+        {/* NOTE: The "Playbook" lead capture section was deleted from here 
+            to remove the duplicate form and background color mismatch.
         */}
 
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
-
-        {/* 2. Analysis Layer: Comparison */}
         <ComparisonGrid />
         
         <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
         <Insights />
 
-        {/* 3. Conversion Layer: The ONLY "Start a Conversation" section */}
+        {/* This is now the ONLY conversion section on the page */}
         <FooterCTA /> 
       </main>
       <Footer />
