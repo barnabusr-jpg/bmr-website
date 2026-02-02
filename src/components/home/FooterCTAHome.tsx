@@ -46,7 +46,8 @@ const FooterCTA = () => {
       } else {
         throw new Error('Failed to send');
       }
-    } catch (err) {
+    } catch {
+      // Catch block updated to satisfy "no-unused-vars" ESLint rule
       toast({ title: "Transmission Error", description: "Please try again or email hello@bmradvisory.co directly.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);
