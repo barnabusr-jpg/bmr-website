@@ -1,87 +1,86 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Calendar } from "lucide-react";
+import { ArrowRight, Activity } from "lucide-react";
+import Link from "next/link";
 
-const insights = [
+const signalEntries = [
   {
-    category: "Governance",
-    title: "Building Trust in AI Systems: A Framework Approach",
-    excerpt: "Explore how transparent governance structures create stakeholder confidence in AI deployments.",
-    date: "2024-03-15",
-    readTime: "5 min read"
+    category: "Trust",
+    title: "The Real Trust Gap",
+    excerpt: "Trust in AI is not achieved solely through compliance; it is cultivated through transparency. We examine how oversight transforms doubt into an operational signal.",
+    slug: "real-trust-gap"
   },
   {
-    category: "Transformation",
-    title: "The Adoption Value System: Measuring AI Impact",
-    excerpt: "Learn how to quantify and maximize the organizational value of AI implementations.",
-    date: "2024-03-10",
-    readTime: "7 min read"
+    category: "Govern",
+    title: "The Adoption Value System",
+    excerpt: "Proving value is an AI adoption accelerator. This introduces the AVS model to turn intent into measurable impact across four dimensions.",
+    slug: "adoption-value-system"
   },
   {
-    category: "Leadership",
-    title: "Executive Readiness for the AI Era",
-    excerpt: "Preparing leadership teams with strategic frameworks for effective AI decision-making.",
-    date: "2024-03-05",
-    readTime: "6 min read"
+    category: "Evolve",
+    title: "Executive Readiness",
+    excerpt: "Technology mastery is not AI leadership. Leadership is about shaping the systems and decision boundaries that govern how technology is used.",
+    slug: "executive-readiness-ai"
   }
 ];
 
 const Insights = () => {
   return (
-    <section className="py-24 px-6 bg-muted/30">
+    <section className="py-24 px-6 bg-[#020617] border-t border-slate-900">
       <div className="container mx-auto max-w-7xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mb-16"
+          className="mb-16"
         >
-          <h2 className="text-4xl font-bold mb-6">Latest Insights</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Expert perspectives on responsible AI, governance, and transformation
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white tracking-tight">
+            The <span className="text-[#14b8a6]">Signal Architecture</span>
+          </h2>
+          <p className="text-xl text-slate-400 max-w-2xl font-light leading-relaxed">
+            Strategic perspectives designed to provide structural clarity when AI-enabled systems 
+            begin to drift from leadership intent.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-3 gap-6">
-          {insights.map((insight, index) => (
+        <div className="grid md:grid-cols-3 gap-8">
+          {signalEntries.map((insight, index) => (
             <motion.div
-              key={insight.title}
+              key={insight.slug}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
             >
-              <Card className="p-6 h-full hover:shadow-lg transition-all duration-200 group cursor-pointer border-2 hover:border-primary/50">
-                <div className="space-y-4">
-                  <span className="text-xs font-semibold text-primary uppercase tracking-wider">
-                    {insight.category}
-                  </span>
+              <Link href={`/insights/${insight.slug}`}>
+                <Card className="p-10 h-full bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden group hover:border-[#14b8a6]/40 transition-all duration-500 cursor-pointer flex flex-col justify-between">
+                  {/* Visual accent consistency */}
+                  <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
                   
-                  <h3 className="text-xl font-semibold leading-tight group-hover:text-primary transition-colors">
-                    {insight.title}
-                  </h3>
-                  
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {insight.excerpt}
-                  </p>
-                  
-                  <div className="pt-4 border-t border-border">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>{insight.date}</span>
-                      </div>
-                      <span>{insight.readTime}</span>
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-2 text-[#14b8a6]">
+                      <Activity className="h-4 w-4" />
+                      <span className="text-[10px] font-bold uppercase tracking-[0.2em]">
+                        Lens: {insight.category}
+                      </span>
                     </div>
                     
-                    <div className="flex items-center text-primary text-sm font-medium group-hover:gap-2 transition-all">
-                      Read More
-                      <ArrowRight className="h-4 w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                    </div>
+                    <h3 className="text-2xl font-bold text-white tracking-tight italic group-hover:text-[#14b8a6] transition-colors leading-tight">
+                      {insight.title}
+                    </h3>
+                    
+                    <p className="text-slate-400 font-light leading-relaxed">
+                      {insight.excerpt}
+                    </p>
                   </div>
-                </div>
-              </Card>
+                    
+                  <div className="pt-8 mt-auto flex items-center text-[#14b8a6] text-sm font-medium group-hover:gap-3 transition-all">
+                    Read Entry
+                    <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                </Card>
+              </Link>
             </motion.div>
           ))}
         </div>
