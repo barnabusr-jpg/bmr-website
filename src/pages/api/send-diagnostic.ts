@@ -55,6 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sgMail.send(msg);
     return res.status(200).json({ message: 'Success' });
   } catch {
-    // No 'error' variable here = No Vercel build failure
+    // Removed 'error' variable here to prevent @typescript-eslint/no-unused-vars error
     return res.status(500).json({ message: 'Internal Error' });
   }
+}
