@@ -7,24 +7,29 @@ import { Button } from "@/components/ui/button";
 import { Check, Activity, ArrowRight } from "lucide-react";
 
 const diagnosticQuestions = [
-  { id: 1, lens: "Trust", text: "Do teams feel safe reporting AI failures or 'near misses' without fear of blame?" },
-  { id: 2, lens: "Trust", text: "Is there a clear, shared understanding of what 'Ethical AI' means in daily practice?" },
-  { id: 3, lens: "Trust", text: "Are end-users' lived experiences actively used to refine AI model behavior?" },
-  { id: 4, lens: "Trust", text: "Is there transparency regarding how AI-driven decisions are made and audited?" },
-  { id: 5, lens: "Govern", text: "Are accountability structures for AI outcomes clearly defined across the organization?" },
-  { id: 6, lens: "Govern", text: "Does the organization have a consistent policy for human-in-the-loop overrides?" },
-  { id: 7, lens: "Govern", text: "Is there a formal mechanism to halt AI deployments if safety thresholds are met?" },
-  { id: 8, lens: "Govern", text: "Are regulatory compliance checks integrated into the automated delivery pipeline?" },
-  { id: 9, lens: "Evolve", text: "Can the system adapt to data drift without requiring a full manual redesign?" },
-  { id: 10, lens: "Evolve", text: "Is there a feedback loop that translates operational friction into technical debt fixes?" },
-  { id: 11, lens: "Evolve", text: "Do teams have the resources to continuously monitor post-deployment performance?" },
-  { id: 12, lens: "Evolve", text: "Is the organization prepared to decommission AI models that no longer provide value?" },
+  // LENS: TRUST
+  { id: 1, lens: "Trust", text: "Our organization has a shared, non-technical language for defining AI reliability." },
+  { id: 2, lens: "Trust", text: "We can clearly demonstrate to stakeholders how our AI outputs align with brand values." },
+  { id: 3, lens: "Trust", text: "There is a high level of confidence that our AI behavior remains consistent in unscripted scenarios." },
+  { id: 4, lens: "Trust", text: "We proactively measure stakeholder sentiment regarding our use of automated decision-making." },
+
+  // LENS: GOVERN
+  { id: 5, lens: "Govern", text: "Our AI projects follow a standardized oversight process from conception to delivery." },
+  { id: 6, lens: "Govern", text: "Final accountability for AI-driven outcomes is clearly mapped to specific leadership roles." },
+  { id: 7, lens: "Govern", text: "We have established protocols for human expert intervention when AI performance fluctuates." },
+  { id: 8, lens: "Govern", text: "Our governance framework is designed to adapt as regulatory and technical landscapes evolve." },
+
+  // LENS: EVOLVE
+  { id: 9, lens: "Evolve", text: "We prioritize 'structured observation' to identify why system risks occur, not just where." },
+  { id: 10, lens: "Evolve", text: "We have a formal 'de-risking' phase before any AI initiative moves to real-world operation." },
+  { id: 11, lens: "Evolve", text: "Our AI strategy is integrated into the broader systemic goals of the organization." },
+  { id: 12, lens: "Evolve", text: "Leadership regularly reviews how AI system behavior impacts our overall delivery risk." },
 ];
 
 function LensIndicator({ label, isActive, isCompleted }: { label: string; isActive: boolean; isCompleted: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className={`h-14 w-14 rounded-full flex items-center justify-center transition-all duration-500 border-2 ${
+      <div className={`h-14 w-14 rounded-full flex items-center justify-center transition-all duration-500 border-2 relative ${
         isActive || isCompleted ? "bg-[#14b8a6] border-[#14b8a6] shadow-[0_0_15px_rgba(20,184,166,0.3)]" : "bg-slate-900 border-slate-800"
       }`}>
         <Check className={`h-6 w-6 transition-opacity duration-300 ${isCompleted ? "opacity-100 text-white" : "opacity-0"}`} />
@@ -93,7 +98,7 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: (answ
                       <input required className="w-full p-4 rounded-md border border-slate-800 bg-slate-950 text-white focus:border-[#14b8a6] outline-none transition-colors" 
                         value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
                     </div>
-                    <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-16 text-lg">
+                    <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-16 text-lg transition-all">
                       Begin Observation <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </form>
@@ -109,7 +114,13 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: (answ
                   <h2 className="text-2xl md:text-4xl font-bold mt-6 mb-12 leading-tight tracking-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
                   <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                     {["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"].map((option) => (
-                      <Button key={option} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/5 text-slate-300 hover:text-white transition-all duration-300" onClick={() => handleAnswer(option)}>
+                      <Button 
+                        key={option} 
+                        variant="outline" 
+                        className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10 text-slate-300 hover:text-white transition-all duration-300 group relative overflow-hidden" 
+                        onClick={() => handleAnswer(option)}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#14b8a6]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                         {option}
                       </Button>
                     ))}
