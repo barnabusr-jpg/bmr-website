@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link'; // Added this import to fix the build error
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 
@@ -27,12 +28,13 @@ const FooterCTA = () => {
             <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
           </Button>
           
-          <a 
+          {/* Fixed: Replaced <a> with <Link> to satisfy ESLint build requirements */}
+          <Link 
             href="/field-guide" 
             className="text-slate-500 hover:text-white text-sm font-medium uppercase tracking-widest transition-colors py-4 px-6"
           >
             Explore the Field Guide
-          </a>
+          </Link>
         </div>
       </div>
     </section>
