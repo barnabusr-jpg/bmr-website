@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
+// Removed 'Card' from here to fix the "defined but never used" build error
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -38,7 +38,6 @@ const FooterCTA = () => {
         throw new Error('Failed to send');
       }
     } catch {
-      // Fix: Removed 'error' variable to satisfy ESLint
       toast({
         title: "Submission Error",
         description: "Please try again or email hello@bmradvisory.co directly.",
@@ -52,7 +51,6 @@ const FooterCTA = () => {
   return (
     <section className="py-32 px-6 bg-[#020617] border-t border-slate-900 overflow-hidden">
       <div className="container mx-auto max-w-5xl">
-        {/* Aesthetic Heading from Screenshot */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -69,7 +67,6 @@ const FooterCTA = () => {
           </p>
         </motion.div>
 
-        {/* Functional Form Integration */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
