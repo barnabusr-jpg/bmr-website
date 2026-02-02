@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from 'next/router';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
@@ -42,7 +43,8 @@ function LensIndicator({ label, isActive, isCompleted }: { label: string; isActi
   );
 }
 
-export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: (answers: any, email: string, name: string) => void }) {
+export default function PromiseGapDiagnosticPage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({ name: "", email: "", organization: "" });
   const [answers, setAnswers] = useState<Record<number, string>>({});
@@ -57,13 +59,36 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: (answ
     setStep(step + 1);
   };
 
+  const submitResults = async () => {
+    const payload = { 
+      answers, 
+      to: formData.email, 
+      firstName: formData.name.split(' ')[0],
+      organization: formData.organization 
+    };
+    
+    try {
+      const res = await fetch('/api/send-diagnostic', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      
+      if (res.ok) {
+        router.push('/thank-you'); 
+      } else {
+        alert("Error sending results. Please try again.");
+      }
+    } catch {
+      alert("Connection failed. Please check your network.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col">
       <Header />
       <main className="flex-grow py-32 px-6">
         <div className="container mx-auto max-w-4xl">
-          
-          {/* Progress Lenses */}
           <div className="flex justify-center gap-8 md:gap-16 mb-20">
             <LensIndicator label="Trust" isActive={step >= 1 && step <= 4} isCompleted={step > 4} />
             <LensIndicator label="Govern" isActive={step >= 5 && step <= 8} isCompleted={step > 8} />
@@ -98,7 +123,7 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: (answ
                       <input required className="w-full p-4 rounded-md border border-slate-800 bg-slate-950 text-white focus:border-[#14b8a6] outline-none transition-colors" 
                         value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
                     </div>
-                    <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-16 text-lg transition-all">
+                    <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-16 text-lg">
                       Begin Observation <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </form>
@@ -138,7 +163,7 @@ export default function PromiseGapDiagnosticPage({ onSubmit }: { onSubmit: (answ
                   <p className="text-slate-400 font-light text-lg mb-10 max-w-xl mx-auto">
                     Your responses have been recorded. We will synthesize these signals into a preliminary System Health Picture.
                   </p>
-                  <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" onClick={() => onSubmit(answers, formData.email, formData.name)}>
+                  <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" onClick={submitResults}>
                     Submit & Send Synthesis
                   </Button>
                 </Card>
