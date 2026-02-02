@@ -1,116 +1,41 @@
-import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
+import React from 'react';
+import Link from 'next/link'; // Added this import to fix the build error
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { ArrowRight } from "lucide-react";
 
 const FooterCTA = () => {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    company: "",
-    message: "",
-  });
-  const { toast } = useToast();
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "Message Sent",
-      description: "Thank you for reaching out. We'll be in touch soon.",
-    });
-    setFormData({ name: "", email: "", company: "", message: "" });
-  };
-
   return (
-    <section className="py-24 px-6">
-      <div className="container mx-auto max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-4xl font-bold mb-6">Start a Conversation</h2>
-          <p className="text-xl text-muted-foreground leading-relaxed">
-            Let&apos;s discuss how we can help your organization navigate
-            responsible AI
-          </p>
-        </motion.div>
+    <section className="py-32 bg-[#020617] border-t border-slate-900 relative overflow-hidden">
+      {/* Subtle bottom-glow to give the section depth */}
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-[#14b8a6]/20 to-transparent" />
+      
+      <div className="container mx-auto px-6 text-center relative z-10">
+        <h2 className="text-4xl md:text-6xl font-bold text-white mb-8 tracking-tight">
+          Start a <span className="text-[#14b8a6]">Conversation</span>
+        </h2>
+        
+        <p className="text-slate-400 mb-12 max-w-2xl mx-auto font-light text-xl leading-relaxed">
+          The first step in closing the Promise Gap™ is making your system behavior visible. 
+          Connect with a strategist to discuss your diagnostic results.
+        </p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
-        >
-          <Card className="p-8 border-2">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Your name"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="company">Company</Label>
-                <Input
-                  id="company"
-                  placeholder="Your organization"
-                  value={formData.company}
-                  onChange={(e) =>
-                    setFormData({ ...formData, company: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea
-                  id="message"
-                  placeholder="Tell us about your AI governance needs..."
-                  rows={5}
-                  value={formData.message}
-                  onChange={(e) =>
-                    setFormData({ ...formData, message: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <Button type="submit" size="lg" className="w-full">
-                Send Message
-              </Button>
-            </form>
-          </Card>
-        </motion.div>
+        <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+          <Button 
+            className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-16 px-12 text-lg transition-all duration-300 shadow-[0_0_30px_rgba(20,184,166,0.15)] group"
+            onClick={() => window.location.href = 'mailto:hello@bmradvisory.co'}
+          >
+            Contact a Strategist 
+            <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+          </Button>
+          
+          {/* Fixed: Replaced <a> with <Link> to satisfy ESLint */}
+          <Link 
+            href="/field-guide" 
+            className="text-slate-500 hover:text-white text-sm font-medium uppercase tracking-widest transition-colors py-4 px-6"
+          >
+            Explore the Field Guide
+          </Link>
+        </div>
       </div>
     </section>
   );
