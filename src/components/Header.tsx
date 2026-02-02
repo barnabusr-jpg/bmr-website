@@ -3,6 +3,16 @@ import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 
 const Header = () => {
+  // Function to handle the smooth scroll to the contact form
+  const scrollToContact = (e: React.MouseEvent) => {
+    // Prevent default anchor behavior
+    e.preventDefault();
+    const element = document.getElementById('contact');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <header className="fixed top-0 w-full z-50 bg-[#020617]/80 backdrop-blur-md border-b border-slate-800">
       <nav className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -11,7 +21,6 @@ const Header = () => {
         </Link>
         
         <div className="hidden md:flex items-center gap-8">
-          {/* Fixed paths to match flat file structure */}
           <Link href="/promise-gap" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
             The Problem
           </Link>
@@ -21,12 +30,21 @@ const Header = () => {
           <Link href="/strategic-advisory" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
             Strategic Advisory
           </Link>
-          <Link href="/insights" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-            Field Guide
-          </Link>
           
-          <Button asChild className="bg-[#0D9488] hover:bg-[#0D9488]/90 text-white">
-            <Link href="/diagnostic">Start Diagnostic</Link>
+          {/* New Contact Link that triggers the scroll */}
+          <a 
+            href="#contact" 
+            onClick={scrollToContact}
+            className="text-sm font-medium text-slate-300 hover:text-white transition-colors cursor-pointer"
+          >
+            Contact
+          </a>
+          
+          <Button 
+            onClick={scrollToContact}
+            className="bg-[#0D9488] hover:bg-[#0D9488]/90 text-white font-bold"
+          >
+            Start a Conversation
           </Button>
         </div>
       </nav>
