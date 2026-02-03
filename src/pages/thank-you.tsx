@@ -1,47 +1,40 @@
-import React from 'react';
+import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Calendar, Mail } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { CheckCircle2, ArrowRight, FileText, Activity } from "lucide-react";
+import Link from 'next/link';
 
 export default function ThankYouPage() {
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col">
+    <div className="min-h-screen bg-[#020617] text-white">
       <Header />
-      <main className="flex-grow flex items-center justify-center py-32 px-6 text-center">
-        <div className="max-w-2xl mx-auto space-y-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-[#14b8a6]/30 bg-[#14b8a6]/10 text-[#14b8a6] text-xs font-bold uppercase tracking-widest mb-8">
-              <Mail className="h-3 w-3" /> Synthesis Dispatched
-            </div>
-            <h1 className="text-5xl md:text-6xl font-bold tracking-tight mb-6">
-              Observation <span className="text-[#14b8a6]">Complete.</span>
-            </h1>
-            <p className="text-xl text-slate-400 font-light leading-relaxed mb-12">
-              Your preliminary diagnostic signals have been delivered to your inbox. 
-              Our team is now mapping these results against the BMR Promise Gap™ framework.
-            </p>
-            
-            <div className="p-10 border-2 border-slate-800 bg-slate-900/20 rounded-2xl relative overflow-hidden group text-left">
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
-              <h3 className="text-2xl font-bold mb-4 text-white">Review your health picture.</h3>
-              <p className="text-slate-400 mb-8 font-light">
-                Every Promise Gap is unique. Book a 15-minute briefing with a BMR strategist to interpret 
-                your pillar scores and identify immediate de-risking opportunities.
-              </p>
-              <Button 
-                className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-14 px-8 w-full md:w-auto"
-                onClick={() => window.open('https://calendly.com/bmr-advisory', '_blank')}
-              >
-                Schedule Briefing <Calendar className="ml-2 h-5 w-5" />
-              </Button>
-            </div>
-          </motion.div>
+      <main className="py-32 px-6 container mx-auto max-w-4xl text-center">
+        <CheckCircle2 className="h-20 w-20 text-[#14b8a6] mx-auto mb-8" />
+        <h1 className="text-4xl md:text-5xl font-bold mb-6">Observation Recorded.</h1>
+        <p className="text-slate-400 text-xl mb-16 max-w-2xl mx-auto leading-relaxed">
+          We are synthesizing your results against our longitudinal data to identify the specific "Friction Points" within your organization.
+        </p>
+
+        <div className="grid md:grid-cols-2 gap-6 text-left">
+          <Card className="p-8 bg-slate-900/40 border-slate-800 border-2">
+            <FileText className="text-[#14b8a6] mb-4" />
+            <h3 className="text-lg font-bold mb-2">The Synthesis Report</h3>
+            <p className="text-sm text-slate-400">Your custom report mapping ROI leaks and hidden labor costs will arrive via email within 24 hours.</p>
+          </Card>
+          <Card className="p-8 bg-slate-900/40 border-slate-800 border-2">
+            <Activity className="text-[#14b8a6] mb-4" />
+            <h3 className="text-lg font-bold mb-2">Longitudinal Context</h3>
+            <p className="text-sm text-slate-400">Our data confirms that technical metrics often mask operational decay. We help you recover the value you've already paid for.</p>
+          </Card>
+        </div>
+
+        <div className="mt-20">
+          <Link href="/">
+            <Button className="bg-transparent border border-slate-700 text-slate-300 hover:text-white hover:border-[#14b8a6] px-8 h-12">
+              Return to Insights
+            </Button>
+          </Link>
         </div>
       </main>
       <Footer />
