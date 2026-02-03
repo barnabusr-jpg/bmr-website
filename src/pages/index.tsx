@@ -2,7 +2,7 @@ import React from 'react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 
 export default function LandingPage() {
   return (
@@ -18,7 +18,7 @@ export default function LandingPage() {
           Strategic Advisory for the AI Era. We help leaders close the Promise Gap 
           between AI potential and operational reality.
         </p>
-        <div className="flex flex-col md:flex-row gap-4 justify-center">
+        <div className="flex justify-center">
           <Button 
             onClick={() => window.location.href = '/diagnostic'}
             className="bg-[#14b8a6] text-black font-bold h-14 px-8 text-lg hover:bg-[#0f9688]"
@@ -29,16 +29,20 @@ export default function LandingPage() {
       </section>
 
       {/* Video Section */}
-      <section className="py-20 bg-slate-900/50 border-y border-slate-800">
+      <section className="py-20 bg-slate-900/30 border-y border-slate-800">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold mb-12">Visualizing the Promise Gap</h2>
-          <div className="max-w-4xl mx-auto rounded-xl overflow-hidden border-2 border-slate-800 shadow-2xl">
+          <div className="max-w-4xl mx-auto rounded-xl overflow-hidden border-2 border-slate-800 shadow-2xl bg-black">
             <video 
               controls 
-              className="w-full aspect-video bg-black"
-              poster="/video-poster.jpg"
+              playsInline
+              preload="auto"
+              className="w-full aspect-video"
             >
-              <source src="YOUR_VERCEL_BLOB_URL_HERE" type="video/mp4" />
+              <source 
+                src="https://uuyq3t7kfckwh0je.public.blob.vercel-storage.com/bmr-commercial.mp4" 
+                type="video/mp4" 
+              />
               Your browser does not support the video tag.
             </video>
           </div>
