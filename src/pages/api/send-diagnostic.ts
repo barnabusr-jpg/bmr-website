@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 
