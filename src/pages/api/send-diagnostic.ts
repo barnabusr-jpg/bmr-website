@@ -4,11 +4,11 @@ import sgMail from '@sendgrid/mail';
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 const ceoTranslation: Record<number, string> = {
-  1: "VALUE DRAIN: High friction; requires constant manual 'life support' to function.",
-  2: "STRANDED ASSET: Theoretically functional, but bypassed or ignored by the team.",
-  3: "UTILITY ONLY: Handles basic tasks but provides no 'lift' for high-value work.",
-  4: "OPERATIONAL LIFT: Measurably increases capacity; humans and AI are in sync.",
-  5: "CAPITAL MULTIPLIER: Resilient and self-correcting; generates new strategic value."
+  1: "VALUE DRAIN: High friction; requires constant manual intervention.",
+  2: "STRANDED ASSET: Functionally present but bypassed by teams.",
+  3: "UTILITY ONLY: Handles basics but provides no strategic lift.",
+  4: "OPERATIONAL LIFT: Measurably increases capacity; team/AI synergy.",
+  5: "CAPITAL MULTIPLIER: Self-correcting; generates new strategic value."
 };
 
 const scoreMap: Record<string, number> = {
@@ -39,9 +39,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <h2 style="color: #14b8a6;">BMR Strategic Synthesis</h2>
         <p>Hello ${firstName}, your Diagnostic for <strong>${organization}</strong> is complete.</p>
         <div style="background: #f8fafc; padding: 25px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
-          <p><strong>Trust Lens: ${trustAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(trustAvg))]}</small></p>
-          <p><strong>Governance Lens: ${governAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(governAvg))]}</small></p>
-          <p><strong>Evolution Lens: ${evolveAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(evolveAvg))]}</small></p>
+          <p><strong>Trust: ${trustAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(trustAvg))]}</small></p>
+          <p><strong>Governance: ${governAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(governAvg))]}</small></p>
+          <p><strong>Evolution: ${evolveAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(evolveAvg))]}</small></p>
         </div>
       </div>
     `,
@@ -51,14 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     to: 'hello@bmradvisory.co',
     from: 'hello@bmradvisory.co',
     subject: `🚨 NEW LEAD: ${organization} Diagnostic`,
-    html: `
-      <h2>New Diagnostic Lead Captured</h2>
-      <p><strong>Name:</strong> ${firstName}<br/><strong>Org:</strong> ${organization}<br/><strong>Email:</strong> ${to}</p>
-      <p><strong>Scores:</strong> Trust: ${trustAvg} | Govern: ${governAvg} | Evolve: ${evolveAvg}</p>
-      <hr />
-      <h3>Raw Signal Data:</h3>
-      <pre style="background: #f4f4f4; padding: 15px;">${JSON.stringify(answers, null, 2)}</pre>
-    `
+    html: `<h2>New Lead Captured</h2><p><strong>Name:</strong> ${firstName}<br/><strong>Org:</strong> ${organization}</p><pre>${JSON.stringify(answers, null, 2)}</pre>`
   };
 
   try {
