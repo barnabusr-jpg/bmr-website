@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Activity, Loader2, ArrowRight } from "lucide-react";
+import { Activity, Loader2 } from "lucide-react";
 
 const diagnosticQuestions = [
   { id: 1, lens: "Trust", text: "Our AI’s reported 'success' metrics translate into zero additional manual verification work for our human teams." },
@@ -31,12 +31,11 @@ export default function DiagnosticPage() {
   const [formData, setFormData] = useState({ name: "", email: "", organization: "" });
   const [answers, setAnswers] = useState<Record<number, string>>({});
 
-  const progress = step > 0 ? (step / 12) * 100 : 0;
+  const progress = step > 0 && step <= 12 ? (step / 12) * 100 : 0;
 
   const handleAnswer = (value: string) => {
-    setAnswers({ ...answers, [step]: value });
-    if (step < 12) setStep(step + 1);
-    else setStep(13); // Final complete state
+    setAnswers(prev => ({ ...prev, [step]: value }));
+    setStep(prev => prev + 1);
   };
 
   const submitResults = async () => {
@@ -54,7 +53,7 @@ export default function DiagnosticPage() {
       });
       if (res.ok) router.push('/thank-you');
     } catch (e) {
-      alert("Error generating synthesis.");
+      console.error("Submission error", e);
     } finally {
       setIsSubmitting(false);
     }
@@ -74,13 +73,22 @@ export default function DiagnosticPage() {
           {step === 0 ? (
             <motion.div key="intro" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/40 border-slate-800 border-2">
-                <h1 className="text-3xl font-bold mb-4">ROI Recovery Audit</h1>
-                <p className="text-slate-400 mb-8">Measure the delta between your AI investment and operational reality.</p>
-                <div className="space-y-4">
-                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#14b8a6]" placeholder="Full Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#14b8a6]" placeholder="Work Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
-                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#14b8a6]" placeholder="Organization" value={formData.organization} onChange={e => setFormData({...formData, organization: e.target.value})} />
-                  <Button onClick={() => setStep(1)} className="w-full bg-[#14b8a6] text-black font-bold h-14 mt-4 hover:bg-[#0d9488]">Begin Observation</Button>
+                <h1 className="text-3xl font-bold mb-4 font-display">ROI Recovery Audit</h1>
+                <p className="text-slate-400 mb-8">Identify where your AI investment is leaking into hidden labor.</p>
+                <div className="space-y-4 text-left">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Full Name</label>
+                    <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#14b8a6]" placeholder="Jane Doe" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Work Email</label>
+                    <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#14b8a6]" placeholder="jane@company.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold uppercase text-slate-500 tracking-wider">Organization</label>
+                    <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#14b8a6]" placeholder="Acme Corp" value={formData.organization} onChange={e => setFormData({...formData, organization: e.target.value})} />
+                  </div>
+                  <Button disabled={!formData.email || !formData.name} onClick={() => setStep(1)} className="w-full bg-[#14b8a6] text-black font-bold h-14 mt-4 hover:bg-[#0d9488]">Begin Observation</Button>
                 </div>
               </Card>
             </motion.div>
@@ -90,7 +98,7 @@ export default function DiagnosticPage() {
               <h2 className="text-2xl md:text-3xl font-bold mb-10 leading-tight">{diagnosticQuestions[step - 1].text}</h2>
               <div className="grid gap-3">
                 {ROI_SCALE.map(opt => (
-                  <Button key={opt} variant="outline" className="h-16 border-slate-800 hover:border-[#14b8a6] justify-start px-6 text-lg" onClick={() => handleAnswer(opt)}>
+                  <Button key={opt} variant="outline" className="h-16 border-slate-800 hover:border-[#14b8a6] justify-start px-6 text-lg transition-all" onClick={() => handleAnswer(opt)}>
                     {opt}
                   </Button>
                 ))}
@@ -100,7 +108,7 @@ export default function DiagnosticPage() {
             <motion.div key="complete" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
               <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
               <h2 className="text-3xl font-bold mb-4">Observation Complete</h2>
-              <p className="text-slate-400 mb-10">Data captured. Requesting Strategic Synthesis for {formData.organization}...</p>
+              <p className="text-slate-400 mb-10">Data captured for {formData.organization}. Ready for synthesis.</p>
               <Button onClick={submitResults} disabled={isSubmitting} className="bg-[#14b8a6] text-black font-bold h-16 w-full text-lg">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Synthesis Report"}
               </Button>
