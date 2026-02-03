@@ -3,100 +3,61 @@ import sgMail from '@sendgrid/mail';
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
-const questionMap: Record<string, string> = {
-  "1": "Shared non-technical language for AI reliability",
-  "2": "Alignment of AI outputs with brand values",
-  "3": "Consistency of AI behavior in unscripted scenarios",
-  "4": "Proactive measurement of stakeholder sentiment",
-  "5": "Standardized oversight from conception to delivery",
-  "6": "Mapping of accountability to specific leadership roles",
-  "7": "Protocols for human intervention during fluctuations",
-  "8": "Adaptability of governance to evolving landscapes",
-  "9": "Priority on structured observation of system risks",
-  "10": "Formal de-risking phase prior to real-world operation",
-  "11": "Integration of AI strategy with systemic goals",
-  "12": "Leadership review of AI-induced delivery risks"
+const ceoTranslation: Record<number, string> = {
+  1: "VALUE DRAIN: High friction; requires constant manual intervention.",
+  2: "STRANDED ASSET: Functionally present but bypassed by teams.",
+  3: "UTILITY ONLY: Handles basics but provides no strategic lift.",
+  4: "OPERATIONAL LIFT: Measurably increases capacity; team/AI synergy.",
+  5: "CAPITAL MULTIPLIER: Self-correcting; generates new strategic value."
+};
+
+const scoreMap: Record<string, number> = {
+  "Value Drain": 1, "Stranded Asset": 2, "Utility Only": 3, "Operational Lift": 4, "Capital Multiplier": 5
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
-
+  
   const { to, firstName, organization, answers } = req.body;
 
-  // Map text responses back to numerical impact for scoring
-  const scoreValue: Record<string, number> = {
-    "Strongly Agree": 5, "Agree": 4, "Neutral": 3, "Disagree": 2, "Strongly Disagree": 1
-  };
-
-  // Logic: Calculate Pillar Averages
   const getAvg = (ids: number[]) => {
-    const total = ids.reduce((sum, id) => {
-      const answerText = answers[id.toString()] || answers[id];
-      return sum + (scoreValue[answerText] || 0);
-    }, 0);
-    return (total / ids.length).toFixed(1);
+    const scores = ids.map(id => scoreMap[answers[id]] || 0);
+    const sum = scores.reduce((a, b) => a + b, 0);
+    return (sum / ids.length).toFixed(1);
   };
 
   const trustAvg = getAvg([1, 2, 3, 4]);
   const governAvg = getAvg([5, 6, 7, 8]);
   const evolveAvg = getAvg([9, 10, 11, 12]);
 
-  const msg = {
-    to: to,
-    from: 'hello@bmradvisory.co', // Must be verified in SendGrid
-    bcc: 'hello@bmradvisory.co',  // Internal lead notification
+  const clientMsg = {
+    to,
+    from: 'hello@bmradvisory.co',
     subject: `Strategic Synthesis: Diagnostic Results for ${firstName}`,
     html: `
-      <div style="font-family: sans-serif; max-width: 600px; color: #020617; line-height: 1.6;">
-        <h2 style="color: #14b8a6; letter-spacing: -0.02em;">Strategic Synthesis</h2>
-        <p>Hello ${firstName},</p>
-        <p>Your diagnostic observation for <strong>${organization}</strong> is complete. We have synthesized your responses into three core strategic lenses:</p>
-        
-        <div style="background: #f8fafc; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #e2e8f0;">
-          <div style="margin-bottom: 16px;">
-            <strong style="font-size: 16px;">Trust Lens: ${trustAvg} / 5.0</strong><br/>
-            <span style="font-size: 13px; color: #64748b;">Alignment between system behavior and stakeholder expectations.</span>
-          </div>
-          
-          <div style="margin-bottom: 16px;">
-            <strong style="font-size: 16px;">Governance Lens: ${governAvg} / 5.0</strong><br/>
-            <span style="font-size: 13px; color: #64748b;">Robustness of oversight and accountability structures.</span>
-          </div>
-          
-          <div>
-            <strong style="font-size: 16px;">Evolution Lens: ${evolveAvg} / 5.0</strong><br/>
-            <span style="font-size: 13px; color: #64748b;">Capacity to de-risk and adapt AI systems in real-time.</span>
-          </div>
-        </div>
-
-        <h3 style="color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Detailed Signals</h3>
-        <ul style="list-style: none; padding: 0;">
-          ${Object.entries(answers).map(([id, val]) => `
-            <li style="margin-bottom: 12px; font-size: 13px; border-bottom: 1px dotted #e2e8f0; padding-bottom: 4px;">
-              <span style="color: #64748b;">${questionMap[id]}:</span> <strong style="color: #14b8a6; float: right;">${val}</strong>
-              <div style="clear: both;"></div>
-            </li>
-          `).join('')}
-        </ul>
-
-        <div style="margin-top: 32px; padding: 20px; border-left: 4px solid #14b8a6; background: #f0fdfa;">
-          <p style="margin: 0; font-weight: bold; color: #020617;">The Promise Gap™ Analysis</p>
-          <p style="margin: 8px 0 0 0; font-size: 14px; color: #0d9488;">These scores identify specific friction points in your architecture. A BMR strategist will review this synthesis and contact you to discuss next steps.</p>
-        </div>
-        
-        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-          <p style="margin: 0; font-weight: bold; color: #020617;">BMR Advisory</p>
-          <p style="margin: 0; color: #64748b; font-size: 14px;">Trust. Govern. Evolve.</p>
+      <div style="font-family: sans-serif; color: #020617; max-width: 600px;">
+        <h2 style="color: #14b8a6;">BMR Strategic Synthesis</h2>
+        <p>Hello ${firstName}, your Diagnostic for <strong>${organization}</strong> is complete.</p>
+        <div style="background: #f8fafc; padding: 25px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
+          <p><strong>Trust: ${trustAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(trustAvg))]}</small></p>
+          <p><strong>Governance: ${governAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(governAvg))]}</small></p>
+          <p><strong>Evolution: ${evolveAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(evolveAvg))]}</small></p>
         </div>
       </div>
     `,
   };
 
+  const leadAlert = {
+    to: 'hello@bmradvisory.co',
+    from: 'hello@bmradvisory.co',
+    subject: `🚨 NEW LEAD: ${organization} Diagnostic`,
+    html: `<h2>New Lead Captured</h2><p><strong>Name:</strong> ${firstName}<br/><strong>Org:</strong> ${organization}</p><pre>${JSON.stringify(answers, null, 2)}</pre>`
+  };
+
   try {
-    await sgMail.send(msg);
-    return res.status(200).json({ message: 'Success' });
-  } catch (error: any) {
-    console.error("Diagnostic Dispatch Error:", error.response?.body || error.message);
-    return res.status(500).json({ message: 'Error' });
+    await Promise.all([sgMail.send(clientMsg), sgMail.send(leadAlert)]);
+    return res.status(200).json({ success: true });
+  } catch {
+    return res.status(500).json({ success: false });
   }
 }
