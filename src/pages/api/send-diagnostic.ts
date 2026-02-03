@@ -4,21 +4,15 @@ import sgMail from '@sendgrid/mail';
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 const ceoTranslation: Record<number, string> = {
-  1: "VALUE DRAIN: High friction; requires constant manual 'life support' to function.",
-  2: "STRANDED ASSET: Theoretically functional, but bypassed or ignored by the team.",
-  3: "UTILITY ONLY: Handles basic tasks but provides no 'lift' for high-value work.",
-  4: "OPERATIONAL LIFT: Measurably increases capacity; humans and AI are in sync.",
-  5: "CAPITAL MULTIPLIER: Resilient and self-correcting; generates new strategic value."
+  1: "VALUE DRAIN: Pay for AI + labor to fix it. Hidden costs exceed value.",
+  2: "STRANDED ASSET: Paying for capacity not used. ROI is effectively $0.",
+  3: "UTILITY ONLY: AI is breaking even; not contributing to growth.",
+  4: "OPERATIONAL LIFT: Saving 20-40% on labor; freeing resources.",
+  5: "CAPITAL MULTIPLIER: AI is a profit center; creating new revenue."
 };
 
 const scoreMap: Record<string, number> = {
   "Value Drain": 1, "Stranded Asset": 2, "Utility Only": 3, "Operational Lift": 4, "Capital Multiplier": 5
-};
-
-const questionLabels: Record<number, string> = {
-  1: "Metric Resonance", 2: "Brand Custody", 3: "Behavioral Predictability", 4: "Adoption Sentiment",
-  5: "Operational Consistency", 6: "Accountability Mapping", 7: "Intervention Latency", 8: "Evolutionary Agility",
-  9: "Root-Cause Resolution", 10: "The De-Risking Phase", 11: "Systemic Synergy", 12: "Longitudinal Vigilance"
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -39,35 +33,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     to,
     from: 'hello@bmradvisory.co',
     subject: `Strategic Synthesis: Diagnostic Results for ${firstName}`,
-    html: `
-      <div style="font-family: sans-serif; color: #020617; max-width: 600px;">
-        <h2 style="color: #14b8a6;">BMR Strategic Synthesis</h2>
-        <p>Hello ${firstName}, your Diagnostic for <strong>${organization}</strong> is complete.</p>
-        <div style="background: #f8fafc; padding: 25px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
-          <p><strong>Trust Lens: ${trustAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(trustAvg))]}</small></p>
-          <p><strong>Governance Lens: ${governAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(governAvg))]}</small></p>
-          <p><strong>Evolution Lens: ${evolveAvg}/5.0</strong><br/><small>${ceoTranslation[Math.round(Number(evolveAvg))]}</small></p>
-        </div>
+    html: `<div style="font-family: sans-serif; color: #020617; max-width: 600px;">
+      <h2 style="color: #14b8a6;">BMR Strategic Synthesis</h2>
+      <p>Diagnostic for <strong>${organization}</strong> complete.</p>
+      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <p><strong>Trust: ${trustAvg}/5.0</strong> - ${ceoTranslation[Math.round(Number(trustAvg))]}</p>
+        <p><strong>Govern: ${governAvg}/5.0</strong> - ${ceoTranslation[Math.round(Number(governAvg))]}</p>
+        <p><strong>Evolve: ${evolveAvg}/5.0</strong> - ${ceoTranslation[Math.round(Number(evolveAvg))]}</p>
       </div>
-    `,
+    </div>`
   };
 
   const leadAlert = {
     to: 'hello@bmradvisory.co',
     from: 'hello@bmradvisory.co',
-    subject: `🚨 NEW LEAD: ${organization} Diagnostic`,
-    html: `
-      <h2>New Diagnostic Lead</h2>
-      <p><strong>Name:</strong> ${firstName}<br/><strong>Org:</strong> ${organization}</p>
-      <p><strong>Scores:</strong> T: ${trustAvg} | G: ${governAvg} | E: ${evolveAvg}</p>
-      <pre>${JSON.stringify(answers, null, 2)}</pre>
-    `
+    subject: `🚨 NEW DIAGNOSTIC: ${organization} (${trustAvg}/${governAvg}/${evolveAvg})`,
+    html: `<h3>New Lead</h3><p>${firstName} (${to}) at ${organization}</p><pre>${JSON.stringify(answers, null, 2)}</pre>`
   };
 
   try {
     await Promise.all([sgMail.send(clientMsg), sgMail.send(leadAlert)]);
     return res.status(200).json({ success: true });
-  } catch (error) {
+  } catch {
     return res.status(500).json({ error: 'Failed' });
   }
 }
