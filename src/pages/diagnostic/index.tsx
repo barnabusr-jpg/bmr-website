@@ -39,17 +39,30 @@ export default function DiagnosticPage() {
   };
 
   const submitResults = async () => {
-  alert("Attempting to send..."); // Add this temporary line
-  setIsSubmitting(true);
-  // ... rest of code
-}     
-    const res = await fetch('/api/send-diagnostic', {
+    alert("Attempting to send..."); 
+    setIsSubmitting(true);
+    
+    try {
+      const res = await fetch('/api/send-diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ answers, to: formData.email, firstName: formData.name.split(' ')[0], organization: formData.organization }),
+        body: JSON.stringify({ 
+          answers, 
+          to: formData.email, 
+          firstName: formData.name.split(' ')[0], 
+          organization: formData.organization 
+        }),
       });
-      if (res.ok) router.push('/thank-you');
-    } catch {
+
+      if (res.ok) {
+        router.push('/thank-you');
+      } else {
+        alert("Server rejected the request. Check Vercel logs.");
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      alert("Network error. The request never reached the server.");
       setIsSubmitting(false);
     }
   };
@@ -93,7 +106,7 @@ export default function DiagnosticPage() {
             <motion.div key="complete" className="text-center">
               <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
               <h2 className="text-3xl font-bold mb-4">Diagnostic Complete</h2>
-              <Button onClick={submitResults} disabled={isSubmitting} className="bg-[#14b8a6] text-black font-bold h-16 w-full text-lg">
+              <Button onClick={submitResults} disabled={isSubmitting} className="bg-[#14b8a6] text-black font-bold h-16 w-full text-lg uppercase">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Synthesis Report"}
               </Button>
             </motion.div>
