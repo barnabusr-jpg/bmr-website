@@ -31,9 +31,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { name, email, org, results } = req.body;
+  // Safety Mapping: Ensure we capture the data regardless of naming convention
+  const leadName = req.body.name || req.body.userName || "Not Provided";
+  const leadEmail = req.body.email || req.body.userEmail || "Not Provided";
+  const leadOrg = req.body.org || req.body.organization || req.body.company || "Not Provided";
+  const results = req.body.results || {};
 
-  const resultsTableRows = Object.entries(results || {})
+  const resultsTableRows = Object.entries(results)
     .map(([id, category]) => {
       const info = DIAGNOSTIC_MAPPING[category as string] || { label: category as string, snippet: "" };
       return `
@@ -49,9 +53,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     <div style="font-family: sans-serif; color: #020617; max-width: 700px; margin: 0 auto; border: 1px solid #e2e8f0; padding: 40px; border-radius: 8px;">
       <h2 style="color: #14b8a6; margin-top: 0; font-size: 24px;">MINE Diagnostic: Observation Brief</h2>
       <div style="background-color: #f8fafc; padding: 20px; border-radius: 4px; margin: 20px 0;">
-        <p style="margin: 0; font-size: 16px;"><strong>Lead:</strong> ${name}</p>
-        <p style="margin: 5px 0 0 0; font-size: 16px;"><strong>Organization:</strong> ${org}</p>
-        <p style="margin: 5px 0 0 0; font-size: 16px;"><strong>Email:</strong> ${email}</p>
+        <p style="margin: 0; font-size: 16px;"><strong>Lead:</strong> ${leadName}</p>
+        <p style="margin: 5px 0 0 0; font-size: 16px;"><strong>Organization:</strong> ${leadOrg}</p>
+        <p style="margin: 5px 0 0 0; font-size: 16px;"><strong>Email:</strong> ${leadEmail}</p>
       </div>
       <h3 style="font-size: 18px; margin-top: 30px; text-transform: uppercase; letter-spacing: 1px; color: #475569;">Observation Results</h3>
       <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
@@ -67,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         </tbody>
       </table>
       <p style="margin-top: 40px; font-size: 12px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-        © ${new Date().getFullYear()} BMR Solutions | System Observation Brief
+        © 2026 BMR Solutions | System Observation Brief
       </p>
     </div>`;
 
@@ -75,7 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sgMail.send({
       to: "hello@bmradvisory.co",
       from: "hello@bmradvisory.co",
-      subject: `[BMR Solutions] MINE Diagnostic: ${org}`,
+      subject: `[BMR Solutions] MINE Diagnostic: ${leadOrg}`,
       html: emailHtml,
     });
     return res.status(200).json({ success: true });
