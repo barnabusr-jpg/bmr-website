@@ -51,9 +51,7 @@ export default function DiagnosticPage() {
           organization: formData.organization 
         }),
       });
-      if (res.ok) {
-        router.push('/thank-you');
-      }
+      if (res.ok) router.push('/thank-you');
     } catch (error) {
       console.error("Submission error", error);
       setIsSubmitting(false);
@@ -74,13 +72,13 @@ export default function DiagnosticPage() {
           {step === 0 ? (
             <motion.div key="intro" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/40 border-slate-800 border-2">
-                <h1 className="text-3xl font-bold mb-4 font-display leading-tight">ROI Recovery Observation</h1>
+                <h1 className="text-3xl font-bold mb-4 font-display">Diagnostic</h1>
                 <p className="text-slate-400 mb-8 leading-relaxed">Identify the specific friction points where your AI investment is leaking into hidden human labor.</p>
                 <div className="space-y-4">
                   <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#14b8a6]" placeholder="Full Name" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                   <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#14b8a6]" placeholder="Work Email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
                   <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#14b8a6]" placeholder="Organization" value={formData.organization} onChange={e => setFormData({...formData, organization: e.target.value})} />
-                  <Button onClick={() => setStep(1)} disabled={!formData.name || !formData.email} className="w-full bg-[#14b8a6] text-black font-bold h-14 mt-4 hover:bg-[#0d9488]">Begin Observation</Button>
+                  <Button onClick={() => setStep(1)} disabled={!formData.name || !formData.email} className="w-full bg-[#14b8a6] text-black font-bold h-14 mt-4">Begin Diagnostic</Button>
                 </div>
               </Card>
             </motion.div>
@@ -99,8 +97,8 @@ export default function DiagnosticPage() {
           ) : (
             <motion.div key="complete" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center">
               <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
-              <h2 className="text-3xl font-bold mb-4">Observation Complete</h2>
-              <p className="text-slate-400 mb-10 leading-relaxed">Data captured for {formData.organization}. Ready for Strategic Synthesis.</p>
+              <h2 className="text-3xl font-bold mb-4">Diagnostic Complete</h2>
+              <p className="text-slate-400 mb-10">Data captured for {formData.organization}. Ready for Strategic Synthesis.</p>
               <Button onClick={submitResults} disabled={isSubmitting} className="bg-[#14b8a6] text-black font-bold h-16 w-full text-lg">
                 {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Synthesis Report"}
               </Button>
