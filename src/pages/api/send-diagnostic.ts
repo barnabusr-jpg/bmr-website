@@ -31,23 +31,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  // Safety Mapping: Ensure we capture the data regardless of naming convention
-  const leadName = req.body.name || req.body.userName || "Not Provided";
-  const leadEmail = req.body.email || req.body.userEmail || "Not Provided";
-  const leadOrg = req.body.org || req.body.organization || req.body.company || "Not Provided";
-  const results = req.body.results || {};
+  // Log incoming data to Vercel console for debugging
+  console.log("Incoming Diagnostic Data:", req.body);
 
-  const resultsTableRows = Object.entries(results)
-    .map(([id, category]) => {
-      const info = DIAGNOSTIC_MAPPING[category as string] || { label: category as string, snippet: "" };
-      return `
-        <tr>
-          <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #020617;">Signal ${id}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #020617;">${info.label}</td>
-          <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b; line-height: 1.4;">${info.snippet}</td>
-        </tr>`;
-    })
-    .join("");
+  // Expanded fallback logic to catch every possible naming convention
+  const leadName = req.body.name || req.body.userName || req.body.fullName || "Not Provided";
+  const leadEmail = req.body.email || req.body.userEmail || req.body.contactEmail || "Not Provided";
+  const leadOrg = req.body.org || req.body.organization || req.body.company || req.body.hers || "Not Provided";
+  
+  // Ensure we find the results object even if it's nested
+  const rawResults = req.body.results || req.body.formData?.results || {};
+
+  // Build the table rows - ensuring we have data to map
+  const resultsTableRows = Object.entries(rawResults).length > 0 
+    ? Object.entries(rawResults).map(([id, category]) => {
+        const info = DIAGNOSTIC_MAPPING[category as string] || { label: category as string, snippet: "" };
+        return `
+          <tr>
+            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #020617;">Signal ${id}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #020617;">${info.label}</td>
+            <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #64748b; line-height: 1.4;">${info.snippet}</td>
+          </tr>`;
+      }).join("")
+    : `<tr><td colspan="3" style="padding: 20px; text-align: center; color: #94a3b8;">No observation data captured in this session.</td></tr>`;
 
   const emailHtml = `
     <div style="font-family: sans-serif; color: #020617; max-width: 700px; margin: 0 auto; border: 1px solid #e2e8f0; padding: 40px; border-radius: 8px;">
