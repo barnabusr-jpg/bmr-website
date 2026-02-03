@@ -39,9 +39,11 @@ export default function DiagnosticPage() {
   };
 
   const submitResults = async () => {
-    setIsSubmitting(true);
-    try {
-      const res = await fetch('/api/send-diagnostic', {
+  alert("Attempting to send..."); // Add this temporary line
+  setIsSubmitting(true);
+  // ... rest of code
+}     
+    const res = await fetch('/api/send-diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers, to: formData.email, firstName: formData.name.split(' ')[0], organization: formData.organization }),
