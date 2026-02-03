@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 
-// Use a fallback to prevent initialization errors
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 const questionMap: Record<string, string> = {
@@ -24,7 +23,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { to, firstName, organization, answers } = req.body;
 
-  // Map text responses back to numerical impact
+  // Map text responses back to numerical impact for scoring
   const scoreValue: Record<string, number> = {
     "Strongly Agree": 5, "Agree": 4, "Neutral": 3, "Disagree": 2, "Strongly Disagree": 1
   };
@@ -32,8 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Logic: Calculate Pillar Averages
   const getAvg = (ids: number[]) => {
     const total = ids.reduce((sum, id) => {
-      // Look up answer by string ID
-      const answerText = answers[id.toString()];
+      const answerText = answers[id.toString()] || answers[id];
       return sum + (scoreValue[answerText] || 0);
     }, 0);
     return (total / ids.length).toFixed(1);
@@ -45,8 +43,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const msg = {
     to: to,
-    from: process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co',
-    bcc: 'hello@bmradvisory.co', // Automatic lead notification for BMR
+    from: 'hello@bmradvisory.co', // Must be verified in SendGrid
+    bcc: 'hello@bmradvisory.co',  // Internal lead notification
     subject: `Strategic Synthesis: Diagnostic Results for ${firstName}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; color: #020617; line-height: 1.6;">
@@ -57,24 +55,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <div style="background: #f8fafc; padding: 24px; border-radius: 12px; margin: 24px 0; border: 1px solid #e2e8f0;">
           <div style="margin-bottom: 16px;">
             <strong style="font-size: 16px;">Trust Lens: ${trustAvg} / 5.0</strong><br/>
-            <span style="font-size: 13px; color: #64748b;">Measures alignment between system behavior and stakeholder expectations.</span>
+            <span style="font-size: 13px; color: #64748b;">Alignment between system behavior and stakeholder expectations.</span>
           </div>
           
           <div style="margin-bottom: 16px;">
             <strong style="font-size: 16px;">Governance Lens: ${governAvg} / 5.0</strong><br/>
-            <span style="font-size: 13px; color: #64748b;">Measures the robustness of oversight and accountability structures.</span>
+            <span style="font-size: 13px; color: #64748b;">Robustness of oversight and accountability structures.</span>
           </div>
           
           <div>
             <strong style="font-size: 16px;">Evolution Lens: ${evolveAvg} / 5.0</strong><br/>
-            <span style="font-size: 13px; color: #64748b;">Measures the capacity to de-risk and adapt AI systems in real-time.</span>
+            <span style="font-size: 13px; color: #64748b;">Capacity to de-risk and adapt AI systems in real-time.</span>
           </div>
         </div>
 
         <h3 style="color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Detailed Signals</h3>
         <ul style="list-style: none; padding: 0;">
           ${Object.entries(answers).map(([id, val]) => `
-            <li style="margin-bottom: 12px; font-size: 13px; border-bottom: 1px border-bottom-style: dotted; border-bottom-color: #e2e8f0; padding-bottom: 4px;">
+            <li style="margin-bottom: 12px; font-size: 13px; border-bottom: 1px dotted #e2e8f0; padding-bottom: 4px;">
               <span style="color: #64748b;">${questionMap[id]}:</span> <strong style="color: #14b8a6; float: right;">${val}</strong>
               <div style="clear: both;"></div>
             </li>
@@ -84,6 +82,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <div style="margin-top: 32px; padding: 20px; border-left: 4px solid #14b8a6; background: #f0fdfa;">
           <p style="margin: 0; font-weight: bold; color: #020617;">The Promise Gap™ Analysis</p>
           <p style="margin: 8px 0 0 0; font-size: 14px; color: #0d9488;">These scores identify specific friction points in your architecture. A BMR strategist will review this synthesis and contact you to discuss next steps.</p>
+        </div>
+        
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+          <p style="margin: 0; font-weight: bold; color: #020617;">BMR Advisory</p>
+          <p style="margin: 0; color: #64748b; font-size: 14px;">Trust. Govern. Evolve.</p>
         </div>
       </div>
     `,
