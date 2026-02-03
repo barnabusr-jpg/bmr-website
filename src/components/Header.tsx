@@ -12,15 +12,9 @@ export default function Header() {
           BMR<span className="text-[#14b8a6]">ADVISORY</span>
         </Link>
         <nav className="hidden md:flex items-center gap-8 font-medium">
-          <Link href="/about" className="text-sm text-slate-400 hover:text-white transition-colors">
-            About
-          </Link>
-          <Link href="/diagnostic" className="text-sm text-[#14b8a6] font-bold hover:text-[#0d9488] transition-colors underline underline-offset-4 decoration-2">
-            Diagnostic
-          </Link>
-          <Link href="/contact" className="text-sm text-slate-400 hover:text-white transition-colors">
-            Contact
-          </Link>
+          <Link href="/about" className="text-sm text-slate-400 hover:text-white transition-colors">About</Link>
+          <Link href="/diagnostic" className="text-sm text-[#14b8a6] font-bold hover:text-[#0d9488] transition-colors underline underline-offset-4 decoration-2">Diagnostic</Link>
+          <Link href="/contact" className="text-sm text-slate-400 hover:text-white transition-colors">Contact</Link>
         </nav>
         <Button 
           onClick={() => router.push('/diagnostic')} 
