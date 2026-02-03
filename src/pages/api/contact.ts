@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 
-// Ensure the Key is initialized exactly as in your diagnostic file
 sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -9,11 +8,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  // Destructure the data coming from the landing page form
   const { name, email, company, message } = req.body;
 
-  const msg = {
-    // Both must be your verified SendGrid address
+  // 1. Internal Notification (To BMR)
+  const internalMsg = {
     to: 'hello@bmradvisory.co', 
     from: 'hello@bmradvisory.co', 
     replyTo: email, 
@@ -21,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     html: `
       <div style="font-family: sans-serif; background: #020617; color: white; padding: 40px; border-radius: 8px;">
         <h2 style="color: #14b8a6; border-bottom: 1px solid #1e293b; padding-bottom: 12px;">New Strategic Inquiry</h2>
-        <div style="margin-top: 24px; space-y: 8px;">
+        <div style="margin-top: 24px;">
           <p><strong>Name:</strong> ${name}</p>
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Company:</strong> ${company || 'N/A'}</p>
@@ -33,12 +31,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     `,
   };
 
+  // 2. External Auto-Reply (To Prospect)
+  const autoReplyMsg = {
+    to: email,
+    from: 'hello@bmradvisory.co',
+    subject: 'Signal Received | BMR Advisory',
+    html: `
+      <div style="font-family: sans-serif; color: #020617; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+        <h2 style="color: #14b8a6; font-size: 24px; letter-spacing: -0.02em;">Inquiry Received.</h2>
+        <p>Thank you for reaching out to BMR Advisory, ${name.split(' ')[0]}.</p>
+        <p>We have received your strategic inquiry regarding <strong>${company || 'your organization'}</strong>. A strategist is currently reviewing the friction points you described.</p>
+        <p>You can expect a direct response within 24–48 hours to discuss the specific architecture required to close your Promise Gap™.</p>
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+          <p style="margin: 0; font-weight: bold; color: #020617;">BMR Advisory</p>
+          <p style="margin: 0; color: #64748b; font-size: 14px;">Trust. Govern. Evolve.</p>
+        </div>
+      </div>
+    `,
+  };
+
   try {
-    // Using the same sending logic as the diagnostic completion
-    await sgMail.send(msg);
+    // Execute both sends
+    await Promise.all([
+      sgMail.send(internalMsg),
+      sgMail.send(autoReplyMsg)
+    ]);
+    
     return res.status(200).json({ message: 'Success' });
   } catch (error: any) {
-    // Log details to Vercel so we can see why SendGrid rejected it
     console.error("Contact Form Error:", error.response?.body || error.message);
     return res.status(500).json({ message: 'Error sending email' });
   }
