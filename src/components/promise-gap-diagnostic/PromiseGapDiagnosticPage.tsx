@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Activity, ArrowRight } from "lucide-react";
+import { Check, Activity, ArrowRight, Loader2 } from "lucide-react";
 
 const diagnosticQuestions = [
   // LENS: TRUST
@@ -46,6 +46,7 @@ function LensIndicator({ label, isActive, isCompleted }: { label: string; isActi
 export default function PromiseGapDiagnosticPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", organization: "" });
   const [answers, setAnswers] = useState<Record<number, string>>({});
 
@@ -60,6 +61,7 @@ export default function PromiseGapDiagnosticPage() {
   };
 
   const submitResults = async () => {
+    setIsSubmitting(true);
     const payload = { 
       answers, 
       to: formData.email, 
@@ -68,7 +70,8 @@ export default function PromiseGapDiagnosticPage() {
     };
     
     try {
-      const res = await fetch('/api/send-diagnostic', {
+      // THE FIX: Pointing to the refined diagnostic API route
+      const res = await fetch('/api/diagnostic-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -77,10 +80,12 @@ export default function PromiseGapDiagnosticPage() {
       if (res.ok) {
         router.push('/thank-you'); 
       } else {
-        alert("Error sending results. Please try again.");
+        alert("Signal dispatch failed. Please check your connection.");
+        setIsSubmitting(false);
       }
     } catch {
-      alert("Connection failed. Please check your network.");
+      alert("Transmission error. Please check your network.");
+      setIsSubmitting(false);
     }
   };
 
@@ -163,8 +168,16 @@ export default function PromiseGapDiagnosticPage() {
                   <p className="text-slate-400 font-light text-lg mb-10 max-w-xl mx-auto">
                     Your responses have been recorded. We will synthesize these signals into a preliminary System Health Picture.
                   </p>
-                  <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" onClick={submitResults}>
-                    Submit & Send Synthesis
+                  <Button 
+                    className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" 
+                    onClick={submitResults}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Synthesizing Signals...</>
+                    ) : (
+                      "Submit & Send Synthesis"
+                    )}
                   </Button>
                 </Card>
               </motion.div>
