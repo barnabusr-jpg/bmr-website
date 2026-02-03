@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { name, email, company, message } = req.body;
 
-  // 1. Internal Notification (To BMR)
+  // 1. Internal Notification (To BMR Strategists)
   const internalMsg = {
     to: 'hello@bmradvisory.co', 
     from: 'hello@bmradvisory.co', 
@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   };
 
   try {
-    // Execute both sends
+    // Dispatch both emails in parallel
     await Promise.all([
       sgMail.send(internalMsg),
       sgMail.send(autoReplyMsg)
@@ -59,7 +59,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     return res.status(200).json({ message: 'Success' });
   } catch (error: any) {
-    console.error("Contact Form Error:", error.response?.body || error.message);
+    // Detailed error logging for Vercel troubleshooting
+    console.error("Email Dispatch Error:", error.response?.body || error.message);
     return res.status(500).json({ message: 'Error sending email' });
   }
 }
