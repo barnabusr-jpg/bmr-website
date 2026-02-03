@@ -52,9 +52,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     from: 'hello@bmradvisory.co',
     subject: `🚨 NEW LEAD: ${organization} Diagnostic`,
     html: `
-      <h2>New Diagnostic Lead</h2>
+      <h2>New Diagnostic Lead Captured</h2>
       <p><strong>Name:</strong> ${firstName}<br/><strong>Org:</strong> ${organization}<br/><strong>Email:</strong> ${to}</p>
-      <p><strong>Scores:</strong> T: ${trustAvg} | G: ${governAvg} | E: ${evolveAvg}</p>
+      <p><strong>Scores:</strong> Trust: ${trustAvg} | Govern: ${governAvg} | Evolve: ${evolveAvg}</p>
+      <hr />
+      <h3>Raw Signal Data:</h3>
       <pre style="background: #f4f4f4; padding: 15px;">${JSON.stringify(answers, null, 2)}</pre>
     `
   };
@@ -63,6 +65,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await Promise.all([sgMail.send(clientMsg), sgMail.send(leadAlert)]);
     return res.status(200).json({ success: true });
   } catch {
-    return res.status(500).json({ error: 'Failed' });
+    return res.status(500).json({ success: false });
   }
 }
