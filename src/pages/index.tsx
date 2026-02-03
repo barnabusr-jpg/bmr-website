@@ -9,7 +9,6 @@ export default function LandingPage() {
     <div className="min-h-screen bg-[#020617] text-white font-sans">
       <Header />
       
-      {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 container mx-auto text-center">
         <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
           BMR <span className="text-[#14b8a6]">Solutions</span>
@@ -28,17 +27,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Video Section */}
       <section className="py-20 bg-slate-900/30 border-y border-slate-800">
         <div className="container mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold mb-12">Visualizing the Promise Gap</h2>
           <div className="max-w-4xl mx-auto rounded-xl overflow-hidden border-2 border-slate-800 shadow-2xl bg-black">
-            <video 
-              controls 
-              playsInline
-              preload="auto"
-              className="w-full aspect-video"
-            >
+            <video controls playsInline preload="auto" className="w-full aspect-video">
               <source 
                 src="https://uuyq3t7kfckwh0je.public.blob.vercel-storage.com/bmr-commercial.mp4" 
                 type="video/mp4" 
