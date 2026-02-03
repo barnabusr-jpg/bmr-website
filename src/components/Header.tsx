@@ -1,37 +1,31 @@
 import React from 'react';
 import Link from 'next/link';
-import { Button } from "@/components/ui/button";
+import { useRouter } from 'next/router';
+import { Button } from '@/components/ui/button';
 
-const Header = () => {
+export default function Header() {
+  const router = useRouter();
+
   return (
-    <header className="fixed top-0 w-full z-50 bg-[#020617]/80 backdrop-blur-md border-b border-slate-800">
-      <nav className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold text-white tracking-tight">
-          BMR<span className="text-[#0D9488]">SOLUTIONS</span>
+    <header className="fixed top-0 w-full z-40 bg-[#020617]/80 backdrop-blur-md border-b border-slate-900">
+      <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="font-bold text-2xl tracking-tighter">BMR<span className="text-[#14b8a6]">ADVISORY</span></span>
         </Link>
-        
-        <div className="hidden md:flex items-center gap-8">
-          {/* Fixed paths to match flat file structure */}
-          <Link href="/promise-gap" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-            The Problem
-          </Link>
-          <Link href="/approach" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-            Our Approach
-          </Link>
-          <Link href="/strategic-advisory" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-            Strategic Advisory
-          </Link>
-          <Link href="/insights" className="text-sm font-medium text-slate-300 hover:text-white transition-colors">
-            Field Guide
-          </Link>
-          
-          <Button asChild className="bg-[#0D9488] hover:bg-[#0D9488]/90 text-white">
-            <Link href="/diagnostic">Start Diagnostic</Link>
-          </Button>
-        </div>
-      </nav>
+
+        <nav className="hidden md:flex items-center gap-8">
+          <Link href="/about" className="text-sm text-slate-400 hover:text-white transition-colors">Methodology</Link>
+          <Link href="/diagnostic" className="text-sm text-[#14b8a6] font-bold hover:text-[#0d9488] transition-colors underline underline-offset-4">ROI Audit</Link>
+          <Link href="/contact" className="text-sm text-slate-400 hover:text-white transition-colors">Contact</Link>
+        </nav>
+
+        <Button 
+          onClick={() => router.push('/diagnostic')}
+          className="bg-white text-black font-bold hover:bg-[#14b8a6] hover:text-white transition-all text-xs px-6"
+        >
+          START DIAGNOSTIC
+        </Button>
+      </div>
     </header>
   );
-};
-
-export default Header;
+}
