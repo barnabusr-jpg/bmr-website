@@ -2,23 +2,24 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
+// Updated labels with unique IDs to force a DOM refresh
 const methodologies = [
   {
-    id: "1",
+    id: "sig_1_friction",
     name: "Manual Friction",
     fullName: "High Human Effort",
     category: "Value Drain",
     description: "The team is working too hard to correct the AI. Manual effort is eating up the expected benefits."
   },
   {
-    id: "4",
+    id: "sig_4_passive",
     name: "Passive Support",
     fullName: "Basic Task Helper",
     category: "Utility Only",
     description: "The AI is just a 'tool' on the side. It isn't an active partner in how the team actually works."
   },
   {
-    id: "10",
+    id: "sig_10_force",
     name: "Force Multiplier",
     fullName: "High-Speed Partnership",
     category: "Capital Multiplier",
@@ -55,7 +56,7 @@ const Frameworks = () => {
             const isSelected = !!selected[methodology.id];
             return (
               <div
-                key={methodology.id}
+                key={methodology.id} // Changed from .name to .id to force re-render
                 onClick={() => toggleSignal(methodology.id, methodology.category)}
                 className="cursor-pointer"
               >
