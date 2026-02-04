@@ -5,24 +5,24 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
 
 const DIAGNOSTIC_MAPPING: Record<string, { label: string; snippet: string }> = {
   "Value Drain": { 
-    label: "Value Drain", 
-    snippet: "Identifies areas where manual 'human-in-the-loop' costs or hidden system latencies are silently eroding AI margins." 
+    label: "Manual Friction", 
+    snippet: "Initial signals suggest your team may be working too hard to correct the AI. This pattern indicates that 'Manual Friction' could be slowing down your progress." 
   },
   "Utility Only": { 
-    label: "Utility Only", 
-    snippet: "Points to a system performing basic tasks but failing to provide the strategic leverage required for a competitive advantage." 
+    label: "Passive Support", 
+    snippet: "Observations suggest the system acts as 'Passive Support' only. It may be helpful for small tasks, but it does not appear to be an active partner in your team's strategy." 
   },
   "Stranded Asset": { 
-    label: "Stranded Asset", 
-    snippet: "Indicates model outputs that are high-quality but decoupled from core business workflows, leaving ROI unrealized." 
+    label: "System Disconnect", 
+    snippet: "Signals point toward a 'System Disconnect.' Good work is being done, but the AI results may be isolated from the people who actually need them to make decisions." 
   },
   "Operational Lift": { 
-    label: "Operational Lift", 
-    snippet: "Signals a successful integration where AI is actively reducing the burden on human capital within specific tasks." 
+    label: "Team Relief", 
+    snippet: "Current patterns suggest the AI is providing 'Team Relief.' It appears to be successfully carrying the load for certain tasks, which may be freeing up your people." 
   },
   "Capital Multiplier": { 
-    label: "Capital Multiplier", 
-    snippet: "Highlights 'Emergent Efficiency' where the system is significantly outperforming baseline expectations and is ready for scale." 
+    label: "Force Multiplier", 
+    snippet: "Observations suggest the system is acting as a 'Force Multiplier.' The team and the AI appear to be working so well together that the business may be ready for growth." 
   }
 };
 
@@ -31,42 +31,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const b = req.body;
   
-  // Confirmed key mapping from successful debug tests
+  // Data extraction using the keys identified in your successful debug dump
   const leadName = b.firstName || b.name || "Not Provided";
   const leadEmail = b.to || b.email || "Not Provided";
   const leadOrg = b.organization || b.org || "Not Provided";
   const results = b.answers || b.results || {};
 
-  // Constructing the Insight Table
   const resultsTableRows = Object.entries(results).length > 0 
     ? Object.entries(results).map(([id, category]) => {
         const info = DIAGNOSTIC_MAPPING[category as string] || { label: category as string, snippet: "" };
         return `
           <tr>
-            <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #020617; font-size: 14px;">Signal ${id}</td>
-            <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; color: #0f172a; font-size: 14px;">${info.label}</td>
-            <td style="padding: 14px 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #475569; line-height: 1.5;">${info.snippet}</td>
+            <td style="padding: 16px 12px; border-bottom: 1px solid #e2e8f0; font-weight: bold; color: #0f172a; font-size: 14px;">Signal ${id}</td>
+            <td style="padding: 16px 12px; border-bottom: 1px solid #e2e8f0; color: #14b8a6; font-weight: 600; font-size: 14px;">${info.label}</td>
+            <td style="padding: 16px 12px; border-bottom: 1px solid #e2e8f0; font-size: 13px; color: #475569; line-height: 1.6; font-style: italic;">${info.snippet}</td>
           </tr>`;
       }).join("")
-    : `<tr><td colspan="3" style="padding: 30px; text-align: center; color: #94a3b8; font-style: italic;">No diagnostic signals were captured in this session.</td></tr>`;
+    : `<tr><td colspan="3" style="padding: 30px; text-align: center; color: #94a3b8; font-style: italic;">No specific diagnostic signals were captured.</td></tr>`;
 
   const emailHtml = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; color: #020617; max-width: 700px; margin: 0 auto; border: 1px solid #e2e8f0; padding: 40px; border-radius: 12px;">
-      <h2 style="color: #14b8a6; margin-top: 0; font-size: 26px; letter-spacing: -0.025em;">MINE Diagnostic: Observation Brief</h2>
+      <h2 style="color: #14b8a6; margin-top: 0; font-size: 24px; letter-spacing: -0.02em;">MINE Diagnostic: Observation Brief</h2>
       
       <div style="background-color: #f8fafc; padding: 24px; border-radius: 8px; margin: 24px 0; border: 1px solid #f1f5f9;">
-        <p style="margin: 0; font-size: 15px;"><strong>Lead:</strong> ${leadName}</p>
-        <p style="margin: 8px 0 0 0; font-size: 15px;"><strong>Organization:</strong> ${leadOrg}</p>
-        <p style="margin: 8px 0 0 0; font-size: 15px;"><strong>Email:</strong> ${leadEmail}</p>
+        <p style="margin: 0; font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;">Engagement Lead</p>
+        <p style="margin: 4px 0 0 0; font-size: 18px; color: #0f172a;"><strong>${leadName}</strong> | ${leadOrg}</p>
       </div>
 
-      <h3 style="font-size: 16px; margin-top: 32px; color: #64748b; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Observation Results</h3>
+      <h3 style="font-size: 12px; margin-top: 32px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Directional Indicators</h3>
       <table style="width: 100%; border-collapse: collapse; margin-top: 12px;">
         <thead>
           <tr style="text-align: left; background-color: #f8fafc;">
-            <th style="padding: 12px; border-bottom: 2px solid #14b8a6; font-size: 13px; color: #0f172a;">Signal</th>
-            <th style="padding: 12px; border-bottom: 2px solid #14b8a6; font-size: 13px; color: #0f172a;">Category</th>
-            <th style="padding: 12px; border-bottom: 2px solid #14b8a6; font-size: 13px; color: #0f172a;">Strategic Insight</th>
+            <th style="padding: 12px; border-bottom: 2px solid #14b8a6; font-size: 11px; color: #64748b;">SIGNAL</th>
+            <th style="padding: 12px; border-bottom: 2px solid #14b8a6; font-size: 11px; color: #64748b;">EXPERIENCE</th>
+            <th style="padding: 12px; border-bottom: 2px solid #14b8a6; font-size: 11px; color: #64748b;">OBSERVATION*</th>
           </tr>
         </thead>
         <tbody>
@@ -74,9 +72,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         </tbody>
       </table>
       
-      <div style="margin-top: 48px; text-align: center; border-top: 1px solid #f1f5f9; padding-top: 24px;">
-        <p style="font-size: 12px; color: #94a3b8; margin: 0;">
-          © ${new Date().getFullYear()} BMR Solutions | Internal Advisory Use Only
+      <div style="margin-top: 40px; padding: 24px; background-color: #020617; border-radius: 8px; color: #ffffff; text-align: center;">
+        <p style="margin: 0; font-size: 14px; color: #14b8a6; font-weight: 600;">Explore the Full Framework</p>
+        <p style="margin: 8px 0 0 0; font-size: 13px; color: #94a3b8; line-height: 1.5;">These notes are based on initial signal patterns. Contact BMR Advisory to see how our full 12-point framework can help your team.</p>
+      </div>
+
+      <div style="margin-top: 40px; text-align: center;">
+        <p style="font-size: 10px; color: #cbd5e1; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.5;">
+          *Advisory observations are based on initial patterns and require further study to be certain.<br>
+          © ${new Date().getFullYear()} BMR Advisory | System Observation & Strategy
         </p>
       </div>
     </div>`;
@@ -85,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sgMail.send({
       to: "hello@bmradvisory.co",
       from: "hello@bmradvisory.co",
-      subject: `[BMR Solutions] MINE Diagnostic: ${leadOrg}`,
+      subject: `[Observation Brief] ${leadOrg} Diagnostic`,
       html: emailHtml,
     });
     return res.status(200).json({ success: true });
