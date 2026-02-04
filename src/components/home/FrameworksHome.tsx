@@ -2,25 +2,26 @@ import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
+// Update this array to change the actual button text
 const methodologies = [
   {
     id: "1",
-    name: "Manual Friction",
-    fullName: "High Human Effort",
+    name: "Manual Friction", // This is the teal 'Signal' name
+    fullName: "High Human Effort", // This is the white card title
     category: "Value Drain",
     description: "The team is working too hard to correct the AI. Manual effort is eating up the expected benefits."
   },
   {
     id: "4",
-    name: "Passive Support",
-    fullName: "Basic Task Helper",
+    name: "Passive Support", // This is the teal 'Signal' name
+    fullName: "Basic Task Helper", // This is the white card title
     category: "Utility Only",
     description: "The AI is just a 'tool' on the side. It isn't an active partner in how the team actually works."
   },
   {
     id: "10",
-    name: "Force Multiplier",
-    fullName: "High-Speed Partnership",
+    name: "Force Multiplier", // This is the teal 'Signal' name
+    fullName: "High-Speed Partnership", // This is the white card title
     category: "Capital Multiplier",
     description: "The team and the AI are perfectly synced. The system is ready for more investment and wider use."
   }
@@ -38,7 +39,7 @@ const Frameworks = () => {
     }
     setSelected(newSelected);
     
-    // Save to local vault for the Footer CTA to grab
+    // VAULT: Save to local storage for the Footer CTA to collect
     localStorage.setItem('bmr_results_vault', JSON.stringify(newSelected));
   };
 
@@ -57,7 +58,7 @@ const Frameworks = () => {
             const isSelected = !!selected[methodology.id];
             return (
               <div
-                key={methodology.name}
+                key={methodology.id}
                 onClick={() => toggleSignal(methodology.id, methodology.category)}
                 className="cursor-pointer"
               >
@@ -77,6 +78,9 @@ const Frameworks = () => {
                   </div>
                   <h4 className="text-xl font-bold mb-3 text-white tracking-tight">{methodology.fullName}</h4>
                   <p className="text-slate-400 font-light leading-relaxed mb-4">{methodology.description}</p>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-slate-600">
+                    BMR Classification: {methodology.category}
+                  </div>
                 </Card>
               </div>
             );
