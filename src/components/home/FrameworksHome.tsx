@@ -1,25 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
-// Updated labels with unique IDs to force a DOM refresh
+// NEW IDs: This forces the browser to clear any old 'selected' memory for these cards
 const methodologies = [
   {
-    id: "sig_1_friction",
+    id: "v2_manual_friction",
     name: "Manual Friction",
     fullName: "High Human Effort",
     category: "Value Drain",
     description: "The team is working too hard to correct the AI. Manual effort is eating up the expected benefits."
   },
   {
-    id: "sig_4_passive",
+    id: "v2_passive_support",
     name: "Passive Support",
     fullName: "Basic Task Helper",
     category: "Utility Only",
     description: "The AI is just a 'tool' on the side. It isn't an active partner in how the team actually works."
   },
   {
-    id: "sig_10_force",
+    id: "v2_force_multiplier",
     name: "Force Multiplier",
     fullName: "High-Speed Partnership",
     category: "Capital Multiplier",
@@ -29,6 +29,15 @@ const methodologies = [
 
 const Frameworks = () => {
   const [selected, setSelected] = useState<Record<string, string>>({});
+
+  // Clear memory on first load to ensure new labels show up
+  useEffect(() => {
+    const saved = localStorage.getItem('bmr_results_vault');
+    if (saved && saved.includes('HAI')) { // If it contains old jargon
+      localStorage.removeItem('bmr_results_vault');
+      setSelected({});
+    }
+  }, []);
 
   const toggleSignal = (id: string, category: string) => {
     const newSelected = { ...selected };
@@ -56,7 +65,7 @@ const Frameworks = () => {
             const isSelected = !!selected[methodology.id];
             return (
               <div
-                key={methodology.id} // Changed from .name to .id to force re-render
+                key={methodology.id}
                 onClick={() => toggleSignal(methodology.id, methodology.category)}
                 className="cursor-pointer"
               >
