@@ -16,7 +16,6 @@ const FooterCTAHome = () => {
     message: ""
   });
 
-  // This "listens" for the diagnostic signals clicked elsewhere on the page
   useEffect(() => {
     const handleDiagnosticUpdate = (e: any) => {
       if (e.detail) setDiagnosticResults(e.detail);
@@ -35,7 +34,7 @@ const FooterCTAHome = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...formData,
-          results: diagnosticResults // Attaches the 12 signals here
+          results: diagnosticResults
         }),
       });
 
@@ -43,9 +42,9 @@ const FooterCTAHome = () => {
         toast({ title: "Request Sent", description: "We will be in touch shortly." });
         setFormData({ name: "", email: "", org: "", message: "" });
       } else {
-        throw new Error();
+        throw new Error("Failed to send");
       }
-    } catch (err) {
+    } catch {
       toast({ variant: "destructive", title: "Error", description: "Failed to send request." });
     } finally {
       setLoading(false);
@@ -118,10 +117,6 @@ const FooterCTAHome = () => {
               </Button>
             </form>
           </Card>
-
-          <p className="text-[11px] text-slate-600 italic tracking-wide">
-            Note: BMR Solutions provides advisory services and does not provide legal advice or compliance certification.
-          </p>
         </div>
       </div>
     </section>
