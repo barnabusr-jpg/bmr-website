@@ -2,24 +2,24 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Check } from "lucide-react";
 
-// NEW IDs: This forces the browser to clear any old 'selected' memory for these cards
+// v3 IDs: Forcing a complete DOM reset to bypass Vercel branch caching
 const methodologies = [
   {
-    id: "v2_manual_friction",
+    id: "v3_manual_friction",
     name: "Manual Friction",
     fullName: "High Human Effort",
     category: "Value Drain",
     description: "The team is working too hard to correct the AI. Manual effort is eating up the expected benefits."
   },
   {
-    id: "v2_passive_support",
+    id: "v3_passive_support",
     name: "Passive Support",
     fullName: "Basic Task Helper",
     category: "Utility Only",
     description: "The AI is just a 'tool' on the side. It isn't an active partner in how the team actually works."
   },
   {
-    id: "v2_force_multiplier",
+    id: "v3_force_multiplier",
     name: "Force Multiplier",
     fullName: "High-Speed Partnership",
     category: "Capital Multiplier",
@@ -33,7 +33,8 @@ const Frameworks = () => {
   // Clear memory on first load to ensure new labels show up
   useEffect(() => {
     const saved = localStorage.getItem('bmr_results_vault');
-    if (saved && saved.includes('HAI')) { // If it contains old jargon
+    // Wipes any legacy jargon or v2 state to ensure clean v3 labels
+    if (saved && (saved.includes('HAI') || saved.includes('v2'))) { 
       localStorage.removeItem('bmr_results_vault');
       setSelected({});
     }
@@ -51,7 +52,7 @@ const Frameworks = () => {
   };
 
   return (
-    <section className="py-24 px-6 bg-[#030712] border-t border-slate-900">
+    <section data-version="3.0" className="py-24 px-6 bg-[#030712] border-t border-slate-900">
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-20">
           <h2 className="text-4xl font-bold mb-6 tracking-tight text-white">System Observations</h2>
@@ -65,7 +66,7 @@ const Frameworks = () => {
             const isSelected = !!selected[methodology.id];
             return (
               <div
-                key={methodology.id}
+                key={methodology.id} // v3 key forces React to re-draw the card
                 onClick={() => toggleSignal(methodology.id, methodology.category)}
                 className="cursor-pointer"
               >
