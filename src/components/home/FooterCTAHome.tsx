@@ -9,17 +9,10 @@ const FooterCTAHome = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [diagnosticResults, setDiagnosticResults] = useState<Record<string, string>>({});
-  
-  // Explicitly named state for maximum reliability
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [org, setOrg] = useState("");
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const handleDiagnosticUpdate = (e: any) => {
       if (e.detail) {
-        console.log("Form received signal update:", e.detail);
         setDiagnosticResults(e.detail);
       }
     };
@@ -27,15 +20,17 @@ const FooterCTAHome = () => {
     return () => window.removeEventListener('diagnostic-update', handleDiagnosticUpdate);
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
+    // Using FormData to grab values directly from the DOM to avoid state-sync issues
+    const formData = new FormData(e.currentTarget);
     const payload = {
-      name,
-      email,
-      org,
-      message,
+      name: formData.get("user_name"),
+      email: formData.get("user_email"),
+      org: formData.get("user_org"),
+      message: formData.get("user_message"),
       results: diagnosticResults
     };
 
@@ -47,13 +42,14 @@ const FooterCTAHome = () => {
       });
 
       if (response.ok) {
-        toast({ title: "Request Sent", description: "Your Field Guide request has been received." });
-        setName(""); setEmail(""); setOrg(""); setMessage("");
+        toast({ title: "Request Sent", description: "Your brief has been delivered." });
+        (e.target as HTMLFormElement).reset();
+        setDiagnosticResults({});
       } else {
-        throw new Error("Send failed");
+        throw new Error();
       }
     } catch {
-      toast({ variant: "destructive", title: "Error", description: "Could not send request." });
+      toast({ variant: "destructive", title: "Error", description: "Failed to send request." });
     } finally {
       setLoading(false);
     }
@@ -75,18 +71,18 @@ const FooterCTAHome = () => {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Name</label>
                   <Input 
+                    name="user_name"
                     required 
-                    value={name} 
-                    onChange={(e) => setName(e.target.value)} 
+                    placeholder="Your name"
                     className="bg-[#020617] border-slate-700 text-white" 
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Organization</label>
                   <Input 
+                    name="user_org"
                     required 
-                    value={org} 
-                    onChange={(e) => setOrg(e.target.value)} 
+                    placeholder="MINE"
                     className="bg-[#020617] border-slate-700 text-white" 
                   />
                 </div>
@@ -94,18 +90,18 @@ const FooterCTAHome = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-300">Email</label>
                 <Input 
+                  name="user_email"
                   required 
                   type="email" 
-                  value={email} 
-                  onChange={(e) => setEmail(e.target.value)} 
+                  placeholder="email@company.com"
                   className="bg-[#020617] border-slate-700 text-white" 
                 />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-300">Message</label>
                 <Textarea 
-                  value={message} 
-                  onChange={(e) => setMessage(e.target.value)} 
+                  name="user_message"
+                  placeholder="How can we help?"
                   className="bg-[#020617] border-slate-700 text-white" 
                 />
               </div>
