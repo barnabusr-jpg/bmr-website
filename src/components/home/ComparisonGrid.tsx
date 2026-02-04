@@ -5,22 +5,22 @@ const ComparisonGrid = () => {
     {
       area: "Foundation",
       traditional: "Technical readiness and hardware scaling.",
-      bmr: "HAI: Human-centric readiness, empathy, and transparency."
+      bmr: "Manual Friction: Identifying where human effort is acting as a patch for system limits."
     },
     {
       area: "Measurement",
       traditional: "Simple adoption metrics and login volume.",
-      bmr: "AVS: Measuring operational resonance and mission-linked value."
+      bmr: "Passive Support: Measuring if AI is just a tool or a strategic team partner."
     },
     {
       area: "Governance",
       traditional: "Static compliance checklists and rigid policies.",
-      bmr: "IGF: Adaptive governance loops that scale and safeguard value."
+      bmr: "System Disconnect: Closing the gap between model outputs and human workflows."
     },
     {
       area: "Outcome",
       traditional: "Siloed pilot programs with high friction.",
-      bmr: "Result: A continuous improvement cycle that sustains trust."
+      bmr: "Force Multiplier: Turning synergy into a continuous cycle of measurable growth."
     }
   ];
 
