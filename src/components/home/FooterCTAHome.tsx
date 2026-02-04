@@ -13,18 +13,24 @@ const FooterCTAHome = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Grab direct values from form inputs
-    const data = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     
-    // Grab diagnostic results from global window
-    const diagnosticData = (window as any).bmr_diagnostic_results || {};
+    // Parse results from the hidden input field
+    const resultsRaw = formData.get("results") as string;
+    let resultsObj = {};
+    try {
+      resultsObj = JSON.parse(resultsRaw || "{}");
+    } catch {
+      resultsObj = {};
+    }
 
     const payload = {
-      name: data.get("name"),
-      email: data.get("email"),
-      org: data.get("org"),
-      message: data.get("message"),
-      results: diagnosticData
+      name: formData.get("name"),
+      email: formData.get("email"),
+      org: formData.get("org"),
+      message: formData.get("message"),
+      results: resultsObj
     };
 
     try {
@@ -35,14 +41,16 @@ const FooterCTAHome = () => {
       });
 
       if (response.ok) {
-        toast({ title: "Request Sent", description: "Your brief has been delivered." });
-        (e.target as HTMLFormElement).reset();
-        (window as any).bmr_diagnostic_results = {}; // Clear results after success
+        toast({ title: "Request Sent", description: "Your System Observation Brief is in your inbox." });
+        form.reset();
+        // Clear hidden input after success
+        const hiddenInput = document.getElementById('diagnostic-data-input') as HTMLInputElement;
+        if (hiddenInput) hiddenInput.value = "{}";
       } else {
         throw new Error();
       }
     } catch {
-      toast({ variant: "destructive", title: "Error", description: "Failed to send request." });
+      toast({ variant: "destructive", title: "Error", description: "Submission failed. Please try again." });
     } finally {
       setLoading(false);
     }
@@ -58,6 +66,9 @@ const FooterCTAHome = () => {
 
           <Card className="p-8 border-slate-800 bg-slate-900/50 backdrop-blur-md max-w-3xl mx-auto text-left">
             <form onSubmit={handleSubmit} className="space-y-6">
+              {/* HIDDEN INPUT FOR DIAGNOSTIC DATA */}
+              <input type="hidden" id="diagnostic-data-input" name="results" defaultValue="{}" />
+
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Name</label>
@@ -65,7 +76,7 @@ const FooterCTAHome = () => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Organization</label>
-                  <Input name="org" required placeholder="Company" className="bg-[#020617] border-slate-700 text-white" />
+                  <Input name="org" required placeholder="Organization" className="bg-[#020617] border-slate-700 text-white" />
                 </div>
               </div>
               <div className="space-y-2">
@@ -76,7 +87,7 @@ const FooterCTAHome = () => {
                 <label className="text-sm font-medium text-slate-300">Message</label>
                 <Textarea name="message" placeholder="How can we help?" className="bg-[#020617] border-slate-700 text-white" />
               </div>
-              <Button type="submit" disabled={loading} className="w-full bg-[#14b8a6] text-[#020617] font-bold">
+              <Button type="submit" disabled={loading} className="w-full bg-[#14b8a6] text-[#020617] font-bold h-12">
                 {loading ? "Sending..." : "Send Request"}
               </Button>
             </form>
