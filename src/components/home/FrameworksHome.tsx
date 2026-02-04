@@ -37,6 +37,8 @@ const Frameworks = () => {
       newSelected[id] = category;
     }
     setSelected(newSelected);
+    
+    // Save to local vault for the Footer CTA to grab
     localStorage.setItem('bmr_results_vault', JSON.stringify(newSelected));
   };
 
