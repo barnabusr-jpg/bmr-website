@@ -38,7 +38,12 @@ const Frameworks = () => {
       newSelected[id] = category;
     }
     setSelected(newSelected);
+    
+    // BROADCAST: Send event for real-time listeners
     window.dispatchEvent(new CustomEvent('diagnostic-update', { detail: newSelected }));
+    
+    // PERSIST: Save to window for the final form submission
+    (window as any).bmr_diagnostic_results = newSelected;
   };
 
   return (
