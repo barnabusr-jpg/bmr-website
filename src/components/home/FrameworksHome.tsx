@@ -39,11 +39,8 @@ const Frameworks = () => {
     }
     setSelected(newSelected);
     
-    // PHYSICAL WRITE: This puts the data into the hidden form field directly
-    const hiddenInput = document.getElementById('diagnostic-data-input') as HTMLInputElement;
-    if (hiddenInput) {
-      hiddenInput.value = JSON.stringify(newSelected);
-    }
+    // BROWSER VAULT: Save selections where the form can find them
+    localStorage.setItem('bmr_results_vault', JSON.stringify(newSelected));
   };
 
   return (
@@ -59,7 +56,6 @@ const Frameworks = () => {
         <div className="grid md:grid-cols-3 gap-8">
           {methodologies.map((methodology) => {
             const isSelected = !!selected[methodology.id];
-            
             return (
               <motion.div
                 key={methodology.name}
@@ -74,19 +70,14 @@ const Frameworks = () => {
                       <Check className="h-3 w-3 text-[#020617]" />
                     </div>
                   )}
-                  
                   <div className="flex items-center gap-3 mb-6">
-                    <div className={`text-3xl font-bold tracking-tighter transition-colors ${
-                      isSelected ? 'text-white' : 'text-[#14b8a6]'
-                    }`}>
+                    <div className={`text-3xl font-bold tracking-tighter ${isSelected ? 'text-white' : 'text-[#14b8a6]'}`}>
                       {methodology.name}
                     </div>
                     <div className={`h-px flex-1 ${isSelected ? 'bg-[#14b8a6]' : 'bg-slate-800'}`} />
                   </div>
-                  
                   <h4 className="text-xl font-bold mb-3 text-white tracking-tight">{methodology.fullName}</h4>
                   <p className="text-slate-400 font-light leading-relaxed mb-4">{methodology.description}</p>
-                  
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#14b8a6]">
                     Impact: {methodology.category}
                   </div>
@@ -94,13 +85,6 @@ const Frameworks = () => {
               </motion.div>
             );
           })}
-        </div>
-        
-        <div className="mt-16 text-center">
-          <p className="text-slate-500 text-sm mb-4">
-            {Object.keys(selected).length} signals selected for your report.
-          </p>
-          <ArrowRight className="h-6 w-6 text-slate-700 mx-auto animate-bounce" />
         </div>
       </div>
     </section>
