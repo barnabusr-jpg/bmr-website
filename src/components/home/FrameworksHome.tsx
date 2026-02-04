@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Check } from "lucide-react";
@@ -8,21 +8,21 @@ const methodologies = [
     id: "1",
     name: "HAI",
     fullName: "Human–AI Interaction",
-    category: "Value Drain", // The diagnostic category
+    category: "Value Drain",
     description: "Examines how people interpret, rely on, and remain accountable for AI-influenced decisions."
   },
   {
     id: "4",
     name: "AVS",
     fullName: "Adoption Value System",
-    category: "Stranded Asset", // The diagnostic category
+    category: "Stranded Asset",
     description: "Evaluates whether AI efforts translate into sustained organizational value rather than activity volume."
   },
   {
     id: "10",
     name: "SHP",
     fullName: "System Health Picture",
-    category: "Capital Multiplier", // The diagnostic category
+    category: "Capital Multiplier",
     description: "Provides visibility into how AI-enabled systems behave across people, processes, and decisions."
   }
 ];
@@ -38,8 +38,6 @@ const Frameworks = () => {
       newSelected[id] = category;
     }
     setSelected(newSelected);
-    
-    // This "shouts" the update to the Footer Form
     window.dispatchEvent(new CustomEvent('diagnostic-update', { detail: newSelected }));
   };
 
@@ -49,12 +47,12 @@ const Frameworks = () => {
         <div className="text-center mb-20">
           <h2 className="text-4xl font-bold mb-6 tracking-tight text-white">Diagnostic Frameworks</h2>
           <p className="text-xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
-            Select the perspectives that align with your current observations to include them in your System Observation Brief.
+            Select the perspectives that align with your current observations.
           </p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {methodologies.map((methodology, index) => {
+          {methodologies.map((methodology) => {
             const isSelected = !!selected[methodology.id];
             
             return (
@@ -66,7 +64,6 @@ const Frameworks = () => {
                 <Card className={`p-8 h-full border-2 transition-all duration-500 relative overflow-hidden group ${
                   isSelected ? 'border-[#14b8a6] bg-[#14b8a6]/10' : 'bg-slate-900/50 border-slate-800'
                 }`}>
-                  {/* Selection Indicator */}
                   {isSelected && (
                     <div className="absolute top-4 right-4 bg-[#14b8a6] rounded-full p-1">
                       <Check className="h-3 w-3 text-[#020617]" />
