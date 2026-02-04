@@ -1,7 +1,6 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
 const methodologies = [
   {
@@ -39,7 +38,7 @@ const Frameworks = () => {
     }
     setSelected(newSelected);
     
-    // BROWSER VAULT: Save selections where the form can find them
+    // VAULT: Save to browser memory
     localStorage.setItem('bmr_results_vault', JSON.stringify(newSelected));
   };
 
@@ -57,7 +56,7 @@ const Frameworks = () => {
           {methodologies.map((methodology) => {
             const isSelected = !!selected[methodology.id];
             return (
-              <motion.div
+              <div
                 key={methodology.name}
                 onClick={() => toggleSignal(methodology.id, methodology.category)}
                 className="cursor-pointer"
@@ -82,7 +81,7 @@ const Frameworks = () => {
                     Impact: {methodology.category}
                   </div>
                 </Card>
-              </motion.div>
+              </div>
             );
           })}
         </div>
