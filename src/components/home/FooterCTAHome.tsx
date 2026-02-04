@@ -8,17 +8,20 @@ import { useToast } from "@/components/ui/use-toast";
 const FooterCTAHome = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [diagnosticResults, setDiagnosticResults] = useState<any>({});
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    org: "",
-    message: ""
-  });
+  const [diagnosticResults, setDiagnosticResults] = useState<Record<string, string>>({});
+  
+  // Explicitly named state for maximum reliability
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [org, setOrg] = useState("");
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const handleDiagnosticUpdate = (e: any) => {
-      if (e.detail) setDiagnosticResults(e.detail);
+      if (e.detail) {
+        console.log("Form received signal update:", e.detail);
+        setDiagnosticResults(e.detail);
+      }
     };
     window.addEventListener('diagnostic-update', handleDiagnosticUpdate);
     return () => window.removeEventListener('diagnostic-update', handleDiagnosticUpdate);
@@ -28,24 +31,29 @@ const FooterCTAHome = () => {
     e.preventDefault();
     setLoading(true);
 
+    const payload = {
+      name,
+      email,
+      org,
+      message,
+      results: diagnosticResults
+    };
+
     try {
       const response = await fetch("/api/send-diagnostic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          results: diagnosticResults
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        toast({ title: "Request Sent", description: "We will be in touch shortly." });
-        setFormData({ name: "", email: "", org: "", message: "" });
+        toast({ title: "Request Sent", description: "Your Field Guide request has been received." });
+        setName(""); setEmail(""); setOrg(""); setMessage("");
       } else {
-        throw new Error("Failed to send");
+        throw new Error("Send failed");
       }
     } catch {
-      toast({ variant: "destructive", title: "Error", description: "Failed to send request." });
+      toast({ variant: "destructive", title: "Error", description: "Could not send request." });
     } finally {
       setLoading(false);
     }
@@ -56,34 +64,29 @@ const FooterCTAHome = () => {
       <div className="container mx-auto max-w-5xl text-center">
         <div className="space-y-12">
           <div className="space-y-4">
-            <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+            <h2 className="text-4xl font-bold text-white tracking-tight">
               Request the <span className="text-[#14b8a6]">Field Guide</span>
             </h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              Contact us to receive the guide on observing AI-enabled systems or to discuss a diagnostic for your organization.
-            </p>
           </div>
 
-          <Card className="p-8 md:p-12 border-slate-800 bg-slate-900/50 backdrop-blur-md max-w-3xl mx-auto text-left">
+          <Card className="p-8 border-slate-800 bg-slate-900/50 backdrop-blur-md max-w-3xl mx-auto text-left">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Name</label>
                   <Input 
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                    placeholder="Your name" 
+                    required 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
                     className="bg-[#020617] border-slate-700 text-white" 
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-slate-300">Organization</label>
                   <Input 
-                    required
-                    value={formData.org}
-                    onChange={(e) => setFormData({...formData, org: e.target.value})}
-                    placeholder="Company name" 
+                    required 
+                    value={org} 
+                    onChange={(e) => setOrg(e.target.value)} 
                     className="bg-[#020617] border-slate-700 text-white" 
                   />
                 </div>
@@ -91,28 +94,22 @@ const FooterCTAHome = () => {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-slate-300">Email</label>
                 <Input 
-                  required
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({...formData, email: e.target.value})}
-                  placeholder="email@company.com" 
+                  required 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
                   className="bg-[#020617] border-slate-700 text-white" 
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300">How can we help?</label>
+                <label className="text-sm font-medium text-slate-300">Message</label>
                 <Textarea 
-                  value={formData.message}
-                  onChange={(e) => setFormData({...formData, message: e.target.value})}
-                  placeholder="I'd like to request the Field Guide..." 
-                  className="bg-[#020617] border-slate-700 min-h-[120px] text-white" 
+                  value={message} 
+                  onChange={(e) => setMessage(e.target.value)} 
+                  className="bg-[#020617] border-slate-700 text-white" 
                 />
               </div>
-              <Button 
-                type="submit" 
-                disabled={loading}
-                className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-12"
-              >
+              <Button type="submit" disabled={loading} className="w-full bg-[#14b8a6] text-[#020617] font-bold">
                 {loading ? "Sending..." : "Send Request"}
               </Button>
             </form>
