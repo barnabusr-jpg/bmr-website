@@ -39,11 +39,11 @@ const Frameworks = () => {
     }
     setSelected(newSelected);
     
-    // BROADCAST: Send event for real-time listeners
-    window.dispatchEvent(new CustomEvent('diagnostic-update', { detail: newSelected }));
-    
-    // PERSIST: Save to window for the final form submission
-    (window as any).bmr_diagnostic_results = newSelected;
+    // PHYSICAL WRITE: This puts the data into the hidden form field directly
+    const hiddenInput = document.getElementById('diagnostic-data-input') as HTMLInputElement;
+    if (hiddenInput) {
+      hiddenInput.value = JSON.stringify(newSelected);
+    }
   };
 
   return (
