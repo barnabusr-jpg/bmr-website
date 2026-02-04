@@ -9,7 +9,6 @@ const FooterCTAHome = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  // DIRECT REFS: No state lag, no sync issues.
   const nameRef = useRef<HTMLInputElement>(null);
   const emailRef = useRef<HTMLInputElement>(null);
   const orgRef = useRef<HTMLInputElement>(null);
@@ -19,11 +18,9 @@ const FooterCTAHome = () => {
     e.preventDefault();
     setLoading(true);
 
-    // Grab signals from the vault
     const saved = localStorage.getItem('bmr_results_vault');
     const diagnosticResults = saved ? JSON.parse(saved) : {};
 
-    // Manually construct the payload from physical field values
     const payload = {
       name: nameRef.current?.value || "Not Provided",
       email: emailRef.current?.value || "Not Provided",
@@ -41,17 +38,16 @@ const FooterCTAHome = () => {
 
       if (response.ok) {
         toast({ title: "Request Sent", description: "Observation Brief delivered." });
-        // Manually clear fields
         if (nameRef.current) nameRef.current.value = "";
         if (emailRef.current) emailRef.current.value = "";
         if (orgRef.current) orgRef.current.value = "";
         if (msgRef.current) msgRef.current.value = "";
         localStorage.removeItem('bmr_results_vault');
       } else {
-        throw new Error();
+        throw new Error("Failed to send");
       }
     } catch {
-      toast({ variant: "destructive", title: "Error", description: "Failed to send." });
+      toast({ variant: "destructive", title: "Error", description: "Submission failed." });
     } finally {
       setLoading(false);
     }
