@@ -8,19 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Check, Activity, ArrowRight, Loader2 } from "lucide-react";
 
 const diagnosticQuestions = [
-  // LENS: TRUST
   { id: 1, lens: "Trust", text: "Our organization has a shared, non-technical language for defining AI reliability." },
   { id: 2, lens: "Trust", text: "We can clearly demonstrate to stakeholders how our AI outputs align with brand values." },
   { id: 3, lens: "Trust", text: "There is a high level of confidence that our AI behavior remains consistent in unscripted scenarios." },
   { id: 4, lens: "Trust", text: "We proactively measure stakeholder sentiment regarding our use of automated decision-making." },
-
-  // LENS: GOVERN
   { id: 5, lens: "Govern", text: "Our AI projects follow a standardized oversight process from conception to delivery." },
   { id: 6, lens: "Govern", text: "Final accountability for AI-driven outcomes is clearly mapped to specific leadership roles." },
   { id: 7, lens: "Govern", text: "We have established protocols for human expert intervention when AI performance fluctuates." },
   { id: 8, lens: "Govern", text: "Our governance framework is designed to adapt as regulatory and technical landscapes evolve." },
-
-  // LENS: EVOLVE
   { id: 9, lens: "Evolve", text: "We prioritize 'structured observation' to identify why system risks occur, not just where." },
   { id: 10, lens: "Evolve", text: "We have a formal 'de-risking' phase before any AI initiative moves to real-world operation." },
   { id: 11, lens: "Evolve", text: "Our AI strategy is integrated into the broader systemic goals of the organization." },
@@ -63,15 +58,14 @@ export default function PromiseGapDiagnosticPage() {
   const submitResults = async () => {
     setIsSubmitting(true);
     const payload = { 
-      answers, 
-      to: formData.email, 
-      firstName: formData.name.split(' ')[0],
-      organization: formData.organization 
+      results: answers, // Matches the 'results' key in the API
+      email: formData.email, 
+      name: formData.name,
+      org: formData.organization 
     };
     
     try {
-      // THE FIX: Pointing to the refined diagnostic API route
-      const res = await fetch('/api/diagnostic-report', {
+      const res = await fetch('/api/send-diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -80,11 +74,11 @@ export default function PromiseGapDiagnosticPage() {
       if (res.ok) {
         router.push('/thank-you'); 
       } else {
-        alert("Signal dispatch failed. Please check your connection.");
+        alert("Signal dispatch failed.");
         setIsSubmitting(false);
       }
     } catch {
-      alert("Transmission error. Please check your network.");
+      alert("Transmission error.");
       setIsSubmitting(false);
     }
   };
@@ -106,29 +100,25 @@ export default function PromiseGapDiagnosticPage() {
                 <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
                   <h2 className="text-3xl font-bold mb-4 tracking-tight">Systemic Diagnostic Intake</h2>
-                  <p className="text-slate-400 font-light mb-10 leading-relaxed">
-                    Identify where behavioral friction and misaligned expectations are forming 
-                    within your AI-enabled systems.
-                  </p>
                   <form onSubmit={handleIntakeSubmit} className="space-y-8">
                     <div className="grid md:grid-cols-2 gap-8">
                       <div className="space-y-3">
                         <label className="text-xs font-light text-slate-500 uppercase tracking-widest">Full Name</label>
-                        <input required className="w-full p-4 rounded-md border border-slate-800 bg-slate-950 text-white focus:border-[#14b8a6] outline-none transition-colors" 
+                        <input required className="w-full p-4 rounded-md border border-slate-800 bg-slate-950 text-white focus:border-[#14b8a6] outline-none" 
                           value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                       </div>
                       <div className="space-y-3">
                         <label className="text-xs font-light text-slate-500 uppercase tracking-widest">Work Email</label>
-                        <input required type="email" className="w-full p-4 rounded-md border border-slate-800 bg-slate-950 text-white focus:border-[#14b8a6] outline-none transition-colors" 
+                        <input required type="email" className="w-full p-4 rounded-md border border-slate-800 bg-slate-950 text-white focus:border-[#14b8a6] outline-none" 
                           value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                       </div>
                     </div>
                     <div className="space-y-3">
                       <label className="text-xs font-light text-slate-500 uppercase tracking-widest">Organization</label>
-                      <input required className="w-full p-4 rounded-md border border-slate-800 bg-slate-950 text-white focus:border-[#14b8a6] outline-none transition-colors" 
+                      <input required className="w-full p-4 rounded-md border border-slate-800 bg-slate-950 text-white focus:border-[#14b8a6] outline-none" 
                         value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
                     </div>
-                    <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-16 text-lg">
+                    <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-16">
                       Begin Observation <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </form>
@@ -140,17 +130,16 @@ export default function PromiseGapDiagnosticPage() {
               <motion.div key="question" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -20, opacity: 0 }}>
                 <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
-                  <span className="text-[#14b8a6] font-bold tracking-[0.3em] uppercase text-xs">Lens: {diagnosticQuestions[step - 1].lens}</span>
-                  <h2 className="text-2xl md:text-4xl font-bold mt-6 mb-12 leading-tight tracking-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
+                  <span className="text-[#14b8a6] font-bold uppercase text-xs">Lens: {diagnosticQuestions[step - 1].lens}</span>
+                  <h2 className="text-2xl md:text-4xl font-bold mt-6 mb-12">{diagnosticQuestions[step - 1].text}</h2>
                   <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                     {["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"].map((option) => (
                       <Button 
                         key={option} 
                         variant="outline" 
-                        className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10 text-slate-300 hover:text-white transition-all duration-300 group relative overflow-hidden" 
+                        className="py-8 text-lg border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10" 
                         onClick={() => handleAnswer(option)}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#14b8a6]/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                         {option}
                       </Button>
                     ))}
@@ -164,20 +153,13 @@ export default function PromiseGapDiagnosticPage() {
                 <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
                   <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
                   <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
-                  <h2 className="text-4xl font-bold tracking-tight text-white mb-4">Observation Complete</h2>
-                  <p className="text-slate-400 font-light text-lg mb-10 max-w-xl mx-auto">
-                    Your responses have been recorded. We will synthesize these signals into a preliminary System Health Picture.
-                  </p>
+                  <h2 className="text-4xl font-bold text-white mb-4">Observation Complete</h2>
                   <Button 
                     className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" 
                     onClick={submitResults}
                     disabled={isSubmitting}
                   >
-                    {isSubmitting ? (
-                      <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Synthesizing Signals...</>
-                    ) : (
-                      "Submit & Send Synthesis"
-                    )}
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : "Submit & Send Synthesis"}
                   </Button>
                 </Card>
               </motion.div>
