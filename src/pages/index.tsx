@@ -4,7 +4,7 @@ import CommercialVideo from "@/components/CommercialVideo";
 import Hero from "@/components/home/HeroHome";
 import ValueBullets from "@/components/home/ValueBulletsHome";
 import ServicesPreview from "@/components/home/ServicesPreviewHome";
-import Frameworks from "@/components/home/FrameworksHome";
+import Frameworks from "@/components/home/DiagnosticFrameworks";
 import Outcomes from "@/components/home/OutcomesHome";
 import ComparisonGrid from "@/components/home/ComparisonGrid";
 import Insights from "@/components/home/InsightsHome";
