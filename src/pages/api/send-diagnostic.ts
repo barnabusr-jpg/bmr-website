@@ -1,132 +1,71 @@
-import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from 'next/router';
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Check, Activity, ArrowRight, Loader2 } from "lucide-react";
+import type { NextApiRequest, NextApiResponse } from "next";
+import sgMail from "@sendgrid/mail";
 
-const diagnosticQuestions = [
-  { id: 1, lens: "Trust", text: "Our organization has a shared, non-technical language for defining AI reliability." },
-  { id: 2, lens: "Trust", text: "We can clearly demonstrate to stakeholders how our AI outputs align with brand values." },
-  { id: 3, lens: "Trust", text: "There is a high level of confidence that our AI behavior remains consistent in unscripted scenarios." },
-  { id: 4, lens: "Trust", text: "We proactively measure stakeholder sentiment regarding our use of automated decision-making." },
-  { id: 5, lens: "Govern", text: "Our AI projects follow a standardized oversight process from conception to delivery." },
-  { id: 6, lens: "Govern", text: "Final accountability for AI-driven outcomes is clearly mapped to specific leadership roles." },
-  { id: 7, lens: "Govern", text: "We have established protocols for human expert intervention when AI performance fluctuates." },
-  { id: 8, lens: "Govern", text: "Our governance framework is designed to adapt as regulatory and technical landscapes evolve." },
-  { id: 9, lens: "Evolve", text: "We prioritize 'structured observation' to identify why system risks occur, not just where." },
-  { id: 10, lens: "Evolve", text: "We have a formal 'de-risking' phase before any AI initiative moves to real-world operation." },
-  { id: 11, lens: "Evolve", text: "Our AI strategy is integrated into the broader systemic goals of the organization." },
-  { id: 12, lens: "Evolve", text: "Leadership regularly reviews how AI system behavior impacts our overall delivery risk." },
-];
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
 
-// The NEW Human-Centric Labels
-const diagnosticOptions = [
-  "Manual Friction",
-  "Passive Support",
-  "System Disconnect",
-  "Team Relief",
-  "Force Multiplier"
-];
+const DIAGNOSTIC_MAPPING: Record<string, { label: string; snippet: string }> = {
+  "Manual Friction": { 
+    label: "Manual Friction", 
+    snippet: "Human effort is acting as a patch for system limits, eroding AI margins." 
+  },
+  "Passive Support": { 
+    label: "Passive Support", 
+    snippet: "The system provides utility but remains a passive tool rather than a partner." 
+  },
+  "System Disconnect": { 
+    label: "System Disconnect", 
+    snippet: "Outputs are decoupled from the actual human decision-making workflow." 
+  },
+  "Team Relief": { 
+    label: "Team Relief", 
+    snippet: "The system is successfully absorbing task volume and providing operational lift." 
+  },
+  "Force Multiplier": { 
+    label: "Force Multiplier", 
+    snippet: "Synergy is creating emergent value, outperforming baseline expectations." 
+  }
+};
 
-export default function PromiseGapDiagnosticPage() {
-  const router = useRouter();
-  const [step, setStep] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", organization: "" });
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== "POST") return res.status(405).send("Method Not Allowed");
 
-  const handleIntakeSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setStep(1); 
-  };
+  const b = req.body;
+  const leadName = b.name || "Not Provided";
+  const leadEmail = b.email || "Not Provided";
+  const leadOrg = b.org || "Not Provided";
+  const results = b.results || {};
 
-  const handleAnswer = (value: string) => {
-    setAnswers({ ...answers, [step]: value });
-    setStep(step + 1);
-  };
+  const resultsTableRows = Object.entries(results).map(([id, val]) => {
+    const info = DIAGNOSTIC_MAPPING[val as string] || { label: val as string, snippet: "" };
+    return `
+      <tr>
+        <td style="padding: 12px; border-bottom: 1px solid #eee;">Signal ${id}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #eee; color: #14b8a6;"><b>${info.label}</b></td>
+        <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 12px;">${info.snippet}</td>
+      </tr>`;
+  }).join("");
 
-  const submitResults = async () => {
-    setIsSubmitting(true);
-    const payload = { 
-      results: answers, 
-      email: formData.email, 
-      name: formData.name,
-      org: formData.organization 
-    };
-    
-    try {
-      const res = await fetch('/api/send-diagnostic', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      
-      if (res.ok) {
-        router.push('/thank-you'); 
-      } else {
-        alert("Transmission failed.");
-        setIsSubmitting(false);
-      }
-    } catch {
-      alert("Network error.");
-      setIsSubmitting(false);
-    }
-  };
+  const emailHtml = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 30px; border-radius: 10px;">
+      <h2 style="color: #14b8a6;">MINE Diagnostic: Observation Brief</h2>
+      <p><b>Lead:</b> ${leadName} (${leadEmail})</p>
+      <p><b>Organization:</b> ${leadOrg}</p>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+        <thead><tr style="background: #f9f9f9;"><th style="text-align:left; padding:10px;">Signal</th><th style="text-align:left; padding:10px;">Experience</th><th style="text-align:left; padding:10px;">Observation</th></tr></thead>
+        <tbody>${resultsTableRows}</tbody>
+      </table>
+    </div>`;
 
-  return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col">
-      <Header />
-      <main className="flex-grow py-32 px-6">
-        <div className="container mx-auto max-w-4xl">
-          <AnimatePresence mode="wait">
-            {step === 0 && (
-              <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative">
-                  <h2 className="text-3xl font-bold mb-6">Systemic Diagnostic Intake</h2>
-                  <form onSubmit={handleIntakeSubmit} className="space-y-6">
-                    <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                    <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                    <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                    <Button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-bold h-16">Begin Observation</Button>
-                  </form>
-                </Card>
-              </motion.div>
-            )}
-
-            {step > 0 && step <= 12 && (
-              <motion.div key="question" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center">
-                  <span className="text-[#14b8a6] font-bold uppercase text-xs">Signal {step} of 12</span>
-                  <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12">{diagnosticQuestions[step - 1].text}</h2>
-                  <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
-                    {diagnosticOptions.map((option) => (
-                      <Button key={option} variant="outline" className="py-8 text-lg border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10" onClick={() => handleAnswer(option)}>
-                        {option}
-                      </Button>
-                    ))}
-                  </div>
-                </Card>
-              </motion.div>
-            )}
-
-            {step === 13 && (
-              <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center">
-                  <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
-                  <h2 className="text-4xl font-bold mb-10">Observation Complete</h2>
-                  <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16" onClick={submitResults} disabled={isSubmitting}>
-                    {isSubmitting ? <Loader2 className="animate-spin" /> : "Submit & Send Synthesis"}
-                  </Button>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </main>
-      <Footer />
-    </div>
-  );
+  try {
+    await sgMail.send({
+      to: "hello@bmradvisory.co",
+      from: "hello@bmradvisory.co",
+      subject: `[Diagnostic] ${leadOrg} Observation`,
+      html: emailHtml,
+    });
+    return res.status(200).json({ success: true });
+  } catch {
+    // Empty catch block is critical to satisfy Vercel linting
+    return res.status(500).json({ success: false });
+  }
 }
