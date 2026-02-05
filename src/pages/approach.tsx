@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ServicesPreview from "@/components/home/ServicesPreviewHome";
-import Frameworks from "@/components/home/DiagnosticFrameworks";
+import DiagnosticFrameworks from "@/components/home/DiagnosticFrameworks"; // UPDATED PATH
 import Outcomes from "@/components/home/OutcomesHome";
 
 export default function ApproachPage() {
@@ -11,13 +11,22 @@ export default function ApproachPage() {
       <main className="pt-20">
         <div className="max-w-4xl mx-auto px-6 text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">Our Approach</h1>
-          <p className="text-xl text-slate-400">A systemic framework for bridging the Promise Gap through HAI, AVS, and IGF.</p>
+          <p className="text-xl text-slate-400">
+            A systemic framework for bridging the Promise Gap by addressing 
+            <span className="text-[#14b8a6]"> Manual Friction</span> and 
+            <span className="text-[#14b8a6]"> System Disconnects</span>.
+          </p>
         </div>
         
         <ServicesPreview />
+        
         <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent my-12" />
-        <Frameworks />
+        
+        {/* Calling the newly renamed component */}
+        <DiagnosticFrameworks />
+        
         <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent my-12" />
+        
         <Outcomes />
       </main>
       <Footer />
