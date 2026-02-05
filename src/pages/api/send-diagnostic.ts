@@ -7,7 +7,7 @@ const INSIGHT_LIBRARY: Record<string, { label: string; snippet: string }> = {
   "Manual Friction":   { label: "Manual Friction",   snippet: "Identifies human-in-the-loop costs eroding AI margins." },
   "Passive Support":   { label: "Passive Support",   snippet: "A system performing tasks but failing to provide strategic leverage." },
   "System Disconnect": { label: "System Disconnect", snippet: "High-quality outputs that are decoupled from core workflows." },
-  "Team Relief":       { label: "Team Relief",       snippet: "AI is actively reducing the operational burden on human capital." },
+  "Team Relief":       { label: "Team Relief",       snippet: "AI is successfully reducing the operational burden on human capital." },
   "Force Multiplier":  { label: "Force Multiplier",  snippet: "System is outperforming expectations and is ready for scale." }
 };
 
@@ -16,12 +16,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { name, email, org, results } = req.body;
 
   const resultsRows = Object.entries(results || {}).map(([id, state]) => {
-    const insight = INSIGHT_LIBRARY[state as string] || { label: state as string, snippet: "Signal recorded." };
+    const insight = INSIGHT_LIBRARY[state as string] || { label: state as string, snippet: "Signal captured." };
     return `
       <tr>
-        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">Signal ${id}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #14b8a6; font-weight: bold;">${insight.label}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">${insight.snippet}</td>
+        <td style="padding:12px; border-bottom:1px solid #eee;">Signal ${id}</td>
+        <td style="padding:12px; border-bottom:1px solid #eee; color:#14b8a6;"><b>${insight.label}</b></td>
+        <td style="padding:12px; border-bottom:1px solid #eee; font-size:12px;">${insight.snippet}</td>
       </tr>`;
   }).join("");
 
@@ -29,11 +29,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sgMail.send({
       to: "hello@bmradvisory.co",
       from: "hello@bmradvisory.co",
-      subject: `[Diagnostic] ${org} Synthesis`,
-      html: `<div style="font-family:sans-serif; max-width:650px; margin:auto; border:1px solid #e2e8f0; padding:40px; border-radius:12px;">
-               <h2 style="color:#14b8a6;">MINE Observation Brief</h2>
+      subject: `[MINE Diagnostic] ${org || 'Observation Brief'}`,
+      html: `<div style="font-family:sans-serif; padding:40px; border:1px solid #eee; border-radius:12px;">
+               <h2 style="color:#14b8a6;">MINE Observation Synthesis</h2>
                <p><b>Lead:</b> ${name} (${email})</p>
-               <table style="width:100%; border-collapse:collapse;">${resultsRows}</table>
+               <p><b>Org:</b> ${org}</p>
+               <table style="width:100%; border-collapse:collapse; margin-top:20px;">${resultsRows}</table>
              </div>`,
     });
     return res.status(200).json({ success: true });
