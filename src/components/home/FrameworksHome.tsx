@@ -7,21 +7,21 @@ const methodologies = [
     id: "1",
     name: "HAI",
     fullName: "Human–AI Interaction",
-    category: "Value Drain",
+    category: "Manual Friction", // Cleaned from Value Drain
     description: "Examines how people interpret, rely on, and remain accountable for AI-influenced decisions."
   },
   {
     id: "4",
     name: "AVS",
     fullName: "Adoption Value System",
-    category: "Stranded Asset",
+    category: "System Disconnect", // Cleaned from Stranded Asset
     description: "Evaluates whether AI efforts translate into sustained organizational value rather than activity volume."
   },
   {
     id: "10",
     name: "SHP",
     fullName: "System Health Picture",
-    category: "Capital Multiplier",
+    category: "Force Multiplier", // Cleaned from Capital Multiplier
     description: "Provides visibility into how AI-enabled systems behave across people, processes, and decisions."
   }
 ];
