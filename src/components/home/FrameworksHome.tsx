@@ -7,21 +7,21 @@ const methodologies = [
     id: "1",
     name: "HAI",
     fullName: "Human–AI Interaction",
-    category: "Manual Friction", // Cleaned from Value Drain
+    category: "Manual Friction", // Aligned from Value Drain
     description: "Examines how people interpret, rely on, and remain accountable for AI-influenced decisions."
   },
   {
     id: "4",
     name: "AVS",
     fullName: "Adoption Value System",
-    category: "System Disconnect", // Cleaned from Stranded Asset
+    category: "System Disconnect", // Aligned from Stranded Asset
     description: "Evaluates whether AI efforts translate into sustained organizational value rather than activity volume."
   },
   {
     id: "10",
     name: "SHP",
     fullName: "System Health Picture",
-    category: "Force Multiplier", // Cleaned from Capital Multiplier
+    category: "Force Multiplier", // Aligned from Capital Multiplier
     description: "Provides visibility into how AI-enabled systems behave across people, processes, and decisions."
   }
 ];
@@ -38,7 +38,7 @@ const Frameworks = () => {
     }
     setSelected(newSelected);
     
-    // VAULT: Save to browser memory
+    // VAULT: Save to browser memory to bridge the homepage to the quiz
     localStorage.setItem('bmr_results_vault', JSON.stringify(newSelected));
   };
 
@@ -78,7 +78,7 @@ const Frameworks = () => {
                   <h4 className="text-xl font-bold mb-3 text-white tracking-tight">{methodology.fullName}</h4>
                   <p className="text-slate-400 font-light leading-relaxed mb-4">{methodology.description}</p>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#14b8a6]">
-                    Impact: {methodology.category}
+                    Observation: {methodology.category}
                   </div>
                 </Card>
               </div>
