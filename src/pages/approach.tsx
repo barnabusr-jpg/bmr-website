@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ServicesPreview from "@/components/home/ServicesPreviewHome";
-import Frameworks from "@/components/home/FrameworksHome";
+import Frameworks from "@/components/home/DiagnosticFrameworks";
 import Outcomes from "@/components/home/OutcomesHome";
 
 export default function ApproachPage() {
