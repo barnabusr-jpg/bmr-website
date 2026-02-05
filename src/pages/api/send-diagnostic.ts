@@ -3,13 +3,13 @@ import sgMail from "@sendgrid/mail";
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || "");
 
-const DIAGNOSTIC_MAPPING: Record<string, { label: string; snippet: string }> = {
-  // New Human-Centric Labels
-  "Manual Friction":   { label: "Manual Friction",   snippet: "Human effort is patching system limits. AI margins are being eroded." },
-  "Passive Support":   { label: "Passive Support",   snippet: "The system is a tool, not a partner. Provides utility but no strategic leverage." },
-  "System Disconnect": { label: "System Disconnect", snippet: "Outputs are decoupled from core workflows, leaving ROI unrealized." },
-  "Team Relief":       { label: "Team Relief",       snippet: "AI is successfully absorbing task volume and reducing human burden." },
-  "Force Multiplier":  { label: "Force Multiplier",  snippet: "Synergy is creating emergent efficiency ready for capital scale." }
+// THE BRAIN'S SOURCE OF TRUTH
+const INSIGHT_LIBRARY: Record<string, { label: string; snippet: string }> = {
+  "Manual Friction":   { label: "Manual Friction",   snippet: "Identifies human-in-the-loop costs eroding AI margins." },
+  "Passive Support":   { label: "Passive Support",   snippet: "A system performing tasks but failing to provide strategic leverage." },
+  "System Disconnect": { label: "System Disconnect", snippet: "High-quality outputs that are decoupled from core workflows." },
+  "Team Relief":       { label: "Team Relief",       snippet: "AI is actively reducing the operational burden on human capital." },
+  "Force Multiplier":  { label: "Force Multiplier",  snippet: "System is outperforming expectations and is ready for scale." }
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -17,34 +17,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { name, email, org, results } = req.body;
 
-  const resultsTableRows = Object.entries(results || {}).map(([id, val]) => {
-    const info = DIAGNOSTIC_MAPPING[val as string] || { label: val as string, snippet: "" };
+  // Process the results using the library
+  const resultsRows = Object.entries(results || {}).map(([id, state]) => {
+    const insight = INSIGHT_LIBRARY[state as string] || { label: state as string, snippet: "Signal recorded." };
     return `
       <tr>
-        <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 14px;">Signal ${id}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #eee; color: #14b8a6; font-weight: bold;">${info.label}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #eee; font-size: 12px; color: #666;">${info.snippet}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px;">Signal ${id}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; color: #14b8a6; font-weight: bold;">${insight.label}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">${insight.snippet}</td>
       </tr>`;
   }).join("");
+
+  const emailHtml = `
+    <div style="font-family: sans-serif; color: #020617; max-width: 650px; margin: auto; border: 1px solid #e2e8f0; padding: 40px; border-radius: 12px;">
+      <h2 style="color: #14b8a6; margin-top: 0;">MINE Diagnostic: Observation Brief</h2>
+      <div style="background: #f8fafc; padding: 20px; border-radius: 8px; margin: 20px 0;">
+        <p style="margin: 0;"><b>Lead:</b> ${name} (${email})</p>
+        <p style="margin: 8px 0 0 0;"><b>Organization:</b> ${org}</p>
+      </div>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="text-align: left; background: #f8fafc;">
+            <th style="padding: 10px; border-bottom: 2px solid #14b8a6; font-size: 13px;">Signal</th>
+            <th style="padding: 10px; border-bottom: 2px solid #14b8a6; font-size: 13px;">Category</th>
+            <th style="padding: 10px; border-bottom: 2px solid #14b8a6; font-size: 13px;">Strategic Insight</th>
+          </tr>
+        </thead>
+        <tbody>${resultsRows}</tbody>
+      </table>
+    </div>`;
 
   try {
     await sgMail.send({
       to: "hello@bmradvisory.co",
       from: "hello@bmradvisory.co",
-      subject: `[Diagnostic] ${org || 'New'} Observation Brief`,
-      html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: auto; border: 1px solid #eee; padding: 40px; border-radius: 12px;">
-          <h2 style="color: #14b8a6;">MINE Diagnostic Brief</h2>
-          <p><b>Lead:</b> ${name || 'Inquiry'} (${email || 'No Email'})</p>
-          <p><b>Org:</b> ${org || 'N/A'}</p>
-          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-            <thead><tr style="background: #f9f9f9;"><th style="text-align:left; padding:10px;">ID</th><th style="text-align:left; padding:10px;">Label</th><th style="text-align:left; padding:10px;">Insight</th></tr></thead>
-            <tbody>${resultsTableRows}</tbody>
-          </table>
-        </div>`,
+      subject: `[Diagnostic] ${org} Synthesis`,
+      html: emailHtml,
     });
     return res.status(200).json({ success: true });
   } catch {
+    // Vercel build fix: ignore the error variable to pass strict linting
     return res.status(500).json({ success: false });
   }
 }
