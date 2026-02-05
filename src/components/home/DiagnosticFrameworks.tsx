@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-// Removed unused Check import
 
 const methodologies = [
   { id: "1", name: "HAI", fullName: "Human–AI Interaction", category: "Manual Friction", description: "Examines how people interpret, rely on, and remain accountable for AI-influenced decisions." },
@@ -8,7 +7,7 @@ const methodologies = [
   { id: "10", name: "SHP", fullName: "System Health Picture", category: "Force Multiplier", description: "Provides visibility into how AI-enabled systems behave across people, processes, and decisions." }
 ];
 
-const Frameworks = () => {
+const DiagnosticFrameworks = () => {
   const [selected, setSelected] = useState<Record<string, string>>({});
 
   const toggleSignal = (id: string, category: string) => {
@@ -30,12 +29,12 @@ const Frameworks = () => {
             const isSelected = !!selected[m.id];
             return (
               <div key={m.name} onClick={() => toggleSignal(m.id, m.category)} className="cursor-pointer">
-                <Card className={`p-8 h-full border-2 transition-all ${isSelected ? 'border-[#14b8a6] bg-[#14b8a6]/10' : 'bg-slate-900/50 border-slate-800'}`}>
+                <Card className={`p-8 h-full border-2 transition-all duration-300 ${isSelected ? 'border-[#14b8a6] bg-[#14b8a6]/10' : 'bg-slate-900/50 border-slate-800'}`}>
                   <div className="flex items-center gap-3 mb-6">
                     <div className={`text-3xl font-bold ${isSelected ? 'text-white' : 'text-[#14b8a6]'}`}>{m.name}</div>
                   </div>
                   <h4 className="text-xl font-bold mb-3 text-white">{m.fullName}</h4>
-                  <p className="text-slate-400 mb-4">{m.description}</p>
+                  <p className="text-slate-400 mb-4 font-light">{m.description}</p>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-[#14b8a6]">Observation: {m.category}</div>
                 </Card>
               </div>
@@ -47,4 +46,4 @@ const Frameworks = () => {
   );
 };
 
-export default Frameworks;
+export default DiagnosticFrameworks;
