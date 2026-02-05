@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
-import { Check } from "lucide-react";
+// Removed unused Check import
 
 const methodologies = [
   { id: "1", name: "HAI", fullName: "Human–AI Interaction", category: "Manual Friction", description: "Examines how people interpret, rely on, and remain accountable for AI-influenced decisions." },
