@@ -6,7 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Activity, Loader2 } from "lucide-react";
+import { Activity, Loader2, ArrowRight } from "lucide-react";
 
 const diagnosticQuestions = [
   { id: 1, lens: "Trust", text: "Our organization has a shared, non-technical language for defining AI reliability." },
@@ -21,6 +21,14 @@ const diagnosticQuestions = [
   { id: 10, lens: "Evolve", text: "We have a formal 'de-risking' phase before any AI initiative moves to real-world operation." },
   { id: 11, lens: "Evolve", text: "Our AI strategy is integrated into the broader systemic goals of the organization." },
   { id: 12, lens: "Evolve", text: "Leadership regularly reviews how AI system behavior impacts our overall delivery risk." },
+];
+
+const humanCentricOptions = [
+  "Manual Friction",
+  "Passive Support",
+  "System Disconnect",
+  "Team Relief",
+  "Force Multiplier"
 ];
 
 export default function PromiseGap() {
@@ -41,7 +49,12 @@ export default function PromiseGap() {
       const res = await fetch('/api/send-diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ results: answers, email: formData.email, name: formData.name, org: formData.organization }),
+        body: JSON.stringify({ 
+          results: answers, 
+          email: formData.email, 
+          name: formData.name, 
+          org: formData.organization 
+        }),
       });
       if (res.ok) router.push('/thank-you');
       else setIsSubmitting(false);
@@ -53,7 +66,7 @@ export default function PromiseGap() {
   return (
     <>
       <Head>
-        <title>The Promise Gap | BMR Solutions</title>
+        <title>The Promise Gap Diagnostic | BMR Solutions</title>
       </Head>
       <div className="min-h-screen bg-[#020617] text-white flex flex-col">
         <Header />
@@ -62,26 +75,35 @@ export default function PromiseGap() {
             <AnimatePresence mode="wait">
               {step === 0 && (
                 <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative">
+                  <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
                     <h2 className="text-3xl font-bold mb-6 text-[#14b8a6]">Systemic Diagnostic Intake</h2>
                     <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
-                      <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                      <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                      <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                      <Button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-bold h-16">Begin Observation</Button>
+                      <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 focus:border-[#14b8a6] outline-none" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                      <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 focus:border-[#14b8a6] outline-none" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                      <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 focus:border-[#14b8a6] outline-none" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
+                      <Button type="submit" className="w-full bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-16 text-lg">
+                        Begin Observation <ArrowRight className="ml-2 h-5 w-5" />
+                      </Button>
                     </form>
                   </Card>
                 </motion.div>
               )}
 
               {step > 0 && step <= 12 && (
-                <motion.div key="question" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center">
-                    <span className="text-[#14b8a6] font-bold uppercase text-xs">Signal {step} of 12</span>
-                    <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 leading-tight">{diagnosticQuestions[step - 1].text}</h2>
+                <motion.div key="question" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                  <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
+                    <span className="text-[#14b8a6] font-bold uppercase tracking-widest text-xs">Signal {step} of 12</span>
+                    <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 leading-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
                     <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
-                      {["Strongly Agree", "Agree", "Neutral", "Disagree", "Strongly Disagree"].map((option) => (
-                        <Button key={option} variant="outline" className="py-8 text-lg border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10" onClick={() => handleAnswer(option)}>
+                      {humanCentricOptions.map((option) => (
+                        <Button 
+                          key={option} 
+                          variant="outline" 
+                          className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10 text-slate-300 hover:text-white transition-all" 
+                          onClick={() => handleAnswer(option)}
+                        >
                           {option}
                         </Button>
                       ))}
@@ -92,10 +114,11 @@ export default function PromiseGap() {
 
               {step === 13 && (
                 <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center">
+                  <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
                     <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
-                    <h2 className="text-4xl font-bold mb-10">Observation Complete</h2>
-                    <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16" onClick={submitResults} disabled={isSubmitting}>
+                    <h2 className="text-4xl font-bold mb-10 text-white">Observation Complete</h2>
+                    <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" onClick={submitResults} disabled={isSubmitting}>
                       {isSubmitting ? <Loader2 className="animate-spin" /> : "Submit & Send Synthesis"}
                     </Button>
                   </Card>
