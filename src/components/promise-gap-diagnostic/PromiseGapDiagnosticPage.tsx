@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Activity, Loader2 } from "lucide-react";
+import { Activity, Loader2 } from "lucide-react"; // Removed unused Check and ArrowRight
 
 const diagnosticQuestions = [
   { id: 1, text: "Our organization has a shared, non-technical language for defining AI reliability." },
