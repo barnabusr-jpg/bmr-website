@@ -67,7 +67,7 @@ export default function PromiseGapDiagnosticPage() {
         body: JSON.stringify({ 
           name: formData.name, 
           email: formData.email, 
-          org: formData.organization, // Correctly mapped to 'org'
+          org: formData.organization, 
           dominantState, 
           scores: stateScores 
         }),
@@ -89,8 +89,8 @@ export default function PromiseGapDiagnosticPage() {
           <motion.div key="intake" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
-              <h2 className="text-3xl font-bold mb-2 text-white text-left">Systemic Observation</h2>
-              <p className="text-slate-400 mb-8 font-light italic text-left">Identify the friction points where AI potential meets organizational reality.</p>
+              <h2 className="text-3xl font-bold mb-2 text-white">Systemic Observation</h2>
+              <p className="text-slate-400 mb-8 font-light italic text-white">Identify the friction points where AI potential meets organizational reality.</p>
               <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
                 <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                 <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
