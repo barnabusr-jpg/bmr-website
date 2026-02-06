@@ -27,8 +27,7 @@ export default function ThankYouPage() {
           <p className="text-slate-400 text-lg mb-12">Signals processed. We have identified your specific Promise Gap.</p>
           
           <Card className="p-8 bg-slate-900/40 border-slate-800 border-2 text-left relative overflow-hidden mb-12 flex flex-col justify-center">
-            {/* The Polish: Ensuring the accent bar is anchored top-to-bottom and visible */}
-            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6] z-10"></div>
             
             <div className="pl-4"> 
               <span className="text-[#14b8a6] font-bold uppercase tracking-widest text-xs">Immediate Synthesis</span>
@@ -43,7 +42,6 @@ export default function ThankYouPage() {
 
           <div className="text-slate-400">
             <p>A detailed recovery roadmap has been sent to your inbox.</p>
-            {/* Updated Hyperlink to BMR Solutions */}
             <button 
               onClick={() => router.push('/')} 
               className="mt-8 flex items-center gap-2 mx-auto text-white hover:text-[#14b8a6] transition-colors group font-medium"
