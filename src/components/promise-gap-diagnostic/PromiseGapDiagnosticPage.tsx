@@ -90,13 +90,12 @@ export default function PromiseGapDiagnosticPage() {
           <motion.div key="intake" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
-              <h2 className="text-3xl font-bold mb-2 text-white text-left">Systemic Observation</h2>
-              <p className="text-slate-400 mb-8 font-light italic text-left">Identify the friction points where AI potential meets organizational reality.</p>
+              <h2 className="text-3xl font-bold mb-2 text-white">Systemic Observation</h2>
               <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
                 <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                 <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                 <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                <Button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-bold h-16 text-lg">Begin Observation</Button>
+                <Button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-bold h-16 text-lg uppercase">Begin Observation</Button>
               </form>
             </Card>
           </motion.div>
@@ -126,7 +125,7 @@ export default function PromiseGapDiagnosticPage() {
               <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
               <h2 className="text-4xl font-bold mb-4 text-white">Signals Captured</h2>
               <p className="text-slate-400 mb-10 font-light">Synthesis complete. Finalizing your organizational report...</p>
-              <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" onClick={submitResults} disabled={isSubmitting}>
+              <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg uppercase" onClick={submitResults} disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Systemic Synthesis"}
               </Button>
             </Card>
