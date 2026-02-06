@@ -88,13 +88,16 @@ export default function PromiseGapDiagnosticPage() {
             <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
               
-              {/* THE LIGHTHOUSE TEST: IF THIS IS RED ON LIVE, THE SYNC IS WORKING */}
-              <h2 className="text-3xl font-bold mb-6 text-red-500 underline">SYSTEM SYNC ACTIVE</h2>
+              {/* CLEAN PROFESSIONAL HEADER */}
+              <h2 className="text-3xl font-bold mb-2 text-white">Diagnostic Intake</h2>
+              <p className="text-slate-400 mb-8 font-light">
+                Identify where AI investment is absorbed by manual friction and system disconnects.
+              </p>
               
               <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
-                <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6]" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6]" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6]" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
+                <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6] text-white" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6] text-white" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6] text-white" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
                 <Button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-bold h-16 text-lg group">
                   Begin Observation
                 </Button>
@@ -110,7 +113,7 @@ export default function PromiseGapDiagnosticPage() {
               <span className="text-[#14b8a6] font-bold uppercase tracking-widest text-xs">Signal {step} of 12</span>
               <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 leading-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
               
-              {/* NUCLEAR OVERRIDE: HARDCODED ARRAY IN THE MAP */}
+              {/* FINAL SYSTEMIC STATE ARRAY */}
               <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                 {["Manual Friction", "Passive Support", "System Disconnect", "Team Relief", "Force Multiplier"].map((state) => (
                   <Button 
