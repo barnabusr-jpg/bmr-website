@@ -1,62 +1,44 @@
-import React from "react";
+import { useRouter } from 'next/router';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Download, AlertTriangle, TrendingUp } from "lucide-react";
-import Link from 'next/link';
+import { CheckCircle2, ArrowRight } from "lucide-react";
+
+const synthesisData: Record<string, { title: string, desc: string, gap: string }> = {
+  "Manual Friction": { title: "High Shadow Labor detected.", desc: "Your organization is likely compensating for AI reliability gaps with intensive human verification.", gap: "Estimated 20-40% ROI Leak." },
+  "System Disconnect": { title: "Governance-Execution Gap detected.", desc: "There is a significant break between leadership intent and how AI tools are actually being used.", gap: "High Operational Risk Profile." },
+  "Passive Support": { title: "Structural Stagnation detected.", desc: "AI is accepted in theory, but the organizational 'muscle' to evolve it into a Force Multiplier is missing.", gap: "Innovation Inertia." },
+  "Team Relief": { title: "Tactical Efficiency detected.", desc: "You have successfully reduced task burden, but the system isn't yet driving strategic growth.", gap: "Untapped Strategic Capacity." },
+  "Force Multiplier": { title: "High Systemic Alignment.", desc: "Your human and AI assets are in a virtuous cycle, though vigilance is required to maintain this lead.", gap: "Sustainable Competitive Advantage." }
+};
 
 export default function ThankYouPage() {
+  const router = useRouter();
+  const { state } = router.query;
+  const synthesis = synthesisData[state as string] || synthesisData["Passive Support"];
+
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
+    <div className="min-h-screen bg-[#020617] text-white font-sans">
       <Header />
-      <main className="py-24 px-6 container mx-auto max-w-5xl text-left">
-        <div className="mb-12">
-          <h2 className="text-[#14b8a6] font-mono text-sm tracking-widest uppercase mb-4">Diagnostic Complete</h2>
-          <h1 className="text-4xl md:text-6xl font-bold font-display leading-tight tracking-tighter">
-            Observation Recorded. <br/><span className="text-slate-500">Your Synthesis is in progress.</span>
-          </h1>
-        </div>
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <div className="md:col-span-2 space-y-6">
-            <Card className="p-8 bg-slate-900/40 border-slate-800 border-2 text-left">
-              <div className="flex items-center gap-3 mb-6">
-                <TrendingUp className="text-[#14b8a6]" size={20} />
-                <h3 className="text-xl font-bold">What happens next?</h3>
-              </div>
-              <p className="text-slate-400 mb-6 leading-relaxed text-left">
-                Our system is mapping your signals against longitudinal data. Your <strong>Promise Gap&trade; Analysis</strong> will identify where AI investment is being consumed by manual human labor.
-              </p>
-              <Button className="bg-[#14b8a6] text-black font-bold h-12 px-6 hover:bg-[#0d9488]">
-                Review the Field Guide <Download className="ml-2" size={18} />
-              </Button>
-            </Card>
-            <div className="grid sm:grid-cols-2 gap-6">
-              <div className="p-6 rounded-lg border border-slate-800 bg-slate-950/50 text-left">
-                <AlertTriangle className="text-yellow-500 mb-2" size={24} />
-                <p className="text-sm text-slate-400 italic font-serif leading-relaxed text-left">
-                  &quot;Technical success metrics often mask operational decay. Scores below 3.0 indicate ROI leaking into verification labor.&quot;
-                </p>
-              </div>
-              <div className="p-6 rounded-lg border border-slate-800 bg-slate-950/50 flex flex-col justify-center text-left">
-                <h4 className="font-bold text-[#14b8a6] mb-1 uppercase text-xs tracking-widest">Advisory Review</h4>
-                <p className="text-sm text-slate-400 text-left">Discuss friction points with a strategist to recover stranded capital.</p>
-              </div>
+      <main className="pt-32 pb-20 px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          <CheckCircle2 className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
+          <h1 className="text-4xl font-bold mb-4">Observation Received</h1>
+          <p className="text-slate-400 text-lg mb-12">Signals processed. We have identified your specific Promise Gap.</p>
+          <Card className="p-8 bg-slate-900/40 border-slate-800 border-2 text-left relative overflow-hidden mb-12">
+            <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
+            <span className="text-[#14b8a6] font-bold uppercase tracking-widest text-xs">Immediate Synthesis</span>
+            <h2 className="text-2xl font-bold mt-2 mb-4">{synthesis.title}</h2>
+            <p className="text-slate-300 mb-6 leading-relaxed">{synthesis.desc}</p>
+            <div className="p-4 bg-slate-950 rounded border border-slate-800">
+              <span className="text-slate-500 text-sm uppercase">Primary Promise Gap:</span>
+              <p className="text-[#14b8a6] font-mono font-bold text-lg uppercase tracking-wider">{synthesis.gap}</p>
             </div>
-          </div>
-          <Card className="p-8 bg-[#14b8a6] text-black border-none flex flex-col justify-between text-left">
-            <div>
-              <h3 className="text-2xl font-bold mb-4 leading-tight tracking-tight text-left">Bridge the Gap.</h3>
-              <p className="text-black/80 text-sm mb-8 leading-relaxed text-left">
-                Schedule a 15-minute <strong>Synthesis Briefing</strong> to interpret your scores and identify immediate recovery steps.
-              </p>
-            </div>
-            <Link href="/contact" className="w-full">
-              <Button className="w-full bg-black text-white font-bold h-14 uppercase text-xs tracking-widest hover:bg-slate-900">
-                Book Briefing
-              </Button>
-            </Link>
           </Card>
+          <div className="text-slate-400">
+            <p>A detailed recovery roadmap has been sent to your inbox.</p>
+            <button onClick={() => router.push('/')} className="mt-8 flex items-center gap-2 mx-auto text-white hover:text-[#14b8a6] transition-colors group">Return to BMR Advisory <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" /></button>
+          </div>
         </div>
       </main>
       <Footer />
