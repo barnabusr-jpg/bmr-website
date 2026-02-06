@@ -20,14 +20,6 @@ const diagnosticQuestions = [
   { id: 12, lens: "Evolve", text: "Leadership regularly reviews how AI system behavior impacts our overall delivery risk." },
 ];
 
-const systemicStates = [
-  "Manual Friction",
-  "Passive Support",
-  "System Disconnect",
-  "Team Relief",
-  "Force Multiplier"
-];
-
 function LensIndicator({ label, isActive, isCompleted }: { label: string; isActive: boolean; isCompleted: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3">
@@ -95,7 +87,10 @@ export default function PromiseGapDiagnosticPage() {
           <motion.div key="intake" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
-              <h2 className="text-3xl font-bold mb-6">Diagnostic Intake</h2>
+              
+              {/* THE LIGHTHOUSE TEST: IF THIS IS RED ON LIVE, THE SYNC IS WORKING */}
+              <h2 className="text-3xl font-bold mb-6 text-red-500 underline">SYSTEM SYNC ACTIVE</h2>
+              
               <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
                 <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6]" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                 <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6]" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
@@ -114,8 +109,10 @@ export default function PromiseGapDiagnosticPage() {
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
               <span className="text-[#14b8a6] font-bold uppercase tracking-widest text-xs">Signal {step} of 12</span>
               <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 leading-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
+              
+              {/* NUCLEAR OVERRIDE: HARDCODED ARRAY IN THE MAP */}
               <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
-                {systemicStates.map((state) => (
+                {["Manual Friction", "Passive Support", "System Disconnect", "Team Relief", "Force Multiplier"].map((state) => (
                   <Button 
                     key={state} 
                     variant="outline" 
