@@ -34,7 +34,7 @@ function LensIndicator({ label, isActive, isCompleted }: { label: string; isActi
       <div className={`h-14 w-14 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
         isActive || isCompleted ? "bg-[#14b8a6] border-[#14b8a6] shadow-[0_0_15px_rgba(20,184,166,0.2)]" : "bg-slate-900 border-slate-800"
       }`}>
-        {isCompleted ? <span className="text-white font-bold">✓</span> : <span className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-600"}`}>{label[0]}</span>}
+        {isCompleted ? <span className="text-white font-bold text-lg">✓</span> : <span className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-600"}`}>{label[0]}</span>}
       </div>
       <div className={`text-[10px] font-bold uppercase tracking-widest ${isActive || isCompleted ? "text-[#14b8a6]" : "text-slate-600"}`}>{label}</div>
     </div>
@@ -51,21 +51,15 @@ export default function PromiseGapDiagnosticPage() {
     "Manual Friction": 0, "Passive Support": 0, "System Disconnect": 0, "Team Relief": 0, "Force Multiplier": 0
   });
 
-  const loadingSequence = [
-    "Analyzing observation patterns...",
-    "Mapping systemic friction points...",
-    "Calibrating Promise Gap™ gravity...",
-    "Synthesizing results..."
-  ];
-
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isSubmitting) {
+      const sequence = ["Analyzing observation patterns...", "Mapping systemic friction points...", "Calibrating Promise Gap™ gravity...", "Synthesizing results..."];
       let i = 0;
       interval = setInterval(() => {
-        i = (i + 1) % loadingSequence.length;
-        setLoadingText(loadingSequence[i]);
-      }, 1500);
+        i = (i + 1) % sequence.length;
+        setLoadingText(sequence[i]);
+      }, 1400);
     }
     return () => clearInterval(interval);
   }, [isSubmitting]);
@@ -84,13 +78,7 @@ export default function PromiseGapDiagnosticPage() {
       const res = await fetch('/api/send-diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name: formData.name, 
-          email: formData.email, 
-          org: formData.organization, 
-          dominantState, 
-          scores: stateScores 
-        }),
+        body: JSON.stringify({ name: formData.name, email: formData.email, org: formData.organization, dominantState, scores: stateScores }),
       });
       if (res.ok) router.push(`/thank-you?state=${encodeURIComponent(dominantState)}`);
       else setIsSubmitting(false);
@@ -98,7 +86,7 @@ export default function PromiseGapDiagnosticPage() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto py-12 px-6">
+    <div className="w-full max-w-4xl mx-auto py-12 px-6 font-sans">
       <div className="flex justify-center gap-8 md:gap-16 mb-20">
         <LensIndicator label="Trust" isActive={step >= 1 && step <= 4} isCompleted={step > 4} />
         <LensIndicator label="Govern" isActive={step >= 5 && step <= 8} isCompleted={step > 8} />
@@ -110,8 +98,8 @@ export default function PromiseGapDiagnosticPage() {
           <motion.div key="intake" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
-              <h2 className="text-3xl font-bold mb-2 text-white">Systemic Observation</h2>
-              <p className="text-slate-400 mb-8 italic font-light">Identify the friction points where AI potential meets reality.</p>
+              <h2 className="text-3xl font-bold mb-2 text-white text-left">Systemic Observation</h2>
+              <p className="text-slate-400 mb-8 italic font-light text-left">Identify the friction points where AI potential meets reality.</p>
               <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
                 <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6] transition-all" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                 <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6] transition-all" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
@@ -130,9 +118,7 @@ export default function PromiseGapDiagnosticPage() {
               <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 leading-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
               <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                 {frequencyScale.map((f) => (
-                  <Button key={f.value} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/5 transition-all text-slate-300 hover:text-white" onClick={() => handleAnswer(f.value)}>
-                    {f.label}
-                  </Button>
+                  <Button key={f.value} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/5 transition-all text-slate-300 hover:text-white" onClick={() => handleAnswer(f.value)}>{f.label}</Button>
                 ))}
               </div>
             </Card>
@@ -146,7 +132,7 @@ export default function PromiseGapDiagnosticPage() {
               <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
               <h2 className="text-4xl font-bold mb-4 text-white">Signals Captured</h2>
               <p className="text-slate-400 mb-10 font-light">{isSubmitting ? loadingText : "Synthesis complete. Finalizing your organizational report..."}</p>
-              <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg uppercase" onClick={submitResults} disabled={isSubmitting}>
+              <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg uppercase tracking-widest" onClick={submitResults} disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Request Systemic Synthesis"}
               </Button>
             </Card>
