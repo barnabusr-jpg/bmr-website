@@ -4,10 +4,10 @@ import PromiseGapDiagnosticPage from "@/components/promise-gap-diagnostic/Promis
 
 export default function DiagnosticPageRoute() {
   return (
-    <div className="min-h-screen bg-[#020617]">
+    <div className="min-h-screen bg-[#020617] text-white">
       <Header />
-      <main className="pt-20">
-        {/* This calls the file with the Red Title and Hardcoded Buttons */}
+      <main className="pt-24 pb-20">
+        {/* Calls the Observation-based Diagnostic Component */}
         <PromiseGapDiagnosticPage />
       </main>
       <Footer />
