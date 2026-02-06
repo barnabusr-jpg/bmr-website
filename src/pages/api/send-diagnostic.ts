@@ -16,8 +16,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   };
 
   const msg = {
-    to: 'info@bmradvisory.co', // Change to your preferred notification email
-    from: 'info@bmradvisory.co', // Must be a verified sender in SendGrid
+    // 1. Where YOU want to receive the lead notification
+    to: 'hello@bmradvisory.co', 
+    
+    // 2. MUST match your SendGrid Verified Sender exactly
+    from: 'hello@bmradvisory.co', 
+    
     subject: `Diagnostic Alert: ${dominantState} - ${org}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; color: #333;">
@@ -29,11 +33,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <p><strong>Analysis:</strong> ${synthesisMap[dominantState]}</p>
         <hr />
         <h4>Raw Score Gravity:</h4>
-        <p>Manual Friction: ${scores["Manual Friction"]}</p>
-        <p>System Disconnect: ${scores["System Disconnect"]}</p>
-        <p>Passive Support: ${scores["Passive Support"]}</p>
-        <p>Team Relief: ${scores["Team Relief"]}</p>
-        <p>Force Multiplier: ${scores["Force Multiplier"]}</p>
+        <p>Manual Friction: ${scores["Manual Friction"] || 0}</p>
+        <p>System Disconnect: ${scores["System Disconnect"] || 0}</p>
+        <p>Passive Support: ${scores["Passive Support"] || 0}</p>
+        <p>Team Relief: ${scores["Team Relief"] || 0}</p>
+        <p>Force Multiplier: ${scores["Force Multiplier"] || 0}</p>
       </div>
     `,
   };
@@ -41,8 +45,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await sgMail.send(msg);
     return res.status(200).json({ success: true });
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    // This will help you see the EXACT error in Vercel Logs if it fails again
+    console.error('SendGrid Error:', error.response?.body || error.message);
     return res.status(500).json({ error: 'Email service failure' });
   }
 }
