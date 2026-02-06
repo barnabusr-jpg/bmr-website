@@ -34,7 +34,7 @@ function LensIndicator({ label, isActive, isCompleted }: { label: string; isActi
       <div className={`h-14 w-14 rounded-full flex items-center justify-center border-2 relative transition-all duration-500 ${
         isActive || isCompleted ? "bg-[#14b8a6] border-[#14b8a6] shadow-[0_0_15px_rgba(20,184,166,0.3)]" : "bg-slate-900 border-slate-800"
       }`}>
-        {isCompleted ? <span className="text-white text-lg">✓</span> : <span className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-600"}`}>{label[0]}</span>}
+        {isCompleted ? <span className="text-white text-lg font-bold">✓</span> : <span className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-600"}`}>{label[0]}</span>}
       </div>
       <div className={`text-xs font-bold uppercase tracking-widest ${isActive || isCompleted ? "text-[#14b8a6]" : "text-slate-600"}`}>{label}</div>
     </div>
@@ -84,13 +84,14 @@ export default function PromiseGapDiagnosticPage() {
         <LensIndicator label="Govern" isActive={step >= 5 && step <= 8} isCompleted={step > 8} />
         <LensIndicator label="Evolve" isActive={step >= 9 && step <= 12} isCompleted={step > 12} />
       </div>
+
       <AnimatePresence mode="wait">
         {step === 0 && (
           <motion.div key="intake" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
-              <h2 className="text-3xl font-bold mb-2 text-white">Systemic Observation</h2>
-              <p className="text-slate-400 mb-8 font-light italic text-white">Identify the friction points where AI potential meets organizational reality.</p>
+              <h2 className="text-3xl font-bold mb-2 text-white text-left">Systemic Observation</h2>
+              <p className="text-slate-400 mb-8 font-light italic text-left">Identify the friction points where AI potential meets organizational reality.</p>
               <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
                 <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                 <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
@@ -100,6 +101,7 @@ export default function PromiseGapDiagnosticPage() {
             </Card>
           </motion.div>
         )}
+
         {step > 0 && step <= 12 && (
           <motion.div key="question" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
@@ -108,19 +110,22 @@ export default function PromiseGapDiagnosticPage() {
               <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 leading-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
               <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                 {frequencyScale.map((f) => (
-                  <Button key={f.value} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10 transition-all text-slate-300 hover:text-white" onClick={() => handleAnswer(f.value)}>{f.label}</Button>
+                  <Button key={f.value} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10 transition-all text-slate-300 hover:text-white" onClick={() => handleAnswer(f.value)}>
+                    {f.label}
+                  </Button>
                 ))}
               </div>
             </Card>
           </motion.div>
         )}
+
         {step === 13 && (
           <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
               <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
               <h2 className="text-4xl font-bold mb-4 text-white">Signals Captured</h2>
-              <p className="text-slate-400 mb-10">Synthesis complete. Requesting your organizational report...</p>
+              <p className="text-slate-400 mb-10 font-light">Synthesis complete. Finalizing your organizational report...</p>
               <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" onClick={submitResults} disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Systemic Synthesis"}
               </Button>
