@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
@@ -31,12 +31,12 @@ const frequencyScale = [
 function LensIndicator({ label, isActive, isCompleted }: { label: string; isActive: boolean; isCompleted: boolean }) {
   return (
     <div className="flex flex-col items-center gap-3">
-      <div className={`h-14 w-14 rounded-full flex items-center justify-center border-2 relative transition-all duration-500 ${
-        isActive || isCompleted ? "bg-[#14b8a6] border-[#14b8a6] shadow-[0_0_15px_rgba(20,184,166,0.3)]" : "bg-slate-900 border-slate-800"
+      <div className={`h-14 w-14 rounded-full flex items-center justify-center border-2 transition-all duration-500 ${
+        isActive || isCompleted ? "bg-[#14b8a6] border-[#14b8a6] shadow-[0_0_15px_rgba(20,184,166,0.2)]" : "bg-slate-900 border-slate-800"
       }`}>
-        {isCompleted ? <span className="text-white text-lg font-bold">✓</span> : <span className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-600"}`}>{label[0]}</span>}
+        {isCompleted ? <span className="text-white font-bold">✓</span> : <span className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-600"}`}>{label[0]}</span>}
       </div>
-      <div className={`text-xs font-bold uppercase tracking-widest ${isActive || isCompleted ? "text-[#14b8a6]" : "text-slate-600"}`}>{label}</div>
+      <div className={`text-[10px] font-bold uppercase tracking-widest ${isActive || isCompleted ? "text-[#14b8a6]" : "text-slate-600"}`}>{label}</div>
     </div>
   );
 }
@@ -45,10 +45,30 @@ export default function PromiseGapDiagnosticPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingText, setLoadingText] = useState("Analyzing observation patterns...");
   const [formData, setFormData] = useState({ name: "", email: "", organization: "" });
   const [stateScores, setStateScores] = useState<Record<string, number>>({
     "Manual Friction": 0, "Passive Support": 0, "System Disconnect": 0, "Team Relief": 0, "Force Multiplier": 0
   });
+
+  const loadingSequence = [
+    "Analyzing observation patterns...",
+    "Mapping systemic friction points...",
+    "Calibrating Promise Gap™ gravity...",
+    "Synthesizing results..."
+  ];
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isSubmitting) {
+      let i = 0;
+      interval = setInterval(() => {
+        i = (i + 1) % loadingSequence.length;
+        setLoadingText(loadingSequence[i]);
+      }, 1500);
+    }
+    return () => clearInterval(interval);
+  }, [isSubmitting]);
 
   const handleAnswer = (value: number) => {
     const question = diagnosticQuestions[step - 1];
@@ -91,11 +111,12 @@ export default function PromiseGapDiagnosticPage() {
             <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
               <h2 className="text-3xl font-bold mb-2 text-white">Systemic Observation</h2>
+              <p className="text-slate-400 mb-8 italic font-light">Identify the friction points where AI potential meets reality.</p>
               <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
-                <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                <Button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-bold h-16 text-lg uppercase">Begin Observation</Button>
+                <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6] transition-all" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6] transition-all" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6] transition-all" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
+                <Button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-bold h-16 text-lg uppercase tracking-widest hover:bg-[#0d9488]">Begin Observation</Button>
               </form>
             </Card>
           </motion.div>
@@ -105,11 +126,11 @@ export default function PromiseGapDiagnosticPage() {
           <motion.div key="question" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
-              <span className="text-[#14b8a6] font-bold uppercase tracking-widest text-xs">Signal {step} of 12</span>
+              <span className="text-[#14b8a6] font-bold uppercase tracking-widest text-[10px]">Signal {step} of 12</span>
               <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 leading-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
               <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                 {frequencyScale.map((f) => (
-                  <Button key={f.value} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10 transition-all text-slate-300 hover:text-white" onClick={() => handleAnswer(f.value)}>
+                  <Button key={f.value} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/5 transition-all text-slate-300 hover:text-white" onClick={() => handleAnswer(f.value)}>
                     {f.label}
                   </Button>
                 ))}
@@ -124,9 +145,9 @@ export default function PromiseGapDiagnosticPage() {
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
               <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
               <h2 className="text-4xl font-bold mb-4 text-white">Signals Captured</h2>
-              <p className="text-slate-400 mb-10 font-light">Synthesis complete. Finalizing your organizational report...</p>
+              <p className="text-slate-400 mb-10 font-light">{isSubmitting ? loadingText : "Synthesis complete. Finalizing your organizational report..."}</p>
               <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg uppercase" onClick={submitResults} disabled={isSubmitting}>
-                {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Systemic Synthesis"}
+                {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Request Systemic Synthesis"}
               </Button>
             </Card>
           </motion.div>
