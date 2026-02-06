@@ -6,18 +6,26 @@ import { Button } from "@/components/ui/button";
 import { Activity, Loader2 } from "lucide-react"; 
 
 const diagnosticQuestions = [
-  { id: 1, lens: "Trust", text: "Our organization has a shared, non-technical language for defining AI reliability." },
-  { id: 2, lens: "Trust", text: "We can clearly demonstrate to stakeholders how our AI outputs align with brand values." },
-  { id: 3, lens: "Trust", text: "There is a high level of confidence that our AI behavior remains consistent in unscripted scenarios." },
-  { id: 4, lens: "Trust", text: "We proactively measure stakeholder sentiment regarding our use of automated decision-making." },
-  { id: 5, lens: "Govern", text: "Our AI projects follow a standardized oversight process from conception to delivery." },
-  { id: 6, lens: "Govern", text: "Final accountability for AI-driven outcomes is clearly mapped to specific leadership roles." },
-  { id: 7, lens: "Govern", text: "We have established protocols for human expert intervention when AI performance fluctuates." },
-  { id: 8, lens: "Govern", text: "Our governance framework is designed to adapt as regulatory and technical landscapes evolve." },
-  { id: 9, lens: "Evolve", text: "We prioritize 'structured observation' to identify why system risks occur, not just where." },
-  { id: 10, lens: "Evolve", text: "We have a formal 'de-risking' phase before any AI initiative moves to real-world operation." },
-  { id: 11, lens: "Evolve", text: "Our AI strategy is integrated into the broader systemic goals of the organization." },
-  { id: 12, lens: "Evolve", text: "Leadership regularly reviews how AI system behavior impacts our overall delivery risk." },
+  { id: 1, lens: "Trust", text: "How often do frontline teams manually verify AI outputs before sharing them with stakeholders?", weights: { 4: "Manual Friction", 3: "Manual Friction", 2: "System Disconnect", 1: "Force Multiplier", 0: "Force Multiplier" }},
+  { id: 2, lens: "Trust", text: "How often can your team identify the specific cause of an AI error within 24 hours?", weights: { 4: "Force Multiplier", 3: "Team Relief", 2: "Passive Support", 1: "System Disconnect", 0: "Manual Friction" }},
+  { id: 3, lens: "Trust", text: "How often do teams use 'shadow' manual processes instead of the AI because it’s more reliable?", weights: { 4: "Manual Friction", 3: "Manual Friction", 2: "System Disconnect", 1: "Passive Support", 0: "Force Multiplier" }},
+  { id: 4, lens: "Trust", text: "How often does your organization adjust its risk appetite based on actual AI performance data?", weights: { 4: "Force Multiplier", 3: "Team Relief", 2: "Passive Support", 1: "System Disconnect", 0: "System Disconnect" }},
+  { id: 5, lens: "Govern", text: "How often are AI projects launched without a formal risk review to hit delivery deadlines?", weights: { 4: "System Disconnect", 3: "System Disconnect", 2: "Passive Support", 1: "Team Relief", 0: "Force Multiplier" }},
+  { id: 6, lens: "Govern", text: "How often is there confusion over which leader 'owns' fixing an AI-driven failure?", weights: { 4: "System Disconnect", 3: "System Disconnect", 2: "Passive Support", 1: "Team Relief", 0: "Force Multiplier" }},
+  { id: 7, lens: "Govern", text: "How often is compliance treated as a one-time 'checkbox' at launch rather than an ongoing requirement?", weights: { 4: "Passive Support", 3: "Passive Support", 2: "System Disconnect", 1: "Team Relief", 0: "Force Multiplier" }},
+  { id: 8, lens: "Govern", text: "How often does your organization track the human hours required to keep AI tools running?", weights: { 4: "Team Relief", 3: "Team Relief", 2: "Passive Support", 1: "Manual Friction", 0: "Manual Friction" }},
+  { id: 9, lens: "Evolve", text: "How often are human corrections fed back into the AI to improve future accuracy?", weights: { 4: "Force Multiplier", 3: "Team Relief", 2: "Passive Support", 1: "System Disconnect", 0: "System Disconnect" }},
+  { id: 10, lens: "Evolve", text: "How often does leadership focus more on AI 'features' than the human 'impact' of those features?", weights: { 4: "Passive Support", 3: "Passive Support", 2: "System Disconnect", 1: "Team Relief", 0: "Force Multiplier" }},
+  { id: 11, lens: "Evolve", text: "How often are AI projects paused because the team isn’t ready for the change?", weights: { 4: "Force Multiplier", 3: "Team Relief", 2: "Passive Support", 1: "System Disconnect", 0: "System Disconnect" }},
+  { id: 12, lens: "Evolve", text: "How often does your organization measure the 'Promise Gap' (expected vs. actual ROI) for AI initiatives?", weights: { 4: "Force Multiplier", 3: "Team Relief", 2: "Passive Support", 1: "Manual Friction", 0: "Manual Friction" }},
+];
+
+const frequencyScale = [
+  { label: "Always", value: 4 },
+  { label: "Frequently", value: 3 },
+  { label: "Sometimes", value: 2 },
+  { label: "Rarely", value: 1 },
+  { label: "Never", value: 0 }
 ];
 
 function LensIndicator({ label, isActive, isCompleted }: { label: string; isActive: boolean; isCompleted: boolean }) {
@@ -26,15 +34,9 @@ function LensIndicator({ label, isActive, isCompleted }: { label: string; isActi
       <div className={`h-14 w-14 rounded-full flex items-center justify-center border-2 relative transition-all duration-500 ${
         isActive || isCompleted ? "bg-[#14b8a6] border-[#14b8a6] shadow-[0_0_15px_rgba(20,184,166,0.3)]" : "bg-slate-900 border-slate-800"
       }`}>
-        {isCompleted ? (
-          <span className="text-white text-lg">✓</span>
-        ) : (
-          <span className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-600"}`}>{label[0]}</span>
-        )}
+        {isCompleted ? <span className="text-white text-lg">✓</span> : <span className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-600"}`}>{label[0]}</span>}
       </div>
-      <div className={`text-xs font-bold uppercase tracking-widest ${isActive || isCompleted ? "text-[#14b8a6]" : "text-slate-600"}`}>
-        {label}
-      </div>
+      <div className={`text-xs font-bold uppercase tracking-widest ${isActive || isCompleted ? "text-[#14b8a6]" : "text-slate-600"}`}>{label}</div>
     </div>
   );
 }
@@ -44,34 +46,29 @@ export default function PromiseGapDiagnosticPage() {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", organization: "" });
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const [stateScores, setStateScores] = useState<Record<string, number>>({
+    "Manual Friction": 0, "Passive Support": 0, "System Disconnect": 0, "Team Relief": 0, "Force Multiplier": 0
+  });
 
-  const handleAnswer = (value: string) => {
-    setAnswers({ ...answers, [step]: value });
+  const handleAnswer = (value: number) => {
+    const question = diagnosticQuestions[step - 1];
+    const stateToIncrement = question.weights[value as keyof typeof question.weights];
+    setStateScores(prev => ({ ...prev, [stateToIncrement]: prev[stateToIncrement] + 1 }));
     setStep(step + 1);
   };
 
   const submitResults = async () => {
     setIsSubmitting(true);
+    const dominantState = Object.entries(stateScores).reduce((a, b) => a[1] > b[1] ? a : b)[0];
     try {
       const res = await fetch('/api/send-diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          org: formData.organization,
-          results: answers
-        }),
+        body: JSON.stringify({ ...formData, dominantState, scores: stateScores }),
       });
-      if (res.ok) {
-        router.push('/thank-you');
-      } else {
-        setIsSubmitting(false);
-      }
-    } catch {
-      setIsSubmitting(false);
-    }
+      if (res.ok) router.push(`/thank-you?state=${encodeURIComponent(dominantState)}`);
+      else setIsSubmitting(false);
+    } catch { setIsSubmitting(false); }
   };
 
   return (
@@ -81,67 +78,45 @@ export default function PromiseGapDiagnosticPage() {
         <LensIndicator label="Govern" isActive={step >= 5 && step <= 8} isCompleted={step > 8} />
         <LensIndicator label="Evolve" isActive={step >= 9 && step <= 12} isCompleted={step > 12} />
       </div>
-
       <AnimatePresence mode="wait">
         {step === 0 && (
           <motion.div key="intake" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
             <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
-              
-              {/* CLEAN PROFESSIONAL HEADER */}
-              <h2 className="text-3xl font-bold mb-2 text-white">Diagnostic Intake</h2>
-              <p className="text-slate-400 mb-8 font-light">
-                Identify where AI investment is absorbed by manual friction and system disconnects.
-              </p>
-              
+              <h2 className="text-3xl font-bold mb-2 text-white">Systemic Observation</h2>
+              <p className="text-slate-400 mb-8 font-light italic">Identify the friction points where AI potential meets organizational reality.</p>
               <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
-                <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6] text-white" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6] text-white" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 outline-none focus:border-[#14b8a6] text-white" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                <Button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-bold h-16 text-lg group">
-                  Begin Observation
-                </Button>
+                <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white outline-none focus:border-[#14b8a6]" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
+                <Button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-bold h-16 text-lg">Begin Observation</Button>
               </form>
             </Card>
           </motion.div>
         )}
-
         {step > 0 && step <= 12 && (
           <motion.div key="question" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
             <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
               <span className="text-[#14b8a6] font-bold uppercase tracking-widest text-xs">Signal {step} of 12</span>
               <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 leading-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
-              
-              {/* FINAL SYSTEMIC STATE ARRAY */}
               <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
-                {["Manual Friction", "Passive Support", "System Disconnect", "Team Relief", "Force Multiplier"].map((state) => (
-                  <Button 
-                    key={state} 
-                    variant="outline" 
-                    className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10 transition-all text-slate-300 hover:text-white" 
-                    onClick={() => handleAnswer(state)}
-                  >
-                    {state}
-                  </Button>
+                {frequencyScale.map((f) => (
+                  <Button key={f.value} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/10 transition-all text-slate-300 hover:text-white" onClick={() => handleAnswer(f.value)}>{f.label}</Button>
                 ))}
               </div>
             </Card>
           </motion.div>
         )}
-
         {step === 13 && (
           <motion.div key="results" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
               <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
-              <h2 className="text-4xl font-bold mb-10 text-white">Observation Complete</h2>
-              <Button 
-                className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" 
-                onClick={submitResults} 
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? <Loader2 className="animate-spin" /> : "Submit & Send Synthesis"}
+              <h2 className="text-4xl font-bold mb-4 text-white">Signals Captured</h2>
+              <p className="text-slate-400 mb-10">Synthesis complete. Requesting your organizational report...</p>
+              <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg" onClick={submitResults} disabled={isSubmitting}>
+                {isSubmitting ? <Loader2 className="animate-spin" /> : "Request Systemic Synthesis"}
               </Button>
             </Card>
           </motion.div>
