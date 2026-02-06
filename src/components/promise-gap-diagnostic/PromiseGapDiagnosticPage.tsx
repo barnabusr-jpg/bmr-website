@@ -51,15 +51,23 @@ export default function PromiseGapDiagnosticPage() {
     "Manual Friction": 0, "Passive Support": 0, "System Disconnect": 0, "Team Relief": 0, "Force Multiplier": 0
   });
 
+  // Controls the narrative timing
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isSubmitting) {
-      const sequence = ["Analyzing observation patterns...", "Mapping systemic friction points...", "Calibrating Promise Gap™ gravity...", "Synthesizing results..."];
+      const sequence = [
+        "Analyzing observation patterns...",
+        "Mapping systemic friction points...",
+        "Calibrating Promise Gap™ gravity...",
+        "Finalizing synthesis..."
+      ];
       let i = 0;
       interval = setInterval(() => {
-        i = (i + 1) % sequence.length;
-        setLoadingText(sequence[i]);
-      }, 1400);
+        if (i < sequence.length - 1) {
+          i++;
+          setLoadingText(sequence[i]);
+        }
+      }, 1000); // Transitions every 1 second
     }
     return () => clearInterval(interval);
   }, [isSubmitting]);
@@ -74,15 +82,36 @@ export default function PromiseGapDiagnosticPage() {
   const submitResults = async () => {
     setIsSubmitting(true);
     const dominantState = Object.entries(stateScores).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    
     try {
-      const res = await fetch('/api/send-diagnostic', {
+      // Create the API call promise
+      const apiCall = fetch('/api/send-diagnostic', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: formData.name, email: formData.email, org: formData.organization, dominantState, scores: stateScores }),
+        body: JSON.stringify({ 
+          name: formData.name, 
+          email: formData.email, 
+          org: formData.organization, 
+          dominantState, 
+          scores: stateScores 
+        }),
       });
-      if (res.ok) router.push(`/thank-you?state=${encodeURIComponent(dominantState)}`);
-      else setIsSubmitting(false);
-    } catch { setIsSubmitting(false); }
+
+      // Create the minimum delay promise (3.5 seconds)
+      const minDelay = new Promise(resolve => setTimeout(resolve, 3500));
+
+      // Wait for both the data handoff and the visual narrative to complete
+      const [res] = await Promise.all([apiCall, minDelay]);
+
+      if (res.ok) {
+        router.push(`/thank-you?state=${encodeURIComponent(dominantState)}`);
+      } else {
+        setIsSubmitting(false);
+      }
+    } catch (error) {
+      console.error("Submission failed", error);
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -118,7 +147,9 @@ export default function PromiseGapDiagnosticPage() {
               <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 leading-tight text-white">{diagnosticQuestions[step - 1].text}</h2>
               <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
                 {frequencyScale.map((f) => (
-                  <Button key={f.value} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/5 transition-all text-slate-300 hover:text-white" onClick={() => handleAnswer(f.value)}>{f.label}</Button>
+                  <Button key={f.value} variant="outline" className="py-8 text-lg font-light border-slate-800 hover:border-[#14b8a6] hover:bg-[#14b8a6]/5 transition-all text-slate-300 hover:text-white" onClick={() => handleAnswer(f.value)}>
+                    {f.label}
+                  </Button>
                 ))}
               </div>
             </Card>
@@ -130,9 +161,9 @@ export default function PromiseGapDiagnosticPage() {
             <Card className="p-12 bg-slate-900/30 border-slate-800 border-2 text-center relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
               <Activity className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
-              <h2 className="text-4xl font-bold mb-4 text-white">Signals Captured</h2>
-              <p className="text-slate-400 mb-10 font-light">{isSubmitting ? loadingText : "Synthesis complete. Finalizing your organizational report..."}</p>
-              <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg uppercase tracking-widest" onClick={submitResults} disabled={isSubmitting}>
+              <h2 className="text-4xl font-bold mb-4 text-white uppercase tracking-tight">Signals Captured</h2>
+              <p className="text-slate-400 mb-10 font-light tracking-wide">{isSubmitting ? loadingText : "Synthesis complete. Finalizing your organizational report..."}</p>
+              <Button className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold w-full h-16 text-lg uppercase tracking-widest shadow-lg shadow-[#14b8a6]/10" onClick={submitResults} disabled={isSubmitting}>
                 {isSubmitting ? <Loader2 className="animate-spin h-6 w-6" /> : "Request Systemic Synthesis"}
               </Button>
             </Card>
