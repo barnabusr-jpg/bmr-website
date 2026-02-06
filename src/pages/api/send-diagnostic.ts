@@ -6,8 +6,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
-  // We extract 'scores' and 'dominantState' even if not used in the main body 
-  // to satisfy the incoming data, but we must use them to satisfy TypeScript.
+  // Destructure all incoming data
   const { name, email, org, dominantState, scores } = req.body;
 
   const firstName = name.split(' ')[0];
