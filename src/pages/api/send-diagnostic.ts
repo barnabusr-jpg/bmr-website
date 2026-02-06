@@ -6,15 +6,16 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
-  // Destructure all incoming data
+  // Destructure with all variables to satisfy payload
   const { name, email, org, dominantState, scores } = req.body;
 
-  const firstName = name.split(' ')[0];
+  // Handle name formatting
+  const firstName = name ? name.split(' ')[0] : 'there';
 
   const msg = {
     to: email, 
-    bcc: 'hello@bmradvisory.co', 
-    from: 'hello@bmradvisory.co', 
+    bcc: 'hello@bmradvisory.co', // Keep you in the loop
+    from: 'hello@bmradvisory.co', // Verified Sender
     subject: 'Insights from Your AI Promise Gap™ Diagnostic',
     html: `
       <div style="font-family: sans-serif; max-width: 600px; color: #333; line-height: 1.6;">
@@ -61,7 +62,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         
         <hr style="border: 0; border-top: 1px solid #eee; margin-top: 40px;" />
         <p style="font-size: 11px; color: #999;">Systemic Profile: ${dominantState}</p>
+        
+        <div style="display: none; visibility: hidden; opacity: 0; font-size: 1px;">
+          Scores: MF:${scores["Manual Friction"]} SD:${scores["System Disconnect"]} PS:${scores["Passive Support"]} TR:${scores["Team Relief"]} FM:${scores["Force Multiplier"]}
         </div>
+      </div>
     `,
   };
 
