@@ -2,7 +2,7 @@ import { useRouter } from 'next/router';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
-import { CheckCircle2, ArrowRight } from "lucide-react";
+import { CheckCircle2, ArrowRight, Download, Calendar } from "lucide-react";
 
 const synthesisData: Record<string, { title: string, desc: string, gap: string }> = {
   "Manual Friction": { title: "High Shadow Labor detected.", desc: "Your responses suggest the possibility that your organization is compensating for artificial intelligence reliability gaps with intensive human verification. This practice often creates 'shadow labor' that can mask true operational costs.", gap: "ESTIMATED 20-40% ROI LEAK" },
@@ -23,8 +23,8 @@ export default function ThankYouPage() {
       <main className="pt-32 pb-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <CheckCircle2 className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
-          <h1 className="text-4xl font-bold mb-4 italic">Observation Received</h1>
-          <p className="text-slate-400 text-lg mb-12">Signals processed. We have identified your primary systemic friction point.</p>
+          <h1 className="text-4xl font-bold mb-4 italic tracking-tight">Observation Received</h1>
+          <p className="text-slate-400 text-lg mb-12 font-light">Signals processed. We have identified your primary systemic friction point.</p>
           
           <Card className="p-8 bg-slate-900/40 border-slate-800 border-2 text-left relative overflow-hidden mb-12 flex flex-col justify-center">
             <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6] z-10"></div>
@@ -42,10 +42,39 @@ export default function ThankYouPage() {
             </div>
           </Card>
 
-          <div className="text-slate-400">
-            <p className="font-light">A detailed recovery roadmap has been sent to your inbox.</p>
-            <button onClick={() => router.push('/')} className="mt-8 flex items-center gap-2 mx-auto text-white hover:text-[#14b8a6] transition-colors group font-bold uppercase tracking-widest text-xs">
-              Return to BMR Solutions <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          {/* Strategic Framework for Action - The Field Guide Bridge */}
+          <div className="mt-16 p-10 border border-slate-800 bg-slate-900/20 rounded-xl text-center relative overflow-hidden">
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#14b8a6]/50 to-transparent"></div>
+            
+            <h3 className="text-xl font-bold mb-4 italic text-white">Strategic Framework for Action</h3>
+            <p className="text-slate-400 mb-8 max-w-xl mx-auto text-sm leading-relaxed font-light">
+              The BMR Diagnostic is the first step in moving from reactive troubleshooting to proactive leadership. Download the Field Guide below to explore the architecture we use to close your specific Promise Gap™.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <a 
+                href="/media/Field Guide.pdf" 
+                download
+                className="flex items-center justify-center gap-2 bg-white text-[#020617] px-8 py-3.5 rounded font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-slate-200 transition-all shadow-lg min-w-[220px]"
+              >
+                <Download size={14} /> Download Field Guide
+              </a>
+              <button 
+                onClick={() => window.open('YOUR_CALENDLY_LINK', '_blank')}
+                className="flex items-center justify-center gap-2 border border-[#14b8a6] text-[#14b8a6] px-8 py-3.5 rounded font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-[#14b8a6]/10 transition-all shadow-lg shadow-[#14b8a6]/10 min-w-[220px]"
+              >
+                <Calendar size={14} /> Schedule SHP Deep Dive
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-16 text-slate-400 border-t border-slate-900 pt-8">
+            <p className="font-light text-sm">A detailed recovery roadmap has been sent to your inbox.</p>
+            <button 
+              onClick={() => router.push('/')} 
+              className="mt-6 flex items-center gap-2 mx-auto text-slate-500 hover:text-[#14b8a6] transition-colors group font-bold uppercase tracking-widest text-[10px]"
+            >
+              Return to Home <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </div>
