@@ -13,6 +13,7 @@ const Header = () => {
         
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
           <Link href="/approach" className="hover:text-white transition-colors">Approach</Link>
+          <Link href="/methodology" className="hover:text-white transition-colors">Methodology</Link>
           <Link href="/services" className="hover:text-white transition-colors">Services</Link>
           <Link href="/insights" className="hover:text-white transition-colors">Insights</Link>
           <Button variant="outline" className="border-slate-700 text-white hover:bg-slate-800" asChild>
