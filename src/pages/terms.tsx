@@ -23,8 +23,7 @@ export default function TermsOfService() {
 
           <section className="p-8 border border-slate-800 bg-slate-900/40 rounded-lg">
             <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide italic">2. Advisory Disclaimer</h2>
-            <p className="text-sm uppercase font-bold text-slate-400 mb-4">Conspicuous Legal Notice:</p>
-            <p className="text-xs leading-relaxed text-slate-500">
+            <p className="text-xs leading-relaxed text-slate-300">
               THE SYSTEM DIAGNOSTIC AND FIELD GUIDE ARE PROVIDED &ldquo;AS IS.&rdquo; BMR SOLUTIONS DOES NOT GUARANTEE SPECIFIC FINANCIAL OR MISSION OUTCOMES. ADVISORY SERVICES DO NOT CONSTITUTE LEGAL OR TECHNICAL COMPLIANCE CERTIFICATIONS.
             </p>
           </section>
@@ -37,10 +36,16 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide">4. Accuracy of Reporting</h2>
-            <p>
-              BMR Solutions is not liable for organizational roadmaps generated based on inaccurate self-reporting within the diagnostic tool.
+            <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide">4. Contact & Inquiries</h2>
+            <p className="mb-6">
+              Questions regarding these Terms or the authorized use of BMR intellectual property should be directed to:
             </p>
+            <a 
+              href="mailto:hello@bmradvisory.co" 
+              className="text-[#14b8a6] font-mono font-bold hover:underline"
+            >
+              hello@bmradvisory.co
+            </a>
           </section>
         </div>
       </main>
