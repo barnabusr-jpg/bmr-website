@@ -8,7 +8,6 @@ import DiagnosticFrameworks from "@/components/home/DiagnosticFrameworks";
 import Outcomes from "@/components/home/OutcomesHome";
 import ComparisonGrid from "@/components/home/ComparisonGrid";
 import Insights from "@/components/home/InsightsHome";
-// Replace FooterCTA with the new ActionHub component logic below
 import { Download, Activity, ArrowRight } from "lucide-react";
 import { useRouter } from "next/router";
 
@@ -34,7 +33,7 @@ const Index = () => {
         <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
         <Insights />
         
-        {/* NEW ACTION HUB SECTION */}
+        {/* ACTION HUB SECTION */}
         <section className="py-24 px-6 border-t border-slate-900 bg-[#020617]">
           <div className="max-w-5xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-6 italic tracking-tight uppercase">Ready to Close the Gap?</h2>
@@ -47,7 +46,7 @@ const Index = () => {
               <div className="p-10 bg-slate-900/40 border border-slate-800 rounded-2xl flex flex-col justify-between hover:border-[#14b8a6]/50 transition-colors group">
                 <div>
                   <Download className="text-[#14b8a6] mb-6 h-10 w-10" />
-                  <h3 className="text-2xl font-bold mb-4 italic uppercase">The Field Guide</h3>
+                  <h3 className="text-2xl font-bold mb-4 italic uppercase text-white tracking-wide">The Field Guide</h3>
                   <p className="text-slate-400 mb-8 font-light leading-relaxed text-sm">
                     Download our operational reference manual. Explore the twelve signals we use to 
                     stabilize and scale human-AI systems.
@@ -65,7 +64,7 @@ const Index = () => {
               <div className="p-10 bg-[#14b8a6]/5 border border-[#14b8a6]/20 rounded-2xl flex flex-col justify-between hover:border-[#14b8a6]/50 transition-colors group">
                 <div>
                   <Activity className="text-[#14b8a6] mb-6 h-10 w-10" />
-                  <h3 className="text-2xl font-bold mb-4 italic uppercase text-white">System Diagnostic</h3>
+                  <h3 className="text-2xl font-bold mb-4 italic uppercase text-white tracking-wide">System Diagnostic</h3>
                   <p className="text-slate-300 mb-8 font-light leading-relaxed text-sm">
                     Ready for a forensic view? Our 12-question pulse check identifies your 
                     primary friction points and identifies your System Archetype.
