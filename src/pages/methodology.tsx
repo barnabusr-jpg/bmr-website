@@ -44,7 +44,11 @@ export default function MethodologyPage() {
           <p className="text-slate-300 mb-10 font-light max-w-2xl mx-auto leading-relaxed">
             Download our operational reference manual. Includes the Diagnostic Signal Glossary used during SHP audits.
           </p>
-          <a href="/media/Field Guide.pdf" download className="inline-flex items-center gap-4 bg-[#14b8a6] text-[#020617] px-10 py-5 rounded font-bold uppercase tracking-[0.2em] text-xs hover:bg-[#0d9488] transition-all cursor-pointer">
+          <a 
+            href="/media/Field Guide.pdf" 
+            download="BMR_Field_Guide.pdf" 
+            className="inline-flex items-center gap-4 bg-[#14b8a6] text-[#020617] px-10 py-5 rounded font-bold uppercase tracking-[0.2em] text-xs hover:bg-[#0d9488] transition-all cursor-pointer"
+          >
             <Download size={18} /> Download Protocol PDF
           </a>
         </section>
