@@ -23,7 +23,7 @@ export default function ThankYouPage() {
       <main className="pt-32 pb-20 px-6">
         <div className="max-w-3xl mx-auto text-center">
           <CheckCircle2 className="h-16 w-16 text-[#14b8a6] mx-auto mb-6" />
-          <h1 className="text-4xl font-bold mb-4 italic">Observation Received</h1>
+          <h1 className="text-4xl font-bold mb-4 italic uppercase tracking-tight">Observation Received</h1>
           <p className="text-slate-400 text-lg mb-12 font-light">Signals processed. We have identified your primary systemic friction point.</p>
           
           <Card className="p-8 bg-slate-900/40 border-slate-800 border-2 text-left relative overflow-hidden mb-12 flex flex-col justify-center">
@@ -33,19 +33,19 @@ export default function ThankYouPage() {
               <h2 className="text-2xl font-bold mt-2 mb-4 leading-tight">{synthesis.title}</h2>
               <p className="text-slate-300 mb-6 leading-relaxed font-light">{synthesis.desc}</p>
               <div className="p-4 bg-slate-950 rounded border border-slate-800">
-                <span className="text-slate-500 text-[10px] uppercase font-bold tracking-widest text-white">Primary Promise Gap:</span>
+                <span className="text-slate-500 text-[10px] uppercase font-bold tracking-widest text-white">Primary Promise Gap&trade;:</span>
                 <p className="text-[#14b8a6] font-mono font-bold text-lg uppercase tracking-wider mt-1">{synthesis.gap}</p>
               </div>
-              <p className="mt-8 text-[11px] text-slate-500 italic leading-relaxed border-t border-slate-800 pt-6">
-                Note: While {synthesis.title.toLowerCase()} represents your primary signal, systemic friction often exists across multiple lenses. Your full recovery roadmap provided via email offers a more multi-dimensional view.
+              <p className="mt-8 text-[11px] text-slate-500 italic leading-relaxed border-t border-slate-800 pt-6 font-light">
+                Note: While {synthesis.title.toLowerCase()} represents your primary signal, systemic friction often exists across multiple lenses. Your recovery roadmap offers a more multi-dimensional view.
               </p>
             </div>
           </Card>
 
-          {/* NEW FIELD GUIDE BRIDGE */}
+          {/* FIELD GUIDE BRIDGE */}
           <div className="mt-16 p-10 border border-slate-800 bg-slate-900/20 rounded-xl text-center relative overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#14b8a6]/50 to-transparent"></div>
-            <h3 className="text-xl font-bold mb-4 italic text-white uppercase">Strategic Framework for Action</h3>
+            <h3 className="text-xl font-bold mb-4 italic text-white uppercase tracking-tight">Strategic Framework for Action</h3>
             <p className="text-slate-400 mb-8 max-w-xl mx-auto text-sm leading-relaxed font-light">
               Download the Field Guide below to explore the architecture we use to close the Gap. 
               For a forensic audit, schedule a Deep Dive.
@@ -60,7 +60,7 @@ export default function ThankYouPage() {
                 <Download size={14} /> Download Field Guide
               </a>
               <button 
-                onClick={() => window.open('YOUR_CALENDLY_LINK', '_blank')}
+                onClick={() => window.open('https://calendly.com/bmrsolutions', '_blank')}
                 className="flex items-center justify-center gap-2 border border-[#14b8a6] text-[#14b8a6] px-8 py-3.5 rounded font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-[#14b8a6]/10 transition-all min-w-[220px]"
               >
                 <Calendar size={14} /> Schedule Deep Dive
@@ -68,9 +68,9 @@ export default function ThankYouPage() {
             </div>
           </div>
 
-          <div className="mt-12 text-slate-400">
-            <button onClick={() => router.push('/')} className="flex items-center gap-2 mx-auto text-white hover:text-[#14b8a6] transition-colors group font-bold uppercase tracking-widest text-[10px]">
-              Return to Home <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          <div className="mt-12 text-slate-500">
+            <button onClick={() => router.push('/')} className="flex items-center gap-2 mx-auto hover:text-[#14b8a6] transition-colors group font-bold uppercase tracking-widest text-[10px]">
+              Return to Home <ArrowRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
         </div>
