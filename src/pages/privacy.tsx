@@ -42,10 +42,17 @@ export default function PrivacyPolicy() {
           </section>
 
           <section>
-            <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide">3. Contact for Forensic Data</h2>
-            <p>
-              To exercise your rights or request an audit of the data we hold, please contact our privacy desk at info@bmrsolutions.ai.
+            <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide leading-tight">3. Contact for Forensic Data</h2>
+            <p className="mb-6">
+              To exercise your rights under the VCDPA or to request an audit of the data we hold, 
+              please contact our privacy desk:
             </p>
+            <a 
+              href="mailto:hello@bmradvisory.co" 
+              className="inline-flex items-center gap-2 text-[#14b8a6] font-mono font-bold hover:text-white transition-colors border border-[#14b8a6]/20 bg-[#14b8a6]/5 px-4 py-2 rounded-md"
+            >
+              hello@bmradvisory.co
+            </a>
           </section>
         </div>
       </main>
