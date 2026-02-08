@@ -9,7 +9,7 @@ export default function TermsOfService() {
         <section className="mb-12">
           <span className="text-[#14b8a6] font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Governing Agreement</span>
           <h1 className="text-4xl md:text-5xl font-bold mb-6 italic uppercase tracking-tight">Terms of Service</h1>
-          <p className="text-slate-500 text-sm uppercase tracking-widest font-mono text-nowrap text-ellipsis overflow-hidden">Jurisdiction: Fairfax County, VA</p>
+          <p className="text-slate-500 text-sm uppercase tracking-widest font-mono">Jurisdiction: Fairfax County, VA</p>
         </section>
 
         <div className="space-y-12 text-slate-400 font-light leading-relaxed border-t border-slate-900 pt-12">
