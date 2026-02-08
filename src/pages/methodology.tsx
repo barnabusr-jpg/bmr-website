@@ -11,7 +11,7 @@ export default function MethodologyPage() {
           <span className="text-[#14b8a6] font-bold uppercase tracking-[0.3em] text-[10px]">The BMR Protocol</span>
           <h1 className="text-5xl font-bold mt-4 mb-6 italic tracking-tight uppercase">Systemic Methodology</h1>
           <p className="text-slate-400 text-xl max-w-3xl leading-relaxed font-light italic">
-            "Closing the Promise Gap™ requires a continuous cycle of alignment across three interconnected layers."
+            &ldquo;Closing the Promise Gap&trade; requires a continuous cycle of alignment across three interconnected layers.&rdquo;
           </p>
         </section>
 
