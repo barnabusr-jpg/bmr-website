@@ -15,7 +15,7 @@ const Index = () => {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
+    <div className="min-h-screen bg-[#020617] text-white font-sans">
       <Header />
       <main>
         <Hero />
