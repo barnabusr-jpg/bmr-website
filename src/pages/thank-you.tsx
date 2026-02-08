@@ -5,9 +5,9 @@ import { Card } from "@/components/ui/card";
 import { CheckCircle2, ArrowRight, Download, Calendar } from "lucide-react";
 
 const synthesisData: Record<string, { title: string, desc: string, gap: string }> = {
-  "Manual Friction": { title: "High Shadow Labor detected.", desc: "Your responses suggest the possibility that your organization is compensating for artificial intelligence reliability gaps with intensive human verification. This practice often creates 'shadow labor' that can mask true operational costs.", gap: "ESTIMATED 20-40% ROI LEAK" },
-  "System Disconnect": { title: "Governance-Execution Gap detected.", desc: "The data points toward a potential break between leadership’s strategic intent and how artificial intelligence tools are actually being utilized at the frontline.", gap: "HIGH OPERATIONAL RISK PROFILE" },
-  "Passive Support": { title: "Structural Stagnation detected.", desc: "The current signals indicate that while artificial intelligence is supported in theory, the organizational 'muscle' required to evolve these tools into a competitive advantage may not yet be fully developed.", gap: "INNOVATION INERTIA" },
+  "Manual Friction": { title: "High Shadow Labor detected.", desc: "Your responses suggest the possibility that your organization is compensating for artificial intelligence reliability gaps with intensive human verification. This practice often creates &lsquo;shadow labor&rsquo; that can mask true operational costs.", gap: "ESTIMATED 20-40% ROI LEAK" },
+  "System Disconnect": { title: "Governance-Execution Gap detected.", desc: "The data points toward a potential break between leadership&rsquo;s strategic intent and how artificial intelligence tools are actually being utilized at the frontline.", gap: "HIGH OPERATIONAL RISK PROFILE" },
+  "Passive Support": { title: "Structural Stagnation detected.", desc: "The current signals indicate that while artificial intelligence is supported in theory, the organizational &lsquo;muscle&rsquo; required to evolve these tools into a competitive advantage may not yet be fully developed.", gap: "INNOVATION INERTIA" },
   "Team Relief": { title: "Tactical Efficiency detected.", desc: "Your results reflect a successful use of artificial intelligence to reduce immediate task burdens. However, there are indications that the system is currently viewed as a utility.", gap: "UNTAPPED STRATEGIC CAPACITY" },
   "Force Multiplier": { title: "High Systemic Alignment.", desc: "Your responses suggest that your human and artificial intelligence assets are operating in a virtuous cycle. The primary challenge in this state is often maintaining this equilibrium.", gap: "SUSTAINABLE COMPETITIVE ADVANTAGE" }
 };
@@ -42,7 +42,6 @@ export default function ThankYouPage() {
             </div>
           </Card>
 
-          {/* FIELD GUIDE BRIDGE */}
           <div className="mt-16 p-10 border border-slate-800 bg-slate-900/20 rounded-xl text-center relative overflow-hidden">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#14b8a6]/50 to-transparent"></div>
             <h3 className="text-xl font-bold mb-4 italic text-white uppercase tracking-tight">Strategic Framework for Action</h3>
@@ -54,7 +53,7 @@ export default function ThankYouPage() {
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <a 
                 href="/media/Field Guide.pdf" 
-                download
+                download="BMR_Field_Guide.pdf"
                 className="flex items-center justify-center gap-2 bg-white text-[#020617] px-8 py-3.5 rounded font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-slate-200 transition-all min-w-[220px]"
               >
                 <Download size={14} /> Download Field Guide
