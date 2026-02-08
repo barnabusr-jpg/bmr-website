@@ -33,7 +33,6 @@ const Index = () => {
         <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
         <Insights />
         
-        {/* ACTION HUB SECTION */}
         <section className="py-24 px-6 border-t border-slate-900 bg-[#020617]">
           <div className="max-w-5xl mx-auto text-center">
             <h2 className="text-4xl font-bold mb-6 italic tracking-tight uppercase">Ready to Close the Gap?</h2>
@@ -54,7 +53,7 @@ const Index = () => {
                 </div>
                 <a 
                   href="/media/Field Guide.pdf" 
-                  download
+                  download="BMR_Field_Guide.pdf"
                   className="inline-flex items-center justify-center gap-3 bg-white text-[#020617] px-8 py-4 rounded font-bold uppercase tracking-widest text-[10px] hover:bg-slate-200 transition-all cursor-pointer"
                 >
                   Download Protocol <Download size={16} />
