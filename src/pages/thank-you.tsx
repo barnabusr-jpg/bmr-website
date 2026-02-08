@@ -36,15 +36,12 @@ export default function ThankYouPage() {
                 <span className="text-slate-500 text-[10px] uppercase font-bold tracking-widest text-white">Primary Promise Gap&trade;:</span>
                 <p className="text-[#14b8a6] font-mono font-bold text-lg uppercase tracking-wider mt-1">{synthesis.gap}</p>
               </div>
-              <p className="mt-8 text-[11px] text-slate-500 italic leading-relaxed border-t border-slate-800 pt-6 font-light">
-                Note: While {synthesis.title.toLowerCase()} represents your primary signal, systemic friction often exists across multiple lenses. Your recovery roadmap offers a more multi-dimensional view.
-              </p>
             </div>
           </Card>
 
-          <div className="mt-16 p-10 border border-slate-800 bg-slate-900/20 rounded-xl text-center relative overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#14b8a6]/50 to-transparent"></div>
-            <h3 className="text-xl font-bold mb-4 italic text-white uppercase tracking-tight">Strategic Framework for Action</h3>
+          <div className="mt-16 p-10 border border-slate-800 bg-slate-900/20 rounded-xl text-center relative overflow-hidden text-white">
+             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#14b8a6]/50 to-transparent"></div>
+            <h3 className="text-xl font-bold mb-4 italic uppercase tracking-tight">Strategic Framework for Action</h3>
             <p className="text-slate-400 mb-8 max-w-xl mx-auto text-sm leading-relaxed font-light">
               Download the Field Guide below to explore the architecture we use to close the Gap. 
               For a forensic audit, schedule a Deep Dive.
