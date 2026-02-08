@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Activity } from "lucide-react";
+import { ArrowRight, Activity, Download } from "lucide-react";
 import Link from "next/link";
 
 const signalEntries = [
@@ -35,7 +35,7 @@ const Insights = () => {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="mb-16"
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white tracking-tight">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white tracking-tight italic uppercase">
             The <span className="text-[#14b8a6]">Signal Architecture</span>
           </h2>
           <p className="text-xl text-slate-400 max-w-2xl font-light leading-relaxed">
@@ -55,7 +55,6 @@ const Insights = () => {
             >
               <Link href={`/insights/${insight.slug}`}>
                 <Card className="p-10 h-full bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden group hover:border-[#14b8a6]/40 transition-all duration-500 cursor-pointer flex flex-col justify-between">
-                  {/* Visual accent consistency */}
                   <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
                   
                   <div className="space-y-6">
@@ -66,7 +65,7 @@ const Insights = () => {
                       </span>
                     </div>
                     
-                    <h3 className="text-2xl font-bold text-white tracking-tight italic group-hover:text-[#14b8a6] transition-colors leading-tight">
+                    <h3 className="text-2xl font-bold text-white tracking-tight italic group-hover:text-[#14b8a6] transition-colors leading-tight uppercase">
                       {insight.title}
                     </h3>
                     
@@ -75,7 +74,7 @@ const Insights = () => {
                     </p>
                   </div>
                     
-                  <div className="pt-8 mt-auto flex items-center text-[#14b8a6] text-sm font-medium group-hover:gap-3 transition-all">
+                  <div className="pt-8 mt-auto flex items-center text-[#14b8a6] text-sm font-medium group-hover:gap-3 transition-all uppercase tracking-widest text-[10px]">
                     Read Entry
                     <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -84,6 +83,25 @@ const Insights = () => {
             </motion.div>
           ))}
         </div>
+
+        {/* ACTIVE FIELD GUIDE DOWNLOAD SECTION */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.5 }}
+          className="mt-16 flex flex-col items-center border-t border-slate-900 pt-16"
+        >
+          <p className="text-slate-500 text-[10px] uppercase tracking-[0.4em] mb-6 font-bold">Protocol Documentation</p>
+          <a 
+            href="/media/Field Guide.pdf" 
+            download="BMR_Field_Guide.pdf"
+            className="group inline-flex items-center gap-4 text-white hover:text-[#14b8a6] transition-all font-bold uppercase tracking-[0.2em] text-xs"
+          >
+            Explore the HAI Field Guide 
+            <Download size={16} className="text-[#14b8a6] group-hover:translate-y-0.5 transition-transform" />
+          </a>
+        </motion.div>
       </div>
     </section>
   );
