@@ -44,9 +44,9 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide">3. Contact for Forensic Data</h2>
             <p>
-              To exercise your rights or request an audit of the data we hold, please contact our privacy desk.
+              To exercise your rights or request an audit of the data we hold, please contact our privacy desk at info@bmrsolutions.ai.
             </p>
-          </div>
+          </section>
         </div>
       </main>
       <Footer />
