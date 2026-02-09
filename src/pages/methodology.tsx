@@ -11,7 +11,7 @@ export default function MethodologyPage() {
       <Header />
       
       <main className="pt-32 pb-20 px-6 max-w-5xl mx-auto">
-        {/* Hero Section - Matches Landing Page Typography */}
+        {/* Hero Section */}
         <section className="mb-20 text-center md:text-left">
           <span className="text-[#14b8a6] font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">
             The BMR Protocol
@@ -24,40 +24,43 @@ export default function MethodologyPage() {
           </p>
         </section>
 
-        {/* The Three Layers - Matches Card Styles from Services/Diagnostic */}
+        {/* The Three Layers - CORRECTED MAPPING */}
         <div className="grid md:grid-cols-3 gap-8 mb-24">
+          {/* HAI - TRUST */}
           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-lg relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
             <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]"></div>
             <ShieldCheck className="text-[#14b8a6] mb-6 h-10 w-10" />
-            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">HAI (Trust)</h3>
+            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">Trust (HAI)</h3>
             <p className="text-slate-400 text-sm leading-relaxed font-light">
               <strong className="text-white">The Foundation of Readiness:</strong> Ensuring adoption begins with empathy and transparency. Without a human-centric foundation, systems fail to scale.
             </p>
           </div>
 
+          {/* AVS - GOVERN */}
           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-lg relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
             <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]"></div>
             <Zap className="text-[#14b8a6] mb-6 h-10 w-10" />
-            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">AVS (Evolve)</h3>
+            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">Govern (AVS)</h3>
             <p className="text-slate-400 text-sm leading-relaxed font-light">
               <strong className="text-white">The Bridge to Value:</strong> Translating raw adoption metrics into measurable mission impact by linking organizational intent to actual outcomes.
             </p>
           </div>
 
+          {/* IGF - EVOLVE */}
           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-lg relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
             <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]"></div>
             <Activity className="text-[#14b8a6] mb-6 h-10 w-10" />
-            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">IGF (Govern)</h3>
+            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">Evolve (IGF)</h3>
             <p className="text-slate-400 text-sm leading-relaxed font-light">
               <strong className="text-white">The Safeguard Loop:</strong> Embedding accountability into every decision loop, creating an environment for rapid, responsible evolution.
             </p>
           </div>
         </div>
 
-        {/* Separator Line - Matches Landing Page Styling */}
+        {/* Separator Line */}
         <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent mb-24" />
 
-        {/* The Signal Glossary Section */}
+        {/* The Signal Glossary Section - CORRECTED LABELS */}
         <section className="mb-24">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
@@ -69,9 +72,9 @@ export default function MethodologyPage() {
               </p>
               <ul className="space-y-6">
                 {[
-                  { label: "Expectation Continuity (HAI)", desc: "Aligning system performance with user mental models to prevent trust erosion." },
-                  { label: "Operational Resonance (AVS)", desc: "Determining if AI adoption is solving core mission problems or creating shadow labor." },
-                  { label: "Decision Explainability (IGF)", desc: "The capacity for leadership to audit and understand why specific outputs were generated." }
+                  { label: "Expectation Continuity (Trust/HAI)", desc: "Aligning system performance with user mental models to prevent trust erosion." },
+                  { label: "Operational Resonance (Govern/AVS)", desc: "Determining if AI adoption is solving core mission problems or creating shadow labor." },
+                  { label: "Decision Explainability (Evolve/IGF)", desc: "The capacity for leadership to audit and understand why specific outputs were generated." }
                 ].map((item, idx) => (
                   <li key={idx} className="flex gap-4 items-start">
                     <div className="h-1.5 w-1.5 rounded-full bg-[#14b8a6] mt-2 shrink-0"></div>
@@ -84,7 +87,6 @@ export default function MethodologyPage() {
               </ul>
             </div>
             
-            {/* The Field Guide Download Section - Matches Services CTA Style */}
             <div className="p-10 bg-[#14b8a6]/5 border border-[#14b8a6]/20 rounded-2xl text-center relative overflow-hidden">
                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#14b8a6]/50 to-transparent"></div>
               <h3 className="text-2xl font-bold mb-4 italic text-white uppercase tracking-tight">Access the Protocol</h3>
@@ -102,7 +104,7 @@ export default function MethodologyPage() {
           </div>
         </section>
 
-        {/* Final CTA - Navigation Back to Home/Diagnostic */}
+        {/* Final CTA */}
         <section className="text-center pt-12 border-t border-slate-900">
           <button 
             onClick={() => router.push('/')}
