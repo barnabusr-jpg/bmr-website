@@ -77,7 +77,19 @@ export default function PromiseGapDiagnosticPage() {
 
   const submitResults = async () => {
     setIsSubmitting(true);
+    
+    // Create an object to track which lenses had high friction for the Results UI
+    const lensResults = {
+      "1": stateScores["Manual Friction"] > 2,
+      "4": stateScores["System Disconnect"] > 2,
+      "10": stateScores["Passive Support"] > 2
+    };
+
     try {
+      // 1. PERSIST DATA LOCALLY so the results page can see it
+      localStorage.setItem('bmr_results_vault', JSON.stringify(lensResults));
+
+      // 2. TRIGGER THE EMAIL API
       const apiCall = fetch('/api/send-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -89,17 +101,23 @@ export default function PromiseGapDiagnosticPage() {
         }),
       });
 
+      // 3. WAIT FOR NARRATIVE DELAY + API
       const minDelay = new Promise(resolve => setTimeout(resolve, 3500));
       const [res] = await Promise.all([apiCall, minDelay]);
 
       if (res.ok) {
+        // SUCCESS: Redirect to visual results
         router.push('/diagnostic/results');
       } else {
+        // FAIL: Logic for retry
+        console.error("API Error");
         setIsSubmitting(false);
+        alert("The synthesis engine encountered an error. Please try again.");
       }
     } catch (error) {
       console.error("Submission failed", error);
       setIsSubmitting(false);
+      alert("Network error. Please ensure you are connected.");
     }
   };
 
