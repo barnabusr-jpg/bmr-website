@@ -9,32 +9,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { name, email, org, scores } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
-  const trustWeight = (scores["Manual Friction"] || 0) + (scores["Team Relief"] || 0);
-  const accountabilityWeight = (scores["System Disconnect"] || 0);
-  const alignmentWeight = (scores["Passive Support"] || 0) + (scores["Force Multiplier"] || 0);
+  // LOGIC ALIGNMENT: Mapping forensic weights to the correct BMR Lenses
+  const trustWeight = (scores["Manual Friction"] || 0) + (scores["Team Relief"] || 0); // Trust (HAI)
+  const governWeight = (scores["System Disconnect"] || 0);                             // Govern (AVS)
+  const evolveWeight = (scores["Passive Support"] || 0) + (scores["Force Multiplier"] || 0); // Evolve (IGF)
 
-  let focusArea: 'Trust' | 'Accountability' | 'Strategic Alignment' = 'Strategic Alignment';
-  if (trustWeight >= accountabilityWeight && trustWeight >= alignmentWeight) focusArea = 'Trust';
-  else if (accountabilityWeight >= trustWeight && accountabilityWeight >= alignmentWeight) focusArea = 'Accountability';
+  // Determine the Focus Area based on highest weighted signal
+  let focusArea: 'Trust (HAI)' | 'Govern (AVS)' | 'Evolve (IGF)' = 'Govern (AVS)';
+  
+  if (trustWeight >= governWeight && trustWeight >= evolveWeight) {
+    focusArea = 'Trust (HAI)';
+  } else if (governWeight >= trustWeight && governWeight >= evolveWeight) {
+    focusArea = 'Govern (AVS)';
+  } else {
+    focusArea = 'Evolve (IGF)';
+  }
 
   const contentMap = {
-    Trust: {
-      result: "Trust",
-      implications: "Your responses suggest the possibility that artificial intelligence outputs requiring frequent manual verification may be creating hidden labor costs and slowing operational workflows. Over time, this pattern can reduce confidence in the system and potentially limit its scalability.",
+    'Trust (HAI)': {
+      result: "Trust Architecture (HAI)",
+      implications: "Your responses suggest that artificial intelligence outputs requiring frequent manual verification may be creating hidden labor costs. Over time, this &ldquo;Manual Friction&rdquo; reduces confidence in the system and potentially limits its scalability.",
       exercise: "Monitor the time your team spends verifying or correcting artificial intelligence outputs during one work week. Please record: <ul><li>Approximate hours dedicated to this task</li><li>Common patterns in the errors or issues encountered</li></ul>",
-      matters: "The current signals indicate that reducing manual verification requirements could unlock notable efficiency improvements for your organization."
+      matters: "Establishing a baseline for manual verification is the first step in moving from a &ldquo;black box&rdquo; environment to a human-centric trust model."
     },
-    Accountability: {
-      result: "Accountability",
-      implications: "The data points toward a potential lack of clarity regarding the ownership of artificial intelligence driven outcomes, which can sometimes lead to delays in issue resolution. Establishing more defined accountability may help ensure systems maintain consistent reliability.",
-      exercise: "During the next two weeks, document instances where an artificial intelligence driven outcome requires human intervention. Please record: <ul><li>The individual or team currently tasked with addressing the issue</li><li>The time required to reach a resolution</li></ul>",
-      matters: "Your responses highlight a valuable opportunity to clarify roles and responsibilities, which may help ensure your technology investments deliver more consistent value."
-    },
-    'Strategic Alignment': {
-      result: "Strategic Alignment",
-      implications: "The current signals indicate that artificial intelligence initiatives within the organization may not yet be fully aligned with broader business objectives. Connecting these projects more closely with your strategic goals helps ensure technology investments directly support growth.",
+    'Govern (AVS)': {
+      result: "Governance & Value (AVS)",
+      implications: "The data points toward a potential &ldquo;System Disconnect&rdquo; where AI initiatives may not be fully aligned with broader business objectives. Establishing a clear Adoption Value System helps ensure technology investments deliver measurable mission impact.",
       exercise: "Examine one recent artificial intelligence initiative and consider: <ul><li>Which specific business objective was this initiative intended to support?</li><li>How is success currently being defined and measured?</li></ul>",
-      matters: "Your responses suggest that improved alignment could help maximize the impact and sustainability of your technology investments."
+      matters: "Strong governance ensures your AI efforts move beyond activity volume and into true value creation that supports organizational growth."
+    },
+    'Evolve (IGF)': {
+      result: "Evolutionary Safeguards (IGF)",
+      implications: "The current signals indicate a potential lack of clarity regarding the ownership of AI-driven outcomes. Embedding accountability loops via an Internal Governance Framework helps ensure systems maintain reliability as they scale.",
+      exercise: "During the next two weeks, document instances where an AI-driven outcome requires human intervention. Please record: <ul><li>The specific individual or team tasked with addressing the issue</li><li>The time required to reach a resolution</li></ul>",
+      matters: "A structured feedback loop ensures your systems can evolve rapidly while remaining firmly under leadership intent."
     }
   };
 
@@ -42,33 +50,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const msg = {
     to: email,
-    bcc: 'hello@bmradvisory.co',
+    bcc: 'hello@bmradvisory.co', // Forensic record keeping
     from: 'hello@bmradvisory.co',
-    subject: `[Observation Report] AI Promise Gap Diagnostic: ${org}`,
+    subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
     html: `
-      <div style="font-family: sans-serif; max-width: 600px; color: #0f172a; line-height: 1.7;">
+      <div style="font-family: sans-serif; max-width: 600px; color: #0f172a; line-height: 1.7; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
         <p>Hello ${firstName},</p>
-        <p>Thank you for completing the AI Promise Gap Diagnostic for <strong>${org || 'your organization'}</strong>. Your responses have identified patterns that may be influencing your artificial intelligence workflows.</p>
+        <p>Thank you for completing the BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong>. Your responses have identified patterns that are influencing your organizational health across our core lenses: <strong>Trust, Govern, and Evolve.</strong></p>
         
         <div style="background-color: #f8fafc; padding: 24px; border-left: 4px solid #14b8a6; margin: 32px 0;">
-          <h4 style="margin: 0; color: #64748b; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Primary Observation Area</h4>
+          <h4 style="margin: 0; color: #64748b; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Primary Observation Lens</h4>
           <p style="font-size: 20px; font-weight: bold; margin: 8px 0 0 0;">${selected.result}</p>
         </div>
 
         <h3 style="font-size: 18px; color: #0f172a;">Potential Implications</h3>
         <p style="color: #334155;">${selected.implications}</p>
 
-        <h3 style="font-size: 18px; color: #0f172a;">Suggested Exercise</h3>
+        <h3 style="font-size: 18px; color: #0f172a;">Suggested Forensic Exercise</h3>
         <div style="color: #334155;">${selected.exercise}</div>
 
         <div style="margin: 40px 0; text-align: center;">
-          <a href="YOUR_CALENDLY_LINK" style="background-color: #14b8a6; color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Schedule a 15-Minute Consultation</a>
+          <a href="https://calendly.com/YOUR_LINK" style="background-color: #14b8a6; color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Schedule a 15-Minute Consultation</a>
         </div>
 
         <h3 style="font-size: 18px; color: #0f172a;">Why These Observations Matter</h3>
         <p style="color: #334155;">${selected.matters}</p>
 
-        <p style="margin-top: 40px;">Best regards,<br><strong>BMR Solutions</strong></p>
+        <p style="margin-top: 40px; border-top: 1px solid #e2e8f0; pt-20px;">
+          Best regards,<br>
+          <strong>BMR Solutions</strong><br>
+          <span style="font-size: 12px; color: #64748b;">Fairfax County, VA</span>
+        </p>
       </div>
     `,
   };
