@@ -30,7 +30,7 @@ export default function PrivacyPolicy() {
 
           <section>
             <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide">2. Your Rights Under Virginia Law</h2>
-            <p className="mb-6">As a resident of the Commonwealth of Virginia, you have the following rights regarding your personal data:</p>
+            <p className="mb-6 text-sm">As a resident of the Commonwealth of Virginia, you have the following rights regarding your personal data:</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {['Right to Access', 'Right to Correct', 'Right to Delete', 'Right to Data Portability'].map((right) => (
                 <div key={right} className="flex items-center gap-3 p-3 border border-slate-800 rounded bg-slate-900/20">
