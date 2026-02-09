@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Activity, Loader2, ShieldCheck, Zap, BarChart3 } from "lucide-react"; 
+import { Activity, Loader2 } from "lucide-react"; 
 
 const diagnosticQuestions = [
   // HAI - TRUST
@@ -78,7 +78,6 @@ export default function PromiseGapDiagnosticPage() {
   const submitResults = async () => {
     setIsSubmitting(true);
     try {
-      // NOTE: Ensure your API filename matches this path
       const apiCall = fetch('/api/send-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
