@@ -5,19 +5,19 @@ import Link from "next/link";
 
 const signalEntries = [
   {
-    category: "Trust",
+    category: "Trust", // Correctly mapped to HAI
     title: "The Real Trust Gap",
     excerpt: "Trust in AI is not achieved solely through compliance; it is cultivated through transparency. We examine how oversight transforms doubt into an operational signal.",
     slug: "real-trust-gap"
   },
   {
-    category: "Govern",
+    category: "Govern", // Correctly mapped to AVS
     title: "The Adoption Value System",
     excerpt: "Proving value is an AI adoption accelerator. This introduces the AVS model to turn intent into measurable impact across four dimensions.",
     slug: "adoption-value-system"
   },
   {
-    category: "Evolve",
+    category: "Evolve", // Correctly mapped to IGF
     title: "Executive Readiness",
     excerpt: "Technology mastery is not AI leadership. Leadership is about shaping the systems and decision boundaries that govern how technology is used.",
     slug: "executive-readiness-ai"
