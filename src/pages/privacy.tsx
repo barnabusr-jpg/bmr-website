@@ -16,7 +16,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide leading-tight">1. Data Controller Notice</h2>
             <p>
-              BMR Solutions (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) acts as a Data Controller under the <strong>Virginia Consumer Data Protection Act (VCDPA)</strong>. We collect professional identity data and systemic &ldquo;signals&rdquo; specifically to identify organizational friction and bridge the Promise Gap&trade;.
+              BMR Solutions (&ldquo;we,&rdquo; &ldquo;us,&rdquo; or &ldquo;our&rdquo;) acts as a Data Controller under the <strong>Virginia Consumer Data Protection Act (VCDPA)</strong>. We collect professional identity data and systemic &ldquo;signals&rdquo; to identify friction across our core lenses: <strong>Trust (HAI)</strong>, <strong>Govern (AVS)</strong>, and <strong>Evolve (IGF)</strong>.
             </p>
           </section>
 
