@@ -6,6 +6,7 @@ export default function PrivacyPolicy() {
     <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-[#14b8a6]/30">
       <Header />
       <main className="pt-32 pb-20 px-6 max-w-4xl mx-auto">
+        {/* Header Section */}
         <section className="mb-12">
           <span className="text-[#14b8a6] font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">Legal Framework</span>
           <h1 className="text-4xl md:text-5xl font-bold mb-6 italic uppercase tracking-tight">Privacy Policy</h1>
@@ -13,6 +14,7 @@ export default function PrivacyPolicy() {
         </section>
         
         <div className="space-y-10 text-slate-400 font-light leading-relaxed border-t border-slate-900 pt-12">
+          {/* Section 1: Data Controller */}
           <section>
             <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide leading-tight">1. Data Controller Notice</h2>
             <p>
@@ -20,6 +22,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
+          {/* Section 2: Commitment */}
           <section className="p-8 bg-[#14b8a6]/5 border border-[#14b8a6]/20 rounded-lg relative overflow-hidden">
             <div className="absolute top-0 left-0 w-1 h-full bg-[#14b8a6]"></div>
             <h2 className="text-xl font-bold text-[#14b8a6] mb-4 uppercase tracking-wide italic">The Non-Disclosure Commitment</h2>
@@ -28,6 +31,7 @@ export default function PrivacyPolicy() {
             </p>
           </section>
 
+          {/* Section 3: Virginia Rights */}
           <section>
             <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide">2. Your Rights Under Virginia Law</h2>
             <p className="mb-6 text-sm">As a resident of the Commonwealth of Virginia, you have the following rights regarding your personal data:</p>
@@ -41,6 +45,7 @@ export default function PrivacyPolicy() {
             </div>
           </section>
 
+          {/* Section 4: Contact */}
           <section>
             <h2 className="text-xl font-bold text-white mb-4 uppercase tracking-wide leading-tight">3. Contact for Forensic Data</h2>
             <p className="mb-6">
