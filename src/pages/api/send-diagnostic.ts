@@ -9,40 +9,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { name, email, org, scores } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
-  // LOGIC ALIGNMENT: Mapping forensic weights to the correct BMR Lenses
-  const trustWeight = (scores["Manual Friction"] || 0) + (scores["Team Relief"] || 0); // Trust (HAI)
-  const governWeight = (scores["System Disconnect"] || 0);                             // Govern (AVS)
-  const evolveWeight = (scores["Passive Support"] || 0) + (scores["Force Multiplier"] || 0); // Evolve (IGF)
+  const trustWeight = (scores["Manual Friction"] || 0) + (scores["Team Relief"] || 0);
+  const governWeight = (scores["System Disconnect"] || 0);
+  const evolveWeight = (scores["Passive Support"] || 0) + (scores["Force Multiplier"] || 0);
 
-  // Determine the Focus Area based on highest weighted signal
   let focusArea: 'Trust (HAI)' | 'Govern (AVS)' | 'Evolve (IGF)' = 'Govern (AVS)';
   
-  if (trustWeight >= governWeight && trustWeight >= evolveWeight) {
-    focusArea = 'Trust (HAI)';
-  } else if (governWeight >= trustWeight && governWeight >= evolveWeight) {
-    focusArea = 'Govern (AVS)';
-  } else {
-    focusArea = 'Evolve (IGF)';
-  }
+  if (trustWeight >= governWeight && trustWeight >= evolveWeight) focusArea = 'Trust (HAI)';
+  else if (governWeight >= trustWeight && governWeight >= evolveWeight) focusArea = 'Govern (AVS)';
+  else focusArea = 'Evolve (IGF)';
 
   const contentMap = {
     'Trust (HAI)': {
       result: "Trust Architecture (HAI)",
       implications: "Your responses suggest that artificial intelligence outputs requiring frequent manual verification may be creating hidden labor costs. Over time, this &ldquo;Manual Friction&rdquo; reduces confidence in the system and potentially limits its scalability.",
-      exercise: "Monitor the time your team spends verifying or correcting artificial intelligence outputs during one work week. Please record: <ul><li>Approximate hours dedicated to this task</li><li>Common patterns in the errors or issues encountered</li></ul>",
-      matters: "Establishing a baseline for manual verification is the first step in moving from a &ldquo;black box&rdquo; environment to a human-centric trust model."
+      exercise: "Monitor the time your team spends verifying or correcting AI outputs during one work week. Record: <ul><li>Approximate hours dedicated to verification</li><li>Common patterns in errors encountered</li></ul>",
+      matters: "Reducing manual verification requirements is the first step in establishing a Human-AI interaction model that scales."
     },
     'Govern (AVS)': {
       result: "Governance & Value (AVS)",
-      implications: "The data points toward a potential &ldquo;System Disconnect&rdquo; where AI initiatives may not be fully aligned with broader business objectives. Establishing a clear Adoption Value System helps ensure technology investments deliver measurable mission impact.",
-      exercise: "Examine one recent artificial intelligence initiative and consider: <ul><li>Which specific business objective was this initiative intended to support?</li><li>How is success currently being defined and measured?</li></ul>",
-      matters: "Strong governance ensures your AI efforts move beyond activity volume and into true value creation that supports organizational growth."
+      implications: "The data points toward a &ldquo;System Disconnect&rdquo; where AI efforts may not be translating into sustained organizational value. Establishing a clear Adoption Value System ensures technology investments deliver measurable mission impact.",
+      exercise: "During the next two weeks, document instances where an AI-driven outcome requires intervention. Record: <ul><li>The specific business objective this was intended to support</li><li>How success is currently being measured</li></ul>",
+      matters: "A robust governance framework ensures your technology investments move beyond activity volume and into true value creation."
     },
     'Evolve (IGF)': {
       result: "Evolutionary Safeguards (IGF)",
-      implications: "The current signals indicate a potential lack of clarity regarding the ownership of AI-driven outcomes. Embedding accountability loops via an Internal Governance Framework helps ensure systems maintain reliability as they scale.",
-      exercise: "During the next two weeks, document instances where an AI-driven outcome requires human intervention. Please record: <ul><li>The specific individual or team tasked with addressing the issue</li><li>The time required to reach a resolution</li></ul>",
-      matters: "A structured feedback loop ensures your systems can evolve rapidly while remaining firmly under leadership intent."
+      implications: "The current signals indicate a need for stronger &ldquo;Safeguard Loops.&rdquo; Without an Internal Governance Framework, systems may drift from leadership intent as they scale, creating long-term operational risk.",
+      exercise: "Examine one recent AI decision or output and consider: <ul><li>The capacity for leadership to audit why that output was generated</li><li>The feedback loop currently in place to correct system drift</li></ul>",
+      matters: "Embedding accountability into every decision loop creates the stability required for rapid, responsible evolution."
     }
   };
 
@@ -50,13 +44,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const msg = {
     to: email,
-    bcc: 'hello@bmradvisory.co', // Forensic record keeping
+    bcc: 'hello@bmradvisory.co',
     from: 'hello@bmradvisory.co',
     subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
     html: `
       <div style="font-family: sans-serif; max-width: 600px; color: #0f172a; line-height: 1.7; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
         <p>Hello ${firstName},</p>
-        <p>Thank you for completing the BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong>. Your responses have identified patterns that are influencing your organizational health across our core lenses: <strong>Trust, Govern, and Evolve.</strong></p>
+        <p>Thank you for completing the BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong>. Your responses identified specific patterns across our lenses: <strong>Trust, Govern, and Evolve.</strong></p>
         
         <div style="background-color: #f8fafc; padding: 24px; border-left: 4px solid #14b8a6; margin: 32px 0;">
           <h4 style="margin: 0; color: #64748b; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">Primary Observation Lens</h4>
@@ -70,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <div style="color: #334155;">${selected.exercise}</div>
 
         <div style="margin: 40px 0; text-align: center;">
-          <a href="https://calendly.com/YOUR_LINK" style="background-color: #14b8a6; color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Schedule a 15-Minute Consultation</a>
+          <a href="https://calendly.com/your-link" style="background-color: #14b8a6; color: #ffffff; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Schedule a 15-Minute Consultation</a>
         </div>
 
         <h3 style="font-size: 18px; color: #0f172a;">Why These Observations Matter</h3>
