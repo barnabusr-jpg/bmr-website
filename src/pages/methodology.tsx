@@ -11,7 +11,6 @@ export default function MethodologyPage() {
       <Header />
       
       <main className="pt-32 pb-20 px-6 max-w-5xl mx-auto">
-        {/* Hero Section */}
         <section className="mb-20 text-center md:text-left">
           <span className="text-[#14b8a6] font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">
             The BMR Protocol
@@ -24,7 +23,6 @@ export default function MethodologyPage() {
           </p>
         </section>
 
-        {/* The Three Layers - CORRECTED MAPPING */}
         <div className="grid md:grid-cols-3 gap-8 mb-24">
           {/* HAI - TRUST */}
           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-lg relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
@@ -32,7 +30,7 @@ export default function MethodologyPage() {
             <ShieldCheck className="text-[#14b8a6] mb-6 h-10 w-10" />
             <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">Trust (HAI)</h3>
             <p className="text-slate-400 text-sm leading-relaxed font-light">
-              <strong className="text-white">The Foundation of Readiness:</strong> Ensuring adoption begins with empathy and transparency. Without a human-centric foundation, systems fail to scale.
+              <strong className="text-white">The Foundation of Readiness:</strong> Ensuring adoption begins with empathy and transparency. Without trust, systems fail to scale.
             </p>
           </div>
 
@@ -42,7 +40,7 @@ export default function MethodologyPage() {
             <Zap className="text-[#14b8a6] mb-6 h-10 w-10" />
             <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">Govern (AVS)</h3>
             <p className="text-slate-400 text-sm leading-relaxed font-light">
-              <strong className="text-white">The Bridge to Value:</strong> Translating raw adoption metrics into measurable mission impact by linking organizational intent to actual outcomes.
+              <strong className="text-white">The Bridge to Value:</strong> Translating raw adoption metrics into measurable mission impact by linking organizational intent to outcomes.
             </p>
           </div>
 
@@ -57,10 +55,8 @@ export default function MethodologyPage() {
           </div>
         </div>
 
-        {/* Separator Line */}
         <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent mb-24" />
 
-        {/* The Signal Glossary Section - CORRECTED LABELS */}
         <section className="mb-24">
           <div className="grid md:grid-cols-2 gap-16 items-center">
             <div>
@@ -88,7 +84,7 @@ export default function MethodologyPage() {
             </div>
             
             <div className="p-10 bg-[#14b8a6]/5 border border-[#14b8a6]/20 rounded-2xl text-center relative overflow-hidden">
-               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#14b8a6]/50 to-transparent"></div>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#14b8a6]/50 to-transparent"></div>
               <h3 className="text-2xl font-bold mb-4 italic text-white uppercase tracking-tight">Access the Protocol</h3>
               <p className="text-slate-400 mb-10 font-light text-sm leading-relaxed">
                 Download the official Field Guide to review the full breakdown of all twelve signals and the architecture required to stabilize your AI initiatives.
@@ -104,7 +100,6 @@ export default function MethodologyPage() {
           </div>
         </section>
 
-        {/* Final CTA */}
         <section className="text-center pt-12 border-t border-slate-900">
           <button 
             onClick={() => router.push('/')}
