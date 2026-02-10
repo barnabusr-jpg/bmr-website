@@ -9,6 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { name, email, org, scores } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
+  // Core BMR Weights Mapping
   const trustWeight = (scores["Manual Friction"] || 0) + (scores["Team Relief"] || 0);
   const governWeight = (scores["System Disconnect"] || 0);
   const evolveWeight = (scores["Passive Support"] || 0) + (scores["Force Multiplier"] || 0);
@@ -83,4 +84,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <div style="border-top: 1px solid #e2e8f0; padding-top: 32px; margin-top: 48px;">
           <h3 style="font-size: 14px; text-transform: uppercase; color: #020617; margin-bottom: 12px; letter-spacing: 1px;">The BMR Methodology</h3>
           <p style="font-size: 13px; color: #64748b; line-height: 1.8; margin-bottom: 24px;">
-            ${selected.matters} We close the
+            ${selected.matters} We close the Promise Gap&trade; by synchronizing <strong>Trust (HAI)</strong>, <strong>Govern (AVS)</strong>, and <strong>Evolve (IGF)</strong> layers.
+          </p>
+        </div>
+
+        <p style="margin-top: 40px; font-size: 14px; color: #020617;">
+          Best regards,<br>
+          <strong style="text-transform: uppercase; letter-spacing: 1px;">BMR Solutions</strong>
+        </p>
+      </div>
+    `
+  };
+
+  try {
+    await sgMail.send(msg);
+    return res.status(200).json({ success: true });
+  } catch (error: any) {
+    console.error('SendGrid Error:', error.response?.body || error.message);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
