@@ -43,6 +43,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const selected = contentMap[focusArea];
 
+  // Pre-filling Calendly with name and email parameters
+  const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
+  const calendlyLink = `${calendlyBase}?name=${encodeURIComponent(name || '')}&email=${encodeURIComponent(email || '')}`;
+
   const msg = {
     to: email,
     bcc: 'hello@bmradvisory.co',
@@ -78,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         </div>
 
         <div style="margin: 48px 0; text-align: center;">
-          <a href="https://calendly.com/your-link" style="background-color: #020617; color: #ffffff; padding: 18px 36px; text-decoration: none; border-radius: 2px; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; display: inline-block;">Schedule Forensic Review</a>
+          <a href="${calendlyLink}" style="background-color: #020617; color: #ffffff; padding: 18px 36px; text-decoration: none; border-radius: 2px; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; display: inline-block;">Schedule Forensic Review</a>
         </div>
 
         <div style="border-top: 1px solid #e2e8f0; padding-top: 32px; margin-top: 48px;">
