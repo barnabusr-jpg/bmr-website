@@ -23,6 +23,8 @@ export default function MethodologyPage() {
           </p>
         </section>
 
+        
+
         <div className="grid md:grid-cols-3 gap-8 mb-24">
           {/* HAI - TRUST */}
           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-lg relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
