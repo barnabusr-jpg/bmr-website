@@ -43,9 +43,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const selected = contentMap[focusArea];
 
-  // Pre-filling Calendly with name and email parameters
+  // SURGICAL FIX: Sanitized URL Construction with Fallbacks
   const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
-  const calendlyLink = `${calendlyBase}?name=${encodeURIComponent(name || '')}&email=${encodeURIComponent(email || '')}`;
+  const safeName = encodeURIComponent(name || "");
+  const safeEmail = encodeURIComponent(email || "");
+  const calendlyLink = `${calendlyBase}?name=${safeName}&email=${safeEmail}`;
 
   const msg = {
     to: email,
