@@ -23,8 +23,6 @@ export default function MethodologyPage() {
           </p>
         </section>
 
-        
-
         <div className="grid md:grid-cols-3 gap-8 mb-24">
           {/* HAI - TRUST */}
           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-lg relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
@@ -96,7 +94,7 @@ export default function MethodologyPage() {
                 download="BMR_Field_Guide.pdf"
                 className="inline-flex items-center justify-center gap-4 bg-[#14b8a6] text-[#020617] px-10 py-5 rounded font-bold uppercase tracking-[0.2em] text-xs hover:bg-[#0d9488] transition-all w-full"
               >
-                <Download size={18} /> Download Protocol PDF
+                <Download size={18} /> Download Field Guide
               </a>
             </div>
           </div>
