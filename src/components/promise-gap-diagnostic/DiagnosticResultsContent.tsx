@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { 
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, 
-  ResponsiveContainer, PolarRadiusAxis 
+  Radar, 
+  RadarChart, 
+  PolarGrid, 
+  PolarAngleAxis, 
+  ResponsiveContainer 
 } from 'recharts';
 import { ShieldAlert, Activity, ArrowRight, Download } from "lucide-react";
 
