@@ -10,7 +10,7 @@ const services = [
   },
   {
     icon: Users,
-    title: "Delivery and Adoption Readiness",
+    title: "Adoption Readiness",
     description: "Surface behavioral and organizational barriers that quietly undermine AI adoption and execution."
   },
   {
@@ -36,7 +36,10 @@ const ServicesPreview = () => {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="text-center mb-20"
         >
-          <h2 className="text-4xl font-bold mb-6 text-white tracking-tight">What We Support</h2>
+          {/* UPDATED: Standardized Forensic Typography */}
+          <h2 className="text-4xl font-bold mb-6 text-white tracking-tight italic uppercase">
+            What We <span className="text-[#14b8a6]">Support</span>
+          </h2>
           <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
             Advisory support for organizations facing real AI risk, regulatory scrutiny, 
             and adoption complexity.
@@ -52,16 +55,21 @@ const ServicesPreview = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
             >
-              <Card className="p-10 h-full bg-slate-900/30 border-slate-800 hover:border-[#14b8a6]/40 transition-all duration-500 border-2 relative overflow-hidden group">
-                {/* Visual accent matching the Hero card style */}
-                <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
+              {/* UPDATED: Standardized Forensic Interaction States */}
+              <Card className="p-10 h-full bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden transition-all duration-500 group">
                 
-                <div className="flex items-start gap-6">
+                {/* THE STANDARDIZED FIX: Top-down building highlight at 1.5px width */}
+                <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500 ease-in-out"></div>
+                
+                <div className="flex items-start gap-6 relative z-10">
                   <div className="p-3 rounded-lg bg-[#14b8a6]/10 flex-shrink-0">
                     <service.icon className="h-6 w-6 text-[#14b8a6]" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold mb-4 text-white tracking-tight">{service.title}</h3>
+                    {/* UPDATED: Standardized Header Typography */}
+                    <h3 className="text-xl font-bold mb-4 text-white tracking-tight italic uppercase">
+                      {service.title}
+                    </h3>
                     <p className="text-slate-400 leading-relaxed font-light text-lg">
                       {service.description}
                     </p>
