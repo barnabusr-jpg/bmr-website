@@ -192,7 +192,9 @@ export default function PromiseGapDiagnosticPage() {
             }),
           });
           
-          if (response.ok) { router.push('/diagnostic/results'); }
+          if (response.ok) { 
+            router.push('/diagnostic/results'); 
+          }
         } catch (error) {
           console.error("Forensic dispatch failed", error);
           setIsSubmitting(false);
