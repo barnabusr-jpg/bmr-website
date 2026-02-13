@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
           {/* Logo / Brand Section */}
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold tracking-tight text-white">
+            <span className="text-xl font-bold tracking-tight text-white italic uppercase">
               BMR <span className="text-[#14b8a6]">Solutions</span>
             </span>
           </div>
@@ -18,9 +18,18 @@ const Footer = () => {
           </p>
           
           {/* Utility Links */}
-          <div className="flex gap-8 text-sm text-slate-400">
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link>
+          <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
+            {/* UPDATED: Added verified Field Guide path */}
+            <a 
+              href="/media/Field%20Guide.pdf" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="hover:text-[#14b8a6] transition-colors uppercase tracking-widest text-[10px] font-bold"
+            >
+              Field Guide
+            </a>
+            <Link href="/privacy" className="hover:text-white transition-colors uppercase tracking-widest text-[10px]">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors uppercase tracking-widest text-[10px]">Terms of Service</Link>
           </div>
         </div>
       </div>
