@@ -35,14 +35,12 @@ const DiagnosticFrameworks = () => {
           {methodologies.map((m) => {
             return (
               <div key={m.name} className="h-full">
-                {/* THE FIX: 
-                   1. Removed onClick and isSelected logic.
-                   2. Swapped full-box hover for left-side teal highlight.
-                */}
                 <Card className="p-8 h-full bg-slate-900/50 border-slate-800 border-2 relative overflow-hidden transition-all duration-300 group">
                   
-                  {/* Forensic Sidebar Highlight */}
-                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6] -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"></div>
+                  {/* THE STANDARDIZED FIX: Top-down building highlight 
+                      Matches 'What We Support' and 'Signal Architecture' sections
+                  */}
+                  <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500 ease-in-out"></div>
 
                   <div className="flex items-center gap-3 mb-6 relative z-10">
                     <div className="text-3xl font-bold tracking-tighter text-[#14b8a6] italic uppercase">
