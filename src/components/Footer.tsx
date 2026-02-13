@@ -17,19 +17,28 @@ const Footer = () => {
             © {new Date().getFullYear()} BMR Solutions. All rights reserved.
           </p>
           
-          {/* Utility Links */}
-          <div className="flex flex-wrap justify-center gap-8 text-sm text-slate-400">
-            {/* UPDATED: Added verified Field Guide path */}
+          {/* Utility Links - Standardized Color and Weight */}
+          <div className="flex flex-wrap justify-center gap-8 text-[10px] uppercase tracking-widest font-bold">
             <a 
               href="/media/Field%20Guide.pdf" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:text-[#14b8a6] transition-colors uppercase tracking-widest text-[10px] font-bold"
+              className="text-slate-400 hover:text-[#14b8a6] transition-colors"
             >
               Field Guide
             </a>
-            <Link href="/privacy" className="hover:text-white transition-colors uppercase tracking-widest text-[10px]">Privacy Policy</Link>
-            <Link href="/terms" className="hover:text-white transition-colors uppercase tracking-widest text-[10px]">Terms of Service</Link>
+            <Link 
+              href="/privacy" 
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              Privacy Policy
+            </Link>
+            <Link 
+              href="/terms" 
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              Terms of Service
+            </Link>
           </div>
         </div>
       </div>
