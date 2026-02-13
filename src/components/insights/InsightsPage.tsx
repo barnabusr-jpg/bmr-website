@@ -33,10 +33,17 @@ export default function InsightsPage() {
                   <p className="text-slate-400 font-light text-lg leading-relaxed">
                     Why AI-enabled system behavior diverges from leadership expectations under real operating conditions.
                   </p>
+                  
                   <div className="pt-8 border-t border-slate-800/50">
-                    <span className="text-[#14b8a6] font-medium inline-flex items-center gap-2 group-hover:translate-x-1 transition-transform cursor-pointer">
+                    {/* UPDATED LINK: Points to the verified /media/ subfolder */}
+                    <a 
+                      href="/media/Field%20Guide.pdf" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[#14b8a6] font-medium inline-flex items-center gap-2 group-hover:translate-x-2 transition-transform cursor-pointer no-underline"
+                    >
                       Explore the Field Guide <ArrowRight className="h-5 w-5" />
-                    </span>
+                    </a>
                   </div>
                 </div>
              </Card>
