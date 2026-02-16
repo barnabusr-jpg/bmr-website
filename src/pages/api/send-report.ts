@@ -23,8 +23,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
   else focusArea = 'IGF';
 
-  // --- CONTENT MAPPING: Refined Neutral Clinical Terminology ---
-  // Synchronized with the "How/What" behavioral questions in the frontend
+  // --- CONTENT MAPPING: Clinical Terminology (Neutral Phrasing) ---
+  // Synchronized with the behavioral intake questions
   const contentMap = {
     'HAI': {
       result: "Trust Architecture (HAI)",
@@ -61,44 +61,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
     html: `
       <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; color: #020617; line-height: 1.6; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px;">
-        
         <div style="border-bottom: 2px solid #020617; padding-bottom: 20px; margin-bottom: 30px;">
           <h2 style="text-transform: uppercase; letter-spacing: 4px; font-size: 14px; margin: 0; color: #64748b;">Forensic Observation Report</h2>
           <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin: 5px 0 0 0;">BMR Solutions Protocol v3.0</p>
         </div>
-
         <p style="font-size: 16px; margin-bottom: 24px;">Hello ${firstName},</p>
-        
         <p style="color: #475569; margin-bottom: 32px;">
           The BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong> is complete. Our analysis has identified specific <strong>Systemic Pressure Signals</strong> within your AI adoption trajectory.
         </p>
-        
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 32px; margin-bottom: 40px;">
           <h3 style="margin: 0 0 8px 0; color: #00F2FF; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; font-weight: bold;">Critical Observation Lens</h3>
           <p style="font-size: 24px; font-weight: bold; margin: 0; color: #020617; font-style: italic;">${selected.result}</p>
-          
           <div style="margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 24px;">
             <h4 style="font-size: 12px; text-transform: uppercase; color: #020617; margin: 0 0 12px 0; letter-spacing: 1px;">Indicated Implications</h4>
             <p style="font-size: 14px; color: #334155; margin: 0; line-height: 1.8;">${selected.implications}</p>
           </div>
         </div>
-
         <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #020617; margin-bottom: 16px;">Surgical Neutralization Exercise</h3>
         <div style="background-color: #ffffff; border-left: 4px solid #00F2FF; padding: 10px 20px; color: #334155; font-size: 14px; margin-bottom: 32px; font-style: italic;">
           ${selected.exercise}
         </div>
-
         <div style="margin: 48px 0; text-align: center;">
           <a href="${calendlyLink}" style="background-color: #020617; color: #ffffff; padding: 18px 36px; text-decoration: none; border-radius: 2px; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; display: inline-block;">Schedule Forensic Review</a>
         </div>
-
         <div style="border-top: 1px solid #e2e8f0; padding-top: 32px; margin-top: 48px;">
           <h3 style="font-size: 14px; text-transform: uppercase; color: #020617; margin-bottom: 12px; letter-spacing: 1px;">The BMR Methodology</h3>
           <p style="font-size: 13px; color: #64748b; line-height: 1.8; margin-bottom: 24px;">
             ${selected.matters} We close the Promise Gap&trade; by synchronizing the <strong>HAI</strong>, <strong>AVS</strong>, and <strong>IGF</strong> layers to prevent structural drift.
           </p>
         </div>
-
         <p style="margin-top: 40px; font-size: 14px; color: #020617;">
           Best regards,<br>
           <strong style="text-transform: uppercase; letter-spacing: 1px;">BMR Solutions Forensic Team</strong>
@@ -111,21 +102,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 1. Dispatch Email to Client
     await sgMail.send(msg);
 
-    // 2. Dispatch Forensic Webhook to trigger Midnight and Cyan Dossier
-    // Replace 'YOUR_WEBHOOK_URL_HERE' with your actual Zapier/Airtable Webhook URL.
-    await fetch('YOUR_WEBHOOK_URL_HERE', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name,
-        email,
-        org,
-        focusArea,
-        result: selected.result,
-        zoneData // Transfers intensity, aggregate scores, and roadmap vectors
-      }),
-    });
+    // 2. Fail-Safe Webhook Dispatch
+    // Replace 'YOUR_WEBHOOK_URL_HERE' with your real URL when ready.
+    const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE'; 
 
+    if (WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
+      try {
+        await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            org,
+            focusArea,
+            result: selected.result,
+            zoneData 
+          }),
+        });
+      } catch (webhookErr) {
+        console.warn('Optional Webhook failed or was skipped:', webhookErr);
+      }
+    }
+
+    // Success response allows frontend to transition to /results
     return res.status(200).json({ success: true });
   } catch (error: any) {
     console.error('Forensic Engine Dispatch Error:', error.response?.body || error.message);
