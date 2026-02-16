@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const firstName = name ? name.split(' ')[0] : 'there';
 
   // --- ANCHOR LOGIC: Determine the Primary Focus Area ---
-  // We prioritize the zone with the highest S1-S5 Signal Intensity
+  // Prioritizes the zone with the highest S1-S5 Signal Intensity
   let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';
   const intensities = {
     HAI: zoneData.HAI?.max || 0,
@@ -23,25 +23,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
   else focusArea = 'IGF';
 
-  // --- CONTENT MAPPING: Clinical Terminology ---
+  // --- CONTENT MAPPING: Refined Neutral Clinical Terminology ---
   const contentMap = {
     'HAI': {
       result: "Trust Architecture (HAI)",
-      implications: "The detected signals suggest that artificial intelligence outputs requiring frequent manual verification are creating hidden labor costs. This &ldquo;Human-AI Asymmetry&rdquo; degrades system confidence and creates a significant Promise Gap.",
-      exercise: "Audit one high-frequency AI workflow. Record every instance where a human must 'double-check' the output. This is your baseline friction point.",
-      matters: "Reducing manual verification is the primary step in establishing a Human-AI interaction model that scales."
+      implications: "The detected signals suggest a mismatch between current AI reliability and operational trust requirements. This &ldquo;Human-AI Asymmetry&rdquo; indicates that manual verification layers are acting as a substitute for system calibration, creating hidden friction.",
+      exercise: "Audit one high-frequency AI workflow. Quantify the timeframe required for manual verification versus automated output. This identifies your baseline trust-friction point.",
+      matters: "Calibrating the trust architecture is the primary step in establishing a Human-AI interaction model that remains stable at scale."
     },
     'AVS': {
       result: "Adoption Value System (AVS)",
-      implications: "Your results point toward &ldquo;Operational Drift,&rdquo; where AI deployment speed is decoupled from governance. Without a synchronized value system, technology investments fail to deliver measurable mission impact.",
-      exercise: "Document every instance where an AI failure occurred in the last month. Identify if a specific 'owner' was notified within 60 minutes. If not, you have an ownership gap.",
-      matters: "A robust adoption system ensures your technology moves beyond activity volume and into true value creation."
+      implications: "Your results point toward &ldquo;Operational Drift,&rdquo; where deployment frequency is decoupled from governance. Without a synchronized value system, technology investments struggle to move beyond activity volume into measurable mission impact.",
+      exercise: "Identify a recent AI performance variance. Determine if a specific 'owner' was notified within the target 60-minute window. This reveals current ownership latency.",
+      matters: "A robust adoption system ensures your technology ecosystem prioritizes value realization over pure deployment speed."
     },
     'IGF': {
       result: "Internal Governance Framework (IGF)",
-      implications: "Current signals indicate &ldquo;Oversight Decay.&rdquo; Without active safeguard loops, systems drift from leadership intent as they scale, creating unmanaged long-term operational and reputational risk.",
-      exercise: "Examine your most recent AI correction. Was that correction fed back into the model for training? If the answer is no, your feedback loop is broken.",
-      matters: "Embedding accountability into every decision loop creates the stability required for rapid, responsible evolution."
+      implications: "Current signals indicate &ldquo;Oversight Decay.&rdquo; Without active safeguard loops, systems may drift from leadership intent as they scale, creating unmanaged long-term operational risks that require structural correction.",
+      exercise: "Examine your most recent AI correction event. Verify if that specific human insight was systematically incorporated into the model’s iterative training cycle.",
+      matters: "Embedding accountability into every decision loop creates the systemic stability required for rapid, responsible evolution."
     }
   };
 
