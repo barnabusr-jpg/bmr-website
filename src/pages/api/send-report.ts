@@ -24,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   else focusArea = 'IGF';
 
   // --- CONTENT MAPPING: Refined Neutral Clinical Terminology ---
+  // Synchronized with the "How/What" behavioral questions in the frontend
   const contentMap = {
     'HAI': {
       result: "Trust Architecture (HAI)",
@@ -47,7 +48,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const selected = contentMap[focusArea];
 
-  // URL Construction
+  // URL Construction for Forensic Review
   const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
   const safeName = encodeURIComponent(name || "");
   const safeEmail = encodeURIComponent(email || "");
@@ -107,10 +108,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   };
 
   try {
+    // 1. Dispatch Email to Client
     await sgMail.send(msg);
+
+    // 2. Dispatch Forensic Webhook to trigger Midnight and Cyan Dossier
+    // Replace 'YOUR_WEBHOOK_URL_HERE' with your actual Zapier/Airtable Webhook URL.
+    await fetch('YOUR_WEBHOOK_URL_HERE', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        org,
+        focusArea,
+        result: selected.result,
+        zoneData // Transfers intensity, aggregate scores, and roadmap vectors
+      }),
+    });
+
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('SendGrid Error:', error.response?.body || error.message);
+    console.error('Forensic Engine Dispatch Error:', error.response?.body || error.message);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
