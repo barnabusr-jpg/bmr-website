@@ -2,7 +2,6 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { ArrowRight } from "lucide-react";
 
 export default function InsightsPage() {
   return (
@@ -24,7 +23,7 @@ export default function InsightsPage() {
             </p>
           </motion.div>
 
-          {/* Core Entry Point Card */}
+          {/* Core Entry Point Card: Redundant Link Removed surgically */}
           <div className="max-w-3xl mx-auto text-left">
              <Card className="p-10 bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-1.5 h-full bg-[#14b8a6]"></div>
@@ -34,17 +33,7 @@ export default function InsightsPage() {
                     Why AI-enabled system behavior diverges from leadership expectations under real operating conditions.
                   </p>
                   
-                  <div className="pt-8 border-t border-slate-800/50">
-                    {/* UPDATED LINK: Points to the verified /media/ subfolder */}
-                    <a 
-                      href="/media/Field%20Guide.pdf" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-[#14b8a6] font-medium inline-flex items-center gap-2 group-hover:translate-x-2 transition-transform cursor-pointer no-underline"
-                    >
-                      Explore the Field Guide <ArrowRight className="h-5 w-5" />
-                    </a>
-                  </div>
+                  {/* Footer link removed to favor primary CTA cards further down the page */}
                 </div>
              </Card>
           </div>
