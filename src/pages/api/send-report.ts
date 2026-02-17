@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
   else focusArea = 'IGF';
 
-  // --- CONTENT MAPPING: Clinical Terminology ---
+  // --- CONTENT MAPPING ---
   const contentMap = {
     'HAI': {
       result: "Trust Architecture (HAI)",
@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const selected = contentMap[focusArea];
 
-  // --- URL CONSTRUCTION: Frictionless Peer Handshake ---
+  // --- URL CONSTRUCTION ---
   const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
   const safeName = encodeURIComponent(name || "");
   const safeEmail = encodeURIComponent(email || "");
@@ -54,30 +54,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const msg = {
     to: email,
     bcc: 'hello@bmradvisory.co',
-    from: 'hello@bmradvisory.co',
+    from: 'hello@bmradvisory.co', // Clean sender for Outlook trust
     subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
     
-    // YAHOO-COMPLIANT FALLBACK: Prevents spam flagging without altering HTML
+    // OUTLOOK-OPTIMIZED TEXT: Reduced discrepancy to pass Checksum filters
     text: `
-BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION REPORT
+BMR SIGNAL DIAGNOSTIC: ${org}
 --------------------------------------------------
-Organization: ${org || 'Your Organization'}
-
 Hello ${firstName},
 
-Your clinical signal analysis is complete. Based on the triage, 
-your primary focus area is: ${selected.result}.
+The clinical signal analysis for your AI adoption trajectory is complete.
 
-INDICATED IMPLICATIONS:
-${selected.implications.replace(/&ldquo;|&rdquo;/g, '"')}
+CRITICAL OBSERVATION:
+${selected.result}
 
-SURGICAL NEUTRALIZATION EXERCISE:
-${selected.exercise}
+To view your systemic pressure map and interactive results, please view the HTML version of this email.
 
-To view your full 32-point Radar Topology and interactive results, 
-please view this email in an HTML-capable client.
-
-Schedule your Forensic Review here: ${calendlyLink}
+Schedule your Forensic Review:
+${calendlyLink}
 
 BMR Solutions | Forensic AI Advisory
     `,
@@ -140,10 +134,9 @@ BMR Solutions | Forensic AI Advisory
             focusArea,
             result: selected.result,
             zoneData,
-            // COMMERCIAL GATES: Prevents free slide generation
             status: "Lead", 
             isContracted: false, 
-            triggerSlideProduction: false, // HARD STOP for Zapier deck creation
+            triggerSlideProduction: false, // HARD STOP for Zapier
             diagnosticType: "Triage-12",
             vaultID: `BMR-${Date.now()}`
           }),
