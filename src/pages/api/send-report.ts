@@ -1,98 +1,69 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import sgMail from '@sendgrid/mail';
+import type { NextApiRequest, NextApiResponse } from 'next';  
+import sgMail from '@sendgrid/mail';  
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');  
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  
-  const { name, email, org, zoneData } = req.body;
-  const firstName = name ? name.split(' ')[0] : 'there';
-
-  // --- ANCHOR LOGIC ---
-  let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';
-  const intensities = {
-    HAI: zoneData.HAI?.max || 0,
-    AVS: zoneData.AVS?.max || 0,
-    IGF: zoneData.IGF?.max || 0
-  };
-
-  if (intensities.HAI >= intensities.AVS && intensities.HAI >= intensities.IGF) focusArea = 'HAI';
-  else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
-  else focusArea = 'IGF';
-
-  const contentMap = {
-    'HAI': {
-      result: "Trust Architecture (HAI)",
-      implications: "The detected signals suggest a mismatch between current AI reliability and operational trust requirements.",
-      exercise: "Audit one high-frequency AI workflow.",
-      matters: "Calibrating the trust architecture is the primary step in establishing stability at scale."
-    },
-    'AVS': {
-      result: "Adoption Value System (AVS)",
-      implications: "Your results point toward Operational Drift, where deployment frequency is decoupled from governance.",
-      exercise: "Identify a recent AI performance variance.",
-      matters: "A robust adoption system ensures your technology ecosystem prioritizes value realization."
-    },
-    'IGF': {
-      result: "Internal Governance Framework (IGF)",
-      implications: "Current signals indicate Oversight Decay where systems may drift from leadership intent.",
-      exercise: "Examine your most recent AI correction event.",
-      matters: "Embedding accountability into every decision loop creates systemic stability."
-    }
-  };
-
-  const selected = contentMap[focusArea];
-  const calendlyLink = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(name || "")}&email=${encodeURIComponent(email || "")}`;
-
-  const msg = {
-    to: email,
-    bcc: 'hello@bmradvisory.co',
-    from: 'hello@bmradvisory.co',
-    subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {  
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });  
     
-    // RESTORED: This is your exact original text structure that Outlook allowed
-    text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION REPORT\n--------------------------------------------------\nOrganization: ${org || 'Your Organization'}\n\nHello ${firstName},\n\nYour clinical signal analysis is complete. Primary focus: ${selected.result}.\n\nSchedule your Forensic Review here: ${calendlyLink}`,
-    
-    // UPDATED: Standardized HTML that matches your design but is cleaner for Outlook
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; color: #020617; line-height: 1.6;">
-        <h2 style="text-transform: uppercase; font-size: 12px; color: #64748b; border-bottom: 1px solid #eee; padding-bottom: 10px;">Forensic Observation Report</h2>
-        <p>Hello ${firstName},</p>
-        <p>The signal diagnostic for <strong>${org}</strong> is complete. Our analysis has identified specific pressure signals within your AI adoption trajectory.</p>
-        <div style="background-color: #f8fafc; padding: 20px; border-left: 4px solid #00F2FF; margin: 20px 0;">
-          <p style="font-size: 11px; text-transform: uppercase; margin: 0;">Observation Lens</p>
-          <p style="font-size: 18px; font-weight: bold; margin: 5px 0;">${selected.result}</p>
-        </div>
-        <p>Review your results and schedule your Forensic Review here:</p>
-        <p><a href="${calendlyLink}" style="background-color: #020617; color: #ffffff; padding: 12px 24px; text-decoration: none; font-weight: bold; display: inline-block;">Schedule Forensic Review</a></p>
-        <p style="font-size: 12px; color: #64748b; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">BMR Solutions | Forensic AI Advisory</p>
-      </div>
-    `
-  };
+  const { name, email, org, zoneData } = req.body;  
+  const firstName = name ? name.split(' ')[0] : 'there';  
 
-  try {
-    await sgMail.send(msg);
+  // --- ANCHOR LOGIC: Determine Primary Focus Area ---  
+  let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';  
+  const intensities = {  
+    HAI: zoneData.HAI?.max || 0,  
+    AVS: zoneData.AVS?.max || 0,  
+    IGF: zoneData.IGF?.max || 0  
+  };  
 
-    const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE'; 
-    if (WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
-      try {
-        await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name, email, org, focusArea, result: selected.result, zoneData,
-            status: "Lead", isContracted: false, triggerSlideProduction: false,
-            diagnosticType: "Triage-12", vaultID: `BMR-${Date.now()}`
-          }),
-        });
-      } catch (webhookErr) {
-        console.warn('Data logging failed:', webhookErr);
-      }
-    }
-    return res.status(200).json({ success: true });
-  } catch (error: any) {
-    console.error('Dispatch Error:', error.message);
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-}
+  if (intensities.HAI >= intensities.AVS && intensities.HAI >= intensities.IGF) focusArea = 'HAI';  
+  else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';  
+  else focusArea = 'IGF';  
+
+  // --- CONTENT MAPPING: Clinical Terminology ---  
+  const contentMap = {  
+    'HAI': {  
+      result: "Trust Architecture (HAI)",  
+      implications: "The detected signals suggest a mismatch between current AI reliability and operational trust requirements. This &ldquo;Human-AI Asymmetry&rdquo; indicates that manual verification layers are acting as a substitute for system calibration, creating hidden friction.",  
+      exercise: "Audit one high-frequency AI workflow. Quantify the timeframe required for manual verification versus automated output. This identifies your baseline trust-friction point.",  
+      matters: "Calibrating the trust architecture is the primary step in establishing a Human-AI interaction model that remains stable at scale."  
+    },  
+    'AVS': {  
+      result: "Adoption Value System (AVS)",  
+      implications: "Your results point toward &ldquo;Operational Drift,&rdquo; where deployment frequency is decoupled from governance. Without a synchronized value system, technology investments struggle to move beyond activity volume into measurable mission impact.",  
+      exercise: "Identify a recent AI performance variance. Determine if a specific 'owner' was notified within the target 60-minute window. This reveals current ownership latency.",  
+      matters: "A robust adoption system ensures your technology ecosystem prioritizes value realization over pure deployment speed."  
+    },  
+    'IGF': {  
+      result: "Internal Governance Framework (IGF)",  
+      implications: "Current signals indicate &ldquo;Oversight Decay.&rdquo; Without active safeguard loops, systems may drift from leadership intent as they scale, creating unmanaged long-term operational risks that require structural correction.",  
+      exercise: "Examine your most recent AI correction event. Verify if that specific human insight was systematically incorporated into the model’s iterative training cycle.",  
+      matters: "Embedding accountability into every decision loop creates the systemic stability required for rapid, responsible evolution."  
+    }  
+  };  
+
+  const selected = contentMap[focusArea];  
+
+  // --- URL CONSTRUCTION ---  
+  const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";  
+  const safeName = encodeURIComponent(name || "");  
+  const safeEmail = encodeURIComponent(email || "");  
+  const calendlyLink = `${calendlyBase}?name=${safeName}&email=${safeEmail}`;  
+
+  const msg = {  
+    to: email,  
+    bcc: 'hello@bmradvisory.co',  
+    from: 'hello@bmradvisory.co',  
+    subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,  
+    // RESTORED TEXT VERSION: Matches your working Outlook signature
+    text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION REPORT\n--------------------------------------------------\nOrganization: ${org || 'Your Organization'}\n\nHello ${firstName},\n\nYour clinical signal analysis is complete. Primary focus: ${selected.result}.\n\nSchedule your Forensic Review here: ${calendlyLink}`,  
+    // EMPTY HTML: Prevents the MIME discrepancy that triggers Outlook silent-blocking
+    html: ``  
+  };  
+
+  try {  
+    // 1. Dispatch Email to Client  
+    await sgMail.send(msg);  
+
+    // 2. Webhook Dispatch with Commercial Gate Flags [cite: 1.
