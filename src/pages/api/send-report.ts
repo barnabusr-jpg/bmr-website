@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { name, email, org, zoneData } = req.body;  
   const firstName = name ? name.split(' ')[0] : 'there';  
 
-  // --- ANCHOR LOGIC: Determine Primary Focus Area ---  
+  // --- ANCHOR LOGIC ---  
   let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';  
   const intensities = {  
     HAI: zoneData.HAI?.max || 0,  
@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';  
   else focusArea = 'IGF';  
 
-  // --- CONTENT MAPPING: Clinical Terminology ---  
+  // --- CONTENT MAPPING ---  
   const contentMap = {  
     'HAI': {  
       result: "Trust Architecture (HAI)",  
@@ -56,9 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     bcc: 'hello@bmradvisory.co',  
     from: 'hello@bmradvisory.co',  
     subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,  
-    // RESTORED TEXT VERSION: Matches your working Outlook signature
     text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION REPORT\n--------------------------------------------------\nOrganization: ${org || 'Your Organization'}\n\nHello ${firstName},\n\nYour clinical signal analysis is complete. Primary focus: ${selected.result}.\n\nSchedule your Forensic Review here: ${calendlyLink}`,  
-    // EMPTY HTML: Prevents the MIME discrepancy that triggers Outlook silent-blocking
     html: ``  
   };  
 
@@ -66,4 +64,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 1. Dispatch Email to Client  
     await sgMail.send(msg);  
 
-    // 2. Webhook Dispatch with Commercial Gate Flags [cite: 1.
+    // 2. Webhook Dispatch: Airtable Logging & Commercial Gate
+    const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE';   
+
+    if (WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {  
+      try {  
+        await fetch(WEBHOOK_URL, {  
+          method: 'POST',  
+          headers: { 'Content-Type': 'application/json' },  
+          body: JSON.stringify({  
+            name,  
+            email,  
+            org,  
+            focusArea,  
+            result: selected.result,  
+            zoneData,  
+            status: "Lead",   
+            isContracted: false,   
+            generationLevel: "Triage-Only",  
+            vaultID: `BMR-${Date.now()}`  
+          }),  
+        });  
+      } catch (webhookErr) {  
+        console.warn('Webhook failed:', webhookErr);  
+      }  
+    }  
+
+    return res.status(200).json({ success: true });  
+  } catch (error: any) {  
+    console.error('Dispatch Error:', error.message);  
+    return res.status(500).json({ error: 'Internal server error' });  
+  }  
+}
