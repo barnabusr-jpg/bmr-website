@@ -7,7 +7,7 @@ import {
   PolarAngleAxis, 
   ResponsiveContainer 
 } from 'recharts';
-import { ShieldAlert, Activity, ArrowRight, Download } from "lucide-react";
+import { ShieldAlert, Activity, ArrowRight, Calendar } from "lucide-react";
 
 // --- CLINICAL TERMINOLOGY ENGINE ---
 const getStatusLabel = (max: number) => {
@@ -45,7 +45,7 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-8 space-y-12">
-      {/* PEER CONTEXT BRIDGE: Directed by the CIO email update */}
+      {/* PEER CONTEXT BRIDGE: Confirms Dispatch */}
       <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8 backdrop-blur-sm animate-in fade-in slide-in-from-left duration-700">
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">
           Signal Intensity Captured
@@ -139,18 +139,19 @@ const DiagnosticResultsContent = () => {
       <div className="mt-12 p-10 bg-[#00F2FF] text-[#020617] text-center rounded-sm">
         <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Forensic Review Recommended</h2>
         <p className="max-w-xl mx-auto font-bold uppercase text-[10px] leading-relaxed mb-6 opacity-80">
-          Detected signals indicate variances that suggest a formal forensic review of root causes. 
-          Synchronization of the 60-Point Forensic Module is the indicated next step.
+          The Forensic Review is a clinical briefing to validate these signals. 
+          Full Forensic Dossiers and the 60-Point Neutralization Roadmap are 
+          generated upon formal advisory engagement.
         </p>
         <button 
-          className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all"
+          className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all shadow-xl"
           onClick={() => {
             const calendlyBase = 'https://calendly.com/hello-bmradvisory/forensic-review';
             const emailParam = userEmail ? `?email=${encodeURIComponent(userEmail)}` : '';
             window.open(`${calendlyBase}${emailParam}`, '_blank');
           }}
         >
-          Schedule Forensic Review <Download className="h-4 w-4" />
+          Schedule Forensic Review <Calendar className="h-4 w-4" />
         </button>
       </div>
     </div>
