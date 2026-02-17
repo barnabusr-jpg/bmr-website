@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { ArrowRight, Activity, Download } from "lucide-react";
+import { Activity, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 const signalEntries = [
@@ -84,24 +84,7 @@ const Insights = () => {
           ))}
         </div>
 
-        {/* ACTIVE FIELD GUIDE DOWNLOAD SECTION */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-          className="mt-16 flex flex-col items-center border-t border-slate-900 pt-16"
-        >
-          <p className="text-slate-500 text-[10px] uppercase tracking-[0.4em] mb-6 font-bold">Protocol Documentation</p>
-          <a 
-            href="/media/Field Guide.pdf" 
-            download="BMR_Field_Guide.pdf"
-            className="group inline-flex items-center gap-4 text-white hover:text-[#14b8a6] transition-all font-bold uppercase tracking-[0.2em] text-xs"
-          >
-            Explore the HAI Field Guide 
-            <Download size={16} className="text-[#14b8a6] group-hover:translate-y-0.5 transition-transform" />
-          </a>
-        </motion.div>
+        {/* REDUNDANT DOWNLOAD SECTION REMOVED TO FAVOR PRIMARY CTA CARDS */}
       </div>
     </section>
   );

@@ -9,19 +9,20 @@ import {
 } from 'recharts';
 import { ShieldAlert, Activity, ArrowRight, Download } from "lucide-react";
 
-// --- CLINICAL TERMINOLOGY ENGINE ---
+// --- CLINICAL TERMINOLOGY ENGINE (SYNCHRONIZED NEUTRALITY) ---
+// Phrasing updated to reflect systemic state rather than "emergency/failure".
 const getStatusLabel = (max: number) => {
-  if (max === 5) return { label: "Systemic Emergency", color: "#EF4444" };
-  if (max === 4) return { label: "Operational Drift", color: "#F59E0B" };
-  if (max === 3) return { label: "Structural Asymmetry", color: "#00F2FF" };
-  return { label: "Optimized Posture", color: "#10B981" };
+  if (max === 5) return { label: "High Pressure Signal", color: "#EF4444" };
+  if (max === 4) return { label: "Operational Variance", color: "#F59E0B" };
+  if (max === 3) return { label: "Structural Drift", color: "#00F2FF" };
+  return { label: "Baseline Stability", color: "#10B981" };
 };
 
 const DiagnosticResultsContent = () => {
   const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    // Retrieve the forensic data from the triage engine
+    // Retrieve the forensic data from the vault populated by index.tsx
     const vault = localStorage.getItem('bmr_results_vault');
     if (vault) setData(JSON.parse(vault));
   }, []);
@@ -32,7 +33,7 @@ const DiagnosticResultsContent = () => {
     </div>
   );
 
-  // Map aggregate weights to the Radar Topology
+  // Map aggregate weights to the Radar Topology for visual displacement
   const chartData = [
     { zone: 'HAI (Human)', value: data.HAI.aggregate, fullMark: 32 },
     { zone: 'AVS (Adoption)', value: data.AVS.aggregate, fullMark: 32 },
@@ -41,7 +42,7 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-8 space-y-12">
-      {/* HEADER: NON-DECLARATIVE POSTURE */}
+      {/* HEADER: CLINICAL OBSERVATION POSTURE */}
       <div className="border-b border-slate-800 pb-8">
         <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px] glow-sm">
           Forensic Triage Output
@@ -50,8 +51,8 @@ const DiagnosticResultsContent = () => {
           Systemic Pressure Map
         </h2>
         <p className="text-slate-500 mt-4 max-w-2xl text-[10px] uppercase tracking-widest leading-relaxed">
-          The following signals represent indicated pressures within the organizational AI lifecycle. 
-          This is a preliminary triage and not a final technical or legal verdict.
+          The following signals identify indicated systemic pressures within the AI lifecycle. 
+          This output provides an objective observation of current operational behaviors.
         </p>
       </div>
 
@@ -78,7 +79,7 @@ const DiagnosticResultsContent = () => {
           </div>
         </Card>
 
-        {/* ZONE SUMMARY */}
+        {/* ZONE SUMMARY (INTENSITY PEAKS) */}
         <div className="space-y-4">
           {['HAI', 'AVS', 'IGF'].map((zone) => {
             const status = getStatusLabel(data[zone].max);
@@ -91,7 +92,7 @@ const DiagnosticResultsContent = () => {
                   </span>
                 </div>
                 <div className="text-2xl font-bold italic uppercase text-white">
-                  {data[zone].aggregate} <span className="text-[10px] font-normal text-slate-600">Points</span>
+                  {data[zone].aggregate} <span className="text-[10px] font-normal text-slate-600">Intensity Points</span>
                 </div>
               </Card>
             );
@@ -99,7 +100,7 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* INTERVENTION ROADMAP */}
+      {/* INTERVENTION ROADMAP (VECTORS) */}
       <div>
         <h3 className="text-xl font-bold mb-8 italic uppercase flex items-center gap-3 text-white">
           <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Neutralization Vectors
@@ -108,7 +109,7 @@ const DiagnosticResultsContent = () => {
           {Object.keys(data).map((zone) => (
             data[zone].vectors.filter((v: string) => v !== "Maintain Baseline").map((vector: string, idx: number) => (
               <div key={`${zone}-${idx}`} className="group p-5 bg-slate-900/20 border border-slate-800 hover:border-[#00F2FF]/40 transition-all">
-                <div className="text-[#00F2FF] text-[9px] font-bold uppercase mb-1 tracking-tighter">{zone} Objective</div>
+                <div className="text-[#00F2FF] text-[9px] font-bold uppercase mb-1 tracking-tighter">{zone} Strategic Target</div>
                 <div className="text-slate-200 font-bold uppercase italic text-xs group-hover:text-white transition-colors leading-tight">
                   {vector}
                 </div>
@@ -119,13 +120,17 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* FINAL CALL TO ACTION: THE "MOAT" */}
+      {/* FINAL CALL TO ACTION: REFINED CLINICAL POSITION */}
       <div className="mt-12 p-10 bg-[#00F2FF] text-[#020617] text-center rounded-sm">
-        <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Forensic Deep-Dive Required</h2>
+        <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Forensic Review Recommended</h2>
         <p className="max-w-xl mx-auto font-bold uppercase text-[10px] leading-relaxed mb-6 opacity-80">
-          Indicated signals exceed standard variance thresholds. Professional verification of root causes via the 60-Point Forensic Module is recommended.
+          Detected signals indicate variances that suggest a formal forensic review of root causes. 
+          Synchronization of the 60-Point Forensic Module is the indicated next step.
         </p>
-        <button className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all">
+        <button 
+          className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all"
+          onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review', '_blank')}
+        >
           Schedule Forensic Review <Download className="h-4 w-4" />
         </button>
       </div>
