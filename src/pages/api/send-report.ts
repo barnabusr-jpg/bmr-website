@@ -9,7 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { name, email, org, zoneData } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
-  // --- ANCHOR LOGIC ---
+  // --- ANCHOR LOGIC: Determine Primary Focus Area ---
   let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';
   const intensities = {
     HAI: zoneData.HAI?.max || 0,
@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
   else focusArea = 'IGF';
 
-  // --- CONTENT MAPPING ---
+  // --- CONTENT MAPPING: Clinical Terminology ---
   const contentMap = {
     'HAI': {
       result: "Trust Architecture (HAI)",
@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const selected = contentMap[focusArea];
 
-  // URL Construction
+  // --- URL CONSTRUCTION: Frictionless Peer Handshake ---
   const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
   const safeName = encodeURIComponent(name || "");
   const safeEmail = encodeURIComponent(email || "");
@@ -55,9 +55,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     to: email,
     bcc: 'hello@bmradvisory.co',
     from: 'hello@bmradvisory.co',
-    subject: `[Observation Report] BMR Signal Diagnostic: ${org}`, // Subject line preserved
+    subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
     
-    // ADDED: Plain-text fallback for Yahoo/AOL deliverability
+    // YAHOO-COMPLIANT FALLBACK: Prevents spam flagging without altering HTML
     text: `
 BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION REPORT
 --------------------------------------------------
@@ -75,8 +75,7 @@ SURGICAL NEUTRALIZATION EXERCISE:
 ${selected.exercise}
 
 To view your full 32-point Radar Topology and interactive results, 
-please view this email in an HTML-capable client or visit 
-the BMR Solutions dashboard.
+please view this email in an HTML-capable client.
 
 Schedule your Forensic Review here: ${calendlyLink}
 
@@ -123,11 +122,40 @@ BMR Solutions | Forensic AI Advisory
   };
 
   try {
+    // 1. Dispatch Clinical Email to Client
     await sgMail.send(msg);
-    // ... Webhook logic remains the same
+
+    // 2. Webhook Dispatch: LOGGING ONLY. (Production Gate Active)
+    const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE'; 
+
+    if (WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
+      try {
+        await fetch(WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            email,
+            org,
+            focusArea,
+            result: selected.result,
+            zoneData,
+            // COMMERCIAL GATES: Prevents free slide generation
+            status: "Lead", 
+            isContracted: false, 
+            triggerSlideProduction: false, // HARD STOP for Zapier deck creation
+            diagnosticType: "Triage-12",
+            vaultID: `BMR-${Date.now()}`
+          }),
+        });
+      } catch (webhookErr) {
+        console.warn('Data logging webhook failed:', webhookErr);
+      }
+    }
+
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('Forensic Engine Dispatch Error:', error.response?.body || error.message);
+    console.error('Forensic Engine Dispatch Error:', error.message);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
