@@ -9,8 +9,7 @@ import {
 } from 'recharts';
 import { ShieldAlert, Activity, ArrowRight, Download } from "lucide-react";
 
-// --- CLINICAL TERMINOLOGY ENGINE (SYNCHRONIZED NEUTRALITY) ---
-// Phrasing updated to reflect systemic state rather than "emergency/failure".
+// --- CLINICAL TERMINOLOGY ENGINE ---
 const getStatusLabel = (max: number) => {
   if (max === 5) return { label: "High Pressure Signal", color: "#EF4444" };
   if (max === 4) return { label: "Operational Variance", color: "#F59E0B" };
@@ -20,11 +19,16 @@ const getStatusLabel = (max: number) => {
 
 const DiagnosticResultsContent = () => {
   const [data, setData] = useState<any>(null);
+  const [userEmail, setUserEmail] = useState<string>('');
 
   useEffect(() => {
-    // Retrieve the forensic data from the vault populated by index.tsx
-    const vault = localStorage.getItem('bmr_results_vault');
-    if (vault) setData(JSON.parse(vault));
+    // Retrieve the forensic data and identity from the vault
+    const vaultData = localStorage.getItem('bmr_results_vault');
+    if (vaultData) {
+      const parsed = JSON.parse(vaultData);
+      setData(parsed);
+      if (parsed.email) setUserEmail(parsed.email);
+    }
   }, []);
 
   if (!data) return (
@@ -33,7 +37,6 @@ const DiagnosticResultsContent = () => {
     </div>
   );
 
-  // Map aggregate weights to the Radar Topology for visual displacement
   const chartData = [
     { zone: 'HAI (Human)', value: data.HAI.aggregate, fullMark: 32 },
     { zone: 'AVS (Adoption)', value: data.AVS.aggregate, fullMark: 32 },
@@ -42,6 +45,18 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-8 space-y-12">
+      {/* PEER CONTEXT BRIDGE: Directed by the CIO email update */}
+      <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8 backdrop-blur-sm animate-in fade-in slide-in-from-left duration-700">
+        <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">
+          Signal Intensity Captured
+        </h3>
+        <p className="text-slate-300 text-sm leading-relaxed italic">
+          Your clinical implication report and baseline neutralization exercise have been 
+          dispatched to <span className="text-white font-semibold">{userEmail || 'your inbox'}</span>. 
+          Please refer to that documentation for the systemic context of these signals.
+        </p>
+      </div>
+
       {/* HEADER: CLINICAL OBSERVATION POSTURE */}
       <div className="border-b border-slate-800 pb-8">
         <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px] glow-sm">
@@ -62,7 +77,7 @@ const DiagnosticResultsContent = () => {
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-8 flex items-center gap-2">
             <Activity className="h-3 w-3 text-[#00F2FF]" /> Organizational Displacement
           </h3>
-          <div className="h-[350px] w-full">
+          <div className="h-[450px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                 <PolarGrid stroke="#1e293b" />
@@ -106,7 +121,7 @@ const DiagnosticResultsContent = () => {
           <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Neutralization Vectors
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Object.keys(data).map((zone) => (
+          {['HAI', 'AVS', 'IGF'].map((zone) => (
             data[zone].vectors.filter((v: string) => v !== "Maintain Baseline").map((vector: string, idx: number) => (
               <div key={`${zone}-${idx}`} className="group p-5 bg-slate-900/20 border border-slate-800 hover:border-[#00F2FF]/40 transition-all">
                 <div className="text-[#00F2FF] text-[9px] font-bold uppercase mb-1 tracking-tighter">{zone} Strategic Target</div>
@@ -129,7 +144,11 @@ const DiagnosticResultsContent = () => {
         </p>
         <button 
           className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all"
-          onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review', '_blank')}
+          onClick={() => {
+            const calendlyBase = 'https://calendly.com/hello-bmradvisory/forensic-review';
+            const emailParam = userEmail ? `?email=${encodeURIComponent(userEmail)}` : '';
+            window.open(`${calendlyBase}${emailParam}`, '_blank');
+          }}
         >
           Schedule Forensic Review <Download className="h-4 w-4" />
         </button>
