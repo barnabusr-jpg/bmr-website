@@ -162,7 +162,15 @@ export default function PromiseGapDiagnosticPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", organization: "" });
+  
+  // PILOT FEEDBACK: Added confirmEmail and role to state
+  const [formData, setFormData] = useState({ 
+    name: "", 
+    email: "", 
+    confirmEmail: "", 
+    organization: "", 
+    role: "Executive" 
+  });
   
   const [zoneResults, setZoneResults] = useState<Record<string, { max: number; aggregate: number; vectors: string[] }>>({
     HAI: { max: 0, aggregate: 0, vectors: [] },
@@ -175,7 +183,12 @@ export default function PromiseGapDiagnosticPage() {
       const submitResults = async () => {
         setIsSubmitting(true);
         try {
-          localStorage.setItem('bmr_results_vault', JSON.stringify({ ...zoneResults, email: formData.email }));
+          // Store role in vault for Results page display
+          localStorage.setItem('bmr_results_vault', JSON.stringify({ 
+            ...zoneResults, 
+            email: formData.email,
+            role: formData.role 
+          }));
           
           const response = await fetch('/api/send-report', {
             method: 'POST',
@@ -184,6 +197,7 @@ export default function PromiseGapDiagnosticPage() {
               name: formData.name, 
               email: formData.email, 
               org: formData.organization, 
+              role: formData.role, // INTEGRATED: Sends persona to API
               zoneData: zoneResults 
             }),
           });
@@ -227,14 +241,48 @@ export default function PromiseGapDiagnosticPage() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm shadow-2xl">
                 <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white">Systemic Observation</h2>
-                <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
-                  <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                  <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                  <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                  <div className="space-y-4">
-                    <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-bold h-16 uppercase tracking-widest hover:bg-[#00d8e4] transition-all shadow-[0_0_20px_rgba(0,242,255,0.2)]">Begin Observation</button>
+                
+                {/* PILOT FEEDBACK: Added Double Email Validation to Form Submit */}
+                <form onSubmit={(e) => { 
+                  e.preventDefault(); 
+                  if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) {
+                    alert("Email addresses do not match. Please verify your entry.");
+                    return;
+                  }
+                  setStep(1); 
+                }} className="space-y-6">
+                  
+                  <input required placeholder="Full Name" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors placeholder:text-slate-600" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                  
+                  {/* PILOT FEEDBACK: Role Selector Integration */}
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase text-slate-500 tracking-widest ml-1 font-bold">Perspective Lens</label>
+                    <select 
+                      required
+                      className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors appearance-none"
+                      value={formData.role}
+                      onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    >
+                      <option value="Executive">Executive (ROI & Strategy focus)</option>
+                      <option value="Manager">Manager (Workflow & Team focus)</option>
+                      <option value="Technical">Technical (Security & Maintenance focus)</option>
+                    </select>
+                  </div>
+
+                  {/* PILOT FEEDBACK: Double Email Entry */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors placeholder:text-slate-600" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    <input required type="email" placeholder="Confirm Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors placeholder:text-slate-600" value={formData.confirmEmail} onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
+                  </div>
+
+                  <input required placeholder="Organization" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors placeholder:text-slate-600" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
+                  
+                  <div className="space-y-4 pt-4">
+                    <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-bold h-16 uppercase tracking-widest hover:bg-[#00d8e4] transition-all shadow-[0_0_20px_rgba(0,242,255,0.2)] active:scale-[0.98]">
+                      Begin Observation
+                    </button>
                     <p className="text-center text-[10px] uppercase tracking-[0.2em] text-slate-500 font-medium leading-relaxed">
-                      A full Forensic Signal Analysis and Neutralization Exercise <br/> will be dispatched to your work email upon completion.
+                      A full Forensic Signal Analysis for the <span className="text-white font-bold">{formData.role}</span> lens <br/> will be dispatched to your email.
                     </p>
                   </div>
                 </form>
