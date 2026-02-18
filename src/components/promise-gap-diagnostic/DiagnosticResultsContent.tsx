@@ -20,6 +20,7 @@ const getStatusLabel = (max: number) => {
 const DiagnosticResultsContent = () => {
   const [data, setData] = useState<any>(null);
   const [userEmail, setUserEmail] = useState<string>('');
+  const [userRole, setUserRole] = useState<string>(''); // NEW: Role state
 
   useEffect(() => {
     // Retrieve the forensic data and identity from the vault
@@ -28,6 +29,7 @@ const DiagnosticResultsContent = () => {
       const parsed = JSON.parse(vaultData);
       setData(parsed);
       if (parsed.email) setUserEmail(parsed.email);
+      if (parsed.role) setUserRole(parsed.role); // NEW: Retrieve role
     }
   }, []);
 
@@ -51,8 +53,9 @@ const DiagnosticResultsContent = () => {
           Signal Intensity Captured
         </h3>
         <p className="text-slate-300 text-sm leading-relaxed italic">
-          Your clinical implication report and baseline neutralization exercise have been 
-          dispatched to <span className="text-white font-semibold">{userEmail || 'your inbox'}</span>. 
+          Your clinical implication report for the 
+          <span className="text-white font-semibold"> {userRole || 'Executive'} perspective </span> 
+          has been dispatched to <span className="text-white font-semibold">{userEmail || 'your inbox'}</span>. 
           Please refer to that documentation for the systemic context of these signals.
         </p>
       </div>
@@ -66,7 +69,8 @@ const DiagnosticResultsContent = () => {
           Systemic Pressure Map
         </h2>
         <p className="text-slate-500 mt-4 max-w-2xl text-[10px] uppercase tracking-widest leading-relaxed">
-          The following signals identify indicated systemic pressures within the AI lifecycle. 
+          The following signals identify indicated systemic pressures within the AI lifecycle from a 
+          <span className="text-slate-300 font-bold"> {userRole || 'Executive'} </span> lens. 
           This output provides an objective observation of current operational behaviors.
         </p>
       </div>
@@ -148,7 +152,9 @@ const DiagnosticResultsContent = () => {
           onClick={() => {
             const calendlyBase = 'https://calendly.com/hello-bmradvisory/forensic-review';
             const emailParam = userEmail ? `?email=${encodeURIComponent(userEmail)}` : '';
-            window.open(`${calendlyBase}${emailParam}`, '_blank');
+            // Added role to calendly for even deeper integration if you want it later
+            const roleParam = userRole ? `&a1=${encodeURIComponent(userRole)}` : '';
+            window.open(`${calendlyBase}${emailParam}${roleParam}`, '_blank');
           }}
         >
           Schedule Forensic Review <Calendar className="h-4 w-4" />
