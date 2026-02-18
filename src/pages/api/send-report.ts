@@ -12,9 +12,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // --- ANCHOR LOGIC ---
   let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';
   const intensities = {
-    HAI: zoneData.HAI?.max || 0,
-    AVS: zoneData.AVS?.max || 0,
-    IGF: zoneData.IGF?.max || 0
+    HAI: zoneData?.HAI?.max || 0,
+    AVS: zoneData?.AVS?.max || 0,
+    IGF: zoneData?.IGF?.max || 0
   };
 
   if (intensities.HAI >= intensities.AVS && intensities.HAI >= intensities.IGF) focusArea = 'HAI';
@@ -49,8 +49,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     await sgMail.send(msg);
 
-    const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE'; 
-    if (WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
+    // Using the real variable name from your logs to satisfy Vercel
+    const WEBHOOK_URL = process.env.AIRTABLE_WEBHOOK_URL; 
+    if (WEBHOOK_URL) {
       try {
         await fetch(WEBHOOK_URL, {
           method: 'POST',
@@ -58,13 +59,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           body: JSON.stringify({ name, email, org, role, focusArea, result: selected.result, zoneData }),
         });
       } catch (webhookErr) { 
-        console.warn('Airtable logging failed:', webhookErr); // Uses webhookErr variable to satisfy build
+        console.warn('Airtable logging failed:', webhookErr); 
       }
     }
 
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('API Error:', error.message || error); // Uses error variable to satisfy build
+    // Explicitly logging the error object or message to clear linting
+    console.error('API Final Error:', error?.message || error); 
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
