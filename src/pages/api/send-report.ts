@@ -6,7 +6,8 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
-  const { name, email, org, zoneData } = req.body;
+  // ADDED 'role': Captures the persona (Executive/Manager/Technical)
+  const { name, email, org, zoneData, role } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
   // --- ANCHOR LOGIC ---
@@ -23,21 +24,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   // --- CONTENT MAPPING ---
   const contentMap = {
-    'HAI': {
-      result: "Trust Architecture (HAI)",
-      implications: "The detected signals suggest a mismatch between current AI reliability and operational trust requirements.",
-      exercise: "Audit one high-frequency AI workflow."
-    },
-    'AVS': {
-      result: "Adoption Value System (AVS)",
-      implications: "Your results point toward Operational Drift where deployment frequency is decoupled from governance.",
-      exercise: "Identify a recent AI performance variance."
-    },
-    'IGF': {
-      result: "Internal Governance Framework (IGF)",
-      implications: "Current signals indicate Oversight Decay where systems may drift from leadership intent.",
-      exercise: "Examine your most recent AI correction event."
-    }
+    'HAI': { result: "Trust Architecture (HAI)", implications: "Human-AI Asymmetry detected.", exercise: "Audit one high-frequency AI workflow." },
+    'AVS': { result: "Adoption Value System (AVS)", implications: "Operational Drift detected.", exercise: "Identify a recent AI performance variance." },
+    'IGF': { result: "Internal Governance Framework (IGF)", implications: "Oversight Decay detected.", exercise: "Examine your most recent AI correction event." }
   };
 
   const selected = contentMap[focusArea];
@@ -47,23 +36,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     to: email,
     bcc: 'hello@bmradvisory.co',
     from: 'hello@bmradvisory.co',
-    // REFINED SUBJECT: Removed brackets to bypass corporate Outlook spam filters
+    // REFINED SUBJECT: Removed brackets for Outlook stability
     subject: `BMR Signal Diagnostic: ${org}`,
     
-    // RESTORED TEXT: Matches your original Outlook-friendly structure
-    text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION\n--------------------------------------------------\nOrganization: ${org || 'Your Organization'}\n\nHello ${firstName},\n\nYour clinical signal analysis is complete. Primary focus: ${selected.result}.\n\nSchedule your Forensic Review here: ${calendlyLink}`,
+    // RESTORED TEXT: Simple structure that passed Outlook tests
+    text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION\n--------------------------------------------------\nOrganization: ${org || 'Your Organization'}\nRole Perspective: ${role || 'Not Specified'}\n\nHello ${firstName},\n\nYour clinical signal analysis is complete. Primary focus: ${selected.result}.\n\nSchedule your Forensic Review here: ${calendlyLink}`,
     
-    // CLEAN HTML: Simple structure to pass the "MIME-Sync" check
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; color: #020617; line-height: 1.6;">
         <h2 style="text-transform: uppercase; font-size: 12px; color: #64748b; border-bottom: 1px solid #eee; padding-bottom: 10px;">Forensic Observation Report</h2>
         <p>Hello ${firstName},</p>
-        <p>The signal diagnostic for <strong>${org}</strong> is complete. Our analysis has identified specific pressure signals within your AI adoption trajectory.</p>
+        <p>The diagnostic for <strong>${org}</strong> is complete from the <strong>${role}</strong> perspective. We have identified specific pressure signals in your AI adoption trajectory.</p>
         <div style="background-color: #f8fafc; padding: 20px; border-left: 4px solid #00F2FF; margin: 20px 0;">
           <p style="font-size: 11px; text-transform: uppercase; margin: 0;">Observation Lens</p>
           <p style="font-size: 18px; font-weight: bold; margin: 5px 0;">${selected.result}</p>
         </div>
-        <p>Review your results and schedule your Forensic Review here:</p>
+        <p>Review your results and schedule your Forensic Review:</p>
         <p><a href="${calendlyLink}" style="background-color: #020617; color: #ffffff; padding: 12px 24px; text-decoration: none; font-weight: bold; display: inline-block;">Schedule Forensic Review</a></p>
         <p style="font-size: 12px; color: #64748b; margin-top: 40px; border-top: 1px solid #eee; padding-top: 20px;">BMR Solutions | Forensic AI Advisory</p>
       </div>
@@ -80,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name, email, org, focusArea, result: selected.result, zoneData,
+            name, email, org, role, focusArea, result: selected.result, zoneData,
             status: "Lead", 
             isContracted: false, 
             triggerSlideProduction: false, // HARD STOP for Zapier
@@ -89,11 +77,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }),
         });
       } catch (webhookErr) {
-        console.warn('Data logging webhook failed:', webhookErr);
+        console.warn('Airtable logging failed:', webhookErr);
       }
     }
 
-    // MANDATORY: Return 200 to stop the "hanging" spinner
+    // MANDATORY: Return 200 to prevent the "Hanging" spinner
     return res.status(200).json({ success: true });
   } catch (error: any) {
     console.error('Dispatch Error:', error.message);
