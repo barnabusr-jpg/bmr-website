@@ -3,8 +3,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 
-const diagnosticQuestions = [
-  /* ... (12 questions) ... */
+// Added type definition to fix implicit 'any' build error
+type Question = {
+  id: number;
+  lens: string;
+  text: string;
+  options: Array<{ label: string; strength: number; weight: number; vector: string; }>;
+};
+
+const diagnosticQuestions: Question[] = [
+  /* ... (Include your 12 questions here) ... */
 ];
 
 export default function PromiseGapDiagnosticPage() {
@@ -14,6 +22,7 @@ export default function PromiseGapDiagnosticPage() {
   const [formData, setFormData] = useState({ 
     name: "", email: "", confirmEmail: "", organization: "", role: "Executive" 
   });
+  
   const [zoneResults, setZoneResults] = useState<any>({
     HAI: { max: 0, aggregate: 0, vectors: [] },
     AVS: { max: 0, aggregate: 0, vectors: [] },
@@ -35,7 +44,7 @@ export default function PromiseGapDiagnosticPage() {
           });
           if (response.ok) { router.push('/diagnostic/results'); }
         } catch (error) {
-          console.error("Dispatch failed", error);
+          console.error("Dispatch failed:", error);
           setIsSubmitting(false);
         }
       };
@@ -61,22 +70,22 @@ export default function PromiseGapDiagnosticPage() {
       <AnimatePresence mode="wait">
         {step === 0 && (
           <motion.div key="step0" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Card className="p-10 bg-slate-900 border-slate-800">
+            <Card className="p-10 bg-slate-900 border-slate-800 shadow-2xl">
               <form onSubmit={(e) => { 
                 e.preventDefault(); 
-                if (formData.email !== formData.confirmEmail) return alert("Emails must match");
+                if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) return alert("Emails must match");
                 setStep(1); 
               }} className="space-y-4">
-                <input required placeholder="Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                 <select required className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
                   <option value="Executive">Executive</option>
                   <option value="Manager">Manager</option>
                   <option value="Technical">Technical</option>
                 </select>
-                <input required type="email" placeholder="Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                 <input required type="email" placeholder="Confirm Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded" value={formData.confirmEmail} onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
                 <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                <button type="submit" className="w-full bg-cyan-500 py-4 text-black font-bold uppercase">Begin</button>
+                <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-bold py-4 uppercase">Begin Observation</button>
               </form>
             </Card>
           </motion.div>
@@ -84,16 +93,16 @@ export default function PromiseGapDiagnosticPage() {
         {step > 0 && step <= 12 && (
           <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Card className="p-10 bg-slate-900 border-slate-800 text-center">
-              <h2 className="text-2xl font-bold mb-8 uppercase italic">{diagnosticQuestions[step - 1].text}</h2>
+              <h2 className="text-2xl font-bold mb-8 italic uppercase">{diagnosticQuestions[step - 1].text}</h2>
               <div className="grid grid-cols-1 gap-4">
                 {diagnosticQuestions[step - 1].options.map((opt, idx) => (
-                  <button key={idx} className="p-4 border border-slate-800 hover:border-cyan-400 uppercase text-xs" onClick={() => handleAnswer(opt)}>{opt.label}</button>
+                  <button key={idx} className="p-4 border border-slate-800 hover:border-[#00F2FF] uppercase text-xs" onClick={() => handleAnswer(opt)}>{opt.label}</button>
                 ))}
               </div>
             </Card>
           </motion.div>
         )}
-        {step === 13 && <div className="text-center py-20 animate-pulse uppercase">Dispatching Forensic Report...</div>}
+        {step === 13 && <div className="text-center py-20 animate-pulse text-[#00F2FF] font-bold uppercase tracking-widest">Constructing Forensic Topology...</div>}
       </AnimatePresence>
     </div>
   );
