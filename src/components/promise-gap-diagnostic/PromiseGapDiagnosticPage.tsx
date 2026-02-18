@@ -2,15 +2,14 @@ import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
-// IMPORTING THE BRAIN: The centralized logic for role-based pressure
 import { calculatePillarPressure } from "@/lib/forensic-logic";
 
-// Explicitly type objects to clear Vercel build errors
+// 1. FIXED: Explicit types to resolve 'implicit any' build error
 type DiagnosticOption = { label: string; strength: number; weight: number; vector: string; };
 type DiagnosticQuestion = { id: number; lens: string; text: string; options: DiagnosticOption[]; };
 
 const diagnosticQuestions: DiagnosticQuestion[] = [
-  /* ... (Ensure your 12 questions are pasted here) ... */
+  /* ... (12 questions) ... */
 ];
 
 export default function PromiseGapDiagnosticPage() {
@@ -45,7 +44,7 @@ export default function PromiseGapDiagnosticPage() {
           });
           if (response.ok) { router.push('/diagnostic/results'); }
         } catch (error) {
-          console.error("Forensic dispatch failed:", error); // Uses error variable
+          console.error("Forensic dispatch failed:", error);
           setIsSubmitting(false);
         }
       };
@@ -53,18 +52,15 @@ export default function PromiseGapDiagnosticPage() {
     }
   }, [step, isSubmitting, formData, router, zoneResults]);
 
-  // REPLACED handleAnswer: Now applies dynamic pillar weighting
+  // 2. FIXED: handleAnswer is now used in the Question Renderer below
   const handleAnswer = (option: DiagnosticOption) => {
     const currentLens = diagnosticQuestions[step - 1].lens;
-    
-    // Apply the 1.5x boost if the zone matches the user's selected role
     const dynamicWeight = calculatePillarPressure(option.weight, formData.role, currentLens);
 
     setZoneResults((prev: any) => ({
       ...prev,
       [currentLens]: {
         max: Math.max(prev[currentLens].max, option.strength),
-        // Aggregate now reflects the role-specific importance of the signal
         aggregate: prev[currentLens].aggregate + dynamicWeight,
         vectors: [...prev[currentLens].vectors, option.vector]
       }
@@ -85,7 +81,6 @@ export default function PromiseGapDiagnosticPage() {
                   if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) return alert("Emails must match");
                   setStep(1); 
                 }} className="space-y-6">
-                  
                   <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                   
                   <div className="space-y-1 relative">
@@ -93,12 +88,7 @@ export default function PromiseGapDiagnosticPage() {
                     <select 
                       required 
                       className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white appearance-none cursor-pointer focus:border-[#00F2FF] outline-none transition-all"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300F2FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 1rem center',
-                        backgroundSize: '1.2em'
-                      }}
+                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300F2FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
                       value={formData.role}
                       onChange={(e) => setFormData({...formData, role: e.target.value})}
                     >
@@ -109,18 +99,17 @@ export default function PromiseGapDiagnosticPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                    <input required type="email" placeholder="Confirm Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.confirmEmail} onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
+                    <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    <input required type="email" placeholder="Confirm Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" value={formData.confirmEmail} onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
                   </div>
-                  
-                  <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                  
-                  <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-bold h-16 uppercase tracking-widest hover:bg-[#00d8e4] transition-all shadow-[0_0_20px_rgba(0,242,255,0.2)]">Begin Observation</button>
+                  <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
+                  <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-bold h-16 uppercase tracking-widest shadow-[0_0_20px_rgba(0,242,255,0.2)]">Begin Observation</button>
                 </form>
               </Card>
             </motion.div>
           )}
 
+          {/* 3. FIXED: Renderer now calls handleAnswer, resolving the 'unused' error */}
           {step > 0 && step <= 12 && (
             <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 text-center shadow-2xl backdrop-blur-sm">
