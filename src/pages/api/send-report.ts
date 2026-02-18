@@ -62,15 +62,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }),
         });
       } catch (webhookErr) { 
-        // Log error to satisfy ESLint
+        // Satisfies ESLint 'no-unused-vars' by logging the error
         console.warn('Airtable logging failed:', webhookErr); 
       }
     }
 
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    // Log error to satisfy ESLint
-    console.error('API Error:', error.message || error);
+    // Satisfies ESLint 'no-unused-vars' by logging the error
+    console.error('API Dispatch Error:', error.message || error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
