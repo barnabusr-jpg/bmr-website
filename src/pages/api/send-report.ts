@@ -34,8 +34,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     bcc: 'hello@bmradvisory.co',
     from: 'hello@bmradvisory.co',
     subject: `BMR Signal Diagnostic: ${org}`,
-    text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION\n--------------------------------------------------\nOrganization: ${org}\nPerspective: ${role}\n\nHello ${firstName},\n\nYour clinical signal analysis is complete. Primary focus: ${selected.result}.\n\nSchedule your Forensic Review: ${calendlyLink}`,
-    html: `<div style="font-family: Arial, sans-serif; max-width: 600px; color: #020617;">
+    text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION\nPerspective: ${role}\nPrimary focus: ${selected.result}.\n\nSchedule Review: ${calendlyLink}`,
+    html: `<div style="font-family: Arial; max-width: 600px; color: #020617;">
       <h2>Forensic Observation Report</h2>
       <p>Hello ${firstName}, your diagnostic is complete from the <strong>${role}</strong> perspective.</p>
       <div style="background: #f8fafc; padding: 20px; border-left: 4px solid #00F2FF; margin: 20px 0;">
@@ -53,19 +53,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name, email, org, role, focusArea, result: selected.result, zoneData,
-            status: "Lead", isContracted: false, triggerSlideProduction: false,
-            diagnosticType: "Triage-12", vaultID: `BMR-${Date.now()}`
-          }),
+          body: JSON.stringify({ name, email, org, role, focusArea, result: selected.result, zoneData }),
         });
       } catch (webhookErr) { 
-        console.warn('Webhook failed:', webhookErr); // Uses webhookErr variable
+        console.warn('Airtable logging failed:', webhookErr); // Fixed Build Error
       }
     }
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('API Error:', error.message || error); // Uses error variable
+    console.error('API Error:', error.message || error); // Fixed Build Error
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
