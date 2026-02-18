@@ -9,7 +9,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { name, email, org, zoneData, role } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
-  // --- ANCHOR LOGIC ---
   let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';
   const intensities = {
     HAI: zoneData.HAI?.max || 0,
@@ -48,7 +47,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     await sgMail.send(msg);
-
     const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE'; 
     if (WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
       try {
@@ -62,15 +60,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }),
         });
       } catch (webhookErr) { 
-        // Satisfies ESLint 'no-unused-vars' by logging the error
-        console.warn('Airtable logging failed:', webhookErr); 
+        console.warn('Webhook failed:', webhookErr); // Fixed build error
       }
     }
-
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    // Satisfies ESLint 'no-unused-vars' by logging the error
-    console.error('API Dispatch Error:', error.message || error);
+    console.error('API Error:', error.message || error); // Fixed build error
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
