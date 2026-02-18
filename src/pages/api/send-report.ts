@@ -9,6 +9,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { name, email, org, zoneData, role } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
+  // --- ANCHOR LOGIC ---
   let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';
   const intensities = {
     HAI: zoneData.HAI?.max || 0,
@@ -34,19 +35,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     bcc: 'hello@bmradvisory.co',
     from: 'hello@bmradvisory.co',
     subject: `BMR Signal Diagnostic: ${org}`,
-    text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION\nPerspective: ${role}\nPrimary focus: ${selected.result}.\n\nSchedule Review: ${calendlyLink}`,
-    html: `<div style="font-family: Arial; max-width: 600px; color: #020617;">
+    text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION\nPerspective: ${role}\nPrimary focus: ${selected.result}.\n\nSchedule: ${calendlyLink}`,
+    html: `<div style="font-family: Arial, sans-serif; max-width: 600px; color: #020617;">
       <h2>Forensic Observation Report</h2>
-      <p>Hello ${firstName}, your diagnostic is complete from the <strong>${role}</strong> perspective.</p>
-      <div style="background: #f8fafc; padding: 20px; border-left: 4px solid #00F2FF; margin: 20px 0;">
+      <p>Hello ${firstName}, your diagnostic is complete from the <strong>${role}</strong> lens.</p>
+      <div style="background: #f8fafc; padding: 20px; border-left: 4px solid #00F2FF;">
         <p style="font-weight: bold; margin: 0;">Primary Signal: ${selected.result}</p>
       </div>
-      <p><a href="${calendlyLink}" style="background: #020617; color: #ffffff; padding: 12px 24px; text-decoration: none; font-weight: bold; display: inline-block;">Schedule Forensic Review</a></p>
+      <p><a href="${calendlyLink}" style="background: #020617; color: #ffffff; padding: 12px 24px; text-decoration: none; display: inline-block; font-weight: bold; margin-top: 20px;">Schedule Forensic Review</a></p>
     </div>`
   };
 
   try {
     await sgMail.send(msg);
+
     const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE'; 
     if (WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
       try {
@@ -56,12 +58,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           body: JSON.stringify({ name, email, org, role, focusArea, result: selected.result, zoneData }),
         });
       } catch (webhookErr) { 
-        console.warn('Airtable logging failed:', webhookErr); // Fixed Build Error
+        console.warn('Airtable logging failed:', webhookErr); // Uses webhookErr variable to satisfy build
       }
     }
+
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('API Error:', error.message || error); // Fixed Build Error
+    console.error('API Error:', error.message || error); // Uses error variable to satisfy build
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
