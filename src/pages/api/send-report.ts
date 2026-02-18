@@ -60,12 +60,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           }),
         });
       } catch (webhookErr) { 
-        console.warn('Webhook failed:', webhookErr); // Fixed build error
+        console.warn('Webhook failed:', webhookErr); // Uses webhookErr variable
       }
     }
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('API Error:', error.message || error); // Fixed build error
+    console.error('API Error:', error.message || error); // Uses error variable
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
