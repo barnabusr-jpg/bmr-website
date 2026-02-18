@@ -16,21 +16,21 @@ const DiagnosticResultsContent = () => {
     }
   }, []);
 
-  if (!data) return <div className="py-20 text-center uppercase tracking-widest text-xs animate-pulse text-slate-500">Initialising Forensic Topology...</div>;
+  if (!data) return <div className="py-20 text-center uppercase tracking-widest text-xs animate-pulse text-slate-500 font-bold">Initialising Forensic Topology...</div>;
 
   return (
     <div className="py-8 space-y-12">
       <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8 backdrop-blur-sm">
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">Signal Intensity Captured</h3>
-        <p className="text-slate-300 text-sm italic">
-          Your report for the <span className="text-white font-semibold">{userRole || 'Executive'} perspective</span> has been dispatched to <span className="text-white font-semibold">{userEmail}</span>.
+        <p className="text-slate-300 text-sm italic leading-relaxed">
+          Your forensic report for the <span className="text-white font-bold">{userRole || 'Executive'} perspective</span> has been dispatched to <span className="text-white font-bold">{userEmail}</span>.
         </p>
       </div>
 
-      <div className="mt-12 p-10 bg-[#00F2FF] text-[#020617] text-center rounded-sm">
+      <div className="mt-12 p-10 bg-[#00F2FF] text-[#020617] text-center rounded-sm shadow-xl">
         <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Forensic Review Recommended</h2>
         <button 
-          className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto mt-6"
+          className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto mt-6 hover:bg-slate-900 transition-all shadow-lg"
           onClick={() => {
             const link = `https://calendly.com/hello-bmradvisory/forensic-review?email=${encodeURIComponent(userEmail)}&a1=${encodeURIComponent(userRole)}`;
             window.open(link, '_blank');
