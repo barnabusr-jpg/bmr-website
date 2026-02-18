@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 
-// --- INTERNAL LOGIC (Moved here to prevent Black Screen crash) ---
+// --- CONSOLIDATED BRAIN: INTERNAL LOGIC ---
 const calculatePillarPressureInternal = (weight: number, role: string, zone: string) => {
   const multipliers: Record<string, string> = {
     "Executive": "IGF",
@@ -16,9 +16,9 @@ const calculatePillarPressureInternal = (weight: number, role: string, zone: str
 type DiagnosticOption = { label: string; strength: number; weight: number; vector: string; };
 type DiagnosticQuestion = { id: number; lens: string; text: string; options: DiagnosticOption[]; };
 
-// IMPORTANT: Ensure your 12 questions are defined here
+// IMPORTANT: Insert your specific 12 diagnostic questions here
 const diagnosticQuestions: DiagnosticQuestion[] = [
-  /* ... Paste your questions here ... */
+  /* ... paste your questions here ... */
 ];
 
 export default function PromiseGapDiagnosticPage() {
@@ -43,7 +43,7 @@ export default function PromiseGapDiagnosticPage() {
           localStorage.setItem('bmr_results_vault', JSON.stringify({ 
             ...zoneResults, email: formData.email, role: formData.role 
           }));
-          const response = await fetch('/api/send-report', {
+          await fetch('/api/send-report', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -51,7 +51,7 @@ export default function PromiseGapDiagnosticPage() {
               role: formData.role, zoneData: zoneResults 
             }),
           });
-          if (response.ok) { router.push('/diagnostic/results'); }
+          router.push('/diagnostic/results');
         } catch (error) {
           console.error("Forensic dispatch failed:", error);
           setIsSubmitting(false);
@@ -63,8 +63,6 @@ export default function PromiseGapDiagnosticPage() {
 
   const handleAnswer = (option: DiagnosticOption) => {
     const currentLens = diagnosticQuestions[step - 1].lens;
-    
-    // Using the internal function to avoid import errors
     const dynamicWeight = calculatePillarPressureInternal(option.weight, formData.role, currentLens);
 
     setZoneResults((prev: any) => ({
@@ -85,29 +83,24 @@ export default function PromiseGapDiagnosticPage() {
           {step === 0 && (
             <motion.div key="step0" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 shadow-2xl backdrop-blur-sm">
-                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white">Systemic Observation</h2>
+                <h2 className="text-3xl font-bold mb-6 italic uppercase text-white">Systemic Observation</h2>
                 <form onSubmit={(e) => { 
                   e.preventDefault(); 
                   if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) return alert("Emails must match");
                   setStep(1); 
                 }} className="space-y-6">
                   <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                  
                   <div className="space-y-1 relative">
                     <label className="text-[10px] uppercase text-slate-500 tracking-widest ml-1 font-bold">Perspective Lens</label>
-                    <select 
-                      required 
-                      className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white appearance-none cursor-pointer focus:border-[#00F2FF] outline-none transition-all"
+                    <select required className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white appearance-none cursor-pointer focus:border-[#00F2FF] outline-none"
                       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2300F2FF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2em' }}
-                      value={formData.role}
-                      onChange={(e) => setFormData({...formData, role: e.target.value})}
+                      value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}
                     >
                       <option value="Executive">Executive Perspective</option>
                       <option value="Manager">Manager Perspective</option>
                       <option value="Technical">Technical Perspective</option>
                     </select>
                   </div>
-
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                     <input required type="email" placeholder="Confirm Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" value={formData.confirmEmail} onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
@@ -131,7 +124,6 @@ export default function PromiseGapDiagnosticPage() {
               </Card>
             </motion.div>
           )}
-
           {step === 13 && <div className="text-center py-20 animate-pulse text-[#00F2FF] font-bold uppercase tracking-widest text-xs">Dispatching Forensic Report...</div>}
         </AnimatePresence>
       </div>
