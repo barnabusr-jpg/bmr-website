@@ -36,20 +36,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     from: 'hello@bmradvisory.co',
     subject: `BMR Signal Diagnostic: ${org}`,
     text: `BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION\n--------------------------------------------------\nOrganization: ${org}\nPerspective: ${role}\n\nHello ${firstName},\n\nYour clinical signal analysis is complete. Primary focus: ${selected.result}.\n\nSchedule your Forensic Review: ${calendlyLink}`,
-    html: `<div style="font-family: Arial; max-width: 600px; color: #020617;">
+    html: `<div style="font-family: Arial, sans-serif; max-width: 600px; color: #020617;">
       <h2>Forensic Observation Report</h2>
       <p>Hello ${firstName}, your diagnostic is complete from the <strong>${role}</strong> perspective.</p>
-      <div style="background: #f8fafc; padding: 20px; border-left: 4px solid #00F2FF;">
-        <p style="font-weight: bold;">${selected.result}</p>
+      <div style="background: #f8fafc; padding: 20px; border-left: 4px solid #00F2FF; margin: 20px 0;">
+        <p style="font-weight: bold; margin: 0;">Primary Signal: ${selected.result}</p>
       </div>
-      <p><a href="${calendlyLink}" style="background: #020617; color: #fff; padding: 12px 24px; text-decoration: none; display: inline-block;">Schedule Forensic Review</a></p>
+      <p><a href="${calendlyLink}" style="background: #020617; color: #ffffff; padding: 12px 24px; text-decoration: none; font-weight: bold; display: inline-block;">Schedule Forensic Review</a></p>
     </div>`
   };
 
   try {
     await sgMail.send(msg);
 
-    // LOG TO AIRTABLE WITH COMMERCIAL GATE
     const WEBHOOK_URL = 'YOUR_WEBHOOK_URL_HERE'; 
     if (WEBHOOK_URL !== 'YOUR_WEBHOOK_URL_HERE') {
       try {
@@ -62,12 +61,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             diagnosticType: "Triage-12", vaultID: `BMR-${Date.now()}`
           }),
         });
-      } catch (webhookErr) { console.warn('Webhook logging failed'); }
+      } catch (webhookErr) { 
+        // Log error to satisfy ESLint
+        console.warn('Airtable logging failed:', webhookErr); 
+      }
     }
 
-    // MANDATORY: Return 200 to stop the "Hanging" spinner on screen
     return res.status(200).json({ success: true });
   } catch (error: any) {
+    // Log error to satisfy ESLint
+    console.error('API Error:', error.message || error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
