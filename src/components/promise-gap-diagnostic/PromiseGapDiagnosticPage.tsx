@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
+// IMPORTING THE BRAIN: The centralized logic for role-based pressure
+import { calculatePillarPressure } from "@/lib/forensic-logic";
 
 // Explicitly type objects to clear Vercel build errors
 type DiagnosticOption = { label: string; strength: number; weight: number; vector: string; };
 type DiagnosticQuestion = { id: number; lens: string; text: string; options: DiagnosticOption[]; };
 
 const diagnosticQuestions: DiagnosticQuestion[] = [
-  /* ... (12 questions) ... */
+  /* ... (Ensure your 12 questions are pasted here) ... */
 ];
 
 export default function PromiseGapDiagnosticPage() {
@@ -51,13 +53,19 @@ export default function PromiseGapDiagnosticPage() {
     }
   }, [step, isSubmitting, formData, router, zoneResults]);
 
+  // REPLACED handleAnswer: Now applies dynamic pillar weighting
   const handleAnswer = (option: DiagnosticOption) => {
     const currentLens = diagnosticQuestions[step - 1].lens;
+    
+    // Apply the 1.5x boost if the zone matches the user's selected role
+    const dynamicWeight = calculatePillarPressure(option.weight, formData.role, currentLens);
+
     setZoneResults((prev: any) => ({
       ...prev,
       [currentLens]: {
         max: Math.max(prev[currentLens].max, option.strength),
-        aggregate: prev[currentLens].aggregate + option.weight,
+        // Aggregate now reflects the role-specific importance of the signal
+        aggregate: prev[currentLens].aggregate + dynamicWeight,
         vectors: [...prev[currentLens].vectors, option.vector]
       }
     }));
@@ -80,7 +88,6 @@ export default function PromiseGapDiagnosticPage() {
                   
                   <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                   
-                  {/* PROFESSIONALLY STYLED SELECTOR: Matches Dark Aesthetic */}
                   <div className="space-y-1 relative">
                     <label className="text-[10px] uppercase text-slate-500 tracking-widest ml-1 font-bold">Perspective Lens</label>
                     <select 
@@ -114,7 +121,6 @@ export default function PromiseGapDiagnosticPage() {
             </motion.div>
           )}
 
-          {/* QUESTION RENDERER: Uses handleAnswer to satisfy ESLint */}
           {step > 0 && step <= 12 && (
             <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 text-center shadow-2xl backdrop-blur-sm">
