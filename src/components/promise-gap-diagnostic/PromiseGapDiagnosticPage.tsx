@@ -2,14 +2,23 @@ import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
-import { calculatePillarPressure } from "@/lib/forensic-logic";
 
-// 1. FIXED: Explicit types to resolve 'implicit any' build error
+// --- INTERNAL LOGIC (Moved here to prevent Black Screen crash) ---
+const calculatePillarPressureInternal = (weight: number, role: string, zone: string) => {
+  const multipliers: Record<string, string> = {
+    "Executive": "IGF",
+    "Technical": "HAI",
+    "Manager": "AVS"
+  };
+  return multipliers[role] === zone ? weight * 1.5 : weight;
+};
+
 type DiagnosticOption = { label: string; strength: number; weight: number; vector: string; };
 type DiagnosticQuestion = { id: number; lens: string; text: string; options: DiagnosticOption[]; };
 
+// IMPORTANT: Ensure your 12 questions are defined here
 const diagnosticQuestions: DiagnosticQuestion[] = [
-  /* ... (12 questions) ... */
+  /* ... Paste your questions here ... */
 ];
 
 export default function PromiseGapDiagnosticPage() {
@@ -52,10 +61,11 @@ export default function PromiseGapDiagnosticPage() {
     }
   }, [step, isSubmitting, formData, router, zoneResults]);
 
-  // 2. FIXED: handleAnswer is now used in the Question Renderer below
   const handleAnswer = (option: DiagnosticOption) => {
     const currentLens = diagnosticQuestions[step - 1].lens;
-    const dynamicWeight = calculatePillarPressure(option.weight, formData.role, currentLens);
+    
+    // Using the internal function to avoid import errors
+    const dynamicWeight = calculatePillarPressureInternal(option.weight, formData.role, currentLens);
 
     setZoneResults((prev: any) => ({
       ...prev,
@@ -69,7 +79,7 @@ export default function PromiseGapDiagnosticPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-6 selection:bg-[#00F2FF]/30">
+    <div className="min-h-screen bg-[#020617] text-white p-6">
       <div className="max-w-4xl mx-auto py-12">
         <AnimatePresence mode="wait">
           {step === 0 && (
@@ -81,7 +91,7 @@ export default function PromiseGapDiagnosticPage() {
                   if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) return alert("Emails must match");
                   setStep(1); 
                 }} className="space-y-6">
-                  <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                  <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                   
                   <div className="space-y-1 relative">
                     <label className="text-[10px] uppercase text-slate-500 tracking-widest ml-1 font-bold">Perspective Lens</label>
@@ -92,9 +102,9 @@ export default function PromiseGapDiagnosticPage() {
                       value={formData.role}
                       onChange={(e) => setFormData({...formData, role: e.target.value})}
                     >
-                      <option value="Executive" className="bg-slate-950">Executive Perspective</option>
-                      <option value="Manager" className="bg-slate-950">Manager Perspective</option>
-                      <option value="Technical" className="bg-slate-950">Technical Perspective</option>
+                      <option value="Executive">Executive Perspective</option>
+                      <option value="Manager">Manager Perspective</option>
+                      <option value="Technical">Technical Perspective</option>
                     </select>
                   </div>
 
@@ -103,20 +113,19 @@ export default function PromiseGapDiagnosticPage() {
                     <input required type="email" placeholder="Confirm Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" value={formData.confirmEmail} onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
                   </div>
                   <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                  <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-bold h-16 uppercase tracking-widest shadow-[0_0_20px_rgba(0,242,255,0.2)]">Begin Observation</button>
+                  <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-bold h-16 uppercase tracking-widest">Begin Observation</button>
                 </form>
               </Card>
             </motion.div>
           )}
 
-          {/* 3. FIXED: Renderer now calls handleAnswer, resolving the 'unused' error */}
           {step > 0 && step <= 12 && (
             <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Card className="p-10 bg-slate-900/30 border-slate-800 text-center shadow-2xl backdrop-blur-sm">
+              <Card className="p-10 bg-slate-900/30 border-slate-800 text-center shadow-2xl">
                 <h2 className="text-2xl font-bold mb-8 italic uppercase text-white tracking-tight leading-tight">{diagnosticQuestions[step - 1].text}</h2>
                 <div className="grid grid-cols-1 gap-4">
                   {diagnosticQuestions[step - 1].options.map((opt, idx) => (
-                    <button key={idx} className="p-4 border border-slate-800 hover:border-[#00F2FF] uppercase text-[10px] tracking-widest text-slate-300 transition-all font-bold" onClick={() => handleAnswer(opt)}>{opt.label}</button>
+                    <button key={idx} className="p-4 border border-slate-800 hover:border-[#00F2FF] uppercase text-[10px] tracking-widest text-slate-300 font-bold" onClick={() => handleAnswer(opt)}>{opt.label}</button>
                   ))}
                 </div>
               </Card>
