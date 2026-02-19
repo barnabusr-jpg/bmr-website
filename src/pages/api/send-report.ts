@@ -7,7 +7,6 @@ import requestIp from "request-ip";
 // 1. TELEMETRY: Initialize clinical logging
 const logSystemVariance = (error: any, context: string) => {
   console.error(`[FORENSIC TELEMETRY] Variance in ${context}:`, error.message);
-  // Integration point for Sentry or Axiom logs
 };
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
@@ -20,7 +19,7 @@ const redis = new Redis({
 
 const rateLimiter = new Ratelimit({
   redis: redis,
-  limiter: Ratelimit.slidingWindow(5, "1h"), // 5 diagnostic runs per hour per IP
+  limiter: Ratelimit.slidingWindow(5, "1h"), 
 });
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -66,19 +65,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       result: `Trust Architecture (HAI) — ${role} Priority`,
       implications: `Detected: **Technical Forensic Variance**. Signals suggest manual verification layers are currently acting as a substitute for system calibration.`,
       exercise: "- Audit one high-frequency AI workflow.\n- Quantify verification latency.\n- Calibrate trust-friction points.",
-      matters: `Reliability steward for ${role}.`
     },
     'AVS': {
       result: `Adoption Value System (AVS) — ${role} Priority`,
       implications: `Detected: **Operational Drift**. Deployment frequency is decoupled from governance, leading to ROI friction.`,
       exercise: "- Identify AI performance variance.\n- Measure ownership notification window.\n- Close the feedback circuit.",
-      matters: `Value realization for ${role}.`
     },
     'IGF': {
       result: `Internal Governance (IGF) — ${role} Priority`,
       implications: `Detected: **Executive Governance Exposure**. Without safeguard loops, systems may drift from leadership intent.`,
       exercise: "- Examine recent AI correction event.\n- Verify systematic model training updates.\n- Formalize stewardship path.",
-      matters: `Strategic control for ${role}.`
     }
   };
 
@@ -117,29 +113,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   };
 
   try {
-    // --- LAYER 3: PARALLEL DISPATCH WITH TELEMETRY ---
+    // --- LAYER 3: MANDATORY EMAIL DISPATCH ---
+    // This fires the client report and your BCC internal alert
     await sgMail.send(msg);
 
+    // --- LAYER 4: ASYNCHRONOUS AIRTABLE LOGGING ---
+    // We do NOT 'await' this. It runs in the background so Airtable issues can't break your flow
     const WEBHOOK_URL = process.env.AIRTABLE_WEBHOOK_URL; 
     if (WEBHOOK_URL) {
-      try {
-        await fetch(WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name, email, org, role, focusArea,
-            result: selected.result,
-            surgicalRecommendation: selected.exercise, // Map to Rich Text
-            defensibleLanguage: selected.implications, // Map to Rich Text
-            rawSignalScore: intensities[focusArea],
-            vaultID: `BMR-${Date.now()}`
-          }),
-        });
-      } catch (webhookErr) {
-        logSystemVariance(webhookErr, "Airtable Webhook Ingestion");
-      }
+      fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name, email, org, role, focusArea,
+          result: selected.result,
+          surgicalRecommendation: selected.exercise,
+          defensibleLanguage: selected.implications,
+          rawSignalScore: intensities[focusArea],
+          vaultID: `BMR-${Date.now()}`
+        }),
+      }).catch(webhookErr => {
+        // Quietly logs the error to your console without interrupting the response
+        logSystemVariance(webhookErr, "Airtable Webhook Ingestion (Silent)");
+      });
     }
+
     return res.status(200).json({ success: true });
+
   } catch (error: any) {
     logSystemVariance(error, "Email Dispatch Layer");
     return res.status(500).json({ error: 'Internal systemic error: Forensic dispatch failed.' });
