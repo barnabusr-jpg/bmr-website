@@ -4,6 +4,14 @@ import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 import { Activity, Loader2 } from "lucide-react";
 
+// --- FORENSIC DEFINITIONS: Role-to-Pillar Mapping ---
+// Helps users understand how their perspective lens influences the diagnostic weighting.
+const lensDefinitions: Record<string, string> = {
+  "Executive": "Focus: Internal Governance (IGF). Strategic alignment and long-term ROI stability.",
+  "Manager": "Focus: Adoption Value (AVS). Workflow synchronization and operational friction.",
+  "Technical": "Focus: Trust Architecture (HAI). Forensic accuracy and system reliability."
+};
+
 // --- INTERNAL FORENSIC LOGIC: Role-Aware Weighting ---
 const calculatePillarPressure = (weight: number, role: string, zone: string) => {
   const multipliers: Record<string, string> = {
@@ -18,9 +26,9 @@ const calculatePillarPressure = (weight: number, role: string, zone: string) => 
 type DiagnosticOption = { label: string; strength: number; weight: number; vector: string; };
 type DiagnosticQuestion = { id: number; lens: string; text: string; options: DiagnosticOption[]; };
 
-// Insert your 12 diagnosticQuestions array here (same as previous)
+// Insert your 12 diagnosticQuestions array here
 const diagnosticQuestions: DiagnosticQuestion[] = [
-  /* ... paste diagnosticQuestions here ... */
+  /* ... paste your diagnosticQuestions array here ... */
 ];
 
 function LensIndicator({ acronym, isActive, isCompleted }: { acronym: string; isActive: boolean; isCompleted: boolean }) {
@@ -46,7 +54,6 @@ export default function PromiseGapDiagnosticPage() {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // UPDATED: Added confirmEmail to state
   const [formData, setFormData] = useState({ 
     name: "", 
     email: "", 
@@ -61,7 +68,6 @@ export default function PromiseGapDiagnosticPage() {
     IGF: { max: 0, aggregate: 0, vectors: [] }
   });
 
-  // --- RENDERING GUARD: Fixes the blank/black screen ---
   const currentQuestion = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
 
   useEffect(() => {
@@ -71,7 +77,6 @@ export default function PromiseGapDiagnosticPage() {
         try {
           localStorage.setItem('bmr_results_vault', JSON.stringify({ ...zoneResults, email: formData.email, role: formData.role }));
           
-          // UPDATED: Dispatch including BCC logic
           const response = await fetch('/api/send-report', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -126,7 +131,6 @@ export default function PromiseGapDiagnosticPage() {
                 <form 
                   onSubmit={(e) => { 
                     e.preventDefault(); 
-                    // IDENTITY VALIDATION GATE
                     if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) {
                       return alert("Identity Mismatch: Work Email and Confirmation must match.");
                     }
@@ -148,9 +152,12 @@ export default function PromiseGapDiagnosticPage() {
                       <option value="Manager">Manager Perspective</option>
                       <option value="Technical">Technical Perspective</option>
                     </select>
+                    {/* NEW: Helper text explaining the forensic focus of the selected lens */}
+                    <p className="mt-2 text-[10px] italic text-[#00F2FF]/80 ml-1 transition-all">
+                      {lensDefinitions[formData.role]}
+                    </p>
                   </div>
 
-                  {/* UPDATED: Double Email Inputs */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input required type="email" placeholder="Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                     <input required type="email" placeholder="Confirm Work Email" className="w-full p-4 rounded bg-slate-950 border border-slate-800 text-white focus:border-[#00F2FF] outline-none transition-colors" value={formData.confirmEmail} onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
