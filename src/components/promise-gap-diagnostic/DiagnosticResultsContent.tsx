@@ -9,7 +9,13 @@ import {
 } from 'recharts';
 import { ShieldAlert, Activity, ArrowRight, Calendar } from "lucide-react";
 
-// --- INTERNAL LOGIC: ROLE-BASED AFFINITY ---
+// --- FORENSIC DEFINITIONS: Synchronized with Intake ---
+const lensDefinitions: Record<string, string> = {
+  "Executive": "Focus: Internal Governance (IGF). Strategic alignment and long-term ROI stability.",
+  "Manager": "Focus: Adoption Value (AVS). Workflow synchronization and operational friction.",
+  "Technical": "Focus: Trust Architecture (HAI). Forensic accuracy and system reliability."
+};
+
 const getVectorAffinity = (vector: string, role: string) => {
   const kws: Record<string, string[]> = {
     Executive: ["roi", "value", "strategic", "kpi", "alignment", "stewardship", "priorities"],
@@ -38,7 +44,7 @@ const DiagnosticResultsContent = () => {
       const parsed = JSON.parse(vaultData);
       setData(parsed);
       if (parsed.email) setUserEmail(parsed.email);
-      if (parsed.role) setUserRole(parsed.role); // Capture role for affinity sorting
+      if (parsed.role) setUserRole(parsed.role);
     }
   }, []);
 
@@ -56,18 +62,24 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-8 space-y-12">
-      {/* SIGNAL HEADER */}
+      {/* SIGNAL HEADER: Calibrated with Lens Definitions */}
       <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8 backdrop-blur-sm animate-in fade-in slide-in-from-left duration-700">
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">
           Signal Intensity Captured
         </h3>
-        <p className="text-slate-300 text-sm leading-relaxed italic">
-          Your forensic report for the <span className="text-white font-bold">{userRole} perspective</span> has been dispatched to <span className="text-white font-semibold">{userEmail}</span>.
+        <p className="text-white font-bold text-lg mb-2 italic uppercase tracking-tighter">
+          {userRole} Perspective Active
+        </p>
+        <p className="text-slate-400 text-xs italic mb-4 max-w-xl leading-relaxed">
+          {lensDefinitions[userRole]}
+        </p>
+        <p className="text-slate-300 text-sm leading-relaxed border-t border-slate-800 pt-4">
+          Your forensic report for the <span className="text-[#00F2FF] font-bold">{userRole} lens</span> has been dispatched to <span className="text-white font-semibold">{userEmail}</span>.
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* RADAR CHART: Highlights Role-Weighted Pressure */}
+        {/* RADAR CHART */}
         <Card className="lg:col-span-2 p-8 bg-slate-900/20 border-slate-800 backdrop-blur-xl shadow-2xl">
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-8 flex items-center gap-2">
             <Activity className="h-3 w-3 text-[#00F2FF]" /> Organizational Displacement
@@ -110,7 +122,7 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* ROADMAP: Sorted by Role Affinity */}
+      {/* ROADMAP */}
       <div>
         <h3 className="text-xl font-bold mb-8 italic uppercase flex items-center gap-3 text-white">
           <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Priority {userRole} Neutralization
