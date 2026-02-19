@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import { ShieldAlert, Activity, ArrowRight, Calendar, Lock } from "lucide-react";
 
-// --- FORENSIC DEFINITIONS: Synchronized with Intake ---
+// --- FORENSIC DEFINITIONS: Synchronized with Intake Protocol ---
 const lensDefinitions: Record<string, string> = {
   "Executive": "Focus: Internal Governance (IGF). Strategic alignment and long-term ROI stability.",
   "Manager": "Focus: Adoption Value (AVS). Workflow synchronization and operational friction.",
@@ -68,7 +68,7 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-8 space-y-12">
-      {/* HEADER: Role Validation */}
+      {/* HEADER: Role Validation & Perspective Active */}
       <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8 backdrop-blur-sm animate-in fade-in slide-in-from-left duration-700">
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">
           Signal Intensity Captured
@@ -79,10 +79,13 @@ const DiagnosticResultsContent = () => {
         <p className="text-slate-400 text-xs italic mb-4 max-w-xl leading-relaxed">
           {lensDefinitions[userRole]}
         </p>
+        <p className="text-slate-300 text-sm leading-relaxed border-t border-slate-800 pt-4">
+          Your forensic report for the <span className="text-[#00F2FF] font-bold">{userRole} lens</span> has been dispatched to <span className="text-white font-semibold">{userEmail}</span>.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* RADAR CHART */}
+        {/* RADAR CHART: Organizational Displacement */}
         <Card className="lg:col-span-2 p-8 bg-slate-900/20 border-slate-800 backdrop-blur-xl shadow-2xl">
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-8 flex items-center gap-2">
             <Activity className="h-3 w-3 text-[#00F2FF]" /> Organizational Displacement
@@ -98,7 +101,7 @@ const DiagnosticResultsContent = () => {
           </div>
         </Card>
 
-        {/* INTENSITY PEAKS */}
+        {/* INTENSITY PEAKS: Zone Pressure Metrics */}
         <div className="space-y-4">
           {['HAI', 'AVS', 'IGF'].map((zone) => {
             const status = getStatusLabel(data[zone].max);
@@ -119,7 +122,7 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* SYSTEMIC LEGEND & ROADMAP */}
+      {/* SYSTEMIC NEUTRALIZATION ROADMAP */}
       <div className="pt-12 border-t border-slate-800">
         <div className="mb-10">
           <h3 className="text-xl font-bold italic uppercase flex items-center gap-3 text-white">
@@ -134,7 +137,7 @@ const DiagnosticResultsContent = () => {
           </p>
         </div>
 
-        {/* RESPONSIVE COLUMN STACK */}
+        {/* RESPONSIVE COLUMN STACK: Narrative Logic HAI -> AVS -> IGF */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {['HAI', 'AVS', 'IGF'].map((zone) => (
             <div key={zone} className="space-y-4">
@@ -152,6 +155,7 @@ const DiagnosticResultsContent = () => {
                     <div key={`${zone}-${idx}`} className={`group relative p-5 border transition-all cursor-default ${
                       isPriority ? "border-[#00F2FF] bg-[#0A1F33]/40 shadow-[0_0_15px_rgba(0,242,255,0.1)]" : "border-slate-800 bg-slate-900/20"
                     }`}>
+                      {/* PROTOCOL ID BADGE: Professional Gating */}
                       <div className="absolute top-2 right-2 opacity-20">
                         <span className="text-[7px] border border-slate-700 px-1 text-slate-500 uppercase font-mono">
                           ID: {zone}-{idx + 10}
@@ -174,7 +178,7 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* CALL TO ACTION */}
+      {/* CALL TO ACTION: Forensic Review */}
       <div className="mt-12 p-10 bg-[#00F2FF] text-[#020617] text-center rounded-sm">
         <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Forensic Review Recommended</h2>
         <p className="text-[10px] uppercase tracking-[0.2em] font-bold mb-6">Neutralize systemic drift through role-aware calibration</p>
