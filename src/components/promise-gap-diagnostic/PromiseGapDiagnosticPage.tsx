@@ -5,7 +5,6 @@ import { Card } from "@/components/ui/card";
 import { Activity, Loader2 } from "lucide-react";
 
 // --- FORENSIC DEFINITIONS: Role-to-Pillar Mapping ---
-// Helps users understand how their perspective lens influences the diagnostic weighting.
 const lensDefinitions: Record<string, string> = {
   "Executive": "Focus: Internal Governance (IGF). Strategic alignment and long-term ROI stability.",
   "Manager": "Focus: Adoption Value (AVS). Workflow synchronization and operational friction.",
@@ -26,9 +25,91 @@ const calculatePillarPressure = (weight: number, role: string, zone: string) => 
 type DiagnosticOption = { label: string; strength: number; weight: number; vector: string; };
 type DiagnosticQuestion = { id: number; lens: string; text: string; options: DiagnosticOption[]; };
 
-// Insert your 12 diagnosticQuestions array here
 const diagnosticQuestions: DiagnosticQuestion[] = [
-  /* ... paste your diagnosticQuestions array here ... */
+  { id: 1, lens: "HAI", text: "How do teams handle verification of AI outputs before sharing them?", options: [
+    { label: "Teams always manually verify outputs before sharing.", strength: 5, weight: 8, vector: "Calibrate Empirical Trust" },
+    { label: "Teams manually verify high-risk outputs only.", strength: 5, weight: 8, vector: "Optimize Interface Utility" },
+    { label: "Teams use automated checks for most outputs.", strength: 3, weight: 3, vector: "Standardize Trust Protocols" },
+    { label: "Outputs are fully automated with no manual review.", strength: 2, weight: 1, vector: "Audit Compliance Overlays" },
+    { label: "No verification process currently exists.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 2, lens: "HAI", text: "What is the process for identifying the cause of AI errors?", options: [
+    { label: "Errors are not tracked; we fix and move on.", strength: 5, weight: 8, vector: "Instrument Error Logging" },
+    { label: "We investigate ad-hoc without formal processes.", strength: 4, weight: 5, vector: "Formalize Forensic Retrospectives" },
+    { label: "We document errors but lack tools to diagnose quickly.", strength: 3, weight: 3, vector: "Synchronize Change Management" },
+    { label: "We automate error tracking but reviews are slow.", strength: 2, weight: 1, vector: "Automate Root-Cause Diagnosis" },
+    { label: "Errors are diagnosed in hours via automated tools.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 3, lens: "HAI", text: "How do teams handle situations where AI tools may not be optimal?", options: [
+    { label: "Teams always bypass AI for manual processes.", strength: 5, weight: 8, vector: "Neutralize Operational Friction" },
+    { label: "Teams often bypass AI for edge cases.", strength: 4, weight: 5, vector: "Expand Algorithmic Scope" },
+    { label: "Teams sometimes bypass AI due to training gaps.", strength: 3, weight: 3, vector: "Synchronize Change Management" },
+    { label: "Teams rarely bypass AI (only for compliance).", strength: 2, weight: 1, vector: "Integrate Audit Workflows" },
+    { label: "AI is never bypassed; tools are fully integrated.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 4, lens: "HAI", text: "How does the organization review AI risk appetite against performance?", options: [
+    { label: "We don’t track performance for risk decisions.", strength: 5, weight: 8, vector: "Establish Risk Telemetry" },
+    { label: "Risk appetite is updated only after major failures.", strength: 4, weight: 5, vector: "Implement Adaptive Risk Logic" },
+    { label: "Risk reviews are scheduled but not data-driven.", strength: 3, weight: 3, vector: "Predictive Risk Modeling" },
+    { label: "Risk appetite is reviewed quarterly with data.", strength: 2, weight: 1, vector: "Increase Review Frequency" },
+    { label: "Risk models are dynamically updated with real-time data.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 5, lens: "AVS", text: "What is the standard process for pre-deployment risk reviews?", options: [
+    { label: "No formal review is conducted.", strength: 5, weight: 8, vector: "Stabilize Deployment Guardrails" },
+    { label: "Reviews are perceived as bottlenecks and skipped.", strength: 3, weight: 3, vector: "Streamline Governance Cycles" },
+    { label: "Reviews are conducted but lack resources.", strength: 3, weight: 3, vector: "Augment Review Capacity" },
+    { label: "Low-risk projects skip formal reviews.", strength: 2, weight: 1, vector: "Formalize Risk Tiering" },
+    { label: "All projects undergo formal risk reviews.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 6, lens: "AVS", text: "How is responsibility assigned for AI failures?", options: [
+    { label: "No designated owner exists.", strength: 5, weight: 8, vector: "Map Accountability Pathways" },
+    { label: "Teams argue over ownership after failures.", strength: 4, weight: 5, vector: "Formalize Ownership Matrix" },
+    { label: "Responsibility is assigned ad-hoc.", strength: 3, weight: 3, vector: "Standardize Escalation Paths" },
+    { label: "Ownership is clear but notifications are slow.", strength: 2, weight: 1, vector: "Optimize Response Latency" },
+    { label: "Designated leaders own fixes and are notified instantly.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 7, lens: "AVS", text: "How is AI compliance managed after deployment?", options: [
+    { label: "Compliance is a one-time checkbox at launch.", strength: 5, weight: 8, vector: "Instrument Persistent Oversight" },
+    { label: "We assume compliance is static post-launch.", strength: 4, weight: 5, vector: "Deploy Continuous Monitoring" },
+    { label: "Ongoing monitoring is too resource-intensive.", strength: 3, weight: 3, vector: "Automate Compliance Telemetry" },
+    { label: "We monitor only high-risk models.", strength: 2, weight: 1, vector: "Define Dynamic Compliance Standards" },
+    { label: "Compliance is audited as a continuous requirement.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 8, lens: "AVS", text: "What level of effort is required to maintain AI tools?", options: [
+    { label: "AI requires constant manual correction.", strength: 5, weight: 8, vector: "Identify Stability Root Causes" },
+    { label: "We lack automated monitoring for maintenance.", strength: 4, weight: 5, vector: "Automate Maintenance Telemetry" },
+    { label: "High manual overhead is expected in early stages.", strength: 3, weight: 3, vector: "Accelerate Maturity Roadmap" },
+    { label: "Human effort is focused on training.", strength: 2, weight: 1, vector: "Optimize Training Cycles" },
+    { label: "AI tools run autonomously with minimal intervention.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 9, lens: "IGF", text: "How are human corrections fed back into AI systems?", options: [
+    { label: "No system exists for corrections.", strength: 5, weight: 8, vector: "Establish Feedback Architecture" },
+    { label: "Corrections are not systematically tracked.", strength: 4, weight: 5, vector: "Close the Feedback Circuit" },
+    { label: "Feedback is shared ad-hoc for critical errors.", strength: 3, weight: 3, vector: "Formalize Correction Ingestion" },
+    { label: "Corrections are logged but reviewed infrequently.", strength: 2, weight: 1, vector: "Automate Training Loops" },
+    { label: "Corrections are automatically incorporated.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 10, lens: "IGF", text: "How does leadership prioritize AI projects?", options: [
+    { label: "Leadership focuses only on technical features.", strength: 5, weight: 8, vector: "Restore Strategic Alignment" },
+    { label: "Leadership lacks visibility into human impact.", strength: 4, weight: 5, vector: "Restore Executive Visibility" },
+    { label: "Stakeholders demand constant feature rollouts.", strength: 3, weight: 3, vector: "Manage Strategic Expectations" },
+    { label: "We are in early adoption where features take priority.", strength: 2, weight: 1, vector: "Define Maturity Thresholds" },
+    { label: "Leadership balances features and impact equally.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 11, lens: "IGF", text: "How does the organization prepare teams for AI deployments?", options: [
+    { label: "Deployments are pushed faster than training allows.", strength: 5, weight: 8, vector: "Synchronize Change Readiness" },
+    { label: "We lack proper training frameworks.", strength: 4, weight: 5, vector: "Deploy Cultural Stabilization" },
+    { label: "The strategic impact was never communicated.", strength: 4, weight: 5, vector: "Standardize Impact Reporting" },
+    { label: "Projects are deprioritized for higher-priority work.", strength: 2, weight: 1, vector: "Assess Resource Allocation" },
+    { label: "Teams are fully trained and aligned.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]},
+  { id: 12, lens: "IGF", text: "How is the gap between expected and actual AI ROI measured?", options: [
+    { label: "No one tracks AI value realization.", strength: 5, weight: 8, vector: "Assign ROI Stewardship" },
+    { label: "We lack tools to measure impact.", strength: 4, weight: 5, vector: "Instrument the Promise Gap™" },
+    { label: "Our focus is on innovation scale, not ROI.", strength: 4, weight: 5, vector: "Pivot to Value Realization" },
+    { label: "We are still piloting benchmarks for ROI measurement.", strength: 2, weight: 1, vector: "Pilot ROI Benchmarks" },
+    { label: "We formally measure ROI against expectations.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+  ]}
 ];
 
 function LensIndicator({ acronym, isActive, isCompleted }: { acronym: string; isActive: boolean; isCompleted: boolean }) {
@@ -77,7 +158,7 @@ export default function PromiseGapDiagnosticPage() {
         try {
           localStorage.setItem('bmr_results_vault', JSON.stringify({ ...zoneResults, email: formData.email, role: formData.role }));
           
-          const response = await fetch('/api/send-report', {
+          await fetch('/api/send-report', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -89,7 +170,7 @@ export default function PromiseGapDiagnosticPage() {
               bcc: 'hello@bmradvisory.co' 
             }),
           });
-          if (response.ok) { router.push('/diagnostic/results'); }
+          router.push('/diagnostic/results'); 
         } catch (error) {
           console.error("Forensic dispatch failed", error);
           setIsSubmitting(false);
@@ -115,7 +196,7 @@ export default function PromiseGapDiagnosticPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-6">
+    <div className="min-h-screen bg-[#020617] text-white p-6 selection:bg-[#00F2FF]/30">
       <div className="max-w-4xl mx-auto py-12">
         <div className="flex justify-center gap-8 mb-20">
           <LensIndicator acronym="HAI" isActive={step >= 1 && step <= 4} isCompleted={step > 4} />
@@ -152,7 +233,6 @@ export default function PromiseGapDiagnosticPage() {
                       <option value="Manager">Manager Perspective</option>
                       <option value="Technical">Technical Perspective</option>
                     </select>
-                    {/* NEW: Helper text explaining the forensic focus of the selected lens */}
                     <p className="mt-2 text-[10px] italic text-[#00F2FF]/80 ml-1 transition-all">
                       {lensDefinitions[formData.role]}
                     </p>
