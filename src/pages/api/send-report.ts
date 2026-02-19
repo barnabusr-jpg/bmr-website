@@ -1,11 +1,50 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
+import requestIp from "request-ip";
+
+// 1. TELEMETRY: Initialize clinical logging
+const logSystemVariance = (error: any, context: string) => {
+  console.error(`[FORENSIC TELEMETRY] Variance in ${context}:`, error.message);
+  // Integration point for Sentry or Axiom logs
+};
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
+// 2. RATE LIMITING: Upstash Redis configuration
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+const rateLimiter = new Ratelimit({
+  redis: redis,
+  limiter: Ratelimit.slidingWindow(5, "1h"), // 5 diagnostic runs per hour per IP
+});
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // --- LAYER 1: ORIGIN SECURITY & METHOD VALIDATION ---
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const allowedOrigin = process.env.ALLOWED_ORIGIN || "https://bmradvisory.co";
+  const origin = req.headers.origin || req.headers.referer;
   
+  if (!origin?.startsWith(allowedOrigin)) {
+    logSystemVariance(new Error("Unauthorized Origin Access"), "Security Layer");
+    return res.status(403).json({ error: 'Forbidden: Unauthorized clinical request' });
+  }
+
+  // --- LAYER 2: API RATE LIMITING ---
+  const clientIp = requestIp.getClientIp(req) || 'default-identifier';
+  const { success } = await rateLimiter.limit(`bmr-diagnostic-${clientIp}`);
+  
+  if (!success) {
+    return res.status(429).json({ 
+      error: 'Rate limit exceeded. Systemic security protocols restrict further submissions this hour.' 
+    });
+  }
+
   const { name, email, org, zoneData, role, bcc } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
@@ -21,25 +60,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
   else focusArea = 'IGF';
 
-  // --- UPDATED CONTENT MAPPING: Clinical Terminology with Role Context ---
+  // --- LAYER 4: CLINICALIZED CONTENT MAPPING ---
   const contentMap = {
     'HAI': {
       result: `Trust Architecture (HAI) — ${role} Priority`,
-      implications: `Based on your ${role} perspective, we have detected a "Technical Forensic Variance." The signals suggest that manual verification layers are currently acting as a substitute for system calibration, creating hidden operational friction.`,
-      exercise: "Audit one high-frequency AI workflow. Quantify the timeframe required for manual verification versus automated output to identify your trust-friction point.",
-      matters: `As a ${role}, establishing a stable Trust Architecture is your primary lever for ensuring system reliability at scale.`
+      implications: `Detected: **Technical Forensic Variance**. Signals suggest manual verification layers are currently acting as a substitute for system calibration.`,
+      exercise: "- Audit one high-frequency AI workflow.\n- Quantify verification latency.\n- Calibrate trust-friction points.",
+      matters: `Reliability steward for ${role}.`
     },
     'AVS': {
       result: `Adoption Value System (AVS) — ${role} Priority`,
-      implications: `Your ${role} lens identified "Operational Drift." This occurs when deployment frequency is decoupled from governance, leading to technology investments that struggle to move beyond activity volume into measurable impact.`,
-      exercise: "Identify a recent AI performance variance. Determine if a specific 'owner' was notified within the target 60-minute window. This reveals current ownership latency.",
-      matters: `From a ${role} standpoint, a robust adoption system ensures that every technology deployment translates into tangible value realization.`
+      implications: `Detected: **Operational Drift**. Deployment frequency is decoupled from governance, leading to ROI friction.`,
+      exercise: "- Identify AI performance variance.\n- Measure ownership notification window.\n- Close the feedback circuit.",
+      matters: `Value realization for ${role}.`
     },
     'IGF': {
-      result: `Internal Governance Framework (IGF) — ${role} Priority`,
-      implications: `Our analysis of your ${role} signals indicates "Executive Governance Exposure." Without active safeguard loops, systems may drift from leadership intent as they scale, creating unmanaged long-term structural risks.`,
-      exercise: "Examine your most recent AI correction event. Verify if that specific human insight was systematically incorporated into the model’s iterative training cycle.",
-      matters: `For an ${role}, this framework is essential for maintaining accountability and strategic control as AI capabilities evolve.`
+      result: `Internal Governance (IGF) — ${role} Priority`,
+      implications: `Detected: **Executive Governance Exposure**. Without safeguard loops, systems may drift from leadership intent.`,
+      exercise: "- Examine recent AI correction event.\n- Verify systematic model training updates.\n- Formalize stewardship path.",
+      matters: `Strategic control for ${role}.`
     }
   };
 
@@ -56,64 +95,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     bcc: bcc || 'hello@bmradvisory.co', 
     from: 'hello@bmradvisory.co',
     subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
-    
-    text: `
-BMR SIGNAL DIAGNOSTIC: FORENSIC OBSERVATION REPORT
---------------------------------------------------
-Perspective: ${role} Lens
-Organization: ${org || 'Your Organization'}
-
-Hello ${firstName},
-
-Your clinical signal analysis is complete. Based on your ${role} perspective, 
-your primary focus area is: ${selected.result}.
-
-INDICATED IMPLICATIONS:
-${selected.implications.replace(/&ldquo;|&rdquo;/g, '"')}
-
-SURGICAL NEUTRALIZATION EXERCISE:
-${selected.exercise}
-
-Schedule your Forensic Review here: ${calendlyLink}
-
-BMR Solutions | Forensic AI Advisory
-    `,
-    
+    text: `Perspective: ${role} Lens\nFocus Area: ${selected.result}\nNeutralization: ${selected.exercise}`,
     html: `
-      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; color: #020617; line-height: 1.6; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 4px;">
+      <div style="font-family: sans-serif; max-width: 600px; color: #020617; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0;">
         <div style="border-bottom: 2px solid #020617; padding-bottom: 20px; margin-bottom: 30px;">
-          <h2 style="text-transform: uppercase; letter-spacing: 4px; font-size: 14px; margin: 0; color: #64748b;">Forensic Observation Report</h2>
-          <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin: 5px 0 0 0;">Lens: ${role} | BMR Protocol v3.0</p>
+          <h2 style="text-transform: uppercase; letter-spacing: 4px; font-size: 14px; color: #64748b;">Forensic Observation Report</h2>
+          <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase;">Lens: ${role} | BMR Protocol v3.0</p>
         </div>
-        <p style="font-size: 16px; margin-bottom: 24px;">Hello ${firstName},</p>
-        <p style="color: #475569; margin-bottom: 32px;">
-          The BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong> is complete. Our analysis has identified specific <strong>Systemic Pressure Signals</strong> based on the ${role} lens.
-        </p>
-        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 32px; margin-bottom: 40px;">
-          <h3 style="margin: 0 0 8px 0; color: #00F2FF; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; font-weight: bold;">Critical Observation Lens</h3>
-          <p style="font-size: 24px; font-weight: bold; margin: 0; color: #020617; font-style: italic;">${selected.result}</p>
-          <div style="margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 24px;">
-            <h4 style="font-size: 12px; text-transform: uppercase; color: #020617; margin: 0 0 12px 0; letter-spacing: 1px;">Indicated Implications</h4>
-            <p style="font-size: 14px; color: #334155; margin: 0; line-height: 1.8;">${selected.implications}</p>
-          </div>
+        <p>Hello ${firstName}, your ${role}-aware analysis for ${org} is ready.</p>
+        <div style="background-color: #f8fafc; padding: 32px; margin: 40px 0;">
+          <h3 style="color: #00F2FF; font-size: 24px; font-style: italic;">${selected.result}</h3>
+          <p>${selected.implications}</p>
         </div>
-        <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #020617; margin-bottom: 16px;">Surgical Neutralization Exercise</h3>
-        <div style="background-color: #ffffff; border-left: 4px solid #00F2FF; padding: 10px 20px; color: #334155; font-size: 14px; margin-bottom: 32px; font-style: italic;">
-          ${selected.exercise}
+        <h4>Surgical Neutralization Exercise</h4>
+        <pre style="background: white; border-left: 4px solid #00F2FF; padding: 15px;">${selected.exercise}</pre>
+        <div style="text-align: center; margin-top: 40px;">
+          <a href="${calendlyLink}" style="background-color: #020617; color: white; padding: 18px 36px; text-decoration: none; font-weight: bold; display: inline-block;">Schedule Forensic Review</a>
         </div>
-        <div style="margin: 48px 0; text-align: center;">
-          <a href="${calendlyLink}" style="background-color: #020617; color: #ffffff; padding: 18px 36px; text-decoration: none; border-radius: 2px; font-weight: bold; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; display: inline-block;">Schedule Forensic Review</a>
-        </div>
-        <p style="margin-top: 40px; font-size: 14px; color: #020617;">
-          Best regards,<br>
-          <strong style="text-transform: uppercase; letter-spacing: 1px;">BMR Solutions Forensic Team</strong>
-        </p>
       </div>
     `
   };
 
   try {
+    // --- LAYER 3: PARALLEL DISPATCH WITH TELEMETRY ---
     await sgMail.send(msg);
+
     const WEBHOOK_URL = process.env.AIRTABLE_WEBHOOK_URL; 
     if (WEBHOOK_URL) {
       try {
@@ -123,19 +129,19 @@ BMR Solutions | Forensic AI Advisory
           body: JSON.stringify({
             name, email, org, role, focusArea,
             result: selected.result,
-            zoneData,
-            status: "Lead", 
-            diagnosticType: "Triage-12",
+            surgicalRecommendation: selected.exercise, // Map to Rich Text
+            defensibleLanguage: selected.implications, // Map to Rich Text
+            rawSignalScore: intensities[focusArea],
             vaultID: `BMR-${Date.now()}`
           }),
         });
       } catch (webhookErr) {
-        console.warn('Data logging webhook failed:', webhookErr);
+        logSystemVariance(webhookErr, "Airtable Webhook Ingestion");
       }
     }
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error('Forensic Engine Dispatch Error:', error.message);
-    return res.status(500).json({ error: 'Internal server error' });
+    logSystemVariance(error, "Email Dispatch Layer");
+    return res.status(500).json({ error: 'Internal systemic error: Forensic dispatch failed.' });
   }
 }
