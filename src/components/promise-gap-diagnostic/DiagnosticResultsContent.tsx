@@ -9,7 +9,6 @@ import {
 } from 'recharts';
 import { ShieldAlert, Activity, ArrowRight, Calendar } from "lucide-react";
 
-// --- FORENSIC DEFINITIONS: Synchronized with Intake ---
 const lensDefinitions: Record<string, string> = {
   "Executive": "Focus: Internal Governance (IGF). Strategic alignment and long-term ROI stability.",
   "Manager": "Focus: Adoption Value (AVS). Workflow synchronization and operational friction.",
@@ -62,7 +61,6 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-8 space-y-12">
-      {/* SIGNAL HEADER: Calibrated with Lens Definitions */}
       <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8 backdrop-blur-sm animate-in fade-in slide-in-from-left duration-700">
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">
           Signal Intensity Captured
@@ -79,7 +77,6 @@ const DiagnosticResultsContent = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* RADAR CHART */}
         <Card className="lg:col-span-2 p-8 bg-slate-900/20 border-slate-800 backdrop-blur-xl shadow-2xl">
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-8 flex items-center gap-2">
             <Activity className="h-3 w-3 text-[#00F2FF]" /> Organizational Displacement
@@ -89,19 +86,12 @@ const DiagnosticResultsContent = () => {
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                 <PolarGrid stroke="#1e293b" />
                 <PolarAngleAxis dataKey="zone" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} />
-                <Radar
-                  name="Pressure"
-                  dataKey="value"
-                  stroke="#00F2FF"
-                  fill="#00F2FF"
-                  fillOpacity={0.4}
-                />
+                <Radar name="Pressure" dataKey="value" stroke="#00F2FF" fill="#00F2FF" fillOpacity={0.4} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        {/* INTENSITY PEAKS */}
         <div className="space-y-4">
           {['HAI', 'AVS', 'IGF'].map((zone) => {
             const status = getStatusLabel(data[zone].max);
@@ -122,7 +112,6 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* ROADMAP */}
       <div>
         <h3 className="text-xl font-bold mb-8 italic uppercase flex items-center gap-3 text-white">
           <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Priority {userRole} Neutralization
@@ -152,7 +141,6 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* CTA */}
       <div className="mt-12 p-10 bg-[#00F2FF] text-[#020617] text-center rounded-sm">
         <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Forensic Review Recommended</h2>
         <button 
