@@ -119,7 +119,7 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* SYSTEMIC LEGEND */}
+      {/* SYSTEMIC LEGEND & ROADMAP */}
       <div className="pt-12 border-t border-slate-800">
         <div className="mb-10">
           <h3 className="text-xl font-bold italic uppercase flex items-center gap-3 text-white">
@@ -134,6 +134,7 @@ const DiagnosticResultsContent = () => {
           </p>
         </div>
 
+        {/* RESPONSIVE COLUMN STACK */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {['HAI', 'AVS', 'IGF'].map((zone) => (
             <div key={zone} className="space-y-4">
@@ -151,7 +152,6 @@ const DiagnosticResultsContent = () => {
                     <div key={`${zone}-${idx}`} className={`group relative p-5 border transition-all cursor-default ${
                       isPriority ? "border-[#00F2FF] bg-[#0A1F33]/40 shadow-[0_0_15px_rgba(0,242,255,0.1)]" : "border-slate-800 bg-slate-900/20"
                     }`}>
-                      {/* PROTOCOL ID BADGE */}
                       <div className="absolute top-2 right-2 opacity-20">
                         <span className="text-[7px] border border-slate-700 px-1 text-slate-500 uppercase font-mono">
                           ID: {zone}-{idx + 10}
@@ -174,12 +174,12 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* CTA */}
+      {/* CALL TO ACTION */}
       <div className="mt-12 p-10 bg-[#00F2FF] text-[#020617] text-center rounded-sm">
         <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Forensic Review Recommended</h2>
         <p className="text-[10px] uppercase tracking-[0.2em] font-bold mb-6">Neutralize systemic drift through role-aware calibration</p>
         <button 
-          className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto mt-6 hover:bg-slate-800 transition-all shadow-xl"
+          className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all shadow-xl"
           onClick={() => {
             const calendlyBase = 'https://calendly.com/hello-bmradvisory/forensic-review';
             const params = `?email=${encodeURIComponent(userEmail)}&a1=${encodeURIComponent(userRole)}`;
