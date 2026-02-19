@@ -26,7 +26,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     'HAI': {
       result: `Trust Architecture (HAI) — ${role} Priority`,
       implications: `Based on your ${role} perspective, we have detected a "Technical Forensic Variance." The signals suggest that manual verification layers are currently acting as a substitute for system calibration, creating hidden operational friction.`,
-      exercise: "Audit one high-frequency AI workflow. Quantify the timeframe required for manual verification versus automated output. This identifies your baseline trust-friction point.",
+      exercise: "Audit one high-frequency AI workflow. Quantify the timeframe required for manual verification versus automated output to identify your trust-friction point.",
       matters: `As a ${role}, establishing a stable Trust Architecture is your primary lever for ensuring system reliability at scale.`
     },
     'AVS': {
@@ -45,7 +45,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const selected = contentMap[focusArea];
 
-  // --- URL CONSTRUCTION ---
+  // --- URL CONSTRUCTION: Calendly Deep-Linking ---
   const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
   const safeName = encodeURIComponent(name || "");
   const safeEmail = encodeURIComponent(email || "");
