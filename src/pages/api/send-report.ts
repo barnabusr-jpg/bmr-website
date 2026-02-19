@@ -6,7 +6,6 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
-  // UPDATED: Destructure 'role' and 'bcc' from the incoming request
   const { name, email, org, zoneData, role, bcc } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
@@ -22,39 +21,38 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
   else focusArea = 'IGF';
 
+  // --- UPDATED CONTENT MAPPING: Clinical Terminology with Role Context ---
   const contentMap = {
     'HAI': {
-      result: "Trust Architecture (HAI)",
-      implications: "The detected signals suggest a mismatch between current AI reliability and operational trust requirements. This &ldquo;Human-AI Asymmetry&rdquo; indicates that manual verification layers are acting as a substitute for system calibration, creating hidden friction.",
+      result: `Trust Architecture (HAI) — ${role} Priority`,
+      implications: `Based on your ${role} perspective, we have detected a "Technical Forensic Variance." The signals suggest that manual verification layers are currently acting as a substitute for system calibration, creating hidden operational friction.`,
       exercise: "Audit one high-frequency AI workflow. Quantify the timeframe required for manual verification versus automated output. This identifies your baseline trust-friction point.",
-      matters: "Calibrating the trust architecture is the primary step in establishing a Human-AI interaction model that remains stable at scale."
+      matters: `As a ${role}, establishing a stable Trust Architecture is your primary lever for ensuring system reliability at scale.`
     },
     'AVS': {
-      result: "Adoption Value System (AVS)",
-      implications: "Your results point toward &ldquo;Operational Drift,&rdquo; where deployment frequency is decoupled from governance. Without a synchronized value system, technology investments struggle to move beyond activity volume into measurable mission impact.",
+      result: `Adoption Value System (AVS) — ${role} Priority`,
+      implications: `Your ${role} lens identified "Operational Drift." This occurs when deployment frequency is decoupled from governance, leading to technology investments that struggle to move beyond activity volume into measurable impact.`,
       exercise: "Identify a recent AI performance variance. Determine if a specific 'owner' was notified within the target 60-minute window. This reveals current ownership latency.",
-      matters: "A robust adoption system ensures your technology ecosystem prioritizes value realization over pure deployment speed."
+      matters: `From a ${role} standpoint, a robust adoption system ensures that every technology deployment translates into tangible value realization.`
     },
     'IGF': {
-      result: "Internal Governance Framework (IGF)",
-      implications: "Current signals indicate &ldquo;Oversight Decay.&rdquo; Without active safeguard loops, systems may drift from leadership intent as they scale, creating unmanaged long-term operational risks that require structural correction.",
+      result: `Internal Governance Framework (IGF) — ${role} Priority`,
+      implications: `Our analysis of your ${role} signals indicates "Executive Governance Exposure." Without active safeguard loops, systems may drift from leadership intent as they scale, creating unmanaged long-term structural risks.`,
       exercise: "Examine your most recent AI correction event. Verify if that specific human insight was systematically incorporated into the model’s iterative training cycle.",
-      matters: "Embedding accountability into every decision loop creates the systemic stability required for rapid, responsible evolution."
+      matters: `For an ${role}, this framework is essential for maintaining accountability and strategic control as AI capabilities evolve.`
     }
   };
 
   const selected = contentMap[focusArea];
 
-  // --- URL CONSTRUCTION: Frictionless Peer Handshake ---
+  // --- URL CONSTRUCTION ---
   const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
   const safeName = encodeURIComponent(name || "");
   const safeEmail = encodeURIComponent(email || "");
-  // UPDATED: Passing the role to Calendly for a more tailored booking experience
   const calendlyLink = `${calendlyBase}?name=${safeName}&email=${safeEmail}&a1=${encodeURIComponent(role || "")}`;
 
   const msg = {
     to: email,
-    // UPDATED: Use the BCC passed from frontend or default to your address
     bcc: bcc || 'hello@bmradvisory.co', 
     from: 'hello@bmradvisory.co',
     subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
@@ -67,7 +65,7 @@ Organization: ${org || 'Your Organization'}
 
 Hello ${firstName},
 
-Your clinical signal analysis is complete. Based on the triage, 
+Your clinical signal analysis is complete. Based on your ${role} perspective, 
 your primary focus area is: ${selected.result}.
 
 INDICATED IMPLICATIONS:
@@ -89,7 +87,7 @@ BMR Solutions | Forensic AI Advisory
         </div>
         <p style="font-size: 16px; margin-bottom: 24px;">Hello ${firstName},</p>
         <p style="color: #475569; margin-bottom: 32px;">
-          The BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong> is complete. Our analysis has identified specific <strong>Systemic Pressure Signals</strong> within your AI adoption trajectory.
+          The BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong> is complete. Our analysis has identified specific <strong>Systemic Pressure Signals</strong> based on the ${role} lens.
         </p>
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 32px; margin-bottom: 40px;">
           <h3 style="margin: 0 0 8px 0; color: #00F2FF; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; font-weight: bold;">Critical Observation Lens</h3>
@@ -115,23 +113,15 @@ BMR Solutions | Forensic AI Advisory
   };
 
   try {
-    // 1. Dispatch Clinical Email to Client
     await sgMail.send(msg);
-
-    // 2. Webhook Dispatch: Use ENV variable for easy toggling
     const WEBHOOK_URL = process.env.AIRTABLE_WEBHOOK_URL; 
-
     if (WEBHOOK_URL) {
       try {
         await fetch(WEBHOOK_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name,
-            email,
-            org,
-            role, // Included for Airtable logging
-            focusArea,
+            name, email, org, role, focusArea,
             result: selected.result,
             zoneData,
             status: "Lead", 
@@ -143,7 +133,6 @@ BMR Solutions | Forensic AI Advisory
         console.warn('Data logging webhook failed:', webhookErr);
       }
     }
-
     return res.status(200).json({ success: true });
   } catch (error: any) {
     console.error('Forensic Engine Dispatch Error:', error.message);
