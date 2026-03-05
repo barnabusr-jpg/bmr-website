@@ -1,6 +1,15 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 
+// Body parser config for large diagnostic payloads
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '1mb',
+    },
+  },
+};
+
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -22,10 +31,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
   else focusArea = 'IGF';
 
-  // Determine Maturity Stage (Based on the Max strength selected in that zone)
-  const maturityStage = zoneData?.[focusArea]?.max || 1;
-  const stageLabels = ["Stage 0: Unobserved", "Stage 1: Reactive", "Stage 2: Emerging", "Stage 3: Integrated", "Stage 4: Optimized"];
-  const currentStageLabel = stageLabels[maturityStage];
+  // --- BUG FIX: Neutralize "undefined" by bounding the index ---
+  // Ensures a score of 5 (from protocol v3.0) maps to index 4 (Optimized)
+  const rawMax = zoneData?.[focusArea]?.max || 1;
+  const maturityIndex = Math.min(Math.max(rawMax, 1), 4);
+  
+  const stageLabels = [
+    "Stage 0: Unobserved", 
+    "Stage 1: Reactive", 
+    "Stage 2: Emerging", 
+    "Stage 3: Integrated", 
+    "Stage 4: Optimized"
+  ];
+
+  const currentStageLabel = stageLabels[maturityIndex];
 
   // --- MATURITY-ALIGNED CONTENT NARRATIVE ---
   const contentMap = {
@@ -58,7 +77,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; color: #020617; line-height: 1.6; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0;">
         <div style="border-bottom: 2px solid #020617; padding-bottom: 20px; margin-bottom: 30px;">
           <h2 style="text-transform: uppercase; letter-spacing: 4px; font-size: 14px; margin: 0; color: #64748b;">Forensic Observation Report</h2>
-          <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin: 5px 0 0 0;">Lens: ${role} | Protocol: Maturity Stage ${maturityStage}</p>
+          <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin: 5px 0 0 0;">Lens: ${role} | Protocol: Maturity Stage ${maturityIndex}</p>
         </div>
         <p>Hello ${firstName},</p>
         <p style="color: #475569;">The BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong> is complete. We have benchmarked your AI maturity based on the ${role} perspective.</p>
