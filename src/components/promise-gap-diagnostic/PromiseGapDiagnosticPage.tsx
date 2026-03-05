@@ -4,7 +4,20 @@ import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 import { Activity, Loader2 } from "lucide-react";
 
-// --- PERSPECTIVE LENS CONTEXTS: Role-Based Question Framing ---
+// --- TYPES & INTERFACES ---
+interface ZoneData {
+  max: number;
+  aggregate: number;
+  vectors: string[];
+}
+
+interface DiagnosticResults {
+  HAI: ZoneData;
+  AVS: ZoneData;
+  IGF: ZoneData;
+}
+
+// --- PERSPECTIVE LENS CONTEXTS ---
 const perspectiveContexts: Record<string, string> = {
   "Executive": "Strategic Stewardship:",
   "Manager": "Operational Synchronization:",
@@ -26,7 +39,7 @@ const calculatePillarPressure = (weight: number, role: string, zone: string) => 
   return multipliers[role] === zone ? weight * 1.5 : weight;
 };
 
-// --- CORE DIAGNOSTIC DATA: MATURITY-ALIGNED LABELS ---
+// --- CORE DIAGNOSTIC DATA ---
 const diagnosticQuestions = [
   { id: 1, lens: "HAI", text: "How do teams handle verification of AI outputs before sharing them?", options: [
     { label: "Stage 4 (Optimized): Automated validation protocols + systematic forensic audits.", strength: 5, weight: 8, vector: "Calibrate Empirical Trust" },
@@ -127,11 +140,18 @@ export default function PromiseGapDiagnosticPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", confirmEmail: "", organization: "", role: "Executive" });
   
-  const [zoneResults, setZoneResults] = useState<any>({
+  const [zoneResults, setZoneResults] = useState<DiagnosticResults>({
     HAI: { max: 0, aggregate: 0, vectors: [] },
     AVS: { max: 0, aggregate: 0, vectors: [] },
     IGF: { max: 0, aggregate: 0, vectors: [] }
   });
+
+  // --- VAULT CLEANUP ---
+  useEffect(() => {
+    if (step === 0) {
+      localStorage.removeItem('bmr_results_vault');
+    }
+  }, [step]);
 
   const currentQuestion = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
 
@@ -163,14 +183,20 @@ export default function PromiseGapDiagnosticPage() {
     if (!currentQuestion) return;
     const dynamicWeight = calculatePillarPressure(option.weight, formData.role, currentQuestion.lens);
 
-    setZoneResults((prev: any) => ({
-      ...prev,
-      [currentQuestion.lens]: {
-        max: Math.max(prev[currentQuestion.lens].max, option.strength),
-        aggregate: prev[currentQuestion.lens].aggregate + dynamicWeight,
-        vectors: [...prev[currentQuestion.lens].vectors, option.vector]
-      }
-    }));
+    setZoneResults((prev) => {
+      const currentZone = prev[currentQuestion.lens as keyof DiagnosticResults];
+      // Ensure recommendation vectors are unique
+      const updatedVectors = Array.from(new Set([...currentZone.vectors, option.vector]));
+
+      return {
+        ...prev,
+        [currentQuestion.lens]: {
+          max: Math.max(currentZone.max, option.strength),
+          aggregate: currentZone.aggregate + dynamicWeight,
+          vectors: updatedVectors
+        }
+      };
+    });
     setStep(step + 1);
   };
 
@@ -189,7 +215,6 @@ export default function PromiseGapDiagnosticPage() {
               <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm shadow-2xl">
                 <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white underline decoration-cyan-500 underline-offset-8">Systemic Observation</h2>
                 
-                {/* PROTOCOL DISCLAIMER */}
                 <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-6 mb-8">
                   <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-2">Forensic Protocol</h3>
                   <p className="text-slate-300 text-xs leading-relaxed italic">
@@ -240,7 +265,6 @@ export default function PromiseGapDiagnosticPage() {
                   {perspectiveContexts[formData.role]} Signal {step} of 12 — {currentQuestion.lens} Zone
                 </span>
                 
-                {/* PERSISTENT FORENSIC NOTE */}
                 <p className="text-slate-400 text-[10px] italic mt-3 border-t border-slate-800 pt-3 max-w-sm mx-auto">
                   If this protocol is not applicable or unknown, select <span className="text-white font-bold">Stage 1 (Reactive)</span>.
                 </p>
