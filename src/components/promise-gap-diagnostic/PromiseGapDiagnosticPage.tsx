@@ -4,7 +4,20 @@ import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 import { Activity, Loader2 } from "lucide-react";
 
-// --- PERSPECTIVE LENS CONTEXTS: Role-Based Question Framing ---
+// --- TYPES & INTERFACES ---
+interface ZoneData {
+  max: number;
+  aggregate: number;
+  vectors: string[];
+}
+
+interface DiagnosticResults {
+  HAI: ZoneData;
+  AVS: ZoneData;
+  IGF: ZoneData;
+}
+
+// --- PERSPECTIVE LENS CONTEXTS ---
 const perspectiveContexts: Record<string, string> = {
   "Executive": "Strategic Stewardship:",
   "Manager": "Operational Synchronization:",
@@ -29,88 +42,76 @@ const calculatePillarPressure = (weight: number, role: string, zone: string) => 
 // --- CORE DIAGNOSTIC DATA ---
 const diagnosticQuestions = [
   { id: 1, lens: "HAI", text: "How do teams handle verification of AI outputs before sharing them?", options: [
-    { label: "Teams always manually verify outputs before sharing.", strength: 5, weight: 8, vector: "Calibrate Empirical Trust" },
-    { label: "Teams manually verify high-risk outputs only.", strength: 5, weight: 8, vector: "Optimize Interface Utility" },
-    { label: "Teams use automated checks for most outputs.", strength: 3, weight: 3, vector: "Standardize Trust Protocols" },
-    { label: "Outputs are fully automated with no manual review.", strength: 2, weight: 1, vector: "Audit Compliance Overlays" },
-    { label: "No verification process currently exists.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): Automated validation protocols + systematic forensic audits.", strength: 5, weight: 8, vector: "Calibrate Empirical Trust" },
+    { label: "Stage 3 (Integrated): Documented workflow for manual/human-in-the-loop verification.", strength: 3, weight: 3, vector: "Standardize Trust Protocols" },
+    { label: "Stage 2 (Emerging): Ad-hoc verification by individual team members without formal standards.", strength: 2, weight: 1, vector: "Optimize Interface Utility" },
+    { label: "Stage 1 (Reactive): No verification process exists / Not Applicable to my role.", strength: 1, weight: 0, vector: "Maintain Baseline" }
   ]},
   { id: 2, lens: "HAI", text: "What is the process for identifying the cause of AI errors?", options: [
-    { label: "Errors are not tracked; we fix and move on.", strength: 5, weight: 8, vector: "Instrument Error Logging" },
-    { label: "We investigate ad-hoc without formal processes.", strength: 4, weight: 5, vector: "Formalize Forensic Retrospectives" },
-    { label: "We document errors but lack tools to diagnose quickly.", strength: 3, weight: 3, vector: "Synchronize Change Management" },
-    { label: "We automate error tracking but reviews are slow.", strength: 2, weight: 1, vector: "Automate Root-Cause Diagnosis" },
-    { label: "Errors are diagnosed in hours via automated tools.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): Errors diagnosed in real-time via automated root-cause telemetry.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Formalized error tracking and documented forensic retrospectives.", strength: 3, weight: 3, vector: "Automate Root-Cause Diagnosis" },
+    { label: "Stage 2 (Emerging): Ad-hoc investigation without formal processes; errors often go untracked.", strength: 2, weight: 1, vector: "Formalize Forensic Retrospectives" },
+    { label: "Stage 1 (Reactive): Errors are not tracked / Not Applicable to my role.", strength: 1, weight: 0, vector: "Instrument Error Logging" }
   ]},
   { id: 3, lens: "HAI", text: "How do teams handle situations where AI tools may not be optimal?", options: [
-    { label: "Teams always bypass AI for manual processes.", strength: 5, weight: 8, vector: "Neutralize Operational Friction" },
-    { label: "Teams often bypass AI for edge cases.", strength: 4, weight: 5, vector: "Expand Algorithmic Scope" },
-    { label: "Teams sometimes bypass AI due to training gaps.", strength: 3, weight: 3, vector: "Synchronize Change Management" },
-    { label: "Teams rarely bypass AI (only for compliance).", strength: 2, weight: 1, vector: "Integrate Audit Workflows" },
-    { label: "AI is never bypassed; tools are fully integrated.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): AI is fully integrated; tools are dynamically optimized for edge cases.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Teams rarely bypass AI, utilizing integrated audit workflows for exceptions.", strength: 3, weight: 3, vector: "Integrate Audit Workflows" },
+    { label: "Stage 2 (Emerging): Teams often bypass AI for edge cases due to perceived tool or training gaps.", strength: 2, weight: 1, vector: "Expand Algorithmic Scope" },
+    { label: "Stage 1 (Reactive): Teams always bypass AI for manual processes / Not Applicable.", strength: 1, weight: 0, vector: "Neutralize Operational Friction" }
   ]},
   { id: 4, lens: "HAI", text: "How does the organization review AI risk appetite against performance?", options: [
-    { label: "We don’t track performance for risk decisions.", strength: 5, weight: 8, vector: "Establish Risk Telemetry" },
-    { label: "Risk appetite is updated only after major failures.", strength: 4, weight: 5, vector: "Implement Adaptive Risk Logic" },
-    { label: "Risk reviews are scheduled but not data-driven.", strength: 3, weight: 3, vector: "Predictive Risk Modeling" },
-    { label: "Risk appetite is reviewed quarterly with data.", strength: 2, weight: 1, vector: "Increase Review Frequency" },
-    { label: "Risk models are dynamically updated with real-time data.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): Risk models are dynamically updated via real-time performance data.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Risk appetite is reviewed quarterly using verified performance benchmarks.", strength: 3, weight: 3, vector: "Increase Review Frequency" },
+    { label: "Stage 2 (Emerging): Risk reviews are scheduled but rely on qualitative vs. data-driven logic.", strength: 2, weight: 1, vector: "Predictive Risk Modeling" },
+    { label: "Stage 1 (Reactive): No tracking for risk decisions / Not Applicable to my role.", strength: 1, weight: 0, vector: "Establish Risk Telemetry" }
   ]},
   { id: 5, lens: "AVS", text: "What is the standard process for pre-deployment risk reviews?", options: [
-    { label: "No formal review is conducted.", strength: 5, weight: 8, vector: "Stabilize Deployment Guardrails" },
-    { label: "Reviews are perceived as bottlenecks and skipped.", strength: 3, weight: 3, vector: "Streamline Governance Cycles" },
-    { label: "Reviews are conducted but lack resources.", strength: 3, weight: 3, vector: "Augment Review Capacity" },
-    { label: "Low-risk projects skip formal reviews.", strength: 2, weight: 1, vector: "Formalize Risk Tiering" },
-    { label: "All projects undergo formal risk reviews.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): Automated deployment guardrails and mandatory formal risk reviews.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Formalized risk tiering; all high-risk projects undergo review.", strength: 3, weight: 3, vector: "Formalize Risk Tiering" },
+    { label: "Stage 2 (Emerging): Reviews are conducted but seen as bottlenecks or lack proper resources.", strength: 2, weight: 1, vector: "Augment Review Capacity" },
+    { label: "Stage 1 (Reactive): No formal review is conducted / Not Applicable.", strength: 1, weight: 0, vector: "Stabilize Deployment Guardrails" }
   ]},
   { id: 6, lens: "AVS", text: "How is responsibility assigned for AI failures?", options: [
-    { label: "No designated owner exists.", strength: 5, weight: 8, vector: "Map Accountability Pathways" },
-    { label: "Teams argue over ownership after failures.", strength: 4, weight: 5, vector: "Formalize Ownership Matrix" },
-    { label: "Responsibility is assigned ad-hoc.", strength: 3, weight: 3, vector: "Standardize Escalation Paths" },
-    { label: "Ownership is clear but notifications are slow.", strength: 2, weight: 1, vector: "Optimize Response Latency" },
-    { label: "Designated leaders own fixes and are notified instantly.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): Clear ownership matrix with instant, automated failure notifications.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Ownership is clear; designated leaders manage standardized escalation paths.", strength: 3, weight: 3, vector: "Optimize Response Latency" },
+    { label: "Stage 2 (Emerging): Responsibility is assigned ad-hoc; teams often argue over ownership.", strength: 2, weight: 1, vector: "Formalize Ownership Matrix" },
+    { label: "Stage 1 (Reactive): No designated owner exists / Not Applicable to my role.", strength: 1, weight: 0, vector: "Map Accountability Pathways" }
   ]},
   { id: 7, lens: "AVS", text: "How is AI compliance managed after deployment?", options: [
-    { label: "Compliance is a one-time checkbox at launch.", strength: 5, weight: 8, vector: "Instrument Persistent Oversight" },
-    { label: "We assume compliance is static post-launch.", strength: 4, weight: 5, vector: "Deploy Continuous Monitoring" },
-    { label: "Ongoing monitoring is too resource-intensive.", strength: 3, weight: 3, vector: "Automate Compliance Telemetry" },
-    { label: "We monitor only high-risk models.", strength: 2, weight: 1, vector: "Define Dynamic Compliance Standards" },
-    { label: "Compliance is audited as a continuous requirement.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): Compliance managed via persistent, automated oversight and drift detection.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Ongoing monitoring for high-risk models with dynamic compliance standards.", strength: 3, weight: 3, vector: "Define Dynamic Compliance Standards" },
+    { label: "Stage 2 (Emerging): Compliance is a one-time launch checkbox; oversight is assumed static.", strength: 2, weight: 1, vector: "Instrument Persistent Oversight" },
+    { label: "Stage 1 (Reactive): No post-launch oversight exists / Not Applicable.", strength: 1, weight: 0, vector: "Deploy Continuous Monitoring" }
   ]},
   { id: 8, lens: "AVS", text: "What level of effort is required to maintain AI tools?", options: [
-    { label: "AI requires constant manual correction.", strength: 5, weight: 8, vector: "Identify Stability Root Causes" },
-    { label: "We lack automated monitoring for maintenance.", strength: 4, weight: 5, vector: "Automate Maintenance Telemetry" },
-    { label: "High manual overhead is expected in early stages.", strength: 3, weight: 3, vector: "Accelerate Maturity Roadmap" },
-    { label: "Human effort is focused on training.", strength: 2, weight: 1, vector: "Optimize Training Cycles" },
-    { label: "AI tools run autonomously with minimal intervention.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): AI tools run autonomously with automated maintenance telemetry.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Effort is focused on training and strategic cycles vs. manual fixes.", strength: 3, weight: 3, vector: "Optimize Training Cycles" },
+    { label: "Stage 2 (Emerging): High manual overhead or constant monitoring required to prevent failure.", strength: 2, weight: 1, vector: "Automate Maintenance Telemetry" },
+    { label: "Stage 1 (Reactive): AI requires constant manual correction / Not Applicable.", strength: 1, weight: 0, vector: "Identify Stability Root Causes" }
   ]},
   { id: 9, lens: "IGF", text: "How are human corrections fed back into AI systems?", options: [
-    { label: "No system exists for corrections.", strength: 5, weight: 8, vector: "Establish Feedback Architecture" },
-    { label: "Corrections are not systematically tracked.", strength: 4, weight: 5, vector: "Close the Feedback Circuit" },
-    { label: "Feedback is shared ad-hoc for critical errors.", strength: 3, weight: 3, vector: "Formalize Correction Ingestion" },
-    { label: "Corrections are logged but reviewed infrequently.", strength: 2, weight: 1, vector: "Automate Training Loops" },
-    { label: "Corrections are automatically incorporated.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): Corrections are automatically ingested into validated retraining loops.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Corrections are logged and reviewed systematically for model refinement.", strength: 3, weight: 3, vector: "Automate Training Loops" },
+    { label: "Stage 2 (Emerging): Feedback is shared ad-hoc for critical errors; tracking is inconsistent.", strength: 2, weight: 1, vector: "Formalize Correction Ingestion" },
+    { label: "Stage 1 (Reactive): No system exists for corrections / Not Applicable to my role.", strength: 1, weight: 0, vector: "Establish Feedback Architecture" }
   ]},
   { id: 10, lens: "IGF", text: "How does leadership prioritize AI projects?", options: [
-    { label: "Leadership focuses only on technical features.", strength: 5, weight: 8, vector: "Restore Strategic Alignment" },
-    { label: "Leadership lacks visibility into human impact.", strength: 4, weight: 5, vector: "Restore Executive Visibility" },
-    { label: "Stakeholders demand constant feature rollouts.", strength: 3, weight: 3, vector: "Manage Strategic Expectations" },
-    { label: "We are in early adoption where features take priority.", strength: 2, weight: 1, vector: "Define Maturity Thresholds" },
-    { label: "Leadership balances features and impact equally.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): Real-time impact telemetry informs all strategic prioritization.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Leadership balances technical features with maturity and human impact.", strength: 3, weight: 3, vector: "Define Maturity Thresholds" },
+    { label: "Stage 2 (Emerging): Focus remains on technical features or innovation scale without visibility.", strength: 2, weight: 1, vector: "Manage Strategic Expectations" },
+    { label: "Stage 1 (Reactive): Priority is ad-hoc or lacks executive visibility / Not Applicable.", strength: 1, weight: 0, vector: "Restore Strategic Alignment" }
   ]},
   { id: 11, lens: "IGF", text: "How does the organization prepare teams for AI deployments?", options: [
-    { label: "Deployments are pushed faster than training allows.", strength: 5, weight: 8, vector: "Synchronize Change Readiness" },
-    { label: "We lack proper training frameworks.", strength: 4, weight: 5, vector: "Deploy Cultural Stabilization" },
-    { label: "The strategic impact was never communicated.", strength: 4, weight: 5, vector: "Standardize Impact Reporting" },
-    { label: "Projects are deprioritized for higher-priority work.", strength: 2, weight: 1, vector: "Assess Resource Allocation" },
-    { label: "Teams are fully trained and aligned.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): Systematic readiness training aligned with standardized impact reporting.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Teams are trained using formal frameworks and communicated strategic impacts.", strength: 3, weight: 3, vector: "Standardize Impact Reporting" },
+    { label: "Stage 2 (Emerging): Deployments often push faster than training or cultural stability allows.", strength: 2, weight: 1, vector: "Deploy Cultural Stabilization" },
+    { label: "Stage 1 (Reactive): No formal training frameworks exist / Not Applicable.", strength: 1, weight: 0, vector: "Synchronize Change Readiness" }
   ]},
   { id: 12, lens: "IGF", text: "How is the gap between expected and actual AI ROI measured?", options: [
-    { label: "No one tracks AI value realization.", strength: 5, weight: 8, vector: "Assign ROI Stewardship" },
-    { label: "We lack tools to measure impact.", strength: 4, weight: 5, vector: "Instrument the Promise Gap™" },
-    { label: "Our focus is on innovation scale, not ROI.", strength: 4, weight: 5, vector: "Pivot to Value Realization" },
-    { label: "We are still piloting benchmarks for ROI measurement.", strength: 2, weight: 1, vector: "Pilot ROI Benchmarks" },
-    { label: "We formally measure ROI against expectations.", strength: 1, weight: 0, vector: "Maintain Baseline" }
+    { label: "Stage 4 (Optimized): AI ROI is measured via automated value-realization tracking vs. KPIs.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): ROI is formally measured against expectations using pilot benchmarks.", strength: 3, weight: 3, vector: "Pilot ROI Benchmarks" },
+    { label: "Stage 2 (Emerging): Lack of tools or benchmarks to measure real impact; focus is on pilots.", strength: 2, weight: 1, vector: "Pivot to Value Realization" },
+    { label: "Stage 1 (Reactive): No tracking of AI value realization / Not Applicable.", strength: 1, weight: 0, vector: "Assign ROI Stewardship" }
   ]}
 ];
 
@@ -139,11 +140,18 @@ export default function PromiseGapDiagnosticPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", confirmEmail: "", organization: "", role: "Executive" });
   
-  const [zoneResults, setZoneResults] = useState<any>({
+  const [zoneResults, setZoneResults] = useState<DiagnosticResults>({
     HAI: { max: 0, aggregate: 0, vectors: [] },
     AVS: { max: 0, aggregate: 0, vectors: [] },
     IGF: { max: 0, aggregate: 0, vectors: [] }
   });
+
+  // --- VAULT CLEANUP ---
+  useEffect(() => {
+    if (step === 0) {
+      localStorage.removeItem('bmr_results_vault');
+    }
+  }, [step]);
 
   const currentQuestion = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
 
@@ -175,14 +183,20 @@ export default function PromiseGapDiagnosticPage() {
     if (!currentQuestion) return;
     const dynamicWeight = calculatePillarPressure(option.weight, formData.role, currentQuestion.lens);
 
-    setZoneResults((prev: any) => ({
-      ...prev,
-      [currentQuestion.lens]: {
-        max: Math.max(prev[currentQuestion.lens].max, option.strength),
-        aggregate: prev[currentQuestion.lens].aggregate + dynamicWeight,
-        vectors: [...prev[currentQuestion.lens].vectors, option.vector]
-      }
-    }));
+    setZoneResults((prev) => {
+      const currentZone = prev[currentQuestion.lens as keyof DiagnosticResults];
+      // Ensure recommendation vectors are unique
+      const updatedVectors = Array.from(new Set([...currentZone.vectors, option.vector]));
+
+      return {
+        ...prev,
+        [currentQuestion.lens]: {
+          max: Math.max(currentZone.max, option.strength),
+          aggregate: currentZone.aggregate + dynamicWeight,
+          vectors: updatedVectors
+        }
+      };
+    });
     setStep(step + 1);
   };
 
@@ -200,6 +214,16 @@ export default function PromiseGapDiagnosticPage() {
             <motion.div key="intro" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm shadow-2xl">
                 <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white underline decoration-cyan-500 underline-offset-8">Systemic Observation</h2>
+                
+                <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-6 mb-8">
+                  <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-2">Forensic Protocol</h3>
+                  <p className="text-slate-300 text-xs leading-relaxed italic">
+                    This diagnostic identifies your organizational maturity stage. If a specific protocol is 
+                    unknown or not yet implemented, please select <span className="text-white font-bold text-cyan-400">Stage 1 (Reactive)</span>. 
+                    This establishes your baseline for forensic stabilization.
+                  </p>
+                </div>
+
                 <form 
                   onSubmit={(e) => { 
                     e.preventDefault(); 
@@ -237,10 +261,14 @@ export default function PromiseGapDiagnosticPage() {
           {step > 0 && step <= 12 && currentQuestion && (
             <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <Card className="p-12 bg-slate-900/30 border-slate-800 text-center shadow-2xl backdrop-blur-sm">
-                {/* DYNAMIC ROLE-BASED CONTEXT HEADER */}
                 <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">
                   {perspectiveContexts[formData.role]} Signal {step} of 12 — {currentQuestion.lens} Zone
                 </span>
+                
+                <p className="text-slate-400 text-[10px] italic mt-3 border-t border-slate-800 pt-3 max-w-sm mx-auto">
+                  If this protocol is not applicable or unknown, select <span className="text-white font-bold">Stage 1 (Reactive)</span>.
+                </p>
+
                 <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 text-white italic uppercase leading-tight">{currentQuestion.text}</h2>
                 <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
                   {currentQuestion.options.map((opt: any, idx: number) => (
