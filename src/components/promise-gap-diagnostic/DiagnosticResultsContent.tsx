@@ -8,10 +8,10 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer 
 } from 'recharts';
-import { ShieldAlert, Activity, ArrowRight, Calendar, Lock, ShieldCheck } from "lucide-react";
+import { ShieldAlert, Activity, Calendar, Lock, ShieldCheck } from "lucide-react";
 import { useRouter } from 'next/router';
 
-// --- TYPES ---
+// --- TYPES & INTERFACES ---
 interface ZoneData {
   max: number;
   aggregate: number;
@@ -69,7 +69,7 @@ const DiagnosticResultsContent = () => {
         router.push('/diagnostic');
       }
     } catch (err) {
-      console.error("Build check: Vault fail", err);
+      console.error("Forensic Vault initialization failed:", err);
       router.push('/diagnostic');
     }
   }, [router]);
@@ -99,8 +99,8 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-8 space-y-12">
-      {/* HEADER */}
-      <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8 backdrop-blur-sm">
+      {/* HEADER: Forensic Validation */}
+      <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8 backdrop-blur-sm animate-in fade-in slide-in-from-left duration-700">
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
            <ShieldCheck className="h-3 w-3" /> Signal Intensity Captured
         </h3>
@@ -112,7 +112,8 @@ const DiagnosticResultsContent = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 p-8 bg-slate-900/20 border-slate-800 backdrop-blur-xl">
+        {/* RADAR CHART: Organizational Displacement */}
+        <Card className="lg:col-span-2 p-8 bg-slate-900/20 border-slate-800 backdrop-blur-xl shadow-2xl">
           <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-8 flex items-center gap-2">
             <Activity className="h-3 w-3 text-[#00F2FF]" /> Organizational Displacement (Intensity Points)
           </h3>
@@ -128,11 +129,12 @@ const DiagnosticResultsContent = () => {
           </div>
         </Card>
 
+        {/* MATURITY BENCHMARKS */}
         <div className="space-y-4">
           {(['HAI', 'AVS', 'IGF'] as const).map((zone) => {
             const status = getStatusLabel(data[zone].max);
             return (
-              <Card key={zone} className="p-6 bg-slate-900/40 border-slate-800">
+              <Card key={zone} className="p-6 bg-slate-900/40 border-slate-800 transition-all hover:bg-slate-900/60">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-[10px] font-bold text-slate-500 tracking-widest">{zone} ZONE</span>
                   <span className="text-[9px] font-bold px-2 py-0.5 rounded uppercase" style={{ backgroundColor: `${status.color}20`, color: status.color }}>
@@ -154,28 +156,33 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* ROADMAP SECTION */}
+      {/* SYSTEMIC NEUTRALIZATION ROADMAP - LOCKED TEASER */}
       <div className="pt-12 border-t border-slate-800 relative">
         <div className="mb-10">
           <h3 className="text-xl font-bold italic uppercase flex items-center gap-3 text-white tracking-tighter">
             <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Systemic Neutralization Roadmap
           </h3>
           <p className="mt-4 text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed max-w-3xl font-bold">
-            <span className="text-[#00F2FF]">Forensic Note:</span> Recommended vectors are filtered. Calibration is required to unlock implementation.
+            <span className="text-[#00F2FF]">Forensic Note:</span> Recommended vectors are filtered. Calibration is required to unlock full implementation.
           </p>
         </div>
 
-        <div className="absolute inset-x-0 bottom-0 top-[100px] z-20 bg-slate-950/70 backdrop-blur-md flex flex-col items-center justify-center border border-slate-800/50 rounded-sm p-12 text-center">
+        {/* TEASER OVERLAY */}
+        <div className="absolute inset-x-0 bottom-0 top-[100px] z-20 bg-slate-950/70 backdrop-blur-md flex flex-col items-center justify-center border border-slate-800/50 rounded-sm p-12 text-center transition-all">
           <Lock className="h-8 w-8 text-[#00F2FF] mb-4 animate-pulse" />
           <h4 className="text-white font-black italic uppercase text-lg tracking-tighter underline decoration-[#00F2FF] underline-offset-8">Review Required</h4>
           <p className="text-slate-400 text-[10px] uppercase tracking-[0.2em] mt-6 max-w-sm leading-relaxed font-bold">
-            Neutralization vectors for the <span className="text-[#00F2FF]">{userRole} lens</span> are restricted.
+            Neutralization vectors for the <span className="text-[#00F2FF]">{userRole} lens</span> are restricted. Schedule a 1-on-1 review to finalize your deployment roadmap.
           </p>
-          <button className="mt-8 bg-[#00F2FF] text-[#020617] px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all shadow-2xl active:scale-95" onClick={handleCalendlyOpen}>
+          <button 
+            className="mt-8 bg-[#00F2FF] text-[#020617] px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all shadow-2xl active:scale-95"
+            onClick={handleCalendlyOpen}
+          >
             Unlock Full Roadmap
           </button>
         </div>
 
+        {/* VECTOR GRID: Remains in background for visual depth */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-10 pointer-events-none grayscale">
           {(['HAI', 'AVS', 'IGF'] as const).map((zone) => (
             <div key={zone} className="space-y-4">
@@ -195,7 +202,7 @@ const DiagnosticResultsContent = () => {
         <h2 className="text-3xl font-black italic uppercase tracking-tighter mb-2">Begin Forensic Calibration</h2>
         <p className="text-[10px] uppercase tracking-[0.3em] font-bold mb-8">Neutralize maturity gaps through role-aware strategy</p>
         <button 
-          className="bg-[#020617] text-white px-10 py-5 font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all shadow-2xl"
+          className="bg-[#020617] text-white px-10 py-5 font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all shadow-xl active:scale-95"
           onClick={handleCalendlyOpen}
         >
           Begin Calibration <Calendar className="h-4 w-4" />
