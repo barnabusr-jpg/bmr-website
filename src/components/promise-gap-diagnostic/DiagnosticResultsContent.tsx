@@ -11,7 +11,7 @@ import {
 import { ShieldAlert, Activity, Calendar, Lock, ShieldCheck } from "lucide-react";
 import { useRouter } from 'next/router';
 
-// --- TYPES & INTERFACES ---
+// --- TYPES ---
 interface ZoneData {
   max: number;
   aggregate: number;
@@ -38,11 +38,12 @@ const zoneFunctionalRoles: Record<string, string> = {
   "IGF": "Stabilization Layer: Intent Maintenance"
 };
 
-const getStatusLabel = (max: number) => {
-  if (max >= 5) return { label: "Stage 4: Optimized", color: "#10B981" };
-  if (max >= 3) return { label: "Stage 3: Integrated", color: "#00F2FF" };
-  if (max >= 2) return { label: "Stage 2: Emerging", color: "#F59E0B" };
-  return { label: "Stage 1: Not in Scope", color: "#EF4444" };
+// UPDATED: Threshold logic to prevent premature Stage 4 "Optimized" status
+const getStatusLabel = (aggregate: number) => {
+  if (aggregate >= 42) return { label: "Stage 4: Optimized", color: "#10B981" };
+  if (aggregate >= 28) return { label: "Stage 3: Integrated", color: "#00F2FF" };
+  if (aggregate >= 12) return { label: "Stage 2: Emerging", color: "#F59E0B" };
+  return { label: "Stage 1: Reactive", color: "#EF4444" };
 };
 
 const DiagnosticResultsContent = () => {
@@ -69,25 +70,24 @@ const DiagnosticResultsContent = () => {
         router.push('/diagnostic');
       }
     } catch (err) {
-      console.error("Forensic Vault initialization failed:", err);
+      console.error("Forensic initialization failed:", err);
       router.push('/diagnostic');
     }
   }, [router]);
 
   if (!isReady || !data) {
     return (
-      <div className="py-20 text-center">
-        <div className="text-slate-500 uppercase tracking-widest text-[10px] animate-pulse font-bold">
-          Initialising Forensic Topology...
-        </div>
+      <div className="py-20 text-center text-slate-500 uppercase tracking-widest text-[10px] animate-pulse font-bold">
+        Initialising Forensic Topology...
       </div>
     );
   }
 
+  // UPDATED: Added 'full' benchmark to show the gap against an optimized model
   const chartData = [
-    { zone: 'HAI (Human)', value: data.HAI.aggregate },
-    { zone: 'AVS (Adoption)', value: data.AVS.aggregate },
-    { zone: 'IGF (Governance)', value: data.IGF.aggregate },
+    { zone: 'HAI (Human)', value: data.HAI.aggregate, full: 45 },
+    { zone: 'AVS (Adoption)', value: data.AVS.aggregate, full: 45 },
+    { zone: 'IGF (Governance)', value: data.IGF.aggregate, full: 45 },
   ];
 
   const handleCalendlyOpen = () => {
@@ -99,7 +99,7 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-8 space-y-12">
-      {/* HEADER: Forensic Validation */}
+      {/* HEADER */}
       <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8 backdrop-blur-sm animate-in fade-in slide-in-from-left duration-700">
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
            <ShieldCheck className="h-3 w-3" /> Signal Intensity Captured
@@ -123,6 +123,11 @@ const DiagnosticResultsContent = () => {
                 <PolarGrid stroke="#1e293b" />
                 <PolarRadiusAxis angle={30} domain={[0, 50]} tick={false} axisLine={false} />
                 <PolarAngleAxis dataKey="zone" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} />
+                
+                {/* The 'Ghost' Benchmark Radar */}
+                <Radar name="Benchmark" dataKey="full" stroke="#1e293b" fill="#1e293b" fillOpacity={0.2} />
+                
+                {/* The User Data Radar */}
                 <Radar name="Pressure" dataKey="value" stroke="#00F2FF" fill="#00F2FF" fillOpacity={0.4} />
               </RadarChart>
             </ResponsiveContainer>
@@ -132,7 +137,7 @@ const DiagnosticResultsContent = () => {
         {/* MATURITY BENCHMARKS */}
         <div className="space-y-4">
           {(['HAI', 'AVS', 'IGF'] as const).map((zone) => {
-            const status = getStatusLabel(data[zone].max);
+            const status = getStatusLabel(data[zone].aggregate);
             return (
               <Card key={zone} className="p-6 bg-slate-900/40 border-slate-800 transition-all hover:bg-slate-900/60">
                 <div className="flex justify-between items-start mb-2">
@@ -156,14 +161,14 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* SYSTEMIC NEUTRALIZATION ROADMAP - LOCKED TEASER */}
+      {/* ROADMAP SECTION */}
       <div className="pt-12 border-t border-slate-800 relative">
         <div className="mb-10">
           <h3 className="text-xl font-bold italic uppercase flex items-center gap-3 text-white tracking-tighter">
             <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Systemic Neutralization Roadmap
           </h3>
           <p className="mt-4 text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed max-w-3xl font-bold">
-            <span className="text-[#00F2FF]">Forensic Note:</span> Recommended vectors are filtered. Calibration is required to unlock full implementation.
+            <span className="text-[#00F2FF]">Forensic Note:</span> Recommended vectors are filtered. Calibration is required to unlock implementation.
           </p>
         </div>
 
@@ -182,7 +187,6 @@ const DiagnosticResultsContent = () => {
           </button>
         </div>
 
-        {/* VECTOR GRID: Remains in background for visual depth */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-10 pointer-events-none grayscale">
           {(['HAI', 'AVS', 'IGF'] as const).map((zone) => (
             <div key={zone} className="space-y-4">
@@ -199,10 +203,10 @@ const DiagnosticResultsContent = () => {
 
       {/* FOOTER CTA */}
       <div className="mt-12 p-12 bg-[#00F2FF] text-[#020617] text-center rounded-sm shadow-[0_0_50px_rgba(0,242,255,0.15)]">
-        <h2 className="text-3xl font-black italic uppercase tracking-tighter mb-2">Begin Forensic Calibration</h2>
+        <h2 className="text-3xl font-black italic uppercase tracking-tighter mb-2 text-white">Begin Forensic Calibration</h2>
         <p className="text-[10px] uppercase tracking-[0.3em] font-bold mb-8">Neutralize maturity gaps through role-aware strategy</p>
         <button 
-          className="bg-[#020617] text-white px-10 py-5 font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all shadow-xl active:scale-95"
+          className="bg-[#020617] text-white px-10 py-5 font-black uppercase text-xs tracking-[0.2em] flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all shadow-xl"
           onClick={handleCalendlyOpen}
         >
           Begin Calibration <Calendar className="h-4 w-4" />
