@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 import { Activity, Loader2, ShieldCheck } from "lucide-react";
 
-// --- TYPES & INTERFACES ---
 interface ZoneData {
   max: number;
   aggregate: number;
@@ -24,9 +23,9 @@ const perspectiveContexts: Record<string, string> = {
 };
 
 const lensDefinitions: Record<string, string> = {
-  "Executive": "Focus: Internal Governance (IGF). Strategic alignment and long-term ROI stability.",
-  "Manager": "Focus: Adoption Value (AVS). Workflow synchronization and operational friction.",
-  "Technical": "Focus: Trust Architecture (HAI). Forensic accuracy and system reliability."
+  "Executive": `Focus: Internal Governance (IGF). Strategic alignment and long-term ROI stability.`,
+  "Manager": `Focus: Adoption Value (AVS). Workflow synchronization and operational friction.`,
+  "Technical": `Focus: Trust Architecture (HAI). Forensic accuracy and system reliability.`
 };
 
 const calculatePillarPressure = (weight: number, role: string, zone: string) => {
@@ -38,7 +37,6 @@ const calculatePillarPressure = (weight: number, role: string, zone: string) => 
   return multipliers[role] === zone ? weight * 1.5 : weight;
 };
 
-// --- SHIELDED DIAGNOSTIC DATA ---
 const diagnosticQuestions = [
   { id: 1, lens: "HAI", text: "How do teams handle verification of AI outputs before sharing them?", options: [
     { label: "Stage 4: Persistent Forensic Reliability", strength: 5, weight: 8, vector: "Calibrate Empirical Trust" },
@@ -213,13 +211,12 @@ export default function PromiseGapDiagnosticPage() {
               <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm shadow-2xl">
                 <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white underline decoration-[#00F2FF] underline-offset-8">Forensic Signal Diagnostic</h2>
                 
-                {/* REFINED AUDIT PROTOCOL BOX */}
                 <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-6 mb-8">
                   <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
                     <ShieldCheck className="h-3 w-3" /> Audit Protocol
                   </h3>
                   <p className="text-slate-300 text-xs leading-relaxed italic">
-                    This diagnostic measures systemic maturity. In instances where a protocol is <span className="text-white font-bold">undefined, unobserved, or outside your current operational scope</span>, select <span className="text-[#00F2FF] font-bold">Stage 1 (Reactive)</span>. This ensures an accurate calibration of your organization's forensic baseline.
+                    {`This diagnostic measures systemic maturity. In instances where a protocol is undefined, unobserved, or outside your current operational scope, select Stage 1 (Reactive). This ensures an accurate calibration of your organization's forensic baseline.`}
                   </p>
                 </div>
 
