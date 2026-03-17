@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 
-// Body parser config for large diagnostic payloads
 export const config = {
   api: {
     bodyParser: {
@@ -26,13 +25,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     IGF: zoneData?.IGF?.aggregate || 0
   };
 
-  // Focus on the area with the highest systemic pressure (aggregate weight)
   if (intensities.HAI >= intensities.AVS && intensities.HAI >= intensities.IGF) focusArea = 'HAI';
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
   else focusArea = 'IGF';
 
-  // --- BUG FIX: Neutralize "undefined" by bounding the index ---
-  // Ensures a score of 5 (from protocol v3.0) maps to index 4 (Optimized)
   const rawMax = zoneData?.[focusArea]?.max || 1;
   const maturityIndex = Math.min(Math.max(rawMax, 1), 4);
   
@@ -66,18 +62,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   };
 
   const selected = contentMap[focusArea];
-  const calendlyLink = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(name || "")}&email=${encodeURIComponent(email || "")}&a1=${encodeURIComponent(role || "")}`;
+  const calendlyLink = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(name || "")}&email=${encodeURIComponent(email || "")}&a1=${encodeURIComponent(role || "")}&a2=${encodeURIComponent(`HAI:${intensities.HAI}_AVS:${intensities.AVS}_IGF:${intensities.IGF}`)}`;
 
+  // --- EMAIL PAYLOAD: Modified to Teaser Mode ---
   const msg = {
     to: email,
     bcc: bcc || 'hello@bmradvisory.co', 
     from: 'hello@bmradvisory.co',
-    subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
+    subject: `[Maturity Benchmark] BMR Signal Diagnostic: ${org}`,
     html: `
       <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; color: #020617; line-height: 1.6; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0;">
         <div style="border-bottom: 2px solid #020617; padding-bottom: 20px; margin-bottom: 30px;">
           <h2 style="text-transform: uppercase; letter-spacing: 4px; font-size: 14px; margin: 0; color: #64748b;">Forensic Observation Report</h2>
-          <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin: 5px 0 0 0;">Lens: ${role} | Protocol: Maturity Stage ${maturityIndex}</p>
+          <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin: 5px 0 0 0;">Lens: ${role} | Maturity Stage: ${maturityIndex}</p>
         </div>
         <p>Hello ${firstName},</p>
         <p style="color: #475569;">The BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong> is complete. We have benchmarked your AI maturity based on the ${role} perspective.</p>
@@ -91,9 +88,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </div>
         </div>
 
-        <h3 style="font-size: 14px; text-transform: uppercase; color: #020617; margin-bottom: 16px;">Surgical Neutralization Exercise</h3>
-        <div style="border-left: 4px solid #00F2FF; padding: 10px 20px; color: #334155; font-size: 14px; margin-bottom: 32px; font-style: italic;">
-          ${selected.exercise}
+        {/* TEASER SECTION: Hiding the specific exercise */}
+        <h3 style="font-size: 14px; text-transform: uppercase; color: #020617; margin-bottom: 16px;">Surgical Neutralization Roadmap</h3>
+        <div style="border-left: 4px solid #00F2FF; padding: 10px 20px; color: #64748b; font-size: 13px; margin-bottom: 32px; font-style: italic; background-color: #f1f5f9;">
+          Neutralization vectors for <strong>${focusArea} Zone</strong> have been identified. To prevent uncalibrated implementation, the specific surgical roadmap is reserved for your 1-on-1 Maturity Review.
         </div>
 
         <div style="margin: 48px 0; text-align: center;">
@@ -110,14 +108,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const WEBHOOK_URL = process.env.AIRTABLE_WEBHOOK_URL; 
     if (WEBHOOK_URL) {
+      // FULL PAYLOAD: Sent to Airtable for your slide deck
       fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           name, email, org, role, 
           focusArea,
+          hai_intensity: intensities.HAI,
+          avs_intensity: intensities.AVS,
+          igf_intensity: intensities.IGF,
           maturityStage: currentStageLabel,
-          result: selected.result, 
+          forensic_implication: selected.implications,
+          neutralization_exercise: selected.exercise, // Stored safely in Airtable
           vaultID: `BMR-${Date.now()}` 
         }),
       }).catch(err => console.error("Airtable Error:", err));
