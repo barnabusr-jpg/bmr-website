@@ -34,12 +34,12 @@ const getVectorAffinity = (vector: string, role: string) => {
   return roleKws.some(kw => vector.toLowerCase().includes(kw)) ? "Priority" : "Standard";
 };
 
-// UPDATED: Maturity Stage Status Mapping
+// UPDATED: Maturity Stage Status Mapping (Reframed for 'Not in Scope' Logic)
 const getStatusLabel = (max: number) => {
   if (max >= 5) return { label: "Stage 4: Optimized", color: "#10B981" };
   if (max >= 3) return { label: "Stage 3: Integrated", color: "#00F2FF" };
   if (max >= 2) return { label: "Stage 2: Emerging", color: "#F59E0B" };
-  return { label: "Stage 1: Reactive", color: "#EF4444" };
+  return { label: "Stage 1: Not in Scope", color: "#EF4444" };
 };
 
 const DiagnosticResultsContent = () => {
@@ -56,7 +56,6 @@ const DiagnosticResultsContent = () => {
       if (parsed.email) setUserEmail(parsed.email);
       if (parsed.role) setUserRole(parsed.role);
     } else {
-      // Safety: if no data, user shouldn't be here
       router.push('/diagnostic');
     }
   }, [router]);
@@ -101,7 +100,6 @@ const DiagnosticResultsContent = () => {
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                 <PolarGrid stroke="#1e293b" />
-                {/* FIXED DOMAIN: Handles Role Multipliers up to 50 */}
                 <PolarRadiusAxis angle={30} domain={[0, 50]} tick={false} axisLine={false} />
                 <PolarAngleAxis dataKey="zone" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} />
                 <Radar name="Pressure" dataKey="value" stroke="#00F2FF" fill="#00F2FF" fillOpacity={0.4} />
@@ -137,19 +135,39 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* SYSTEMIC NEUTRALIZATION ROADMAP */}
-      <div className="pt-12 border-t border-slate-800">
+      {/* SYSTEMIC NEUTRALIZATION ROADMAP - LOCKED TEASER */}
+      <div className="pt-12 border-t border-slate-800 relative">
         <div className="mb-10">
           <h3 className="text-xl font-bold italic uppercase flex items-center gap-3 text-white">
             <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Systemic Neutralization Roadmap
           </h3>
           <p className="mt-4 text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed max-w-3xl">
-            <span className="text-[#00F2FF] font-bold">Forensic Note:</span> Recommended vectors are filtered to remove baseline maintenance and prioritize surgical actions based on your <span className="text-white italic">{userRole} lens</span>. High-priority targets indicate immediate variance neutralization requirements.
+            <span className="text-[#00F2FF] font-bold">Forensic Note:</span> Recommended vectors are filtered based on your <span className="text-white italic">{userRole} lens</span>. Calibration is required to unlock full implementation paths.
           </p>
         </div>
 
-        {/* VECTOR GRID: HAI -> AVS -> IGF */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* TEASER OVERLAY: This protects your IP and drives the Review Session */}
+        <div className="absolute inset-x-0 bottom-0 top-[100px] z-20 bg-slate-950/60 backdrop-blur-md flex flex-col items-center justify-center border border-slate-800/50 rounded-sm p-12 text-center transition-all">
+          <Lock className="h-8 w-8 text-[#00F2FF] mb-4 animate-pulse" />
+          <h4 className="text-white font-black italic uppercase text-lg tracking-tighter">Calibration Review Required</h4>
+          <p className="text-slate-400 text-[10px] uppercase tracking-[0.2em] mt-3 max-w-sm leading-relaxed font-bold">
+            Surgical neutralization vectors for the <span className="text-[#00F2FF]">{userRole} lens</span> are currently restricted. Schedule a 1-on-1 review to finalize your deployment roadmap.
+          </p>
+          <button 
+            className="mt-8 bg-[#00F2FF] text-[#020617] px-6 py-3 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all shadow-xl active:scale-95"
+            onClick={() => {
+              const calendlyBase = 'https://calendly.com/hello-bmradvisory/forensic-review';
+              const scoreSummary = `HAI:${data.HAI.aggregate}|AVS:${data.AVS.aggregate}|IGF:${data.IGF.aggregate}`;
+              const params = `?email=${encodeURIComponent(userEmail)}&a1=${encodeURIComponent(userRole)}&a2=${encodeURIComponent(scoreSummary)}`;
+              window.open(`${calendlyBase}${params}`, '_blank');
+            }}
+          >
+            Unlock Full Roadmap
+          </button>
+        </div>
+
+        {/* VECTOR GRID: Remains in background for visual depth */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 opacity-20 pointer-events-none grayscale">
           {['HAI', 'AVS', 'IGF'].map((zone) => (
             <div key={zone} className="space-y-4">
               <div className="px-1 border-b border-slate-800 pb-2">
@@ -159,30 +177,12 @@ const DiagnosticResultsContent = () => {
               
               {data[zone].vectors
                 .filter((v: string) => v !== "Maintain Baseline")
-                .sort((a: string) => getVectorAffinity(a, userRole) === "Priority" ? -1 : 1)
-                .map((vector: string, idx: number) => {
-                  const isPriority = getVectorAffinity(vector, userRole) === "Priority";
-                  return (
-                    <div key={`${zone}-${idx}`} className={`group relative p-5 border transition-all cursor-default ${
-                      isPriority ? "border-[#00F2FF] bg-[#0A1F33]/40 shadow-[0_0_15px_rgba(0,242,255,0.1)]" : "border-slate-800 bg-slate-900/20"
-                    }`}>
-                      <div className="absolute top-2 right-2 opacity-20">
-                        <span className="text-[7px] border border-slate-700 px-1 text-slate-500 uppercase font-mono">
-                          PG-{zone}-{idx + 10}
-                        </span>
-                      </div>
-                      
-                      <div className="text-[#00F2FF] text-[9px] font-bold uppercase mb-1 tracking-tighter flex items-center gap-1">
-                        {isPriority && <Lock className="h-2 w-2" />}
-                        {isPriority ? "Priority Calibration" : "Forensic Target"}
-                      </div>
-                      <div className="text-slate-200 font-bold uppercase italic text-[11px] leading-tight">
-                        {vector}
-                      </div>
-                      <ArrowRight className={`h-3 w-3 mt-4 transition-transform group-hover:translate-x-1 ${isPriority ? "text-[#00F2FF]" : "text-slate-700"}`} />
+                .map((vector: string, idx: number) => (
+                    <div key={`${zone}-${idx}`} className="p-5 border border-slate-800 bg-slate-900/20">
+                      <div className="text-slate-200 font-bold uppercase italic text-[11px]">{vector}</div>
                     </div>
-                  );
-              })}
+                  )
+              )}
             </div>
           ))}
         </div>
@@ -190,13 +190,14 @@ const DiagnosticResultsContent = () => {
 
       {/* CALL TO ACTION: Forensic Review */}
       <div className="mt-12 p-10 bg-[#00F2FF] text-[#020617] text-center rounded-sm shadow-[0_0_30px_rgba(0,242,255,0.2)]">
-        <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Schedule Forensic Review</h2>
-        <p className="text-[10px] uppercase tracking-[0.2em] font-bold mb-6">Neutralize systemic drift through role-aware maturity calibration</p>
+        <h2 className="text-2xl font-black italic uppercase tracking-tighter mb-2">Initialize Forensic Alignment</h2>
+        <p className="text-[10px] uppercase tracking-[0.2em] font-bold mb-6">Neutralize maturity gaps through role-aware calibration</p>
         <button 
           className="bg-[#020617] text-white px-8 py-4 font-black uppercase text-xs tracking-widest flex items-center gap-3 mx-auto hover:bg-slate-800 transition-all shadow-xl active:scale-95"
           onClick={() => {
             const calendlyBase = 'https://calendly.com/hello-bmradvisory/forensic-review';
-            const params = `?email=${encodeURIComponent(userEmail)}&a1=${encodeURIComponent(userRole)}`;
+            const scoreSummary = `HAI:${data.HAI.aggregate}|AVS:${data.AVS.aggregate}|IGF:${data.IGF.aggregate}`;
+            const params = `?email=${encodeURIComponent(userEmail)}&a1=${encodeURIComponent(userRole)}&a2=${encodeURIComponent(scoreSummary)}`;
             window.open(`${calendlyBase}${params}`, '_blank');
           }}
         >
