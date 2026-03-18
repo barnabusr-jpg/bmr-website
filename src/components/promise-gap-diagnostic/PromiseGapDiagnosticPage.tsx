@@ -95,18 +95,21 @@ export default function PromiseGapDiagnosticPage() {
   });
   const [answers, setAnswers] = useState<any[]>([]);
 
+  // THE FIX: Strict Guard Clause
   const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
-    const primary = formData.email.trim().toLowerCase();
-    const secondary = formData.confirmEmail.trim().toLowerCase();
+    
+    // Normalize both inputs for comparison
+    const email1 = formData.email.trim().toLowerCase();
+    const email2 = formData.confirmEmail.trim().toLowerCase();
 
-    if (primary !== secondary) {
+    if (email1 !== email2) {
       setEmailError(true);
-      return; 
+      return; // CRITICAL: This return prevents the code from reaching setStep(1)
     }
     
     setEmailError(false);
-    setStep(1);
+    setStep(1); // Only triggers if the if-statement above is false
   };
 
   const handleAnswer = async (option: any) => {
@@ -123,6 +126,7 @@ export default function PromiseGapDiagnosticPage() {
 
   const finishDiagnostic = async (finalAnswers: any[]) => {
     setIsSubmitting(true);
+
     const calculatePillar = (lens: string) => {
       const pillarAnswers = finalAnswers.filter(a => a.lens === lens);
       return {
@@ -151,6 +155,7 @@ export default function PromiseGapDiagnosticPage() {
           name: formData.name,
           email: formData.email,
           org: formData.org,
+          // Removed 'role' from transmission to match API expectations
           zoneData
         }),
       });
@@ -172,7 +177,8 @@ export default function PromiseGapDiagnosticPage() {
           {step === 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
-                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight">Forensic Signal Diagnostic</h2>
+                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white">Forensic Signal Diagnostic</h2>
+                
                 <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-6 mb-8">
                   <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
                     <ShieldCheck className="h-3 w-3" /> Audit Protocol
@@ -181,16 +187,18 @@ export default function PromiseGapDiagnosticPage() {
                     This diagnostic measures systemic maturity. Select Level 1 if a protocol is reactive or undefined.
                   </p>
                 </div>
+
                 <form onSubmit={handleStart} className="space-y-6">
                   <input 
                     className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
                     placeholder="Full Name" required 
                     onChange={(e) => setFormData({...formData, name: e.target.value})} 
                   />
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input 
                       type="email"
-                      className={`w-full p-4 bg-slate-950 border rounded text-white outline-none transition-all ${emailError ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
+                      className={`w-full p-4 bg-slate-950 border rounded text-white outline-none transition-all ${emailError ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
                       placeholder="Work Email" required 
                       onChange={(e) => {
                         setFormData({...formData, email: e.target.value});
@@ -199,7 +207,7 @@ export default function PromiseGapDiagnosticPage() {
                     />
                     <input 
                       type="email"
-                      className={`w-full p-4 bg-slate-950 border rounded text-white outline-none transition-all ${emailError ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.2)]' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
+                      className={`w-full p-4 bg-slate-950 border rounded text-white outline-none transition-all ${emailError ? 'border-red-500 ring-1 ring-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
                       placeholder="Confirm Work Email" required 
                       onChange={(e) => {
                         setFormData({...formData, confirmEmail: e.target.value});
@@ -207,17 +215,20 @@ export default function PromiseGapDiagnosticPage() {
                       }} 
                     />
                   </div>
+                  
                   {emailError && (
-                    <div className="flex items-center gap-2 text-red-500 text-xs mt-1">
+                    <div className="flex items-center gap-2 text-red-400 text-xs mt-1 animate-pulse">
                       <AlertCircle className="h-3 w-3" />
-                      <span>Verification mismatch: Please ensure both email addresses are identical.</span>
+                      <span>The email addresses provided do not match. Please verify.</span>
                     </div>
                   )}
+
                   <input 
                     className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
                     placeholder="Organization" required 
                     onChange={(e) => setFormData({...formData, org: e.target.value})} 
                   />
+
                   <div className="space-y-1">
                     <select 
                       className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
@@ -230,6 +241,7 @@ export default function PromiseGapDiagnosticPage() {
                     </select>
                     <p className="mt-2 text-[10px] italic text-[#00F2FF]/80">{lensDefinitions[formData.role]}</p>
                   </div>
+
                   <button 
                     type="submit" 
                     className="w-full py-6 bg-[#00F2FF] text-[#020617] font-bold uppercase tracking-widest text-xs hover:bg-white transition-all shadow-[0_0_20px_rgba(0,242,255,0.1)]"
