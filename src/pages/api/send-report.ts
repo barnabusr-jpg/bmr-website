@@ -6,7 +6,8 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
-  const { name, email, org, zoneData, role } = req.body;
+  // FIX: 'role' removed from destructuring to prevent Vercel 'unused variable' build error
+  const { name, email, org, zoneData } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
   const intensities = {
