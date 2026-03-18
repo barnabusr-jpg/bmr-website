@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Radar as RechartsRadar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { ArrowRight, Lock } from "lucide-react"; // Removed ShieldAlert & Activity
+import { ArrowRight, Lock } from "lucide-react";
 import { useRouter } from 'next/router';
 
 const DiagnosticResultsContent = () => {
@@ -14,7 +14,7 @@ const DiagnosticResultsContent = () => {
     else router.push('/diagnostic');
   }, [router]);
 
-  if (!data) return <div className="py-20 text-center text-slate-500 text-xs uppercase tracking-widest animate-pulse">Initializing...</div>;
+  if (!data) return <div className="py-20 text-center text-slate-500 text-xs uppercase tracking-widest animate-pulse">Initializing Topology...</div>;
 
   const chartData = [
     { zone: 'HAI', value: data.HAI.aggregate },
