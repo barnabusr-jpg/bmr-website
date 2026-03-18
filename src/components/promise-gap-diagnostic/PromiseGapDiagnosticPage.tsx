@@ -4,7 +4,7 @@ import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 import { Loader2, ShieldCheck } from "lucide-react";
 
-// (Note: Insert the 'diagnosticQuestions' array from your current code here)
+// (Note: Ensure diagnosticQuestions array is defined here)
 
 function VectorIndicator({ num, isActive, isDone }: { num: number, isActive: boolean, isDone: boolean }) {
   return (
@@ -34,7 +34,7 @@ export default function PromiseGapDiagnosticPage() {
         body: JSON.stringify({ ...formData, zoneData: results }),
       }).then(() => router.push('/diagnostic/results'));
     }
-  }, [step]);
+  }, [step, formData, results, router]); // Added missing dependencies here
 
   const handleAnswer = (opt: any) => {
     const lens = currentQ!.lens;
