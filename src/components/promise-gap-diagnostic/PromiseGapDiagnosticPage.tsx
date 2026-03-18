@@ -1,37 +1,34 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { ShieldCheck, AlertCircle } from "lucide-react"; // Removed 'Loader2' to fix build error
+import { ShieldCheck, AlertCircle } from "lucide-react";
 import DiagnosticResultsContent from "./DiagnosticResultsContent";
-
-const lensDefinitions: Record<string, string> = {
-  "Executive": "Focus: Strategic alignment, enterprise risk stewardship, and long-term ROI stability.",
-  "Manager": "Focus: Operational workflow synchronization, adoption friction, and team output.",
-  "Technical": "Focus: System reliability, architectural integrity, and forensic data accuracy."
-};
 
 const diagnosticQuestions = [
   { id: 1, lens: "HAI", text: "How do teams handle verification of AI outputs before sharing them?", options: [
     { label: "Level 4: Forensic Assurance (Optimized)", strength: 5, weight: 8 },
     { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  // ... (Insert your other 10 questions here)
+  { id: 12, lens: "IGF", text: "How is the gap between expected and actual AI ROI measured?", options: [
+    { label: "Level 4: Automated Value Tracking", strength: 5, weight: 8 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
   ]}
-  // ... rest of questions omitted for brevity but should remain in your local file
 ];
 
 export default function PromiseGapDiagnosticPage() {
   const [step, setStep] = useState(0);
-  const [showResults, setShowResults] = useState(false); // Removed 'isSubmitting' to fix build error
+  const [showResults, setShowResults] = useState(false);
   const [emailError, setEmailError] = useState(false);
   const [formData, setFormData] = useState({ 
     name: '', email: '', confirmEmail: '', org: '', role: 'Executive' 
   });
   const [answers, setAnswers] = useState<any[]>([]);
 
-  // REAL-TIME VALIDATION & UNLOCK LOGIC
+  // Monitor email matching in real-time
   useEffect(() => {
     const email1 = formData.email.trim().toLowerCase();
     const email2 = formData.confirmEmail.trim().toLowerCase();
-
     if (email1 && email2 && email1 !== email2) {
       setEmailError(true);
     } else {
@@ -39,7 +36,7 @@ export default function PromiseGapDiagnosticPage() {
     }
   }, [formData.email, formData.confirmEmail]);
 
-  // Derived state to control UI locking
+  // Logic Gate: Must have name, matching emails, and organization to proceed
   const isLocked = emailError || !formData.email || !formData.confirmEmail || formData.email !== formData.confirmEmail;
 
   const handleStart = (e: React.FormEvent) => {
@@ -47,16 +44,15 @@ export default function PromiseGapDiagnosticPage() {
     if (!isLocked) setStep(1);
   };
 
-  // FIXED: handleAnswer is now called below to satisfy linting
-  const handleAnswer = async (option: any) => {
-    const currentLens = diagnosticQuestions[step - 1]?.lens || "HAI";
+  const handleAnswer = (option: any) => {
+    const currentLens = diagnosticQuestions[step - 1].lens;
     const newAnswers = [...answers, { ...option, lens: currentLens }];
     setAnswers(newAnswers);
 
-    if (step < 1) { // Reduced for testing logic, set to 12 for production
+    if (step < 12) {
       setStep(step + 1);
     } else {
-      // Logic for finishing diagnostic
+      // Final submission logic can be added here if needed
       setShowResults(true);
     }
   };
@@ -81,7 +77,7 @@ export default function PromiseGapDiagnosticPage() {
 
                 <form onSubmit={handleStart} className="space-y-6">
                   <input 
-                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
+                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none" 
                     placeholder="Full Name" required 
                     onChange={(e) => setFormData({...formData, name: e.target.value})} 
                   />
@@ -89,13 +85,13 @@ export default function PromiseGapDiagnosticPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input 
                       type="email"
-                      className={`w-full p-4 bg-slate-950 border rounded text-white transition-all ${emailError ? 'border-red-500' : 'border-slate-800'}`} 
+                      className={`w-full p-4 bg-slate-950 border rounded text-white transition-all ${emailError ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.1)]' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
                       placeholder="Work Email" required 
                       onChange={(e) => setFormData({...formData, email: e.target.value})} 
                     />
                     <input 
                       type="email"
-                      className={`w-full p-4 bg-slate-950 border rounded text-white transition-all ${emailError ? 'border-red-500' : 'border-slate-800'}`} 
+                      className={`w-full p-4 bg-slate-950 border rounded text-white transition-all ${emailError ? 'border-red-500 shadow-[0_0_10px_rgba(239,68,68,0.1)]' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
                       placeholder="Confirm Work Email" required 
                       onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} 
                     />
@@ -104,16 +100,16 @@ export default function PromiseGapDiagnosticPage() {
                   {emailError && (
                     <div className="flex items-center gap-2 text-red-400 text-[10px] uppercase font-bold animate-pulse">
                       <AlertCircle className="h-3 w-3" />
-                      <span>Email Mismatch: Resolution required to unlock organization field.</span>
+                      <span>Email Mismatch: Resolution required to unlock form.</span>
                     </div>
                   )}
 
-                  {/* DYNAMIC UNLOCK: These fields are only accessible when emails match */}
+                  {/* VISUAL LOCK: Dims and disables until email is valid */}
                   <div className={`transition-all duration-500 ${isLocked ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'}`}>
                     <input 
                       disabled={isLocked}
                       className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none mb-6" 
-                      placeholder="Organization" required 
+                      placeholder="Organization" required={!isLocked} 
                       onChange={(e) => setFormData({...formData, org: e.target.value})} 
                     />
                     <select 
@@ -131,7 +127,7 @@ export default function PromiseGapDiagnosticPage() {
                   <button 
                     disabled={isLocked}
                     type="submit" 
-                    className={`w-full py-6 font-bold uppercase tracking-widest text-xs transition-all ${isLocked ? 'bg-slate-800 text-slate-500' : 'bg-[#00F2FF] text-[#020617] hover:bg-white'}`}
+                    className={`w-full py-6 font-bold uppercase tracking-widest text-xs transition-all ${isLocked ? 'bg-slate-800 text-slate-500' : 'bg-[#00F2FF] text-[#020617] hover:bg-white shadow-[0_0_20px_rgba(0,242,255,0.1)]'}`}
                   >
                     {isLocked ? "Calibration Required" : "Begin Observation"}
                   </button>
@@ -140,16 +136,19 @@ export default function PromiseGapDiagnosticPage() {
             </motion.div>
           )}
 
-          {step > 0 && (
+          {step > 0 && step <= 12 && (
              <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Card className="p-12 bg-slate-900/30 border-slate-800 text-center">
-                  <h2 className="text-2xl font-bold mb-12 uppercase italic">{diagnosticQuestions[step - 1].text}</h2>
+                  <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
+                  <h2 className="text-2xl font-bold mt-10 mb-12 italic uppercase tracking-tighter">
+                    {diagnosticQuestions[step - 1].text}
+                  </h2>
                   <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
                     {diagnosticQuestions[step - 1].options.map((opt, idx) => (
                       <button 
                         key={idx} 
                         onClick={() => handleAnswer(opt)} 
-                        className="py-6 px-6 border border-slate-800 text-slate-300 uppercase text-[11px] font-bold hover:border-[#00F2FF]"
+                        className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-[11px] font-bold hover:border-[#00F2FF] transition-all text-left"
                       >
                         {opt.label}
                       </button>
