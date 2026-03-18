@@ -16,7 +16,6 @@ const DiagnosticResultsContent = () => {
 
   if (!data) return <div className="py-20 text-center text-slate-500 text-xs uppercase tracking-widest animate-pulse">Initializing Topology...</div>;
 
-  // IP PROTECTION: Mapping internal data keys to abstracted Chart labels
   const chartData = [
     { zone: 'VECTOR 01', value: Math.round(data.HAI.aggregate) },
     { zone: 'VECTOR 02', value: Math.round(data.AVS.aggregate) },
@@ -38,7 +37,6 @@ const DiagnosticResultsContent = () => {
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                 <PolarGrid stroke="#1e293b" />
                 <PolarRadiusAxis angle={30} domain={[0, 96]} tick={false} axisLine={false} />
-                {/* Labels now show VECTOR 01, 02, 03 instead of HAI, AVS, IGF */}
                 <PolarAngleAxis dataKey="zone" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} />
                 <RechartsRadar name="Intensity" dataKey="value" stroke="#00F2FF" fill="#00F2FF" fillOpacity={0.4} />
               </RadarChart>
@@ -49,7 +47,6 @@ const DiagnosticResultsContent = () => {
         <div className="space-y-4">
           {['HAI', 'AVS', 'IGF'].map((z, index) => (
             <Card key={z} className="p-6 bg-slate-900/40 border-slate-800">
-              {/* FIXED: Replaced acronyms and "ZONE" with Vector nomenclature */}
               <span className="text-[10px] font-bold text-[#00F2FF] uppercase tracking-widest">
                 Observation Vector 0{index + 1}
               </span>
