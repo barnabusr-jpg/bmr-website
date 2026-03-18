@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { ShieldCheck, AlertCircle } from "lucide-react";
 import DiagnosticResultsContent from "./DiagnosticResultsContent";
 
 const diagnosticQuestions = [
-  // HAI LENS (Questions 1-4)
   { id: 1, lens: "HAI", text: "How do teams handle verification of AI outputs before sharing them?", options: [
     { label: "Level 4: Forensic Assurance (Optimized)", weight: 1 },
     { label: "Level 3: Peer-Review Protocol (Managed)", weight: 3 },
@@ -30,7 +28,6 @@ const diagnosticQuestions = [
     { label: "Level 2: Annual Compliance Check", weight: 5 },
     { label: "Level 1: Never Audited", weight: 7 }
   ]},
-  // AVS LENS (Questions 5-8)
   { id: 5, lens: "AVS", text: "How is AI performance mapped to specific business KPIs?", options: [
     { label: "Level 4: Real-time Dashboard Integration", weight: 1 },
     { label: "Level 3: Monthly KPI Attribution", weight: 3 },
@@ -55,7 +52,6 @@ const diagnosticQuestions = [
     { label: "Level 2: Reactive Helpdesk Tickets", weight: 5 },
     { label: "Level 1: No Feedback Integration", weight: 7 }
   ]},
-  // IGF LENS (Questions 9-12)
   { id: 9, lens: "IGF", text: "How is sensitive data leakage prevented in AI interactions?", options: [
     { label: "Level 4: Enterprise-Grade DLP Scrubbing", weight: 1 },
     { label: "Level 3: Strict Manual Access Controls", weight: 3 },
@@ -112,23 +108,23 @@ export default function PromiseGapDiagnosticPage() {
         <AnimatePresence mode="wait">
           {step === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Card className="p-10 bg-slate-900/30 border-slate-800">
-                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight">Forensic Signal Diagnostic</h2>
-                <form onSubmit={(e) => { e.preventDefault(); if(!isLocked) setStep(1); }} className="space-y-6">
-                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none" placeholder="Full Name" required onChange={(e) => setFormData({...formData, name: e.target.value})} />
+              <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
+                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white">Forensic Signal Diagnostic</h2>
+                <form onSubmit={(e) => { e.preventDefault(); if(!isLocked) setStep(1); }} className="space-y-6 text-white">
+                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#00F2FF]" placeholder="Full Name" required onChange={(e) => setFormData({...formData, name: e.target.value})} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="email" className={`w-full p-4 bg-slate-950 border rounded text-white outline-none ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} placeholder="Work Email" required onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                    <input type="email" className={`w-full p-4 bg-slate-950 border rounded text-white outline-none ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} placeholder="Confirm Email" required onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
+                    <input type="email" className={`w-full p-4 bg-slate-950 border rounded outline-none ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} placeholder="Work Email" required onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    <input type="email" className={`w-full p-4 bg-slate-950 border rounded outline-none ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} placeholder="Confirm Email" required onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
                   </div>
-                  <div className={isLocked ? "opacity-20 pointer-events-none" : "opacity-100"}>
-                    <input disabled={isLocked} className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white mb-6 outline-none focus:border-[#00F2FF]" placeholder="Organization" required={!isLocked} onChange={(e) => setFormData({...formData, org: e.target.value})} />
-                    <select disabled={isLocked} className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
+                  <div className={`transition-all ${isLocked ? 'opacity-20 pointer-events-none' : 'opacity-100'}`}>
+                    <input disabled={isLocked} className="w-full p-4 bg-slate-950 border border-slate-800 rounded mb-6 outline-none focus:border-[#00F2FF]" placeholder="Organization" required={!isLocked} onChange={(e) => setFormData({...formData, org: e.target.value})} />
+                    <select disabled={isLocked} className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
                       <option value="Executive">Executive Perspective</option>
                       <option value="Manager">Manager Perspective</option>
                       <option value="Technical">Technical Perspective</option>
                     </select>
                   </div>
-                  <button disabled={isLocked} type="submit" className={`w-full py-6 font-bold uppercase text-xs ${isLocked ? 'bg-slate-800 text-slate-500' : 'bg-[#00F2FF] text-[#020617] hover:bg-white'}`}>
+                  <button disabled={isLocked} type="submit" className={`w-full py-6 font-bold uppercase tracking-widest text-xs transition-all ${isLocked ? 'bg-slate-800 text-slate-500' : 'bg-[#00F2FF] text-[#020617] hover:bg-white'}`}>
                     {isLocked ? "Calibration Required" : "Begin Observation"}
                   </button>
                 </form>
@@ -138,7 +134,7 @@ export default function PromiseGapDiagnosticPage() {
              <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <Card className="p-12 bg-slate-900/30 border-slate-800 text-center">
                   <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
-                  <h2 className="text-2xl font-bold mt-10 mb-12 italic uppercase tracking-tighter">{diagnosticQuestions[step - 1].text}</h2>
+                  <h2 className="text-2xl font-bold mt-10 mb-12 italic uppercase tracking-tighter text-white">{diagnosticQuestions[step - 1].text}</h2>
                   <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
                     {diagnosticQuestions[step - 1].options.map((opt, idx) => (
                       <button key={idx} onClick={() => handleAnswer(opt)} className="py-6 px-6 border border-slate-800 text-slate-300 uppercase text-[11px] font-bold hover:border-[#00F2FF] transition-all">
