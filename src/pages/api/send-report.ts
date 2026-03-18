@@ -18,16 +18,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const firstName = name ? name.split(' ')[0] : 'there';
 
   // --- ANCHOR LOGIC: Determine Pillar Focus & Maturity Level ---
-  let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';
   const intensities = {
     HAI: zoneData?.HAI?.aggregate || 0,
     AVS: zoneData?.AVS?.aggregate || 0,
     IGF: zoneData?.IGF?.aggregate || 0
   };
 
-  if (intensities.HAI >= intensities.AVS && intensities.HAI >= intensities.IGF) focusArea = 'HAI';
-  else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
-  else focusArea = 'IGF';
+  let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';
+  if (intensities.HAI >= intensities.AVS && intensities.HAI >= intensities.IGF) {
+    focusArea = 'HAI';
+  } else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) {
+    focusArea = 'AVS';
+  } else {
+    focusArea = 'IGF';
+  }
 
   const rawMax = zoneData?.[focusArea]?.max || 1;
   const maturityIndex = Math.min(Math.max(rawMax, 1), 4);
@@ -47,23 +51,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const contentMap = {
     'HAI': {
       publicTitle: "Trust Architecture Alignment",
-      implications: `A significant variance in "Verification Reliability" has been detected. Operational friction is likely masking hidden technical debt.`,
-      exercise: `Audit a high-frequency AI workflow. Compare the time spent on 'Human-in-the-loop' verification versus the actual generation time to reveal your Trust Friction Ratio.`,
+      implications: "A significant variance in 'Verification Reliability' has been detected. Operational friction is likely masking hidden technical debt.",
+      exercise: "Audit a high-frequency AI workflow. Compare the time spent on 'Human-in-the-loop' verification versus the actual generation time to reveal your Trust Friction Ratio.",
     },
     'AVS': {
       publicTitle: "Adoption Value Synchronization",
-      implications: `Signals indicate "Operational Drift." User adoption and governance protocols are currently uncalibrated, leading to high activity with low forensic value.`,
-      exercise: `Trace an AI failure from the last 30 days. Measure the time elapsed between the error and executive notification to identify your Ownership Latency.`,
+      implications: "Signals indicate 'Operational Drift.' User adoption and governance protocols are currently uncalibrated, leading to high activity with low forensic value.",
+      exercise: "Trace an AI failure from the last 30 days. Measure the time elapsed between the error and executive notification to identify your Ownership Latency.",
     },
     'IGF': {
       publicTitle: "Internal Governance Integrity",
-      implications: `Observations suggest "Executive Oversight Variance." Current protocols may be perceived as bottlenecks rather than strategic accelerators.`,
-      exercise: `Review your latest AI model correction. Verify if that specific forensic insight was systematically ingested into a retraining loop or if it remained a siloed manual fix.`,
+      implications: "Observations suggest 'Executive Oversight Variance.' Current protocols may be perceived as bottlenecks rather than strategic accelerators.",
+      exercise: "Review your latest AI model correction. Verify if that specific forensic insight was systematically ingested into a retraining loop or if it remained a siloed manual fix.",
     }
   };
 
   const selected = contentMap[focusArea];
-  const calendlyLink = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(name || "")}&email=${encodeURIComponent(email || "")}&a1=${encodeURIComponent(role || "")}&a2=${encodeURIComponent(`TotalScore:${totalScore}_Role:${role}`)}`;
+  const calendlyLink = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(name || "")}&email=${encodeURIComponent(email || "")}&a1=${encodeURIComponent(role || "")}&a2=${encodeURIComponent(`TotalScore:${totalScore}`)}`;
 
   const msg = {
     to: email,
@@ -109,7 +113,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const WEBHOOK_URL = process.env.AIRTABLE_WEBHOOK_URL; 
     if (WEBHOOK_URL) {
-      // FULL DATA: Sent to Airtable for your slide deck (unmasked)
       fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -122,7 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           total_score: totalScore,
           maturityStage: currentStageLabel,
           forensic_implication: selected.implications,
-          neutralization_exercise: selected.exercise, // THE SECRET EXERCISE
+          neutralization_exercise: selected.exercise, 
           vaultID: `BMR-${Date.now()}` 
         }),
       }).catch(err => console.error("Airtable Error:", err));
