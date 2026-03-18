@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
-import { Activity, Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck } from "lucide-react";
 
 interface ZoneData { max: number; aggregate: number; vectors: string[]; }
 interface DiagnosticResults { HAI: ZoneData; AVS: ZoneData; IGF: ZoneData; }
