@@ -2,11 +2,12 @@ import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
-import { Loader2, ShieldCheck } from "lucide-react"; // Removed unused
+import { Loader2, ShieldCheck } from "lucide-react";
 
 interface ZoneData { max: number; aggregate: number; vectors: string[]; }
 interface DiagnosticResults { HAI: ZoneData; AVS: ZoneData; IGF: ZoneData; }
 
+// Internal mapping for weighting logic remains intact to protect scoring IP
 const calculatePillarPressure = (weight: number, role: string, zone: string) => {
   const multipliers: Record<string, string> = { "Executive": "IGF", "Technical": "HAI", "Manager": "AVS" };
   return multipliers[role] === zone ? weight * 1.2 : weight;
@@ -87,12 +88,20 @@ const diagnosticQuestions = [
   ]}
 ];
 
-function LensIndicator({ acronym, isActive, isCompleted }: { acronym: string; isActive: boolean; isCompleted: boolean }) {
+// Indicators updated to use abstracted Vector nomenclature
+function LensIndicator({ vectorNumber, isActive, isCompleted }: { vectorNumber: number; isActive: boolean; isCompleted: boolean }) {
   return (
-    <div className={`h-14 w-14 rounded-full flex items-center justify-center border-2 transition-all duration-700 
+    <div className={`h-14 w-14 rounded-full flex flex-col items-center justify-center border-2 transition-all duration-700 
       ${isActive || isCompleted ? "bg-[#0A1F33] border-[#00F2FF] shadow-[0_0_15px_rgba(0,242,255,0.4)]" : "bg-slate-900 border-slate-800"}`}
     >
-      {isCompleted ? <span className="text-[#00F2FF] font-bold text-lg">✓</span> : <span className={`text-[10px] font-bold ${isActive ? "text-[#00F2FF]" : "text-slate-600"}`}>{acronym}</span>}
+      {isCompleted ? (
+        <span className="text-[#00F2FF] font-bold text-lg">✓</span>
+      ) : (
+        <>
+          <span className={`text-[8px] font-bold ${isActive ? "text-[#00F2FF]" : "text-slate-600"}`}>VECTOR</span>
+          <span className={`text-[12px] font-black ${isActive ? "text-[#00F2FF]" : "text-slate-600"}`}>0{vectorNumber}</span>
+        </>
+      )}
     </div>
   );
 }
@@ -103,7 +112,9 @@ export default function PromiseGapDiagnosticPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", confirmEmail: "", organization: "", role: "Executive" });
   const [zoneResults, setZoneResults] = useState<DiagnosticResults>({
-    HAI: { max: 0, aggregate: 0, vectors: [] }, AVS: { max: 0, aggregate: 0, vectors: [] }, IGF: { max: 0, aggregate: 0, vectors: [] }
+    HAI: { max: 0, aggregate: 0, vectors: [] }, 
+    AVS: { max: 0, aggregate: 0, vectors: [] }, 
+    IGF: { max: 0, aggregate: 0, vectors: [] }
   });
 
   const currentQuestion = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
@@ -141,11 +152,13 @@ export default function PromiseGapDiagnosticPage() {
   return (
     <div className="min-h-screen bg-[#020617] text-white p-6 font-sans">
       <div className="max-w-4xl mx-auto py-12">
+        {/* Indicators now show VECTOR 01, 02, 03 */}
         <div className="flex justify-center gap-8 mb-20">
-          <LensIndicator acronym="HAI" isActive={step >= 1 && step <= 4} isCompleted={step > 4} />
-          <LensIndicator acronym="AVS" isActive={step >= 5 && step <= 8} isCompleted={step > 8} />
-          <LensIndicator acronym="IGF" isActive={step >= 9 && step <= 12} isCompleted={step > 12} />
+          <LensIndicator vectorNumber={1} isActive={step >= 1 && step <= 4} isCompleted={step > 4} />
+          <LensIndicator vectorNumber={2} isActive={step >= 5 && step <= 8} isCompleted={step > 8} />
+          <LensIndicator vectorNumber={3} isActive={step >= 9 && step <= 12} isCompleted={step > 12} />
         </div>
+
         <AnimatePresence mode="wait">
           {step === 0 && (
             <motion.div key="intro" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
@@ -175,6 +188,7 @@ export default function PromiseGapDiagnosticPage() {
               </Card>
             </motion.div>
           )}
+
           {step > 0 && step <= 12 && currentQuestion && (
             <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
               <Card className="p-12 bg-slate-900/30 border-slate-800 text-center">
@@ -182,12 +196,15 @@ export default function PromiseGapDiagnosticPage() {
                 <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 italic uppercase text-white">{currentQuestion.text}</h2>
                 <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
                   {currentQuestion.options.map((opt, i) => (
-                    <button key={i} className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-xs hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left" onClick={() => handleAnswer(opt)}>{opt.label}</button>
+                    <button key={i} className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-xs hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left" onClick={() => handleAnswer(opt)}>
+                      {opt.label}
+                    </button>
                   ))}
                 </div>
               </Card>
             </motion.div>
           )}
+
           {step === 13 && (
             <div className="text-center py-20">
               <ShieldCheck className="h-16 w-16 text-[#00F2FF] mx-auto mb-6" />
