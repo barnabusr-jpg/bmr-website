@@ -23,7 +23,66 @@ const diagnosticQuestions = [
     { label: "Level 2: Tactical Incident Investigation", strength: 2, weight: 1 },
     { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
   ]},
-  // ... [Note: Questions 3-12 would follow the same structure as your provided list]
+  { id: 3, lens: "HAI", text: "How do teams handle situations where AI tools may not be optimal?", options: [
+    { label: "Level 4: Dynamic Edge-Case Optimization", strength: 5, weight: 8 },
+    { label: "Level 3: Integrated Exception Workflows", strength: 3, weight: 3 },
+    { label: "Level 2: Manual Tool Bypassing", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  { id: 4, lens: "HAI", text: "How does the organization review AI risk appetite against performance?", options: [
+    { label: "Level 4: Predictive Risk Modeling", strength: 5, weight: 8 },
+    { label: "Level 3: Data-Driven Performance Benchmarking", strength: 3, weight: 3 },
+    { label: "Level 2: Qualitative Risk Assessment", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  { id: 5, lens: "AVS", text: "What is the standard process for pre-deployment risk reviews?", options: [
+    { label: "Level 4: Automated Deployment Guardrails", strength: 5, weight: 8 },
+    { label: "Level 3: Formalized Risk Tiering", strength: 3, weight: 3 },
+    { label: "Level 2: Fragmented Review Capacity", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  { id: 6, lens: "AVS", text: "How is responsibility assigned for AI failures?", options: [
+    { label: "Level 4: Persistent Accountability Telemetry", strength: 5, weight: 8 },
+    { label: "Level 3: Optimized Response Pathways", strength: 3, weight: 3 },
+    { label: "Level 2: Fragmented Ownership Matrix", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  { id: 7, lens: "AVS", text: "How is AI compliance managed after deployment?", options: [
+    { label: "Level 4: Continuous Drift Detection", strength: 5, weight: 8 },
+    { label: "Level 3: Dynamic Compliance Benchmarking", strength: 3, weight: 3 },
+    { label: "Level 2: Static Post-Launch Oversight", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  { id: 8, lens: "AVS", text: "What level of effort is required to maintain AI tools?", options: [
+    { label: "Level 4: Autonomous Maintenance Telemetry", strength: 5, weight: 8 },
+    { label: "Level 3: Strategic Lifecycle Optimization", strength: 3, weight: 3 },
+    { label: "Level 2: Manual Correction Overhead", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  { id: 9, lens: "IGF", text: "How are human corrections fed back into AI systems?", options: [
+    { label: "Level 4: Retraining Loop Automation", strength: 5, weight: 8 },
+    { label: "Level 3: Systematic Correction Refinement", strength: 3, weight: 3 },
+    { label: "Level 2: Fragmented Feedback Ingestion", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  { id: 10, lens: "IGF", text: "How does leadership prioritize AI projects?", options: [
+    { label: "Level 4: Impact Telemetry Alignment", strength: 5, weight: 8 },
+    { label: "Level 3: Strategic Maturity Thresholds", strength: 3, weight: 3 },
+    { label: "Level 2: Technical Feature Prioritization", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  { id: 11, lens: "IGF", text: "How does the organization prepare teams for AI deployments?", options: [
+    { label: "Level 4: Systematic Readiness Reporting", strength: 5, weight: 8 },
+    { label: "Level 3: Standardized Impact Benchmarking", strength: 3, weight: 3 },
+    { label: "Level 2: Tactical Change Readiness", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]},
+  { id: 12, lens: "IGF", text: "How is the gap between expected and actual AI ROI measured?", options: [
+    { label: "Level 4: Automated Value Tracking", strength: 5, weight: 8 },
+    { label: "Level 3: Pilot ROI Benchmarking", strength: 3, weight: 3 },
+    { label: "Level 2: Speculative Impact Reporting", strength: 2, weight: 1 },
+    { label: "Level 1: Reactive / Undefined Baseline", strength: 1, weight: 0 }
+  ]}
 ];
 
 export default function PromiseGapDiagnosticPage() {
@@ -38,14 +97,15 @@ export default function PromiseGapDiagnosticPage() {
   const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.email !== formData.confirmEmail) {
-      alert("Emails do not match.");
+      alert("Email addresses do not match. Please verify.");
       return;
     }
     setStep(1);
   };
 
   const handleAnswer = async (option: any) => {
-    const newAnswers = [...answers, { ...option, lens: diagnosticQuestions[step - 1].lens }];
+    const currentLens = diagnosticQuestions[step - 1].lens;
+    const newAnswers = [...answers, { ...option, lens: currentLens }];
     setAnswers(newAnswers);
 
     if (step < 12) {
@@ -58,7 +118,6 @@ export default function PromiseGapDiagnosticPage() {
   const finishDiagnostic = async (finalAnswers: any[]) => {
     setIsSubmitting(true);
 
-    // Calculate Scores per Pillar
     const calculatePillar = (lens: string) => {
       const pillarAnswers = finalAnswers.filter(a => a.lens === lens);
       return {
@@ -73,7 +132,6 @@ export default function PromiseGapDiagnosticPage() {
       IGF: calculatePillar("IGF")
     };
 
-    // Save for the Results Component to read
     localStorage.setItem('bmr_results_vault', JSON.stringify({
       ...formData,
       ...zoneData,
@@ -81,7 +139,6 @@ export default function PromiseGapDiagnosticPage() {
     }));
 
     try {
-      // Trigger the API logic you built earlier
       await fetch('/api/send-report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -96,7 +153,7 @@ export default function PromiseGapDiagnosticPage() {
       setShowResults(true);
     } catch (err) {
       console.error("Transmission failed", err);
-      setShowResults(true); // Show results anyway so user isn't stuck
+      setShowResults(true); 
     } finally {
       setIsSubmitting(false);
     }
@@ -105,35 +162,68 @@ export default function PromiseGapDiagnosticPage() {
   if (showResults) return <DiagnosticResultsContent />;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-6">
+    <div className="min-h-screen bg-[#020617] text-white p-6 font-sans">
       <div className="max-w-4xl mx-auto py-12">
         <AnimatePresence mode="wait">
           {step === 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
                 <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight">Forensic Signal Diagnostic</h2>
+                
+                <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-6 mb-8">
+                  <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
+                    <ShieldCheck className="h-3 w-3" /> Audit Protocol
+                  </h3>
+                  <p className="text-slate-300 text-xs italic">
+                    {`This diagnostic measures systemic maturity. Select Level 1 if a protocol is reactive or undefined.`}
+                  </p>
+                </div>
+
                 <form onSubmit={handleStart} className="space-y-6">
-                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded" placeholder="Full Name" required 
-                    onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                  
+                  <input 
+                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
+                    placeholder="Full Name" required 
+                    onChange={(e) => setFormData({...formData, name: e.target.value})} 
+                  />
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded" placeholder="Work Email" required 
-                      onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                    <input type="email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded" placeholder="Confirm Email" required 
-                      onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
+                    <input 
+                      type="email"
+                      className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
+                      placeholder="Work Email" required 
+                      onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                    />
+                    <input 
+                      type="email"
+                      className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
+                      placeholder="Confirm Work Email" required 
+                      onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} 
+                    />
                   </div>
 
-                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded" placeholder="Organization" required 
-                    onChange={(e) => setFormData({...formData, org: e.target.value})} />
+                  <input 
+                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
+                    placeholder="Organization" required 
+                    onChange={(e) => setFormData({...formData, org: e.target.value})} 
+                  />
 
-                  <select className="w-full p-4 bg-slate-950 border border-slate-800 rounded" value={formData.role} 
-                    onChange={(e) => setFormData({...formData, role: e.target.value})}>
-                    <option value="Executive">Executive Perspective</option>
-                    <option value="Manager">Manager Perspective</option>
-                    <option value="Technical">Technical Perspective</option>
-                  </select>
+                  <div className="space-y-1">
+                    <select 
+                      className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
+                      value={formData.role} 
+                      onChange={(e) => setFormData({...formData, role: e.target.value})}
+                    >
+                      <option value="Executive">Executive Perspective</option>
+                      <option value="Manager">Manager Perspective</option>
+                      <option value="Technical">Technical Perspective</option>
+                    </select>
+                    <p className="mt-2 text-[10px] italic text-[#00F2FF]/80">{lensDefinitions[formData.role]}</p>
+                  </div>
 
-                  <button type="submit" className="w-full py-6 bg-[#00F2FF] text-[#020617] font-bold uppercase tracking-widest text-xs">
+                  <button 
+                    type="submit" 
+                    className="w-full py-6 bg-[#00F2FF] text-[#020617] font-bold uppercase tracking-widest text-xs hover:bg-white transition-all shadow-[0_0_20px_rgba(0,242,255,0.1)]"
+                  >
                     Begin Observation
                   </button>
                 </form>
@@ -156,8 +246,11 @@ export default function PromiseGapDiagnosticPage() {
                   </h2>
                   <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
                     {diagnosticQuestions[step - 1].options.map((opt, idx) => (
-                      <button key={idx} onClick={() => handleAnswer(opt)} 
-                              className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-[11px] font-bold hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left">
+                      <button 
+                        key={idx} 
+                        onClick={() => handleAnswer(opt)} 
+                        className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-[11px] font-bold hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left"
+                      >
                         {opt.label}
                       </button>
                     ))}
