@@ -1,92 +1,152 @@
-import React from 'react';
+import React, { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { ShieldAlert, Lock, ShieldCheck } from "lucide-react";
+import DiagnosticResultsContent from "./DiagnosticResultsContent";
 
-interface ResultsProps {
-  answers: any[];
-  userDetails: { name: string, email: string, org: string, role: string };
-}
+const diagnosticQuestions = [
+  { id: 1, lens: "HAI", text: "How do teams handle verification of AI outputs before sharing them?", options: [
+    { label: "Level 4: Forensic Assurance (Optimized)", weight: 1 },
+    { label: "Level 3: Peer-Review Protocol (Managed)", weight: 3 },
+    { label: "Level 2: Spot-Check Verification (Reactive)", weight: 5 },
+    { label: "Level 1: No Verification (Undefined)", weight: 7 }
+  ]},
+  { id: 2, lens: "HAI", text: "What is the primary method for identifying AI-generated hallucinations?", options: [
+    { label: "Level 4: Automated Cross-Reference Tools", weight: 1 },
+    { label: "Level 3: Structured Manual Review", weight: 3 },
+    { label: "Level 2: Ad-hoc Discovery", weight: 5 },
+    { label: "Level 1: Consumer Reliance", weight: 7 }
+  ]},
+  { id: 3, lens: "HAI", text: "How are AI prompt libraries managed across the organization?", options: [
+    { label: "Level 4: Centralized & Audited Repository", weight: 1 },
+    { label: "Level 3: Departmental Shared Folders", weight: 3 },
+    { label: "Level 2: Individual Personal Lists", weight: 5 },
+    { label: "Level 1: No Formal Storage", weight: 7 }
+  ]},
+  { id: 4, lens: "HAI", text: "How frequently is AI output accuracy audited by third parties?", options: [
+    { label: "Level 4: Continuous Automated Auditing", weight: 1 },
+    { label: "Level 3: Quarterly Manual Reviews", weight: 3 },
+    { label: "Level 2: Annual Compliance Check", weight: 5 },
+    { label: "Level 1: Never Audited", weight: 7 }
+  ]},
+  { id: 5, lens: "AVS", text: "How is AI performance mapped to specific business KPIs?", options: [
+    { label: "Level 4: Real-time Dashboard Integration", weight: 1 },
+    { label: "Level 3: Monthly KPI Attribution", weight: 3 },
+    { label: "Level 2: Anecdotal Success Stories", weight: 5 },
+    { label: "Level 1: No Performance Mapping", weight: 7 }
+  ]},
+  { id: 6, lens: "AVS", text: "What is the process for retiring inefficient AI models?", options: [
+    { label: "Level 4: Automated Lifecycle Decommissioning", weight: 1 },
+    { label: "Level 3: Scheduled Periodic Reviews", weight: 3 },
+    { label: "Level 2: Manual Removal on Failure", weight: 5 },
+    { label: "Level 1: Indefinite Operation", weight: 7 }
+  ]},
+  { id: 7, lens: "AVS", text: "How are team members trained on new AI capabilities?", options: [
+    { label: "Level 4: Role-Specific Certification Paths", weight: 1 },
+    { label: "Level 3: Regular Workshops & Seminars", weight: 3 },
+    { label: "Level 2: Ad-hoc Tool Demonstrations", weight: 5 },
+    { label: "Level 1: Self-Taught / No Training", weight: 7 }
+  ]},
+  { id: 8, lens: "AVS", text: "How is user feedback incorporated into AI tool refinement?", options: [
+    { label: "Level 4: Direct API-to-Engineering Loop", weight: 1 },
+    { label: "Level 3: Monthly Stakeholder Meetings", weight: 3 },
+    { label: "Level 2: Reactive Helpdesk Tickets", weight: 5 },
+    { label: "Level 1: No Feedback Integration", weight: 7 }
+  ]},
+  { id: 9, lens: "IGF", text: "How is sensitive data leakage prevented in AI interactions?", options: [
+    { label: "Level 4: Enterprise-Grade DLP Scrubbing", weight: 1 },
+    { label: "Level 3: Strict Manual Access Controls", weight: 3 },
+    { label: "Level 2: General Privacy Policy Guideline", weight: 5 },
+    { label: "Level 1: Relying on User Discretion", weight: 7 }
+  ]},
+  { id: 10, lens: "IGF", text: "Who holds ultimate accountability for AI-generated decisions?", options: [
+    { label: "Level 4: Dedicated AI Ethics Committee", weight: 1 },
+    { label: "Level 3: C-Suite Executive Sponsor", weight: 3 },
+    { label: "Level 2: Individual Department Heads", weight: 5 },
+    { label: "Level 1: Distributed / Unclear", weight: 7 }
+  ]},
+  { id: 11, lens: "IGF", text: "How are AI vendor risks assessed during procurement?", options: [
+    { label: "Level 4: Forensic Security Due Diligence", weight: 1 },
+    { label: "Level 3: Standard IT Audit Checklist", weight: 3 },
+    { label: "Level 2: Basic TOS Review", weight: 5 },
+    { label: "Level 1: No Formal Risk Assessment", weight: 7 }
+  ]},
+  { id: 12, lens: "IGF", text: "How is the gap between expected and actual AI ROI measured?", options: [
+    { label: "Level 4: Automated Value Tracking", weight: 1 },
+    { label: "Level 3: Quarterly Financial Audits", weight: 3 },
+    { label: "Level 2: Year-End Budget Review", weight: 5 },
+    { label: "Level 1: Not Formally Measured", weight: 7 }
+  ]}
+];
 
-const DiagnosticResultsContent = ({ answers, userDetails }: ResultsProps) => {
-  // Logic: Sum the weight of all 12 questions. Max possible = 84
-  const totalDisplacement = answers.reduce((acc, curr) => acc + (curr.weight || 0), 0);
+export default function PromiseGapDiagnosticPage() {
+  const [step, setStep] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [emailError, setEmailError] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', confirmEmail: '', org: '', role: 'Executive' });
+  const [answers, setAnswers] = useState<any[]>([]);
 
-  // Groups questions by Lens for the Radar visualization
-  const getPillarScore = (lens: string) => {
-    return answers
-      .filter(a => a.lens === lens)
-      .reduce((acc, curr) => acc + (curr.weight || 0), 0);
+  useEffect(() => {
+    const e1 = formData.email.trim().toLowerCase();
+    const e2 = formData.confirmEmail.trim().toLowerCase();
+    setEmailError(!!(e1 && e2 && e1 !== e2));
+  }, [formData.email, formData.confirmEmail]);
+
+  const isLocked = emailError || !formData.email || !formData.confirmEmail || formData.email !== formData.confirmEmail;
+
+  const handleAnswer = (option: any) => {
+    const currentLens = diagnosticQuestions[step - 1].lens;
+    setAnswers([...answers, { ...option, lens: currentLens }]);
+    if (step < 12) setStep(step + 1);
+    else setShowResults(true);
   };
 
-  const chartData = [
-    { zone: 'HAI', value: getPillarScore('HAI') },
-    { zone: 'AVS', value: getPillarScore('AVS') },
-    { zone: 'IGF', value: getPillarScore('IGF') },
-  ];
-
-  const getSeverity = (score: number) => {
-    if (score <= 30) return { label: "OPTIMIZED STEWARDSHIP", color: "#10B981" };
-    if (score <= 60) return { label: "PROTOCOLIZED DRIFT", color: "#00F2FF" };
-    return { label: "CRITICAL BASELINE GAPS", color: "#EF4444" };
-  };
-
-  const status = getSeverity(totalDisplacement);
-
-  const handleUnlock = () => {
-    // Redirects with encoded user data
-    const calendlyUrl = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(userDetails.name)}&email=${encodeURIComponent(userDetails.email)}&org=${encodeURIComponent(userDetails.org)}`;
-    window.location.href = calendlyUrl;
-  };
+  if (showResults) return <DiagnosticResultsContent answers={answers} userDetails={formData} />;
 
   return (
-    <div className="py-8 space-y-12 max-w-6xl mx-auto px-6">
-      <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-8 backdrop-blur-sm">
-        <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
-          <ShieldCheck className="h-3 w-3" /> Forensic Signal Captured
-        </h3>
-        <p className="text-white font-black text-2xl mb-2 italic uppercase tracking-tighter">{userDetails.role} Perspective Active</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card className="lg:col-span-2 p-8 bg-slate-900/20 border-slate-800">
-          <div className="h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                <PolarGrid stroke="#1e293b" />
-                <PolarAngleAxis dataKey="zone" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} />
-                <PolarRadiusAxis domain={[0, 28]} tick={false} axisLine={false} />
-                <Radar name="Pressure" dataKey="value" stroke={status.color} fill={status.color} fillOpacity={0.4} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-10 bg-slate-900/40 border-slate-800 border-t-4 text-center" style={{ borderTopColor: status.color }}>
-          <span className="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase block mb-4">Total Displacement Score</span>
-          <div className="text-7xl font-black italic uppercase text-white tracking-tighter mb-4">{totalDisplacement}</div>
-          <div className="text-xs font-bold uppercase tracking-widest mb-6" style={{ color: status.color }}>Status: {status.label}</div>
-        </Card>
-      </div>
-
-      <div className="pt-12 border-t border-slate-800 relative">
-        <h3 className="text-xl font-bold italic uppercase flex items-center gap-3 text-white tracking-tighter mb-8">
-          <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Surgical Neutralization Roadmap
-        </h3>
-        
-        <div className="absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-12 text-center border border-slate-800 rounded">
-          <Lock className="h-8 w-8 text-[#00F2FF] mb-4" />
-          <h4 className="text-white font-black italic uppercase text-lg tracking-tighter underline decoration-[#00F2FF] underline-offset-8">Review Required</h4>
-          <button 
-            onClick={handleUnlock}
-            className="mt-10 bg-[#00F2FF] text-[#020617] px-12 py-5 font-black uppercase text-[11px] tracking-widest hover:bg-white transition-all shadow-2xl"
-          >
-            Unlock Full Roadmap
-          </button>
-        </div>
+    <div className="min-h-screen bg-[#020617] text-white p-6">
+      <div className="max-w-4xl mx-auto py-12">
+        <AnimatePresence mode="wait">
+          {step === 0 ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <Card className="p-10 bg-slate-900/30 border-slate-800">
+                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight">Forensic Signal Diagnostic</h2>
+                <form onSubmit={(e) => { e.preventDefault(); if(!isLocked) setStep(1); }} className="space-y-6">
+                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#00F2FF]" placeholder="Full Name" required onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input type="email" className={`w-full p-4 bg-slate-950 border rounded outline-none ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} placeholder="Work Email" required onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                    <input type="email" className={`w-full p-4 bg-slate-950 border rounded outline-none ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} placeholder="Confirm Email" required onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
+                  </div>
+                  <div className={isLocked ? "opacity-20 pointer-events-none" : "opacity-100"}>
+                    <input disabled={isLocked} className="w-full p-4 bg-slate-950 border border-slate-800 rounded mb-6 outline-none focus:border-[#00F2FF]" placeholder="Organization" required={!isLocked} onChange={(e) => setFormData({...formData, org: e.target.value})} />
+                    <select disabled={isLocked} className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
+                      <option value="Executive">Executive Perspective</option>
+                      <option value="Manager">Manager Perspective</option>
+                      <option value="Technical">Technical Perspective</option>
+                    </select>
+                  </div>
+                  <button disabled={isLocked} type="submit" className={`w-full py-6 font-bold uppercase tracking-widest text-xs ${isLocked ? 'bg-slate-800 text-slate-500' : 'bg-[#00F2FF] text-[#020617] hover:bg-white'}`}>
+                    {isLocked ? "Calibration Required" : "Begin Observation"}
+                  </button>
+                </form>
+              </Card>
+            </motion.div>
+          ) : (
+             <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <Card className="p-12 bg-slate-900/30 border-slate-800 text-center">
+                  <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
+                  <h2 className="text-2xl font-bold mt-10 mb-12 italic uppercase tracking-tighter">{diagnosticQuestions[step - 1].text}</h2>
+                  <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
+                    {diagnosticQuestions[step - 1].options.map((opt, idx) => (
+                      <button key={idx} onClick={() => handleAnswer(opt)} className="py-6 px-6 border border-slate-800 text-slate-300 uppercase text-[11px] font-bold hover:border-[#00F2FF] transition-all">
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+             </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
-};
-
-export default DiagnosticResultsContent;
+}
