@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Radar as ReRadar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts'; // Removed PolarRadiusAxis here
+import { Radar as ReRadar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
 import { ArrowRight, Lock } from "lucide-react";
 
 const DiagnosticResultsContent = () => {
