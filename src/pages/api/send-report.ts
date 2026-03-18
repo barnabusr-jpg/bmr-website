@@ -17,16 +17,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const maxStrength = Math.max(zoneData?.HAI?.max || 0, zoneData?.AVS?.max || 0, zoneData?.IGF?.max || 0);
   const maturityStage = `Stage ${maxStrength}: ${maxStrength >= 4 ? 'Optimized' : 'Emerging'}`;
 
-  // Identify Focus
+  // 1. Identify Focus Key (Internal logic)
   const focusKey = intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF 
     ? 'AVS' 
     : (intensities.IGF >= intensities.HAI ? 'IGF' : 'HAI');
 
-  // CLEAN LABEL for User Email
+  // 2. Define Labels
   const clientFacingVector = focusKey === 'HAI' ? 'Vector 01' : focusKey === 'AVS' ? 'Vector 02' : 'Vector 03';
-
-  // DETAILED LABEL for Airtable (Matches your screenshot exactly)
   const airtableFacingVector = `Vector 0${focusKey === 'HAI' ? 1 : focusKey === 'AVS' ? 2 : 3} (${focusKey})`;
+
+  // 3. Intelligent Calendly Link
+  const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
+  const calendlyUrl = `${calendlyBase}?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&a1=${clientFacingVector}&utm_campaign=${encodeURIComponent(organization)}`;
 
   const msg = {
     to: email,
@@ -44,8 +46,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           <p style="font-size: 18px; font-weight: bold; font-style: italic; margin: 5px 0;">Observation ${clientFacingVector}</p>
         </div>
 
+        <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 30px;">
+          The captured signals indicate specific friction points within your current AI infrastructure. To decrypt these findings and review the strategic neutralization roadmap, please use the secure link below.
+        </p>
+
         <div style="background-color: #020617; color: #ffffff; padding: 25px; text-align: center;">
-          <a href="https://calendly.com/hello-bmradvisory/forensic-review?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}" style="color: white; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Unlock Strategic Roadmap →</a>
+          <a href="${calendlyUrl}" style="color: white; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Unlock Strategic Roadmap →</a>
         </div>
       </div>`
   };
@@ -61,7 +67,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           org: organization, 
           role, 
           maturityStage,
-          focusArea: airtableFacingVector, // Hits "Vector 01 (HAI)" in Airtable
+          focusArea: airtableFacingVector, 
           result: `BMR Signal: ${clientFacingVector}`,
           intensities 
         }),
