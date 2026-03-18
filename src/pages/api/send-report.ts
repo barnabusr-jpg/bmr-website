@@ -6,6 +6,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
+  // FIXED: Removed 'role' to prevent "assigned a value but never used" error
   const { name, email, org, zoneData } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
@@ -15,6 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     IGF: zoneData?.IGF?.aggregate || 0
   };
 
+  // Logic to determine the priority focus area based on scores
   let focusArea: 'HAI' | 'AVS' | 'IGF' = 'HAI';
   if (intensities.HAI >= intensities.AVS && intensities.HAI >= intensities.IGF) focusArea = 'HAI';
   else if (intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF) focusArea = 'AVS';
@@ -46,16 +48,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     from: 'hello@bmradvisory.co',
     subject: `[Priority Signal] Forensic Maturity Signature: ${org}`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; color: #ffffff; background-color: #1a1a1a; padding: 40px;">
-        <h2 style="color: #00F2FF;">Forensic Signal Captured</h2>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; color: #ffffff; background-color: #1a1a1a; padding: 40px; border: 1px solid #333;">
+        <h2 style="color: #00F2FF; text-transform: uppercase; letter-spacing: 2px;">Forensic Signal Captured</h2>
         <p>Hello ${firstName},</p>
-        <p>The diagnostic for <strong>${org}</strong> is complete.</p>
-        <div style="background-color: #262626; border-left: 4px solid #00F2FF; padding: 20px; margin: 20px 0;">
-          <p style="font-size: 18px; font-weight: bold;">${selected.title}</p>
-          <p>${selected.teaser}</p>
-          <p style="color: #ff4d4d;">RISK: ${selected.risk}</p>
+        <p>The diagnostic for <strong>${org}</strong> is complete. We have successfully mapped your maturity signature.</p>
+        <div style="background-color: #262626; border-left: 4px solid #00F2FF; padding: 20px; margin: 25px 0;">
+          <p style="font-size: 10px; color: #00F2FF; text-transform: uppercase;">Priority Focus Area</p>
+          <p style="font-size: 20px; font-weight: bold; margin: 5px 0;">${selected.title}</p>
+          <p style="color: #cbd5e1;">${selected.teaser}</p>
+          <p style="color: #ff4d4d; font-weight: bold;">Note: ${selected.risk}</p>
         </div>
-        <a href="${calendlyLink}" style="background-color: #00F2FF; color: #000; padding: 15px 25px; text-decoration: none; font-weight: bold;">Unlock Full Roadmap</a>
+        <div style="text-align: center;">
+          <a href="${calendlyLink}" style="background-color: #00F2FF; color: #000; padding: 15px 30px; text-decoration: none; font-weight: bold; display: inline-block;">SCHEDULE MATURITY REVIEW</a>
+        </div>
       </div>
     `
   };
@@ -64,6 +69,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     await sgMail.send(msg);
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    return res.status(500).json({ error: error.message });
+    // Basic error logging that won't trigger linting issues
+    console.error("Email dispatch failed");
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 }
