@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { ShieldCheck, Loader2 } from "lucide-react";
+import { ShieldCheck, Loader2, AlertCircle } from "lucide-react";
 import DiagnosticResultsContent from "./DiagnosticResultsContent";
 
 const lensDefinitions: Record<string, string> = {
@@ -89,6 +89,7 @@ export default function PromiseGapDiagnosticPage() {
   const [step, setStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [emailError, setEmailError] = useState(false);
   const [formData, setFormData] = useState({ 
     name: '', email: '', confirmEmail: '', org: '', role: 'Executive' 
   });
@@ -96,10 +97,17 @@ export default function PromiseGapDiagnosticPage() {
 
   const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.email !== formData.confirmEmail) {
-      alert("Email addresses do not match. Please verify.");
+    
+    // Hardening the comparison logic
+    const primaryEmail = formData.email.trim().toLowerCase();
+    const secondaryEmail = formData.confirmEmail.trim().toLowerCase();
+
+    if (primaryEmail !== secondaryEmail) {
+      setEmailError(true);
       return;
     }
+    
+    setEmailError(false);
     setStep(1);
   };
 
@@ -168,7 +176,7 @@ export default function PromiseGapDiagnosticPage() {
           {step === 0 && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
-                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight">Forensic Signal Diagnostic</h2>
+                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white">Forensic Signal Diagnostic</h2>
                 
                 <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-6 mb-8">
                   <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
@@ -189,17 +197,30 @@ export default function PromiseGapDiagnosticPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <input 
                       type="email"
-                      className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
+                      className={`w-full p-4 bg-slate-950 border rounded text-white outline-none transition-all ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
                       placeholder="Work Email" required 
-                      onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                      onChange={(e) => {
+                        setFormData({...formData, email: e.target.value});
+                        setEmailError(false);
+                      }} 
                     />
                     <input 
                       type="email"
-                      className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
+                      className={`w-full p-4 bg-slate-950 border rounded text-white outline-none transition-all ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
                       placeholder="Confirm Work Email" required 
-                      onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} 
+                      onChange={(e) => {
+                        setFormData({...formData, confirmEmail: e.target.value});
+                        setEmailError(false);
+                      }} 
                     />
                   </div>
+                  
+                  {emailError && (
+                    <div className="flex items-center gap-2 text-red-500 text-xs mt-1 animate-pulse">
+                      <AlertCircle className="h-3 w-3" />
+                      <span>Verification mismatch: Please ensure both email addresses are identical.</span>
+                    </div>
+                  )}
 
                   <input 
                     className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
