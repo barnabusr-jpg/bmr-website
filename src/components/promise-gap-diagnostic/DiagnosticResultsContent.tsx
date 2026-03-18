@@ -14,7 +14,7 @@ const DiagnosticResultsContent = () => {
     else router.push('/diagnostic');
   }, [router]);
 
-  if (!data) return <div className="py-20 text-center text-slate-500 text-xs uppercase tracking-widest animate-pulse">Initializing Topology...</div>;
+  if (!data) return <div className="py-20 text-center text-slate-500 text-xs uppercase tracking-widest animate-pulse">Initializing...</div>;
 
   const chartData = [
     { zone: 'HAI', value: data.HAI.aggregate },
@@ -23,10 +23,11 @@ const DiagnosticResultsContent = () => {
   ];
 
   return (
-    <div className="py-8 space-y-12">
+    <div className="py-8 space-y-12 font-sans">
       <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8">
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">Signal Intensity Captured</h3>
         <p className="text-white font-bold text-lg italic uppercase">{data.role} Perspective Active</p>
+        <p className="text-slate-400 text-xs mt-2 italic uppercase tracking-wider">Analysis dispatched to {data.email}</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -47,7 +48,7 @@ const DiagnosticResultsContent = () => {
           {['HAI', 'AVS', 'IGF'].map((z) => (
             <Card key={z} className="p-6 bg-slate-900/40 border-slate-800">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{z} ZONE</span>
-              <div className="text-2xl font-bold italic text-white">{data[z].aggregate} <span className="text-[10px] font-normal text-slate-600">Pts</span></div>
+              <div className="text-2xl font-bold italic text-white uppercase">{data[z].aggregate} <span className="text-[10px] font-normal text-slate-600">Pts</span></div>
             </Card>
           ))}
         </div>
@@ -56,15 +57,15 @@ const DiagnosticResultsContent = () => {
       <div className="pt-12 border-t border-slate-800">
         <div className="relative p-16 border border-[#00F2FF]/20 bg-slate-900/40 rounded-sm text-center">
           <Lock className="h-12 w-12 text-[#00F2FF] mx-auto mb-6 animate-pulse" />
-          <h4 className="text-white font-black uppercase italic tracking-tighter text-2xl mb-4">Forensic Targets Encrypted</h4>
-          <p className="text-slate-400 text-[10px] uppercase tracking-widest leading-relaxed max-w-md mx-auto mb-10">
-            The full neutralization roadmap for the {data.role} lens is accessible via your strategic review.
+          <h4 className="text-white font-black uppercase italic tracking-tighter text-2xl mb-4">Strategic Targets Encrypted</h4>
+          <p className="text-slate-400 text-[10px] uppercase tracking-widest leading-relaxed max-w-md mx-auto mb-10 text-balance">
+            Neutralization vectors for the {data.role} lens are accessible via your diagnostic review session.
           </p>
           <button 
             className="bg-[#00F2FF] text-[#020617] px-10 py-5 font-black uppercase text-[11px] tracking-[0.3em] hover:bg-white transition-all shadow-2xl"
             onClick={() => window.open(`https://calendly.com/hello-bmradvisory/forensic-review?email=${encodeURIComponent(data.email)}&name=${encodeURIComponent(data.name)}`, '_blank')}
           >
-            Unlock Strategic Review <ArrowRight className="inline h-4 w-4 ml-2" />
+            Unlock Forensic Review <ArrowRight className="inline h-4 w-4 ml-2" />
           </button>
         </div>
       </div>
