@@ -1,149 +1,214 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
-import DiagnosticResultsContent from "./DiagnosticResultsContent";
+import { Activity, Loader2, ShieldCheck } from "lucide-react";
+
+interface ZoneData {
+  max: number;
+  aggregate: number;
+  vectors: string[];
+}
+
+interface DiagnosticResults {
+  HAI: ZoneData;
+  AVS: ZoneData;
+  IGF: ZoneData;
+}
+
+const calculatePillarPressure = (weight: number, role: string, zone: string) => {
+  const multipliers: Record<string, string> = { "Executive": "IGF", "Technical": "HAI", "Manager": "AVS" };
+  return multipliers[role] === zone ? weight * 1.2 : weight;
+};
 
 const diagnosticQuestions = [
   { id: 1, lens: "HAI", text: "How do teams handle verification of AI outputs before sharing them?", options: [
-    { label: "Level 4: Forensic Assurance (Optimized)", weight: 1 },
-    { label: "Level 3: Peer-Review Protocol (Managed)", weight: 3 },
-    { label: "Level 2: Spot-Check Verification (Reactive)", weight: 5 },
-    { label: "Level 1: No Verification (Undefined)", weight: 7 }
+    { label: "Stage 4 (Optimized): Automated validation protocols + systematic forensic audits.", strength: 5, weight: 8, vector: "Calibrate Empirical Trust" },
+    { label: "Stage 3 (Integrated): Documented workflow for manual/human-in-the-loop verification.", strength: 3, weight: 4, vector: "Standardize Trust Protocols" },
+    { label: "Stage 2 (Emerging): Ad-hoc verification by individual team members without formal standards.", strength: 2, weight: 2, vector: "Optimize Interface Utility" },
+    { label: "Stage 1 (Reactive): No verification process exists / Not Applicable.", strength: 1, weight: 0, vector: "Maintain Baseline" }
   ]},
-  { id: 2, lens: "HAI", text: "What is the primary method for identifying AI-generated hallucinations?", options: [
-    { label: "Level 4: Automated Cross-Reference Tools", weight: 1 },
-    { label: "Level 3: Structured Manual Review", weight: 3 },
-    { label: "Level 2: Ad-hoc Discovery", weight: 5 },
-    { label: "Level 1: Consumer Reliance", weight: 7 }
+  { id: 2, lens: "HAI", text: "What is the process for identifying the cause of AI errors?", options: [
+    { label: "Stage 4 (Optimized): Errors diagnosed in real-time via automated root-cause telemetry.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Formalized error tracking and documented forensic retrospectives.", strength: 3, weight: 4, vector: "Automate Root-Cause Diagnosis" },
+    { label: "Stage 2 (Emerging): Ad-hoc investigation without formal processes.", strength: 2, weight: 2, vector: "Formalize Forensic Retrospectives" },
+    { label: "Stage 1 (Reactive): Errors are not tracked / Not Applicable.", strength: 1, weight: 0, vector: "Instrument Error Logging" }
   ]},
-  { id: 3, lens: "HAI", text: "How are AI prompt libraries managed across the organization?", options: [
-    { label: "Level 4: Centralized & Audited Repository", weight: 1 },
-    { label: "Level 3: Departmental Shared Folders", weight: 3 },
-    { label: "Level 2: Individual Personal Lists", weight: 5 },
-    { label: "Level 1: No Formal Storage", weight: 7 }
+  { id: 3, lens: "HAI", text: "How do teams handle situations where AI tools may not be optimal?", options: [
+    { label: "Stage 4 (Optimized): AI is fully integrated; tools are dynamically optimized for edge cases.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Teams rarely bypass AI, utilizing integrated audit workflows.", strength: 3, weight: 4, vector: "Integrate Audit Workflows" },
+    { label: "Stage 2 (Emerging): Teams often bypass AI for edge cases due to perceived tool gaps.", strength: 2, weight: 2, vector: "Expand Algorithmic Scope" },
+    { label: "Stage 1 (Reactive): Teams always bypass AI for manual processes.", strength: 1, weight: 0, vector: "Neutralize Operational Friction" }
   ]},
-  { id: 4, lens: "HAI", text: "How frequently is AI output accuracy audited by third parties?", options: [
-    { label: "Level 4: Continuous Automated Auditing", weight: 1 },
-    { label: "Level 3: Quarterly Manual Reviews", weight: 3 },
-    { label: "Level 2: Annual Compliance Check", weight: 5 },
-    { label: "Level 1: Never Audited", weight: 7 }
+  { id: 4, lens: "HAI", text: "How does the organization review AI risk appetite against performance?", options: [
+    { label: "Stage 4 (Optimized): Risk models are dynamically updated via real-time performance data.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Risk appetite is reviewed quarterly using verified benchmarks.", strength: 3, weight: 4, vector: "Increase Review Frequency" },
+    { label: "Stage 2 (Emerging): Risk reviews are scheduled but rely on qualitative logic.", strength: 2, weight: 2, vector: "Predictive Risk Modeling" },
+    { label: "Stage 1 (Reactive): No tracking for risk decisions / Not Applicable.", strength: 1, weight: 0, vector: "Establish Risk Telemetry" }
   ]},
-  { id: 5, lens: "AVS", text: "How is AI performance mapped to specific business KPIs?", options: [
-    { label: "Level 4: Real-time Dashboard Integration", weight: 1 },
-    { label: "Level 3: Monthly KPI Attribution", weight: 3 },
-    { label: "Level 2: Anecdotal Success Stories", weight: 5 },
-    { label: "Level 1: No Performance Mapping", weight: 7 }
+  { id: 5, lens: "AVS", text: "What is the standard process for pre-deployment risk reviews?", options: [
+    { label: "Stage 4 (Optimized): Automated deployment guardrails and mandatory formal risk reviews.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Formalized risk tiering; all high-risk projects undergo review.", strength: 3, weight: 4, vector: "Formalize Risk Tiering" },
+    { label: "Stage 2 (Emerging): Reviews are conducted but seen as bottlenecks.", strength: 2, weight: 2, vector: "Augment Review Capacity" },
+    { label: "Stage 1 (Reactive): No formal review is conducted / Not Applicable.", strength: 1, weight: 0, vector: "Stabilize Deployment Guardrails" }
   ]},
-  { id: 6, lens: "AVS", text: "What is the process for retiring inefficient AI models?", options: [
-    { label: "Level 4: Automated Lifecycle Decommissioning", weight: 1 },
-    { label: "Level 3: Scheduled Periodic Reviews", weight: 3 },
-    { label: "Level 2: Manual Removal on Failure", weight: 5 },
-    { label: "Level 1: Indefinite Operation", weight: 7 }
+  { id: 6, lens: "AVS", text: "How is responsibility assigned for AI failures?", options: [
+    { label: "Stage 4 (Optimized): Clear ownership matrix with instant, automated failure notifications.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Ownership is clear; designated leaders manage standardized escalation.", strength: 3, weight: 4, vector: "Optimize Response Latency" },
+    { label: "Stage 2 (Emerging): Responsibility is assigned ad-hoc; teams often argue over ownership.", strength: 2, weight: 2, vector: "Formalize Ownership Matrix" },
+    { label: "Stage 1 (Reactive): No designated owner exists / Not Applicable.", strength: 1, weight: 0, vector: "Map Accountability Pathways" }
   ]},
-  { id: 7, lens: "AVS", text: "How are team members trained on new AI capabilities?", options: [
-    { label: "Level 4: Role-Specific Certification Paths", weight: 1 },
-    { label: "Level 3: Regular Workshops & Seminars", weight: 3 },
-    { label: "Level 2: Ad-hoc Tool Demonstrations", weight: 5 },
-    { label: "Level 1: Self-Taught / No Training", weight: 7 }
+  { id: 7, lens: "AVS", text: "How is AI compliance managed after deployment?", options: [
+    { label: "Stage 4 (Optimized): Compliance managed via persistent, automated oversight and drift detection.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Ongoing monitoring for high-risk models with dynamic compliance.", strength: 3, weight: 4, vector: "Define Dynamic Compliance Standards" },
+    { label: "Stage 2 (Emerging): Compliance is a one-time launch checkbox; oversight is assumed static.", strength: 2, weight: 2, vector: "Instrument Persistent Oversight" },
+    { label: "Stage 1 (Reactive): No post-launch oversight exists / Not Applicable.", strength: 1, weight: 0, vector: "Deploy Continuous Monitoring" }
   ]},
-  { id: 8, lens: "AVS", text: "How is user feedback incorporated into AI tool refinement?", options: [
-    { label: "Level 4: Direct API-to-Engineering Loop", weight: 1 },
-    { label: "Level 3: Monthly Stakeholder Meetings", weight: 3 },
-    { label: "Level 2: Reactive Helpdesk Tickets", weight: 5 },
-    { label: "Level 1: No Feedback Integration", weight: 7 }
+  { id: 8, lens: "AVS", text: "What level of effort is required to maintain AI tools?", options: [
+    { label: "Stage 4 (Optimized): AI tools run autonomously with automated maintenance telemetry.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Effort is focused on training and strategic cycles vs. manual fixes.", strength: 3, weight: 4, vector: "Optimize Training Cycles" },
+    { label: "Stage 2 (Emerging): High manual overhead or constant monitoring required.", strength: 2, weight: 2, vector: "Automate Maintenance Telemetry" },
+    { label: "Stage 1 (Reactive): AI requires constant manual correction / Not Applicable.", strength: 1, weight: 0, vector: "Identify Stability Root Causes" }
   ]},
-  { id: 9, lens: "IGF", text: "How is sensitive data leakage prevented in AI interactions?", options: [
-    { label: "Level 4: Enterprise-Grade DLP Scrubbing", weight: 1 },
-    { label: "Level 3: Strict Manual Access Controls", weight: 3 },
-    { label: "Level 2: General Privacy Policy Guideline", weight: 5 },
-    { label: "Level 1: Relying on User Discretion", weight: 7 }
+  { id: 9, lens: "IGF", text: "How are human corrections fed back into AI systems?", options: [
+    { label: "Stage 4 (Optimized): Corrections are automatically ingested into validated retraining loops.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Corrections are logged and reviewed systematically for refinement.", strength: 3, weight: 4, vector: "Automate Training Loops" },
+    { label: "Stage 2 (Emerging): Feedback is shared ad-hoc for critical errors; tracking is inconsistent.", strength: 2, weight: 2, vector: "Formalize Correction Ingestion" },
+    { label: "Stage 1 (Reactive): No system exists for corrections / Not Applicable.", strength: 1, weight: 0, vector: "Establish Feedback Architecture" }
   ]},
-  { id: 10, lens: "IGF", text: "Who holds ultimate accountability for AI-generated decisions?", options: [
-    { label: "Level 4: Dedicated AI Ethics Committee", weight: 1 },
-    { label: "Level 3: C-Suite Executive Sponsor", weight: 3 },
-    { label: "Level 2: Individual Department Heads", weight: 5 },
-    { label: "Level 1: Distributed / Unclear", weight: 7 }
+  { id: 10, lens: "IGF", text: "How does leadership prioritize AI projects?", options: [
+    { label: "Stage 4 (Optimized): Real-time impact telemetry informs all strategic prioritization.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Leadership balances technical features with maturity and human impact.", strength: 3, weight: 4, vector: "Define Maturity Thresholds" },
+    { label: "Stage 2 (Emerging): Focus remains on technical features or innovation scale.", strength: 2, weight: 2, vector: "Manage Strategic Expectations" },
+    { label: "Stage 1 (Reactive): Priority is ad-hoc or lacks executive visibility.", strength: 1, weight: 0, vector: "Restore Strategic Alignment" }
   ]},
-  { id: 11, lens: "IGF", text: "How are AI vendor risks assessed during procurement?", options: [
-    { label: "Level 4: Forensic Security Due Diligence", weight: 1 },
-    { label: "Level 3: Standard IT Audit Checklist", weight: 3 },
-    { label: "Level 2: Basic TOS Review", weight: 5 },
-    { label: "Level 1: No Formal Risk Assessment", weight: 7 }
+  { id: 11, lens: "IGF", text: "How does the organization prepare teams for AI deployments?", options: [
+    { label: "Stage 4 (Optimized): Systematic readiness training aligned with impact reporting.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): Teams are trained using formal frameworks and communicated impacts.", strength: 3, weight: 4, vector: "Standardize Impact Reporting" },
+    { label: "Stage 2 (Emerging): Deployments often push faster than cultural stability allows.", strength: 2, weight: 2, vector: "Deploy Cultural Stabilization" },
+    { label: "Stage 1 (Reactive): No formal training frameworks exist / Not Applicable.", strength: 1, weight: 0, vector: "Synchronize Change Readiness" }
   ]},
   { id: 12, lens: "IGF", text: "How is the gap between expected and actual AI ROI measured?", options: [
-    { label: "Level 4: Automated Value Tracking", weight: 1 },
-    { label: "Level 3: Quarterly Financial Audits", weight: 3 },
-    { label: "Level 2: Year-End Budget Review", weight: 5 },
-    { label: "Level 1: Not Formally Measured", weight: 7 }
+    { label: "Stage 4 (Optimized): AI ROI is measured via automated value-realization tracking vs. KPIs.", strength: 5, weight: 8, vector: "Maintain Baseline" },
+    { label: "Stage 3 (Integrated): ROI is formally measured against expectations using pilot benchmarks.", strength: 3, weight: 4, vector: "Pilot ROI Benchmarks" },
+    { label: "Stage 2 (Emerging): Lack of tools or benchmarks to measure real impact.", strength: 2, weight: 2, vector: "Pivot to Value Realization" },
+    { label: "Stage 1 (Reactive): No tracking of AI value realization / Not Applicable.", strength: 1, weight: 0, vector: "Assign ROI Stewardship" }
   ]}
 ];
 
+function LensIndicator({ acronym, isActive, isCompleted }: { acronym: string; isActive: boolean; isCompleted: boolean }) {
+  return (
+    <div className={`h-14 w-14 rounded-full flex items-center justify-center border-2 transition-all duration-700 
+      ${isActive || isCompleted ? "bg-[#0A1F33] border-[#00F2FF] shadow-[0_0_15px_rgba(0,242,255,0.4)]" : "bg-slate-900 border-slate-800"}`}
+    >
+      {isCompleted ? <span className="text-[#00F2FF] font-bold text-lg">✓</span> : <span className={`text-[10px] font-bold ${isActive ? "text-[#00F2FF]" : "text-slate-600"}`}>{acronym}</span>}
+    </div>
+  );
+}
+
 export default function PromiseGapDiagnosticPage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
-  const [showResults, setShowResults] = useState(false);
-  const [emailError, setEmailError] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', confirmEmail: '', org: '', role: 'Executive' });
-  const [answers, setAnswers] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({ name: "", email: "", confirmEmail: "", organization: "", role: "Executive" });
+  const [zoneResults, setZoneResults] = useState<DiagnosticResults>({
+    HAI: { max: 0, aggregate: 0, vectors: [] },
+    AVS: { max: 0, aggregate: 0, vectors: [] },
+    IGF: { max: 0, aggregate: 0, vectors: [] }
+  });
+
+  const currentQuestion = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
 
   useEffect(() => {
-    const e1 = formData.email.trim().toLowerCase();
-    const e2 = formData.confirmEmail.trim().toLowerCase();
-    setEmailError(!!(e1 && e2 && e1 !== e2));
-  }, [formData.email, formData.confirmEmail]);
-
-  const isLocked = emailError || !formData.email || !formData.confirmEmail || formData.email !== formData.confirmEmail;
+    if (step === 13 && !isSubmitting) {
+      const submit = async () => {
+        setIsSubmitting(true);
+        localStorage.setItem('bmr_results_vault', JSON.stringify({ ...zoneResults, ...formData }));
+        await fetch('/api/send-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...formData, zoneData: zoneResults }),
+        });
+        router.push('/diagnostic/results');
+      };
+      submit();
+    }
+  }, [step, isSubmitting, formData, router, zoneResults]);
 
   const handleAnswer = (option: any) => {
-    const currentLens = diagnosticQuestions[step - 1].lens;
-    setAnswers([...answers, { ...option, lens: currentLens }]);
-    if (step < 12) setStep(step + 1);
-    else setShowResults(true);
+    if (!currentQuestion) return;
+    const weight = calculatePillarPressure(option.weight, formData.role, currentQuestion.lens);
+    setZoneResults(prev => ({
+      ...prev,
+      [currentQuestion.lens]: {
+        max: Math.max(prev[currentQuestion.lens as keyof DiagnosticResults].max, option.strength),
+        aggregate: prev[currentQuestion.lens as keyof DiagnosticResults].aggregate + weight,
+        vectors: [...prev[currentQuestion.lens as keyof DiagnosticResults].vectors, option.vector]
+      }
+    }));
+    setStep(step + 1);
   };
 
-  if (showResults) return <DiagnosticResultsContent answers={answers} userDetails={formData} />;
-
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-6">
+    <div className="min-h-screen bg-[#020617] text-white p-6 font-sans">
       <div className="max-w-4xl mx-auto py-12">
+        <div className="flex justify-center gap-8 mb-20">
+          <LensIndicator acronym="HAI" isActive={step >= 1 && step <= 4} isCompleted={step > 4} />
+          <LensIndicator acronym="AVS" isActive={step >= 5 && step <= 8} isCompleted={step > 8} />
+          <LensIndicator acronym="IGF" isActive={step >= 9 && step <= 12} isCompleted={step > 12} />
+        </div>
+
         <AnimatePresence mode="wait">
-          {step === 0 ? (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Card className="p-10 bg-slate-900/30 border-slate-800">
-                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight">Forensic Signal Diagnostic</h2>
-                <form onSubmit={(e) => { e.preventDefault(); if(!isLocked) setStep(1); }} className="space-y-6">
-                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none focus:border-[#00F2FF]" placeholder="Full Name" required onChange={(e) => setFormData({...formData, name: e.target.value})} />
+          {step === 0 && (
+            <motion.div key="intro" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
+                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tighter text-white underline decoration-[#00F2FF] underline-offset-8">Systemic Observation</h2>
+                <form onSubmit={(e) => { 
+                  e.preventDefault(); 
+                  if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) {
+                    alert("Email mismatch detected. Please verify your entry.");
+                    return;
+                  }
+                  setStep(1); 
+                }} className="space-y-6">
+                  <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, name: e.target.value})} />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input type="email" className={`w-full p-4 bg-slate-950 border rounded outline-none ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} placeholder="Work Email" required onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                    <input type="email" className={`w-full p-4 bg-slate-950 border rounded outline-none ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} placeholder="Confirm Email" required onChange={(e) => setFormData({...formData, confirmEmail: e.target.value})} />
+                    <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, email: e.target.value})} />
+                    <input required type="email" placeholder="Confirm Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, confirmEmail: e.target.value})} />
                   </div>
-                  <div className={isLocked ? "opacity-20 pointer-events-none" : "opacity-100"}>
-                    <input disabled={isLocked} className="w-full p-4 bg-slate-950 border border-slate-800 rounded mb-6 outline-none focus:border-[#00F2FF]" placeholder="Organization" required={!isLocked} onChange={(e) => setFormData({...formData, org: e.target.value})} />
-                    <select disabled={isLocked} className="w-full p-4 bg-slate-950 border border-slate-800 rounded outline-none" value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
-                      <option value="Executive">Executive Perspective</option>
-                      <option value="Manager">Manager Perspective</option>
-                      <option value="Technical">Technical Perspective</option>
-                    </select>
-                  </div>
-                  <button disabled={isLocked} type="submit" className={`w-full py-6 font-bold uppercase tracking-widest text-xs ${isLocked ? 'bg-slate-800 text-slate-500' : 'bg-[#00F2FF] text-[#020617] hover:bg-white'}`}>
-                    {isLocked ? "Calibration Required" : "Begin Observation"}
-                  </button>
+                  <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, organization: e.target.value})} />
+                  <select className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none cursor-pointer" onChange={e => setFormData({...formData, role: e.target.value})}>
+                    <option value="Executive">Executive Perspective</option>
+                    <option value="Manager">Manager Perspective</option>
+                    <option value="Technical">Technical Perspective</option>
+                  </select>
+                  <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-black h-16 uppercase tracking-widest hover:bg-white transition-all">Begin Observation</button>
                 </form>
               </Card>
             </motion.div>
-          ) : (
-             <motion.div key={step} initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                <Card className="p-12 bg-slate-900/30 border-slate-800 text-center">
-                  <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
-                  <h2 className="text-2xl font-bold mt-10 mb-12 italic uppercase tracking-tighter">{diagnosticQuestions[step - 1].text}</h2>
-                  <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
-                    {diagnosticQuestions[step - 1].options.map((opt, idx) => (
-                      <button key={idx} onClick={() => handleAnswer(opt)} className="py-6 px-6 border border-slate-800 text-slate-300 uppercase text-[11px] font-bold hover:border-[#00F2FF] transition-all">
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </Card>
-             </motion.div>
+          )}
+
+          {step > 0 && step <= 12 && currentQuestion && (
+            <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+              <Card className="p-12 bg-slate-900/30 border-slate-800 text-center">
+                <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
+                <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 italic uppercase text-white">{currentQuestion.text}</h2>
+                <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
+                  {currentQuestion.options.map((opt, i) => (
+                    <button key={i} className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-xs hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left" onClick={() => handleAnswer(opt)}>{opt.label}</button>
+                  ))}
+                </div>
+              </Card>
+            </motion.div>
+          )}
+
+          {step === 13 && (
+            <div className="text-center py-20">
+              <ShieldCheck className="h-16 w-16 text-[#00F2FF] mx-auto mb-6" />
+              <h2 className="text-2xl font-bold uppercase italic text-white mb-2">Signals Captured</h2>
+              <p className="text-slate-500 text-xs uppercase tracking-widest mb-8 text-balance">Dispatching forensic report to {formData.email}...</p>
+              <Loader2 className="animate-spin h-8 w-8 text-[#00F2FF] mx-auto" />
+            </div>
           )}
         </AnimatePresence>
       </div>
