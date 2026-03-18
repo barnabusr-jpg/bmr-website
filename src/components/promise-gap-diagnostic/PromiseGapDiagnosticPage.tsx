@@ -4,7 +4,56 @@ import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 import { Loader2, ShieldCheck } from "lucide-react";
 
-// (Note: Ensure diagnosticQuestions array is defined here)
+const diagnosticQuestions = [
+  { text: "AI standard operating procedures (SOPs) are documented and followed.", lens: "HAI", options: [
+    { label: "Non-existent", strength: 1, weight: 10 }, { label: "Ad-hoc/Manual", strength: 2, weight: 25 },
+    { label: "Formalized", strength: 3, weight: 50 }, { label: "Automated/Optimized", strength: 4, weight: 100 }
+  ]},
+  { text: "Our organization has a clear AI ethics and governance framework.", lens: "HAI", options: [
+    { label: "No framework", strength: 1, weight: 10 }, { label: "Basic guidelines", strength: 2, weight: 25 },
+    { label: "Comprehensive policy", strength: 3, weight: 50 }, { label: "Audited compliance", strength: 4, weight: 100 }
+  ]},
+  { text: "AI roles and responsibilities are clearly defined across teams.", lens: "HAI", options: [
+    { label: "Undefined", strength: 1, weight: 10 }, { label: "Informal roles", strength: 2, weight: 25 },
+    { label: "Dedicated AI team", strength: 3, weight: 50 }, { label: "Cross-functional AI matrix", strength: 4, weight: 100 }
+  ]},
+  { text: "We conduct regular AI risk assessments and impact audits.", lens: "HAI", options: [
+    { label: "Never", strength: 1, weight: 10 }, { label: "Rarely/Reactive", strength: 2, weight: 25 },
+    { label: "Annually", strength: 3, weight: 50 }, { label: "Continuous monitoring", strength: 4, weight: 100 }
+  ]},
+  { text: "Our AI systems directly contribute to measurable business ROI.", lens: "AVS", options: [
+    { label: "Not tracked", strength: 1, weight: 10 }, { label: "Anecdotal evidence", strength: 2, weight: 25 },
+    { label: "Specific KPIs", strength: 3, weight: 50 }, { label: "Direct revenue/savings impact", strength: 4, weight: 100 }
+  ]},
+  { text: "AI initiatives are aligned with the core strategic vision.", lens: "AVS", options: [
+    { label: "Disconnected", strength: 1, weight: 10 }, { label: "Loosely aligned", strength: 2, weight: 25 },
+    { label: "Strategically integrated", strength: 3, weight: 50 }, { label: "Strategy-driven AI", strength: 4, weight: 100 }
+  ]},
+  { text: "We have a dedicated budget and resources for AI scaling.", lens: "AVS", options: [
+    { label: "No budget", strength: 1, weight: 10 }, { label: "Project-based funding", strength: 2, weight: 25 },
+    { label: "Annual AI budget", strength: 3, weight: 50 }, { label: "Venture-scale resource pool", strength: 4, weight: 100 }
+  ]},
+  { text: "Customer value is a primary driver for AI implementation.", lens: "AVS", options: [
+    { label: "Internal focus only", strength: 1, weight: 10 }, { label: "Secondary consideration", strength: 2, weight: 25 },
+    { label: "Key success metric", strength: 3, weight: 50 }, { label: "Core value proposition", strength: 4, weight: 100 }
+  ]},
+  { text: "Our data infrastructure can handle real-time AI processing.", lens: "IGF", options: [
+    { label: "Legacy/Siloed", strength: 1, weight: 10 }, { label: "Partially integrated", strength: 2, weight: 25 },
+    { label: "Cloud-native/Scaled", strength: 3, weight: 50 }, { label: "Edge/Real-time optimized", strength: 4, weight: 100 }
+  ]},
+  { text: "We leverage proprietary datasets to train specialized models.", lens: "IGF", options: [
+    { label: "Public data only", strength: 1, weight: 10 }, { label: "Minimal internal data", strength: 2, weight: 25 },
+    { label: "Significant internal data", strength: 3, weight: 50 }, { label: "Massive proprietary flywheel", strength: 4, weight: 100 }
+  ]},
+  { text: "API and model versioning are strictly controlled.", lens: "IGF", options: [
+    { label: "Manual/Inconsistent", strength: 1, weight: 10 }, { label: "Basic versioning", strength: 2, weight: 25 },
+    { label: "Automated pipelines", strength: 3, weight: 50 }, { label: "Full MLOps lifecycle", strength: 4, weight: 100 }
+  ]},
+  { text: "Computing resources (GPU/Cloud) are managed efficiently.", lens: "IGF", options: [
+    { label: "High waste", strength: 1, weight: 10 }, { label: "Some optimization", strength: 2, weight: 25 },
+    { label: "Managed auto-scaling", strength: 3, weight: 50 }, { label: "Hyper-optimized orchestration", strength: 4, weight: 100 }
+  ]}
+];
 
 function VectorIndicator({ num, isActive, isDone }: { num: number, isActive: boolean, isDone: boolean }) {
   return (
@@ -20,7 +69,7 @@ function VectorIndicator({ num, isActive, isDone }: { num: number, isActive: boo
 export default function PromiseGapDiagnosticPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({ name: "", email: "", confirmEmail: "", organization: "", role: "Executive" });
+  const [formData, setFormData] = useState({ name: "", email: "", organization: "", role: "Executive" });
   const [results, setResults] = useState({ HAI: { max: 0, aggregate: 0 }, AVS: { max: 0, aggregate: 0 }, IGF: { max: 0, aggregate: 0 } });
 
   const currentQ = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
@@ -34,14 +83,16 @@ export default function PromiseGapDiagnosticPage() {
         body: JSON.stringify({ ...formData, zoneData: results }),
       }).then(() => router.push('/diagnostic/results'));
     }
-  }, [step, formData, results, router]); // Added missing dependencies here
+  }, [step, formData, results, router]);
 
   const handleAnswer = (opt: any) => {
-    const lens = currentQ!.lens;
+    const lens = currentQ!.lens as keyof typeof results;
     setResults(prev => ({
       ...prev,
-      [lens]: { max: Math.max(prev[lens as keyof typeof results].max, opt.strength), 
-               aggregate: prev[lens as keyof typeof results].aggregate + opt.weight }
+      [lens]: { 
+        max: Math.max(prev[lens].max, opt.strength), 
+        aggregate: prev[lens].aggregate + opt.weight 
+      }
     }));
     setStep(step + 1);
   };
