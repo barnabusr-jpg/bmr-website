@@ -9,10 +9,9 @@ interface ResultsProps {
 }
 
 const DiagnosticResultsContent = ({ answers, userDetails }: ResultsProps) => {
-  // Logic: Sum the weight of all 12 questions. Max possible = 84
+  // Summing weights for the 84-point scale (12 questions * max 7)
   const totalDisplacement = answers.reduce((acc, curr) => acc + (curr.weight || 0), 0);
 
-  // Pillar logic for the Radar Chart
   const getPillarScore = (lens: string) => {
     return answers
       .filter(a => a.lens === lens)
@@ -34,7 +33,6 @@ const DiagnosticResultsContent = ({ answers, userDetails }: ResultsProps) => {
   const status = getSeverity(totalDisplacement);
 
   const handleUnlock = () => {
-    // Passes user details to Calendly to avoid double-entry
     const calendlyUrl = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(userDetails.name)}&email=${encodeURIComponent(userDetails.email)}&org=${encodeURIComponent(userDetails.org)}`;
     window.location.href = calendlyUrl;
   };
@@ -45,9 +43,7 @@ const DiagnosticResultsContent = ({ answers, userDetails }: ResultsProps) => {
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
           <ShieldCheck className="h-3 w-3" /> Forensic Signal Captured
         </h3>
-        <p className="text-white font-black text-2xl mb-2 italic uppercase tracking-tighter">
-          {userDetails.role} Perspective Active
-        </p>
+        <p className="text-white font-black text-2xl mb-2 italic uppercase tracking-tighter">{userDetails.role} Perspective Active</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -67,9 +63,7 @@ const DiagnosticResultsContent = ({ answers, userDetails }: ResultsProps) => {
         <Card className="p-10 bg-slate-900/40 border-slate-800 border-t-4 text-center" style={{ borderTopColor: status.color }}>
           <span className="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase block mb-4">Total Displacement Score</span>
           <div className="text-7xl font-black italic uppercase text-white tracking-tighter mb-4">{totalDisplacement}</div>
-          <div className="text-xs font-bold uppercase tracking-widest mb-6" style={{ color: status.color }}>
-            Status: {status.label}
-          </div>
+          <div className="text-xs font-bold uppercase tracking-widest mb-6" style={{ color: status.color }}>Status: {status.label}</div>
         </Card>
       </div>
 
@@ -78,22 +72,20 @@ const DiagnosticResultsContent = ({ answers, userDetails }: ResultsProps) => {
           <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Surgical Neutralization Roadmap
         </h3>
         
-        {/* Active Overlay with Functioning Button */}
         <div className="absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-12 text-center border border-slate-800 rounded">
           <Lock className="h-8 w-8 text-[#00F2FF] mb-4" />
           <h4 className="text-white font-black italic uppercase text-lg tracking-tighter underline decoration-[#00F2FF] underline-offset-8">Review Required</h4>
           <button 
             onClick={handleUnlock}
-            className="mt-10 bg-[#00F2FF] text-[#020617] px-12 py-5 font-black uppercase text-[11px] tracking-widest hover:bg-white transition-all shadow-[0_0_30px_rgba(0,242,255,0.3)]"
+            className="mt-10 bg-[#00F2FF] text-[#020617] px-12 py-5 font-black uppercase text-[11px] tracking-widest hover:bg-white transition-all shadow-2xl"
           >
             Unlock Full Roadmap
           </button>
         </div>
 
-        {/* Blurred Background placeholders */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 opacity-20 blur-sm pointer-events-none">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="p-8 border border-slate-800 bg-slate-900/20 h-48 rounded shadow-inner" />
+            <div key={i} className="p-8 border border-slate-800 bg-slate-900/20 h-48 rounded" />
           ))}
         </div>
       </div>
