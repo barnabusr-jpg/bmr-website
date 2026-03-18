@@ -95,16 +95,16 @@ export default function PromiseGapDiagnosticPage() {
   });
   const [answers, setAnswers] = useState<any[]>([]);
 
+  // FIX: Added normalized case-insensitive comparison logic
   const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Hardening the comparison logic
-    const primaryEmail = formData.email.trim().toLowerCase();
-    const secondaryEmail = formData.confirmEmail.trim().toLowerCase();
+    const primary = formData.email.trim().toLowerCase();
+    const secondary = formData.confirmEmail.trim().toLowerCase();
 
-    if (primaryEmail !== secondaryEmail) {
+    if (primary !== secondary) {
       setEmailError(true);
-      return;
+      return; // Force matching emails before proceeding
     }
     
     setEmailError(false);
@@ -112,175 +112,4 @@ export default function PromiseGapDiagnosticPage() {
   };
 
   const handleAnswer = async (option: any) => {
-    const currentLens = diagnosticQuestions[step - 1].lens;
-    const newAnswers = [...answers, { ...option, lens: currentLens }];
-    setAnswers(newAnswers);
-
-    if (step < 12) {
-      setStep(step + 1);
-    } else {
-      await finishDiagnostic(newAnswers);
-    }
-  };
-
-  const finishDiagnostic = async (finalAnswers: any[]) => {
-    setIsSubmitting(true);
-
-    const calculatePillar = (lens: string) => {
-      const pillarAnswers = finalAnswers.filter(a => a.lens === lens);
-      return {
-        aggregate: pillarAnswers.reduce((sum, a) => sum + (a.strength + a.weight), 0),
-        max: Math.max(...pillarAnswers.map(a => a.strength))
-      };
-    };
-
-    const zoneData = {
-      HAI: calculatePillar("HAI"),
-      AVS: calculatePillar("AVS"),
-      IGF: calculatePillar("IGF")
-    };
-
-    localStorage.setItem('bmr_results_vault', JSON.stringify({
-      ...formData,
-      ...zoneData,
-      timestamp: new Date().toISOString()
-    }));
-
-    try {
-      await fetch('/api/send-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          org: formData.org,
-          role: formData.role,
-          zoneData
-        }),
-      });
-      setShowResults(true);
-    } catch (err) {
-      console.error("Transmission failed", err);
-      setShowResults(true); 
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (showResults) return <DiagnosticResultsContent />;
-
-  return (
-    <div className="min-h-screen bg-[#020617] text-white p-6 font-sans">
-      <div className="max-w-4xl mx-auto py-12">
-        <AnimatePresence mode="wait">
-          {step === 0 && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
-                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white">Forensic Signal Diagnostic</h2>
-                
-                <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-6 mb-8">
-                  <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
-                    <ShieldCheck className="h-3 w-3" /> Audit Protocol
-                  </h3>
-                  <p className="text-slate-300 text-xs italic">
-                    {`This diagnostic measures systemic maturity. Select Level 1 if a protocol is reactive or undefined.`}
-                  </p>
-                </div>
-
-                <form onSubmit={handleStart} className="space-y-6">
-                  <input 
-                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
-                    placeholder="Full Name" required 
-                    onChange={(e) => setFormData({...formData, name: e.target.value})} 
-                  />
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input 
-                      type="email"
-                      className={`w-full p-4 bg-slate-950 border rounded text-white outline-none transition-all ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
-                      placeholder="Work Email" required 
-                      onChange={(e) => {
-                        setFormData({...formData, email: e.target.value});
-                        setEmailError(false);
-                      }} 
-                    />
-                    <input 
-                      type="email"
-                      className={`w-full p-4 bg-slate-950 border rounded text-white outline-none transition-all ${emailError ? 'border-red-500' : 'border-slate-800 focus:border-[#00F2FF]'}`} 
-                      placeholder="Confirm Work Email" required 
-                      onChange={(e) => {
-                        setFormData({...formData, confirmEmail: e.target.value});
-                        setEmailError(false);
-                      }} 
-                    />
-                  </div>
-                  
-                  {emailError && (
-                    <div className="flex items-center gap-2 text-red-500 text-xs mt-1 animate-pulse">
-                      <AlertCircle className="h-3 w-3" />
-                      <span>Verification mismatch: Please ensure both email addresses are identical.</span>
-                    </div>
-                  )}
-
-                  <input 
-                    className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
-                    placeholder="Organization" required 
-                    onChange={(e) => setFormData({...formData, org: e.target.value})} 
-                  />
-
-                  <div className="space-y-1">
-                    <select 
-                      className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white focus:border-[#00F2FF] outline-none transition-all" 
-                      value={formData.role} 
-                      onChange={(e) => setFormData({...formData, role: e.target.value})}
-                    >
-                      <option value="Executive">Executive Perspective</option>
-                      <option value="Manager">Manager Perspective</option>
-                      <option value="Technical">Technical Perspective</option>
-                    </select>
-                    <p className="mt-2 text-[10px] italic text-[#00F2FF]/80">{lensDefinitions[formData.role]}</p>
-                  </div>
-
-                  <button 
-                    type="submit" 
-                    className="w-full py-6 bg-[#00F2FF] text-[#020617] font-bold uppercase tracking-widest text-xs hover:bg-white transition-all shadow-[0_0_20px_rgba(0,242,255,0.1)]"
-                  >
-                    Begin Observation
-                  </button>
-                </form>
-              </Card>
-            </motion.div>
-          )}
-
-          {step > 0 && step <= 12 && (
-             <motion.div key={step} initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
-                <Card className="p-12 bg-slate-900/30 border-slate-800 text-center relative overflow-hidden">
-                  {isSubmitting && (
-                    <div className="absolute inset-0 z-50 bg-slate-950/90 flex flex-col items-center justify-center">
-                      <Loader2 className="h-8 w-8 text-[#00F2FF] animate-spin mb-4" />
-                      <p className="text-[10px] uppercase tracking-[4px] text-[#00F2FF]">Analyzing Forensic Signature...</p>
-                    </div>
-                  )}
-                  <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
-                  <h2 className="text-2xl font-bold mt-10 mb-12 italic uppercase tracking-tighter">
-                    {diagnosticQuestions[step - 1].text}
-                  </h2>
-                  <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
-                    {diagnosticQuestions[step - 1].options.map((opt, idx) => (
-                      <button 
-                        key={idx} 
-                        onClick={() => handleAnswer(opt)} 
-                        className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-[11px] font-bold hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left"
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </Card>
-             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  );
-}
+    const currentLens = diagnosticQuestions[step
