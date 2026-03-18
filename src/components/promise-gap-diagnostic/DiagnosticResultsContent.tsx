@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Radar as ReRadar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { Radar as ReRadar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts'; // Removed PolarRadiusAxis here
 import { ArrowRight, Lock } from "lucide-react";
 
 const DiagnosticResultsContent = () => {
@@ -61,7 +61,7 @@ const DiagnosticResultsContent = () => {
         <Lock className="h-12 w-12 text-[#00F2FF] mx-auto mb-6" />
         <h4 className="font-black uppercase italic text-2xl mb-4">Strategic Targets Encrypted</h4>
         <p className="text-slate-400 text-[10px] uppercase tracking-widest max-w-md mx-auto mb-10">
-          The captured signals indicate friction points within your AI infrastructure. Decrypt findings via your session.
+          The captured signals indicate friction points within your current AI infrastructure. Decrypt findings via your session.
         </p>
         <button className="bg-[#00F2FF] text-[#020617] px-10 py-5 font-black uppercase text-[11px] tracking-[0.3em] hover:bg-white transition-all" onClick={handleBooking}>
           Unlock Forensic Review <ArrowRight className="inline h-4 w-4 ml-2" />
