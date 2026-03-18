@@ -69,8 +69,18 @@ function VectorIndicator({ num, isActive, isDone }: { num: number, isActive: boo
 export default function PromiseGapDiagnosticPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [formData, setFormData] = useState({ name: "", email: "", organization: "", role: "Executive" });
-  const [results, setResults] = useState({ HAI: { max: 0, aggregate: 0 }, AVS: { max: 0, aggregate: 0 }, IGF: { max: 0, aggregate: 0 } });
+  const [formData, setFormData] = useState({ 
+    name: "", 
+    email: "", 
+    confirmEmail: "", 
+    organization: "", 
+    role: "Executive" 
+  });
+  const [results, setResults] = useState({ 
+    HAI: { max: 0, aggregate: 0 }, 
+    AVS: { max: 0, aggregate: 0 }, 
+    IGF: { max: 0, aggregate: 0 } 
+  });
 
   const currentQ = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
 
@@ -111,15 +121,32 @@ export default function PromiseGapDiagnosticPage() {
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
                 <h2 className="text-3xl font-bold mb-6 italic uppercase underline decoration-[#00F2FF] underline-offset-8">Systemic Observation</h2>
-                <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
+                <form 
+                  onSubmit={(e) => { 
+                    e.preventDefault(); 
+                    if (formData.email !== formData.confirmEmail) {
+                      alert("Emails do not match. Please verify your entry.");
+                      return;
+                    }
+                    setStep(1); 
+                  }} 
+                  className="space-y-6"
+                >
                   <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, name: e.target.value})} />
-                  <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, email: e.target.value})} />
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, email: e.target.value})} />
+                    <input required type="email" placeholder="Confirm Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, confirmEmail: e.target.value})} />
+                  </div>
+
                   <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, organization: e.target.value})} />
+                  
                   <select className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" onChange={e => setFormData({...formData, role: e.target.value})}>
                     <option value="Executive">Executive Perspective</option>
                     <option value="Manager">Manager Perspective</option>
                     <option value="Technical">Technical Perspective</option>
                   </select>
+                  
                   <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-black h-16 uppercase tracking-widest hover:bg-white transition-all">Begin Observation</button>
                 </form>
               </Card>
