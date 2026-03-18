@@ -1,39 +1,47 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ message: 'Method not allowed' });
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const { name, email, org, zoneData, role } = req.body;
 
-  const { email, name, org, totalScore, zoneData } = req.body;
+  const intensities = { HAI: zoneData?.HAI?.aggregate || 0, AVS: zoneData?.AVS?.aggregate || 0, IGF: zoneData?.IGF?.aggregate || 0 };
+  let focus = intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF ? 'AVS' : (intensities.IGF >= intensities.HAI ? 'IGF' : 'HAI');
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-  });
+  const msg = {
+    to: email,
+    bcc: 'hello@bmradvisory.co',
+    from: 'hello@bmradvisory.co',
+    subject: `[Observation Report] BMR Signal Diagnostic: ${org}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; color: #020617; padding: 40px; border: 1px solid #e2e8f0;">
+        <h2 style="text-transform: uppercase; letter-spacing: 4px; font-size: 14px; color: #64748b; border-bottom: 2px solid #020617; padding-bottom: 10px;">Forensic Signal Analysis</h2>
+        <p>Hello ${name.split(' ')[0]},</p>
+        <p>Your diagnostic for <strong>${org}</strong> has identified systemic variance in your <strong>${focus} Zone</strong>.</p>
+        <div style="background-color: #f8fafc; padding: 30px; margin: 30px 0; border-left: 4px solid #00F2FF;">
+          <p style="font-size: 10px; text-transform: uppercase; color: #64748b; margin: 0;">Primary Variance Lens</p>
+          <p style="font-size: 18px; font-weight: bold; font-style: italic; margin: 5px 0;">${focus} Infrastructure</p>
+        </div>
+        <div style="background-color: #020617; color: #ffffff; padding: 25px; text-align: center;">
+          <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 2px; color: #00F2FF;">Roadmap Encrypted</p>
+          <a href="https://calendly.com/hello-bmradvisory/forensic-review?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}" style="color: white; text-decoration: none; font-weight: bold;">Schedule Review to Unlock →</a>
+        </div>
+      </div>`
+  };
 
   try {
-    await transporter.sendMail({
-      from: '"BMR Advisory" <hello@bmradvisory.com>',
-      to: email,
-      subject: `[Maturity Benchmark] BMR Signal Diagnostic: ${org}`,
-      html: `
-        <div style="font-family: sans-serif; background: #020617; color: white; padding: 40px;">
-          <h2 style="color: #00F2FF;">FORENSIC OBSERVATION REPORT</h2>
-          <p>Hello ${name}, the BMR Signal Diagnostic for ${org} is complete.</p>
-          <p><strong>Total Displacement Score:</strong> ${totalScore} / 84</p>
-          <hr />
-          <p><strong>Lens Breakdown:</strong></p>
-          <ul>
-            <li>HAI: ${zoneData.HAI}</li>
-            <li>AVS: ${zoneData.AVS}</li>
-            <li>IGF: ${zoneData.IGF}</li>
-          </ul>
-        </div>
-      `,
-    });
+    await sgMail.send(msg);
+    if (process.env.AIRTABLE_WEBHOOK_URL) {
+      await fetch(process.env.AIRTABLE_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, org, role, focusArea: focus }),
+      });
+    }
     return res.status(200).json({ success: true });
-  } catch (error) {
-    return res.status(500).json({ message: 'Failed to dispatch.' });
+  } catch (error: any) {
+    return res.status(500).json({ error: error.message });
   }
 }
