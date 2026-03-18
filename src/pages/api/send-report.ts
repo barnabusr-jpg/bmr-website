@@ -8,7 +8,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   const { name, email, organization, zoneData, role } = req.body;
 
-  // Rounding for Airtable and UI consistency
+  // Rounding for Airtable and UI consistency to prevent decimal leakage
   const intensities = { 
     HAI: Math.round(zoneData?.HAI?.aggregate || 0), 
     AVS: Math.round(zoneData?.AVS?.aggregate || 0), 
@@ -18,25 +18,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const maxStrength = Math.max(zoneData?.HAI?.max || 0, zoneData?.AVS?.max || 0, zoneData?.IGF?.max || 0);
   const maturityStage = `Stage ${maxStrength}: ${maxStrength >= 4 ? 'Optimized' : 'Emerging'}`;
 
-  const focus = intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF 
+  // IP PROTECTION: Map internal acronyms to abstracted Vector nomenclature
+  const vectorMap: Record<string, string> = {
+    HAI: 'Vector 01',
+    AVS: 'Vector 02',
+    IGF: 'Vector 03'
+  };
+
+  const focusKey = intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF 
     ? 'AVS' 
     : (intensities.IGF >= intensities.HAI ? 'IGF' : 'HAI');
+
+  const focusVector = vectorMap[focusKey];
 
   const msg = {
     to: email,
     bcc: 'hello@bmradvisory.co',
     from: 'hello@bmradvisory.co',
-    subject: `[Observation Report] BMR Signal Diagnostic: ${organization}`, // Fixed
+    subject: `[Observation Report] BMR Signal Diagnostic: ${organization}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; color: #020617; padding: 40px; border: 1px solid #e2e8f0;">
         <h2 style="text-transform: uppercase; letter-spacing: 4px; font-size: 14px; color: #64748b; border-bottom: 2px solid #020617; padding-bottom: 10px;">Forensic Signal Captured</h2>
         <p>Hello ${name.split(' ')[0]},</p>
         <p>Your BMR Diagnostic for <strong>${organization}</strong> has completed benchmarking for the <strong>${role} Lens</strong>.</p>
+        
         <div style="background-color: #f8fafc; padding: 30px; margin: 30px 0; border-left: 4px solid #00F2FF;">
           <p style="font-size: 10px; text-transform: uppercase; color: #64748b; margin: 0;">Primary Variance Lens</p>
-          <p style="font-size: 18px; font-weight: bold; font-style: italic; margin: 5px 0;">${focus} Infrastructure</p>
+          <p style="font-size: 18px; font-weight: bold; font-style: italic; margin: 5px 0;">Observation ${focusVector}</p>
         </div>
-        <div style="background-color: #020617; color: #ffffff; padding: 25px; text-align: center;">
+
+        <p style="font-size: 12px; color: #64748b; line-height: 1.6;">
+          The captured signals indicate specific friction points within your current AI infrastructure. To decrypt these findings and review the strategic neutralization roadmap, please use the secure link below.
+        </p>
+
+        <div style="background-color: #020617; color: #ffffff; padding: 25px; text-align: center; margin-top: 30px;">
           <a href="https://calendly.com/hello-bmradvisory/forensic-review?email=${encodeURIComponent(email)}&name=${encodeURIComponent(name)}" style="color: white; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Unlock Strategic Roadmap →</a>
         </div>
       </div>`
@@ -50,10 +65,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           Name: name, 
-          Organization: organization, // Maps to Airtable column
+          Organization: organization,
           "Audit Perspective": role, 
           "Maturity Stage": maturityStage,
-          "Focus Area": focus,
+          "Focus Area": focusVector, // Stores "Vector 01/02/03" in Airtable
           intensities 
         }),
       });
