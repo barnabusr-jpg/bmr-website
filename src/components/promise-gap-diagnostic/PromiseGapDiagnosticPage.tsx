@@ -88,7 +88,6 @@ const diagnosticQuestions = [
   ]}
 ];
 
-// Indicators updated to use abstracted Vector nomenclature
 function LensIndicator({ vectorNumber, isActive, isCompleted }: { vectorNumber: number; isActive: boolean; isCompleted: boolean }) {
   return (
     <div className={`h-14 w-14 rounded-full flex flex-col items-center justify-center border-2 transition-all duration-700 
@@ -123,7 +122,14 @@ export default function PromiseGapDiagnosticPage() {
     if (step === 13 && !isSubmitting) {
       const submit = async () => {
         setIsSubmitting(true);
-        localStorage.setItem('bmr_results_vault', JSON.stringify({ ...zoneResults, ...formData }));
+        // Vault for local results page use
+        localStorage.setItem('bmr_results_vault', JSON.stringify({ 
+           ...formData, 
+           HAI: zoneResults.HAI,
+           AVS: zoneResults.AVS,
+           IGF: zoneResults.IGF
+        }));
+
         await fetch('/api/send-report', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -152,7 +158,8 @@ export default function PromiseGapDiagnosticPage() {
   return (
     <div className="min-h-screen bg-[#020617] text-white p-6 font-sans">
       <div className="max-w-4xl mx-auto py-12">
-        {/* Indicators now show VECTOR 01, 02, 03 */}
+        
+        {/* Indicators: Vector Logic */}
         <div className="flex justify-center gap-8 mb-20">
           <LensIndicator vectorNumber={1} isActive={step >= 1 && step <= 4} isCompleted={step > 4} />
           <LensIndicator vectorNumber={2} isActive={step >= 5 && step <= 8} isCompleted={step > 8} />
@@ -163,7 +170,7 @@ export default function PromiseGapDiagnosticPage() {
           {step === 0 && (
             <motion.div key="intro" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
               <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
-                <h2 className="text-3xl font-bold mb-6 italic uppercase text-white underline decoration-[#00F2FF] underline-offset-8">Systemic Observation</h2>
+                <h2 className="text-3xl font-bold mb-6 italic uppercase text-white underline decoration-[#00F2FF] underline-offset-8 text-center md:text-left">Systemic Observation</h2>
                 <form onSubmit={(e) => { 
                   e.preventDefault(); 
                   if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) {
@@ -172,18 +179,22 @@ export default function PromiseGapDiagnosticPage() {
                   }
                   setStep(1); 
                 }} className="space-y-6">
-                  <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, name: e.target.value})} />
+                  <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF] transition-all" onChange={e => setFormData({...formData, name: e.target.value})} />
+                  
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, email: e.target.value})} />
-                    <input required type="email" placeholder="Confirm Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, confirmEmail: e.target.value})} />
+                    <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF] transition-all" onChange={e => setFormData({...formData, email: e.target.value})} />
+                    <input required type="email" placeholder="Confirm Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF] transition-all" onChange={e => setFormData({...formData, confirmEmail: e.target.value})} />
                   </div>
-                  <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, organization: e.target.value})} />
-                  <select className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none cursor-pointer" onChange={e => setFormData({...formData, role: e.target.value})}>
+
+                  <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF] transition-all" onChange={e => setFormData({...formData, organization: e.target.value})} />
+                  
+                  <select className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none cursor-pointer focus:border-[#00F2FF] transition-all appearance-none" onChange={e => setFormData({...formData, role: e.target.value})}>
                     <option value="Executive">Executive Perspective</option>
                     <option value="Manager">Manager Perspective</option>
                     <option value="Technical">Technical Perspective</option>
                   </select>
-                  <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-black h-16 uppercase tracking-widest hover:bg-white transition-all">Begin Observation</button>
+
+                  <button type="submit" className="w-full bg-[#00F2FF] text-[#020617] font-black h-16 uppercase tracking-widest hover:bg-white transition-all shadow-lg shadow-[#00F2FF]/10">Begin Observation</button>
                 </form>
               </Card>
             </motion.div>
@@ -191,13 +202,16 @@ export default function PromiseGapDiagnosticPage() {
 
           {step > 0 && step <= 12 && currentQuestion && (
             <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-              <Card className="p-12 bg-slate-900/30 border-slate-800 text-center">
+              <Card className="p-12 bg-slate-900/30 border-slate-800 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 h-1 bg-slate-800 w-full">
+                  <div className="h-full bg-[#00F2FF] transition-all duration-300" style={{ width: `${(step / 12) * 100}%` }} />
+                </div>
                 <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
-                <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 italic uppercase text-white">{currentQuestion.text}</h2>
+                <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 italic uppercase text-white leading-tight">{currentQuestion.text}</h2>
                 <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
                   {currentQuestion.options.map((opt, i) => (
-                    <button key={i} className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-xs hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left" onClick={() => handleAnswer(opt)}>
-                      {opt.label}
+                    <button key={i} className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-[11px] font-bold hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left leading-relaxed group" onClick={() => handleAnswer(opt)}>
+                      <span className="group-hover:text-white">{opt.label}</span>
                     </button>
                   ))}
                 </div>
@@ -209,7 +223,8 @@ export default function PromiseGapDiagnosticPage() {
             <div className="text-center py-20">
               <ShieldCheck className="h-16 w-16 text-[#00F2FF] mx-auto mb-6" />
               <h2 className="text-2xl font-bold uppercase italic text-white mb-2">Signals Captured</h2>
-              <Loader2 className="animate-spin h-8 w-8 text-[#00F2FF] mx-auto mt-4" />
+              <p className="text-slate-500 uppercase tracking-widest text-xs mb-8">Encrypting Forensic Topology...</p>
+              <Loader2 className="animate-spin h-8 w-8 text-[#00F2FF] mx-auto" />
             </div>
           )}
         </AnimatePresence>
