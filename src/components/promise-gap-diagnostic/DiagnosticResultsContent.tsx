@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Radar as RechartsRadar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { ShieldAlert, Activity, ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react"; // Removed ShieldAlert & Activity
 import { useRouter } from 'next/router';
 
 const DiagnosticResultsContent = () => {
@@ -23,7 +23,7 @@ const DiagnosticResultsContent = () => {
   ];
 
   return (
-    <div className="py-8 space-y-12 font-sans">
+    <div className="py-8 space-y-12 font-sans text-white">
       <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8">
         <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">Signal Intensity Captured</h3>
         <p className="text-white font-bold text-lg italic uppercase">{data.role} Perspective Active</p>
