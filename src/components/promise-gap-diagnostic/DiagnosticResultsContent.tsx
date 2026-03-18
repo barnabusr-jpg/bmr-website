@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Radar as RechartsRadar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
-import { ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react"; // Removed unused
 import { useRouter } from 'next/router';
 
 const DiagnosticResultsContent = () => {
@@ -48,7 +48,10 @@ const DiagnosticResultsContent = () => {
           {['HAI', 'AVS', 'IGF'].map((z) => (
             <Card key={z} className="p-6 bg-slate-900/40 border-slate-800">
               <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{z} ZONE</span>
-              <div className="text-2xl font-bold italic text-white uppercase">{data[z].aggregate} <span className="text-[10px] font-normal text-slate-600">Pts</span></div>
+              <div className="text-2xl font-bold italic text-white uppercase">
+                {/* Math.round fixes decimal leakage */}
+                {Math.round(data[z].aggregate)} <span className="text-[10px] font-normal text-slate-600">Pts</span>
+              </div>
             </Card>
           ))}
         </div>
