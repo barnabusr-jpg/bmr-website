@@ -17,16 +17,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const maxStrength = Math.max(zoneData?.HAI?.max || 0, zoneData?.AVS?.max || 0, zoneData?.IGF?.max || 0);
   const maturityStage = `Stage ${maxStrength}: ${maxStrength >= 4 ? 'Optimized' : 'Emerging'}`;
 
-  // 1. Identify Focus Key (Internal logic)
   const focusKey = intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF 
-    ? 'AVS' 
-    : (intensities.IGF >= intensities.HAI ? 'IGF' : 'HAI');
+    ? 'AVS' : (intensities.IGF >= intensities.HAI ? 'IGF' : 'HAI');
 
-  // 2. Define Labels
   const clientFacingVector = focusKey === 'HAI' ? 'Vector 01' : focusKey === 'AVS' ? 'Vector 02' : 'Vector 03';
   const airtableFacingVector = `Vector 0${focusKey === 'HAI' ? 1 : focusKey === 'AVS' ? 2 : 3} (${focusKey})`;
 
-  // 3. Intelligent Calendly Link
   const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
   const calendlyUrl = `${calendlyBase}?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&a1=${clientFacingVector}&utm_campaign=${encodeURIComponent(organization)}`;
 
