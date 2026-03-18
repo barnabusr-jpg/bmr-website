@@ -1,56 +1,32 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Radar as RechartsRadar } from 'recharts';
-import { ShieldAlert, Lock, ShieldCheck } from "lucide-react";
+import { Radar as RechartsRadar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from 'recharts';
+import { ShieldAlert, Activity, ArrowRight, Lock } from "lucide-react";
+import { useRouter } from 'next/router';
 
-interface ResultsProps {
-  answers: any[];
-  userDetails: { name: string, email: string, org: string, role: string };
-}
-
-const DiagnosticResultsContent = ({ answers, userDetails }: ResultsProps) => {
-  const totalScore = answers.reduce((acc, curr) => acc + (curr.weight || 0), 0);
-
-  const getPillarScore = (lens: string) => {
-    return answers
-      .filter(a => a.lens === lens)
-      .reduce((acc, curr) => acc + (curr.weight || 0), 0);
-  };
-
-  const chartData = [
-    { zone: 'HAI', value: getPillarScore('HAI') },
-    { zone: 'AVS', value: getPillarScore('AVS') },
-    { zone: 'IGF', value: getPillarScore('IGF') },
-  ];
-
-  const status = totalScore > 60 ? { label: "CRITICAL BASELINE GAPS", color: "#EF4444" } : 
-                 totalScore > 30 ? { label: "PROTOCOLIZED DRIFT", color: "#00F2FF" } : 
-                 { label: "OPTIMIZED STEWARDSHIP", color: "#10B981" };
+const DiagnosticResultsContent = () => {
+  const router = useRouter();
+  const [data, setData] = useState<any>(null);
 
   useEffect(() => {
-    // Dispatches result to API route for email automation
-    fetch('/api/send-report', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...userDetails,
-        totalScore,
-        zoneData: { HAI: getPillarScore('HAI'), AVS: getPillarScore('AVS'), IGF: getPillarScore('IGF') }
-      })
-    });
-  }, []);
+    const vault = localStorage.getItem('bmr_results_vault');
+    if (vault) setData(JSON.parse(vault));
+    else router.push('/diagnostic');
+  }, [router]);
 
-  const handleUnlock = () => {
-    window.location.href = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(userDetails.name)}&email=${encodeURIComponent(userDetails.email)}`;
-  };
+  if (!data) return <div className="py-20 text-center text-slate-500 text-xs uppercase tracking-widest animate-pulse">Initializing Topology...</div>;
+
+  const chartData = [
+    { zone: 'HAI', value: data.HAI.aggregate },
+    { zone: 'AVS', value: data.AVS.aggregate },
+    { zone: 'IGF', value: data.IGF.aggregate },
+  ];
 
   return (
-    <div className="py-8 space-y-12 max-w-6xl mx-auto">
-      <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-8 backdrop-blur-sm">
-        <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
-           <ShieldCheck className="h-3 w-3" /> Forensic Signal Captured
-        </h3>
-        <p className="text-white font-black text-2xl mb-2 italic uppercase tracking-tighter">{userDetails.role} Perspective Active</p>
+    <div className="py-8 space-y-12">
+      <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8">
+        <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">Signal Intensity Captured</h3>
+        <p className="text-white font-bold text-lg italic uppercase">{data.role} Perspective Active</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -59,30 +35,36 @@ const DiagnosticResultsContent = ({ answers, userDetails }: ResultsProps) => {
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                 <PolarGrid stroke="#1e293b" />
+                <PolarRadiusAxis angle={30} domain={[0, 96]} tick={false} axisLine={false} />
                 <PolarAngleAxis dataKey="zone" tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 'bold' }} />
-                <PolarRadiusAxis domain={[0, 28]} tick={false} axisLine={false} />
-                <RechartsRadar name="Pressure" dataKey="value" stroke={status.color} fill={status.color} fillOpacity={0.4} />
+                <RechartsRadar name="Intensity" dataKey="value" stroke="#00F2FF" fill="#00F2FF" fillOpacity={0.4} />
               </RadarChart>
             </ResponsiveContainer>
           </div>
         </Card>
 
-        <Card className="p-10 bg-slate-900/40 border-slate-800 border-t-4 text-center" style={{ borderTopColor: status.color }}>
-          <span className="text-[10px] font-bold text-slate-500 tracking-[0.3em] uppercase block mb-4">Total Displacement Score</span>
-          <div className="text-7xl font-black italic uppercase text-white tracking-tighter mb-4">{totalScore}</div>
-          <div className="text-xs font-bold uppercase tracking-widest mb-6" style={{ color: status.color }}>Status: {status.label}</div>
-        </Card>
+        <div className="space-y-4">
+          {['HAI', 'AVS', 'IGF'].map((z) => (
+            <Card key={z} className="p-6 bg-slate-900/40 border-slate-800">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{z} ZONE</span>
+              <div className="text-2xl font-bold italic text-white">{data[z].aggregate} <span className="text-[10px] font-normal text-slate-600">Pts</span></div>
+            </Card>
+          ))}
+        </div>
       </div>
 
-      <div className="pt-12 border-t border-slate-800 relative">
-        <h3 className="text-xl font-bold italic uppercase flex items-center gap-3 text-white tracking-tighter mb-8">
-          <ShieldAlert className="h-5 w-5 text-[#00F2FF]" /> Surgical Neutralization Roadmap
-        </h3>
-        <div className="absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-12 text-center border border-slate-800 rounded">
-          <Lock className="h-8 w-8 text-[#00F2FF] mb-4" />
-          <h4 className="text-white font-black italic uppercase text-lg tracking-tighter underline decoration-[#00F2FF] underline-offset-8">Review Required</h4>
-          <button onClick={handleUnlock} className="mt-8 bg-[#00F2FF] text-[#020617] px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all shadow-2xl">
-            Unlock Full Roadmap
+      <div className="pt-12 border-t border-slate-800">
+        <div className="relative p-16 border border-[#00F2FF]/20 bg-slate-900/40 rounded-sm text-center">
+          <Lock className="h-12 w-12 text-[#00F2FF] mx-auto mb-6 animate-pulse" />
+          <h4 className="text-white font-black uppercase italic tracking-tighter text-2xl mb-4">Forensic Targets Encrypted</h4>
+          <p className="text-slate-400 text-[10px] uppercase tracking-widest leading-relaxed max-w-md mx-auto mb-10">
+            The full neutralization roadmap for the {data.role} lens is accessible via your strategic review.
+          </p>
+          <button 
+            className="bg-[#00F2FF] text-[#020617] px-10 py-5 font-black uppercase text-[11px] tracking-[0.3em] hover:bg-white transition-all shadow-2xl"
+            onClick={() => window.open(`https://calendly.com/hello-bmradvisory/forensic-review?email=${encodeURIComponent(data.email)}&name=${encodeURIComponent(data.name)}`, '_blank')}
+          >
+            Unlock Strategic Review <ArrowRight className="inline h-4 w-4 ml-2" />
           </button>
         </div>
       </div>
