@@ -1,45 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
-import { Activity, Loader2, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 
-// --- TYPES & INTERFACES ---
-interface ZoneData {
-  max: number;
-  aggregate: number;
-  vectors: string[];
-}
-
-interface DiagnosticResults {
-  HAI: ZoneData;
-  AVS: ZoneData;
-  IGF: ZoneData;
-}
-
-const perspectiveContexts: Record<string, string> = {
-  "Executive": "Strategic Stewardship:",
-  "Manager": "Operational Synchronization:",
-  "Technical": "Forensic Reliability:"
-};
-
-// SHIELDED LENS DEFINITIONS (No Acronyms)
 const lensDefinitions: Record<string, string> = {
   "Executive": "Focus: Strategic alignment, enterprise risk stewardship, and long-term ROI stability.",
   "Manager": "Focus: Operational workflow synchronization, adoption friction, and team output.",
   "Technical": "Focus: System reliability, architectural integrity, and forensic data accuracy."
 };
 
-const calculatePillarPressure = (weight: number, role: string, zone: string) => {
-  const multipliers: Record<string, string> = {
-    "Executive": "IGF", 
-    "Technical": "HAI", 
-    "Manager": "AVS"    
-  };
-  return multipliers[role] === zone ? weight * 1.5 : weight;
-};
-
-// SHIELDED DIAGNOSTIC QUESTIONS
 const diagnosticQuestions = [
   { id: 1, lens: "HAI", text: "How do teams handle verification of AI outputs before sharing them?", options: [
     { label: "Level 4: Forensic Assurance (Optimized)", strength: 5, weight: 8, vector: "Verification Reliability" },
@@ -115,44 +84,37 @@ const diagnosticQuestions = [
   ]}
 ];
 
-// ... (Indicator component remains same)
-
 export default function PromiseGapDiagnosticPage() {
-  // ... (States and Effects remain same)
+  const [step, setStep] = useState(0);
+  const [formData, setFormData] = useState({ name: '', email: '', org: '', role: 'Executive' });
+
+  const handleStart = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStep(1);
+  };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white p-6 font-sans">
+    <div className="min-h-screen bg-[#020617] text-white p-6">
       <div className="max-w-4xl mx-auto py-12">
-        {/* Progress Dots: No Acronyms */}
-        <div className="flex justify-center gap-8 mb-20">
-          {[1, 2, 3].map((num) => (
-             <div key={num} className={`h-12 w-12 rounded-full border-2 flex items-center justify-center
-               ${(step > (num-1)*4) ? "border-[#00F2FF] bg-[#0A1F33]" : "border-slate-800 bg-slate-900"}`}>
-               {step > num*4 ? "✓" : <span className="text-[10px] font-bold text-slate-500">Pillar {num}</span>}
-             </div>
-          ))}
-        </div>
-
         <AnimatePresence mode="wait">
           {step === 0 && (
-            <motion.div key="intro" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
-              <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm shadow-2xl">
-                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white underline decoration-[#00F2FF] underline-offset-8">Forensic Signal Diagnostic</h2>
-                
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
+                <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight">Forensic Signal Diagnostic</h2>
                 <div className="border-l-2 border-[#00F2FF] bg-[#0A1F33]/40 p-6 mb-8">
                   <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3 flex items-center gap-2">
                     <ShieldCheck className="h-3 w-3" /> Audit Protocol
                   </h3>
-                  <p className="text-slate-300 text-xs leading-relaxed italic">
-                    {`This diagnostic measures systemic maturity. In instances where a protocol is undefined, unobserved, or outside your current operational scope, select Level 1 (Reactive). This ensures an accurate calibration of your organization's forensic baseline.`}
+                  <p className="text-slate-300 text-xs italic">
+                    {`This diagnostic measures systemic maturity. Select Level 1 if a protocol is reactive or undefined.`}
                   </p>
                 </div>
-
-                <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
-                  {/* ... Inputs ... */}
+                <form onSubmit={handleStart} className="space-y-6">
+                  <input className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" 
+                         placeholder="Full Name" required 
+                         onChange={(e) => setFormData({...formData, name: e.target.value})} />
                   <div className="space-y-1">
-                    <label className="text-[10px] uppercase text-slate-500 tracking-widest font-bold">Perspective Lens</label>
-                    <select className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none" 
+                    <select className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" 
                             value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
                       <option value="Executive">Executive Perspective</option>
                       <option value="Manager">Manager Perspective</option>
@@ -160,31 +122,32 @@ export default function PromiseGapDiagnosticPage() {
                     </select>
                     <p className="mt-2 text-[10px] italic text-[#00F2FF]/80">{lensDefinitions[formData.role]}</p>
                   </div>
-                  {/* ... Rest of form ... */}
+                  <button type="submit" className="w-full py-6 bg-[#00F2FF] text-[#020617] font-bold uppercase tracking-widest text-xs hover:bg-white transition-all">
+                    Begin Observation
+                  </button>
                 </form>
               </Card>
             </motion.div>
           )}
 
-          {step > 0 && step <= 12 && currentQuestion && (
-            <motion.div key={`step-${step}`} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-              <Card className="p-12 bg-slate-900/30 border-slate-800 text-center shadow-2xl backdrop-blur-sm">
-                <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">
-                  {perspectiveContexts[formData.role]} Observation {step} of 12
-                </span>
-                <h2 className="text-2xl md:text-3xl font-bold mt-10 mb-12 text-white italic uppercase leading-tight tracking-tighter">{currentQuestion.text}</h2>
-                <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
-                  {currentQuestion.options.map((opt: any, idx: number) => (
-                    <button key={idx} className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-[11px] font-bold hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left leading-relaxed" 
-                            onClick={() => handleAnswer(opt)}>
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </Card>
-            </motion.div>
+          {step > 0 && step <= 12 && (
+             <motion.div key={step} initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }}>
+                <Card className="p-12 bg-slate-900/30 border-slate-800 text-center">
+                  <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
+                  <h2 className="text-2xl font-bold mt-10 mb-12 italic uppercase tracking-tighter">
+                    {diagnosticQuestions[step - 1].text}
+                  </h2>
+                  <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
+                    {diagnosticQuestions[step - 1].options.map((opt, idx) => (
+                      <button key={idx} onClick={() => setStep(step + 1)} 
+                              className="py-6 px-6 border border-slate-800 text-slate-300 uppercase tracking-widest text-[11px] font-bold hover:border-[#00F2FF] hover:bg-[#0A1F33]/50 transition-all text-left">
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </Card>
+             </motion.div>
           )}
-          {/* ... Step 13 / Loading remain same ... */}
         </AnimatePresence>
       </div>
     </div>
