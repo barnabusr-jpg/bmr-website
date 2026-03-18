@@ -7,8 +7,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   const { name, email, org, zoneData, role } = req.body;
 
-  const intensities = { HAI: zoneData?.HAI?.aggregate || 0, AVS: zoneData?.AVS?.aggregate || 0, IGF: zoneData?.IGF?.aggregate || 0 };
-  let focus = intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF ? 'AVS' : (intensities.IGF >= intensities.HAI ? 'IGF' : 'HAI');
+  const intensities = { 
+    HAI: zoneData?.HAI?.aggregate || 0, 
+    AVS: zoneData?.AVS?.aggregate || 0, 
+    IGF: zoneData?.IGF?.aggregate || 0 
+  };
+
+  const focus = intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF 
+    ? 'AVS' 
+    : (intensities.IGF >= intensities.HAI ? 'IGF' : 'HAI');
 
   const msg = {
     to: email,
