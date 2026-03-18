@@ -6,6 +6,7 @@ sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   
+  // FIXED: 'role' is removed from destructuring to satisfy the ESLint unused variable rule
   const { name, email, org, zoneData } = req.body;
   const firstName = name ? name.split(' ')[0] : 'there';
 
