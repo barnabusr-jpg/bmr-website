@@ -31,6 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const rawMax = zoneData?.[focusArea]?.max || 1;
   const maturityIndex = Math.min(Math.max(rawMax, 1), 4);
+  const totalScore = intensities.HAI + intensities.AVS + intensities.IGF;
   
   const stageLabels = [
     "Stage 0: Unobserved", 
@@ -42,29 +43,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const currentStageLabel = stageLabels[maturityIndex];
 
-  // --- MATURITY-ALIGNED CONTENT NARRATIVE ---
+  // --- SHIELDED CONTENT (IP MASKED FOR EMAIL) ---
   const contentMap = {
     'HAI': {
-      result: `Trust Architecture (HAI) — ${currentStageLabel}`,
-      implications: `Our forensic analysis of the ${role} lens reveals a variance in "Verification Reliability." At ${currentStageLabel}, your organization is currently bridging trust gaps with manual effort, which creates a 'hidden tax' on AI output speed.`,
-      exercise: "Audit a high-frequency AI workflow. Compare the time spent on 'Human-in-the-loop' verification versus the actual generation time to reveal your Trust Friction Ratio.",
+      publicTitle: "Trust Architecture Alignment",
+      implications: `A significant variance in "Verification Reliability" has been detected. Operational friction is likely masking hidden technical debt.`,
+      exercise: `Audit a high-frequency AI workflow. Compare the time spent on 'Human-in-the-loop' verification versus the actual generation time to reveal your Trust Friction Ratio.`,
     },
     'AVS': {
-      result: `Adoption Value System (AVS) — ${currentStageLabel}`,
-      implications: `The ${role} signals indicate "Operational Drift." While tools are present, the synchronization between user adoption and governance is uncalibrated. This leads to high activity volume with low forensic value realization.`,
-      exercise: "Trace an AI failure from the last 30 days. Measure the time elapsed between the error and executive notification to identify your Ownership Latency.",
+      publicTitle: "Adoption Value Synchronization",
+      implications: `Signals indicate "Operational Drift." User adoption and governance protocols are currently uncalibrated, leading to high activity with low forensic value.`,
+      exercise: `Trace an AI failure from the last 30 days. Measure the time elapsed between the error and executive notification to identify your Ownership Latency.`,
     },
     'IGF': {
-      result: `Internal Governance (IGF) — ${currentStageLabel}`,
-      implications: `Observations suggest "Executive Oversight Variance." At the ${role} level, governance is likely perceived as a deployment bottleneck rather than a strategic accelerator, leading to reactive risk management.`,
-      exercise: "Review your latest AI model correction. Verify if that specific forensic insight was systematically ingested into a retraining loop or if it remained a siloed manual fix.",
+      publicTitle: "Internal Governance Integrity",
+      implications: `Observations suggest "Executive Oversight Variance." Current protocols may be perceived as bottlenecks rather than strategic accelerators.`,
+      exercise: `Review your latest AI model correction. Verify if that specific forensic insight was systematically ingested into a retraining loop or if it remained a siloed manual fix.`,
     }
   };
 
   const selected = contentMap[focusArea];
-  const calendlyLink = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(name || "")}&email=${encodeURIComponent(email || "")}&a1=${encodeURIComponent(role || "")}&a2=${encodeURIComponent(`HAI:${intensities.HAI}_AVS:${intensities.AVS}_IGF:${intensities.IGF}`)}`;
+  const calendlyLink = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(name || "")}&email=${encodeURIComponent(email || "")}&a1=${encodeURIComponent(role || "")}&a2=${encodeURIComponent(`TotalScore:${totalScore}_Role:${role}`)}`;
 
-  // --- EMAIL PAYLOAD: Modified to Teaser Mode ---
   const msg = {
     to: email,
     bcc: bcc || 'hello@bmradvisory.co', 
@@ -74,24 +74,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; color: #020617; line-height: 1.6; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0;">
         <div style="border-bottom: 2px solid #020617; padding-bottom: 20px; margin-bottom: 30px;">
           <h2 style="text-transform: uppercase; letter-spacing: 4px; font-size: 14px; margin: 0; color: #64748b;">Forensic Observation Report</h2>
-          <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin: 5px 0 0 0;">Lens: ${role} | Maturity Stage: ${maturityIndex}</p>
+          <p style="font-size: 10px; color: #94a3b8; text-transform: uppercase; margin: 5px 0 0 0;">Lens: ${role} | Displacement Score: ${totalScore}</p>
         </div>
+        
         <p>Hello ${firstName},</p>
-        <p style="color: #475569;">The BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong> is complete. We have benchmarked your AI maturity based on the ${role} perspective.</p>
+        <p style="color: #475569;">The BMR Signal Diagnostic for <strong>${org || 'your organization'}</strong> is complete. We have captured your maturity signature based on the ${role} perspective.</p>
         
         <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 32px; margin-bottom: 40px;">
-          <h3 style="margin: 0 0 8px 0; color: #00F2FF; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; font-weight: bold;">Maturity Benchmark</h3>
-          <p style="font-size: 22px; font-weight: bold; margin: 0; color: #020617; font-style: italic;">${selected.result}</p>
+          <h3 style="margin: 0 0 8px 0; color: #00F2FF; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; font-weight: bold;">Priority Focus Area</h3>
+          <p style="font-size: 22px; font-weight: bold; margin: 0; color: #020617; font-style: italic;">${selected.publicTitle}</p>
+          
           <div style="margin-top: 24px; border-top: 1px solid #e2e8f0; padding-top: 24px;">
-            <h4 style="font-size: 12px; text-transform: uppercase; color: #020617; margin: 0 0 12px 0;">Forensic Implications</h4>
+            <h4 style="font-size: 12px; text-transform: uppercase; color: #020617; margin: 0 0 12px 0;">Forensic Observation</h4>
             <p style="font-size: 14px; color: #334155; margin: 0; line-height: 1.8;">${selected.implications}</p>
           </div>
         </div>
 
-        {/* TEASER SECTION: Hiding the specific exercise */}
         <h3 style="font-size: 14px; text-transform: uppercase; color: #020617; margin-bottom: 16px;">Surgical Neutralization Roadmap</h3>
         <div style="border-left: 4px solid #00F2FF; padding: 10px 20px; color: #64748b; font-size: 13px; margin-bottom: 32px; font-style: italic; background-color: #f1f5f9;">
-          Neutralization vectors for <strong>${focusArea} Zone</strong> have been identified. To prevent uncalibrated implementation, the specific surgical roadmap is reserved for your 1-on-1 Maturity Review.
+          Neutralization vectors for your specific displacement profile have been identified. To prevent uncalibrated implementation, the <strong>Full Forensic Roadmap</strong> and specific exercises are reserved for your 1-on-1 Maturity Review.
         </div>
 
         <div style="margin: 48px 0; text-align: center;">
@@ -108,7 +109,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const WEBHOOK_URL = process.env.AIRTABLE_WEBHOOK_URL; 
     if (WEBHOOK_URL) {
-      // FULL PAYLOAD: Sent to Airtable for your slide deck
+      // FULL DATA: Sent to Airtable for your slide deck (unmasked)
       fetch(WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,9 +119,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           hai_intensity: intensities.HAI,
           avs_intensity: intensities.AVS,
           igf_intensity: intensities.IGF,
+          total_score: totalScore,
           maturityStage: currentStageLabel,
           forensic_implication: selected.implications,
-          neutralization_exercise: selected.exercise, // Stored safely in Airtable
+          neutralization_exercise: selected.exercise, // THE SECRET EXERCISE
           vaultID: `BMR-${Date.now()}` 
         }),
       }).catch(err => console.error("Airtable Error:", err));
