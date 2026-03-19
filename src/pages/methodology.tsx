@@ -1,6 +1,6 @@
 import React from 'react';
 import { useRouter } from "next/router";
-import Link from 'next/link";
+import Link from 'next/link';
 import { Download, ShieldCheck, Activity, Zap, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -21,7 +21,7 @@ export default function MethodologyPage() {
             Systemic <span className="text-slate-500 text-nowrap">Architecture</span>
           </h1>
           <p className="text-slate-400 text-xl max-w-3xl leading-relaxed font-light italic">
-            &ldquo;Closing the Promise Gap requires a continuous cycle of alignment across three interconnected layers of organizational health.&rdquo;
+            "Closing the Promise Gap requires a continuous cycle of alignment across three interconnected layers of organizational health."
           </p>
         </section>
 
