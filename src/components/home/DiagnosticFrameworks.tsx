@@ -3,18 +3,18 @@ import { Card } from "@/components/ui/card";
 const methodologies = [
   { 
     name: "HAI", 
-    fullName: "Trust Architecture", 
-    description: "Examines how people interpret, rely on, and remain accountable for AI-influenced decisions." 
+    fullName: "The Trust Lens", 
+    description: "Evaluates the psychological and operational readiness of the organization by identifying where human mental models diverge from system outputs." 
   },
   { 
     name: "AVS", 
-    fullName: "Adoption Value System", 
-    description: "Evaluates whether AI efforts translate into sustained organizational value rather than activity volume." 
+    fullName: "The Govern Lens", 
+    description: "Audits the alignment of artificial intelligence workflows with strategic intent to ensure automated activity translates into verifiable value." 
   },
   { 
     name: "IGF", 
-    fullName: "Internal Governance Framework", 
-    description: "Provides the accountability loop required to ensure AI-enabled systems behave across people, processes, and decisions." 
+    fullName: "The Evolve Lens", 
+    description: "Establishes the architecture for long term resilience through the Safeguard Loop to ensure autonomous adaptation remains under leadership control." 
   }
 ];
 
@@ -24,10 +24,10 @@ const DiagnosticFrameworks = () => {
       <div className="container mx-auto max-w-7xl">
         <div className="text-center mb-20">
           <h2 className="text-4xl font-bold mb-6 text-white tracking-tight italic uppercase">
-            Diagnostic <span className="text-[#14b8a6]">Frameworks</span>
+            Triple-Lens <span className="text-[#14b8a6]">Architecture</span>
           </h2>
           <p className="text-xl text-slate-400 max-w-2xl mx-auto font-light leading-relaxed">
-            Our forensic methodology is built on three core systemic lenses.
+            Our forensic methodology is built on three core systemic lenses designed to identify and stabilize systemic drift.
           </p>
         </div>
 
@@ -37,9 +37,7 @@ const DiagnosticFrameworks = () => {
               <div key={m.name} className="h-full">
                 <Card className="p-8 h-full bg-slate-900/50 border-slate-800 border-2 relative overflow-hidden transition-all duration-300 group">
                   
-                  {/* THE STANDARDIZED FIX: Top-down building highlight 
-                      Matches 'What We Support' and 'Signal Architecture' sections
-                  */}
+                  {/* THE STANDARDIZED FIX: Top-down building highlight */}
                   <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500 ease-in-out"></div>
 
                   <div className="flex items-center gap-3 mb-6 relative z-10">
