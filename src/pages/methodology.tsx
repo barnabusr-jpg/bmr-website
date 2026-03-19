@@ -21,12 +21,12 @@ export default function MethodologyPage() {
             Systemic <span className="text-slate-500 text-nowrap">Architecture</span>
           </h1>
           <p className="text-slate-400 text-xl max-w-3xl leading-relaxed font-light italic">
-            "Closing the Promise Gap requires a continuous cycle of alignment across three interconnected layers of organizational health."
+            {/* Using JSX expression to handle quotes safely for Next.js linting */}
+            {"\"Closing the Promise Gap requires a continuous cycle of alignment across three interconnected layers of organizational health.\""}
           </p>
         </section>
 
         <div className="grid md:grid-cols-3 gap-8 mb-24">
-          {/* HAI - TRUST */}
           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-none relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
             <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]"></div>
             <ShieldCheck className="text-[#14b8a6] mb-6 h-10 w-10" />
@@ -36,7 +36,6 @@ export default function MethodologyPage() {
             </p>
           </div>
 
-          {/* AVS - GOVERN */}
           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-none relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
             <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]"></div>
             <Zap className="text-[#14b8a6] mb-6 h-10 w-10" />
@@ -46,7 +45,6 @@ export default function MethodologyPage() {
             </p>
           </div>
 
-          {/* IGF - EVOLVE */}
           <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-none relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
             <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]"></div>
             <Activity className="text-[#14b8a6] mb-6 h-10 w-10" />
