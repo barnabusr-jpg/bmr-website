@@ -26,11 +26,10 @@ const signalEntries = [
   }
 ];
 
-const Insights = () => {
+const InsightsHome = () => {
   return (
     <section className="py-24 px-6 bg-[#020617]">
       <div className="container mx-auto max-w-7xl">
-        {/* HEADER SECTION: Standardized for Briefings */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -41,13 +40,11 @@ const Insights = () => {
           <span className="text-[#14b8a6] font-black uppercase tracking-[0.4em] text-[10px] mb-4 italic">
             Strategic Intelligence
           </span>
-          
           <h2 className="text-4xl md:text-6xl font-black mb-6 text-white tracking-tighter italic uppercase">
             Technical <span className="text-[#14b8a6]">Briefings</span>
           </h2>
         </motion.div>
 
-        {/* GRID SECTION */}
         <div className="grid md:grid-cols-3 gap-8">
           {signalEntries.map((insight, index) => (
             <motion.div
@@ -58,29 +55,24 @@ const Insights = () => {
               transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
             >
               <Link href={`/insights/${insight.slug}`}>
-                <Card className="p-10 h-full bg-slate-900/10 border-slate-900 border-2 relative overflow-hidden group hover:border-[#14b8a6]/40 transition-all duration-500 cursor-pointer flex flex-col justify-between rounded-none shadow-2xl">
-                  {/* Hover Highlight Line */}
+                <Card className="p-10 h-full bg-slate-900/10 border-slate-900 border-2 relative overflow-hidden group hover:border-[#14b8a6]/40 transition-all duration-500 cursor-pointer flex flex-col justify-between rounded-none">
                   <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
-                  
                   <div className="space-y-6">
                     <div className="flex items-center gap-3 text-[#14b8a6]">
-                      <Activity className="h-4 w-4 group-hover:animate-pulse" />
-                      {/* FIXED: Removed "Lens:" prefix to prevent confusion with Frameworks */}
+                      <Activity className="h-4 w-4" />
+                      {/* Fixed: Removed the comment that caused the Vercel Build Error */}
                       <span className="text-[10px] font-black uppercase tracking-[0.3em] italic">
-                        ID: {insight.category} // BMR-TR01
+                        ID: {insight.category}
                       </span>
                     </div>
-                    
-                    <h3 className="text-2xl font-black text-white tracking-tight italic group-hover:text-[#14b8a6] transition-colors leading-tight uppercase">
+                    <h3 className="text-2xl font-black text-white tracking-tight italic uppercase group-hover:text-[#14b8a6] transition-colors">
                       {insight.title}
                     </h3>
-                    
-                    <p className="text-slate-500 font-light leading-relaxed italic text-sm group-hover:text-slate-400 transition-colors">
+                    <p className="text-slate-500 font-light leading-relaxed italic text-sm">
                       {insight.excerpt}
                     </p>
                   </div>
-                    
-                  <div className="pt-10 mt-auto flex items-center text-[#14b8a6] font-black uppercase tracking-[0.2em] text-[10px] group-hover:gap-4 transition-all italic">
+                  <div className="pt-10 mt-auto flex items-center text-[#14b8a6] font-black uppercase tracking-[0.2em] text-[10px] italic">
                     Open Forensic Briefing
                     <ArrowRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform" />
                   </div>
@@ -94,4 +86,4 @@ const Insights = () => {
   );
 };
 
-export default Insights;
+export default InsightsHome;
