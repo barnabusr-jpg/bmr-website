@@ -6,33 +6,33 @@ import { TrendingUp, Users, Shield, Zap, Target, CheckCircle2 } from "lucide-rea
 const outcomes = [
   {
     icon: TrendingUp,
-    title: "Accelerated Adoption",
-    description: "Move forward more decisively when uncertainty and misalignment are reduced."
+    title: "Systemic Readiness",
+    description: "Reducing operational friction to ensure rapid and sustainable user integration across all levels of the organization."
   },
   {
     icon: Users,
-    title: "Enhanced Trust",
-    description: "Stakeholders gain confidence when AI use is understandable, consistent, and accountable."
+    title: "Expectation Continuity",
+    description: "Aligning system performance with human mental models to prevent trust erosion during high stakes decision cycles."
   },
   {
     icon: Shield,
-    title: "Regulatory Confidence",
-    description: "Navigate expectations with fewer surprises when governance decisions are coherent."
+    title: "Defensible Compliance",
+    description: "Establishing automated audit trails and governance structures to navigate shifting regulatory expectations with certainty."
   },
   {
     icon: Zap,
-    title: "Operational Stability",
-    description: "AI-enabled workflows become more predictable and resilient when decision friction is addressed."
+    title: "Structural Hardening",
+    description: "Eliminating systemic drift to ensure consistent and resilient performance within AI enabled workflows."
   },
   {
     icon: Target,
-    title: "Strategic Alignment",
-    description: "AI initiatives reinforce organizational priorities rather than competing with them."
+    title: "Operational Resonance",
+    description: "Linking artificial intelligence initiatives directly to core mission objectives to ensure strategic intent matches execution."
   },
   {
     icon: CheckCircle2,
-    title: "Evidence of Value",
-    description: "Gain clearer visibility into whether AI efforts are contributing to meaningful outcomes over time."
+    title: "Verified ROI",
+    description: "Identifying and capturing organizational value that is frequently leaked during the initial implementation phase."
   }
 ];
 
@@ -48,10 +48,10 @@ const Outcomes = () => {
           className="text-center mb-20"
         >
           <h2 className="text-4xl font-bold mb-6 text-white tracking-tight italic uppercase">
-            Outcome <span className="text-[#14b8a6]">Snapshot</span>
+            Hardened <span className="text-[#14b8a6]">Outcomes</span>
           </h2>
           <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
-            Restoring alignment between intent, execution, and lived experience before risk hardens into outcome.
+            Restoring alignment between intent, execution, and lived experience before systemic risk hardens into permanent failure.
           </p>
         </motion.div>
 
@@ -93,8 +93,8 @@ const Outcomes = () => {
           className="mt-20 text-center"
         >
           <p className="text-slate-500 font-light italic text-sm">
-            &quot;Progress typically comes from identifying the smallest set of targeted interventions 
-            required to materially change outcomes.&quot;
+            &quot;Progress is achieved by identifying the smallest set of targeted interventions 
+            required to materially change organizational outcomes.&quot;
           </p>
         </motion.div>
       </div>

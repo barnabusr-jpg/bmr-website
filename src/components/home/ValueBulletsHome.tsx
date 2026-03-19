@@ -1,51 +1,70 @@
-import { motion } from "framer-motion";
-import { Shield, TrendingUp, Users, Target } from "lucide-react";
+"use client";
 
-const values = [
-  {
-    icon: Shield,
-    title: "Responsible AI",
-    description: "Build ethical frameworks that prioritize transparency and accountability"
+import { motion } from "framer-motion";
+import { Shield, Zap, Target, Cpu } from "lucide-react";
+
+const signals = [
+  { 
+    id: "SIG-01", 
+    title: "Responsible AI", 
+    desc: "Hardening the boundary between human intent and automated output via ethical frameworks.", 
+    icon: Shield 
   },
-  {
-    icon: TrendingUp,
-    title: "Measurable Results",
-    description: "Drive outcomes with data-driven insights and proven methodologies"
+  { 
+    id: "SIG-02", 
+    title: "Measurable Results", 
+    desc: "Eliminating value leak by driving outcomes with forensic data-driven insights.", 
+    icon: Zap 
   },
-  {
-    icon: Users,
-    title: "Human-Centered",
-    description: "Design solutions that enhance human capabilities and decision-making"
+  { 
+    id: "SIG-03", 
+    title: "Human-Centered", 
+    desc: "Designing solutions that enhance human capabilities and stabilize shadow labor.", 
+    icon: Target 
   },
-  {
-    icon: Target,
-    title: "Strategic Focus",
-    description: "Align AI initiatives with organizational goals and values"
-  }
+  { 
+    id: "SIG-04", 
+    title: "Strategic Focus", 
+    desc: "Establishing adaptive control loops that align AI initiatives with core organization goals.", 
+    icon: Cpu 
+  },
 ];
 
 const ValueBullets = () => {
   return (
-    <section className="py-20 px-6">
-      <div className="container mx-auto max-w-7xl">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {values.map((value, index) => (
+    <section className="py-24 px-6 bg-[#020617]">
+      <div className="max-w-7xl mx-auto">
+        {/* Added a Grid-based layout with 1px gaps for that "Dashboard" feel */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1 bg-slate-900/50 border border-slate-900 shadow-2xl">
+          {signals.map((signal, i) => (
             <motion.div
-              key={value.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              key={signal.id}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
-              className="flex flex-col items-start gap-4 p-6 hover:shadow-lg transition-all duration-200 border-2 rounded-lg"
+              transition={{ delay: i * 0.1, duration: 0.5 }}
+              className="p-10 bg-[#020617] group hover:bg-slate-900/30 transition-all duration-500 relative overflow-hidden"
             >
+              {/* Subtle accent hover effect */}
+              <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
               
-               <div className="p-3 rounded-lg bg-primary/10">
+              <div className="flex flex-col h-full">
+                <div className="flex justify-between items-start mb-10">
+                  <div className="p-3 bg-slate-900/50 border border-slate-800 group-hover:border-[#14b8a6]/40 transition-colors">
+                    <signal.icon className="h-6 w-6 text-[#14b8a6] group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+                  <span className="text-[9px] font-black text-slate-800 group-hover:text-[#14b8a6] transition-colors tracking-[0.3em] italic">
+                    {signal.id}
+                  </span>
+                </div>
 
-                <value.icon className="h-6 w-6 text-primary " />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold mb-2">{value.title}</h3>
-                <p className="text-sm text-muted-foreground">{value.description}</p>
+                <h3 className="text-xl font-black italic uppercase tracking-tighter text-white mb-4 leading-none group-hover:text-[#14b8a6] transition-colors">
+                  {signal.title}
+                </h3>
+                
+                <p className="text-sm text-slate-500 font-light italic leading-relaxed">
+                  {signal.desc}
+                </p>
               </div>
             </motion.div>
           ))}

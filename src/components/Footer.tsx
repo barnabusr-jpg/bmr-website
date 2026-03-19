@@ -1,43 +1,47 @@
+import React from 'react';
 import Link from "next/link";
+import { Mail } from "lucide-react";
 
 const Footer = () => {
+  const handleRequestAccess = () => {
+    const subject = encodeURIComponent("Access Request: BMR Systems Operations Protocol");
+    const body = encodeURIComponent("I am requesting access to the BMR Systems Operations Protocol (Field Guide) for my organization.\n\nName:\nOrganization:");
+    window.location.href = `mailto:hello@bmrsolutions.co?subject=${subject}&body=${body}`;
+  };
+
   return (
     <footer className="bg-[#020617] border-t border-slate-900 py-12 px-6">
       <div className="container mx-auto max-w-7xl">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          {/* Logo / Brand Section */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+          
+          {/* Brand - Reverted to Solutions */}
           <div className="flex items-center gap-2">
             <span className="text-xl font-bold tracking-tight text-white italic uppercase">
               BMR <span className="text-[#14b8a6]">Solutions</span>
             </span>
           </div>
           
-          {/* Copyright Section */}
-          <p className="text-slate-500 text-sm font-light">
-            © {new Date().getFullYear()} BMR Solutions. All rights reserved.
+          {/* Legal / Copyright */}
+          <p className="text-slate-600 text-[9px] md:text-[10px] uppercase tracking-[0.2em] font-bold">
+            © {new Date().getFullYear()} BMR SOLUTIONS CO. STRATEGIC ADVISORY & SYSTEMIC STABILITY.
           </p>
           
-          {/* Utility Links - Standardized Color and Weight */}
+          {/* Navigation & Fenced Asset */}
           <div className="flex flex-wrap justify-center gap-8 text-[10px] uppercase tracking-widest font-bold">
-            <a 
-              href="/media/Field%20Guide.pdf" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-slate-400 hover:text-[#14b8a6] transition-colors"
+            {/* Asset Trigger - Uses 'Mail' and 'handleRequestAccess' */}
+            <button 
+              onClick={handleRequestAccess}
+              className="text-[#14b8a6] hover:text-white transition-colors flex items-center gap-2 italic"
             >
-              Field Guide
-            </a>
-            <Link 
-              href="/privacy" 
-              className="text-slate-400 hover:text-white transition-colors"
-            >
-              Privacy Policy
+              <Mail size={12} /> Request Protocol Access
+            </button>
+            
+            {/* Internal Links - Uses 'Link' */}
+            <Link href="/privacy" className="text-slate-500 hover:text-white transition-colors">
+              Privacy
             </Link>
-            <Link 
-              href="/terms" 
-              className="text-slate-400 hover:text-white transition-colors"
-            >
-              Terms of Service
+            <Link href="/terms" className="text-slate-500 hover:text-white transition-colors">
+              Terms
             </Link>
           </div>
         </div>
