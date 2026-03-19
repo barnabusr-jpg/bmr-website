@@ -1,3 +1,4 @@
+import React from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -7,12 +8,12 @@ const Header = () => {
       <div className="container mx-auto max-w-7xl px-6 h-20 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <span className="text-xl font-black tracking-tighter text-white italic uppercase transition-all group-hover:tracking-normal">
-            BMR <span className="text-[#14b8a6]">Forensics</span>
+            BMR <span className="text-[#14b8a6]">Solutions</span>
           </span>
         </Link>
         
         <nav className="hidden md:flex items-center gap-10 text-[10px] font-bold tracking-[0.2em] text-slate-500 uppercase">
-          {/* Ensure these routes exist in your /pages directory */}
+          {/* Routes validated against /pages directory */}
           <Link href="/approach" className="hover:text-[#14b8a6] hover:italic transition-all">Approach</Link>
           <Link href="/methodology" className="hover:text-[#14b8a6] hover:italic transition-all">Architecture</Link>
           <Link href="/services" className="hover:text-[#14b8a6] hover:italic transition-all">Services</Link>
@@ -26,7 +27,7 @@ const Header = () => {
           </Button>
         </nav>
 
-        {/* Simple Mobile Indicator (Optional: You can add a sheet here later) */}
+        {/* Mobile Indicator */}
         <div className="md:hidden">
            <Link href="/diagnostic" className="text-[#14b8a6] text-[10px] font-bold uppercase tracking-widest border border-[#14b8a6]/30 px-4 py-2 italic">
              Pulse Check
