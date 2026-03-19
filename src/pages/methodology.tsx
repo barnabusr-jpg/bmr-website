@@ -1,7 +1,9 @@
+import React from 'react';
+import { useRouter } from "next/router";
+import Link from 'next/link";
+import { Download, ShieldCheck, Activity, Zap, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Download, ShieldCheck, Activity, Zap, ArrowRight } from "lucide-react";
-import { useRouter } from "next/router";
 
 export default function MethodologyPage() {
   const router = useRouter();
@@ -15,7 +17,7 @@ export default function MethodologyPage() {
           <span className="text-[#14b8a6] font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">
             The BMR Protocol
           </span>
-          <h1 className="text-5xl md:text-6xl font-bold mt-4 mb-8 italic tracking-tight uppercase leading-none">
+          <h1 className="text-5xl md:text-6xl font-bold mt-4 mb-8 italic tracking-tight uppercase leading-none text-white">
             Systemic <span className="text-slate-500 text-nowrap">Architecture</span>
           </h1>
           <p className="text-slate-400 text-xl max-w-3xl leading-relaxed font-light italic">
@@ -89,12 +91,13 @@ export default function MethodologyPage() {
               <p className="text-slate-400 mb-10 font-light text-sm leading-relaxed">
                 Access the proprietary architecture required to identify systemic drift. This guide contains the full technical breakdown of the twelve signals used to stabilize AI initiatives.
               </p>
-              <a 
+              <Link 
                 href="/media/Field Guide.pdf" 
+                target="_blank"
                 className="inline-flex items-center justify-center gap-4 bg-[#14b8a6] text-[#020617] px-10 py-5 rounded-none font-bold uppercase tracking-[0.2em] text-xs hover:bg-[#0d9488] transition-all w-full"
               >
                 <Download size={18} /> Access The Protocol
-              </a>
+              </Link>
             </div>
           </div>
         </section>
