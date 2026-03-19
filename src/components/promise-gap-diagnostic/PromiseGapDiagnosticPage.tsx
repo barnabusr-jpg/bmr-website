@@ -1,8 +1,10 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, AlertCircle } from "lucide-react";
 
 const diagnosticQuestions = [
   { text: "AI standard operating procedures (SOPs) are documented and followed.", lens: "HAI", options: [
@@ -68,7 +70,9 @@ function VectorIndicator({ num, isActive, isDone }: { num: number, isActive: boo
 
 export default function PromiseGapDiagnosticPage() {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(0);
+  const [emailError, setEmailError] = useState(false);
   const [formData, setFormData] = useState({ 
     name: "", 
     email: "", 
@@ -82,10 +86,12 @@ export default function PromiseGapDiagnosticPage() {
     IGF: { max: 0, aggregate: 0 } 
   });
 
-  const currentQ = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (step === 13) {
+    if (step === 13 && mounted) {
       localStorage.setItem('bmr_results_vault', JSON.stringify({ ...formData, ...results }));
       fetch('/api/send-report', {
         method: 'POST',
@@ -93,10 +99,11 @@ export default function PromiseGapDiagnosticPage() {
         body: JSON.stringify({ ...formData, zoneData: results }),
       }).then(() => router.push('/diagnostic/results'));
     }
-  }, [step, formData, results, router]);
+  }, [step, formData, results, router, mounted]);
 
   const handleAnswer = (opt: any) => {
-    const lens = currentQ!.lens as keyof typeof results;
+    const currentQ = diagnosticQuestions[step - 1];
+    const lens = currentQ.lens as keyof typeof results;
     setResults(prev => ({
       ...prev,
       [lens]: { 
@@ -106,6 +113,10 @@ export default function PromiseGapDiagnosticPage() {
     }));
     setStep(step + 1);
   };
+
+  if (!mounted) return null;
+
+  const currentQ = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
 
   return (
     <div className="min-h-screen bg-[#020617] text-white p-6">
@@ -119,29 +130,35 @@ export default function PromiseGapDiagnosticPage() {
         <AnimatePresence mode="wait">
           {step === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm">
+              <Card className="p-10 bg-slate-900/30 border-slate-800 backdrop-blur-sm rounded-none">
                 <h2 className="text-3xl font-bold mb-6 italic uppercase underline decoration-[#00F2FF] underline-offset-8">Systemic Observation</h2>
                 <form 
                   onSubmit={(e) => { 
                     e.preventDefault(); 
-                    if (formData.email !== formData.confirmEmail) {
-                      alert("Emails do not match. Please verify your entry.");
+                    if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) {
+                      setEmailError(true);
                       return;
                     }
                     setStep(1); 
                   }} 
                   className="space-y-6"
                 >
-                  <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, name: e.target.value})} />
+                  <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 rounded-none text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, name: e.target.value})} />
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <input required type="email" placeholder="Work Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, email: e.target.value})} />
-                    <input required type="email" placeholder="Confirm Email" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, confirmEmail: e.target.value})} />
+                    <input required type="email" placeholder="Work Email" className={`w-full p-4 bg-slate-950 border ${emailError ? 'border-red-500' : 'border-slate-800'} rounded-none text-white outline-none focus:border-[#00F2FF]`} onChange={e => {setFormData({...formData, email: e.target.value}); setEmailError(false);}} />
+                    <input required type="email" placeholder="Confirm Email" className={`w-full p-4 bg-slate-950 border ${emailError ? 'border-red-500' : 'border-slate-800'} rounded-none text-white outline-none focus:border-[#00F2FF]`} onChange={e => {setFormData({...formData, confirmEmail: e.target.value}); setEmailError(false);}} />
                   </div>
 
-                  <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, organization: e.target.value})} />
+                  {emailError && (
+                    <div className="flex items-center gap-2 text-red-500 text-xs uppercase font-bold tracking-widest">
+                      <AlertCircle size={14} /> Emails do not match. Verify entry.
+                    </div>
+                  )}
+
+                  <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 rounded-none text-white outline-none focus:border-[#00F2FF]" onChange={e => setFormData({...formData, organization: e.target.value})} />
                   
-                  <select className="w-full p-4 bg-slate-950 border border-slate-800 rounded text-white" onChange={e => setFormData({...formData, role: e.target.value})}>
+                  <select className="w-full p-4 bg-slate-950 border border-slate-800 rounded-none text-white appearance-none cursor-pointer focus:border-[#00F2FF]" onChange={e => setFormData({...formData, role: e.target.value})}>
                     <option value="Executive">Executive Perspective</option>
                     <option value="Manager">Manager Perspective</option>
                     <option value="Technical">Technical Perspective</option>
@@ -153,7 +170,7 @@ export default function PromiseGapDiagnosticPage() {
             </motion.div>
           ) : step <= 12 ? (
             <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-              <Card className="p-12 bg-slate-900/30 border-slate-800 text-center">
+              <Card className="p-12 bg-slate-900/30 border-slate-800 text-center rounded-none">
                 <span className="text-[#00F2FF] font-bold uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
                 <h2 className="text-2xl md:text-3xl font-bold mt-6 mb-12 italic uppercase">{currentQ?.text}</h2>
                 <div className="grid grid-cols-1 gap-4 max-w-xl mx-auto">
