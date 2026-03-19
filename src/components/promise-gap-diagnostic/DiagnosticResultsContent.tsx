@@ -21,9 +21,9 @@ const DiagnosticResultsContent = () => {
     }
   }, []);
 
-  // Prevent hydration mismatch by not rendering until mounted
   if (!mounted || !data) return null;
 
+  // Reverted to original Vector labels for IP protection
   const chartData = [
     { zone: 'VECTOR 01', value: Math.round(data?.HAI?.aggregate || 0) },
     { zone: 'VECTOR 02', value: Math.round(data?.AVS?.aggregate || 0) },
@@ -42,8 +42,9 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-8 space-y-12 text-white">
-      <div className="border-l-2 border-[#00F2FF] bg-slate-900/40 p-8">
-        <h3 className="text-[#00F2FF] text-[10px] uppercase tracking-[4px] font-bold mb-3">Signal Intensity Captured</h3>
+      {/* Forensic Header Status */}
+      <div className="border-l-2 border-[#14b8a6] bg-slate-900/40 p-8">
+        <h3 className="text-[#14b8a6] text-[10px] uppercase tracking-[4px] font-bold mb-3">Signal Intensity Captured</h3>
         <p className="font-bold text-lg italic uppercase">{data.role} Perspective Active</p>
       </div>
 
@@ -57,8 +58,8 @@ const DiagnosticResultsContent = () => {
                 <ReRadar 
                   name="Intensity" 
                   dataKey="value" 
-                  stroke="#00F2FF" 
-                  fill="#00F2FF" 
+                  stroke="#14b8a6" 
+                  fill="#14b8a6" 
                   fillOpacity={0.4} 
                 />
               </RadarChart>
@@ -68,23 +69,24 @@ const DiagnosticResultsContent = () => {
 
         <div className="space-y-4">
           {['Vector 01', 'Vector 02', 'Vector 03'].map((v, i) => (
-            <Card key={v} className="p-6 bg-slate-900/40 border-slate-800 rounded-none">
-              <span className="text-[10px] font-bold text-[#00F2FF] uppercase tracking-widest">Observation {v}</span>
+            <Card key={v} className="p-6 bg-slate-900/40 border-slate-800 rounded-none group hover:border-[#14b8a6]/50 transition-colors">
+              <span className="text-[10px] font-bold text-[#14b8a6] uppercase tracking-widest">Observation {v}</span>
               <div className="text-2xl font-bold italic mt-1">{chartData[i].value} PTS</div>
             </Card>
           ))}
         </div>
       </div>
 
-      <div className="text-center p-16 border border-[#00F2FF]/20 bg-slate-900/40 relative overflow-hidden group">
-        <div className="absolute top-0 left-0 w-full h-1 bg-[#00F2FF]/10 group-hover:bg-[#00F2FF]/30 transition-colors" />
-        <Lock className="h-12 w-12 text-[#00F2FF] mx-auto mb-6" />
-        <h4 className="font-black uppercase italic text-2xl mb-4 text-white">Strategic Targets Encrypted</h4>
+      {/* Forensic Lock Section */}
+      <div className="text-center p-16 border border-[#14b8a6]/20 bg-slate-900/40 relative overflow-hidden group">
+        <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]/10 group-hover:bg-[#14b8a6]/30 transition-colors" />
+        <Lock className="h-12 w-12 text-[#14b8a6] mx-auto mb-6" />
+        <h4 className="font-black uppercase italic text-2xl mb-4 text-white tracking-tighter">Strategic Targets Encrypted</h4>
         <p className="text-slate-400 text-[10px] uppercase tracking-widest max-w-md mx-auto mb-10 leading-relaxed">
           {"The captured signals indicate friction points within your current AI infrastructure. Decrypt findings via your session."}
         </p>
         <button 
-          className="bg-[#00F2FF] text-[#020617] px-10 py-5 font-black uppercase text-[11px] tracking-[0.3em] hover:bg-white transition-all duration-300" 
+          className="bg-[#14b8a6] text-[#020617] px-10 py-5 font-black uppercase text-[11px] tracking-[0.3em] hover:bg-white transition-all duration-300" 
           onClick={handleBooking}
         >
           Unlock Forensic Review <ArrowRight className="inline h-4 w-4 ml-2" />
