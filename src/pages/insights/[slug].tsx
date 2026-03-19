@@ -93,10 +93,13 @@ export default function SignalEntry() {
   return (
     <div className="bg-[#020617] text-white min-h-screen flex flex-col font-sans">
       <Header />
-      <main className="flex-grow pt-32 pb-24 px-6">
+      <main className="flex-grow pt-40 pb-24 px-6">
         <div className="max-w-3xl mx-auto">
           {/* Internal Navigation */}
-          <Link href="/#insights" className="text-[#14b8a6] text-sm font-bold uppercase tracking-widest mb-12 inline-flex items-center gap-2 hover:opacity-80 transition-opacity italic">
+          <Link 
+            href="/#insights" 
+            className="text-[#14b8a6] text-sm font-bold uppercase tracking-[0.2em] mb-12 inline-flex items-center gap-2 hover:opacity-70 transition-all italic"
+          >
             <ArrowLeft className="h-4 w-4" /> Back to Signal Architecture
           </Link>
 
@@ -104,30 +107,32 @@ export default function SignalEntry() {
           <header className="mb-16 space-y-6">
             <div className="flex items-center gap-3 text-[#14b8a6]">
               <Activity className="h-5 w-5" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">Lens: {article.category}</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Lens: {article.category}</span>
             </div>
-            <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-tight text-white">
+            <h1 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter leading-[0.95] text-white">
               {article.title}
             </h1>
           </header>
 
           {/* Article Body Section */}
           <article className="space-y-12">
-            <div className="text-xl md:text-2xl text-slate-400 font-light leading-relaxed italic border-l-2 border-[#14b8a6] pl-6">
+            <div className="text-xl md:text-2xl text-slate-400 font-light leading-relaxed italic border-l border-slate-800 pl-8">
               {article.intro}
             </div>
             
             <div className="space-y-16 text-lg text-slate-300 font-light leading-relaxed">
               {article.sections.map((section: any, i: number) => (
                 <div key={i} className="space-y-6">
-                  <h2 className="text-2xl font-bold text-white tracking-tight uppercase italic">{section.heading}</h2>
-                  <p>{section.body}</p>
+                  <h2 className="text-xl font-bold text-white tracking-widest uppercase italic border-b border-slate-900 pb-2 inline-block">
+                    {section.heading}
+                  </h2>
+                  <p className="opacity-90">{section.body}</p>
                   {section.bullets && (
-                    <ul className="space-y-4 pt-4">
+                    <ul className="grid gap-4 pt-4">
                       {section.bullets.map((bullet: string, j: number) => (
-                        <li key={j} className="flex gap-4 items-start italic">
+                        <li key={j} className="flex gap-4 items-start italic bg-slate-900/20 p-4 border border-slate-900/50">
                           <span className="h-1.5 w-1.5 rounded-full bg-[#14b8a6] mt-2.5 shrink-0" />
-                          <span>{bullet}</span>
+                          <span className="text-sm tracking-tight">{bullet}</span>
                         </li>
                       ))}
                     </ul>
@@ -137,15 +142,24 @@ export default function SignalEntry() {
             </div>
           </article>
 
+          {/* Forensic Bottom Line (Summary) */}
+          <section className="mt-20 pt-10 border-t border-slate-900">
+             <p className="text-slate-500 text-sm italic font-light">
+               This briefing is part of the BMR Forensic Protocol. Strategic drift is a manageable variable when identified early.
+             </p>
+          </section>
+
           {/* Footer Call to Action */}
-          <footer className="mt-24 pt-12 border-t border-slate-900">
-            <div className="bg-slate-900/30 p-12 rounded-none border border-slate-800 text-center space-y-8 relative overflow-hidden">
+          <footer className="mt-24">
+            <div className="bg-[#14b8a6]/5 p-12 rounded-none border border-[#14b8a6]/20 text-center space-y-8 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]" />
-              <h3 className="text-2xl font-bold tracking-tight text-white italic uppercase">Detecting these signals in your organization?</h3>
-              <p className="text-slate-400 font-light max-w-md mx-auto italic">
+              <h3 className="text-2xl font-bold tracking-tight text-white italic uppercase">
+                Detecting these signals?
+              </h3>
+              <p className="text-slate-400 font-light max-w-md mx-auto italic text-sm">
                 Restore alignment before systemic drift hardens into a permanent outcome.
               </p>
-              <Button asChild className="bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-14 px-10 text-sm uppercase tracking-widest transition-all duration-300 rounded-none shadow-lg">
+              <Button asChild className="bg-[#14b8a6] hover:bg-white text-[#020617] font-black h-14 px-10 text-[10px] uppercase tracking-[0.2em] transition-all duration-300 rounded-none shadow-2xl">
                 <Link href="/contact">Start a Conversation</Link>
               </Button>
             </div>
