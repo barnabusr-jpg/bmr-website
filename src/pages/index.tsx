@@ -7,7 +7,7 @@ import ServicesPreview from "@/components/home/ServicesPreviewHome";
 import Outcomes from "@/components/home/OutcomesHome";
 import ComparisonGrid from "@/components/home/ComparisonGrid";
 import Insights from "@/components/home/InsightsHome";
-import { Download, Activity, ArrowRight } from "lucide-react";
+import { Activity, ArrowRight } from "lucide-react";
 import { useRouter } from "next/router";
 
 const Index = () => {
@@ -34,7 +34,7 @@ const Index = () => {
         
         <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
         
-        {/* TRIPLE-LENS ARCHITECTURE: Now exclusively handled by the Insights component */}
+        {/* TRIPLE-LENS ARCHITECTURE: Centered via the internal InsightsHome logic */}
         <Insights />
         
         {/* FINAL CONVERSION SECTION */}
@@ -48,45 +48,34 @@ const Index = () => {
               start with the BMR framework to eliminate shadow labor and value leak.
             </p>
 
-            <div className="grid md:grid-cols-2 gap-8 text-left">
-              {/* THE FIELD GUIDE CARD */}
-              <div className="p-10 bg-slate-900/40 border-2 border-slate-800 rounded-none flex flex-col justify-between hover:border-[#14b8a6]/40 transition-all duration-500 group relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
-                <div>
-                  <Download className="text-[#14b8a6] mb-6 h-10 w-10 group-hover:scale-110 transition-transform" />
-                  <h3 className="text-2xl font-bold mb-4 italic uppercase text-white tracking-tight">The Field Guide</h3>
-                  <p className="text-slate-400 mb-10 font-light leading-relaxed text-sm italic">
-                    Download our operational reference manual. Explore the twelve signals we use to 
-                    stabilize and scale human-AI systems.
-                  </p>
-                </div>
-                <a 
-                  href="/media/Field Guide.pdf" 
-                  download="BMR_Field_Guide.pdf"
-                  className="inline-flex items-center justify-center gap-3 bg-white text-[#020617] px-8 py-5 rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-slate-200 transition-all cursor-pointer shadow-lg"
-                >
-                  Download Protocol <Download size={14} />
-                </a>
-              </div>
-
-              {/* SYSTEM DIAGNOSTIC CARD */}
+            {/* Centered Single Card Layout */}
+            <div className="max-w-2xl mx-auto text-left">
               <div className="p-10 bg-[#14b8a6]/5 border-2 border-[#14b8a6]/10 rounded-none flex flex-col justify-between hover:border-[#14b8a6]/40 transition-all duration-500 group relative overflow-hidden">
+                {/* Hover DNA Highlight */}
                 <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
+                
                 <div>
                   <Activity className="text-[#14b8a6] mb-6 h-10 w-10 group-hover:animate-pulse" />
-                  <h3 className="text-2xl font-bold mb-4 italic uppercase text-white tracking-tight">System Diagnostic</h3>
+                  <h3 className="text-2xl font-black mb-4 italic uppercase text-white tracking-tight">
+                    System Diagnostic
+                  </h3>
                   <p className="text-slate-300 mb-10 font-light leading-relaxed text-sm italic">
                     Ready for a forensic view? Our 12-question pulse check identifies your 
                     primary friction points and defines your System Archetype.
                   </p>
                 </div>
+                
                 <button 
                   onClick={() => router.push('/diagnostic')}
-                  className="inline-flex items-center justify-center gap-3 bg-[#14b8a6] text-[#020617] px-8 py-5 rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-[#0d9488] transition-all shadow-lg"
+                  className="inline-flex items-center justify-center gap-3 bg-[#14b8a6] text-[#020617] px-8 py-6 rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white transition-all shadow-lg shadow-[#14b8a6]/10"
                 >
                   Begin Diagnostic <ArrowRight size={14} />
                 </button>
               </div>
+              
+              <p className="text-center mt-8 text-[9px] text-slate-700 font-black uppercase tracking-widest italic">
+                Authorized Session: Forensic Review V3
+              </p>
             </div>
           </div>
         </section>
