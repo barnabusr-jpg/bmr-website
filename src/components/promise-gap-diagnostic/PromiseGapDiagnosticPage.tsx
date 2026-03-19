@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
-import { Loader2, ShieldCheck, Activity, ArrowRight } from "lucide-react";
+import { Loader2, ShieldCheck, Activity, ArrowRight } from "lucide-react"; // AlertCircle removed to fix build
 
 const diagnosticQuestions = [
   { text: "AI standard operating procedures (SOPs) are documented and followed.", lens: "HAI", options: [
@@ -62,10 +62,10 @@ function VectorIndicator({ num, isActive, isDone }: { num: number, isActive: boo
     <div className="flex flex-col items-center gap-2 transition-all duration-700">
       <div className={`h-12 w-12 flex items-center justify-center border-2 rounded-none transition-all duration-700 
         ${isActive || isDone ? "bg-[#14b8a6]/10 border-[#14b8a6]" : "bg-slate-900/50 border-slate-800"}`}>
-        {isDone ? <span className="text-[#14b8a6] font-black text-sm uppercase italic">Pass</span> : 
+        {isDone ? <span className="text-[#14b8a6] font-black text-[10px] uppercase italic tracking-tighter">Pass</span> : 
         <span className={`text-xs font-black ${isActive ? "text-[#14b8a6]" : "text-slate-700"}`}>0{num}</span>}
       </div>
-      <span className={`text-[8px] font-black tracking-widest uppercase ${isActive ? "text-[#14b8a6]" : "text-slate-800"}`}>Lens</span>
+      <span className={`text-[8px] font-black tracking-[0.3em] uppercase ${isActive ? "text-[#14b8a6]" : "text-slate-800"}`}>Lens</span>
     </div>
   );
 }
@@ -105,8 +105,8 @@ export default function PromiseGapDiagnosticPage() {
   const currentQ = step > 0 && step <= 12 ? diagnosticQuestions[step - 1] : null;
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="flex justify-center gap-6 mb-20">
+    <div className="max-w-4xl mx-auto px-6">
+      <div className="flex justify-center gap-8 mb-24">
         <VectorIndicator num={1} isActive={step >= 1 && step <= 4} isDone={step > 4} />
         <VectorIndicator num={2} isActive={step >= 5 && step <= 8} isDone={step > 8} />
         <VectorIndicator num={3} isActive={step >= 9 && step <= 12} isDone={step > 12} />
@@ -115,63 +115,68 @@ export default function PromiseGapDiagnosticPage() {
       <AnimatePresence mode="wait">
         {step === 0 ? (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-            <Card className="p-10 bg-slate-900/20 border-2 border-slate-800 backdrop-blur-md rounded-none relative overflow-hidden">
+            <Card className="p-12 bg-slate-900/20 border-2 border-slate-800 backdrop-blur-md rounded-none relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1 h-full bg-[#14b8a6]"></div>
-              <h2 className="text-3xl font-black mb-8 italic uppercase tracking-tighter text-white">Forensic <span className="text-[#14b8a6]">Observation</span></h2>
+              <h2 className="text-3xl md:text-4xl font-black mb-10 italic uppercase tracking-tighter text-white">Forensic <span className="text-[#14b8a6]">Observation</span></h2>
               
               <form onSubmit={(e) => { 
                 e.preventDefault(); 
                 if (formData.email.toLowerCase() !== formData.confirmEmail.toLowerCase()) { setEmailError(true); return; }
                 setStep(1); 
               }} className="space-y-6">
-                <input required placeholder="Full Name" className="w-full p-5 bg-slate-950/50 border border-slate-800 rounded-none text-white outline-none focus:border-[#14b8a6] transition-colors" onChange={e => setFormData({...formData, name: e.target.value})} />
+                <input required placeholder="Full Name" className="w-full p-6 bg-slate-950/50 border border-slate-800 rounded-none text-white outline-none focus:border-[#14b8a6] transition-colors italic" onChange={e => setFormData({...formData, name: e.target.value})} />
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <input required type="email" placeholder="Work Email" className={`w-full p-5 bg-slate-950/50 border ${emailError ? 'border-red-500' : 'border-slate-800'} rounded-none text-white outline-none focus:border-[#14b8a6] transition-colors`} onChange={e => {setFormData({...formData, email: e.target.value}); setEmailError(false);}} />
-                  <input required type="email" placeholder="Confirm Email" className={`w-full p-5 bg-slate-950/50 border ${emailError ? 'border-red-500' : 'border-slate-800'} rounded-none text-white outline-none focus:border-[#14b8a6] transition-colors`} onChange={e => {setFormData({...formData, confirmEmail: e.target.value}); setEmailError(false);}} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <input required type="email" placeholder="Work Email" className={`w-full p-6 bg-slate-950/50 border ${emailError ? 'border-red-500/50' : 'border-slate-800'} rounded-none text-white outline-none focus:border-[#14b8a6] transition-colors italic`} onChange={e => {setFormData({...formData, email: e.target.value}); setEmailError(false);}} />
+                  <input required type="email" placeholder="Confirm Email" className={`w-full p-6 bg-slate-950/50 border ${emailError ? 'border-red-500/50' : 'border-slate-800'} rounded-none text-white outline-none focus:border-[#14b8a6] transition-colors italic`} onChange={e => {setFormData({...formData, confirmEmail: e.target.value}); setEmailError(false);}} />
                 </div>
 
-                <input required placeholder="Organization" className="w-full p-5 bg-slate-950/50 border border-slate-800 rounded-none text-white outline-none focus:border-[#14b8a6] transition-colors" onChange={e => setFormData({...formData, organization: e.target.value})} />
+                <input required placeholder="Organization" className="w-full p-6 bg-slate-950/50 border border-slate-800 rounded-none text-white outline-none focus:border-[#14b8a6] transition-colors italic" onChange={e => setFormData({...formData, organization: e.target.value})} />
                 
-                <select className="w-full p-5 bg-slate-950/50 border border-slate-800 rounded-none text-white appearance-none cursor-pointer focus:border-[#14b8a6] transition-colors" onChange={e => setFormData({...formData, role: e.target.value})}>
-                  <option value="Executive">Executive Perspective</option>
-                  <option value="Manager">Manager Perspective</option>
-                  <option value="Technical">Technical Perspective</option>
-                </select>
+                <div className="relative">
+                  <select className="w-full p-6 bg-slate-950/50 border border-slate-800 rounded-none text-white appearance-none cursor-pointer focus:border-[#14b8a6] transition-colors italic" onChange={e => setFormData({...formData, role: e.target.value})}>
+                    <option value="Executive">Executive Perspective</option>
+                    <option value="Manager">Manager Perspective</option>
+                    <option value="Technical">Technical Perspective</option>
+                  </select>
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500 italic text-[10px] font-black uppercase tracking-widest">Select Lens</div>
+                </div>
                 
                 {emailError && (
-                  <p className="text-red-500 text-[10px] uppercase font-bold tracking-widest italic">! Emails do not match. Verify entry.</p>
+                  <p className="text-red-500 text-[10px] uppercase font-black tracking-[0.3em] italic animate-pulse">
+                    ! Conflict Detected: Email inputs do not match.
+                  </p>
                 )}
 
-                <button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-black h-16 uppercase tracking-[0.2em] text-[10px] hover:bg-white transition-all shadow-xl">Begin Protocol</button>
+                <button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-black h-20 uppercase tracking-[0.3em] text-[11px] hover:bg-white transition-all shadow-2xl mt-8">Begin Protocol</button>
               </form>
             </Card>
           </motion.div>
         ) : step <= 12 ? (
           <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-            <div className="space-y-8">
-               <div className="flex items-center gap-3">
+            <div className="space-y-12">
+               <div className="flex items-center gap-4">
                  <Activity className="text-[#14b8a6] h-4 w-4" />
-                 <span className="text-[#14b8a6] font-black uppercase tracking-[0.3em] text-[10px]">Signal {step} of 12</span>
+                 <span className="text-[#14b8a6] font-black uppercase tracking-[0.4em] text-[10px]">Signal {step} of 12</span>
                </div>
-               <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[120px]">{currentQ?.text}</h2>
-               <div className="grid grid-cols-1 gap-4 mt-12">
+               <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px]">{currentQ?.text}</h2>
+               <div className="grid grid-cols-1 gap-4 mt-16">
                  {currentQ?.options.map((opt, i) => (
-                   <button key={i} className="group relative flex items-center justify-between py-8 px-10 border-2 border-slate-800 bg-slate-900/20 text-slate-300 uppercase tracking-widest text-[11px] font-black hover:border-[#14b8a6]/40 hover:text-white transition-all text-left rounded-none overflow-hidden" onClick={() => handleAnswer(opt)}>
+                   <button key={i} className="group relative flex items-center justify-between py-10 px-12 border-2 border-slate-800 bg-slate-900/20 text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black hover:border-[#14b8a6]/40 hover:text-white transition-all text-left rounded-none overflow-hidden" onClick={() => handleAnswer(opt)}>
                      <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
-                     <span className="group-hover:italic group-hover:translate-x-2 transition-all duration-300">{opt.label}</span>
-                     <ArrowRight size={16} className="text-slate-800 group-hover:text-[#14b8a6] transition-colors" />
+                     <span className="group-hover:italic group-hover:translate-x-3 transition-all duration-300">{opt.label}</span>
+                     <ArrowRight size={18} className="text-slate-800 group-hover:text-[#14b8a6] transition-all group-hover:translate-x-1" />
                    </button>
                  ))}
                </div>
             </div>
           </motion.div>
         ) : (
-          <div className="text-center py-20">
-            <ShieldCheck className="h-20 w-20 text-[#14b8a6] mx-auto mb-6 animate-pulse" />
-            <h2 className="text-3xl font-black uppercase italic mb-4 tracking-tighter">Signals Captured</h2>
-            <div className="flex items-center justify-center gap-3 text-slate-500 font-bold text-[10px] tracking-widest uppercase italic">
-              <Loader2 className="animate-spin h-4 w-4" /> Hardening Forensic Report...
+          <div className="text-center py-32">
+            <ShieldCheck className="h-24 w-24 text-[#14b8a6] mx-auto mb-10 animate-pulse" />
+            <h2 className="text-4xl font-black uppercase italic mb-6 tracking-tighter text-white">Signals Captured</h2>
+            <div className="flex items-center justify-center gap-4 text-slate-500 font-black text-[11px] tracking-[0.3em] uppercase italic">
+              <Loader2 className="animate-spin h-5 w-5" /> Processing Forensic Report...
             </div>
           </div>
         )}
