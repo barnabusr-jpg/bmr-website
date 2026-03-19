@@ -4,9 +4,8 @@ import React, { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
-import { Loader2, ShieldCheck, AlertCircle, Activity, ArrowRight } from "lucide-react";
+import { Loader2, ShieldCheck, Activity, ArrowRight } from "lucide-react";
 
-// Questions remain identical to your logic but tagged for the UI
 const diagnosticQuestions = [
   { text: "AI standard operating procedures (SOPs) are documented and followed.", lens: "HAI", options: [
     { label: "Non-existent", strength: 1, weight: 10 }, { label: "Ad-hoc/Manual", strength: 2, weight: 25 },
@@ -58,10 +57,9 @@ const diagnosticQuestions = [
   ]}
 ];
 
-// Industrial progress indicator matching the "Vector" style
 function VectorIndicator({ num, isActive, isDone }: { num: number, isActive: boolean, isDone: boolean }) {
   return (
-    <div className={`flex flex-col items-center gap-2 transition-all duration-700`}>
+    <div className="flex flex-col items-center gap-2 transition-all duration-700">
       <div className={`h-12 w-12 flex items-center justify-center border-2 rounded-none transition-all duration-700 
         ${isActive || isDone ? "bg-[#14b8a6]/10 border-[#14b8a6]" : "bg-slate-900/50 border-slate-800"}`}>
         {isDone ? <span className="text-[#14b8a6] font-black text-sm uppercase italic">Pass</span> : 
@@ -108,7 +106,6 @@ export default function PromiseGapDiagnosticPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* HEADER PROGRESS GRID */}
       <div className="flex justify-center gap-6 mb-20">
         <VectorIndicator num={1} isActive={step >= 1 && step <= 4} isDone={step > 4} />
         <VectorIndicator num={2} isActive={step >= 5 && step <= 8} isDone={step > 8} />
@@ -142,6 +139,10 @@ export default function PromiseGapDiagnosticPage() {
                   <option value="Technical">Technical Perspective</option>
                 </select>
                 
+                {emailError && (
+                  <p className="text-red-500 text-[10px] uppercase font-bold tracking-widest italic">! Emails do not match. Verify entry.</p>
+                )}
+
                 <button type="submit" className="w-full bg-[#14b8a6] text-[#020617] font-black h-16 uppercase tracking-[0.2em] text-[10px] hover:bg-white transition-all shadow-xl">Begin Protocol</button>
               </form>
             </Card>
@@ -153,11 +154,7 @@ export default function PromiseGapDiagnosticPage() {
                  <Activity className="text-[#14b8a6] h-4 w-4" />
                  <span className="text-[#14b8a6] font-black uppercase tracking-[0.3em] text-[10px]">Signal {step} of 12</span>
                </div>
-               
-               <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[120px]">
-                 {currentQ?.text}
-               </h2>
-
+               <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[120px]">{currentQ?.text}</h2>
                <div className="grid grid-cols-1 gap-4 mt-12">
                  {currentQ?.options.map((opt, i) => (
                    <button key={i} className="group relative flex items-center justify-between py-8 px-10 border-2 border-slate-800 bg-slate-900/20 text-slate-300 uppercase tracking-widest text-[11px] font-black hover:border-[#14b8a6]/40 hover:text-white transition-all text-left rounded-none overflow-hidden" onClick={() => handleAnswer(opt)}>
