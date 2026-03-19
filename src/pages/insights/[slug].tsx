@@ -1,10 +1,27 @@
 import React from 'react';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ArrowLeft, Activity } from "lucide-react"; 
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+
+// SEO & Social Metadata
+const metadata: Record<string, any> = {
+  "real-trust-gap": {
+    title: "The Real Trust Gap | BMR Solutions",
+    description: "A forensic look at why LLM seat utilization is a false metric and how the Promise Gap creates shadow labor."
+  },
+  "adoption-value-system": {
+    title: "The Adoption Value System (AVS) | BMR Solutions",
+    description: "Aligning technical tools with operational reality. How to turn AI activity into measurable business impact."
+  },
+  "executive-readiness": {
+    title: "Executive Readiness & AI Resilience | BMR Solutions",
+    description: "Building the Safeguard Loop. How to prevent systemic drift and maintain leadership control over AI evolution."
+  }
+};
 
 // BMR Signal Architecture - Proprietary Forensic Framework Content
 const articleData: Record<string, any> = {
@@ -90,9 +107,21 @@ export default function SignalEntry() {
   // Safeguard: Ensure build doesn't crash if slug is undefined during static generation
   if (!article) return <div className="bg-[#020617] min-h-screen" />;
 
+  const pageSEO = metadata[slug as string] || { title: "Insight | BMR Solutions", description: "Forensic perspectives on AI systems." };
+
   return (
     <div className="bg-[#020617] text-white min-h-screen flex flex-col font-sans">
+      <Head>
+        <title>{pageSEO.title}</title>
+        <meta name="description" content={pageSEO.description} />
+        <meta property="og:title" content={pageSEO.title} />
+        <meta property="og:description" content={pageSEO.description} />
+        <meta property="og:type" content="article" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </Head>
+
       <Header />
+      
       <main className="flex-grow pt-40 pb-24 px-6">
         <div className="max-w-3xl mx-auto">
           {/* Internal Navigation */}
@@ -142,7 +171,7 @@ export default function SignalEntry() {
             </div>
           </article>
 
-          {/* Forensic Bottom Line (Summary) */}
+          {/* Forensic Bottom Line */}
           <section className="mt-20 pt-10 border-t border-slate-900">
              <p className="text-slate-500 text-sm italic font-light">
                This briefing is part of the BMR Forensic Protocol. Strategic drift is a manageable variable when identified early.
