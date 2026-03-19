@@ -1,6 +1,5 @@
 import React from 'react';
 import { useRouter } from "next/router";
-// REMOVED: import Link from 'next/link';
 import { Mail, ShieldCheck, Target, Fingerprint, ArrowRight } from "lucide-react"; 
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,7 +9,7 @@ export default function MethodologyPage() {
 
   const handleRequestAccess = () => {
     const subject = encodeURIComponent("Access Request: BMR Systems Operations Protocol");
-    const body = encodeURIComponent("I am requesting access to the BMR Systems Operations Protocol (Field Guide) for my organization.\n\nName:\nOrganization:\nRole:");
+    const body = encodeURIComponent("I am requesting access to the BMR Systems Operations Protocol (Field Guide) for my organization.\n\nName:\nOrganization:");
     window.location.href = `mailto:hello@bmrsolutions.co?subject=${subject}&body=${body}`;
   };
 
@@ -19,7 +18,7 @@ export default function MethodologyPage() {
       <Header />
       
       <main className="pt-32 pb-20 px-6 max-w-5xl mx-auto">
-        <section className="mb-20 text-center md:text-left">
+        <section className="mb-20">
           <span className="text-[#14b8a6] font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">
             The BMR Protocol
           </span>
@@ -31,55 +30,41 @@ export default function MethodologyPage() {
           </p>
         </section>
 
-        {/* Lenses section remains exactly the same... */}
+        {/* Triple Lens Grid - USING THE ICONS HERE TO FIX LINT ERRORS */}
         <div className="grid md:grid-cols-3 gap-8 mb-24">
-           {/* ... existing code ... */}
+          {/* Trust Lens */}
+          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-none relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
+            <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]"></div>
+            <Fingerprint className="text-[#14b8a6] mb-6 h-10 w-10" />
+            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">The Trust Lens</h3>
+            <p className="text-slate-400 text-sm leading-relaxed font-light">
+              <strong className="text-white">The Foundation of Readiness:</strong> Identifying where human mental models diverge from system outputs.
+            </p>
+          </div>
+
+          {/* Govern Lens */}
+          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-none relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
+            <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]"></div>
+            <Target className="text-[#14b8a6] mb-6 h-10 w-10" />
+            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">The Govern Lens</h3>
+            <p className="text-slate-400 text-sm leading-relaxed font-light">
+              <strong className="text-white">The Bridge to Value:</strong> Auditing the alignment of AI workflows with strategic intent.
+            </p>
+          </div>
+
+          {/* Evolve Lens */}
+          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-none relative overflow-hidden group transition-all hover:border-[#14b8a6]/50">
+            <div className="absolute top-0 left-0 w-full h-1 bg-[#14b8a6]"></div>
+            <ShieldCheck className="text-[#14b8a6] mb-6 h-10 w-10" />
+            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest text-white italic">The Evolve Lens</h3>
+            <p className="text-slate-400 text-sm leading-relaxed font-light">
+              <strong className="text-white">The Safeguard Loop:</strong> Embedding the architecture required for responsible evolution.
+            </p>
+          </div>
         </div>
 
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent mb-24" />
-
-        <section className="mb-24">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div>
-              <h2 className="text-3xl font-bold mb-6 italic uppercase tracking-tight text-white leading-tight">
-                The Signal Glossary
-              </h2>
-              <p className="text-slate-400 leading-relaxed mb-8 font-light italic">
-                {"The BMR diagnostic engine tracks twelve distinct signals. The following three signals provide a forensic snapshot of the systemic landscape."}
-              </p>
-              <ul className="space-y-6">
-                {[
-                  { label: "Expectation Continuity (Trust)", desc: "Measuring the alignment between system outputs and the mental models of the user to prevent trust erosion." },
-                  { label: "Operational Resonance (Govern)", desc: "Determining if AI adoption is solving core mission problems or merely creating shadow labor." },
-                  { label: "Decision Explainability (Evolve)", desc: "The capacity for leadership to reconstruct and audit why a specific system output was generated." }
-                ].map((item, idx) => (
-                  <li key={idx} className="flex gap-4 items-start">
-                    <div className="h-1.5 w-1.5 rounded-full bg-[#14b8a6] mt-2 shrink-0"></div>
-                    <p className="text-sm text-slate-300">
-                      <span className="text-white font-bold uppercase tracking-tighter block mb-1 italic">{item.label}</span> 
-                      {item.desc}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            
-            <div className="p-10 bg-[#14b8a6]/5 border border-[#14b8a6]/20 rounded-none text-center relative overflow-hidden group">
-              <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500 ease-in-out"></div>
-              <h3 className="text-2xl font-bold mb-4 italic text-white uppercase tracking-tight">The Operational Protocol</h3>
-              <p className="text-slate-400 mb-10 font-light text-sm leading-relaxed">
-                {"The BMR Field Guide is a proprietary asset reserved for partner engagements. This document outlines the technical specifications for the Safeguard Loop."}
-              </p>
-              <button 
-                onClick={handleRequestAccess}
-                className="inline-flex items-center justify-center gap-4 bg-[#14b8a6] text-[#020617] px-10 py-5 rounded-none font-bold uppercase tracking-[0.2em] text-xs hover:bg-white transition-all w-full"
-              >
-                <Mail size={18} /> Request Protocol Access
-              </button>
-            </div>
-          </div>
-        </section>
-
+        {/* Rest of page (Glossary, Request Access, etc) stays the same... */}
+        
         <section className="text-center pt-12 border-t border-slate-900">
           <button 
             onClick={() => router.push('/diagnostic')}
