@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import Link from "next/link";
 
 const HeroHome = () => {
+  const subheadline = "BMR Forensics | Structural Audit";
+
   return (
     <section className="relative min-h-[90vh] flex items-center py-24 px-6 overflow-hidden bg-slate-950">
       <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('/grid.svg')] [mask-image:radial-gradient(ellipse_at_center,black,transparent)]" />
@@ -24,7 +26,7 @@ const HeroHome = () => {
               <div className="flex items-center gap-3">
                 <div className="h-px w-8 bg-red-600" />
                 <p className="text-[10px] font-black tracking-[0.4em] text-red-600 uppercase italic">
-                  BMR Forensics // Structural Audit
+                  {subheadline}
                 </p>
               </div>
 
