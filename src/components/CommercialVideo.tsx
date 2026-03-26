@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react"; // Removed 'useEffect' to fix build error
 import { Play, Volume2, ShieldAlert, AlertCircle } from "lucide-react";
 
 const CommercialVideo = ({ src, poster }: { src: string; poster?: string }) => {
@@ -21,7 +21,7 @@ const CommercialVideo = ({ src, poster }: { src: string; poster?: string }) => {
 
   return (
     <section className="py-32 bg-slate-950 relative overflow-hidden flex flex-col items-center border-y border-slate-900">
-      {/* SYSTEM GRID: SLATE-900 FOR FLAT ARCHITECTURE */}
+      {/* HUD Grid Overlay */}
       <div 
         className="absolute inset-0 opacity-[0.05] pointer-events-none" 
         style={{ 
@@ -49,7 +49,6 @@ const CommercialVideo = ({ src, poster }: { src: string; poster?: string }) => {
       <div className="relative w-full max-w-6xl px-6 z-10">
         <div className="relative rounded-none overflow-hidden border border-slate-900 bg-black">
           
-          {/* VIDEO ELEMENT: DESATURATED FOR BRAND COHESION */}
           <video
             ref={videoRef}
             src={src}
@@ -63,7 +62,6 @@ const CommercialVideo = ({ src, poster }: { src: string; poster?: string }) => {
             }`}
           />
 
-          {/* INTERFACE OVERLAY: HIGH-OPACITY TERMINAL LOOK */}
           {!isPlaying && !error && (
             <button
               onClick={handlePlay}
@@ -79,7 +77,6 @@ const CommercialVideo = ({ src, poster }: { src: string; poster?: string }) => {
             </button>
           )}
 
-          {/* ERROR STATE REPORTING */}
           {error && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-950 text-red-600 font-mono">
               <AlertCircle className="mb-4 h-12 w-12" />
@@ -87,7 +84,6 @@ const CommercialVideo = ({ src, poster }: { src: string; poster?: string }) => {
             </div>
           )}
 
-          {/* HARDENED AUDIO CONTROL */}
           {isPlaying && isMuted && (
             <button
               onClick={handleUnmute}
@@ -97,18 +93,13 @@ const CommercialVideo = ({ src, poster }: { src: string; poster?: string }) => {
             </button>
           )}
 
-          {/* SCANLINE OVERLAY */}
+          {/* HUD Scanline Effect */}
           <div className="absolute inset-0 pointer-events-none bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] z-20" />
         </div>
 
-        {/* STATUS BAR: PRECISION METRICS */}
-        <div className="flex justify-between items-center py-8">
-          <div className="text-[9px] font-mono text-slate-700 uppercase tracking-widest font-bold">
-            DATA_ENCRYPTION: AES-256 // STABILITY_INDEX: 44.7
-          </div>
-          <div className="text-[9px] font-mono text-slate-700 uppercase tracking-widest font-bold">
-            SYSTEM AUDIO IS MUTED BY DEFAULT FOR INITIAL DOCUMENTATION.
-          </div>
+        <div className="flex justify-between items-center py-8 font-mono text-[9px] text-slate-700 uppercase tracking-widest font-bold">
+          <div>DATA_ENCRYPTION: AES-256 // STABILITY_INDEX: 44.7</div>
+          <div>SYSTEM AUDIO IS MUTED BY DEFAULT FOR INITIAL DOCUMENTATION.</div>
         </div>
       </div>
     </section>
