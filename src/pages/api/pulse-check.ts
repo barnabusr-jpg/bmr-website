@@ -5,40 +5,44 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { role, answers } = req.body;
 
-  // 1. Map raw answers to a 0-10 severity scale for forensic precision
+  // 1. Normalize 12-question pool (Scale 0-10)
   const scores = answers.map((a: string | number) => {
-    if (typeof a === 'number') return (a / 10); // Normalizing range values
-    
-    // Mapping high-friction string responses to high scores
-    const highRiskTerms = ["Often", "Always", "7+", "No", "What is", "Neither"];
-    return highRiskTerms.some(term => String(a).includes(term)) ? 8 : 2;
+    if (typeof a === 'number') return a / 10;
+    const highRisk = ["Often", "Always", "7+", "No", "Neither", "buried in rework"];
+    return highRisk.some(term => String(a).includes(term)) ? 8.5 : 2.5;
   });
 
-  // 2. Identify the "Shear Zone" (The gap between AI promise and reality)
-  const reworkTax = (scores[0] || 0) + (scores[3] || 0);
-  const integrityScore = scores[6] || 0; // Maps to "Audit Trail" question
+  // 2. Identify the "Shear Zone"
+  const reworkTaxRaw = (scores[0] || 0) + (scores[3] || 0);
+  const shadowAI = scores[4] || 0;
+  const expertiseDebt = scores[2] || 0;
 
-  // 3. Archetype Selection Logic
-  let archetype = "Operational Drift";
+  // 3. Archetype & Velocity Determination
+  let archetype = "CollectiveDelusion";
   let velocity = -1.5;
 
-  if (reworkTax > 12) {
-    archetype = "The Replacement Trap";
-    velocity = -7.2;
-  } else if (scores[7] > 7) {
-    archetype = "Shadow Shear";
+  if (reworkTaxRaw > 12) {
+    archetype = "ReplacementTrap";
+    velocity = -7.4;
+  } else if (shadowAI > 7) {
+    archetype = "ShadowShear";
     velocity = -5.8;
-  } else if (role === 'executive' && integrityScore > 5) {
-    archetype = "The Promise Gap";
-    velocity = -3.9;
+  } else if (expertiseDebt > 7) {
+    archetype = "HollowChevron";
+    velocity = -4.2;
   }
 
-  // 4. Return formatted data for results.tsx
+  // 4. Financial Impact Scaling (In Millions for the Verdict)
+  const totalImpact = (reworkTaxRaw * 0.4) + (shadowAI * 0.2) + (expertiseDebt * 0.5);
+
   res.status(200).json({
     archetype,
-    reworkTax: (reworkTax * 4).toFixed(1) + "%",
-    deltaGap: (reworkTax / 4).toFixed(2),
+    deltaGap: parseFloat((reworkTaxRaw / 3.5).toFixed(2)),
+    reworkTax: reworkTaxRaw, 
+    shadowAI: shadowAI,
+    expertiseDebt: expertiseDebt,
+    financialImpact: totalImpact, // Normalized total
     fractureVelocity: velocity,
-    summary: `Based on your ${role} perspective, the diagnostic detected critical logic fractures.`
+    perspective: role
   });
 }
