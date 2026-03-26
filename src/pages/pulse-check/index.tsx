@@ -1,72 +1,132 @@
 import React from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
-import { Activity, ShieldAlert, ChevronRight } from "lucide-react";
+import { useRouter } from 'next/router';
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { motion } from 'framer-motion';
+import {
+  Activity,
+  ShieldAlert,
+  Terminal,
+  Fingerprint,
+  ArrowRight,
+  Database,
+  AlertTriangle
+} from "lucide-react";
 
-export default function PulseCheckLanding() {
-  const title = "The 12-Question Pulse Check";
-  const subheadline = "Expose the Promise Gap between your AI projected savings and its actual cost.";
-  
-  const items = [
-    { label: "System Archetype", desc: "Identify patterns like 'The Replacement Trap'" },
-    { label: "Delta Score", desc: "Measure the divergence between organizational roles" },
-    { label: "Forensic Verdict", desc: "Quantify hidden rework costs" }
+export default function PulseCheckEntry() {
+  const router = useRouter();
+
+  const systemMetadata = [
+    {
+      icon: Terminal,
+      label: "LOGIC TRACE STATUS",
+      value: "ACTIVE",
+      color: "text-red-600"
+    },
+    {
+      icon: Fingerprint,
+      label: "SESSION IDENTITY",
+      value: "ANONYMIZED",
+      color: "text-slate-400"
+    },
+    {
+      icon: Database,
+      label: "DATA PROTECTION",
+      value: "AES-256 ENCRYPTION",
+      color: "text-green-500"
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans selection:bg-red-500/30">
+    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-red-600">
       <Head>
-        <title>BMR | Pulse Check Diagnostic</title>
+        <title>BMR | SYSTEM DIAGNOSTIC V3.2</title>
       </Head>
-      
       <Header />
-      
-      <main className="pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto space-y-12">
-          
-          <div className="border-l-4 border-red-600 pl-8 space-y-4 mt-20">
-            <h1 className="text-5xl md:text-7xl font-black italic uppercase tracking-tighter">
-              {title}
-            </h1>
-            <p className="text-xl md:text-2xl text-slate-400 font-medium italic leading-relaxed">
-              {subheadline}
-            </p>
-          </div>
 
-          <div className="bg-slate-900 border border-slate-800 p-8 md:p-12 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5">
-              <Activity className="h-32 w-32 text-red-600" />
+      <main className="pt-48 pb-32 px-6">
+        <div className="max-w-4xl mx-auto">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="border border-slate-900 bg-slate-900/10 p-12 md:p-20 relative overflow-hidden"
+          >
+            {/* TERMINAL SCANNING BAR */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-slate-900">
+              <motion.div 
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="w-1/2 h-full bg-red-600/50 blur-sm"
+              />
             </div>
-            
-            <h2 className="text-xl font-black uppercase tracking-widest text-red-600 mb-8">
-              Diagnostic Objectives:
-            </h2>
-            
-            <ul className="space-y-6 mb-12">
-              {items.map((item, i) => (
-                <li key={i} className="flex gap-4 items-start">
-                  <ShieldAlert className="h-6 w-6 text-red-900 shrink-0 mt-1" />
-                  <div>
-                    <span className="block text-lg font-bold text-white uppercase italic">
-                      {item.label}
-                    </span>
-                    <span className="text-slate-500 text-sm italic">
-                      {item.desc}
-                    </span>
-                  </div>
-                </li>
-              ))}
-            </ul>
 
-            <Link 
-              href="/pulse-check/assessment"
-              className="inline-flex items-center gap-4 bg-red-600 hover:bg-white text-white hover:text-red-600 font-black py-6 px-12 uppercase tracking-[0.2em] text-[10px] transition-all duration-500 group"
-            >
-              Start Pulse Check
-              <ChevronRight className="h-4 w-4 group-hover:translate-x-2 transition-transform" />
-            </Link>
+            <div className="flex flex-col items-center text-center space-y-10">
+              <div className="relative">
+                <Activity className="h-16 w-16 text-red-600 animate-pulse" />
+                <motion.div 
+                  animate={{ opacity: [0, 1, 0] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="absolute -top-2 -right-2"
+                >
+                  <AlertTriangle className="h-5 w-5 text-red-500" />
+                </motion.div>
+              </div>
+              
+              <div className="space-y-4">
+                <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-none">
+                  SYSTEM <br /> DIAGNOSTIC
+                </h1>
+                <p className="text-red-600 font-mono text-[10px] uppercase tracking-[0.5em] font-bold">
+                  PULSE CHECK V3.2 // FORENSIC INTAKE
+                </p>
+              </div>
+
+              <p className="text-slate-400 text-lg font-light italic max-w-xl leading-relaxed">
+                This 12-QUESTION DIAGNOSTIC SEQUENCE identifies the primary friction points in your AI logic chain. 
+                Do not exit the terminal before completion.
+              </p>
+
+              {/* SYSTEM METADATA GRID */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-10 w-full border-y border-slate-900">
+                {systemMetadata.map((item, i) => (
+                  <div key={i} className="space-y-3">
+                    <item.icon className={`h-5 w-5 mx-auto ${item.color}`} />
+                    <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest leading-none">
+                      {item.label}
+                    </div>
+                    <div className="text-xs font-black text-white tracking-tight">
+                      {item.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-6 w-full space-y-8">
+                <button 
+                  onClick={() => router.push('/pulse-check/assessment')}
+                  className="w-full bg-red-600 text-white font-black py-7 uppercase text-xs tracking-[0.4em] hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 group shadow-2xl shadow-red-900/20"
+                >
+                  INITIATE FORENSIC TRACE <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+                
+                <div className="flex items-center justify-center gap-4 py-4 px-6 border border-slate-900 bg-slate-950/50">
+                  <ShieldAlert className="h-4 w-4 text-slate-700" />
+                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-slate-500">
+                    WARNING: SHADOW AI DETECTION REQUIRES ACCURATE INPUT PARAMETERS
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          <div className="mt-12 flex justify-between items-center px-4">
+             <div className="text-[9px] font-mono text-slate-800 uppercase tracking-widest">
+               BMR // SECURE_INTAKE_MODULE
+             </div>
+             <div className="text-[9px] font-mono text-slate-800 uppercase tracking-widest">
+               NO PROPRIETARY DATA COLLECTED
+             </div>
           </div>
         </div>
       </main>
