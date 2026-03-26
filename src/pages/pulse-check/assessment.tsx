@@ -3,11 +3,10 @@ import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, ArrowRight, ArrowLeft, Activity, ShieldCheck } from "lucide-react";
+import { Terminal, ArrowLeft, Activity, ShieldCheck } from "lucide-react";
 
 export default function AssessmentPage() {
   const [step, setStep] = useState(0);
-  const [role, setRole] = useState("");
   const [answers, setAnswers] = useState<Record<number, number>>({});
 
   const protocolText = "Status: Diagnostic Active";
@@ -15,8 +14,7 @@ export default function AssessmentPage() {
   const questions = [
     { id: 1, text: "How often do human operators manually 'fix' AI output before it reaches production?", weight: "Operational Drift" },
     { id: 2, text: "Is the internal perception of AI success consistent across Executive and Technical teams?", weight: "Delta Gap" },
-    { id: 3, text: "Does the system provide a clear audit trail for every automated decision made?", weight: "Structural Integrity" },
-    // Simplified for build test - you can expand this to 12 questions here
+    { id: 3, text: "Does the system provide a clear audit trail for every automated decision made?", weight: "Structural Integrity" }
   ];
 
   const handleNext = () => setStep((s) => s + 1);
@@ -66,7 +64,7 @@ export default function AssessmentPage() {
                     {['Executive', 'Managerial', 'Technical'].map((r) => (
                       <button
                         key={r}
-                        onClick={() => { setRole(r); handleNext(); }}
+                        onClick={handleNext}
                         className="w-full p-6 text-left border border-slate-900 bg-slate-900/50 hover:border-red-600 hover:bg-red-600/10 transition-all group flex justify-between items-center"
                       >
                         <span className="text-xl font-bold uppercase italic tracking-tight text-slate-400 group-hover:text-white">{r}</span>
@@ -114,8 +112,8 @@ export default function AssessmentPage() {
               ) : (
                 <div className="text-center py-20 space-y-6">
                   <Activity className="h-12 w-12 text-red-600 mx-auto animate-pulse" />
-                  <h2 className="text-3xl font-black uppercase italic italic tracking-tighter">Analysis Complete</h2>
-                  <p className="text-slate-500 text-sm max-w-sm mx-auto uppercase tracking-widest leading-loose">The forensic engine is calculating your Δ Score and structural archetype.</p>
+                  <h2 className="text-3xl font-black uppercase italic tracking-tighter">Analysis Complete</h2>
+                  <p className="text-slate-500 text-sm max-w-sm mx-auto uppercase tracking-widest leading-loose">The forensic engine is calculating your Delta Score and structural archetype.</p>
                   <button className="bg-white text-black font-black px-10 py-4 uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all">
                     View Forensic Report
                   </button>
