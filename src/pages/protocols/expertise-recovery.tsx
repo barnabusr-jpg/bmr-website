@@ -16,7 +16,9 @@ import {
 export default function ExpertiseRecoveryProtocol() {
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-purple-600">
-      <Head><title>BMR | PROTOCOL 03: EXPERTISE RECOVERY</title></Head>
+      <Head>
+        <title>BMR | PROTOCOL 03: EXPERTISE RECOVERY</title>
+      </Head>
       <Header />
 
       <main className="pt-32 pb-20 px-6">
@@ -31,9 +33,11 @@ export default function ExpertiseRecoveryProtocol() {
               <History className="h-3 w-3" /> Protocol 03 Activated
             </span>
           </motion.div>
-          <h1 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter mb-6">Expertise Recovery</h1>
+          <h1 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter mb-6 leading-none">
+            Expertise <br /> Recovery
+          </h1>
           <p className="text-slate-400 text-xl max-w-3xl mx-auto mb-8 font-light italic">
-            Reversing the "Black Box" dependency to restore structural human capability.
+            Reversing the &quot;Black Box&quot; dependency to restore structural human capability.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button className="bg-purple-600 hover:bg-white hover:text-black text-white font-black py-4 px-10 uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 group">
@@ -52,9 +56,15 @@ export default function ExpertiseRecoveryProtocol() {
               <BrainCircuit className="h-6 w-6 text-purple-600" />
               <h2 className="text-2xl font-black uppercase italic tracking-tight">Skill Decay Analysis</h2>
             </div>
-            <p className="text-slate-500 text-sm mb-8 font-mono uppercase tracking-tight">Over-reliance on AI logic creates systemic fragility:</p>
+            <p className="text-slate-500 text-sm mb-8 font-mono uppercase tracking-tight">
+              Over-reliance on AI logic creates systemic fragility:
+            </p>
             <ul className="space-y-4">
-              {['Loss of first-principles reasoning', 'Inability to detect complex hallucinations', 'Junior staff "logic-lock" dependency'].map((text, i) => (
+              {[
+                'Loss of first-principles reasoning', 
+                'Inability to detect complex hallucinations', 
+                'Junior staff &quot;logic-lock&quot; dependency'
+              ].map((text, i) => (
                 <li key={i} className="flex items-start gap-4 text-slate-300 text-sm italic">
                   <div className="w-1.5 h-1.5 bg-purple-600 mt-2 shrink-0" /> {text}
                 </li>
@@ -67,9 +77,15 @@ export default function ExpertiseRecoveryProtocol() {
               <Lock className="h-6 w-6 text-purple-600" />
               <h2 className="text-2xl font-black uppercase italic tracking-tight">Protocol Objectives</h2>
             </div>
-            <p className="text-slate-500 text-sm mb-8 font-mono uppercase tracking-tight">This protocol restores human operational integrity:</p>
+            <p className="text-slate-500 text-sm mb-8 font-mono uppercase tracking-tight">
+              This protocol restores human operational integrity:
+            </p>
             <ul className="space-y-4">
-              {['Establish "Blackout" manual proficiency', 'Implement mandatory logic-trace audits', 'Restore internal expertise sovereignty'].map((text, i) => (
+              {[
+                'Establish &quot;Blackout&quot; manual proficiency', 
+                'Implement mandatory logic-trace audits', 
+                'Restore internal expertise sovereignty'
+              ].map((text, i) => (
                 <li key={i} className="flex items-start gap-4 text-slate-300 text-sm italic">
                   <div className="w-1.5 h-1.5 bg-purple-600 mt-2 shrink-0" /> {text}
                 </li>
@@ -85,12 +101,35 @@ export default function ExpertiseRecoveryProtocol() {
           </h2>
           <div className="grid gap-1">
             {[
-              { phase: 'Phase 01', title: 'Blackout Drills', desc: 'Execute manual task performance without AI assistance to benchmark decay.', icon: Users, time: '1 week' },
-              { phase: 'Phase 02', title: 'Logic Hardening', desc: 'Training staff to identify and neutralize algorithmic hallucinations.', icon: BrainCircuit, time: '3 weeks' },
-              { phase: 'Phase 03', title: 'Sovereignty Audit', desc: 'Final verification of the team to function during system failure.', icon: ShieldCheck, time: '2 weeks' }
+              { 
+                phase: 'Phase 01', 
+                title: 'Blackout Drills', 
+                desc: 'Execute manual task performance without AI assistance to benchmark decay.', 
+                icon: Users, 
+                time: '1 week' 
+              },
+              { 
+                phase: 'Phase 02', 
+                title: 'Logic Hardening', 
+                desc: 'Training staff to identify and neutralize algorithmic hallucinations.', 
+                icon: BrainCircuit, 
+                time: '3 weeks' 
+              },
+              { 
+                phase: 'Phase 03', 
+                title: 'Sovereignty Audit', 
+                desc: 'Final verification of the team to function during system failure.', 
+                icon: ShieldCheck, 
+                time: '2 weeks' 
+              }
             ].map((item, index) => (
-              <div key={index} className="border border-slate-900 bg-slate-900/10 p-8 flex flex-col md:flex-row gap-8 items-center group hover:border-purple-600 transition-colors">
-                <div className="bg-purple-600/10 p-4 border border-purple-600/20"><item.icon className="h-8 w-8 text-purple-600" /></div>
+              <div 
+                key={index} 
+                className="border border-slate-900 bg-slate-900/10 p-8 flex flex-col md:flex-row gap-8 items-center group hover:border-purple-600 transition-colors"
+              >
+                <div className="bg-purple-600/10 p-4 border border-purple-600/20">
+                  <item.icon className="h-8 w-8 text-purple-600" />
+                </div>
                 <div className="flex-1 text-center md:text-left">
                   <div className="flex items-center justify-center md:justify-start gap-4 mb-2 font-mono text-[10px] text-slate-500 uppercase tracking-widest">
                     <span>{item.phase}</span>
