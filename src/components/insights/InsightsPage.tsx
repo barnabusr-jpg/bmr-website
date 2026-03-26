@@ -31,7 +31,6 @@ const InsightsPage = () => {
       <main className="pt-32 pb-20 px-6">
         <div className="container mx-auto max-w-5xl">
           
-          {/* Header Section */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-8 border-b border-slate-900 pb-12">
             <div className="border-l-4 border-red-600 pl-8">
               <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-[0.4em]">
@@ -86,7 +85,7 @@ const InsightsPage = () => {
               </motion.div>
             ))}
             
-            {/* RESOLVED: Corrected comment syntax for Next.js build */}
+            {/* FIXED: The comment below is now wrapped in braces to satisfy line 68 build error */}
             <div className="bg-slate-950/50 p-12 flex flex-col items-center justify-center border-t border-slate-900 opacity-30">
               <Lock className="h-6 w-6 text-slate-800 mb-4" />
               <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-800 italic">
