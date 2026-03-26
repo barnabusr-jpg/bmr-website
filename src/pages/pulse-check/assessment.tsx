@@ -49,7 +49,7 @@ export default function AssessmentPage() {
 
   const handleFinalize = async () => {
     try {
-      // Logic uses the 'role' variable to ensure linting passes
+      // Sending role in payload to ensure variable is used
       const response = await fetch('/api/pulse-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -116,9 +116,9 @@ export default function AssessmentPage() {
                       <div className="space-y-8 py-6">
                         <input 
                           type="range" 
-                          // @ts-expect-error - Properties min/max are verified via type check in logic
+                          // @ts-expect-error - currentQuestions includes range types where min/max are defined
                           min={currentQuestions[step-1].min} 
-                          // @ts-expect-error
+                          // @ts-expect-error - currentQuestions includes range types where min/max are defined
                           max={currentQuestions[step-1].max} 
                           className="w-full accent-red-600 h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer" 
                           onMouseUp={(e) => selectOption(parseInt((e.target as HTMLInputElement).value))} 
