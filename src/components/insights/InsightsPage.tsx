@@ -3,93 +3,106 @@
 import React from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import CommercialVideo from "@/components/CommercialVideo";
-import Hero from "@/components/home/HeroHome";
-import ValueBullets from "@/components/home/ValueBulletsHome";
-import ServicesPreview from "@/components/home/ServicesPreviewHome";
-import DiagnosticFrameworks from "@/components/home/DiagnosticFrameworks"; 
-import Outcomes from "@/components/home/OutcomesHome";
-import ComparisonGrid from "@/components/home/ComparisonGrid";
-import Insights from "@/components/home/InsightsHome";
-import { Card } from "@/components/ui/card";
-import { Activity, ArrowRight } from "lucide-react";
-import { useRouter } from "next/router";
+import { motion } from "framer-motion";
+import { Lock, ArrowUpRight, Terminal, ShieldAlert } from "lucide-react";
 
-const Index = () => {
-  const router = useRouter();
+const BRIEFINGS = [
+  {
+    id: "CAS-772",
+    date: "MAR 26, 2026",
+    title: "Shadow Labor in LLM Deployment",
+    summary: "Audit reveals 42% of human hours are spent &quot;correcting&quot; AI output without feedback loops. Systemic value leakage identified in Tier-1 logistics firm.",
+    status: "UNCLASSIFIED",
+    tag: "Operational Drift"
+  },
+  {
+    id: "CAS-910",
+    date: "MAR 12, 2026",
+    title: "The Divergence Coefficient (Δ)",
+    summary: "How technical optimism leads to architectural decay. Documentation of the 6-month window where AI utility drops below the human-cost floor.",
+    status: "RESTRICTED",
+    tag: "Architecture"
+  }
+];
 
+const InsightsPage = () => {
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans">
+    <div className="min-h-screen bg-slate-950 text-white font-sans">
       <Header />
-      <main>
-        <Hero />
-        <CommercialVideo src="https://uuyq3t7kfckwh0je.public.blob.vercel-storage.com/bmr-commercial.mp4" />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <ValueBullets />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <ServicesPreview />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <DiagnosticFrameworks /> 
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <Outcomes />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <ComparisonGrid />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <Insights />
-        
-        {/* FINAL CONVERSION SECTION: CENTERED PULSE CHECK (REPLACED FIELD GUIDE) */}
-        <section className="py-32 px-6 border-t border-slate-900 bg-[#020617]">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-5xl md:text-7xl font-black mb-16 italic tracking-tighter uppercase text-white leading-none">
-              Ready to <span className="text-[#14b8a6]">Close the Gap?</span>
-            </h2>
+      
+      <main className="pt-32 pb-20 px-6">
+        <div className="container mx-auto max-w-5xl">
+          
+          {/* Header Section */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-8 border-b border-slate-900 pb-12">
+            <div className="border-l-4 border-red-600 pl-8">
+              <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-[0.4em]">
+                Data_Repository // Access_Level_01
+              </span>
+              <h1 className="text-5xl md:text-7xl font-black italic uppercase text-white tracking-tighter mt-2">
+                Forensic <br /> <span className="text-slate-800">Briefings.</span>
+              </h1>
+            </div>
             
-            <div className="max-w-2xl mx-auto text-left">
-              <Card className="p-12 bg-slate-950/40 border-2 border-slate-900 rounded-none relative overflow-hidden group hover:border-[#14b8a6]/20 transition-all duration-500 shadow-2xl">
-                {/* Visual Accent Line */}
-                <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500" />
-                
-                <Activity className="text-[#14b8a6] mb-8 h-12 w-12" />
-                
-                <h3 className="text-3xl font-black mb-4 italic uppercase text-white tracking-tight">
-                  Pulse Check
-                </h3>
-                
-                <p className="text-slate-400 mb-12 font-light leading-relaxed text-lg italic">
-                  Ready for a forensic view? Our 12-question protocol identifies 
-                  your primary friction points and defines your System Archetype.
-                </p>
-                
-                <button 
-                  onClick={() => router.push('/diagnostic')}
-                  className="w-full bg-[#14b8a6] text-[#020617] px-8 py-6 font-black uppercase tracking-[0.3em] text-[11px] hover:bg-white transition-all duration-500 shadow-2xl"
-                >
-                  Initialize Pulse Check <ArrowRight size={16} className="ml-3 inline" />
-                </button>
-              </Card>
-
-              {/* Protocol Footer Link */}
-              <div className="mt-12 text-center">
-                <button 
-                  onClick={() => router.push('/diagnostic')}
-                  className="text-slate-600 font-black uppercase tracking-[0.4em] text-[9px] hover:text-[#14b8a6] transition-colors italic"
-                >
-                  Access the Operational Protocol // Auth Required
-                </button>
+            <div className="flex flex-col items-end text-right font-mono text-slate-600">
+              <div className="flex items-center gap-2 text-[10px] uppercase">
+                <Terminal className="h-3 w-3" /> System Status: Online
               </div>
             </div>
           </div>
-        </section>
+
+          {/* Briefings Grid */}
+          <div className="grid gap-px bg-slate-900 border border-slate-900">
+            {BRIEFINGS.map((post, i) => (
+              <motion.div 
+                key={post.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="group relative bg-slate-950 p-10 hover:bg-slate-900/30 transition-all cursor-pointer overflow-hidden"
+              >
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-start gap-8">
+                  <div className="space-y-6 max-w-2xl">
+                    <div className="flex items-center gap-4">
+                      <span className="bg-red-600/10 text-red-600 text-[9px] font-black px-2 py-0.5 uppercase tracking-widest">
+                        {post.tag}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest">
+                        {post.date} // {post.id}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter group-hover:text-red-600 transition-all leading-none mb-4">
+                        {post.title}
+                      </h2>
+                      <p className="text-slate-500 text-sm italic font-medium leading-relaxed">
+                        {post.summary}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="h-12 w-12 border border-slate-800 flex items-center justify-center group-hover:border-red-600 group-hover:bg-red-600 transition-all">
+                    <ArrowUpRight className="h-5 w-5 text-slate-600 group-hover:text-white" />
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+            
+            {/* Encrypted Section */}
+            <div className="bg-slate-950/50 p-12 flex flex-col items-center justify-center border-t border-slate-900 opacity-30">
+              <Lock className="h-6 w-6 text-slate-800 mb-4" />
+              <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-800 italic">
+                Restricted_Case_Files // Auth_Required
+              </span>
+            </div>
+          </div>
+        </div>
       </main>
+
       <Footer />
     </div>
   );
 };
 
-export default Index;
+export default InsightsPage;
