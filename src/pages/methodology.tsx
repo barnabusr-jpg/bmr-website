@@ -1,85 +1,66 @@
 import React from 'react';
-import { useRouter } from "next/router";
-import { Mail, ShieldCheck, Target, Fingerprint, ArrowRight } from "lucide-react"; 
+import Head from 'next/head';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { ShieldCheck, Target, Users } from "lucide-react";
 
-export default function MethodologyPage() {
-  const router = useRouter();
-
-  // FIX: This function was "assigned but never used" according to the linter
-  const handleRequestAccess = () => {
-    const subject = encodeURIComponent("Access Request: BMR Systems Operations Protocol");
-    const body = encodeURIComponent("I am requesting access to the BMR Systems Operations Protocol (Field Guide) for my organization.\n\nName:\nOrganization:");
-    window.location.href = `mailto:hello@bmrsolutions.co?subject=${subject}&body=${body}`;
-  };
-
+export default function Methodology() {
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans">
+    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-red-600/30">
+      <Head>
+        <title>BMR SOLUTIONS | METHODOLOGY</title>
+      </Head>
       <Header />
       
-      <main className="pt-32 pb-20 px-6 max-w-5xl mx-auto">
-        <section className="mb-20">
-          <span className="text-[#14b8a6] font-bold uppercase tracking-[0.3em] text-[10px] mb-4 block">
-            The BMR Protocol
-          </span>
-          <h1 className="text-5xl md:text-6xl font-bold mt-4 mb-8 italic tracking-tight uppercase leading-none">
-            Systemic <span className="text-slate-500 text-nowrap">Architecture</span>
+      <main className="pt-48 pb-20 px-6 text-white">
+        <div className="max-w-6xl mx-auto text-center mb-32">
+          <h1 className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter leading-[0.8]">
+            RE-ANCHORING AI TO <br /> <span className="text-red-600 font-black">STRATEGIC INTENT.</span>
           </h1>
-          <p className="text-slate-400 text-xl max-w-3xl leading-relaxed font-light italic">
-            {"\"Closing the Promise Gap requires a continuous cycle of alignment across three interconnected layers of organizational health.\""}
+          <p className="text-slate-400 text-xl max-w-3xl mx-auto mt-12 font-light italic leading-relaxed">
+            BMR Solutions was founded to bridge the &quot;Promise Gap.&quot; We address the space where technical AI deployment fails to translate into realized operational value.
           </p>
-        </section>
+        </div>
 
-        {/* Triple Lens Grid - USING ShieldCheck, Target, Fingerprint */}
-        <div className="grid md:grid-cols-3 gap-8 mb-24">
-          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-none relative">
-            <Fingerprint className="text-[#14b8a6] mb-6 h-10 w-10" />
-            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest italic">The Trust Lens</h3>
-            <p className="text-slate-400 text-sm leading-relaxed font-light">Identifying where human mental models diverge from system outputs.</p>
+        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-20 items-center mb-40">
+          <div>
+            <h2 className="text-4xl font-black uppercase italic tracking-tight mb-8">THE FRICTION TAX</h2>
+            <p className="text-slate-400 leading-relaxed mb-6 italic font-light">
+              Most organizations view AI as a technical installation. We view it as an organizational evolution. 
+              When AI systems are bolted on rather than integrated, they create a friction tax. This is the hidden human labor required to verify, fix, and oversee the machine.
+            </p>
+            <p className="text-slate-400 leading-relaxed italic font-light">
+              We assist leaders in identifying these inefficiencies and recovering stranded capital through longitudinal observation and systemic re-anchoring.
+            </p>
           </div>
 
-          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-none relative">
-            <Target className="text-[#14b8a6] mb-6 h-10 w-10" />
-            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest italic">The Govern Lens</h3>
-            <p className="text-slate-400 text-sm leading-relaxed font-light">Auditing the alignment of AI workflows with strategic intent.</p>
-          </div>
-
-          <div className="p-8 bg-slate-900/40 border border-slate-800 rounded-none relative">
-            <ShieldCheck className="text-[#14b8a6] mb-6 h-10 w-10" />
-            <h3 className="text-xl font-bold mb-3 uppercase tracking-widest italic">The Evolve Lens</h3>
-            <p className="text-slate-400 text-sm leading-relaxed font-light">Embedding the architecture required for responsible evolution.</p>
+          <div className="border border-slate-900 bg-slate-900/20 p-10 space-y-10">
+            {[
+              { icon: ShieldCheck, title: "TRUST-FIRST ARCHITECTURE", desc: "Reducing manual verification through behavioral predictability." },
+              { icon: Target, title: "OPERATIONAL RESONANCE", desc: "Aligning system outputs with brand-level standards." },
+              { icon: Users, title: "HUMAN-CENTRIC EVOLUTION", desc: "Moving staff from verification labor to high-value work." }
+            ].map((item, i) => (
+              <div key={i} className="flex gap-6">
+                <item.icon className="h-6 w-6 text-red-600 shrink-0" />
+                <div>
+                  <h4 className="text-white font-black uppercase italic tracking-widest text-sm mb-2">{item.title}</h4>
+                  <p className="text-slate-500 text-sm italic leading-relaxed font-light">{item.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* THE FIX: The Operational Protocol Section */}
-        <section className="mb-24">
-          <div className="p-10 bg-[#14b8a6]/5 border border-[#14b8a6]/20 rounded-none text-center">
-            <h3 className="text-2xl font-bold mb-4 italic text-white uppercase tracking-tight">The Operational Protocol</h3>
-            <p className="text-slate-400 mb-10 font-light text-sm leading-relaxed">
-              {"Access the proprietary architecture required to identify systemic drift."}
-            </p>
-            
-            {/* FIX: Explicitly calling handleRequestAccess and rendering Mail icon */}
-            <button 
-              onClick={handleRequestAccess}
-              className="inline-flex items-center justify-center gap-4 bg-[#14b8a6] text-[#020617] px-10 py-5 rounded-none font-bold uppercase tracking-[0.2em] text-xs hover:bg-white transition-all w-full"
-            >
-              <Mail size={18} /> Request Protocol Access
-            </button>
-          </div>
-        </section>
-
-        <section className="text-center pt-12 border-t border-slate-900">
+        <section className="text-center py-20 border-t border-slate-900">
+          <h2 className="text-5xl font-black uppercase italic tracking-tighter mb-12 italic">READY TO SEE THE DATA?</h2>
           <button 
-            onClick={() => router.push('/diagnostic')}
-            className="group inline-flex items-center gap-3 text-slate-500 hover:text-[#14b8a6] transition-colors font-bold uppercase tracking-[0.3em] text-[10px] italic"
+            onClick={() => window.location.href = '/pulse-check'}
+            className="bg-red-600 text-white font-black py-6 px-16 uppercase text-xs tracking-[0.4em] hover:bg-white hover:text-black transition-all shadow-2xl shadow-red-900/20"
           >
-            Initialize Pulse Check <ArrowRight className="h-4 w-4 group-hover:translate-x-2 transition-transform" />
+            BEGIN DIAGNOSTIC SEQUENCE
           </button>
         </section>
       </main>
-      
       <Footer />
     </div>
   );
