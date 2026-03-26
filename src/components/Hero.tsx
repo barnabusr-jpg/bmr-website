@@ -2,13 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-import { ShieldAlert, ArrowRight, Activity } from "lucide-react";
+// REMOVED ArrowRight from this line:
+import { ShieldAlert, Activity } from "lucide-react"; 
 import Link from "next/link";
 
 const Hero = () => {
   const [delta, setDelta] = useState(0.342);
 
-  // Simulated Delta Drift Ticker
   useEffect(() => {
     const interval = setInterval(() => {
       setDelta(prev => parseFloat((prev + (Math.random() * 0.02 - 0.01)).toFixed(3)));
@@ -18,7 +18,6 @@ const Hero = () => {
 
   return (
     <section className="relative pt-32 pb-20 px-6 bg-slate-950 overflow-hidden">
-      {/* Forensic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
         <div className="absolute inset-0 bg-[url('/grid.svg')] bg-repeat opacity-20" />
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 blur-[120px] rounded-full" />
@@ -27,7 +26,6 @@ const Hero = () => {
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="flex flex-col items-center text-center md:items-start md:text-left">
           
-          {/* Status Indicator */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -87,7 +85,6 @@ const Hero = () => {
             </Link>
           </motion.div>
 
-          {/* Forensic Metadata Bar */}
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
