@@ -1,105 +1,110 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowRight, Activity, Zap } from "lucide-react";
+import { ShieldAlert, ArrowRight, Activity } from "lucide-react";
 import Link from "next/link";
 
 const Hero = () => {
+  const [delta, setDelta] = useState(0.342);
+
+  // Simulated Delta Drift Ticker
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDelta(prev => parseFloat((prev + (Math.random() * 0.02 - 0.01)).toFixed(3)));
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <section className="relative min-h-[85vh] flex items-center py-24 px-6 overflow-hidden bg-slate-950 text-white">
-      <div className="absolute inset-0 opacity-10 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600 rounded-full blur-[120px] animate-pulse" />
+    <section className="relative pt-32 pb-20 px-6 bg-slate-950 overflow-hidden">
+      {/* Forensic Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-repeat opacity-20" />
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600/20 blur-[120px] rounded-full" />
       </div>
 
       <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
-            className="space-y-8"
+        <div className="flex flex-col items-center text-center md:items-start md:text-left">
+          
+          {/* Status Indicator */}
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3 mb-8 bg-slate-900/50 border border-slate-800 px-4 py-2"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-red-900/50 bg-red-900/10 text-red-500 text-xs font-black uppercase tracking-[0.2em]">
-              <Activity className="h-3 w-3" />
-              Forensic Review V3 // Active
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-red-600 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-red-600">
+                Systemic Drift Detected
+              </span>
             </div>
-
-            <h1 className="text-5xl md:text-6xl font-black leading-[1.1] tracking-tight">
-              AI Doesn&apos;t Fail Because the <span className="text-slate-500">Code Breaks.</span>
-              <span className="block text-red-600 italic mt-2">It Fails Because the System Drifts.</span>
-            </h1>
-
-            <p className="text-xl text-slate-400 max-w-xl leading-relaxed font-medium">
-              We measure the <span className="text-white italic">Divergence Coefficient (Δ)</span> — the gap between strategic intent and operational reality. We harden your architecture before drift becomes permanent failure.
-            </p>
-
-            <div className="flex flex-wrap gap-4 pt-4">
-              <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-xs px-8 h-14 rounded-none" asChild>
-                <Link href="/pulse-check">
-                  Initialize Pulse Check
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" className="border-slate-800 hover:bg-slate-900 text-slate-300 font-bold uppercase tracking-widest text-xs h-14 rounded-none" asChild>
-                <Link href="/protocol">Access Protocol</Link>
-              </Button>
-            </div>
+            <div className="h-4 w-px bg-slate-800" />
+            <span className="text-[10px] font-mono text-slate-500 uppercase">
+              Current Δ: {delta}
+            </span>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85] text-white mb-8"
           >
-            <Card className="bg-slate-900/50 border-slate-800 border-2 backdrop-blur-xl p-10 font-mono relative overflow-hidden rounded-none">
-              <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
-                <div className="space-y-1">
-                  <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em]">Operational Reality Scan</p>
-                  <p className="text-xs text-red-500 font-bold flex items-center gap-2">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                    </span>
-                    Active Shear Force Detected
-                  </p>
-                </div>
-                <Zap className="text-slate-700 h-5 w-5" />
+            Hardening <br />
+            <span className="text-slate-700">The </span> 
+            <span className="text-red-600">Logic Chain.</span>
+          </motion.h1>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-lg md:text-2xl text-slate-400 max-w-2xl mb-12 font-medium leading-tight italic"
+          >
+            BMR Forensics identifies the &quot;Value Leakage&quot; in your AI systems. We stop the drift between strategic intent and operational reality.
+          </motion.p>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto"
+          >
+            <Link 
+              href="/pulse-check"
+              className="group flex items-center justify-center gap-3 bg-red-600 text-white px-10 py-5 font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white hover:text-red-600 transition-all shadow-xl shadow-red-900/20"
+            >
+              <Activity className="h-4 w-4 group-hover:animate-pulse" />
+              Initialize Probe
+            </Link>
+            
+            <Link 
+              href="/services"
+              className="flex items-center justify-center gap-3 border-2 border-slate-800 text-white px-10 py-5 font-black uppercase tracking-[0.2em] text-[10px] hover:bg-slate-800 transition-all"
+            >
+              <ShieldAlert className="h-4 w-4 text-red-600" />
+              View Protocols
+            </Link>
+          </motion.div>
+
+          {/* Forensic Metadata Bar */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="mt-24 w-full grid grid-cols-2 md:grid-cols-4 gap-8 pt-8 border-t border-slate-900"
+          >
+            {[
+              { label: "Audit Fidelity", value: "99.8%" },
+              { label: "Override Reduction", value: "40.2%" },
+              { label: "Logic Latency", value: "<12ms" },
+              { label: "Compliance Status", value: "Hardened" },
+            ].map((stat) => (
+              <div key={stat.label} className="text-left">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-700 mb-1">{stat.label}</p>
+                <p className="text-sm font-mono text-slate-300 uppercase">{stat.value}</p>
               </div>
-
-              <div className="space-y-6">
-                <div>
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-4xl md:text-6xl font-black text-white italic tracking-tighter">Δ: 0.28</span>
-                    <span className="text-[10px] text-slate-500 mb-2 font-bold">THRESHOLD: 0.15</span>
-                  </div>
-                  <div className="h-1.5 bg-slate-800 w-full overflow-hidden">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: "75%" }}
-                      transition={{ duration: 1.5, delay: 0.8 }}
-                      className="h-full bg-red-600 relative"
-                    >
-                      <div className="absolute inset-0 bg-white/10 animate-shimmer" />
-                    </motion.div>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-[10px] uppercase tracking-widest font-bold">
-                  <div className="p-3 bg-slate-950/50 border border-slate-800">
-                    <p className="text-slate-500 mb-1">Trust (HAI)</p>
-                    <p className="text-red-500">Erosion: 55%</p>
-                  </div>
-                  <div className="p-3 bg-slate-950/50 border border-slate-800">
-                    <p className="text-slate-500 mb-1">Audit (IGF)</p>
-                    <p className="text-yellow-500">Log Rot: Active</p>
-                  </div>
-                </div>
-
-                <p className="text-[10px] text-slate-500 leading-relaxed text-center italic border-t border-slate-800 pt-6">
-                  &quot;Systemic balance not reached. Structural hardening required&quot;.
-                </p>
-              </div>
-            </Card>
+            ))}
           </motion.div>
         </div>
       </div>
