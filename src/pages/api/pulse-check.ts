@@ -8,7 +8,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // SCORING LOGIC: Based on BMR Forensic Methodology
     let delta = 0; 
-    const igfInitial = 100; 
     const hai = 100; // Constant to satisfy 'prefer-const'
 
     // Question 1: Manual Overrides
@@ -18,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     else delta += 0.05;
 
     // Question 2: Auditable Logs
-    const igf = answers.q2 === 'no' ? 0 : igfInitial;
+    const igf = answers.q2 === 'no' ? 0 : 100;
 
     // ARCHETYPE DETECTION
     let archetype = "Stable System";
@@ -32,8 +31,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       archetype,
       verdict: `System Archetype: ${archetype} Detected (Δ = ${delta.toFixed(2)})`
     });
-  } catch (_error) {
-    // Prefixing with underscore tells ESLint the unused variable is intentional
+  } catch {
+    // Variable removed entirely to satisfy 'no-unused-vars'
     res.status(500).json({ error: 'Diagnostic Engine Failure' });
   }
 }
