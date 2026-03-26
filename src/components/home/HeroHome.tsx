@@ -77,12 +77,12 @@ const HeroHome = () => {
                 Why Systems <span className="text-red-600">Quietly Drift</span>
               </h3>
               <div className="space-y-8 relative z-10 text-slate-500 italic">
-                <p className="text-slate-300 font-bold">AI failure is rarely a binary event.</p>
-                <p className="border-l border-slate-800 pl-6 text-sm">
+                <p className="text-slate-300 font-bold leading-relaxed italic">AI failure is rarely a binary event.</p>
+                <p className="border-l border-slate-800 pl-6 text-sm leading-relaxed">
                   It is a slow, structural divergence where AI-enabled logic decays 
                   under operating conditions leaders cannot see.
                 </p>
-                <p>
+                <p className="leading-relaxed">
                   When human intent and machine execution decouple, you don&apos;t have an &quot;optimization&quot; problem. 
                   You have <span className="text-red-600 font-black uppercase">Systemic Rot.</span>
                 </p>
