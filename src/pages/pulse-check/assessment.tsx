@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, ArrowLeft, Activity, ShieldCheck, AlertTriangle, TrendingDown } from "lucide-react";
+import { Terminal, ArrowLeft, Activity, ShieldCheck, AlertTriangle } from "lucide-react";
 
 type Role = 'executive' | 'managerial' | 'technical';
 
 export default function AssessmentPage() {
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [role, setRole] = useState<Role | null>(null);
   const [answers, setAnswers] = useState<(number | string)[]>([]);
@@ -45,32 +47,37 @@ export default function AssessmentPage() {
     handleNext();
   };
 
+  const handleFinalize = async () => {
+    try {
+      const response = await fetch('/api/pulse-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, answers }),
+      });
+      const data = await response.json();
+      sessionStorage.setItem('bmr_results', JSON.stringify(data));
+      router.push('/pulse-check/results');
+    } catch (error) {
+      console.error("Forensic Data Transmission Failed", error);
+    }
+  };
+
   const currentQuestions = role ? [...questions[role], ...questions.shared] : [];
   const progress = Math.round((step / (currentQuestions.length + 1)) * 100);
 
-  const calculateFinalResults = () => {
-    const raw = answers.map((a) => (typeof a === 'number' ? a : a.length));
-    const aggregate = raw.reduce((acc, curr) => acc + curr, 0);
-
-    if (aggregate > 40) return { name: "The Replacement Trap", risk: "Critical", vel: -6.3, desc: "Labor reduction goals have decoupled from operational reality. Rework tax is currently compounding." };
-    if (aggregate > 20) return { name: "Shadow Shear", risk: "High", vel: -5.2, desc: "Official systems are being bypassed by unsanctioned tools. Expertise debt is mounting." };
-    return { name: "Collective Delusion", risk: "Moderate", vel: -2.8, desc: "Internal success metrics do not align with frontline output. Systemic fragility is present." };
-  };
-
-  const archetype = step > currentQuestions.length ? calculateFinalResults() : null;
-
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-red-600/30">
+    <div className="min-h-screen bg-slate-950 text-white font-sans">
       <Head><title>BMR | Forensic Diagnostic</title></Head>
       <Header />
       <main className="pt-40 pb-20 px-6 flex flex-col items-center justify-center">
         <div className="max-w-2xl w-full space-y-8">
+          
           <div className="space-y-4">
             <div className="flex justify-between items-center text-[10px] font-mono uppercase tracking-[0.3em]">
               <div className="flex items-center gap-2 text-red-600 font-black">
                 <Activity className="h-3 w-3" /> Step {step + 1} of {currentQuestions.length + 1}
               </div>
-              <div className="text-slate-600">Integrity: {100 - (step * 3)}%</div>
+              <div className="text-slate-600 italic">Integrity Check Active</div>
             </div>
             <div className="h-1 w-full bg-slate-900 overflow-hidden">
               <motion.div className="h-full bg-red-600" animate={{ width: `${progress}%` }} />
@@ -85,8 +92,8 @@ export default function AssessmentPage() {
                   <div className="grid gap-3">
                     {(['executive', 'managerial', 'technical'] as Role[]).map((r) => (
                       <button key={r} onClick={() => { setRole(r); handleNext(); }} className="w-full p-6 text-left border border-slate-900 bg-slate-900/50 hover:border-red-600 transition-all group flex justify-between items-center">
-                        <span className="text-xl font-bold uppercase italic text-slate-400 group-hover:text-white">{r}</span>
-                        <Terminal className="h-4 w-4 text-slate-800 group-hover:text-red-600" />
+                        <span className="text-xl font-bold uppercase italic text-slate-400 group-hover:text-white transition-colors">{r}</span>
+                        <Terminal className="h-4 w-4 text-slate-800 group-hover:text-red-600 transition-colors" />
                       </button>
                     ))}
                   </div>
@@ -95,40 +102,42 @@ export default function AssessmentPage() {
                 <div className="space-y-12">
                   <div className="space-y-4">
                     <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-[0.4em]">Metric: {currentQuestions[step - 1].weight}</span>
-                    <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-tight md:text-4xl">{currentQuestions[step - 1].text}</h2>
+                    <h2 className="text-3xl font-black italic uppercase tracking-tighter md:text-4xl leading-tight">{currentQuestions[step - 1].text}</h2>
                   </div>
                   <div className="grid gap-3">
                     {currentQuestions[step - 1].type === "select" ? (
                       currentQuestions[step - 1].options?.map((opt) => (
-                        <button key={opt} onClick={() => selectOption(opt)} className="w-full p-5 text-left border border-slate-900 bg-slate-950 hover:border-slate-800 hover:bg-slate-900 transition-all group relative">
+                        <button key={opt} onClick={() => selectOption(opt)} className="w-full p-5 text-left border border-slate-900 bg-slate-950 hover:bg-slate-800 transition-all group relative">
                           <span className="text-xs font-bold uppercase tracking-widest text-slate-500 group-hover:text-white relative z-10">{opt}</span>
                           <ShieldCheck className="absolute right-4 bottom-4 h-6 w-6 opacity-5 group-hover:opacity-20 transition-opacity" />
                         </button>
                       ))
                     ) : (
                       <div className="space-y-8 py-6">
-                        <input type="range" min={currentQuestions[step-1].min} max={currentQuestions[step-1].max} className="w-full accent-red-600 h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer" onMouseUp={(e) => selectOption(parseInt((e.target as HTMLInputElement).value))} />
+                        <input 
+                          type="range" 
+                          // @ts-ignore - Bypass union type check for range properties
+                          min={currentQuestions[step-1].min} 
+                          // @ts-ignore
+                          max={currentQuestions[step-1].max} 
+                          className="w-full accent-red-600 h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer" 
+                          onMouseUp={(e) => selectOption(parseInt((e.target as HTMLInputElement).value))} 
+                        />
                         <div className="flex justify-between text-[10px] font-mono text-slate-600 uppercase tracking-widest"><span>Minimal Impact</span><span>Critical Point</span></div>
                       </div>
                     )}
                   </div>
-                  <button onClick={handleBack} className="flex items-center gap-2 text-slate-500 hover:text-white uppercase text-[10px] font-black tracking-widest transition-colors"><ArrowLeft className="h-3 w-3" /> Previous</button>
+                  <button onClick={handleBack} className="flex items-center gap-2 text-slate-500 hover:text-white uppercase text-[10px] font-black tracking-widest transition-colors"><ArrowLeft className="h-3 w-3" /> Previous Step</button>
                 </div>
               ) : (
                 <div className="text-center py-10 space-y-8 border border-slate-900 p-10 bg-slate-900/20 relative overflow-hidden">
-                  <div className="space-y-4">
-                    <AlertTriangle className="h-12 w-12 text-red-600 mx-auto" />
-                    <h2 className="text-4xl font-black uppercase italic tracking-tighter">{archetype?.name}</h2>
-                    <div className="inline-block px-4 py-1 bg-red-600/10 border border-red-600/20 text-red-600 font-mono text-[10px] font-black tracking-[0.5em] uppercase">Verdict: {archetype?.risk} Risk</div>
-                  </div>
-                  <p className="text-slate-400 italic text-lg leading-relaxed max-w-md mx-auto">{archetype?.desc}</p>
-                  <div className="flex items-center justify-center gap-4 text-red-600 font-mono text-sm border-y border-slate-800 py-4 uppercase tracking-tighter">
-                    <TrendingDown className="h-4 w-4" /> Fracture Velocity: {archetype?.vel}/month
-                  </div>
-                  <div className="grid gap-4 pt-4">
-                    <button className="w-full bg-red-600 text-white font-black py-5 uppercase text-[10px] tracking-widest hover:bg-red-700 transition-all">Start 30-Question Forensic Audit</button>
-                    <button className="w-full bg-white text-black font-black py-5 uppercase text-[10px] tracking-widest hover:bg-slate-200 transition-all">Book Emergency Triage Call</button>
-                  </div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-red-600" />
+                  <AlertTriangle className="h-12 w-12 text-red-600 mx-auto" />
+                  <h2 className="text-4xl font-black uppercase italic tracking-tighter italic">Diagnostic Complete</h2>
+                  <p className="text-slate-400 italic text-lg max-w-md mx-auto">Forensic engine ready. Secure data transmission initialized.</p>
+                  <button onClick={handleFinalize} className="w-full bg-white text-black font-black py-5 uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all">
+                    Generate Verdict
+                  </button>
                 </div>
               )}
             </motion.div>
