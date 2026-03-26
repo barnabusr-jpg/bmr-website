@@ -2,14 +2,13 @@
 
 import React from 'react';
 import { motion } from "framer-motion";
-import { ShieldAlert, Activity } from "lucide-react"; // Removed ChevronRight
+import { ShieldAlert, Activity } from "lucide-react"; 
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 
 const HeroHome = () => {
   return (
     <section className="relative min-h-[90vh] flex items-center py-24 px-6 overflow-hidden bg-slate-950">
-      {/* Forensic Grid Overlay */}
       <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('/grid.svg')] [mask-image:radial-gradient(ellipse_at_center,black,transparent)]" />
       
       <div className="container mx-auto max-w-7xl relative z-10">
@@ -74,11 +73,9 @@ const HeroHome = () => {
           >
             <Card className="p-12 border-2 shadow-2xl bg-slate-900/10 backdrop-blur-sm border-slate-900 rounded-none relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-red-600 transition-all duration-700" />
-              
               <h3 className="text-3xl font-black mb-10 text-white tracking-tighter italic uppercase relative z-10">
                 Why Systems <span className="text-red-600">Quietly Drift</span>
               </h3>
-
               <div className="space-y-8 relative z-10">
                 <p className="text-slate-300 leading-relaxed text-lg font-bold italic">
                   AI failure is rarely a binary event.
@@ -87,7 +84,7 @@ const HeroHome = () => {
                   It is a slow, structural divergence where AI-enabled logic decays 
                   under operating conditions leaders cannot see.
                 </p>
-                <p>
+                <p className="text-slate-500 italic">
                   When human intent and machine execution decouple, 
                   you don&apos;t have an &quot;optimization&quot; problem. 
                   You have <span className="text-red-600 font-black uppercase">Systemic Rot.</span>
