@@ -27,10 +27,8 @@ const InsightsPage = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans">
       <Header />
-      
       <main className="pt-32 pb-20 px-6">
         <div className="container mx-auto max-w-5xl">
-          
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-8 border-b border-slate-900 pb-12">
             <div className="border-l-4 border-red-600 pl-8">
               <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-[0.4em]">
@@ -40,14 +38,12 @@ const InsightsPage = () => {
                 Forensic <br /> <span className="text-slate-800">Briefings.</span>
               </h1>
             </div>
-            
             <div className="flex flex-col items-end text-right font-mono text-slate-600">
               <div className="flex items-center gap-2 text-[10px] uppercase">
                 <Terminal className="h-3 w-3" /> System Status: Online
               </div>
             </div>
           </div>
-
           <div className="grid gap-px bg-slate-900 border border-slate-900">
             {BRIEFINGS.map((post, i) => (
               <motion.div 
@@ -67,7 +63,6 @@ const InsightsPage = () => {
                         {post.date} // {post.id}
                       </span>
                     </div>
-
                     <div>
                       <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter group-hover:text-red-600 transition-all leading-none mb-4">
                         {post.title}
@@ -77,14 +72,12 @@ const InsightsPage = () => {
                       </p>
                     </div>
                   </div>
-                  
                   <div className="h-12 w-12 border border-slate-800 flex items-center justify-center group-hover:border-red-600 group-hover:bg-red-600 transition-all">
                     <ArrowUpRight className="h-5 w-5 text-slate-600 group-hover:text-white" />
                   </div>
                 </div>
               </motion.div>
             ))}
-            
             <div className="bg-slate-950/50 p-12 flex flex-col items-center justify-center border-t border-slate-900 opacity-30">
               <Lock className="h-6 w-6 text-slate-800 mb-4" />
               <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-800 italic">
@@ -94,7 +87,6 @@ const InsightsPage = () => {
           </div>
         </div>
       </main>
-
       <Footer />
     </div>
   );
