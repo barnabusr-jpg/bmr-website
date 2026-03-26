@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { motion } from "framer-motion";
 import { Shield, Target, Construction, ArrowUpRight } from "lucide-react";
@@ -42,7 +44,7 @@ export default function ServicesPreviewHome() {
             </h3>
           </div>
           <p className="text-slate-500 text-sm max-w-xs font-medium leading-relaxed italic border-l-2 border-slate-100 pl-6">
-            We do not offer "strategy." We offer systemic correction. Choose your level of structural depth.
+            We do not offer &quot;strategy.&quot; We offer systemic correction. Choose your level of structural depth.
           </p>
         </div>
 
