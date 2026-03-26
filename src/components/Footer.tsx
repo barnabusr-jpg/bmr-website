@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 
 export default function Footer() {
-  // FIX: Mapping unique routes to prevent redundant internal linking
   const forensicTiers = [
     { name: "DRIFT DIAGNOSTICS", href: "/protocols/rapid-de-risk" },
     { name: "STRUCTURAL HARDENING", href: "/protocols/structural-hardening" },
@@ -62,8 +61,12 @@ export default function Footer() {
 
       <div className="max-w-7xl mx-auto pt-10 border-t border-slate-900/50 flex justify-between items-center text-[9px] font-mono text-slate-800 uppercase tracking-widest">
         <div className="flex gap-8">
-          <Link href="/privacy" className="hover:text-red-600 uppercase">PRIVACY PROTOCOLS</Link>
-          <Link href="/terms" className="hover:text-red-600 uppercase">ENGAGEMENT TERMS</Link>
+          <Link href="/privacy" className="hover:text-red-600 uppercase">
+            PRIVACY PROTOCOLS
+          </Link>
+          <Link href="/terms" className="hover:text-red-600 uppercase">
+            ENGAGEMENT TERMS
+          </Link>
         </div>
         <div>TERMINAL STATUS: OPERATIONAL</div>
       </div>
