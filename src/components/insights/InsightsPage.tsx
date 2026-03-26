@@ -4,7 +4,7 @@ import React from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
-import { Lock, ArrowUpRight, Terminal } from "lucide-react"; // REMOVED: ShieldAlert to fix lint error
+import { Lock, ArrowUpRight, Terminal } from "lucide-react";
 
 const BRIEFINGS = [
   {
@@ -89,6 +89,9 @@ const InsightsPage = () => {
               </motion.div>
             ))}
             
+            {/* CRITICAL FIX: This comment is now correctly inside 
+                curly braces to satisfy the Next.js/ESLint compiler 
+            */}
             <div className="bg-slate-950/50 p-12 flex flex-col items-center justify-center border-t border-slate-900 opacity-30">
               <Lock className="h-6 w-6 text-slate-800 mb-4" />
               <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-800 italic">
