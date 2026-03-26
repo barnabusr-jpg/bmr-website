@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ChevronRight, ShieldAlert, Activity } from "lucide-react";
+import { ChevronRight, ShieldAlert } from "lucide-react";
 
 const QUESTIONS = [
   {
@@ -17,19 +17,18 @@ const QUESTIONS = [
   },
   {
     id: 'q2',
-    text: "Are AI decisions logged and auditable?",
+    text: "Are AI decisions logged and auditable in real-time?",
     options: [
       { label: "Yes, fully auditable", value: "yes" },
       { label: "No, logs are incomplete", value: "no" }
     ]
-  },
-  // Additional questions from your documentation...
+  }
 ];
 
 export default function PulseCheck() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
-  const [result, setResult] = useState(null);
+  const [result, setResult] = useState<any>(null);
 
   const handleAnswer = async (value: string) => {
     const newAnswers = { ...answers, [QUESTIONS[step].id]: value };
@@ -50,17 +49,17 @@ export default function PulseCheck() {
 
   if (result) {
     return (
-      <Card className="p-8 bg-slate-900 border-red-900/50 text-white max-w-2xl mx-auto border-2 font-mono">
+      <Card className="p-8 bg-slate-900 border-red-900/50 text-white max-w-2xl mx-auto border-2 font-mono rounded-none">
         <div className="flex items-center gap-3 text-red-500 mb-6 uppercase tracking-widest text-[10px] font-black">
           <ShieldAlert className="h-4 w-4" />
           Stress Test Complete // Results Gated
         </div>
-        <h3 className="text-3xl font-black italic mb-4">{result.archetype}</h3>
-        <div className="text-5xl font-black text-white mb-6 tracking-tighter italic">Δ: {result.delta}</div>
+        <h3 className="text-3xl font-black italic mb-4 uppercase">{result.archetype}</h3>
+        <div className="text-5xl font-black text-white mb-6 tracking-tighter italic border-b border-slate-800 pb-4">Δ: {result.delta}</div>
         <p className="text-slate-400 text-sm mb-8 leading-relaxed italic border-l-2 border-slate-700 pl-4">
-          "Your system shows signs of active shear. Strategic intent is diverging from operational reality."
+          &quot;Your system shows signs of active shear. Strategic intent is diverging from operational reality.&quot;
         </p>
-        <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase text-xs h-14">
+        <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase text-xs h-14 rounded-none">
           Unlock Full 72-Question Deep Audit
         </Button>
       </Card>
@@ -74,7 +73,7 @@ export default function PulseCheck() {
           <span>Forensic Probe {step + 1}/{QUESTIONS.length}</span>
           <span>Auth Required</span>
         </div>
-        <div className="h-1 bg-slate-200 w-full">
+        <div className="h-1 bg-slate-800 w-full">
           <div 
             className="h-full bg-red-600 transition-all duration-500" 
             style={{ width: `${((step + 1) / QUESTIONS.length) * 100}%` }} 
@@ -90,7 +89,7 @@ export default function PulseCheck() {
           exit={{ opacity: 0, x: -20 }}
           className="space-y-8"
         >
-          <h2 className="text-2xl font-black italic text-slate-900 leading-tight">
+          <h2 className="text-2xl font-black italic text-white leading-tight uppercase tracking-tight">
             {QUESTIONS[step].text}
           </h2>
           <div className="grid gap-3">
@@ -98,10 +97,10 @@ export default function PulseCheck() {
               <button
                 key={opt.value}
                 onClick={() => handleAnswer(opt.value)}
-                className="group flex justify-between items-center p-6 border-2 border-slate-200 hover:border-red-600 hover:bg-red-50 transition-all text-left"
+                className="group flex justify-between items-center p-6 border border-slate-800 bg-slate-900/50 hover:border-red-600 hover:bg-red-950/30 transition-all text-left rounded-none"
               >
-                <span className="font-bold text-slate-700 group-hover:text-red-900">{opt.label}</span>
-                <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-red-600" />
+                <span className="font-bold text-slate-300 group-hover:text-white uppercase text-xs tracking-widest">{opt.label}</span>
+                <ChevronRight className="h-4 w-4 text-slate-700 group-hover:text-red-600" />
               </button>
             ))}
           </div>
