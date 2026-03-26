@@ -11,7 +11,7 @@ const BRIEFINGS = [
     id: "CAS-772",
     date: "MAR 26, 2026",
     title: "Shadow Labor in LLM Deployment",
-    summary: "Audit reveals 42% of human hours are spent &quot;correcting&quot; AI output without feedback loops. Systemic value leakage identified in Tier-1 logistics firm.",
+    summary: "Audit reveals 42% of human hours are spent correcting AI output without feedback loops. Systemic value leakage identified in Tier-1 logistics firm.",
     tag: "Operational Drift"
   },
   {
@@ -24,6 +24,10 @@ const BRIEFINGS = [
 ];
 
 const InsightsPage = () => {
+  const systemStatus = "System Status: Online";
+  const repoAccess = "Data Repository | Access Level 01";
+  const footerLabel = "Restricted Case Files | Auth Required";
+
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans">
       <Header />
@@ -32,7 +36,7 @@ const InsightsPage = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-20 gap-8 border-b border-slate-900 pb-12">
             <div className="border-l-4 border-red-600 pl-8">
               <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-[0.4em]">
-                Data_Repository // Access_Level_01
+                {repoAccess}
               </span>
               <h1 className="text-5xl md:text-7xl font-black italic uppercase text-white tracking-tighter mt-2">
                 Forensic <br /> <span className="text-slate-800">Briefings.</span>
@@ -40,10 +44,11 @@ const InsightsPage = () => {
             </div>
             <div className="flex flex-col items-end text-right font-mono text-slate-600">
               <div className="flex items-center gap-2 text-[10px] uppercase">
-                <Terminal className="h-3 w-3" /> System Status: Online
+                <Terminal className="h-3 w-3" /> {systemStatus}
               </div>
             </div>
           </div>
+
           <div className="grid gap-px bg-slate-900 border border-slate-900">
             {BRIEFINGS.map((post, i) => (
               <motion.div 
@@ -60,7 +65,7 @@ const InsightsPage = () => {
                         {post.tag}
                       </span>
                       <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest">
-                        {post.date} // {post.id}
+                        {post.date} | {post.id}
                       </span>
                     </div>
                     <div>
@@ -81,7 +86,7 @@ const InsightsPage = () => {
             <div className="bg-slate-950/50 p-12 flex flex-col items-center justify-center border-t border-slate-900 opacity-30">
               <Lock className="h-6 w-6 text-slate-800 mb-4" />
               <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-800 italic">
-                Restricted_Case_Files // Auth_Required
+                {footerLabel}
               </span>
             </div>
           </div>
