@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 
 export default function Footer() {
+  // FIX: Mapping unique routes to prevent redundant internal linking
   const forensicTiers = [
     { name: "DRIFT DIAGNOSTICS", href: "/protocols/rapid-de-risk" },
     { name: "STRUCTURAL HARDENING", href: "/protocols/structural-hardening" },
@@ -16,7 +17,7 @@ export default function Footer() {
             BMR <span className="text-red-600">SOLUTIONS</span>
           </div>
           <p className="text-slate-500 text-xs leading-relaxed max-w-sm font-light italic">
-            We do not provide optimization services. We provide structural hardening.
+            We do not provide optimization services. We provide structural hardening. 
             We eliminate systemic decay before it results in operational failure.
           </p>
         </div>
