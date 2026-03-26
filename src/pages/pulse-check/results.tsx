@@ -3,7 +3,6 @@ import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from "framer-motion";
-// Removed 'ArrowRight' to fix the 'defined but never used' build error
 import { AlertTriangle, Zap, ShieldAlert, Activity } from 'lucide-react';
 
 type Archetype = 'ReplacementTrap' | 'HollowChevron' | 'ShadowShear' | 'CollectiveDelusion';
@@ -36,7 +35,7 @@ export default function PulseCheckResults() {
   if (!result) return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-widest gap-4">
       <Activity className="animate-pulse h-8 w-8" /> 
-      <span>Analyzing 12-Point Logic Chain...</span>
+      <span>Analyzing Forensic Data...</span>
     </div>
   );
 
@@ -90,7 +89,6 @@ export default function PulseCheckResults() {
                 <div className="w-full bg-slate-900 h-4 border border-slate-800 p-0.5">
                   <motion.div 
                     initial={{ width: 0 }} 
-                    // @ts-expect-error - Animating width based on numeric deltaGap calculation
                     animate={{ width: `${(result.deltaGap / 10) * 100}%` }} 
                     transition={{ duration: 1.5, ease: "easeOut" }}
                     className="h-full bg-gradient-to-r from-blue-500 to-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]" 
@@ -102,7 +100,9 @@ export default function PulseCheckResults() {
               <div className="bg-red-600/10 border border-red-600/30 p-8 text-center">
                 <div className="text-[10px] font-black text-red-600 uppercase mb-2 tracking-widest">Annual Profit Hemorrhage</div>
                 <div className="text-5xl font-black text-red-600">${result.financialImpact.toFixed(1)}M</div>
-                <div className="text-[10px] text-slate-500 mt-4 uppercase">Rework: ${result.reworkTax.toFixed(1)}M | Shadow: ${result.shadowAI.toFixed(1)}M</div>
+                <div className="text-[10px] text-slate-500 mt-4 uppercase text-center">
+                  Rework: ${result.reworkTax.toFixed(1)}M | Shadow: ${result.shadowAI.toFixed(1)}M
+                </div>
               </div>
             </div>
 
@@ -118,9 +118,8 @@ export default function PulseCheckResults() {
             </div>
           </div>
 
-          {/* ROADMAP */}
           <div className="border border-slate-900 p-8 bg-slate-900/20">
-            <h2 className="text-xl font-black uppercase italic mb-6">Hardening Roadmap</h2>
+            <h2 className="text-xl font-black uppercase italic mb-6 text-center md:text-left">Hardening Roadmap</h2>
             <div className="grid md:grid-cols-2 gap-8">
               {roadmap[result.archetype].map((step, i) => (
                 <div key={i} className="flex gap-4 text-left">
