@@ -1,87 +1,94 @@
+import React from 'react';
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { Brain, Users, ShieldAlert, Lightbulb } from "lucide-react";
+import { Shield, Target, Construction, ArrowUpRight } from "lucide-react";
+import Link from "next/link";
 
-const services = [
+const SERVICES = [
   {
-    icon: Brain,
-    title: "AI Decision Structures",
-    description: "Reveal how AI decisions are approved, challenged, and escalated under real operating conditions."
+    title: "The Pulse Check",
+    id: "SRV-01",
+    icon: <Target className="h-6 w-6" />,
+    description: "Rapid forensic scan of a single AI implementation. We identify the Divergence Coefficient (Δ) and provide a 'Stop/Go' risk report.",
+    deliverable: "Drift Diagnostic Report",
+    action: "Initialize Scan"
   },
   {
-    icon: Users,
-    title: "Adoption Readiness",
-    description: "Surface behavioral and organizational barriers that quietly undermine AI adoption and execution."
+    title: "Structural Hardening",
+    id: "SRV-02",
+    icon: <Construction className="h-6 w-6" />,
+    description: "Deep-tier re-architecture. We rebuild your human-in-the-loop protocols and logging layers to stop value leakage and shadow labor.",
+    deliverable: "Hardened Architecture Blueprint",
+    action: "Request Protocol"
   },
   {
-    icon: ShieldAlert,
-    title: "Executive Readiness",
-    description: "Support senior leaders in navigating AI tradeoffs with clarity, accountability, and confidence when decisions carry consequences."
-  },
-  {
-    icon: Lightbulb,
-    title: "Innovation Advisory",
-    description: "Evaluate AI opportunities through a risk-aware, human-centered lens before momentum outpaces judgment."
+    title: "Forensic Retainer",
+    id: "SRV-03",
+    icon: <Shield className="h-6 w-6" />,
+    description: "Continuous systemic monitoring. Monthly drift audits and IGF compliance checks to ensure long-term operational resonance.",
+    deliverable: "Monthly Fidelity Audit",
+    action: "Secure Retainer"
   }
 ];
 
-const ServicesPreview = () => {
+export default function ServicesPreviewHome() {
   return (
-    <section className="py-24 px-6 bg-[#020617] border-t border-slate-900">
+    <section className="py-32 bg-white px-6">
       <div className="container mx-auto max-w-7xl">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mb-20"
-        >
-          {/* UPDATED: Standardized Forensic Typography */}
-          <h2 className="text-4xl font-bold mb-6 text-white tracking-tight italic uppercase">
-            What We <span className="text-[#14b8a6]">Support</span>
-          </h2>
-          <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed">
-            Advisory support for organizations facing real AI risk, regulatory scrutiny, 
-            and adoption complexity.
+        <div className="flex flex-col md:flex-row justify-between items-start mb-20 gap-8">
+          <div className="max-w-xl">
+            <h2 className="text-xs font-black tracking-[0.5em] text-slate-400 uppercase mb-4">Engagement Models</h2>
+            <h3 className="text-4xl md:text-5xl font-black italic text-slate-900 uppercase tracking-tighter">
+              Forensic <span className="text-red-600">Intervention.</span>
+            </h3>
+          </div>
+          <p className="text-slate-500 text-sm max-w-xs font-medium leading-relaxed italic border-l-2 border-slate-100 pl-6">
+            We do not offer "strategy." We offer systemic correction. Choose your level of structural depth.
           </p>
-        </motion.div>
+        </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
-          {services.map((service, index) => (
+        <div className="grid lg:grid-cols-3 gap-px bg-slate-200 border border-slate-200">
+          {SERVICES.map((srv, index) => (
             <motion.div
-              key={service.title}
+              key={srv.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
+              className="bg-white p-12 group hover:bg-slate-50 transition-all flex flex-col justify-between min-h-[450px]"
             >
-              {/* UPDATED: Standardized Forensic Interaction States */}
-              <Card className="p-10 h-full bg-slate-900/30 border-slate-800 border-2 relative overflow-hidden transition-all duration-500 group">
-                
-                {/* THE STANDARDIZED FIX: Top-down building highlight at 1.5px width */}
-                <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500 ease-in-out"></div>
-                
-                <div className="flex items-start gap-6 relative z-10">
-                  <div className="p-3 rounded-lg bg-[#14b8a6]/10 flex-shrink-0">
-                    <service.icon className="h-6 w-6 text-[#14b8a6]" />
+              <div>
+                <div className="flex justify-between items-start mb-12">
+                  <div className="p-4 bg-slate-900 text-white group-hover:bg-red-600 transition-colors">
+                    {srv.icon}
                   </div>
-                  <div>
-                    {/* UPDATED: Standardized Header Typography */}
-                    <h3 className="text-xl font-bold mb-4 text-white tracking-tight italic uppercase">
-                      {service.title}
-                    </h3>
-                    <p className="text-slate-400 leading-relaxed font-light text-lg">
-                      {service.description}
-                    </p>
-                  </div>
+                  <span className="text-[10px] font-black text-slate-300 font-mono tracking-widest">{srv.id}</span>
                 </div>
-              </Card>
+                
+                <h4 className="text-2xl font-black mb-6 italic uppercase tracking-tighter text-slate-900 leading-none">
+                  {srv.title}
+                </h4>
+                <p className="text-slate-600 text-sm leading-relaxed mb-8 font-medium italic">
+                  {srv.description}
+                </p>
+              </div>
+
+              <div className="space-y-8">
+                <div className="pt-6 border-t border-slate-100">
+                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Primary Deliverable</p>
+                  <p className="text-xs font-bold text-slate-900 uppercase">{srv.deliverable}</p>
+                </div>
+
+                <Link 
+                  href="/contact" 
+                  className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-widest text-red-600 group-hover:gap-4 transition-all"
+                >
+                  {srv.action} <ArrowUpRight className="h-4 w-4" />
+                </Link>
+              </div>
             </motion.div>
           ))}
         </div>
       </div>
     </section>
   );
-};
-
-export default ServicesPreview;
+}
