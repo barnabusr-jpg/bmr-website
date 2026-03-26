@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from "framer-motion";
-import { ShieldAlert, Activity, ChevronRight } from "lucide-react";
+import { ShieldAlert, Activity } from "lucide-react"; // REMOVED: ChevronRight to fix lint error
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 
