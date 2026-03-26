@@ -1,96 +1,110 @@
+"use client";
+
+import React from 'react';
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { ShieldAlert, Activity, ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 const HeroHome = () => {
   return (
-    <section className="relative min-h-[85vh] flex items-center py-16 px-6 overflow-hidden bg-[#020617]">
-      <div className="container mx-auto max-w-7xl">
+    <section className="relative min-h-[90vh] flex items-center py-24 px-6 overflow-hidden bg-slate-950">
+      {/* Forensic Grid Overlay */}
+      <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('/grid.svg')] [mask-image:radial-gradient(ellipse_at_center,black,transparent)]" />
+      
+      <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          {/* Left: Hero content */}
+          
+          {/* Left: Forensic Content */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="space-y-8"
+            transition={{ duration: 0.5 }}
+            className="space-y-10"
           >
-            <div className="space-y-3">
-              <p className="text-sm font-semibold tracking-[0.2em] text-[#14b8a6] uppercase">
-                BMR Solutions
-              </p>
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="h-px w-8 bg-red-600" />
+                <p className="text-[10px] font-black tracking-[0.4em] text-red-600 uppercase italic">
+                  BMR Forensics // Structural Audit
+                </p>
+              </div>
 
-              <h1 className="text-5xl md:text-7xl font-bold leading-tight text-white tracking-tight italic uppercase">
-                Strategic Advisory for
-                <span className="text-[#14b8a6] block mt-2">Responsible AI</span>
+              <h1 className="text-6xl md:text-8xl font-black leading-[0.85] text-white tracking-tighter italic uppercase">
+                Strategy is <span className="text-slate-800">Luxury.</span>
+                <span className="text-red-600 block mt-2">Recovery is Duty.</span>
               </h1>
             </div>
 
-            <p className="text-xl md:text-2xl text-slate-400 font-light max-w-xl leading-relaxed">
-              Helping organizations understand how their AI-enabled systems behave under real operating
-              conditions so leaders can make well-grounded, defensible decisions when trust, regulation,
-              and delivery risk matter.
+            <p className="text-lg md:text-xl text-slate-500 font-medium max-w-xl leading-relaxed italic">
+              We identify the &quot;Log Rot&quot; and systemic drift in AI deployments. 
+              BMR provides the forensic tools to harden logic chains before 
+              architectural collapse becomes inevitable.
             </p>
 
             <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="group bg-[#14b8a6] hover:bg-[#0d9488] text-[#020617] font-bold h-14 px-10 uppercase tracking-widest text-xs" asChild>
-                <Link href="/contact">
-                  Start a Conversation
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Link>
-              </Button>
+              <Link 
+                href="/pulse-check"
+                className="group bg-red-600 hover:bg-white text-white hover:text-red-600 font-black h-16 px-10 uppercase tracking-[0.2em] text-[10px] flex items-center gap-3 transition-all duration-500 shadow-[0_0_30px_rgba(220,38,38,0.2)]"
+              >
+                <Activity className="h-4 w-4 group-hover:animate-pulse" />
+                Initialize Diagnostic
+              </Link>
 
-              <Button size="lg" variant="outline" className="border-slate-700 text-white hover:bg-slate-800 h-14 px-10 font-light uppercase tracking-widest text-xs" asChild>
-                <Link href="/approach">
-                  Explore Our Approach
-                </Link>
-              </Button>
+              <Link 
+                href="/services"
+                className="border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-900 h-16 px-10 font-black uppercase tracking-[0.2em] text-[10px] flex items-center transition-all"
+              >
+                View Protocols
+              </Link>
             </div>
 
-            <div className="space-y-4 pt-8 border-t border-slate-900">
-              <p className="text-sm md:text-base text-slate-500 flex items-center gap-3 font-light">
-                <span className="h-1.5 w-1.5 bg-[#14b8a6] rounded-full"></span>
-                Understand how AI-related decision risk forms before it hardens.
-              </p>
-              <p className="text-sm md:text-base text-slate-500 flex items-center gap-3 font-light">
-                <span className="h-1.5 w-1.5 bg-[#14b8a6] rounded-full"></span>
-                Observe system behavior under real operating conditions.
-              </p>
-              <p className="text-[10px] text-slate-600 italic mt-8 tracking-wide">
-                Note: BMR provides advisory services and does not provide legal advice or compliance certification.
-              </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10 border-t border-slate-900">
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="h-5 w-5 text-red-900 shrink-0" />
+                <p className="text-[11px] text-slate-600 font-bold uppercase tracking-widest leading-tight">
+                  Detect operational divergence <br /> in real-time logic.
+                </p>
+              </div>
+              <div className="flex items-start gap-3">
+                <ShieldAlert className="h-5 w-5 text-red-900 shrink-0" />
+                <p className="text-[11px] text-slate-600 font-bold uppercase tracking-widest leading-tight">
+                  Observe behavioral decay <br /> under high-stakes load.
+                </p>
+              </div>
             </div>
           </motion.div>
 
-          {/* Right: Authority framing card */}
+          {/* Right: The Forensic Card */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2, ease: "easeOut" }}
+            transition={{ duration: 0.6, delay: 0.2 }}
           >
-            <Card className="p-10 border-2 shadow-2xl backdrop-blur-md bg-slate-900/50 border-slate-800 relative overflow-hidden group">
+            <Card className="p-12 border-2 shadow-2xl bg-slate-900/10 backdrop-blur-sm border-slate-900 rounded-none relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-red-600 transition-all duration-700" />
               
-              {/* THE STANDARDIZED FIX: Top-down building highlight */}
-              <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500 ease-in-out"></div>
-              
-              <h3 className="text-2xl md:text-3xl font-bold mb-10 text-white tracking-tight italic uppercase relative z-10">
-                Why AI Efforts <span className="text-[#14b8a6]">Quietly Stall</span>
+              <h3 className="text-3xl font-black mb-10 text-white tracking-tighter italic uppercase relative z-10">
+                Why Systems <span className="text-red-600">Quietly Drift</span>
               </h3>
 
               <div className="space-y-8 relative z-10">
-                <p className="text-slate-200 leading-relaxed text-lg font-normal">
-                  AI initiatives rarely fail because the technology does not work.
+                <p className="text-slate-300 leading-relaxed text-lg font-bold italic">
+                  AI failure is rarely a binary event.
                 </p>
-                <p className="text-slate-400 leading-relaxed font-light text-lg italic">
-                  They stall because AI-enabled systems behave differently under real operating conditions than leaders expect.
+                <p className="text-slate-500 leading-relaxed font-medium text-lg italic border-l border-slate-800 pl-6">
+                  It is a slow, structural divergence where AI-enabled logic decays 
+                  under operating conditions leaders cannot see.
                 </p>
-                <p className="text-slate-400 leading-relaxed font-light text-lg">
-                  When human judgment, AI, and oversight interact at scale, predictable behavioral patterns emerge—creating the <span className="text-[#14b8a6] font-medium">Promise Gap™</span>.
+                <p className="text-slate-500 leading-relaxed font-medium text-lg italic">
+                  When human intent and machine execution decouple at scale, 
+                  you don&apos;t have an &quot;optimization&quot; problem. 
+                  You have <span className="text-red-600 font-black">Systemic Rot.</span>
                 </p>
               </div>
             </Card>
           </motion.div>
+          
         </div>
       </div>
     </section>
