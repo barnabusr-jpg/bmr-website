@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from "framer-motion";
-import { ShieldAlert, Activity } from "lucide-react"; // REMOVED: ChevronRight to fix lint error
+import { ShieldAlert, Activity } from "lucide-react"; // Removed ChevronRight
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 
@@ -15,7 +15,6 @@ const HeroHome = () => {
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
           
-          {/* Left: Forensic Content */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -50,13 +49,6 @@ const HeroHome = () => {
                 <Activity className="h-4 w-4 group-hover:animate-pulse" />
                 Initialize Diagnostic
               </Link>
-
-              <Link 
-                href="/services"
-                className="border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-900 h-16 px-10 font-black uppercase tracking-[0.2em] text-[10px] flex items-center transition-all"
-              >
-                View Protocols
-              </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-10 border-t border-slate-900">
@@ -75,7 +67,6 @@ const HeroHome = () => {
             </div>
           </motion.div>
 
-          {/* Right: The Forensic Card */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
@@ -96,15 +87,14 @@ const HeroHome = () => {
                   It is a slow, structural divergence where AI-enabled logic decays 
                   under operating conditions leaders cannot see.
                 </p>
-                <p className="text-slate-500 leading-relaxed font-medium text-lg italic">
-                  When human intent and machine execution decouple at scale, 
+                <p>
+                  When human intent and machine execution decouple, 
                   you don&apos;t have an &quot;optimization&quot; problem. 
-                  You have <span className="text-red-600 font-black">Systemic Rot.</span>
+                  You have <span className="text-red-600 font-black uppercase">Systemic Rot.</span>
                 </p>
               </div>
             </Card>
           </motion.div>
-          
         </div>
       </div>
     </section>
