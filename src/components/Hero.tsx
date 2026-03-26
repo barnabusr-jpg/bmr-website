@@ -7,7 +7,6 @@ import Link from "next/link";
 const Hero = () => {
   return (
     <section className="relative min-h-[85vh] flex items-center py-24 px-6 overflow-hidden bg-slate-950 text-white">
-      {/* Background visual element for systemic drift */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-red-600 rounded-full blur-[120px] animate-pulse" />
       </div>
@@ -26,7 +25,7 @@ const Hero = () => {
             </div>
 
             <h1 className="text-5xl md:text-6xl font-black leading-[1.1] tracking-tight">
-              AI Doesn’t Fail Because the <span className="text-slate-500">Code Breaks.</span>
+              AI Doesn&apos;t Fail Because the <span className="text-slate-500">Code Breaks.</span>
               <span className="block text-red-600 italic mt-2">It Fails Because the System Drifts.</span>
             </h1>
 
@@ -35,13 +34,13 @@ const Hero = () => {
             </p>
 
             <div className="flex flex-wrap gap-4 pt-4">
-              <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-xs px-8 h-14" asChild>
+              <Button size="lg" className="bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest text-xs px-8 h-14 rounded-none" asChild>
                 <Link href="/pulse-check">
                   Initialize Pulse Check
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-slate-800 hover:bg-slate-900 text-slate-300 font-bold uppercase tracking-widest text-xs h-14" asChild>
+              <Button size="lg" variant="outline" className="border-slate-800 hover:bg-slate-900 text-slate-300 font-bold uppercase tracking-widest text-xs h-14 rounded-none" asChild>
                 <Link href="/protocol">Access Protocol</Link>
               </Button>
             </div>
@@ -52,8 +51,7 @@ const Hero = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            <Card className="bg-slate-900/50 border-slate-800 border-2 backdrop-blur-xl p-10 font-mono relative overflow-hidden">
-              {/* Ticker Header */}
+            <Card className="bg-slate-900/50 border-slate-800 border-2 backdrop-blur-xl p-10 font-mono relative overflow-hidden rounded-none">
               <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-4">
                 <div className="space-y-1">
                   <p className="text-[10px] text-slate-500 uppercase tracking-[0.3em]">Operational Reality Scan</p>
@@ -62,18 +60,17 @@ const Hero = () => {
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                       <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                     </span>
-                    Active Shear Force Detected 
+                    Active Shear Force Detected
                   </p>
                 </div>
                 <Zap className="text-slate-700 h-5 w-5" />
               </div>
 
-              {/* Δ Ticker Logic */}
               <div className="space-y-6">
                 <div>
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-4xl md:text-6xl font-black text-white italic tracking-tighter">Δ: 0.28</span>
-                    <span className="text-[10px] text-slate-500 mb-2">THRESHOLD: 0.15</span>
+                    <span className="text-[10px] text-slate-500 mb-2 font-bold">THRESHOLD: 0.15</span>
                   </div>
                   <div className="h-1.5 bg-slate-800 w-full overflow-hidden">
                     <motion.div
@@ -82,7 +79,7 @@ const Hero = () => {
                       transition={{ duration: 1.5, delay: 0.8 }}
                       className="h-full bg-red-600 relative"
                     >
-                      <div className="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]" />
+                      <div className="absolute inset-0 bg-white/10 animate-shimmer" />
                     </motion.div>
                   </div>
                 </div>
@@ -99,7 +96,7 @@ const Hero = () => {
                 </div>
 
                 <p className="text-[10px] text-slate-500 leading-relaxed text-center italic border-t border-slate-800 pt-6">
-                  "Systemic balance not reached. Structural hardening required".
+                  &quot;Systemic balance not reached. Structural hardening required&quot;.
                 </p>
               </div>
             </Card>
