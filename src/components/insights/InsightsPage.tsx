@@ -85,7 +85,6 @@ const InsightsPage = () => {
               </motion.div>
             ))}
             
-            {/* FIXED: The comment below is now wrapped in braces to satisfy line 67 build error */}
             <div className="bg-slate-950/50 p-12 flex flex-col items-center justify-center border-t border-slate-900 opacity-30">
               <Lock className="h-6 w-6 text-slate-800 mb-4" />
               <span className="text-[10px] font-black uppercase tracking-[0.5em] text-slate-800 italic">
