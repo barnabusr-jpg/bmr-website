@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Mail, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Mail, ShieldCheck, AlertTriangle } from 'lucide-react'; // Removed 'X'
 import { DiagnosticResult } from '../lib/diagnosticEngine';
 
 interface Props {
@@ -8,14 +8,13 @@ interface Props {
   onSuccess: (email: string) => void;
 }
 
-export default function TriageCaptureModal({ result, onClose, onSuccess }: Props) {
+export default function TriageCaptureModal({ result, onSuccess }: Props) { // Removed 'onClose' from destructured props
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [isValid, setIsValid] = useState(false);
   const [transmissionId, setTransmissionId] = useState('');
 
-  // Generate unique forensic transmission ID on mount
   useEffect(() => {
     setTransmissionId(`TX-${Math.random().toString(36).substring(2, 10).toUpperCase()}`);
   }, []);
@@ -38,10 +37,9 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
     }
 
     try {
-      // AES-256 Handshake Simulation
       await new Promise(resolve => setTimeout(resolve, 1500));
       onSuccess(email);
-    } catch (err) {
+    } catch { // Changed '(err)' to empty catch to satisfy linter
       setError('TRANSMISSION_FAILURE: AES-256_HANDSHAKE_ERROR');
     } finally {
       setIsSubmitting(false);
@@ -58,7 +56,6 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
     <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-red-600/30 max-w-md w-full p-8 relative shadow-2xl">
         
-        {/* Header with ID */}
         <div className="flex justify-between items-start mb-6">
           <div className="flex items-center gap-3 text-red-600 uppercase font-black italic tracking-widest text-[10px]">
             <ShieldCheck size={18} />
@@ -70,7 +67,6 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
           </div>
         </div>
 
-        {/* Urgency Status */}
         <div className={`mb-6 p-2 text-center text-[9px] font-mono uppercase tracking-widest border ${
           getUrgency() === 'CRITICAL' ? 'border-red-600 bg-red-600/10 text-red-600 animate-pulse' :
           getUrgency() === 'URGENT' ? 'border-yellow-600 bg-yellow-600/10 text-yellow-600' :
@@ -81,7 +77,7 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
 
         <p className="text-slate-400 mb-8 text-[11px] leading-relaxed uppercase tracking-wider font-mono italic">
           Your <span className="text-red-600 font-bold">{result.protocol.replace('_', ' ')}</span> briefing 
-          contains high-exposure data. Endpoint verification required for AES-256 encrypted packet transfer.
+          is ready. Endpoint verification required for AES-256 encrypted packet transfer.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
