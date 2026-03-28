@@ -64,12 +64,12 @@ export default function FieldGuidePage() {
                   If misalignment between vision and delivery is suspected, the first step is awareness.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button asChild size="lg">
-                    <Link href="/contact">
-                      Start a Conversation <ArrowRight className="ml-2 h-5 w-5" />
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg">
+                  <Link 
+  href="/contact"
+  className="inline-flex items-center justify-center h-12 px-8 text-sm font-bold uppercase tracking-widest bg-red-600 text-white transition-all hover:bg-white hover:text-black shadow-[0_0_20px_rgba(220,38,38,0.2)]"
+>
+  Start a Conversation <ArrowRight className="ml-2 h-5 w-5" />
+</Link>
                     <Link href="/">
                       Return Home <ArrowRight className="ml-2 h-5 w-5" />
                     </Link>
