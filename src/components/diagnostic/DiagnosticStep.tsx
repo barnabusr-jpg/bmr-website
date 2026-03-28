@@ -61,7 +61,7 @@ const DiagnosticStep = ({
             </Label>
             <RadioGroup
               value={answers[question.id] || ""}
-              onValueChange={(value) => onAnswerChange(question.id, value)}
+              onValueChange={(value: string) => onAnswerChange(question.id, value)}
               className="flex flex-wrap gap-3"
             >
               {answerOptions.map((option) => (
