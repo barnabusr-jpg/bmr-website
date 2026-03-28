@@ -17,15 +17,15 @@ export default function ForensicSlider({
   criticalThreshold = 7
 }: ForensicSliderProps) {
   const isCritical = value >= criticalThreshold;
-  // Calculate percentage for the red "fill" effect
   const fillPercentage = ((value - 1) / 9) * 100;
 
   return (
     <div className="mb-12 group">
       <div className="flex justify-between items-end mb-4">
         <div className="flex items-center gap-2">
+          {/* We wrap the label in a template literal to safely use the // separator */}
           <label className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500 group-hover:text-red-600 transition-colors">
-            {zone.toUpperCase()} // {label.toUpperCase()}
+            {`${zone.toUpperCase()} // ${label.toUpperCase()}`}
           </label>
           {isCritical && (
             <AlertTriangle className="h-3 w-3 text-red-600 animate-pulse" />
