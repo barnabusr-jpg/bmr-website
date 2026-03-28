@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, ShieldCheck, AlertTriangle } from 'lucide-react'; // Removed 'X'
+import { Mail, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { DiagnosticResult } from '../lib/diagnosticEngine';
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
   onSuccess: (email: string) => void;
 }
 
-export default function TriageCaptureModal({ result, onSuccess }: Props) { // Removed 'onClose' from destructured props
+export default function TriageCaptureModal({ result, onClose, onSuccess }: Props) {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -28,18 +28,14 @@ export default function TriageCaptureModal({ result, onSuccess }: Props) { // Re
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isValid) return;
+
     setIsSubmitting(true);
-
-    if (!isValid) {
-      setError('PROTOCOL_VIOLATION: INVALID_EMAIL_FORMAT');
-      setIsSubmitting(false);
-      return;
-    }
-
     try {
+      // API Handshake Simulation
       await new Promise(resolve => setTimeout(resolve, 1500));
       onSuccess(email);
-    } catch { // Changed '(err)' to empty catch to satisfy linter
+    } catch {
       setError('TRANSMISSION_FAILURE: AES-256_HANDSHAKE_ERROR');
     } finally {
       setIsSubmitting(false);
@@ -100,11 +96,18 @@ export default function TriageCaptureModal({ result, onSuccess }: Props) { // Re
                 required
               />
             </div>
-            <div className="text-right">
-              <span className={`text-[8px] font-mono uppercase ${isValid ? 'text-green-600' : 'text-slate-600'}`}>
-                {isValid ? 'ENDPOINT_VALIDATED' : 'AWAITING_HANDSHAKE'}
-              </span>
-            </div>
+          </div>
+
+          {/* GDPR Compliance Component */}
+          <div className="flex items-start gap-3 group cursor-pointer">
+            <input 
+              type="checkbox" 
+              required 
+              className="mt-1 accent-red-600 bg-slate-950 border-slate-800 rounded-sm" 
+            />
+            <span className="text-[9px] font-mono text-slate-500 uppercase leading-tight group-hover:text-slate-300 transition-colors">
+              I consent to secure data retention and forensic follow-up communications.
+            </span>
           </div>
 
           {error && (
@@ -114,13 +117,23 @@ export default function TriageCaptureModal({ result, onSuccess }: Props) { // Re
             </div>
           )}
 
-          <button
-            type="submit"
-            disabled={isSubmitting || !isValid}
-            className="w-full bg-red-600 hover:bg-white hover:text-black text-white font-black py-5 px-4 text-[10px] uppercase tracking-[0.4em] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-3"
-          >
-            {isSubmitting ? 'TRANSMITTING_PACKET...' : 'DECRYPT & TRANSMIT'}
-          </button>
+          <div className="flex flex-col gap-4">
+            <button
+              type="submit"
+              disabled={isSubmitting || !isValid}
+              className="w-full bg-red-600 hover:bg-white hover:text-black text-white font-black py-5 px-4 text-[10px] uppercase tracking-[0.4em] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'TRANSMITTING...' : 'DECRYPT & TRANSMIT'}
+            </button>
+            
+            <button 
+              type="button"
+              onClick={onClose}
+              className="text-[8px] font-mono text-slate-600 uppercase tracking-widest hover:text-red-600 transition-colors"
+            >
+              Abort Handshake
+            </button>
+          </div>
         </form>
       </div>
     </div>
