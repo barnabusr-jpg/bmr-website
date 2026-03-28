@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, ShieldAlert, Activity, Zap } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Activity } from 'lucide-react'; // Removed 'Zap'
 import { DiagnosticResult } from '../lib/diagnosticEngine';
 
 interface Props {
