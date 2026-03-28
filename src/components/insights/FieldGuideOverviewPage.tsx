@@ -17,7 +17,6 @@ export default function FieldGuideOverviewPage() {
       <main className="py-24 px-6">
         <div className="container mx-auto max-w-7xl">
           
-          {/* HERO SECTION */}
           <motion.div
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
@@ -42,7 +41,6 @@ export default function FieldGuideOverviewPage() {
             </p>
           </motion.div>
 
-          {/* WHY THIS GUIDE EXISTS */}
           <motion.section
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -70,14 +68,10 @@ export default function FieldGuideOverviewPage() {
                   <li>[02] Governance loses influence under pressure</li>
                   <li>[03] Value becomes difficult to see before confidence erodes</li>
                 </ul>
-                <p className="pt-4 text-xs italic text-slate-500">
-                  // The Field Guide provides shared language to recognize these patterns early.
-                </p>
               </div>
             </Card>
           </motion.section>
 
-          {/* CORE PERSPECTIVES GRID */}
           <div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto mb-14">
             {[
               { 
@@ -108,7 +102,6 @@ export default function FieldGuideOverviewPage() {
             ))}
           </div>
 
-          {/* NEXT STEPS / CTA */}
           <motion.section
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
