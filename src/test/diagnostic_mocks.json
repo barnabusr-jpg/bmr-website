@@ -1,0 +1,60 @@
+{
+  "test_cases": [
+    {
+      "id": "TC_01_CRITICAL_COLLAPSE",
+      "description": "High Rework, High Shadow AI, High Expertise Debt",
+      "input": {
+        "answers": {
+          "RT_TOTAL": 35, 
+          "SA_TOTAL": 25,
+          "ED_TOTAL": 15,
+          "DG_TOTAL": 10
+        },
+        "duration": 145,
+        "role": "technical"
+      },
+      "expected_outcome": {
+        "tier": "LOGIC_RECONSTRUCTION",
+        "min_friction_index": 75.0,
+        "status": "VALIDATED"
+      }
+    },
+    {
+      "id": "TC_02_VELOCITY_FAILURE",
+      "description": "Under 60 second completion (Bot/Gamer detection)",
+      "input": {
+        "answers": {
+          "RT_TOTAL": 5,
+          "SA_TOTAL": 5,
+          "ED_TOTAL": 5,
+          "DG_TOTAL": 5
+        },
+        "duration": 42,
+        "role": "executive"
+      },
+      "expected_outcome": {
+        "status": "INCONCLUSIVE",
+        "warning": "VELOCITY_THRESHOLD_FAILED"
+      }
+    },
+    {
+      "id": "TC_03_STRUCTURAL_DRIFT",
+      "description": "Moderate friction across all shear zones",
+      "input": {
+        "answers": {
+          "RT_TOTAL": 20,
+          "SA_TOTAL": 15,
+          "ED_TOTAL": 10,
+          "DG_TOTAL": 5
+        },
+        "duration": 110,
+        "role": "operations"
+      },
+      "expected_outcome": {
+        "tier": "STRUCTURAL_HARDENING",
+        "friction_index_range": [45, 75],
+        "status": "VALIDATED"
+      }
+    }
+  ]
+}
