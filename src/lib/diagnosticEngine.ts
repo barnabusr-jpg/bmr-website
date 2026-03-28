@@ -1,48 +1,69 @@
-// /src/lib/diagnosticEngine.ts
+/**
+ * BMR SOLUTIONS // FORENSIC DIAGNOSTIC ENGINE V3.2
+ * -----------------------------------------------
+ * Mathematical integrity for systemic friction analysis.
+ * Zero contractions. Zero soft logic.
+ */
 
 export type ShearZone = 'reworkTax' | 'shadowAI' | 'expertiseDebt' | 'deltaGap';
 export type ProtocolTier = 'LOGIC_RECONSTRUCTION' | 'STRUCTURAL_HARDENING' | 'DRIFT_DIAGNOSTICS';
+export type DiagnosticStatus = 'VALIDATED' | 'INCONCLUSIVE' | 'DIVERGENT' | 'CRITICAL_SYSTEM_DECAY';
 
-interface DiagnosticResult {
+export interface DiagnosticResult {
   frictionIndex: number;
   tier: ProtocolTier;
   breakdown: Record<ShearZone, number>;
-  status: 'VALIDATED' | 'INCONCLUSIVE' | 'DIVERGENT';
+  status: DiagnosticStatus;
   warning?: string;
 }
 
 export class ForensicEngine {
+  // Weighted impact levels based on capital leakage priority
   private static WEIGHTS: Record<ShearZone, number> = {
-    reworkTax: 0.4,
-    shadowAI: 0.3,
-    expertiseDebt: 0.2,
-    deltaGap: 0.1
+    reworkTax: 0.45,     // Direct financial drain
+    shadowAI: 0.25,      // Governance and security risk
+    expertiseDebt: 0.20, // Operational continuity risk
+    deltaGap: 0.10       // Strategic alignment variance
   };
 
   /**
-   * Calculates the systemic friction index based on weighted Shear Zones.
-   * Logic: (Zone Score / Max Zone Score) * Zone Weight
+   * Processes raw question data into a weighted Friction Index.
+   * @param answers - Map of category totals (0-100 scale per category)
+   * @param duration - Time taken in seconds to complete the diagnostic
    */
   public static calculate(answers: Record<string, number>, duration: number): DiagnosticResult {
-    // 1. Velocity Check: Under 60 seconds triggers a fidelity warning
+    // 1. FIDELITY CHECK: Under 60 seconds triggers an inconclusive status
     if (duration < 60) {
       return this.generateInconclusive('VELOCITY_THRESHOLD_FAILED');
     }
 
-    const breakdown: Record<ShearZone, number> = {
-      reworkTax: (answers['RT_TOTAL'] || 0) * this.WEIGHTS.reworkTax,
-      shadowAI: (answers['SA_TOTAL'] || 0) * this.WEIGHTS.shadowAI,
-      expertiseDebt: (answers['ED_TOTAL'] || 0) * this.WEIGHTS.expertiseDebt,
-      deltaGap: (answers['DG_TOTAL'] || 0) * this.WEIGHTS.deltaGap,
+    // 2. RAW DATA NORMALIZATION
+    const rawScores: Record<ShearZone, number> = {
+      reworkTax: (answers['RT_TOTAL'] || 0),
+      shadowAI: (answers['SA_TOTAL'] || 0),
+      expertiseDebt: (answers['ED_TOTAL'] || 0),
+      deltaGap: (answers['DG_TOTAL'] || 0),
     };
 
+    // 3. WEIGHTED SHEAR ZONE CALCULATION
+    const breakdown: Record<ShearZone, number> = {
+      reworkTax: Number((rawScores.reworkTax * this.WEIGHTS.reworkTax).toFixed(2)),
+      shadowAI: Number((rawScores.shadowAI * this.WEIGHTS.shadowAI).toFixed(2)),
+      expertiseDebt: Number((rawScores.expertiseDebt * this.WEIGHTS.expertiseDebt).toFixed(2)),
+      deltaGap: Number((rawScores.deltaGap * this.WEIGHTS.deltaGap).toFixed(2)),
+    };
+
+    // 4. FRICTION INDEX AGGREGATION
     const frictionIndex = Object.values(breakdown).reduce((a, b) => a + b, 0);
+    
+    // 5. STATUS DETERMINATION
+    const status = frictionIndex > 90 ? 'CRITICAL_SYSTEM_DECAY' : 'VALIDATED';
     
     return {
       frictionIndex: Number(frictionIndex.toFixed(2)),
       tier: this.determineTier(frictionIndex),
       breakdown,
-      status: 'VALIDATED'
+      status
     };
   }
 
@@ -60,5 +81,12 @@ export class ForensicEngine {
       status: 'INCONCLUSIVE',
       warning: reason
     };
+  }
+
+  /**
+   * Compares Executive vs. Technical outputs to identify Strategic Blind Spots.
+   */
+  public static detectDivergence(execIndex: number, techIndex: number): boolean {
+    return Math.abs(execIndex - techIndex) > 20;
   }
 }
