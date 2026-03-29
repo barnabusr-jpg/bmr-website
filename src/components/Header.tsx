@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/router'; // Keep if using /pages directory
 import { Activity, ShieldAlert, Zap } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -13,6 +13,9 @@ const NAV_ITEMS = [
 
 export default function Header() {
   const router = useRouter();
+  
+  // Safely capture the current path to avoid build-time errors
+  const currentPath = router?.pathname || '';
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-900 px-6 py-5">
@@ -24,21 +27,21 @@ export default function Header() {
             <Activity size={18} className="text-white group-hover:text-red-600 animate-pulse" />
           </div>
           <div className="flex flex-col text-left">
-            <span className="text-xl font-black italic tracking-tighter text-white uppercase italic leading-none">
+            <span className="text-xl font-black italic tracking-tighter text-white uppercase leading-none">
               BMR<span className="text-red-600">SOLUTIONS</span>
             </span>
             <span className="text-[8px] font-mono text-red-600 font-bold tracking-widest uppercase mt-1">ADMIN ACCESS</span>
           </div>
         </Link>
 
-        {/* NAVIGATION NODE - This is what separates the pages */}
+        {/* NAVIGATION NODE */}
         <div className="hidden lg:flex items-center gap-12">
           {NAV_ITEMS.map((item) => (
             <Link 
               key={item.path} 
               href={item.path}
               className={`text-[10px] font-black tracking-[0.4em] uppercase transition-all hover:text-red-600 ${
-                router.pathname === item.path ? 'text-red-600' : 'text-slate-400'
+                currentPath === item.path ? 'text-red-600' : 'text-slate-400'
               }`}
             >
               {item.label}
