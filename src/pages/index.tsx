@@ -11,7 +11,7 @@ import Sensors from "@/components/Sensors";
 import ServicesPreview from "@/components/home/ServicesPreviewHome";
 import Outcomes from "@/components/home/OutcomesHome";
 import ComparisonGrid from "@/components/home/ComparisonGrid";
-import { Activity, ArrowRight, ShieldCheck, Zap } from "lucide-react";
+import { Activity, ArrowRight } from "lucide-react";
 
 const Index = () => {
   const router = useRouter();
@@ -24,22 +24,14 @@ const Index = () => {
       <Header />
       
       <main>
-        {/* --- Phase 1: Authentication & Hook --- */}
         <Hero />
-        
-        {/* --- Phase 2: Evidence & Sensory Data --- */}
         <CommercialVideo src="https://uuyq3t7kfckwh0je.public.blob.vercel-storage.com/bmr-commercial.mp4" />
         <Sensors />
-        
-        {/* --- Phase 3: Capability Preview --- */}
         <ServicesPreview />
         <Outcomes />
-        
-        {/* --- Phase 4: Competitive Analysis --- */}
         <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
         <ComparisonGrid />
 
-        {/* --- Phase 5: The Tactical CTA --- */}
         <section className="py-32 px-6 border-t border-slate-900 bg-[#020617]">
           <div className="max-w-5xl mx-auto text-center">
             <h2 className="text-5xl md:text-7xl font-black mb-12 italic tracking-tighter uppercase text-white leading-none">
