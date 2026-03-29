@@ -9,10 +9,8 @@ import {
   Lock, 
   ArrowRight, 
   Activity, 
-  AlertTriangle, 
-  Zap,
-  ShieldCheck,
-  ShieldAlert
+  ShieldAlert,
+  Zap
 } from "lucide-react";
 
 const IMPACT_COLORS = {
@@ -68,8 +66,6 @@ const BRIEFINGS = [
     vulnerability: "FEB 2026",
     source: "Stanford HAI",
     impact: "STABILIZING" as keyof typeof IMPACT_COLORS,
-    classification: "RESTRICTED // PROTOCOL-7",
-    pages: 12,
     desc: "Stanford 2026 Briefing: The transition from AI Assistance to Systemic Negligence in automated decision-making.",
     path: "https://hai.stanford.edu/news/regulating-ai-risk"
   }
@@ -81,19 +77,18 @@ export default function BriefingsPage() {
   const getThreatLevel = () => {
     if (typeof window === 'undefined') return "OSCILLATING";
     const hour = new Date().getHours();
-    if (hour >= 22 || hour <= 4) return "CRITICAL";
-    if (hour >= 18) return "ELEVATED";
+    if (hour >= 18 || hour <= 4) return "CRITICAL";
     return "OSCILLATING";
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-red-600/30 text-left">
+    <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-red-600/30">
       <Head>
         <title>BMR | FORENSIC BRIEFINGS</title>
       </Head>
       <Header />
       
-      <main className="pt-44 pb-24 px-6 text-left">
+      <main className="pt-44 pb-24 px-6">
         <div className="max-w-6xl mx-auto space-y-20">
           
           <motion.div 
@@ -104,7 +99,7 @@ export default function BriefingsPage() {
             <div className="flex flex-wrap items-center gap-3 border border-red-600/50 p-3 px-5 rounded-full bg-gradient-to-r from-red-900/20 to-red-600/5 backdrop-blur-md shadow-[0_0_30px_rgba(220,38,38,0.1)]">
               <div className="flex items-center gap-2">
                 <ShieldAlert size={14} className="text-red-500" />
-                <span className="text-red-500 font-mono text-[10px] tracking-[0.4em] font-black uppercase">
+                <span className="text-red-500 font-mono text-[10px] tracking-[0.4em] font-black uppercase text-left">
                   CLEARANCE
                 </span>
               </div>
@@ -116,22 +111,22 @@ export default function BriefingsPage() {
               </div>
               <div className="hidden sm:flex items-center gap-2 border-l border-red-600/50 pl-4">
                 <Lock size={12} className="text-red-500 opacity-60" />
-                <span className="text-red-500/80 font-mono text-[9px] tracking-widest uppercase">
+                <span className="text-red-500/80 font-mono text-[9px] tracking-widest uppercase text-left">
                   SESSION ACTIVE
                 </span>
               </div>
             </div>
-            <div className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.5em] italic">
+            <div className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.5em] italic text-left">
               THREAT {getThreatLevel()} // CONFIDENCE 92%
             </div>
           </motion.div>
 
-          <section className="space-y-6 text-left">
-            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4">
+          <section className="space-y-6 text-left border-l border-red-600 pl-6">
+            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4 text-left">
               FORENSIC <br />
               <span className="text-red-600">BRIEFINGS</span>
             </h1>
-            <p className="max-w-xl text-slate-500 font-bold leading-relaxed italic uppercase text-xs tracking-tight border-l border-red-600 pl-6 text-left">
+            <p className="max-w-xl text-slate-500 font-bold leading-relaxed italic uppercase text-xs tracking-tight text-left">
               Intelligence on operational divergence and system decay. Access is restricted to leadership tasked with structural recovery.
             </p>
           </section>
@@ -152,7 +147,7 @@ export default function BriefingsPage() {
                 </div>
 
                 <div className="space-y-6 z-10 text-left">
-                  <div className="flex flex-wrap items-center gap-4">
+                  <div className="flex flex-wrap items-center gap-4 text-left">
                     <span className="bg-red-600 text-white text-[9px] font-black px-3 py-1 tracking-widest uppercase italic">
                       {brief.tag}
                     </span>
@@ -168,7 +163,7 @@ export default function BriefingsPage() {
                   </div>
 
                   <div className="space-y-3 text-left">
-                    <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter group-hover:text-red-600 transition-colors leading-none">
+                    <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter group-hover:text-red-600 transition-colors leading-none text-left text-white">
                       {brief.title}
                     </h2>
                     
@@ -183,20 +178,20 @@ export default function BriefingsPage() {
                     </p>
                     
                     <div className="flex items-center gap-3 pt-2 text-left">
-                      <span className="text-[8px] font-mono text-red-600/60 uppercase tracking-widest font-black italic">
+                      <span className="text-[8px] font-mono text-red-600/60 uppercase tracking-widest font-black italic text-left">
                         VULNERABILITY IDENTIFIED {brief.vulnerability}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div className="z-10 shrink-0">
+                <div className="z-10 shrink-0 text-left">
                    <button 
                     onClick={() => { if (brief.path) window.open(brief.path, '_blank'); }}
                     className="bg-white text-black px-10 py-5 font-black uppercase text-[11px] tracking-[0.4em] flex items-center gap-3 hover:bg-red-600 hover:text-white transition-all group-hover:translate-x-2"
                    >
                     DECLASSIFY <ArrowRight size={16} />
-                  </button>
+                   </button>
                 </div>
               </motion.div>
             ))}
@@ -206,11 +201,11 @@ export default function BriefingsPage() {
              <div className="absolute top-0 right-0 p-4 opacity-5">
                 <Zap size={240} />
              </div>
-             <div className="relative z-10 space-y-6">
+             <div className="relative z-10 space-y-6 text-center">
                 <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none text-white text-center">
                   INCOMPLETE DATA <br /> IS SYSTEM RISK
                 </h2>
-                <div className="pt-6">
+                <div className="pt-6 text-center">
                   <button 
                     onClick={() => { window.location.href = '/pulse-check/assessment'; }}
                     className="bg-black text-white px-14 py-7 font-black uppercase text-[12px] tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-2xl"
@@ -220,6 +215,12 @@ export default function BriefingsPage() {
                 </div>
              </div>
           </section>
+
+          <div className="pt-16 border-t border-slate-900 flex flex-col items-center text-center space-y-4 opacity-40 text-center">
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.6em] max-w-lg italic font-bold text-center underline">
+              WARNING UNAUTHORIZED DISTRIBUTION WILL TRIGGER REVOCATION
+            </p>
+          </div>
         </div>
       </main>
 
