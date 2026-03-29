@@ -5,9 +5,8 @@ import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from "framer-motion";
-import { AlertTriangle, ShieldAlert, Activity, Lock } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Activity, Lock, RefreshCcw } from 'lucide-react';
 
-// Unified type to match API response
 type Archetype = 'Replacement Trap' | 'Hollow Chevron' | 'Shadow Shear' | 'Collective Delusion';
 
 interface ResultData {
@@ -23,17 +22,41 @@ interface ResultData {
 
 export default function PulseCheckResults() {
   const [result, setResult] = useState<ResultData | null>(null);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    const data = sessionStorage.getItem('bmr_results');
-    if (data) {
+    // CRITICAL: Synchronized Key Check
+    const rawData = sessionStorage.getItem('bmr_results_data');
+    
+    if (rawData) {
       try {
-        setResult(JSON.parse(data));
+        setResult(JSON.parse(rawData));
       } catch (e) {
-        console.error("Forensic Data Corruption", e);
+        setError(true);
       }
+    } else {
+      // If data is missing, wait 1 second and check again (Handles race conditions)
+      const timeout = setTimeout(() => {
+        const retryData = sessionStorage.getItem('bmr_results_data');
+        if (retryData) setResult(JSON.parse(retryData));
+        else setError(true);
+      }, 1000);
+      return () => clearTimeout(timeout);
     }
   }, []);
+
+  if (error) return (
+    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-widest gap-6 px-6 text-center">
+      <AlertTriangle className="h-12 w-12" />
+      <div className="space-y-2">
+        <p className="font-black text-xl">Forensic Data Missing</p>
+        <p className="text-slate-500 text-[10px]">Session integrity check failed. Re-initialize audit.</p>
+      </div>
+      <button onClick={() => window.location.href='/pulse-check/assessment'} className="bg-white text-black px-8 py-4 font-black text-[10px] tracking-[.3em] hover:bg-red-600 hover:text-white transition-all flex items-center gap-2">
+        <RefreshCcw size={12} /> Restart Audit
+      </button>
+    </div>
+  );
 
   if (!result) return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-widest gap-4">
@@ -68,70 +91,47 @@ export default function PulseCheckResults() {
       <Head><title>BMR | Verdict: {result.archetype}</title></Head>
       <Header />
       <main className="pt-40 pb-20 px-6">
-        <div className="max-w-4xl mx-auto space-y-12">
-          
-          <div className="text-center py-20 border border-red-900/10 bg-slate-900/20 relative overflow-hidden">
+        <div className="max-w-4xl mx-auto space-y-12 text-center">
+          <div className="py-20 border border-red-900/10 bg-slate-900/20 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-red-600" />
             <AlertTriangle className="h-16 w-16 text-red-600 mx-auto mb-8 animate-pulse" />
-            
-            <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter mb-6 text-white leading-none">
-              {result.archetype}
-            </h1>
-
+            <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter mb-6 text-white leading-none">{result.archetype}</h1>
             <div className="max-w-xl mx-auto px-6 space-y-10">
               <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-slate-500 font-mono text-[9px] uppercase tracking-[0.3em] border-y border-slate-900 py-6">
                 <span>Decay Rate: <span className="text-red-600 font-black">{result.fractureVelocity}/mo</span></span>
                 <span className="hidden md:inline text-slate-800">|</span>
                 <span>Est. Collapse: <span className="text-red-600 font-black">{daysToCollapse} Days</span></span>
               </div>
-
-              {/* DIVERGENCE METER */}
               <div className="space-y-4 text-left">
                 <div className="flex justify-between items-end">
                   <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">Divergence (Δ)</span>
                   <span className="text-4xl font-black italic text-red-600 tracking-tighter">{result.deltaGap.toFixed(1)}</span>
                 </div>
                 <div className="w-full bg-slate-950 h-3 border border-slate-900 p-0.5">
-                  <motion.div 
-                    initial={{ width: 0 }} 
-                    animate={{ width: `${Math.min((result.deltaGap / 10) * 100, 100)}%` }} 
-                    transition={{ duration: 2, ease: "circOut" }}
-                    className="h-full bg-gradient-to-r from-slate-900 via-red-900 to-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)]" 
-                  />
+                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((result.deltaGap / 10) * 100, 100)}%` }} transition={{ duration: 2, ease: "circOut" }} className="h-full bg-gradient-to-r from-slate-900 via-red-900 to-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)]" />
                 </div>
               </div>
-
-              {/* PROFIT HEMORRHAGE */}
               <div className="bg-red-950/10 border border-red-900/30 p-10 relative">
                 <div className="absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
                 <div className="text-[10px] font-black text-red-600 uppercase mb-4 tracking-[0.5em] italic">Annual Profit Hemorrhage</div>
-                <div className="text-6xl md:text-7xl font-black text-white tracking-tighter">
-                  ${result.financialImpact.toFixed(2)}<span className="text-red-600">M</span>
-                </div>
+                <div className="text-6xl md:text-7xl font-black text-white tracking-tighter">${result.financialImpact.toFixed(2)}<span className="text-red-600">M</span></div>
                 <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-red-900/20 text-[9px] font-mono uppercase tracking-widest text-slate-500">
                   <div className="text-left">Rework Tax: <span className="text-white">${result.reworkTax.toFixed(1)}M</span></div>
                   <div className="text-right">Shadow AI: <span className="text-white">${result.shadowAI.toFixed(1)}M</span></div>
                 </div>
               </div>
             </div>
-
             <div className="grid md:grid-cols-2 gap-2 mt-16 px-6">
               <button disabled className="bg-slate-900 text-slate-700 p-8 flex flex-col items-center cursor-not-allowed border border-slate-800 relative">
                 <Lock className="h-4 w-4 mb-2 opacity-20" />
                 <span className="font-black text-[9px] tracking-[0.4em] uppercase">Audit: Unauthorized</span>
-                <span className="text-[8px] mt-2 italic opacity-40">Requires Active Triage Key</span>
               </button>
-              
-              <button 
-                onClick={() => window.open('https://calendly.com/bmr-solutions/triage', '_blank')} 
-                className="bg-red-600 text-white p-8 flex flex-col items-center hover:bg-white hover:text-black transition-all border border-red-600"
-              >
+              <button onClick={() => window.open('https://calendly.com/bmr-solutions/triage', '_blank')} className="bg-red-600 text-white p-8 flex flex-col items-center hover:bg-white hover:text-black transition-all border border-red-600">
                 <ShieldAlert className="h-5 w-5 mb-2" />
                 <span className="font-black text-[10px] tracking-[0.4em] uppercase italic">Book Emergency Triage</span>
               </button>
             </div>
           </div>
-
           <div className="border border-slate-900 p-10 bg-slate-950/50">
             <h2 className="text-sm font-black uppercase italic mb-10 text-slate-500 tracking-[0.3em]">Hardening Roadmap: Phase 01</h2>
             <div className="grid md:grid-cols-2 gap-12">
