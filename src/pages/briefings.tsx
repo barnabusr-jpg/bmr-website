@@ -44,9 +44,7 @@ const BRIEFINGS = [
     impact: "HIGH" as keyof typeof IMPACT_COLORS,
     classification: "INTERNAL/NOFORN",
     pages: 18,
-    attachments: 3,
-    desc: "Analysis of recursive AI training loops creating a 40% increase in 'Logic Rot' across enterprise models.",
-    status: "UNLOCKED",
+    desc: "Analysis of recursive AI training loops creating a 40% increase in Logic Rot across enterprise models.",
     path: "https://www.nature.com/articles/s41586-024-07546-0"
   },
   {
@@ -59,9 +57,7 @@ const BRIEFINGS = [
     impact: "CRITICAL" as keyof typeof IMPACT_COLORS,
     classification: "TOP SECRET // BMR-EYES-ONLY",
     pages: 32,
-    attachments: 7,
     desc: "Forrester Q1 2026 Analysis: Shadow AI has surpassed phishing as the primary vector for corporate data exfiltration.",
-    status: "UNLOCKED",
     path: "https://www.cyberhaven.com/blog/ai-data-loss-prevention-report/"
   },
   {
@@ -74,9 +70,7 @@ const BRIEFINGS = [
     impact: "STABILIZING" as keyof typeof IMPACT_COLORS,
     classification: "RESTRICTED // PROTOCOL-7",
     pages: 12,
-    attachments: 2,
-    desc: "Stanford 2026 Briefing: The transition from 'AI Assistance' to 'Systemic Negligence' in automated decision-making.",
-    status: "UNLOCKED",
+    desc: "Stanford 2026 Briefing: The transition from AI Assistance to Systemic Negligence in automated decision-making.",
     path: "https://hai.stanford.edu/news/regulating-ai-risk"
   }
 ];
@@ -93,13 +87,13 @@ export default function BriefingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-red-600/30">
+    <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-red-600/30 text-left">
       <Head>
         <title>BMR | FORENSIC BRIEFINGS</title>
       </Head>
       <Header />
       
-      <main className="pt-44 pb-24 px-6">
+      <main className="pt-44 pb-24 px-6 text-left">
         <div className="max-w-6xl mx-auto space-y-20">
           
           <motion.div 
@@ -116,19 +110,19 @@ export default function BriefingsPage() {
               </div>
               <div className="flex items-center gap-3 border-l border-red-600/50 pl-4">
                 <Activity size={12} className="text-red-500 animate-pulse" />
-                <span className="text-white font-mono text-[10px] tracking-[0.2em] font-black uppercase">
+                <span className="text-white font-mono text-[10px] tracking-[0.2em] font-black uppercase text-left">
                   ADMIN {sessionId}
                 </span>
               </div>
               <div className="hidden sm:flex items-center gap-2 border-l border-red-600/50 pl-4">
                 <Lock size={12} className="text-red-500 opacity-60" />
                 <span className="text-red-500/80 font-mono text-[9px] tracking-widest uppercase">
-                  SESSION 2359 UTC
+                  SESSION ACTIVE
                 </span>
               </div>
             </div>
             <div className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.5em] italic">
-              THREAT LEVEL <span className="text-red-600">{getThreatLevel()}</span> CONFIDENCE 92%
+              THREAT {getThreatLevel()} // CONFIDENCE 92%
             </div>
           </motion.div>
 
@@ -137,7 +131,7 @@ export default function BriefingsPage() {
               FORENSIC <br />
               <span className="text-red-600">BRIEFINGS</span>
             </h1>
-            <p className="max-w-xl text-slate-500 font-bold leading-relaxed italic uppercase text-xs tracking-tight border-l border-red-600 pl-6">
+            <p className="max-w-xl text-slate-500 font-bold leading-relaxed italic uppercase text-xs tracking-tight border-l border-red-600 pl-6 text-left">
               Intelligence on operational divergence and system decay. Access is restricted to leadership tasked with structural recovery.
             </p>
           </section>
@@ -159,13 +153,13 @@ export default function BriefingsPage() {
 
                 <div className="space-y-6 z-10 text-left">
                   <div className="flex flex-wrap items-center gap-4">
-                    <span className="bg-red-600 text-white text-[9px] font-black px-3 py-1 tracking-widest uppercase italic shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+                    <span className="bg-red-600 text-white text-[9px] font-black px-3 py-1 tracking-widest uppercase italic">
                       {brief.tag}
                     </span>
                     <span className={`px-3 py-1 border text-[9px] font-mono font-bold uppercase tracking-widest ${SECTOR_STYLES[brief.sector as keyof typeof SECTOR_STYLES]}`}>
                       {brief.sector}
                     </span>
-                    <div className="flex items-center gap-2 border-l border-slate-800 pl-4">
+                    <div className="flex items-center gap-2 border-l border-slate-800 pl-4 text-left">
                       <div className={`w-2 h-2 rounded-full animate-pulse ${IMPACT_DOTS[brief.impact]}`} />
                       <span className={`text-[9px] font-mono font-black uppercase tracking-widest ${IMPACT_COLORS[brief.impact]}`}>
                         IMPACT {brief.impact}
@@ -173,21 +167,22 @@ export default function BriefingsPage() {
                     </div>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-3 text-left">
                     <h2 className="text-3xl md:text-5xl font-black italic uppercase tracking-tighter group-hover:text-red-600 transition-colors leading-none">
                       {brief.title}
                     </h2>
                     
-                    <div className="flex flex-wrap items-center gap-3 font-mono text-[9px] font-black tracking-[0.15em] italic">
+                    <div className="flex flex-wrap items-center gap-3 font-mono text-[9px] font-black tracking-[0.15em] italic text-left">
                        <span className="text-red-500/80">CLASS {brief.classification}</span>
+                       <span className="text-slate-800">•</span>
                        <span className="text-slate-500">{brief.pages} PAGES</span>
                     </div>
 
-                    <p className="text-slate-500 text-sm font-medium italic max-w-xl leading-relaxed uppercase tracking-tight">
+                    <p className="text-slate-500 text-sm font-medium italic max-w-xl leading-relaxed uppercase tracking-tight text-left">
                       {brief.desc}
                     </p>
                     
-                    <div className="flex items-center gap-3 pt-2">
+                    <div className="flex items-center gap-3 pt-2 text-left">
                       <span className="text-[8px] font-mono text-red-600/60 uppercase tracking-widest font-black italic">
                         VULNERABILITY IDENTIFIED {brief.vulnerability}
                       </span>
@@ -198,28 +193,10 @@ export default function BriefingsPage() {
                 <div className="z-10 shrink-0">
                    <button 
                     onClick={() => { if (brief.path) window.open(brief.path, '_blank'); }}
-                    className="bg-white text-black px-10 py-5 font-black uppercase text-[11px] tracking-[0.4em] flex items-center gap-3 hover:bg-red-600 hover:text-white transition-all group-hover:translate-x-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
+                    className="bg-white text-black px-10 py-5 font-black uppercase text-[11px] tracking-[0.4em] flex items-center gap-3 hover:bg-red-600 hover:text-white transition-all group-hover:translate-x-2"
                    >
                     DECLASSIFY <ArrowRight size={16} />
                   </button>
-                </div>
-
-                <div className="absolute right-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none hidden lg:block translate-x-10 group-hover:translate-x-0">
-                  <div className="w-48 h-64 bg-slate-900 border border-slate-700 rounded-sm shadow-[0_40px_80px_rgba(0,0,0,0.8)] overflow-hidden rotate-2 group-hover:rotate-0 transition-transform duration-500">
-                    <div className="h-8 bg-slate-800 flex items-center px-3 border-b border-slate-700 justify-between">
-                      <div className="flex gap-1.5 text-red-500 font-bold text-[8px]">
-                        BMR
-                      </div>
-                      <ShieldCheck size={12} className="text-slate-600" />
-                    </div>
-                    <div className="p-5 space-y-4">
-                      <div className="h-1.5 bg-slate-700 rounded w-full" />
-                      <div className="h-1.5 bg-slate-700 rounded w-5/6" />
-                      <div className="h-24 bg-red-600/5 rounded border border-red-600/10 flex items-center justify-center relative overflow-hidden">
-                        <Activity size={24} className="text-red-600/10 animate-pulse" />
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </motion.div>
             ))}
@@ -243,13 +220,6 @@ export default function BriefingsPage() {
                 </div>
              </div>
           </section>
-
-          <div className="pt-16 border-t border-slate-900 flex flex-col items-center text-center space-y-4 opacity-40">
-            <AlertTriangle size={24} className="text-red-600" />
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.6em] max-w-lg italic font-bold text-center underline">
-              WARNING UNAUTHORIZED DISTRIBUTION WILL TRIGGER REVOCATION
-            </p>
-          </div>
         </div>
       </main>
 
