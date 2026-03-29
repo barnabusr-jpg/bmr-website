@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion } from "framer-motion";
-import { Database, BarChart3, GitMerge, Zap, ShieldAlert } from "lucide-react";
+import { Database, BarChart3, GitMerge, Zap } from "lucide-react";
 
 const PHASES = [
   { id: "M-01", title: "DIVERGENCE DETECTION", icon: <Database size={20} />, desc: "WE BASELINE LOGIC AUTHORITY AGAINST OPERATIONAL OUTCOMES TO UNCOVER HIDDEN LOGIC ROT." },
@@ -25,9 +25,6 @@ export default function MethodologyPage() {
         <div className="max-w-6xl mx-auto space-y-32">
           
           <section className="space-y-6 border-l-4 border-red-600 pl-8 text-left uppercase">
-            <div className="flex items-center gap-4">
-              <span className="text-red-600 font-mono text-[10px] font-black tracking-[0.4em] uppercase font-bold italic">RECOVERY TIER-1</span>
-            </div>
             <h1 className="text-6xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4">
               THE MATH OF <br /><span className="text-red-600">RECOVERY</span>
             </h1>
@@ -36,15 +33,12 @@ export default function MethodologyPage() {
           <section className="bg-slate-900/10 border border-slate-900 p-12 md:p-20 relative overflow-hidden text-left">
             <div className="grid lg:grid-cols-2 gap-16 items-center">
               <div className="space-y-8 text-left">
-                <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter italic text-left uppercase">THE REWORK <br /> TAX EQUATION</h2>
+                <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter italic text-left uppercase italic underline">THE REWORK <br /> TAX EQUATION</h2>
                 <div className="p-10 bg-black border border-red-600/20 rounded-sm shadow-2xl text-center">
                   <div className="text-2xl md:text-4xl font-mono font-black italic tracking-tighter text-white uppercase italic">
                     Tr = Σ (Ds × Ch) + Ωl
                   </div>
                 </div>
-                <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest text-left font-mono italic">
-                  Ds: DIVERGENCE SEVERITY | Ch: HUMAN CORRECTION | Ωl: SYSTEMIC LIABILITY
-                </p>
               </div>
               <div className="bg-red-600/5 p-10 border border-red-600/20 text-left">
                 <p className="text-slate-400 text-sm font-medium leading-relaxed uppercase tracking-tight text-left italic">
@@ -71,7 +65,7 @@ export default function MethodologyPage() {
           <section className="bg-red-600 p-12 md:p-24 text-center space-y-10 shadow-2xl relative overflow-hidden">
              <div className="absolute top-0 right-0 p-4 opacity-10"><Zap size={300} /></div>
              <h2 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter leading-none text-white text-center">STOP GUESSING. <br /> START AUDITING.</h2>
-             <button onClick={() => router.push('/pulse-check/assessment')} className="bg-black text-white px-16 py-8 font-black uppercase text-[12px] tracking-[0.6em] hover:bg-white hover:text-black transition-all shadow-2xl">RUN FORENSIC ANALYSIS</button>
+             <button onClick={() => router.push('/pulse-check/assessment')} className="bg-black text-white px-16 py-8 font-black uppercase text-[12px] tracking-[0.6em] hover:bg-white hover:text-black transition-all shadow-2xl uppercase">RUN FORENSIC ANALYSIS</button>
           </section>
         </div>
       </main>
