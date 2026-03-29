@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -12,8 +12,7 @@ import {
   AlertTriangle, 
   Zap,
   ShieldCheck,
-  ShieldAlert,
-  FileText
+  ShieldAlert
 } from "lucide-react";
 
 // --- Forensic Data Schema ---
@@ -74,9 +73,6 @@ const BRIEFINGS = [
     vulnerability: "FEB 2026",
     source: "Stanford HAI",
     impact: "STABILIZING" as keyof typeof IMPACT_COLORS,
-    classification: "RESTRICTED // PROTOCOL-7",
-    pages: 12,
-    attachments: 2,
     desc: "Stanford 2026 Briefing: The transition from 'AI Assistance' to 'Systemic Negligence' in automated decision-making.",
     status: "UNLOCKED",
     path: "https://hai.stanford.edu/news/regulating-ai-risk"
@@ -86,8 +82,8 @@ const BRIEFINGS = [
 export default function BriefingsPage() {
   const sessionId = "NODE-SEC-04";
   
-  // Dynamic Threat Level Logic
   const getThreatLevel = () => {
+    if (typeof window === 'undefined') return "OSCILLATING";
     const hour = new Date().getHours();
     if (hour >= 22 || hour <= 4) return "CRITICAL";
     if (hour >= 18) return "ELEVATED";
@@ -104,7 +100,6 @@ export default function BriefingsPage() {
       <main className="pt-44 pb-24 px-6">
         <div className="max-w-6xl mx-auto space-y-20">
           
-          {/* --- Hardened Authentication UI --- */}
           <motion.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -125,8 +120,8 @@ export default function BriefingsPage() {
               </div>
               <div className="hidden sm:flex items-center gap-2 border-l border-red-600/50 pl-4">
                 <Lock size={12} className="text-red-500 opacity-60" />
-                <span className="text-red-500/80 font-mono text-[9px] tracking-widest">
-                  SESSION EXPIRES: 23:59 UTC
+                <span className="text-red-500/80 font-mono text-[9px] tracking-widest uppercase">
+                  SESSION: 23:59 UTC
                 </span>
               </div>
             </div>
@@ -135,18 +130,16 @@ export default function BriefingsPage() {
             </div>
           </motion.div>
 
-          {/* --- Hero Section --- */}
           <section className="space-y-6">
             <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4">
               FORENSIC <br />
-              <span className="text-red-600 text-glow-red">BRIEFINGS.</span>
+              <span className="text-red-600">BRIEFINGS.</span>
             </h1>
             <p className="max-w-xl text-slate-500 font-bold leading-relaxed italic uppercase text-xs tracking-tight border-l border-red-600 pl-6">
               Declassified intelligence on operational divergence and system decay. Access is strictly for leadership tasked with structural recovery.
             </p>
           </section>
 
-          {/* --- Briefing Grid --- */}
           <div className="grid gap-6">
             {BRIEFINGS.map((brief, i) => (
               <motion.div 
@@ -158,7 +151,6 @@ export default function BriefingsPage() {
                 whileHover={{ scale: 1.005 }}
                 className="group relative bg-slate-900/10 border border-slate-900 p-8 md:p-10 hover:border-red-600/50 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-8 overflow-hidden"
               >
-                {/* ID Badge */}
                 <div className="absolute -top-2 -left-2 w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-black font-mono text-[10px] italic z-20 shadow-2xl">
                   {brief.id}
                 </div>
@@ -184,13 +176,10 @@ export default function BriefingsPage() {
                       {brief.title}
                     </h2>
                     
-                    {/* --- Forensic Metadata Enhancement --- */}
                     <div className="flex flex-wrap items-center gap-3 font-mono text-[9px] font-black tracking-[0.15em] italic">
                        <span className="text-red-500/80">CLASS: {brief.classification}</span>
                        <span className="text-slate-800">•</span>
                        <span className="text-slate-500">{brief.pages} PAGES</span>
-                       <span className="text-slate-800">•</span>
-                       <span className="text-slate-500">{brief.attachments} ATTACHMENTS</span>
                     </div>
 
                     <p className="text-slate-500 text-sm font-medium italic max-w-xl leading-relaxed uppercase tracking-tight">
@@ -200,10 +189,6 @@ export default function BriefingsPage() {
                     <div className="flex items-center gap-3 pt-2">
                       <span className="text-[8px] font-mono text-red-600/60 uppercase tracking-widest font-black italic">
                         VULNERABILITY IDENTIFIED: {brief.vulnerability}
-                      </span>
-                      <span className="text-slate-800 font-mono text-[8px]">•</span>
-                      <span className="text-[8px] font-mono text-slate-600 uppercase tracking-widest font-black italic">
-                        SOURCE: {brief.source}
                       </span>
                     </div>
                   </div>
@@ -218,26 +203,21 @@ export default function BriefingsPage() {
                   </button>
                 </div>
 
-                {/* --- Hardened Document Preview --- */}
                 <div className="absolute right-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none hidden lg:block translate-x-10 group-hover:translate-x-0">
                   <div className="w-48 h-64 bg-slate-900 border border-slate-700 rounded-sm shadow-[0_40px_80px_rgba(0,0,0,0.8)] overflow-hidden rotate-2 group-hover:rotate-0 transition-transform duration-500">
                     <div className="h-8 bg-slate-800 flex items-center px-3 border-b border-slate-700 justify-between">
                       <div className="flex gap-1.5">
                         <div className="w-2 h-2 bg-red-500 rounded-full" />
                         <div className="w-2 h-2 bg-yellow-500 rounded-full" />
-                        <div className="w-2 h-2 bg-green-500 rounded-full" />
                       </div>
                       <ShieldCheck size={12} className="text-slate-600" />
                     </div>
                     <div className="p-5 space-y-4">
                       <div className="h-1.5 bg-slate-700 rounded w-full" />
                       <div className="h-1.5 bg-slate-700 rounded w-5/6" />
-                      <div className="h-1.5 bg-slate-700 rounded w-4/6" />
                       <div className="h-24 bg-red-600/5 rounded border border-red-600/10 flex items-center justify-center relative overflow-hidden">
                         <Activity size={24} className="text-red-600/10 animate-pulse" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900/40 to-transparent" />
                       </div>
-                      <div className="h-1.5 bg-slate-800 rounded w-full" />
                     </div>
                   </div>
                 </div>
@@ -253,9 +233,6 @@ export default function BriefingsPage() {
                 <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none text-white">
                   INCOMPLETE DATA <br /> IS SYSTEM RISK.
                 </h2>
-                <p className="text-red-100 uppercase font-mono text-[11px] tracking-[0.3em] max-w-xl mx-auto leading-relaxed italic font-bold">
-                  Generic briefings provide context. A pulse-check provides recovery. Start your private forensic audit today.
-                </p>
                 <div className="pt-6">
                   <button 
                     onClick={() => { window.location.href = '/pulse-check/assessment'; }}
@@ -270,7 +247,7 @@ export default function BriefingsPage() {
           <div className="pt-16 border-t border-slate-900 flex flex-col items-center text-center space-y-4 opacity-40">
             <AlertTriangle size={24} className="text-red-600" />
             <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.6em] max-w-lg italic font-bold">
-              WARNING: UNAUTHORIZED DISTRIBUTION OF THESE BRIEFINGS WILL TRIGGER SYSTEM-WIDE REVOCATION OF CREDENTIALS.
+              WARNING: UNAUTHORIZED DISTRIBUTION WILL TRIGGER REVOCATION.
             </p>
           </div>
         </div>
