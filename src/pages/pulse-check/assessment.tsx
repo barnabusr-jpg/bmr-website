@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, ArrowLeft, Activity, ShieldCheck, AlertTriangle, Lock } from "lucide-react";
+import { Terminal, ArrowLeft, Activity, AlertTriangle, Lock } from "lucide-react";
 
 type Role = 'executive' | 'managerial' | 'technical';
 
@@ -20,6 +20,24 @@ interface Question {
   options?: string[];
 }
 
+// Moved outside to satisfy useMemo dependency rules
+const MASTER_QUESTIONS: Record<string, Question[]> = {
+  managerial: [
+    { id: 'mgr_1', text: "How often does your team manually fix AI outputs?", weight: "Rework Tax", type: "select", options: ["Never", "Rarely (1–10%)", "Sometimes (10–30%)", "Often (30–50%)", "Always (>50%)"] },
+    { id: 'mgr_2', text: "Has your team's overtime increased since deploying AI?", weight: "Labor Leakage", type: "select", options: ["No", "10–30%", "30–50%", "50%+"] },
+    { id: 'mgr_3', text: "How many junior employees can manually perform tasks now handled by AI?", weight: "Expertise Debt", type: "range", min: 0, max: 100 },
+    { id: 'mgr_4', text: "Are AI-generated errors caught by the team or by the end client?", weight: "Systemic Risk", type: "select", options: ["Internal QA", "Human Spot-check", "Client Reported", "Undetected"] },
+    { id: 'mgr_5', text: "Does the team feel they are 'working for the AI' or 'using the AI'?", weight: "Agency Loss", type: "select", options: ["Using", "Both", "Working for", "Resistant"] },
+    { id: 'mgr_6', text: "What percentage of 'completed' AI tasks require a second human pass?", weight: "Value Leak", type: "range", min: 0, max: 100 },
+    { id: 'mgr_7', text: "Is there a documented protocol for when AI logic contradicts human expertise?", weight: "Logic Authority", type: "select", options: ["Yes, clear protocol", "Informal consensus", "Human always yields", "No protocol exists"] },
+  ],
+  shared: [
+    { id: 'sh_1', text: "Does the AI provide a verifiable audit trail for every decision?", weight: "Structural Integrity", type: "select", options: ["Yes, fully", "Partially", "No", "We don't know"] },
+    { id: 'sh_2', text: "Are AI hallucinations caught by automated filters or human review?", weight: "Safety Buffer", type: "select", options: ["Automated filters", "Human review", "Both", "Neither"] },
+    { id: 'sh_3', text: "Does a single model failure bring down the entire logic chain?", weight: "Cascade Risk", type: "select", options: ["No", "Partially", "Yes", "We don't know"] },
+  ]
+};
+
 export default function AssessmentPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -27,37 +45,17 @@ export default function AssessmentPage() {
   const [answers, setAnswers] = useState<Record<string, number | string>>({});
   const [isFinalizing, setIsFinalizing] = useState(false);
 
-  // THE RECONSTRUCTED 12-STEP FORENSIC ARRAY
-  const questions: Record<string, Question[]> = {
-    managerial: [
-      { id: 'mgr_1', text: "How often does your team manually fix AI outputs?", weight: "Rework Tax", type: "select", options: ["Never", "Rarely (1–10%)", "Sometimes (10–30%)", "Often (30–50%)", "Always (>50%)"] },
-      { id: 'mgr_2', text: "Has your team's overtime increased since deploying AI?", weight: "Labor Leakage", type: "select", options: ["No", "10–30%", "30–50%", "50%+"] },
-      { id: 'mgr_3', text: "How many junior employees can manually perform tasks now handled by AI?", weight: "Expertise Debt", type: "range", min: 0, max: 100 },
-      { id: 'mgr_4', text: "Are AI-generated errors caught by the team or by the end client?", weight: "Systemic Risk", type: "select", options: ["Internal QA", "Human Spot-check", "Client Reported", "Undetected"] },
-      { id: 'mgr_5', text: "Does the team feel they are 'working for the AI' or 'using the AI'?", weight: "Agency Loss", type: "select", options: ["Using", "Both", "Working for", "Resistant"] },
-      { id: 'mgr_6', text: "What percentage of 'completed' AI tasks require a second human pass?", weight: "Value Leak", type: "range", min: 0, max: 100 },
-      { id: 'mgr_7', text: "Is there a documented protocol for when AI logic contradicts human expertise?", weight: "Logic Authority", type: "select", options: ["Yes, clear protocol", "Informal consensus", "Human always yields", "No protocol exists"] },
-    ],
-    // Shared questions complete the 10-question core (Steps 2-11)
-    shared: [
-      { id: 'sh_1', text: "Does the AI provide a verifiable audit trail for every decision?", weight: "Structural Integrity", type: "select", options: ["Yes, fully", "Partially", "No", "We don't know"] },
-      { id: 'sh_2', text: "Are AI hallucinations caught by automated filters or human review?", weight: "Safety Buffer", type: "select", options: ["Automated filters", "Human review", "Both", "Neither"] },
-      { id: 'sh_3', text: "Does a single model failure bring down the entire logic chain?", weight: "Cascade Risk", type: "select", options: ["No", "Partially", "Yes", "We don't know"] },
-    ]
-  };
-
   const currentQuestions = useMemo(() => {
     if (!role) return [];
-    // If managerial isn't selected, it defaults to executive or technical logic (not shown here for brevity)
-    const roleBase = questions[role] || questions.managerial; 
-    return [...roleBase, ...questions.shared];
+    const roleBase = MASTER_QUESTIONS[role] || MASTER_QUESTIONS.managerial; 
+    return [...roleBase, ...MASTER_QUESTIONS.shared];
   }, [role]);
 
-  // MATH: Identity(1) + Questions(10) + Verdict(1) = 12 Total Steps
   const totalSteps = 12; 
   const progress = Math.round((step / (totalSteps - 1)) * 100);
 
   const selectOption = (val: number | string) => {
+    if (!currentQuestions[step - 1]) return;
     const qId = currentQuestions[step - 1].id;
     setAnswers(prev => ({ ...prev, [qId]: val }));
     setTimeout(() => setStep(s => s + 1), 300);
@@ -72,7 +70,8 @@ export default function AssessmentPage() {
         body: JSON.stringify({ role, answers }),
       });
       router.push('/pulse-check/results');
-    } catch (error) {
+    } catch {
+      // Cleaned up unused error variable
       router.push('/pulse-check/results'); 
     }
   };
@@ -130,12 +129,15 @@ export default function AssessmentPage() {
                       <input 
                         type="range" min={0} max={100} 
                         value={answers[currentQuestions[step-1]?.id] || 50}
-                        onChange={(e) => setAnswers(prev => ({ ...prev, [currentQuestions[step-1].id]: parseInt(e.target.value) }))}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          setAnswers(prev => ({ ...prev, [currentQuestions[step-1].id]: val }));
+                        }}
                         className="w-full accent-red-600 h-1 bg-slate-900 appearance-none cursor-pointer" 
                       />
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-mono text-slate-700 uppercase tracking-widest font-black italic">Nominal</span>
-                        <button onClick={() => setStep(s => s + 1)} className="bg-white text-black px-6 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">Confirm Metric</button>
+                        <button onClick={() => setStep(s => s + 1)} className="bg-white text-black px-6 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)]">Confirm Metric</button>
                         <span className="text-red-600 text-[10px] font-mono uppercase tracking-widest font-black italic">Critical Failure</span>
                       </div>
                     </div>
@@ -146,8 +148,8 @@ export default function AssessmentPage() {
                 <div className="text-center py-20 space-y-10 border border-red-900/20 p-12 bg-red-950/5 relative">
                   <AlertTriangle className="h-16 w-16 text-red-600 mx-auto animate-pulse" />
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter text-red-600">Diagnostic Complete</h2>
-                  <button onClick={handleFinalize} disabled={isFinalizing} className="w-full bg-white text-black font-black py-6 uppercase text-[12px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all">
-                    {isFinalizing ? "Generating..." : "Generate Verdict"}
+                  <button onClick={handleFinalize} disabled={isFinalizing} className="w-full bg-white text-black font-black py-6 uppercase text-[12px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all shadow-2xl">
+                    {isFinalizing ? "Generating Verdict..." : "Generate Verdict"}
                   </button>
                 </div>
               )}
