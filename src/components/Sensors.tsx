@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { motion } from "framer-motion";
 import { Search, ShieldAlert, Zap, Microscope } from "lucide-react";
@@ -35,48 +37,49 @@ const SENSORS = [
 
 export default function Sensors() {
   return (
-    <section className="bg-white py-24 px-6">
+    <section className="bg-[#020617] py-32 px-6 border-y border-slate-900">
       <div className="container mx-auto max-w-7xl">
-        <div className="mb-16 text-center">
-          <h2 className="text-xs font-black tracking-[0.5em] text-slate-400 uppercase mb-4">
-            The 4-Sensor Array
+        <div className="mb-20 text-left border-l-4 border-red-600 pl-8">
+          <h2 className="text-[10px] font-black tracking-[0.5em] text-red-600 uppercase mb-4 italic">
+            SIGNAL ANALYSIS // SENSOR-ARRAY-V3
           </h2>
-          <h3 className="text-4xl font-black italic text-slate-900 uppercase tracking-tight">
-            Detecting Systemic Drift
+          <h3 className="text-5xl md:text-7xl font-black italic text-white uppercase tracking-tighter leading-none">
+            DETECTING SYSTEMIC <span className="text-red-600">DRIFT</span>
           </h3>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-px bg-slate-200 border border-slate-200">
+        {/* Removed the white background grid and replaced with a clean gap */}
+        <div className="grid md:grid-cols-2 gap-6">
           {SENSORS.map((sensor, index) => (
             <motion.div 
               key={sensor.id}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
               viewport={{ once: true }}
-              className="bg-white p-10 group hover:bg-slate-50 transition-colors"
+              transition={{ delay: index * 0.1 }}
+              className="bg-slate-900/10 border border-slate-900 p-12 group hover:border-red-600/50 transition-all shadow-2xl relative overflow-hidden"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="p-3 bg-slate-900 text-white group-hover:bg-red-600 transition-colors">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="p-3 bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.3)]">
                   {sensor.icon}
                 </div>
-                <span className="text-[10px] font-black text-slate-400 tracking-widest uppercase">
+                <span className="text-[10px] font-black text-slate-700 tracking-widest uppercase font-mono italic">
                   {sensor.id}
                 </span>
               </div>
               
-              <h4 className="text-2xl font-black mb-4 italic uppercase tracking-tighter text-slate-900">
+              <h4 className="text-3xl font-black mb-4 italic uppercase tracking-tighter text-white">
                 {sensor.label}
               </h4>
-              <p className="text-slate-600 mb-8 leading-relaxed text-sm font-medium">
+              <p className="text-slate-500 mb-10 leading-relaxed text-sm font-medium italic uppercase tracking-tight">
                 {sensor.copy}
               </p>
 
-              <div className="bg-slate-900 p-6 font-mono border-l-4 border-red-600">
-                <p className="text-[10px] text-red-500 font-black uppercase tracking-widest mb-2">
-                  Forensic Probe:
+              <div className="bg-black/40 p-8 border-l-2 border-red-600">
+                <p className="text-[9px] text-red-600 font-black uppercase tracking-[0.4em] mb-3 italic">
+                  FORENSIC PROBE //
                 </p>
-                <p className="text-white text-xs leading-relaxed">
+                <p className="text-slate-400 text-xs font-mono leading-relaxed uppercase tracking-tighter">
                   {sensor.probe}
                 </p>
               </div>
