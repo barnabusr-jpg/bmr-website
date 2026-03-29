@@ -20,7 +20,6 @@ interface Question {
   options?: string[];
 }
 
-// Moved outside to satisfy useMemo dependency rules
 const MASTER_QUESTIONS: Record<string, Question[]> = {
   managerial: [
     { id: 'mgr_1', text: "How often does your team manually fix AI outputs?", weight: "Rework Tax", type: "select", options: ["Never", "Rarely (1–10%)", "Sometimes (10–30%)", "Often (30–50%)", "Always (>50%)"] },
@@ -64,14 +63,22 @@ export default function AssessmentPage() {
   const handleFinalize = async () => {
     setIsFinalizing(true);
     try {
-      await fetch('/api/pulse-check', {
+      const response = await fetch('/api/pulse-check', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ role, answers }),
       });
-      router.push('/pulse-check/results');
+      
+      const data = await response.json();
+      
+      // CRITICAL: Synchronized Key
+      sessionStorage.setItem('bmr_results_data', JSON.stringify(data));
+      
+      // Verification Delay before Redirect
+      setTimeout(() => {
+        router.push('/pulse-check/results');
+      }, 150);
     } catch {
-      // Cleaned up unused error variable
       router.push('/pulse-check/results'); 
     }
   };
@@ -82,7 +89,6 @@ export default function AssessmentPage() {
       <Header />
       <main className="pt-40 pb-20 px-6 flex flex-col items-center justify-center">
         <div className="max-w-2xl w-full space-y-12">
-          
           <div className="space-y-4">
             <div className="flex justify-between items-center text-[10px] font-mono uppercase tracking-[0.3em]">
               <div className="flex items-center gap-2 text-red-600 font-black">
@@ -98,7 +104,6 @@ export default function AssessmentPage() {
 
           <AnimatePresence mode="wait">
             <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="min-h-[400px]">
-              
               {step === 0 ? (
                 <div className="space-y-10">
                   <h2 className="text-5xl font-black italic uppercase tracking-tighter">Initialize Identity</h2>
@@ -117,7 +122,6 @@ export default function AssessmentPage() {
                     <span className="text-red-600 font-mono text-[9px] font-black uppercase tracking-[0.4em]">Variance: {currentQuestions[step-1]?.weight}</span>
                     <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-none md:text-5xl">{currentQuestions[step-1]?.text}</h2>
                   </div>
-
                   {currentQuestions[step-1]?.type === "select" ? (
                     <div className="grid gap-3">
                       {currentQuestions[step-1].options?.map((opt) => (
@@ -126,29 +130,23 @@ export default function AssessmentPage() {
                     </div>
                   ) : (
                     <div className="space-y-12 py-10">
-                      <input 
-                        type="range" min={0} max={100} 
-                        value={answers[currentQuestions[step-1]?.id] || 50}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value);
-                          setAnswers(prev => ({ ...prev, [currentQuestions[step-1].id]: val }));
-                        }}
-                        className="w-full accent-red-600 h-1 bg-slate-900 appearance-none cursor-pointer" 
-                      />
+                      <input type="range" min={0} max={100} value={answers[currentQuestions[step-1]?.id] || 50}
+                        onChange={(e) => setAnswers(prev => ({ ...prev, [currentQuestions[step-1].id]: parseInt(e.target.value) }))}
+                        className="w-full accent-red-600 h-1 bg-slate-900 appearance-none cursor-pointer" />
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-mono text-slate-700 uppercase tracking-widest font-black italic">Nominal</span>
-                        <button onClick={() => setStep(s => s + 1)} className="bg-white text-black px-6 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-[0_0_15px_rgba(255,255,255,0.1)]">Confirm Metric</button>
+                        <button onClick={() => setStep(s => s + 1)} className="bg-white text-black px-6 py-2 text-[10px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">Confirm Metric</button>
                         <span className="text-red-600 text-[10px] font-mono uppercase tracking-widest font-black italic">Critical Failure</span>
                       </div>
                     </div>
                   )}
-                  <button onClick={() => setStep(s => s - 1)} className="text-slate-700 hover:text-white uppercase text-[9px] font-black tracking-[0.3em] flex items-center gap-2 transition-colors"><ArrowLeft size={10} /> Backtrack Trace</button>
+                  <button onClick={() => setStep(s => s - 1)} className="text-slate-700 hover:text-white uppercase text-[9px] font-black tracking-[0.3em] flex items-center gap-2"><ArrowLeft size={10} /> Backtrack Trace</button>
                 </div>
               ) : (
                 <div className="text-center py-20 space-y-10 border border-red-900/20 p-12 bg-red-950/5 relative">
                   <AlertTriangle className="h-16 w-16 text-red-600 mx-auto animate-pulse" />
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter text-red-600">Diagnostic Complete</h2>
-                  <button onClick={handleFinalize} disabled={isFinalizing} className="w-full bg-white text-black font-black py-6 uppercase text-[12px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all shadow-2xl">
+                  <button onClick={handleFinalize} disabled={isFinalizing} className="w-full bg-white text-black font-black py-6 uppercase text-[12px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all">
                     {isFinalizing ? "Generating Verdict..." : "Generate Verdict"}
                   </button>
                 </div>
