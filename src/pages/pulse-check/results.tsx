@@ -5,7 +5,7 @@ import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from "framer-motion";
-import { AlertTriangle, ShieldAlert, Activity, Lock, RefreshCcw, Download, FileText } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Activity, Lock, RefreshCcw, Download } from 'lucide-react';
 
 type Archetype = 'Replacement Trap' | 'Hollow Chevron' | 'Shadow Shear' | 'Collective Delusion';
 
@@ -51,7 +51,7 @@ export default function PulseCheckResults() {
   if (error) return (
     <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-[0.3em] gap-6 px-6 text-center">
       <AlertTriangle className="h-12 w-12" />
-      <div className="space-y-2">
+      <div className="space-y-2 text-center">
         <p className="font-black text-xl italic tracking-tighter text-white">Forensic Integrity Failure</p>
         <p className="text-slate-600 text-[10px] font-bold">SESSION DATA CORRUPTED OR EXPIRED.</p>
       </div>
@@ -98,8 +98,8 @@ export default function PulseCheckResults() {
         <div className="max-w-5xl mx-auto space-y-12">
           
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-slate-900 pb-12">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
+            <div className="space-y-4 text-left">
+              <div className="flex items-center gap-3 text-left">
                 <ShieldAlert className="text-red-600" size={16} />
                 <span className="text-red-600 font-mono text-[10px] font-black tracking-[0.5em] uppercase text-left">INTERNAL DIAGNOSTIC: COMPLETED</span>
               </div>
@@ -117,7 +117,7 @@ export default function PulseCheckResults() {
               <AlertTriangle size={240} />
             </div>
 
-            <div className="space-y-12 relative z-10">
+            <div className="space-y-12 relative z-10 text-left">
               <div className="space-y-4 text-left">
                 <span className="text-slate-600 font-mono text-[10px] font-black tracking-[0.4em] uppercase underline italic text-left">IDENTIFIED SYSTEM ARCHETYPE</span>
                 <h2 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter text-white leading-none text-left">
@@ -126,7 +126,7 @@ export default function PulseCheckResults() {
                 <div className="flex flex-wrap items-center gap-6 font-mono text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 pt-4 text-left">
                   <span className="flex items-center gap-2 italic"><Activity size={12} className="text-red-600" /> DECAY RATE: {result.fractureVelocity}/MO</span>
                   <span className="text-slate-800">•</span>
-                  <span className="flex items-center gap-2 italic underline italic font-black text-red-600">COLLAPSE WINDOW: {daysToCollapse} DAYS</span>
+                  <span className="flex items-center gap-2 italic underline font-black text-red-600">COLLAPSE WINDOW: {daysToCollapse} DAYS</span>
                 </div>
               </div>
 
@@ -139,12 +139,12 @@ export default function PulseCheckResults() {
                      </p>
                    </div>
                    <div className="space-y-3 text-left">
-                     <div className="flex justify-between items-end px-1 font-mono text-[10px] text-left">
-                       <span className="text-slate-600 uppercase font-black">DIVERGENCE INDEX (Δ)</span>
-                       <span className="text-red-600 font-black italic">{result.deltaGap.toFixed(1)}/10.0</span>
+                     <div className="flex justify-between items-end px-1 font-mono text-[10px] text-left text-slate-600 uppercase font-black">
+                       <span>DIVERGENCE INDEX (Δ)</span>
+                       <span className="text-red-600 italic font-black">{result.deltaGap.toFixed(1)}/10.0</span>
                      </div>
                      <div className="w-full bg-slate-950 h-3 border border-slate-800 p-0.5">
-                       <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((result.deltaGap / 10) * 100, 100)}%` }} transition={{ duration: 2 }} className="h-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]" />
+                       <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((result.deltaGap / 10) * 100, 100)}%` }} transition={{ duration: 2 }} className="h-full bg-red-600" />
                      </div>
                    </div>
                 </div>
@@ -152,7 +152,7 @@ export default function PulseCheckResults() {
                 <div className="bg-red-950/5 border border-red-600/20 p-8 space-y-8 relative shadow-inner text-left">
                   <div className="space-y-1 text-left">
                     <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.5em] italic text-left">ANNUAL PROFIT HEMORRHAGE (EST)</span>
-                    <div className="text-6xl md:text-7xl font-black text-white tracking-tighter italic text-left underline italic">
+                    <div className="text-6xl md:text-7xl font-black text-white tracking-tighter italic text-left underline">
                       ${result.financialImpact.toFixed(1)}<span className="text-red-600">M</span>
                     </div>
                   </div>
@@ -188,7 +188,7 @@ export default function PulseCheckResults() {
 
           <div className="grid md:grid-cols-2 gap-4 pt-12 text-center">
              <button disabled className="bg-slate-900 text-slate-700 p-10 flex flex-col items-center justify-center cursor-not-allowed border border-slate-800 opacity-50">
-                <Lock className="h-5 w-5 mb-3 text-slate-700" />
+                <Lock className="h-5 w-5 mb-3" />
                 <span className="font-black text-[10px] tracking-[0.4em] uppercase">FULL AUDIT: RESTRICTED</span>
              </button>
              <button 
