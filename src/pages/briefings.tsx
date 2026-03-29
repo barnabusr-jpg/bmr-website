@@ -5,7 +5,7 @@ import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from "framer-motion";
-import { ArrowRight, Activity, ShieldAlert, Zap } from "lucide-react";
+import { ArrowRight, ShieldAlert } from "lucide-react";
 
 const IMPACT_COLORS = { HIGH: "text-yellow-500", CRITICAL: "text-red-500", STABILIZING: "text-green-500" } as const;
 const IMPACT_DOTS = { HIGH: "bg-yellow-500", CRITICAL: "bg-red-500", STABILIZING: "bg-green-500" } as const;
@@ -16,12 +16,6 @@ const BRIEFINGS = [
 ];
 
 export default function BriefingsPage() {
-  const getThreatLevel = () => {
-    if (typeof window === 'undefined') return "OSCILLATING";
-    const hour = new Date().getHours();
-    return (hour >= 18 || hour <= 4) ? "CRITICAL" : "OSCILLATING";
-  };
-
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-red-600/30">
       <Head><title>BMR | FORENSIC BRIEFINGS</title></Head>
@@ -33,19 +27,16 @@ export default function BriefingsPage() {
               <ShieldAlert size={14} className="text-red-500" />
               <span className="text-white font-mono text-[10px] tracking-[0.2em] font-black uppercase text-left">ADMIN NODE SEC-04</span>
             </div>
-            <div className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.5em] italic text-left">
-              THREAT LEVEL <span className="text-red-600">{getThreatLevel()}</span>
-            </div>
           </motion.div>
 
           <section className="space-y-6 border-l-2 border-red-600 pl-6 text-left">
-            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] text-left">FORENSIC <br /><span className="text-red-600">BRIEFINGS</span></h1>
+            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] text-left">FORENSIC <br /><span className="text-red-600 uppercase">BRIEFINGS</span></h1>
           </section>
 
           <div className="grid gap-6">
             {BRIEFINGS.map((brief) => (
               <motion.div key={brief.id} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="group relative bg-slate-900/10 border border-slate-900 p-8 md:p-10 hover:border-red-600/50 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-8 overflow-hidden text-left shadow-2xl">
-                <div className="absolute -top-2 -left-2 w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-black font-mono text-[10px] italic z-20">{brief.id}</div>
+                <div className="absolute -top-2 -left-2 w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-black font-mono text-[10px] italic z-20 shadow-2xl">{brief.id}</div>
                 <div className="space-y-6 z-10 text-left">
                   <div className="flex flex-wrap items-center gap-4 text-left font-mono">
                     <span className="bg-red-600 text-white text-[9px] font-black px-3 py-1 uppercase">{brief.tag}</span>
