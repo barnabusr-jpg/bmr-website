@@ -5,7 +5,6 @@ import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ComparisonGrid from "@/components/home/ComparisonGrid";
-import { motion } from "framer-motion";
 import { Database, Zap } from "lucide-react";
 
 export default function MethodologyPage() {
@@ -16,8 +15,8 @@ export default function MethodologyPage() {
       <main className="pt-44 pb-24 px-6 text-left">
         <div className="max-w-6xl mx-auto space-y-24">
           <header className="border-l-4 border-red-600 pl-8 space-y-4 text-left">
-             <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-none italic text-white">THE <span className="text-red-600 uppercase">Math.</span></h1>
-             <p className="text-slate-500 font-bold uppercase text-xs tracking-widest italic">FORENSIC COMPARISON VS. TRADITIONAL CONSULTING</p>
+             <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-none italic text-white">THE <span className="text-red-600 uppercase text-glow-red">MATH.</span></h1>
+             <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.4em] italic">FORENSIC COMPARISON VS. TRADITIONAL CONSULTING</p>
           </header>
 
           <ComparisonGrid />
