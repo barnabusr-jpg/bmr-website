@@ -4,9 +4,8 @@ import React from 'react';
 import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { 
-  FileText, 
   Lock, 
   ArrowRight, 
   Activity, 
@@ -65,6 +64,8 @@ const BRIEFINGS = [
 ];
 
 export default function BriefingsPage() {
+  const sessionId = "SEC-NODE-04";
+
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-red-600/30">
       <Head>
@@ -96,7 +97,7 @@ export default function BriefingsPage() {
               </div>
             </div>
             <div className="text-[9px] font-mono text-slate-600 uppercase tracking-widest italic">
-              Session ID: {Math.random().toString(36).substring(7).toUpperCase()} // NODE: SEC-04
+              Session ID: {sessionId} // NODE: SEC-04
             </div>
           </motion.div>
 
@@ -163,7 +164,7 @@ export default function BriefingsPage() {
                   </button>
                 </div>
 
-                {/* --- Forensic Document Preview (Visual Hook) --- */}
+                {/* --- Forensic Document Preview --- */}
                 <div className="absolute right-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none hidden lg:block translate-x-10 group-hover:translate-x-0">
                   <div className="w-44 h-56 bg-slate-900 border border-slate-700 rounded-sm shadow-2xl overflow-hidden rotate-3 group-hover:rotate-0 transition-transform">
                     <div className="h-6 bg-slate-800 flex items-center px-2 border-b border-slate-700 justify-between">
@@ -203,7 +204,7 @@ export default function BriefingsPage() {
                 </p>
                 <div className="pt-4">
                   <button 
-                    onClick={() => window.location.href = '/pulse-check/assessment'}
+                    onClick={() => { window.location.href = '/pulse-check/assessment'; }}
                     className="bg-black text-white px-12 py-6 font-black uppercase text-[12px] tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-xl"
                   >
                     INITIALIZE DIAGNOSTIC
@@ -212,7 +213,6 @@ export default function BriefingsPage() {
              </div>
           </section>
 
-          {/* Footer Clearance Warning */}
           <div className="pt-12 border-t border-slate-900 flex flex-col items-center text-center space-y-4 opacity-30">
             <AlertTriangle size={20} className="text-red-600" />
             <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.6em] max-w-md">
