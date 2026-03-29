@@ -72,6 +72,9 @@ const BRIEFINGS = [
     vulnerability: "FEB 2026",
     source: "Stanford HAI",
     impact: "STABILIZING" as keyof typeof IMPACT_COLORS,
+    classification: "RESTRICTED // PROTOCOL-7",
+    pages: 12,
+    attachments: 2,
     desc: "Stanford 2026 Briefing: The transition from 'AI Assistance' to 'Systemic Negligence' in automated decision-making.",
     status: "UNLOCKED",
     path: "https://hai.stanford.edu/news/regulating-ai-risk"
@@ -114,47 +117,47 @@ export default function BriefingsPage() {
               <div className="flex items-center gap-3 border-l border-red-600/50 pl-4">
                 <Activity size={12} className="text-red-500 animate-pulse" />
                 <span className="text-white font-mono text-[10px] tracking-[0.2em] font-black uppercase">
-                  ADMIN // {sessionId}
+                  ADMIN {sessionId}
                 </span>
               </div>
               <div className="hidden sm:flex items-center gap-2 border-l border-red-600/50 pl-4">
                 <Lock size={12} className="text-red-500 opacity-60" />
-                <span className="text-red-500/80 font-mono text-[9px] tracking-widest uppercase text-center">
-                  SESSION: 23:59 UTC
+                <span className="text-red-500/80 font-mono text-[9px] tracking-widest uppercase">
+                  SESSION 2359 UTC
                 </span>
               </div>
             </div>
             <div className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.5em] italic">
-              THREAT LEVEL: <span className="text-red-600">{getThreatLevel()}</span> // CONFIDENCE: 92%
+              THREAT LEVEL <span className="text-red-600">{getThreatLevel()}</span> CONFIDENCE 92%
             </div>
           </motion.div>
 
-          <section className="space-y-6">
+          <section className="space-y-6 text-left">
             <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4">
               FORENSIC <br />
-              <span className="text-red-600">BRIEFINGS.</span>
+              <span className="text-red-600">BRIEFINGS</span>
             </h1>
             <p className="max-w-xl text-slate-500 font-bold leading-relaxed italic uppercase text-xs tracking-tight border-l border-red-600 pl-6">
-              Declassified intelligence on operational divergence and system decay. Access is restricted to leadership tasked with structural recovery.
+              Intelligence on operational divergence and system decay. Access is restricted to leadership tasked with structural recovery.
             </p>
           </section>
 
           <div className="grid gap-6">
-            {BRIEFINGS.map((brief, i) => (
+            {BRIEFINGS.map((brief) => (
               <motion.div 
                 key={brief.id}
                 initial={{ opacity: 0, x: -20, scale: 0.98 }}
                 whileInView={{ opacity: 1, x: 0, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ delay: i * 0.1, type: "spring", stiffness: 200, damping: 20 }}
+                transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 whileHover={{ scale: 1.005 }}
-                className="group relative bg-slate-900/10 border border-slate-900 p-8 md:p-10 hover:border-red-600/50 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-8 overflow-hidden"
+                className="group relative bg-slate-900/10 border border-slate-900 p-8 md:p-10 hover:border-red-600/50 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-8 overflow-hidden text-left"
               >
                 <div className="absolute -top-2 -left-2 w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-black font-mono text-[10px] italic z-20 shadow-2xl">
                   {brief.id}
                 </div>
 
-                <div className="space-y-6 z-10">
+                <div className="space-y-6 z-10 text-left">
                   <div className="flex flex-wrap items-center gap-4">
                     <span className="bg-red-600 text-white text-[9px] font-black px-3 py-1 tracking-widest uppercase italic shadow-[0_0_15px_rgba(220,38,38,0.3)]">
                       {brief.tag}
@@ -165,7 +168,7 @@ export default function BriefingsPage() {
                     <div className="flex items-center gap-2 border-l border-slate-800 pl-4">
                       <div className={`w-2 h-2 rounded-full animate-pulse ${IMPACT_DOTS[brief.impact]}`} />
                       <span className={`text-[9px] font-mono font-black uppercase tracking-widest ${IMPACT_COLORS[brief.impact]}`}>
-                        IMPACT: {brief.impact}
+                        IMPACT {brief.impact}
                       </span>
                     </div>
                   </div>
@@ -176,9 +179,8 @@ export default function BriefingsPage() {
                     </h2>
                     
                     <div className="flex flex-wrap items-center gap-3 font-mono text-[9px] font-black tracking-[0.15em] italic">
-                       <span className="text-red-500/80">CLASS: {brief.classification || "RESTRICTED"}</span>
-                       <span className="text-slate-800">•</span>
-                       <span className="text-slate-500">{brief.pages || 10} PAGES</span>
+                       <span className="text-red-500/80">CLASS {brief.classification}</span>
+                       <span className="text-slate-500">{brief.pages} PAGES</span>
                     </div>
 
                     <p className="text-slate-500 text-sm font-medium italic max-w-xl leading-relaxed uppercase tracking-tight">
@@ -187,7 +189,7 @@ export default function BriefingsPage() {
                     
                     <div className="flex items-center gap-3 pt-2">
                       <span className="text-[8px] font-mono text-red-600/60 uppercase tracking-widest font-black italic">
-                        VULNERABILITY IDENTIFIED: {brief.vulnerability}
+                        VULNERABILITY IDENTIFIED {brief.vulnerability}
                       </span>
                     </div>
                   </div>
@@ -205,9 +207,8 @@ export default function BriefingsPage() {
                 <div className="absolute right-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none hidden lg:block translate-x-10 group-hover:translate-x-0">
                   <div className="w-48 h-64 bg-slate-900 border border-slate-700 rounded-sm shadow-[0_40px_80px_rgba(0,0,0,0.8)] overflow-hidden rotate-2 group-hover:rotate-0 transition-transform duration-500">
                     <div className="h-8 bg-slate-800 flex items-center px-3 border-b border-slate-700 justify-between">
-                      <div className="flex gap-1.5">
-                        <div className="w-2 h-2 bg-red-500 rounded-full" />
-                        <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                      <div className="flex gap-1.5 text-red-500 font-bold text-[8px]">
+                        BMR
                       </div>
                       <ShieldCheck size={12} className="text-slate-600" />
                     </div>
@@ -230,7 +231,7 @@ export default function BriefingsPage() {
              </div>
              <div className="relative z-10 space-y-6">
                 <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none text-white text-center">
-                  INCOMPLETE DATA <br /> IS SYSTEM RISK.
+                  INCOMPLETE DATA <br /> IS SYSTEM RISK
                 </h2>
                 <div className="pt-6">
                   <button 
@@ -245,8 +246,8 @@ export default function BriefingsPage() {
 
           <div className="pt-16 border-t border-slate-900 flex flex-col items-center text-center space-y-4 opacity-40">
             <AlertTriangle size={24} className="text-red-600" />
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.6em] max-w-lg italic font-bold text-center">
-              WARNING: UNAUTHORIZED DISTRIBUTION WILL TRIGGER REVOCATION.
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.6em] max-w-lg italic font-bold text-center underline">
+              WARNING UNAUTHORIZED DISTRIBUTION WILL TRIGGER REVOCATION
             </p>
           </div>
         </div>
