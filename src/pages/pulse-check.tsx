@@ -1,10 +1,17 @@
+"use client";
+
 import React, { useState } from 'react';
-import { ForensicEngine, DiagnosticResult } from '../lib/diagnosticEngine';
+import { ShieldAlert, Activity, FileText } from 'lucide-react';
+
+// Forensic Engine & Type Imports
+import { ForensicEngine } from '../lib/diagnosticEngine';
+import type { DiagnosticResult } from '../lib/diagnosticEngine';
+
+// Component Imports
 import ForensicResultCard from '../components/ForensicResultCard';
 import ForensicSlider from '../components/ForensicSlider';
 import TriageCaptureModal from '../components/TriageCaptureModal';
 import ForensicPDFGenerator from '../lib/pdfGenerator';
-import { ShieldAlert, Activity, FileText } from 'lucide-react';
 
 export default function PulseCheck() {
   const [startTime] = useState(Date.now());
@@ -23,7 +30,7 @@ export default function PulseCheck() {
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
-    // Psychological delay for "Analysis"
+    // Psychological delay for "Analysis" - BMR Standard
     await new Promise(resolve => setTimeout(resolve, 1500));
     
     const duration = (Date.now() - startTime) / 1000;
@@ -37,16 +44,23 @@ export default function PulseCheck() {
   const handleTriageSuccess = async (email: string) => {
     if (!result) return;
     setShowTriageModal(false);
-    // Generate PDF and store the local URL
+    // Generate PDF and store the local URL for the briefing
     const url = await ForensicPDFGenerator.generate(result, email);
     setPdfUrl(url);
   };
 
-  // 1. Result State View
+  // 1. Result State View (Forensic Briefing)
   if (result && !showTriageModal) return (
     <div className="min-h-screen bg-slate-950 pt-32 pb-20 px-6 flex flex-col items-center">
       <div className="max-w-2xl w-full">
-        <ForensicResultCard result={result} onRestart={() => { setResult(null); setPdfUrl(null); }} />
+        <ForensicResultCard 
+          result={result} 
+          onRestart={() => { 
+            setResult(null); 
+            setPdfUrl(null); 
+            setRole(null);
+          }} 
+        />
         
         {pdfUrl && (
           <a 
@@ -61,12 +75,12 @@ export default function PulseCheck() {
     </div>
   );
 
-  // 2. Main Diagnostic View
+  // 2. Main Diagnostic View (Initial State)
   return (
     <div className="min-h-screen bg-slate-950 text-white pt-48 pb-20 px-6">
       <div className="max-w-xl mx-auto">
         {!role ? (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="border-l-2 border-red-600 pl-6 mb-12">
               <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-2 text-white">Initialize Audit</h1>
               <p className="text-slate-500 text-[10px] font-mono uppercase tracking-widest">Select Perspective</p>
@@ -89,17 +103,26 @@ export default function PulseCheck() {
               <ShieldAlert className="text-red-600 h-6 w-6" />
             </div>
 
-            <ForensicSlider label="Rework Volume" zone="Rework Tax" value={answers.reworkTax} onChange={(v) => setAnswers({...answers, reworkTax: v})} />
-            <ForensicSlider label="Unsanctioned LLMs" zone="Shadow AI" value={answers.shadowAI} onChange={(v) => setAnswers({...answers, shadowAI: v})} />
-            <ForensicSlider label="Knowledge Decay" zone="Expertise Debt" value={answers.expertiseDebt} onChange={(v) => setAnswers({...answers, expertiseDebt: v})} />
-            <ForensicSlider label="Strategic Gap" zone="Delta Gap" value={answers.deltaGap} onChange={(v) => setAnswers({...answers, deltaGap: v})} />
+            <div className="space-y-6">
+                <ForensicSlider label="Rework Volume" zone="Rework Tax" value={answers.reworkTax} onChange={(v) => setAnswers({...answers, reworkTax: v})} />
+                <ForensicSlider label="Unsanctioned LLMs" zone="Shadow AI" value={answers.shadowAI} onChange={(v) => setAnswers({...answers, shadowAI: v})} />
+                <ForensicSlider label="Knowledge Decay" zone="Expertise Debt" value={answers.expertiseDebt} onChange={(v) => setAnswers({...answers, expertiseDebt: v})} />
+                <ForensicSlider label="Strategic Gap" zone="Delta Gap" value={answers.deltaGap} onChange={(v) => setAnswers({...answers, deltaGap: v})} />
+            </div>
 
             <button 
               onClick={handleSubmit} 
               disabled={isSubmitting}
-              className="w-full mt-12 bg-red-600 hover:bg-white hover:text-black text-white py-6 font-black uppercase italic tracking-[0.3em] text-[10px] border border-red-600 flex items-center justify-center gap-4 transition-all"
+              className="w-full mt-12 bg-red-600 hover:bg-white hover:text-black text-white py-6 font-black uppercase italic tracking-[0.3em] text-[10px] border border-red-600 flex items-center justify-center gap-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? <><Activity className="animate-spin h-4 w-4" /> Analyzing Logic Chains...</> : 'Generate Forensic Report'}
+            </button>
+            
+            <button 
+                onClick={() => setRole(null)}
+                className="w-full mt-4 text-slate-500 hover:text-white font-mono text-[9px] uppercase tracking-widest transition-colors"
+            >
+                Return to Node Selection
             </button>
           </div>
         )}
