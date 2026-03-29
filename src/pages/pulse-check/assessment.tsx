@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useState, useMemo } from 'react';
-import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion, AnimatePresence } from "framer-motion";
-import { Terminal, ArrowLeft, Activity, AlertTriangle, Lock } from "lucide-react";
+import { Terminal, ArrowLeft, Activity, AlertTriangle } from "lucide-react";
 
 type Role = 'executive' | 'managerial' | 'technical';
 type Sector = 'finance' | 'healthcare' | 'tech' | 'services';
@@ -73,7 +72,6 @@ export default function AssessmentPage() {
       <Header />
       <main className="pt-40 pb-20 px-6 flex flex-col items-center">
         <div className="max-w-2xl w-full space-y-12">
-          {/* Progress Header */}
           <div className="space-y-4">
             <div className="flex justify-between items-center text-[10px] font-mono uppercase tracking-[0.3em]">
               <div className="flex items-center gap-2 text-red-600 font-black">
@@ -93,10 +91,9 @@ export default function AssessmentPage() {
                 <div className="space-y-12">
                   <div className="space-y-2">
                     <h2 className="text-5xl font-black italic uppercase tracking-tighter">Initialize Identity</h2>
-                    <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Sector Calibration Required</p>
+                    <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest text-center">Sector Calibration Required</p>
                   </div>
 
-                  {/* Sector Picker */}
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {[
                       { id: "finance", label: "FINANCE", risk: "COMPLIANCE" },
@@ -115,10 +112,9 @@ export default function AssessmentPage() {
                     ))}
                   </div>
 
-                  {/* Role Picker */}
                   <div className="grid gap-3 pt-4">
                     {(['executive', 'managerial', 'technical'] as Role[]).map((r) => (
-                      <button key={r} onClick={() => { setRole(r); setStep(1); }} className="w-full p-8 text-left border border-slate-900 bg-slate-950 hover:border-red-600 transition-all flex justify-between items-center group relative">
+                      <button key={r} onClick={() => { setRole(r); setStep(1); }} className="w-full p-8 text-left border border-slate-900 bg-slate-950 hover:border-red-600 transition-all flex justify-between items-center group">
                         <span className="text-2xl font-black uppercase italic text-slate-500 group-hover:text-white">{r}</span>
                         <Terminal className="h-5 w-5 text-slate-800 group-hover:text-red-600" />
                       </button>
