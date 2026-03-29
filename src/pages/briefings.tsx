@@ -71,8 +71,6 @@ const BRIEFINGS = [
 ];
 
 export default function BriefingsPage() {
-  const sessionId = "NODE-SEC-04";
-  
   const getThreatLevel = () => {
     if (typeof window === 'undefined') return "OSCILLATING";
     const hour = new Date().getHours();
@@ -95,29 +93,27 @@ export default function BriefingsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col lg:flex-row items-start lg:items-center gap-6"
           >
-            <div className="flex flex-wrap items-center gap-3 border border-red-600/50 p-3 px-5 rounded-full bg-red-600/5 backdrop-blur-md">
+            <div className="flex flex-wrap items-center gap-3 border border-red-600/50 p-3 px-5 rounded-full bg-red-600/5 backdrop-blur-md shadow-lg">
               <div className="flex items-center gap-2">
                 <ShieldAlert size={14} className="text-red-500" />
                 <span className="text-red-500 font-mono text-[10px] tracking-[0.4em] font-black uppercase">
                   CLEARANCE
                 </span>
               </div>
-              <div className="flex items-center gap-3 border-l border-red-600/50 pl-4">
+              <div className="flex items-center gap-3 border-l border-red-600/50 pl-4 font-mono text-[10px] text-white uppercase font-black">
                 <Activity size={12} className="text-red-500 animate-pulse" />
-                <span className="text-white font-mono text-[10px] tracking-[0.2em] font-black uppercase">
-                  ADMIN {sessionId}
-                </span>
+                ADMIN NODE SEC-04
               </div>
             </div>
             <div className="text-[9px] font-mono text-slate-600 uppercase tracking-[0.5em] italic">
-              THREAT {getThreatLevel()} // CONFIDENCE 92 PERCENT
+              THREAT LEVEL <span className="text-red-600">{getThreatLevel()}</span> CONFIDENCE 92 PERCENT
             </div>
           </motion.div>
 
-          <section className="space-y-6 border-l border-red-600 pl-6">
-            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4">
+          <section className="space-y-6 border-l-2 border-red-600 pl-6">
+            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8]">
               FORENSIC <br />
-              <span className="text-red-600 font-black">BRIEFINGS</span>
+              <span className="text-red-600">BRIEFINGS</span>
             </h1>
             <p className="max-w-xl text-slate-500 font-bold leading-relaxed italic uppercase text-xs tracking-tight">
               Intelligence on operational divergence and system decay. Access is restricted to leadership tasked with structural recovery.
@@ -131,7 +127,6 @@ export default function BriefingsPage() {
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true }}
-                transition={{ type: "spring", stiffness: 200, damping: 20 }}
                 className="group relative bg-slate-900/10 border border-slate-900 p-8 md:p-10 hover:border-red-600/50 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-8 overflow-hidden"
               >
                 <div className="absolute -top-2 -left-2 w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-black font-mono text-[10px] italic z-20 shadow-2xl">
@@ -159,7 +154,7 @@ export default function BriefingsPage() {
                       {brief.title}
                     </h2>
                     
-                    <div className="flex flex-wrap items-center gap-3 font-mono text-[9px] font-black tracking-[0.15em] italic text-slate-400">
+                    <div className="flex flex-wrap items-center gap-3 font-mono text-[9px] font-black tracking-[0.15em] italic text-slate-400 uppercase">
                        <span>CLASS {brief.classification}</span>
                        <span>•</span>
                        <span>{brief.pages} PAGES</span>
@@ -169,10 +164,8 @@ export default function BriefingsPage() {
                       {brief.desc}
                     </p>
                     
-                    <div className="flex items-center gap-3 pt-2">
-                      <span className="text-[8px] font-mono text-red-600/60 uppercase tracking-widest font-black italic">
-                        VULNERABILITY IDENTIFIED {brief.vulnerability}
-                      </span>
+                    <div className="flex items-center gap-3 pt-2 font-mono text-[8px] text-red-600/60 uppercase tracking-widest font-black italic">
+                      VULNERABILITY IDENTIFIED {brief.vulnerability}
                     </div>
                   </div>
                 </div>
@@ -180,7 +173,7 @@ export default function BriefingsPage() {
                 <div className="z-10 shrink-0">
                    <button 
                     onClick={() => { if (brief.path) window.open(brief.path, '_blank'); }}
-                    className="bg-white text-black px-10 py-5 font-black uppercase text-[11px] tracking-[0.4em] flex items-center gap-3 hover:bg-red-600 hover:text-white transition-all shadow-2xl"
+                    className="bg-white text-black px-10 py-5 font-black uppercase text-[11px] tracking-[0.3em] flex items-center gap-3 hover:bg-red-600 hover:text-white transition-all shadow-2xl"
                    >
                     DECLASSIFY <ArrowRight size={16} />
                   </button>
@@ -189,7 +182,7 @@ export default function BriefingsPage() {
             ))}
           </div>
 
-          <section className="bg-red-600 p-12 md:p-20 text-center space-y-8 relative overflow-hidden">
+          <section className="bg-red-600 p-12 md:p-20 text-center space-y-8 relative overflow-hidden shadow-2xl">
              <div className="absolute top-0 right-0 p-4 opacity-5">
                 <Zap size={240} />
              </div>
@@ -200,13 +193,19 @@ export default function BriefingsPage() {
                 <div className="pt-6">
                   <button 
                     onClick={() => { window.location.href = '/pulse-check/assessment'; }}
-                    className="bg-black text-white px-14 py-7 font-black uppercase text-[12px] tracking-[0.5em] hover:bg-white hover:text-black transition-all shadow-xl"
+                    className="bg-black text-white px-14 py-7 font-black uppercase text-[12px] tracking-[0.5em] hover:bg-white hover:text-black transition-all"
                   >
                     INITIALIZE DIAGNOSTIC
                   </button>
                 </div>
              </div>
           </section>
+
+          <div className="pt-16 border-t border-slate-900 flex flex-col items-center text-center space-y-4 opacity-40">
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.6em] max-w-lg italic font-bold text-center underline">
+              WARNING UNAUTHORIZED DISTRIBUTION WILL TRIGGER REVOCATION
+            </p>
+          </div>
         </div>
       </main>
 
