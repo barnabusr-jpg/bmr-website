@@ -10,13 +10,24 @@ import { Terminal, ArrowLeft, Activity, ShieldCheck, AlertTriangle, Lock } from 
 
 type Role = 'executive' | 'managerial' | 'technical';
 
+// Forensic Type Definition
+interface Question {
+  id: string;
+  text: string;
+  weight: string;
+  type: "range" | "select";
+  min?: number;
+  max?: number;
+  options?: string[];
+}
+
 export default function AssessmentPage() {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [role, setRole] = useState<Role | null>(null);
   const [answers, setAnswers] = useState<Record<string, number | string>>({});
 
-  const questions = {
+  const questions: Record<string, Question[]> = {
     executive: [
       { id: 'exec_1', text: "What is your target labor reduction from AI (e.g., 20%, 30%, 50%)?", weight: "Labor Leakage", type: "range", min: 0, max: 50 },
       { id: 'exec_2', text: "Does leadership review the Verify:Serve ratio?", weight: "Operational Drift", type: "select", options: ["Yes, it's a KPI", "No, but we track others", "No, we don't measure", "What is Verify:Serve?"] },
@@ -42,13 +53,14 @@ export default function AssessmentPage() {
     ]
   };
 
-  // 🏛️ FORENSIC LOGIC SYNC
   const currentQuestions = useMemo(() => {
     if (!role) return [];
     return [...questions[role], ...questions.shared];
-  }, [role]);
+    // questions is a static constant outside the component in some setups, 
+    // but here it is inside, so we satisfy the ESLint warning from your screenshot.
+  }, [role, questions.executive, questions.managerial, questions.technical, questions.shared]);
 
-  const totalSteps = currentQuestions.length + 2; // Identity (1) + Questions (N) + Verdict (1)
+  const totalSteps = currentQuestions.length + 2; 
   const progress = Math.round((step / (totalSteps - 1)) * 100);
 
   const handleNext = () => setStep((s) => s + 1);
@@ -83,7 +95,6 @@ export default function AssessmentPage() {
       <main className="pt-40 pb-20 px-6 flex flex-col items-center justify-center">
         <div className="max-w-2xl w-full space-y-12">
           
-          {/* HARDENED PROGRESS HEADER */}
           <div className="space-y-4">
             <div className="flex justify-between items-center text-[10px] font-mono uppercase tracking-[0.3em]">
               <div className="flex items-center gap-2 text-red-600 font-black">
@@ -160,8 +171,8 @@ export default function AssessmentPage() {
                       <div className="space-y-12 py-10">
                         <input 
                           type="range" 
-                          min={currentQuestions[step-1].min} 
-                          max={currentQuestions[step-1].max} 
+                          min={currentQuestions[step-1].min ?? 0} 
+                          max={currentQuestions[step-1].max ?? 100} 
                           className="w-full accent-red-600 h-1 bg-slate-900 rounded-none appearance-none cursor-pointer" 
                           onMouseUp={(e) => selectOption(parseInt((e.target as HTMLInputElement).value))} 
                         />
