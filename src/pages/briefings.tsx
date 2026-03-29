@@ -6,7 +6,6 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from "framer-motion";
 import { 
-  Lock, 
   ArrowRight, 
   Activity, 
   ShieldAlert,
@@ -118,7 +117,7 @@ export default function BriefingsPage() {
           <section className="space-y-6 border-l border-red-600 pl-6">
             <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-[0.8] mb-4">
               FORENSIC <br />
-              <span className="text-red-600">BRIEFINGS</span>
+              <span className="text-red-600 font-black">BRIEFINGS</span>
             </h1>
             <p className="max-w-xl text-slate-500 font-bold leading-relaxed italic uppercase text-xs tracking-tight">
               Intelligence on operational divergence and system decay. Access is restricted to leadership tasked with structural recovery.
