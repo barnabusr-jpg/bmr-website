@@ -5,7 +5,7 @@ import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from "framer-motion";
-import { AlertTriangle, ShieldAlert, Activity, Lock, RefreshCcw } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Activity, Lock, RefreshCcw, Download, FileText, ChevronRight } from 'lucide-react';
 
 type Archetype = 'Replacement Trap' | 'Hollow Chevron' | 'Shadow Shear' | 'Collective Delusion';
 
@@ -17,7 +17,6 @@ interface ResultData {
   expertiseDebt: number;
   financialImpact: number;
   fractureVelocity: number;
-  perspective: string;
 }
 
 export default function PulseCheckResults() {
@@ -25,9 +24,7 @@ export default function PulseCheckResults() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    // CRITICAL: Synchronized Key Check
     const rawData = sessionStorage.getItem('bmr_results_data');
-    
     if (rawData) {
       try {
         setResult(JSON.parse(rawData));
@@ -35,7 +32,6 @@ export default function PulseCheckResults() {
         setError(true);
       }
     } else {
-      // If data is missing, wait 1 second and check again (Handles race conditions)
       const timeout = setTimeout(() => {
         const retryData = sessionStorage.getItem('bmr_results_data');
         if (retryData) {
@@ -53,22 +49,22 @@ export default function PulseCheckResults() {
   }, []);
 
   if (error) return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-widest gap-6 px-6 text-center">
+    <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-[0.3em] gap-6 px-6 text-center">
       <AlertTriangle className="h-12 w-12" />
       <div className="space-y-2">
-        <p className="font-black text-xl tracking-tighter italic">Forensic Data Missing</p>
-        <p className="text-slate-500 text-[10px]">Session integrity check failed. Re-initialize audit.</p>
+        <p className="font-black text-xl italic tracking-tighter">Forensic Integrity Failure</p>
+        <p className="text-slate-600 text-[10px] font-bold">SESSION DATA CORRUPTED OR EXPIRED.</p>
       </div>
-      <button onClick={() => window.location.href='/pulse-check/assessment'} className="bg-white text-black px-8 py-4 font-black text-[10px] tracking-[.3em] hover:bg-red-600 hover:text-white transition-all flex items-center gap-2">
-        <RefreshCcw size={12} /> Restart Audit
+      <button onClick={() => window.location.href='/pulse-check/assessment'} className="bg-white text-black px-10 py-5 font-black text-[10px] tracking-[.4em] hover:bg-red-600 hover:text-white transition-all flex items-center gap-3">
+        <RefreshCcw size={14} /> RE-INITIALIZE AUDIT
       </button>
     </div>
   );
 
   if (!result) return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-widest gap-4">
-      <Activity className="animate-pulse h-8 w-8" /> 
-      <span className="animate-pulse italic">Analyzing Forensic Data...</span>
+    <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-widest gap-4">
+      <Activity className="animate-pulse h-10 w-10 text-red-600" /> 
+      <span className="animate-pulse italic font-black tracking-[0.5em] text-[10px]">GENERATING RISK DOSSIER...</span>
     </div>
   );
 
@@ -76,85 +72,146 @@ export default function PulseCheckResults() {
 
   const roadmap: Record<Archetype, {title: string, desc: string}[]> = {
     "Replacement Trap": [
-      { title: "Audit Training Data", desc: "Identify toxic data increasing Rework Tax." },
-      { title: "Block Unsanctioned Tools", desc: "Eliminate Shadow AI compliance risks." }
+      { title: "LOGIC AUTHORITY AUDIT", desc: "Identify and isolate toxic data segments causing logic decay." },
+      { title: "SHADOW NODE SHUTDOWN", desc: "Forced decommissioning of unsanctioned third-party LLM tools." }
     ],
     "Hollow Chevron": [
-      { title: "Manual Task Drills", desc: "Ensure staff can perform tasks without AI." },
-      { title: "Log Overrides", desc: "Track when humans override AI decisions." }
+      { title: "RECURSIVE DRIFT DRILLS", desc: "Mandatory human-in-the-loop overrides for high-stakes decisioning." },
+      { title: "EXPERTISE CAPTURE", desc: "Hard-coding senior institutional knowledge into the verification layer." }
     ],
     "Shadow Shear": [
-      { title: "Enforce Governance", desc: "Bring all AI tools under compliance." },
-      { title: "Audit Data Leakage", desc: "Secure data being input into unsanctioned tools." }
+      { title: "GOVERNANCE HARDENING", desc: "Implement BMR-7 protocol for all endpoint AI interactions." },
+      { title: "DATA LEAKAGE SWEEP", desc: "Audit and patch outgoing data streams to public model interfaces." }
     ],
     "Collective Delusion": [
-      { title: "Friction Reviews", desc: "Align executive and frontline perceptions." },
-      { title: "Stress-Test Outputs", desc: "Identify fragility under high-volume." }
+      { title: "PERCEPTION SYNC", desc: "Realignment of executive reporting vs. frontline operational reality." },
+      { title: "STRESS-TEST INFERENCE", desc: "Testing system logic against high-volatility market scenarios." }
     ]
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-red-600/30">
-      <Head><title>BMR | Verdict: {result.archetype}</title></Head>
+    <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-red-600/30">
+      <Head><title>BMR | RISK PROFILE: {result.archetype}</title></Head>
       <Header />
-      <main className="pt-40 pb-20 px-6">
-        <div className="max-w-4xl mx-auto space-y-12 text-center">
-          <div className="py-20 border border-red-900/10 bg-slate-900/20 relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-1 bg-red-600" />
-            <AlertTriangle className="h-16 w-16 text-red-600 mx-auto mb-8 animate-pulse" />
-            <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter mb-6 text-white leading-none tracking-tight">
-              {result.archetype}
-            </h1>
-            <div className="max-w-xl mx-auto px-6 space-y-10">
-              <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-slate-500 font-mono text-[9px] uppercase tracking-[0.3em] border-y border-slate-900 py-6">
-                <span>Decay Rate: <span className="text-red-600 font-black">{result.fractureVelocity}/mo</span></span>
-                <span className="hidden md:inline text-slate-800">|</span>
-                <span>Est. Collapse: <span className="text-red-600 font-black">{daysToCollapse} Days</span></span>
+      
+      <main className="pt-44 pb-24 px-6 text-left">
+        <div className="max-w-5xl mx-auto space-y-12">
+          
+          {/* --- TERMINAL HEADER --- */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 border-b border-slate-900 pb-12">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <ShieldAlert className="text-red-600" size={16} />
+                <span className="text-red-600 font-mono text-[10px] font-black tracking-[0.5em] uppercase">INTERNAL DIAGNOSTIC: COMPLETED</span>
               </div>
-              <div className="space-y-4 text-left">
-                <div className="flex justify-between items-end">
-                  <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">Divergence (Δ)</span>
-                  <span className="text-4xl font-black italic text-red-600 tracking-tighter">{result.deltaGap.toFixed(1)}</span>
-                </div>
-                <div className="w-full bg-slate-950 h-3 border border-slate-900 p-0.5">
-                  <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((result.deltaGap / 10) * 100, 100)}%` }} transition={{ duration: 2, ease: "circOut" }} className="h-full bg-gradient-to-r from-slate-900 via-red-900 to-red-600 shadow-[0_0_20px_rgba(220,38,38,0.3)]" />
-                </div>
-              </div>
-              <div className="bg-red-950/10 border border-red-900/30 p-10 relative">
-                <div className="absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
-                <div className="text-[10px] font-black text-red-600 uppercase mb-4 tracking-[0.5em] italic">Annual Profit Hemorrhage</div>
-                <div className="text-6xl md:text-7xl font-black text-white tracking-tighter italic">${result.financialImpact.toFixed(2)}<span className="text-red-600">M</span></div>
-                <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-red-900/20 text-[9px] font-mono uppercase tracking-widest text-slate-500">
-                  <div className="text-left">Rework Tax: <span className="text-white">${result.reworkTax.toFixed(1)}M</span></div>
-                  <div className="text-right">Shadow AI: <span className="text-white">${result.shadowAI.toFixed(1)}M</span></div>
-                </div>
-              </div>
+              <h1 className="text-6xl md:text-8xl font-black italic uppercase tracking-tighter leading-none italic text-white">
+                RISK <span className="text-red-600">VERDICT.</span>
+              </h1>
             </div>
-            <div className="grid md:grid-cols-2 gap-2 mt-16 px-6">
-              <button disabled className="bg-slate-900 text-slate-700 p-8 flex flex-col items-center cursor-not-allowed border border-slate-800 relative group">
-                <Lock className="h-4 w-4 mb-2 opacity-20" />
-                <span className="font-black text-[9px] tracking-[0.4em] uppercase">Audit: Unauthorized</span>
-              </button>
-              <button onClick={() => window.open('https://calendly.com/bmr-solutions/triage', '_blank')} className="bg-red-600 text-white p-8 flex flex-col items-center hover:bg-white hover:text-black transition-all border border-red-600">
-                <ShieldAlert className="h-5 w-5 mb-2" />
-                <span className="font-black text-[10px] tracking-[0.4em] uppercase italic tracking-widest">Book Emergency Triage</span>
-              </button>
-            </div>
+            <button className="flex items-center gap-3 bg-slate-900 border border-slate-800 px-8 py-4 font-mono text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all">
+              <Download size={14} /> DOWNLOAD DOSSIER
+            </button>
           </div>
-          <div className="border border-slate-900 p-10 bg-slate-950/50">
-            <h2 className="text-sm font-black uppercase italic mb-10 text-slate-500 tracking-[0.3em] italic">Hardening Roadmap: Phase 01</h2>
-            <div className="grid md:grid-cols-2 gap-12">
-              {roadmap[result.archetype]?.map((step, i) => (
-                <div key={i} className="flex gap-6 text-left border-l border-red-900/30 pl-6 py-2">
-                  <div className="text-red-600 font-black font-mono italic text-xl">0{i+1}</div>
-                  <div>
-                    <div className="font-black uppercase text-xs tracking-widest text-white italic mb-2 tracking-tight">{step.title}</div>
-                    <div className="text-slate-500 text-xs italic leading-relaxed">{step.desc}</div>
+
+          {/* --- ARCHETYPE OUTPUT --- */}
+          <section className="bg-slate-900/10 border-2 border-slate-900 p-10 md:p-16 relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 p-8 opacity-5">
+              <AlertTriangle size={240} />
+            </div>
+
+            <div className="space-y-12 relative z-10">
+              <div className="space-y-4">
+                <span className="text-slate-600 font-mono text-[10px] font-black tracking-[0.4em] uppercase underline italic">IDENTIFIED SYSTEM ARCHETYPE</span>
+                <h2 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter text-white leading-none">
+                  {result.archetype}
+                </h2>
+                <div className="flex flex-wrap items-center gap-6 font-mono text-[9px] font-black uppercase tracking-[0.3em] text-slate-500 pt-4">
+                  <span className="flex items-center gap-2 italic"><Activity size={12} className="text-red-600" /> DECAY RATE: {result.fractureVelocity}/MO</span>
+                  <span className="text-slate-800">•</span>
+                  <span className="flex items-center gap-2 italic"><RefreshCcw size={12} className="text-red-600" /> COLLAPSE WINDOW: {daysToCollapse} DAYS</span>
+                </div>
+              </div>
+
+              <div className="grid lg:grid-cols-2 gap-12 pt-12 border-t border-slate-900">
+                <div className="space-y-8">
+                   <div className="space-y-4">
+                     <h4 className="text-[10px] font-mono text-slate-500 font-black tracking-widest uppercase">DIAGNOSTIC SUMMARY</h4>
+                     <p className="text-slate-400 text-sm font-bold leading-relaxed italic uppercase tracking-tight">
+                        SYSTEMIC LOGIC DIVERGENCE HAS REACHED CRITICAL LEVELS. THE CURRENT ARCHETYPE INDICATES A FAILURE IN RECURSIVE VALIDATION, TRIGGERING A COMPOUNDING FINANCIAL DRAIN.
+                     </p>
+                   </div>
+                   <div className="space-y-3">
+                     <div className="flex justify-between items-end px-1 font-mono text-[10px]">
+                       <span className="text-slate-600 uppercase font-black">DIVERGENCE INDEX (Δ)</span>
+                       <span className="text-red-600 font-black italic">{result.deltaGap.toFixed(1)}/10.0</span>
+                     </div>
+                     <div className="w-full bg-slate-950 h-3 border border-slate-800 p-0.5">
+                       <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min((result.deltaGap / 10) * 100, 100)}%` }} transition={{ duration: 2 }} className="h-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,0.5)]" />
+                     </div>
+                   </div>
+                </div>
+
+                <div className="bg-red-950/5 border border-red-600/20 p-8 space-y-8 relative shadow-inner">
+                  <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <FileText size={40} />
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black text-red-600 uppercase tracking-[0.5em] italic">ANNUAL REWORK TAX (EST)</span>
+                    <div className="text-6xl md:text-7xl font-black text-white tracking-tighter italic">
+                      ${result.financialImpact.toFixed(1)}<span className="text-red-600">M</span>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-8 pt-8 border-t border-red-600/10">
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest">DEBT LOAD</span>
+                      <div className="text-sm font-black text-white italic">${result.reworkTax.toFixed(1)}M</div>
+                    </div>
+                    <div className="space-y-1">
+                      <span className="text-[8px] font-mono font-bold text-slate-600 uppercase tracking-widest">SHADOW AI</span>
+                      <div className="text-sm font-black text-white italic">${result.shadowAI.toFixed(1)}M</div>
+                    </div>
                   </div>
                 </div>
-              ))}
+              </div>
+            </div>
+          </section>
+
+          {/* --- PHASE 01 ROADMAP --- */}
+          <div className="space-y-10 pt-12">
+            <h3 className="text-[11px] font-mono text-slate-500 font-black tracking-[0.4em] uppercase text-center italic">REQUIRED REMEDIATION: PHASE 01</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+               {roadmap[result.archetype]?.map((step, i) => (
+                 <div key={i} className="bg-slate-900/20 border border-slate-900 p-8 flex gap-6 items-start hover:border-red-600/50 transition-all group">
+                    <span className="text-red-600 font-mono text-xl font-black italic">0{i+1}</span>
+                    <div className="space-y-2">
+                       <h5 className="text-xs font-black uppercase text-white tracking-widest italic">{step.title}</h5>
+                       <p className="text-slate-500 text-[11px] font-medium leading-relaxed uppercase tracking-tight italic">{step.desc}</p>
+                    </div>
+                 </div>
+               ))}
             </div>
           </div>
+
+          {/* --- CTA SECTION --- */}
+          <div className="grid md:grid-cols-2 gap-4 pt-12">
+             <button disabled className="bg-slate-900 text-slate-700 p-10 flex flex-col items-center justify-center cursor-not-allowed border border-slate-800 opacity-50">
+                <Lock className="h-5 w-5 mb-3" />
+                <span className="font-black text-[10px] tracking-[0.4em] uppercase">FULL AUDIT: RESTRICTED</span>
+             </button>
+             <button 
+                onClick={() => window.open('https://calendly.com/bmr-solutions/triage', '_blank')}
+                className="bg-red-600 text-white p-10 flex flex-col items-center justify-center hover:bg-white hover:text-black transition-all shadow-2xl shadow-red-600/10 group"
+             >
+                <ShieldAlert className="h-6 w-6 mb-3 group-hover:animate-pulse" />
+                <span className="font-black text-[11px] tracking-[0.5em] uppercase italic">INITIATE EMERGENCY TRIAGE</span>
+             </button>
+          </div>
+
+          <footer className="pt-24 flex flex-col items-center gap-4 opacity-10 text-center">
+            <Activity className="text-red-600 animate-pulse" />
+            <span className="font-mono text-[8px] tracking-[0.6em] uppercase text-slate-500 italic">SESSION TERMINATED // AUTHORIZED EYES ONLY</span>
+          </footer>
+
         </div>
       </main>
       <Footer />
