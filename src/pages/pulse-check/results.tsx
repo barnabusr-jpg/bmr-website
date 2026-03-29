@@ -31,15 +31,22 @@ export default function PulseCheckResults() {
     if (rawData) {
       try {
         setResult(JSON.parse(rawData));
-      } catch (e) {
+      } catch {
         setError(true);
       }
     } else {
       // If data is missing, wait 1 second and check again (Handles race conditions)
       const timeout = setTimeout(() => {
         const retryData = sessionStorage.getItem('bmr_results_data');
-        if (retryData) setResult(JSON.parse(retryData));
-        else setError(true);
+        if (retryData) {
+          try {
+            setResult(JSON.parse(retryData));
+          } catch {
+            setError(true);
+          }
+        } else {
+          setError(true);
+        }
       }, 1000);
       return () => clearTimeout(timeout);
     }
@@ -49,7 +56,7 @@ export default function PulseCheckResults() {
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-widest gap-6 px-6 text-center">
       <AlertTriangle className="h-12 w-12" />
       <div className="space-y-2">
-        <p className="font-black text-xl">Forensic Data Missing</p>
+        <p className="font-black text-xl tracking-tighter italic">Forensic Data Missing</p>
         <p className="text-slate-500 text-[10px]">Session integrity check failed. Re-initialize audit.</p>
       </div>
       <button onClick={() => window.location.href='/pulse-check/assessment'} className="bg-white text-black px-8 py-4 font-black text-[10px] tracking-[.3em] hover:bg-red-600 hover:text-white transition-all flex items-center gap-2">
@@ -61,7 +68,7 @@ export default function PulseCheckResults() {
   if (!result) return (
     <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center font-mono text-red-600 uppercase tracking-widest gap-4">
       <Activity className="animate-pulse h-8 w-8" /> 
-      <span className="animate-pulse">Analyzing Forensic Data...</span>
+      <span className="animate-pulse italic">Analyzing Forensic Data...</span>
     </div>
   );
 
@@ -95,7 +102,9 @@ export default function PulseCheckResults() {
           <div className="py-20 border border-red-900/10 bg-slate-900/20 relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-red-600" />
             <AlertTriangle className="h-16 w-16 text-red-600 mx-auto mb-8 animate-pulse" />
-            <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter mb-6 text-white leading-none">{result.archetype}</h1>
+            <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter mb-6 text-white leading-none tracking-tight">
+              {result.archetype}
+            </h1>
             <div className="max-w-xl mx-auto px-6 space-y-10">
               <div className="flex flex-col md:flex-row justify-center items-center gap-4 text-slate-500 font-mono text-[9px] uppercase tracking-[0.3em] border-y border-slate-900 py-6">
                 <span>Decay Rate: <span className="text-red-600 font-black">{result.fractureVelocity}/mo</span></span>
@@ -114,7 +123,7 @@ export default function PulseCheckResults() {
               <div className="bg-red-950/10 border border-red-900/30 p-10 relative">
                 <div className="absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
                 <div className="text-[10px] font-black text-red-600 uppercase mb-4 tracking-[0.5em] italic">Annual Profit Hemorrhage</div>
-                <div className="text-6xl md:text-7xl font-black text-white tracking-tighter">${result.financialImpact.toFixed(2)}<span className="text-red-600">M</span></div>
+                <div className="text-6xl md:text-7xl font-black text-white tracking-tighter italic">${result.financialImpact.toFixed(2)}<span className="text-red-600">M</span></div>
                 <div className="grid grid-cols-2 gap-4 mt-8 pt-8 border-t border-red-900/20 text-[9px] font-mono uppercase tracking-widest text-slate-500">
                   <div className="text-left">Rework Tax: <span className="text-white">${result.reworkTax.toFixed(1)}M</span></div>
                   <div className="text-right">Shadow AI: <span className="text-white">${result.shadowAI.toFixed(1)}M</span></div>
@@ -122,24 +131,24 @@ export default function PulseCheckResults() {
               </div>
             </div>
             <div className="grid md:grid-cols-2 gap-2 mt-16 px-6">
-              <button disabled className="bg-slate-900 text-slate-700 p-8 flex flex-col items-center cursor-not-allowed border border-slate-800 relative">
+              <button disabled className="bg-slate-900 text-slate-700 p-8 flex flex-col items-center cursor-not-allowed border border-slate-800 relative group">
                 <Lock className="h-4 w-4 mb-2 opacity-20" />
                 <span className="font-black text-[9px] tracking-[0.4em] uppercase">Audit: Unauthorized</span>
               </button>
               <button onClick={() => window.open('https://calendly.com/bmr-solutions/triage', '_blank')} className="bg-red-600 text-white p-8 flex flex-col items-center hover:bg-white hover:text-black transition-all border border-red-600">
                 <ShieldAlert className="h-5 w-5 mb-2" />
-                <span className="font-black text-[10px] tracking-[0.4em] uppercase italic">Book Emergency Triage</span>
+                <span className="font-black text-[10px] tracking-[0.4em] uppercase italic tracking-widest">Book Emergency Triage</span>
               </button>
             </div>
           </div>
           <div className="border border-slate-900 p-10 bg-slate-950/50">
-            <h2 className="text-sm font-black uppercase italic mb-10 text-slate-500 tracking-[0.3em]">Hardening Roadmap: Phase 01</h2>
+            <h2 className="text-sm font-black uppercase italic mb-10 text-slate-500 tracking-[0.3em] italic">Hardening Roadmap: Phase 01</h2>
             <div className="grid md:grid-cols-2 gap-12">
               {roadmap[result.archetype]?.map((step, i) => (
                 <div key={i} className="flex gap-6 text-left border-l border-red-900/30 pl-6 py-2">
                   <div className="text-red-600 font-black font-mono italic text-xl">0{i+1}</div>
                   <div>
-                    <div className="font-black uppercase text-xs tracking-widest text-white italic mb-2">{step.title}</div>
+                    <div className="font-black uppercase text-xs tracking-widest text-white italic mb-2 tracking-tight">{step.title}</div>
                     <div className="text-slate-500 text-xs italic leading-relaxed">{step.desc}</div>
                   </div>
                 </div>
