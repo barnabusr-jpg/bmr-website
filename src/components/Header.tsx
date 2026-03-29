@@ -15,31 +15,29 @@ export default function Header() {
   const router = useRouter();
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#020617]/80 backdrop-blur-xl border-b border-slate-900 px-6 py-4">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-900 px-6 py-5">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <div className="flex flex-col">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="bg-red-600 p-2 rounded-sm group-hover:bg-white transition-colors">
-              <Activity size={18} className="text-white group-hover:text-red-600 animate-pulse" />
-            </div>
-            <div className="flex flex-col text-left">
-              <span className="text-xl font-black italic tracking-tighter text-white uppercase">
-                BMR<span className="text-red-600">SOLUTIONS</span>
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">AUTH LEVEL</span>
-                <span className="text-[8px] font-mono text-red-600 font-bold uppercase tracking-widest animate-pulse text-left">ADMIN</span>
-              </div>
-            </div>
-          </Link>
-        </div>
+        
+        {/* LOGO NODE */}
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="bg-red-600 p-2 group-hover:bg-white transition-colors">
+            <Activity size={18} className="text-white group-hover:text-red-600 animate-pulse" />
+          </div>
+          <div className="flex flex-col text-left">
+            <span className="text-xl font-black italic tracking-tighter text-white uppercase italic">
+              BMR<span className="text-red-600">SOLUTIONS</span>
+            </span>
+            <span className="text-[8px] font-mono text-red-600 font-bold tracking-widest uppercase animate-pulse">ADMIN ACCESS</span>
+          </div>
+        </Link>
 
-        <div className="hidden lg:flex items-center gap-10">
+        {/* NAVIGATION NODE */}
+        <div className="hidden lg:flex items-center gap-12">
           {NAV_ITEMS.map((item) => (
             <Link 
               key={item.path} 
               href={item.path}
-              className={`text-[10px] font-black tracking-[0.3em] uppercase transition-all hover:text-red-600 ${
+              className={`text-[10px] font-black tracking-[0.4em] uppercase transition-all hover:text-red-600 ${
                 router.pathname === item.path ? 'text-red-600' : 'text-slate-400'
               }`}
             >
@@ -48,21 +46,23 @@ export default function Header() {
           ))}
         </div>
 
+        {/* ACTION NODE */}
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end pr-6 border-r border-slate-800 text-right">
              <div className="flex items-center gap-2">
                 <ShieldAlert size={10} className="text-red-600" />
                 <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">STATUS</span>
              </div>
-             <span className="text-[9px] font-mono text-green-500 font-bold uppercase tracking-widest text-right">STABLE NODE-SEC-04</span>
+             <span className="text-[9px] font-mono text-green-500 font-bold uppercase tracking-widest">STABLE NODE-SEC-04</span>
           </div>
           <button 
             onClick={() => router.push('/pulse-check/assessment')}
             className="bg-red-600 text-white px-6 py-3 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all shadow-lg"
           >
-            <Zap size={14} /> INITIATE DIAGNOSTIC
+            <Zap size={14} /> DIAGNOSTIC
           </button>
         </div>
+
       </div>
     </nav>
   );
