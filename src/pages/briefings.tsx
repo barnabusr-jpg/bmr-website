@@ -97,7 +97,7 @@ export default function BriefingsPage() {
               </div>
             </div>
             <div className="text-[9px] font-mono text-slate-600 uppercase tracking-widest italic">
-              Session ID: {sessionId} // NODE: SEC-04
+              Session ID: {sessionId}
             </div>
           </motion.div>
 
@@ -124,12 +124,10 @@ export default function BriefingsPage() {
                 transition={{ delay: i * 0.1, type: "spring", stiffness: 150 }}
                 className="group relative bg-slate-900/10 border border-slate-900 p-8 md:p-10 hover:border-red-600/50 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-8 overflow-hidden"
               >
-                {/* ID Badge */}
                 <div className="absolute -top-2 -left-2 w-10 h-10 bg-red-600 rounded-full flex items-center justify-center text-white font-black font-mono text-[10px] italic shadow-lg z-20">
                   {brief.id}
                 </div>
 
-                {/* Content Block */}
                 <div className="space-y-6 z-10">
                   <div className="flex flex-wrap items-center gap-4">
                     <span className="bg-red-600 text-white text-[9px] font-black px-3 py-1 tracking-widest uppercase italic">
@@ -156,7 +154,6 @@ export default function BriefingsPage() {
                   </div>
                 </div>
 
-                {/* Action Button */}
                 <div className="flex items-center gap-4 z-10">
                    <button className="bg-white text-black px-10 py-5 font-black uppercase text-[11px] tracking-[0.3em] flex items-center gap-3 hover:bg-red-600 hover:text-white transition-all group-hover:translate-x-2 shadow-2xl">
                     {brief.status === "UNLOCKED" ? "DECLASSIFY" : "REQUEST ACCESS"}
@@ -164,7 +161,6 @@ export default function BriefingsPage() {
                   </button>
                 </div>
 
-                {/* --- Forensic Document Preview --- */}
                 <div className="absolute right-12 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none hidden lg:block translate-x-10 group-hover:translate-x-0">
                   <div className="w-44 h-56 bg-slate-900 border border-slate-700 rounded-sm shadow-2xl overflow-hidden rotate-3 group-hover:rotate-0 transition-transform">
                     <div className="h-6 bg-slate-800 flex items-center px-2 border-b border-slate-700 justify-between">
@@ -190,7 +186,6 @@ export default function BriefingsPage() {
             ))}
           </div>
 
-          {/* --- Secondary CTA --- */}
           <section className="bg-red-600 p-12 md:p-16 text-center space-y-8 relative overflow-hidden">
              <div className="absolute top-0 right-0 p-4 opacity-10">
                 <Zap size={120} />
@@ -219,7 +214,6 @@ export default function BriefingsPage() {
               WARNING: UNAUTHORIZED DISTRIBUTION OF THESE BRIEFINGS WILL TRIGGER SYSTEM-WIDE REVOCATION OF CREDENTIALS.
             </p>
           </div>
-
         </div>
       </main>
 
