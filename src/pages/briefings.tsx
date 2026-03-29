@@ -15,7 +15,6 @@ import {
   ShieldAlert
 } from "lucide-react";
 
-// --- Forensic Data Schema ---
 const IMPACT_COLORS = {
   HIGH: "text-yellow-500",
   CRITICAL: "text-red-500",
@@ -120,7 +119,7 @@ export default function BriefingsPage() {
               </div>
               <div className="hidden sm:flex items-center gap-2 border-l border-red-600/50 pl-4">
                 <Lock size={12} className="text-red-500 opacity-60" />
-                <span className="text-red-500/80 font-mono text-[9px] tracking-widest uppercase">
+                <span className="text-red-500/80 font-mono text-[9px] tracking-widest uppercase text-center">
                   SESSION: 23:59 UTC
                 </span>
               </div>
@@ -136,7 +135,7 @@ export default function BriefingsPage() {
               <span className="text-red-600">BRIEFINGS.</span>
             </h1>
             <p className="max-w-xl text-slate-500 font-bold leading-relaxed italic uppercase text-xs tracking-tight border-l border-red-600 pl-6">
-              Declassified intelligence on operational divergence and system decay. Access is strictly for leadership tasked with structural recovery.
+              Declassified intelligence on operational divergence and system decay. Access is restricted to leadership tasked with structural recovery.
             </p>
           </section>
 
@@ -177,9 +176,9 @@ export default function BriefingsPage() {
                     </h2>
                     
                     <div className="flex flex-wrap items-center gap-3 font-mono text-[9px] font-black tracking-[0.15em] italic">
-                       <span className="text-red-500/80">CLASS: {brief.classification}</span>
+                       <span className="text-red-500/80">CLASS: {brief.classification || "RESTRICTED"}</span>
                        <span className="text-slate-800">•</span>
-                       <span className="text-slate-500">{brief.pages} PAGES</span>
+                       <span className="text-slate-500">{brief.pages || 10} PAGES</span>
                     </div>
 
                     <p className="text-slate-500 text-sm font-medium italic max-w-xl leading-relaxed uppercase tracking-tight">
@@ -196,7 +195,7 @@ export default function BriefingsPage() {
 
                 <div className="z-10 shrink-0">
                    <button 
-                    onClick={() => window.open(brief.path, '_blank')}
+                    onClick={() => { if (brief.path) window.open(brief.path, '_blank'); }}
                     className="bg-white text-black px-10 py-5 font-black uppercase text-[11px] tracking-[0.4em] flex items-center gap-3 hover:bg-red-600 hover:text-white transition-all group-hover:translate-x-2 shadow-[0_20px_50px_rgba(0,0,0,0.5)]"
                    >
                     DECLASSIFY <ArrowRight size={16} />
@@ -230,7 +229,7 @@ export default function BriefingsPage() {
                 <Zap size={240} />
              </div>
              <div className="relative z-10 space-y-6">
-                <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none text-white">
+                <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none text-white text-center">
                   INCOMPLETE DATA <br /> IS SYSTEM RISK.
                 </h2>
                 <div className="pt-6">
@@ -246,7 +245,7 @@ export default function BriefingsPage() {
 
           <div className="pt-16 border-t border-slate-900 flex flex-col items-center text-center space-y-4 opacity-40">
             <AlertTriangle size={24} className="text-red-600" />
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.6em] max-w-lg italic font-bold">
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.6em] max-w-lg italic font-bold text-center">
               WARNING: UNAUTHORIZED DISTRIBUTION WILL TRIGGER REVOCATION.
             </p>
           </div>
