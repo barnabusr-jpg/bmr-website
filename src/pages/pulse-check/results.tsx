@@ -5,7 +5,7 @@ import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { motion } from "framer-motion";
-import { AlertTriangle, Zap, ShieldAlert, Activity, Lock } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Activity, Lock } from 'lucide-react';
 
 // Unified type to match API response
 type Archetype = 'Replacement Trap' | 'Hollow Chevron' | 'Shadow Shear' | 'Collective Delusion';
@@ -44,7 +44,6 @@ export default function PulseCheckResults() {
 
   const daysToCollapse = Math.round(Math.abs(10 / result.fractureVelocity) * 30);
 
-  // Roadmap keys now match API string literals exactly
   const roadmap: Record<Archetype, {title: string, desc: string}[]> = {
     "Replacement Trap": [
       { title: "Audit Training Data", desc: "Identify toxic data increasing Rework Tax." },
@@ -102,8 +101,8 @@ export default function PulseCheckResults() {
                 </div>
               </div>
 
-              {/* PROFIT HEMORRHAGE - THE VERDICT */}
-              <div className="bg-red-950/10 border border-red-900/30 p-10 relative group">
+              {/* PROFIT HEMORRHAGE */}
+              <div className="bg-red-950/10 border border-red-900/30 p-10 relative">
                 <div className="absolute -top-px -left-px w-4 h-4 border-t-2 border-l-2 border-red-600"></div>
                 <div className="text-[10px] font-black text-red-600 uppercase mb-4 tracking-[0.5em] italic">Annual Profit Hemorrhage</div>
                 <div className="text-6xl md:text-7xl font-black text-white tracking-tighter">
@@ -117,7 +116,7 @@ export default function PulseCheckResults() {
             </div>
 
             <div className="grid md:grid-cols-2 gap-2 mt-16 px-6">
-              <button disabled className="bg-slate-900 text-slate-700 p-8 flex flex-col items-center cursor-not-allowed border border-slate-800 relative group">
+              <button disabled className="bg-slate-900 text-slate-700 p-8 flex flex-col items-center cursor-not-allowed border border-slate-800 relative">
                 <Lock className="h-4 w-4 mb-2 opacity-20" />
                 <span className="font-black text-[9px] tracking-[0.4em] uppercase">Audit: Unauthorized</span>
                 <span className="text-[8px] mt-2 italic opacity-40">Requires Active Triage Key</span>
