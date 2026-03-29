@@ -20,18 +20,18 @@ export default function Header() {
         
         {/* LOGO NODE */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="bg-red-600 p-2 group-hover:bg-white transition-colors">
+          <div className="bg-red-600 p-2 rounded-sm group-hover:bg-white transition-colors">
             <Activity size={18} className="text-white group-hover:text-red-600 animate-pulse" />
           </div>
           <div className="flex flex-col text-left">
-            <span className="text-xl font-black italic tracking-tighter text-white uppercase italic">
+            <span className="text-xl font-black italic tracking-tighter text-white uppercase italic leading-none">
               BMR<span className="text-red-600">SOLUTIONS</span>
             </span>
-            <span className="text-[8px] font-mono text-red-600 font-bold tracking-widest uppercase animate-pulse">ADMIN ACCESS</span>
+            <span className="text-[8px] font-mono text-red-600 font-bold tracking-widest uppercase mt-1">ADMIN ACCESS</span>
           </div>
         </Link>
 
-        {/* NAVIGATION NODE */}
+        {/* NAVIGATION NODE - This is what separates the pages */}
         <div className="hidden lg:flex items-center gap-12">
           {NAV_ITEMS.map((item) => (
             <Link 
@@ -46,7 +46,7 @@ export default function Header() {
           ))}
         </div>
 
-        {/* ACTION NODE */}
+        {/* STATUS & ACTION NODE */}
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end pr-6 border-r border-slate-800 text-right">
              <div className="flex items-center gap-2">
@@ -57,7 +57,7 @@ export default function Header() {
           </div>
           <button 
             onClick={() => router.push('/pulse-check/assessment')}
-            className="bg-red-600 text-white px-6 py-3 font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all shadow-lg"
+            className="bg-red-600 text-white px-6 py-3 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all shadow-lg shadow-red-900/10"
           >
             <Zap size={14} /> DIAGNOSTIC
           </button>
