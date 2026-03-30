@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Resend } from 'resend';
-import { BMRAuthEmail } from '../../emails/BMRAuthEmail';
+import { BMRAuthEmail } from '../../../emails/BMRAuthEmail';
 
 // 🏗️ INITIALIZE RESEND PROTOCOL
 const resend = new Resend(process.env.RESEND_API_KEY);
