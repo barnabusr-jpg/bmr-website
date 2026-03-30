@@ -4,11 +4,23 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lock, Terminal } from "lucide-react";
 
-export default function ActivationModal({ isOpen, onClose, protocolName }) {
+// 🛠️ FIX: Explicitly define the props to satisfy TypeScript
+interface ActivationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  protocolName: string;
+}
+
+interface UserProfile {
+  archetype: string;
+  reworkTax: string;
+}
+
+export default function ActivationModal({ isOpen, onClose, protocolName }: ActivationModalProps) {
   const [email, setEmail] = useState("");
   const [attempts, setAttempts] = useState(0);
   const [status, setStatus] = useState<"idle" | "scanning" | "authorized" | "unauthorized" | "locked">("idle");
-  const [profile, setProfile] = useState<{ archetype: string; reworkTax: string } | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   useEffect(() => {
     if (attempts >= 3) {
@@ -21,6 +33,7 @@ export default function ActivationModal({ isOpen, onClose, protocolName }) {
     setStatus("scanning");
 
     try {
+      // Use encodeURIComponent for safe URL handling
       const response = await fetch(`/api/validate-operator?email=${encodeURIComponent(email)}`);
       const data = await response.json();
 
@@ -28,11 +41,11 @@ export default function ActivationModal({ isOpen, onClose, protocolName }) {
         setProfile(data.profile);
         setStatus("authorized");
       } else {
-        setAttempts(prev => prev + 1);
+        setAttempts((prev) => prev + 1);
         setStatus("unauthorized");
       }
     } catch {
-      setAttempts(prev => prev + 1);
+      setAttempts((prev) => prev + 1);
       setStatus("unauthorized");
     }
   };
@@ -42,9 +55,19 @@ export default function ActivationModal({ isOpen, onClose, protocolName }) {
   return (
     <AnimatePresence>
       <div className="fixed inset-0 z-[100] flex items-center justify-center px-6">
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-black/95 backdrop-blur-xl" />
+        <motion.div 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          exit={{ opacity: 0 }} 
+          onClick={onClose} 
+          className="absolute inset-0 bg-black/95 backdrop-blur-xl" 
+        />
 
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="relative w-full max-w-lg bg-slate-950 border border-red-600/30 p-1 shadow-2xl">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }} 
+          animate={{ opacity: 1, scale: 1 }} 
+          className="relative w-full max-w-lg bg-slate-950 border border-red-600/30 p-1 shadow-2xl"
+        >
           <div className="absolute inset-0 bg-noise opacity-[0.03] pointer-events-none" />
           <div className="relative z-10 bg-[#020617] p-8 md:p-12 border border-slate-900">
             <button onClick={onClose} className="absolute top-6 right-6 text-slate-700 hover:text-white transition-colors">
@@ -68,7 +91,7 @@ export default function ActivationModal({ isOpen, onClose, protocolName }) {
                 
                 <div className="bg-slate-900/50 p-6 border border-slate-900 text-left">
                   <p className="text-slate-600 text-[9px] uppercase font-mono mb-2">REWORK_TAX_SNAPSHOT //</p>
-                  <div className="flex items-baseline gap-2">
+                  <div className="flex items-baseline gap-2 text-left">
                     <span className="text-5xl font-black text-white">{profile?.reworkTax}%</span>
                     <span className="text-red-600 text-[10px] font-black uppercase italic animate-pulse">! DRIFT_DETECTED</span>
                   </div>
@@ -81,7 +104,7 @@ export default function ActivationModal({ isOpen, onClose, protocolName }) {
             ) : (
               <div className="space-y-8 text-left">
                 <div className="space-y-2 text-left">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 text-left">
                     <Terminal size={14} className="text-red-600" />
                     <span className="text-red-600 text-[10px] font-mono font-black uppercase tracking-[0.3em]">SECURE_GATEWAY_V4</span>
                   </div>
@@ -105,7 +128,10 @@ export default function ActivationModal({ isOpen, onClose, protocolName }) {
                     <p className="text-red-600 text-[9px] font-black uppercase italic animate-bounce">! NO_DIAGNOSTIC_MATCH_FOUND. RE-SCAN_REQUIRED.</p>
                   )}
 
-                  <button disabled={status === "scanning"} className="w-full py-5 bg-red-600 text-white font-black uppercase text-[11px] tracking-[0.4em] italic hover:bg-white hover:text-black transition-all disabled:opacity-50">
+                  <button 
+                    disabled={status === "scanning"} 
+                    className="w-full py-5 bg-red-600 text-white font-black uppercase text-[11px] tracking-[0.4em] italic hover:bg-white hover:text-black transition-all disabled:opacity-50"
+                  >
                     {status === "scanning" ? "SCANNING_DATABASE..." : "VALIDATE_CLEARANCE"}
                   </button>
                 </form>
