@@ -19,33 +19,40 @@ export default function BriefingsPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans">
       <Head><title>BMR | THE VAULT</title></Head>
       <Header />
       <main className="pt-44 pb-24 px-6 text-left">
         <div className="max-w-6xl mx-auto space-y-24">
           
           <header className="border-l-4 border-red-600 pl-8 space-y-4 text-left">
-             <div className="flex items-center gap-3 italic">
+             <div className="flex items-center gap-3 italic text-left">
                <ShieldAlert size={14} className="text-red-600"/>
                <span className="text-red-600 font-mono text-[10px] font-black tracking-widest uppercase italic">AUTHORIZED EYES ONLY</span>
              </div>
-             <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-none text-white">THE <span className="text-red-600">VAULT.</span></h1>
+             <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-none text-white text-left">
+               THE <span className="text-red-600">VAULT.</span>
+             </h1>
           </header>
 
+          {/* This component contains the 10th-grade Forensic Analysis cards */}
           <Insights />
 
           <div className="grid gap-6">
+            <div className="py-4 border-b border-slate-900">
+               <h3 className="text-[10px] font-black tracking-[0.5em] text-slate-500 uppercase italic">CASE_FILES // RECONSTRUCTED_LOGIC</h3>
+            </div>
             {BRIEFINGS.map((brief) => (
               <motion.div 
                 key={brief.id} 
                 initial={{ opacity: 0, x: -20 }}
                 whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
                 className="group bg-slate-900/10 border border-slate-900 p-10 hover:border-red-600/50 transition-all flex flex-col md:flex-row justify-between items-start md:items-center gap-8 shadow-2xl relative text-left"
               >
                 <div className="space-y-4 text-left italic">
                    <span className="bg-red-600 text-white text-[9px] font-black px-3 py-1 uppercase tracking-widest italic">{brief.tag}</span>
-                   <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-none">{brief.title}</h2>
+                   <h2 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter text-white leading-none">{brief.title}</h2>
                 </div>
                 <button 
                   onClick={() => router.push(brief.path)} 
