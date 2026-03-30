@@ -1,42 +1,40 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-async function getForensicRecord() {
-  // Logic remains the same, placeholder for real DB call
-  return {
-    authorized: true,
-    pulseCheckComplete: true,
-    profile: {
-      archetype: "THE_GHOST",
-      reworkTax: "22.5",
-      lastActive: "MARCH 20, 2026",
-      impactScore: "HIGH"
-    }
-  };
-}
+// 🕵️ REGISTRY OF AUTHORIZED OPERATORS
+// In production, this would be a real Database call.
+const AUTHORIZED_DATABASE = [
+  { 
+    email: "admin@bmr.solutions", 
+    pulseCheckComplete: true, 
+    profile: { archetype: "THE_ARCHITECT", reworkTax: "18.4" } 
+  },
+  { 
+    email: "operator-01@bmr.solutions", 
+    pulseCheckComplete: true, 
+    profile: { archetype: "THE_OPTIMIZER", reworkTax: "12.2" } 
+  }
+];
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const { email: queryEmail } = req.query;
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  const { email } = req.query;
 
-  if (!queryEmail || typeof queryEmail !== 'string') {
+  if (!email || typeof email !== 'string') {
     return res.status(400).json({ error: "! INVALID_IDENTIFIER" });
   }
 
-  try {
-    const record = await getForensicRecord();
+  // 🔎 SCANNING THE REGISTRY
+  const record = AUTHORIZED_DATABASE.find(user => user.email.toLowerCase() === email.toLowerCase());
 
-    if (!record || !record.pulseCheckComplete) {
-      return res.status(404).json({ 
-        authorized: false, 
-        message: "! NO_DIAGNOSTIC_MATCH_FOUND" 
-      });
-    }
-
+  if (record && record.pulseCheckComplete) {
+    // SUCCESS: Match found in the authorized registry
     return res.status(200).json(record);
-
-  } catch {
-    return res.status(500).json({ error: "! SYSTEM_FAILURE // DATABASE_OFFLINE" });
+  } else {
+    // FAILURE: No match found for the identifier provided
+    console.warn(`[SECURITY] UNAUTHORIZED_ACCESS_ATTEMPT // ID: ${email}`);
+    return res.status(404).json({ 
+      authorized: false, 
+      pulseCheckComplete: false,
+      message: "! NO_DIAGNOSTIC_MATCH_FOUND" 
+    });
   }
 }
