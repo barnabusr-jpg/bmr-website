@@ -2,19 +2,18 @@
 
 import React from 'react';
 import { motion } from "framer-motion";
-import { Shield, Zap, CheckCircle, FileText } from "lucide-react";
+import { Shield, Zap } from "lucide-react"; // Removed unused icons
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
 export default function StructuralHardening() {
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30 font-sans">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30 font-sans text-left">
       <Header />
       <main className="pt-44 pb-24 px-6 text-left">
         <div className="max-w-6xl mx-auto space-y-16">
           
           <div className="text-center">
-            {/* 🛠️ PULSING PROTOCOL INDICATOR */}
             <motion.div
               animate={{ opacity: [0.4, 1, 0.4], scale: [0.98, 1, 0.98] }}
               transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -23,10 +22,10 @@ export default function StructuralHardening() {
               PROTOCOL 02 ACTIVATED
             </motion.div>
 
-            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-none mb-6">
-              STRUCTURAL <br /><span className="text-blue-600 text-outline">HARDENING.</span>
+            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-none mb-6 text-center">
+              STRUCTURAL <br /><span className="text-blue-600">HARDENING.</span>
             </h1>
-            <p className="text-slate-500 text-lg md:text-xl font-medium uppercase italic tracking-tight max-w-2xl mx-auto">
+            <p className="text-slate-500 text-lg md:text-xl font-medium uppercase italic tracking-tight max-w-2xl mx-auto text-center">
               Eliminate the rework tax and establish military grade governance frameworks.
             </p>
           </div>
@@ -35,14 +34,10 @@ export default function StructuralHardening() {
             <button className="bg-blue-600 hover:bg-white text-white hover:text-blue-600 px-10 py-5 font-black uppercase text-[11px] tracking-[0.4em] transition-all italic flex items-center gap-3">
               ACTIVATE PROTOCOL <Zap size={16} />
             </button>
-            <button className="border border-slate-800 hover:border-blue-600 text-slate-500 hover:text-white px-10 py-5 font-black uppercase text-[11px] tracking-[0.4em] transition-all italic">
-              DOWNLOAD FIELD MANUAL
-            </button>
           </div>
 
           <div className="grid md:grid-cols-2 gap-px bg-slate-900/50 border border-slate-900">
-            {/* SYSTEM DECAY ANALYSIS */}
-            <div className="bg-slate-950 p-12 space-y-8">
+            <div className="bg-slate-950 p-12 space-y-8 text-left">
               <div className="flex items-center gap-3 text-blue-500">
                 <Shield size={20} />
                 <h2 className="text-2xl font-black uppercase italic tracking-tighter">SYSTEM DECAY ANALYSIS</h2>
@@ -57,8 +52,7 @@ export default function StructuralHardening() {
               </ul>
             </div>
 
-            {/* PROTOCOL OBJECTIVES */}
-            <div className="bg-slate-950 p-12 space-y-8 border-l border-slate-900">
+            <div className="bg-slate-950 p-12 space-y-8 border-l border-slate-900 text-left">
               <div className="flex items-center gap-3 text-blue-500">
                 <Zap size={20} />
                 <h2 className="text-2xl font-black uppercase italic tracking-tighter">PROTOCOL OBJECTIVES</h2>
