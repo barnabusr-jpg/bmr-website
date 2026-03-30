@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import clientPromise from '../../../lib/mongodb';
 import { Resend } from 'resend';
-import { BMRAuthEmail } from '../../emails/BMRAuthEmail';
+import { BMRAuthEmail } from '../../../emails/BMRAuthEmail';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
