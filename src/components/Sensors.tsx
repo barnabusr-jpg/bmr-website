@@ -39,15 +39,21 @@ export default function Sensors() {
   return (
     <section className="bg-[#020617] py-32 px-6 border-y border-slate-900">
       <div className="container mx-auto max-w-7xl">
+        
+        {/* HEADER SECTION: Synchronized with Hero "Node Access" theme */}
         <div className="mb-20 text-left border-l-4 border-red-600 pl-8">
-          <h2 className="text-[10px] font-black tracking-[0.5em] text-red-600 uppercase mb-4 italic">
-            SIGNAL ANALYSIS // SENSOR-ARRAY-V3
-          </h2>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-px w-8 bg-red-600/50" />
+            <h2 className="text-[10px] font-black tracking-[0.5em] text-red-600 uppercase italic">
+              NODE_STREAM: SENSOR_ARRAY_V3 // ACTIVE_SCAN
+            </h2>
+          </div>
           <h3 className="text-5xl md:text-7xl font-black italic text-white uppercase tracking-tighter leading-none">
-            DETECTING SYSTEMIC <span className="text-red-600">DRIFT</span>
+            DETECTING SYSTEMIC <span className="text-red-600">DRIFT.</span>
           </h3>
         </div>
 
+        {/* SENSOR GRID */}
         <div className="grid md:grid-cols-2 gap-6">
           {SENSORS.map((sensor, index) => (
             <motion.div 
@@ -59,7 +65,7 @@ export default function Sensors() {
               className="bg-slate-900/10 border border-slate-900 p-12 group hover:border-red-600/50 transition-all shadow-2xl relative overflow-hidden"
             >
               <div className="flex items-center gap-4 mb-8">
-                <div className="p-3 bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+                <div className="p-3 bg-red-600 text-white shadow-[0_0_15px_rgba(220,38,38,0.3)] group-hover:bg-white group-hover:text-red-600 transition-colors">
                   {sensor.icon}
                 </div>
                 <span className="text-[10px] font-black text-slate-700 tracking-widest uppercase font-mono italic">
@@ -67,7 +73,7 @@ export default function Sensors() {
                 </span>
               </div>
               
-              <h4 className="text-3xl font-black mb-4 italic uppercase tracking-tighter text-white">
+              <h4 className="text-3xl font-black mb-4 italic uppercase tracking-tighter text-white group-hover:text-red-600 transition-colors">
                 {sensor.label}
               </h4>
               <p className="text-slate-500 mb-10 leading-relaxed text-sm font-medium italic uppercase tracking-tight text-left">
