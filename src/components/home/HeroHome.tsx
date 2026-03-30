@@ -2,12 +2,11 @@
 
 import React from 'react';
 import { motion } from "framer-motion";
-import { ShieldAlert, Activity } from "lucide-react"; 
+import { Activity } from "lucide-react"; // ShieldAlert removed to satisfy linter
 import { Card } from "@/components/ui/card";
 import Link from "next/link";
 
 const HeroHome = () => {
-  // 🛠️ Update 1: Brand Collision Fix
   const subheadline = "NODE_ACCESS: FORENSIC_ENVIRONMENT // STRUCTURAL_AUDIT_V3";
 
   return (
@@ -23,7 +22,7 @@ const HeroHome = () => {
             transition={{ duration: 0.5 }}
             className="space-y-10 text-left"
           >
-            <div className="space-y-4 text-left">
+            <div className="space-y-4 text-left border-l-2 border-red-600/20 pl-6">
               <div className="flex items-center gap-3">
                 <div className="h-px w-8 bg-red-600" />
                 <p className="text-[10px] font-black tracking-[0.4em] text-red-600 uppercase italic">
@@ -37,7 +36,6 @@ const HeroHome = () => {
               </h1>
             </div>
 
-            {/* 🛠️ Update 2: 10th Grade / No Contraction Scrub */}
             <p className="text-lg md:text-xl text-slate-500 font-medium max-w-xl leading-relaxed italic text-left uppercase tracking-tight">
               We identify the log rot and systemic drift in AI deployments. 
               BMR provides the forensic tools to harden logic chains before 
@@ -55,7 +53,6 @@ const HeroHome = () => {
             </div>
           </motion.div>
 
-          {/* 🛠️ Update 3: The Right-Side Card (IP Safe & No Contractions) */}
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
