@@ -9,29 +9,29 @@ const SENSORS = [
     id: "SIG-01",
     icon: <ShieldAlert className="h-5 w-5" />,
     label: "Authority Vacuum Detection",
-    copy: "When humans override AI decisions without logging it, you have a governance fracture. We measure Shadow Labor and Δ Override Rates.",
-    probe: "Show us the last 5 AI decisions manually corrected. If >20% are unlogged, Δ increases."
+    copy: "When humans override AI decisions without a recorded audit, you have a governance fracture. This creates unmanaged shadow labor. We measure the drift between intended logic and manual intervention.",
+    probe: "Does your current dashboard identify every instance where a human manually corrected an AI output? If you cannot, you have an authority vacuum."
   },
   {
     id: "SIG-02",
     icon: <Zap className="h-5 w-5" />,
     label: "Value Leakage Audit",
-    copy: "AI systems fail gradually, leaking value through rework and misalignment. We quantify Operational Resonance (AVS) to pinpoint where ROI erodes.",
-    probe: "Provide the last 10 AI-driven outcomes. If >15% required manual correction, value leakage detected."
+    copy: "AI systems fail gradually. They leak value through rework and misalignment. This erosion of profit is often invisible to leadership. We quantify operational resonance to find where margin decays.",
+    probe: "Does your profit margin on AI-assisted tasks match your initial projections? Discrepancies in these figures indicate systemic value leakage."
   },
   {
     id: "SIG-03",
     icon: <Search className="h-5 w-5" />,
     label: "Log Rot Forensic",
-    copy: "Audit trails that lack context are useless for defense. We analyze IGF (Audit Fidelity) to ensure your logs survive a hostile regulatory review.",
-    probe: "Can you reconstruct the 'Logic Chain' of a decision made 90 days ago? If not, you have Log Rot."
+    copy: "Audit trails that lack context are useless for defense. We ensure your logs survive a hostile regulatory review. We analyze audit fidelity to maintain structural integrity over time.",
+    probe: "Pick a random AI decision from the last quarter. Can you prove the logic chain to a regulator today? If you cannot, you have log rot."
   },
   {
     id: "SIG-04",
     icon: <Microscope className="h-5 w-5" />,
     label: "Trust Erosion Mapping",
-    copy: "We map the gap between what your AI claims to do and what users actually experience, calculating the HAI (Human-AI Integrity) score.",
-    probe: "Compare your marketing 'Accuracy Rate' against your 'Support Ticket Rate' for AI errors."
+    copy: "We map the gap between what your AI claims to perform and what users actually experience. We calculate the integrity score. This identifies where user trust has decoupled from system output.",
+    probe: "Is there a measurable difference between your internal accuracy reports and the volume of support tickets? This gap is trust erosion."
   }
 ];
 
@@ -48,7 +48,6 @@ export default function Sensors() {
           </h3>
         </div>
 
-        {/* Removed the white background grid and replaced with a clean gap */}
         <div className="grid md:grid-cols-2 gap-6">
           {SENSORS.map((sensor, index) => (
             <motion.div 
@@ -71,11 +70,11 @@ export default function Sensors() {
               <h4 className="text-3xl font-black mb-4 italic uppercase tracking-tighter text-white">
                 {sensor.label}
               </h4>
-              <p className="text-slate-500 mb-10 leading-relaxed text-sm font-medium italic uppercase tracking-tight">
+              <p className="text-slate-500 mb-10 leading-relaxed text-sm font-medium italic uppercase tracking-tight text-left">
                 {sensor.copy}
               </p>
 
-              <div className="bg-black/40 p-8 border-l-2 border-red-600">
+              <div className="bg-black/40 p-8 border-l-2 border-red-600 text-left">
                 <p className="text-[9px] text-red-600 font-black uppercase tracking-[0.4em] mb-3 italic">
                   FORENSIC PROBE //
                 </p>
