@@ -1,5 +1,11 @@
 import { MongoClient } from 'mongodb';
 
+// 🛡️ Global Type Augmentation
+// This informs TypeScript that the global object may contain our MongoDB promise.
+declare global {
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
+
 if (!process.env.MONGODB_URI) {
   throw new Error('! CONFIG_ERROR: MONGODB_URI is missing from environment variables.');
 }
@@ -11,18 +17,14 @@ let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
 if (process.env.NODE_ENV === 'development') {
-  // In development, use a global variable to preserve the connection across HMR reloads.
-  const globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>;
-  };
-
-  if (!globalWithMongo._mongoClientPromise) {
+  // In development, we use the global variable to prevent multiple connections during HMR.
+  if (!global._mongoClientPromise) {
     client = new MongoClient(uri, options);
-    globalWithMongo._mongoClientPromise = client.connect();
+    global._mongoClientPromise = client.connect();
   }
-  clientPromise = globalWithMongo._mongoClientPromise;
+  clientPromise = global._mongoClientPromise;
 } else {
-  // In production, it is best to avoid global variables for standard builds.
+  // In production, we initialize a fresh client.
   client = new MongoClient(uri, options);
   clientPromise = client.connect();
 }
