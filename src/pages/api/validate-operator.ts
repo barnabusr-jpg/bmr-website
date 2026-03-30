@@ -1,25 +1,9 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import clientPromise from '../../lib/mongodb';
 import { Resend } from 'resend';
-import { BMRAuthEmail } from '../../../emails/BMRAuthEmail';
+import { BMRAuthEmail } from '../../emails/BMRAuthEmail';
 
-// 🏗️ INITIALIZE RESEND PROTOCOL
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-// 🕵️ REGISTRY OF AUTHORIZED OPERATORS
-const AUTHORIZED_DATABASE = [
-  { 
-    email: "admin@bmr.solutions", 
-    name: "System Administrator",
-    pulseCheckComplete: true, 
-    profile: { archetype: "The Architect", reworkTax: "18.4" } 
-  },
-  { 
-    email: "operator-01@bmr.solutions", 
-    name: "Senior Operator",
-    pulseCheckComplete: true, 
-    profile: { archetype: "The Optimizer", reworkTax: "12.2" } 
-  }
-];
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { email, protocol } = req.query;
@@ -28,13 +12,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "! INVALID_IDENTIFIER" });
   }
 
-  // 🔎 SCANNING THE REGISTRY
-  const record = AUTHORIZED_DATABASE.find(user => user.email.toLowerCase() === email.toLowerCase());
+  try {
+    // 🔌 CONNECT TO MONGODB
+    const client = await clientPromise;
+    const db = client.db("bmr_advisory"); // Your Database Name
+    
+    // 🔎 QUERY THE OPERATORS COLLECTION
+    const record = await db.collection("operators").findOne({ 
+      email: email.toLowerCase() 
+    });
 
-  if (record && record.pulseCheckComplete) {
-    const protocolName = (protocol as string) || "BMR Stabilization Protocol";
+    if (record && record.pulseCheckComplete) {
+      const protocolName = (protocol as string) || "BMR Stabilization Protocol";
 
-    try {
       // 📧 DISPATCH FORENSIC MANIFEST
       await resend.emails.send({
         from: 'BMR Advisory <hello@bmradvisory.co>',
@@ -50,18 +40,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
 
       return res.status(200).json(record);
-    } catch (error) {
-      // LOG ERROR BUT ALLOW ACCESS: We do not block the user if the email service is slow.
-      console.error("! EMAIL_DISPATCH_FAILURE:", error);
-      return res.status(200).json(record);
+    } else {
+      return res.status(404).json({ message: "! NO_DIAGNOSTIC_MATCH_FOUND" });
     }
-  } else {
-    // FAILURE: No match found
-    console.warn(`[SECURITY] UNAUTHORIZED_ACCESS_ATTEMPT // ID: ${email}`);
-    return res.status(404).json({ 
-      authorized: false, 
-      pulseCheckComplete: false,
-      message: "! NO_DIAGNOSTIC_MATCH_FOUND" 
-    });
+  } catch (error) {
+    console.error("! DATABASE_ERROR:", error);
+    return res.status(500).json({ error: "! INTERNAL_SYSTEM_FAILURE" });
   }
 }
