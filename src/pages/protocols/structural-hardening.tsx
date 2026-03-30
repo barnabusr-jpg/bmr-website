@@ -1,100 +1,77 @@
+"use client";
+
 import React from 'react';
-import Head from 'next/head';
+import { motion } from "framer-motion";
+import { Shield, Zap, CheckCircle, FileText } from "lucide-react";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { motion } from 'framer-motion';
-import {
-  Zap,
-  Cpu,
-  FileText,
-  ChevronRight,
-  ArrowRight,
-  ShieldAlert
-} from 'lucide-react';
 
-export default function StructuralHardeningProtocol() {
+export default function StructuralHardening() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-blue-600">
-      <Head><title>BMR | PROTOCOL 02: STRUCTURAL HARDENING</title></Head>
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-blue-500/30 font-sans">
       <Header />
+      <main className="pt-44 pb-24 px-6 text-left">
+        <div className="max-w-6xl mx-auto space-y-16">
+          
+          <div className="text-center">
+            {/* 🛠️ PULSING PROTOCOL INDICATOR */}
+            <motion.div
+              animate={{ opacity: [0.4, 1, 0.4], scale: [0.98, 1, 0.98] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="inline-block px-4 py-1 border border-blue-600/50 bg-blue-600/5 text-[10px] font-mono text-blue-500 uppercase tracking-[0.3em] italic mb-8"
+            >
+              PROTOCOL 02 ACTIVATED
+            </motion.div>
 
-      <main className="pt-32 pb-20 px-6">
-        <div className="max-w-6xl mx-auto text-center mb-16">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="inline-block border border-blue-600/30 px-4 py-2 mb-8">
-            <span className="text-blue-600 font-mono text-[10px] uppercase tracking-widest flex items-center gap-2">
-              <Cpu className="h-3 w-3" /> Protocol 02 Activated
-            </span>
-          </motion.div>
-          <h1 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter mb-6">Structural Hardening</h1>
-          <p className="text-slate-400 text-xl max-w-3xl mx-auto mb-8 font-light italic">
-            Eliminate the Rework Tax and establish military-grade governance frameworks.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <button className="bg-blue-600 hover:bg-white hover:text-black text-white font-black py-4 px-10 uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 group">
-              Activate Protocol <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-none mb-6">
+              STRUCTURAL <br /><span className="text-blue-600 text-outline">HARDENING.</span>
+            </h1>
+            <p className="text-slate-500 text-lg md:text-xl font-medium uppercase italic tracking-tight max-w-2xl mx-auto">
+              Eliminate the rework tax and establish military grade governance frameworks.
+            </p>
+          </div>
+
+          <div className="flex justify-center gap-6">
+            <button className="bg-blue-600 hover:bg-white text-white hover:text-blue-600 px-10 py-5 font-black uppercase text-[11px] tracking-[0.4em] transition-all italic flex items-center gap-3">
+              ACTIVATE PROTOCOL <Zap size={16} />
             </button>
-            <button className="border border-slate-700 hover:bg-slate-800 text-white font-black py-4 px-10 uppercase text-xs tracking-widest transition-all">
-              Download Field Manual
+            <button className="border border-slate-800 hover:border-blue-600 text-slate-500 hover:text-white px-10 py-5 font-black uppercase text-[11px] tracking-[0.4em] transition-all italic">
+              DOWNLOAD FIELD MANUAL
             </button>
           </div>
-        </div>
 
-        <div className="max-w-6xl mx-auto mb-20 grid md:grid-cols-2 gap-1">
-          <div className="border border-slate-800 bg-slate-900/20 p-10">
-            <div className="flex items-center gap-3 mb-6">
-              <ShieldAlert className="h-6 w-6 text-blue-600" />
-              <h2 className="text-2xl font-black uppercase italic tracking-tight">System Decay Analysis</h2>
-            </div>
-            <p className="text-slate-500 text-sm mb-8 font-mono uppercase tracking-tight">The Rework Tax creates compounding operational debt:</p>
-            <ul className="space-y-4">
-              {['Verify:Serve ratios exceeding 2.0', 'Silent Updates creating system drift', 'Accountability gaps in AI decisions'].map((text, i) => (
-                <li key={i} className="flex items-start gap-4 text-slate-300 text-sm italic">
-                  <div className="w-1.5 h-1.5 bg-blue-600 mt-2 shrink-0" /> {text}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="border border-slate-800 bg-slate-900/20 p-10">
-            <div className="flex items-center gap-3 mb-6">
-              <Zap className="h-6 w-6 text-blue-600" />
-              <h2 className="text-2xl font-black uppercase italic tracking-tight">Protocol Objectives</h2>
-            </div>
-            <p className="text-slate-500 text-sm mb-8 font-mono uppercase tracking-tight">This protocol establishes structural integrity:</p>
-            <ul className="space-y-4">
-              {['Reduce Verify:Serve ratio to below 1.5', 'Implement blind validation protocols', 'Establish AI decision traceability'].map((text, i) => (
-                <li key={i} className="flex items-start gap-4 text-slate-300 text-sm italic">
-                  <div className="w-1.5 h-1.5 bg-blue-600 mt-2 shrink-0" /> {text}
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-sm font-mono text-slate-500 uppercase tracking-[0.4em] mb-12 text-center text-white flex items-center justify-center gap-4">
-            <FileText className="h-4 w-4 text-blue-600" /> Execution Framework
-          </h2>
-          <div className="grid gap-1">
-            {[
-              { phase: 'Phase 01', title: 'Tax Elimination', desc: 'Implement validation protocols to reduce rework overhead.', icon: Zap, time: '2 weeks' },
-              { phase: 'Phase 02', title: 'Governance Hardening', desc: 'Establish usage policies and military-grade controls.', icon: Cpu, time: '3 weeks' },
-              { phase: 'Phase 03', title: 'Traceability System', desc: 'Create decision audit trails for all AI-assisted outputs.', icon: FileText, time: '3 weeks' }
-            ].map((item, index) => (
-              <div key={index} className="border border-slate-900 bg-slate-900/10 p-8 flex flex-col md:flex-row gap-8 items-center group hover:border-blue-600 transition-colors">
-                <div className="bg-blue-600/10 p-4 border border-blue-600/20"><item.icon className="h-8 w-8 text-blue-600" /></div>
-                <div className="flex-1 text-center md:text-left">
-                  <div className="flex items-center justify-center md:justify-start gap-4 mb-2 font-mono text-[10px] text-slate-500 uppercase tracking-widest">
-                    <span>{item.phase}</span>
-                    <span className="h-1 w-1 bg-slate-800 rounded-full" />
-                    <span>Duration: {item.time}</span>
-                  </div>
-                  <h3 className="text-2xl font-black uppercase italic tracking-tight">{item.title}</h3>
-                  <p className="text-slate-400 text-sm mt-2">{item.desc}</p>
-                </div>
-                <ChevronRight className="h-6 w-6 text-slate-800 group-hover:text-blue-600 transition-colors" />
+          <div className="grid md:grid-cols-2 gap-px bg-slate-900/50 border border-slate-900">
+            {/* SYSTEM DECAY ANALYSIS */}
+            <div className="bg-slate-950 p-12 space-y-8">
+              <div className="flex items-center gap-3 text-blue-500">
+                <Shield size={20} />
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter">SYSTEM DECAY ANALYSIS</h2>
               </div>
-            ))}
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest leading-loose">
+                The rework tax creates compounding operational debt. We identify these drift points:
+              </p>
+              <ul className="space-y-4 text-slate-400 text-sm italic font-medium">
+                <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 bg-blue-600 mt-1.5" /> Verify to serve ratios exceeding 2.0</li>
+                <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 bg-blue-600 mt-1.5" /> Silent updates creating system drift</li>
+                <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 bg-blue-600 mt-1.5" /> Accountability gaps in AI decisions</li>
+              </ul>
+            </div>
+
+            {/* PROTOCOL OBJECTIVES */}
+            <div className="bg-slate-950 p-12 space-y-8 border-l border-slate-900">
+              <div className="flex items-center gap-3 text-blue-500">
+                <Zap size={20} />
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter">PROTOCOL OBJECTIVES</h2>
+              </div>
+              <p className="text-slate-500 text-xs font-bold uppercase tracking-widest leading-loose">
+                This protocol establishes structural integrity within the logic chain:
+              </p>
+              <ul className="space-y-4 text-slate-400 text-sm italic font-medium">
+                <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 bg-blue-600 mt-1.5" /> Reduce verify to serve ratio below 1.5</li>
+                <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 bg-blue-600 mt-1.5" /> Implement blind validation protocols</li>
+                <li className="flex items-start gap-3"><div className="w-1.5 h-1.5 bg-blue-600 mt-1.5" /> Establish AI decision traceability</li>
+              </ul>
+            </div>
           </div>
         </div>
       </main>
