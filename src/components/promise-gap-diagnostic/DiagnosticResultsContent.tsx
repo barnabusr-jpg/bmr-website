@@ -15,7 +15,7 @@ const DiagnosticResultsContent = () => {
       try {
         setData(JSON.parse(vault));
       } catch (err) {
-        console.error("Vault retrieval error:", err);
+        console.error(err);
       }
     }
   }, []);
@@ -46,7 +46,7 @@ const DiagnosticResultsContent = () => {
     setIsDownloading(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsDownloading(false);
-    alert("FORENSIC_TRANSFER_COMPLETE: Document artifact ready.");
+    alert("TRANSFER_COMPLETE");
   };
 
   if (!data) return null;
@@ -67,12 +67,12 @@ const DiagnosticResultsContent = () => {
         <ForensicTriageGrid onLock={handleLock} />
       </div>
 
-      <div className={`transition-all duration-700 ${hasValidated ? 'opacity-100 translate-y-0' : 'opacity-30 blur-sm pointer-events-none'}`}>
+      <div className={hasValidated ? 'opacity-100 translate-y-0 transition-all duration-700' : 'opacity-30 blur-sm pointer-events-none'}>
         <div className="p-12 border-2 border-slate-900 bg-slate-900/40 text-center relative overflow-hidden">
           {!hasValidated && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm">
                <div className="flex items-center gap-3 text-[#14b8a6] font-black uppercase text-[10px] tracking-[0.4em]">
-                 <ShieldAlert size={18} /> Calibration Required to Unlock Verdict
+                 <ShieldAlert size={18} /> Calibration Required
                </div>
             </div>
           )}
@@ -102,7 +102,7 @@ const DiagnosticResultsContent = () => {
               className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
             >
               <Download size={16} className={isDownloading ? 'animate-bounce' : 'group-hover:translate-y-1 transition-transform'} />
-              {isDownloading ? "Generating Dossier..." : "Download Forensic Summary"}
+              {isDownloading ? "Generating..." : "Download Summary"}
             </button>
           </div>
         </div>
