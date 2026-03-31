@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Radar as ReRadar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
-import { ArrowRight, Lock, Activity, Download } from "lucide-react";
+import { Activity, Download } from "lucide-react";
 
 const DiagnosticResultsContent = () => {
   const [data, setData] = useState<any>(null);
@@ -22,14 +22,6 @@ const DiagnosticResultsContent = () => {
     }
   }, []);
 
-  const handleBooking = () => {
-    if (typeof window === 'undefined' || !data) return;
-    const focusKey = data.AVS.aggregate >= data.HAI.aggregate && data.AVS.aggregate >= data.IGF.aggregate ? 'AVS' : (data.IGF.aggregate >= data.HAI.aggregate ? 'IGF' : 'HAI');
-    const vectorId = focusKey === 'HAI' ? 'Vector 01' : focusKey === 'AVS' ? 'Vector 02' : 'Vector 03';
-    const url = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(data.name)}&email=${encodeURIComponent(data.email)}&a1=${vectorId}&utm_campaign=${encodeURIComponent(data.organization)}`;
-    window.open(url, '_blank');
-  };
-
   const handleDownloadDossier = async () => {
     if (!data) return;
     setIsDownloading(true);
@@ -42,9 +34,9 @@ const DiagnosticResultsContent = () => {
           email: data.email,
           organization: data.organization,
           scores: {
-            hai: data.HAI.aggregate,
-            avs: data.AVS.aggregate,
-            igf: data.IGF.aggregate
+            hai: data.HAI?.aggregate || 0,
+            avs: data.AVS?.aggregate || 0,
+            igf: data.IGF?.aggregate || 0
           }
         })
       });
@@ -52,9 +44,6 @@ const DiagnosticResultsContent = () => {
       if (!response.ok) throw new Error('DOWNLOAD_FAILED');
 
       const result = await response.json();
-      console.log("Dossier Status:", result.status);
-      
-      // In this stage, we trigger a successful alert to confirm the handshake
       alert(`FORENSIC_TRANSFER_COMPLETE: Artifact ${result.artifact} is ready for review.`);
       
     } catch (err) {
@@ -74,7 +63,7 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-12 space-y-16 text-white max-w-6xl mx-auto px-6 font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between border-l-4 border-[#14b8a6] bg-slate-900/20 p-10 relative overflow-hidden">
+      <div className="flex flex-col md:flex-row md:items-end justify-between border-l-4 border-[#14b8a6] bg-slate-900/20 p-10 relative overflow-hidden text-left">
         <div className="absolute top-0 right-0 p-4 opacity-10">
            <Activity size={80} className="text-[#14b8a6]" />
         </div>
@@ -99,7 +88,7 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
         <Card className="lg:col-span-2 p-10 bg-slate-900/10 border-2 border-slate-900 rounded-none relative">
           <div className="h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
