@@ -32,28 +32,19 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
 
     setIsSubmitting(true);
     try {
-      // API Handshake Simulation
+      // 1. Handshake Simulation
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // BMR LOGIC: Identify highest intensity Vector for Calendly routing
-      // Logic mirrors active site: AVS > HAI/IGF ? Vector 02 : (IGF > HAI ? Vector 03 : Vector 01)
-      const scores = {
-        hai: result.frictionIndex, // Replace with specific layer score if available in result object
-        avs: result.frictionIndex, 
-        igf: result.frictionIndex 
-      };
-
-      // Since 'result' structure might vary, we use the frictionIndex as the base signal
-      // In a production Deep Dive, we map result.HAI.aggregate, etc.
+      // 2. BMR Vector Mapping: Maps frictionIndex to Calendly 'a1' field
       const vectorId = result.frictionIndex > 75 ? 'Vector 03' : 'Vector 02';
 
+      // 3. Secure Endpoint: Redirects to the verified BMR Calendly handle
       const calendlyUrl = `https://calendly.com/hello-bmradvisory/forensic-review?` + 
         `name=${encodeURIComponent('BMR_USER')}&` + 
         `email=${encodeURIComponent(email)}&` + 
         `a1=${vectorId}&` + 
         `utm_campaign=${encodeURIComponent(result.protocol || 'BMR_DIAGNOSTIC')}`;
 
-      // Execute Secure Redirect
       window.open(calendlyUrl, '_blank');
       
       onSuccess(email);
@@ -71,7 +62,7 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 font-sans">
       <div className="bg-slate-900 border border-red-600/30 max-w-md w-full p-8 relative shadow-2xl">
         
         <div className="flex justify-between items-start mb-6">
