@@ -35,21 +35,36 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
       // 1. Handshake Simulation
       await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // 2. BMR Vector Mapping: Maps frictionIndex to Calendly 'a1' field
-      const vectorId = result.frictionIndex > 75 ? 'Vector 03' : 'Vector 02';
+      // 2. Data Retrieval: Pull from the vault to ensure the URL is valid
+      const vault = localStorage.getItem('bmr_results_vault');
+      const vaultData = vault ? JSON.parse(vault) : null;
 
-      // 3. Secure Endpoint: Redirects to the verified BMR Calendly handle
+      if (!vaultData) {
+        throw new Error('DATA_VAULT_NOT_FOUND');
+      }
+
+      // 3. Vector Mapping Logic
+      const focusKey = vaultData.AVS?.aggregate >= vaultData.HAI?.aggregate && 
+                       vaultData.AVS?.aggregate >= vaultData.IGF?.aggregate ? 'AVS' : 
+                       (vaultData.IGF?.aggregate >= vaultData.HAI?.aggregate ? 'IGF' : 'HAI');
+      
+      const vectorId = focusKey === 'HAI' ? 'Vector 01' : 
+                       focusKey === 'AVS' ? 'Vector 02' : 'Vector 03';
+
+      // 4. Construct Absolute Calendly URL (Fixed Slug to prevent 404)
       const calendlyUrl = `https://calendly.com/hello-bmradvisory/forensic-review?` + 
-        `name=${encodeURIComponent('BMR_USER')}&` + 
+        `name=${encodeURIComponent(vaultData.name || 'BMR User')}&` + 
         `email=${encodeURIComponent(email)}&` + 
         `a1=${vectorId}&` + 
-        `utm_campaign=${encodeURIComponent(result.protocol || 'BMR_DIAGNOSTIC')}`;
+        `utm_campaign=${encodeURIComponent(vaultData.organization || 'BMR_DIAGNOSTIC')}`;
 
-      window.open(calendlyUrl, '_blank');
+      // 5. Direct Redirection (Harder for browsers to block than window.open)
+      window.location.href = calendlyUrl;
       
       onSuccess(email);
-    } catch {
-      setError('TRANSMISSION_FAILURE: AES-256_HANDSHAKE_ERROR');
+    } catch (err) {
+      console.error("Triage Redirect Error:", err);
+      setError('TRANSMISSION_FAILURE: ENDPOINT_NOT_REACHABLE');
     } finally {
       setIsSubmitting(false);
     }
@@ -62,7 +77,7 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 font-sans">
+    <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
       <div className="bg-slate-900 border border-red-600/30 max-w-md w-full p-8 relative shadow-2xl">
         
         <div className="flex justify-between items-start mb-6">
@@ -86,7 +101,7 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
 
         <p className="text-slate-400 mb-8 text-[11px] leading-relaxed uppercase tracking-wider font-mono italic">
           Your <span className="text-red-600 font-bold">{result.protocol.replace('_', ' ')}</span> briefing 
-          is ready. Endpoint verification required for AES-256 encrypted packet transfer.
+          is ready. Endpoint verification required for encrypted packet transfer.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -100,7 +115,7 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
                 type="email"
                 value={email}
                 onChange={(e) => validateEmail(e.target.value)}
-                className={`w-full bg-slate-950 border px-10 py-4 text-xs placeholder-slate-700 focus:outline-none font-mono transition-colors ${
+                className={`w-full bg-slate-950 border px-10 py-4 text-xs focus:outline-none font-mono transition-colors ${
                   isValid ? 'border-green-600 text-white' :
                   error ? 'border-red-600 text-red-600' :
                   'border-slate-800 text-white'
