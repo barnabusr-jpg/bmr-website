@@ -15,9 +15,6 @@ const DiagnosticResultsContent = () => {
       try {
         const parsed = JSON.parse(vault);
         setData(parsed);
-        
-        // FORCED RESET: Even if data exists, we reset the validation 
-        // to force the user to interact with the Triage Grid on this view.
         setHasValidated(false);
         setHemorrhageTotal(0);
       } catch (err) {
@@ -27,9 +24,16 @@ const DiagnosticResultsContent = () => {
   }, []);
 
   const handleLock = (val: number) => {
-    // This is the ONLY function that can flip the gatekeeper
     setHemorrhageTotal(val);
     setHasValidated(true);
+  };
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    // Logic for PDF generation would trigger here
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsDownloading(false);
+    alert("FORENSIC_ARTIFACT_DOWNLOAD_COMPLETE");
   };
 
   const handleBooking = () => {
@@ -66,8 +70,7 @@ const DiagnosticResultsContent = () => {
         <ForensicTriageGrid onLock={handleLock} />
       </div>
 
-      {/* VERDICT SECTION: Strictly controlled by hasValidated */}
-      <div className={hasValidated ? "opacity-100 translate-y-0 transition-all duration-1000" : "opacity-5 blur-xl pointer-events-none h-0 overflow-hidden"}>
+      <div className={hasValidated ? "opacity-100 h-auto translate-y-0 transition-all duration-1000" : "opacity-0 h-0 overflow-hidden pointer-events-none"}>
         <div className="p-12 border-2 border-slate-900 bg-slate-900/40 text-center relative overflow-hidden">
           <Activity className="mx-auto mb-6 text-[#14b8a6] opacity-50" size={48} />
           
@@ -87,6 +90,15 @@ const DiagnosticResultsContent = () => {
               className="bg-[#14b8a6] text-slate-950 px-12 py-6 font-black uppercase text-[12px] tracking-[0.4em] hover:bg-white transition-all flex items-center shadow-2xl"
             >
               Unlock Full Protocol <ArrowRight className="ml-3 h-4 w-4" />
+            </button>
+
+            <button 
+              onClick={handleDownload}
+              disabled={isDownloading}
+              className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors disabled:opacity-30"
+            >
+              <Download size={16} className={isDownloading ? "animate-bounce" : ""} />
+              {isDownloading ? "Encrypting Artifact..." : "Download Dossier"}
             </button>
           </div>
         </div>
