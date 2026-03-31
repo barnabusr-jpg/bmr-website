@@ -3,8 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Radar as ReRadar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
-import { ArrowRight, Lock, Activity, ShieldAlert, Download } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, Lock, Activity, Download } from "lucide-react";
 
 const DiagnosticResultsContent = () => {
   const [data, setData] = useState<any>(null);
@@ -24,7 +23,7 @@ const DiagnosticResultsContent = () => {
   }, []);
 
   const handleBooking = () => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined' || !data) return;
     const focusKey = data.AVS.aggregate >= data.HAI.aggregate && data.AVS.aggregate >= data.IGF.aggregate ? 'AVS' : (data.IGF.aggregate >= data.HAI.aggregate ? 'IGF' : 'HAI');
     const vectorId = focusKey === 'HAI' ? 'Vector 01' : focusKey === 'AVS' ? 'Vector 02' : 'Vector 03';
     const url = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(data.name)}&email=${encodeURIComponent(data.email)}&a1=${vectorId}&utm_campaign=${encodeURIComponent(data.organization)}`;
@@ -32,6 +31,7 @@ const DiagnosticResultsContent = () => {
   };
 
   const handleDownloadDossier = async () => {
+    if (!data) return;
     setIsDownloading(true);
     try {
       const response = await fetch('/api/forensic/generate', {
@@ -51,15 +51,12 @@ const DiagnosticResultsContent = () => {
 
       if (!response.ok) throw new Error('DOWNLOAD_FAILED');
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `BMR_Forensic_Dossier_${data.organization.replace(/\s+/g, '_')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      const result = await response.json();
+      console.log("Dossier Status:", result.status);
+      
+      // In this stage, we trigger a successful alert to confirm the handshake
+      alert(`FORENSIC_TRANSFER_COMPLETE: Artifact ${result.artifact} is ready for review.`);
+      
     } catch (err) {
       console.error("Dossier Error:", err);
     } finally {
@@ -77,7 +74,6 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="py-12 space-y-16 text-white max-w-6xl mx-auto px-6 font-sans">
-      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between border-l-4 border-[#14b8a6] bg-slate-900/20 p-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10">
            <Activity size={80} className="text-[#14b8a6]" />
@@ -89,7 +85,6 @@ const DiagnosticResultsContent = () => {
           <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter">
             Forensic <span className="text-[#14b8a6]">Outcome</span>
           </h1>
-          
           <button 
             onClick={handleDownloadDossier}
             disabled={isDownloading}
@@ -104,7 +99,6 @@ const DiagnosticResultsContent = () => {
         </div>
       </div>
 
-      {/* CHART SECTION */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 p-10 bg-slate-900/10 border-2 border-slate-900 rounded-none relative">
           <div className="h-[400px] w-full">
@@ -117,7 +111,6 @@ const DiagnosticResultsContent = () => {
             </ResponsiveContainer>
           </div>
         </Card>
-
         <div className="space-y-4">
           {['Vector 01', 'Vector 02', 'Vector 03'].map((v, i) => (
             <div key={v} className="p-8 bg-slate-900/30 border-2 border-slate-900">
@@ -126,18 +119,6 @@ const DiagnosticResultsContent = () => {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* CTA SECTION */}
-      <div className="text-center p-20 border-2 border-slate-900 bg-slate-900/40 group">
-        <Lock className="h-16 w-16 text-[#14b8a6] mx-auto mb-8 opacity-50" />
-        <h4 className="font-black uppercase italic text-3xl mb-6">Strategic Targets <span className="text-[#14b8a6]">Encrypted</span></h4>
-        <button 
-          className="bg-[#14b8a6] text-[#020617] px-12 py-6 font-black uppercase text-[12px] tracking-[0.4em] hover:bg-white transition-all" 
-          onClick={handleBooking}
-        >
-          Unlock Full Protocol <ArrowRight className="inline h-4 w-4 ml-3" />
-        </button>
       </div>
     </div>
   );
