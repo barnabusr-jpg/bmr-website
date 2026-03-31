@@ -1,14 +1,14 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-   darkMode: ["class"],
+  darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-   prefix: "",
- theme: {
+  prefix: "",
+  theme: {
     container: {
       center: true,
       padding: "2rem",
@@ -20,6 +20,8 @@ const config: Config = {
       fontFamily: {
         heading: ['Poppins', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
+        // Added BMR Forensic Typewriter font
+        forensic: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Courier New', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -27,6 +29,14 @@ const config: Config = {
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        // Added BMR Forensic Palette
+        bmr: {
+          dark: '#0f172a',
+          slate: '#1e293b',
+          red: '#dc2626',
+          gray: '#64748b',
+          light: '#f8fafc',
+        },
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -67,20 +77,12 @@ const config: Config = {
       },
       keyframes: {
         "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
         },
         "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
         },
       },
       animation: {
