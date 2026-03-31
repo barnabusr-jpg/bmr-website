@@ -30,7 +30,6 @@ const DiagnosticResultsContent = () => {
 
   const handleDownload = async () => {
     setIsDownloading(true);
-    // Logic for PDF generation would trigger here
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsDownloading(false);
     alert("FORENSIC_ARTIFACT_DOWNLOAD_COMPLETE");
