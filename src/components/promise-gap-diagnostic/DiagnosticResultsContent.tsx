@@ -44,7 +44,7 @@ const DiagnosticResultsContent = () => {
   const triggerDownload = async () => {
     if (!data || !hasValidated) return;
     setIsDownloading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
     setIsDownloading(false);
     alert("TRANSFER_COMPLETE");
   };
@@ -59,7 +59,7 @@ const DiagnosticResultsContent = () => {
           Forensic <span className="text-[#14b8a6]">Outcome</span>
         </h1>
         <p className="text-slate-500 text-[10px] uppercase tracking-widest mt-2 font-mono">
-          Protocol: {data.archetype || "REPLACEMENT TRAP"} // {data.organization}
+          Protocol: {data.archetype || "REPLACEMENT TRAP"} {'|'} {data.organization}
         </p>
       </div>
 
@@ -67,7 +67,7 @@ const DiagnosticResultsContent = () => {
         <ForensicTriageGrid onLock={handleLock} />
       </div>
 
-      <div className={hasValidated ? 'opacity-100 translate-y-0 transition-all duration-700' : 'opacity-30 blur-sm pointer-events-none'}>
+      <div className={hasValidated ? "opacity-100 translate-y-0 transition-all duration-700" : "opacity-30 blur-sm pointer-events-none"}>
         <div className="p-12 border-2 border-slate-900 bg-slate-900/40 text-center relative overflow-hidden">
           {!hasValidated && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm">
@@ -92,7 +92,7 @@ const DiagnosticResultsContent = () => {
           <div className="flex flex-col md:flex-row gap-6 justify-center items-center">
             <button 
               onClick={handleBooking} 
-              className="bg-[#14b8a6] text-slate-950 px-12 py-6 font-black uppercase text-[12px] tracking-[0.4em] hover:bg-white transition-all flex items-center shadow-[0_0_20px_rgba(20,184,166,0.3)]"
+              className="bg-[#14b8a6] text-slate-950 px-12 py-6 font-black uppercase text-[12px] tracking-[0.4em] hover:bg-white transition-all flex items-center shadow-2xl"
             >
               Unlock Full Protocol <ArrowRight className="ml-3 h-4 w-4" />
             </button>
@@ -101,7 +101,7 @@ const DiagnosticResultsContent = () => {
               onClick={triggerDownload} 
               className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
             >
-              <Download size={16} className={isDownloading ? 'animate-bounce' : 'group-hover:translate-y-1 transition-transform'} />
+              <Download size={16} className={isDownloading ? "animate-bounce" : "group-hover:translate-y-1 transition-transform"} />
               {isDownloading ? "Generating..." : "Download Summary"}
             </button>
           </div>
