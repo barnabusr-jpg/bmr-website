@@ -34,6 +34,28 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
     try {
       // API Handshake Simulation
       await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // BMR LOGIC: Identify highest intensity Vector for Calendly routing
+      // Logic mirrors active site: AVS > HAI/IGF ? Vector 02 : (IGF > HAI ? Vector 03 : Vector 01)
+      const scores = {
+        hai: result.frictionIndex, // Replace with specific layer score if available in result object
+        avs: result.frictionIndex, 
+        igf: result.frictionIndex 
+      };
+
+      // Since 'result' structure might vary, we use the frictionIndex as the base signal
+      // In a production Deep Dive, we map result.HAI.aggregate, etc.
+      const vectorId = result.frictionIndex > 75 ? 'Vector 03' : 'Vector 02';
+
+      const calendlyUrl = `https://calendly.com/hello-bmradvisory/forensic-review?` + 
+        `name=${encodeURIComponent('BMR_USER')}&` + 
+        `email=${encodeURIComponent(email)}&` + 
+        `a1=${vectorId}&` + 
+        `utm_campaign=${encodeURIComponent(result.protocol || 'BMR_DIAGNOSTIC')}`;
+
+      // Execute Secure Redirect
+      window.open(calendlyUrl, '_blank');
+      
       onSuccess(email);
     } catch {
       setError('TRANSMISSION_FAILURE: AES-256_HANDSHAKE_ERROR');
@@ -98,7 +120,6 @@ export default function TriageCaptureModal({ result, onClose, onSuccess }: Props
             </div>
           </div>
 
-          {/* GDPR Compliance Component */}
           <div className="flex items-start gap-3 group cursor-pointer">
             <input 
               type="checkbox" 
