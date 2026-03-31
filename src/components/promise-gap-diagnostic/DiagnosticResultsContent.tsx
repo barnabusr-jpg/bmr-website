@@ -44,7 +44,6 @@ const DiagnosticResultsContent = () => {
   const triggerDownload = async () => {
     if (!data || !hasValidated) return;
     setIsDownloading(true);
-    // Simulate generation delay
     await new Promise(resolve => setTimeout(resolve, 2000));
     setIsDownloading(false);
     alert("FORENSIC_TRANSFER_COMPLETE: Document artifact ready.");
@@ -102,7 +101,7 @@ const DiagnosticResultsContent = () => {
               onClick={triggerDownload} 
               className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
             >
-              <Download size={16} className={`${isDownloading ? 'animate-bounce' : 'group-hover:translate-y-1 transition-transform'}`} />
+              <Download size={16} className={isDownloading ? 'animate-bounce' : 'group-hover:translate-y-1 transition-transform'} />
               {isDownloading ? "Generating Dossier..." : "Download Forensic Summary"}
             </button>
           </div>
