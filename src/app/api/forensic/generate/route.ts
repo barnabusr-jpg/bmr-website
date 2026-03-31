@@ -9,8 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'DATA_UNSTABLE' }, { status: 400 });
     }
 
-    // IP PROTECTION SEAL: This text must be injected into the PDF Footer
-    const ipNotice = "PROPRIETARY LOGIC NOTICE (BMR-v3.4): All calculations regarding Logic Decay and Rework Tax are protected under BMR Advisory IP (2026).";
+    const ipNotice = "PROPRIETARY LOGIC NOTICE (BMR-v3.4): Calculations protected under BMR Advisory IP (2026).";
 
     return NextResponse.json({ 
       status: 'COMPLETE', 
@@ -23,6 +22,7 @@ export async function POST(req: Request) {
       }
     });
   } catch (err) {
+    console.error("CRITICAL_API_FAILURE:", err);
     return NextResponse.json({ error: 'SYSTEM_FAILURE' }, { status: 500 });
   }
 }
