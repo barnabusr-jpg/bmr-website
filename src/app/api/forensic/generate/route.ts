@@ -3,20 +3,26 @@ import { NextResponse } from 'next/server';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { archetype, organization, email } = body;
+    const { organization, validated_hemorrhage, calibration } = body;
 
-    if (!organization || !email) {
-      return NextResponse.json({ error: 'MISSING_REQUIRED_FIELDS' }, { status: 400 });
+    if (!calibration || !validated_hemorrhage) {
+      return NextResponse.json({ error: 'DATA_UNSTABLE' }, { status: 400 });
     }
 
+    // IP PROTECTION SEAL: This text must be injected into the PDF Footer
+    const ipNotice = "PROPRIETARY LOGIC NOTICE (BMR-v3.4): All calculations regarding Logic Decay and Rework Tax are protected under BMR Advisory IP (2026).";
+
     return NextResponse.json({ 
-      status: 'TRANSMISSION_COMPLETE', 
-      artifact: `BMR_FORENSIC_${organization.toUpperCase()}`,
-      archetype: archetype,
-      timestamp: new Date().toISOString()
+      status: 'COMPLETE', 
+      artifact: `BMR_${organization.toUpperCase()}`,
+      notice: ipNotice,
+      summary: {
+        nodes: calibration.nodes,
+        integrity: calibration.integrity,
+        total: validated_hemorrhage
+      }
     });
-  } catch (error) {
-    console.error("AES-256 Handshake Error:", error);
-    return NextResponse.json({ error: 'AES-256_HANDSHAKE_FAILURE' }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ error: 'SYSTEM_FAILURE' }, { status: 500 });
   }
 }
