@@ -1,113 +1,81 @@
 "use client";
-
 import React, { useEffect, useState } from 'react';
-import { Card } from "@/components/ui/card";
-import { Radar as ReRadar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from 'recharts';
-import { Activity, Download } from "lucide-react";
+import ForensicTriageGrid from '../forensic/ForensicTriageGrid';
+import { Download, ArrowRight, Activity, Lock } from 'lucide-react';
 
 const DiagnosticResultsContent = () => {
   const [data, setData] = useState<any>(null);
-  const [mounted, setMounted] = useState(false);
+  const [hemorrhageTotal, setHemorrhageTotal] = useState(17800000);
   const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const vault = localStorage.getItem('bmr_results_vault');
-    if (vault) {
-      try {
-        setData(JSON.parse(vault));
-      } catch (e) {
-        console.error("Failed to parse vault data", e);
-      }
-    }
+    if (vault) setData(JSON.parse(vault));
   }, []);
+
+  const handleBooking = () => {
+    if (!data) return;
+    const vault = JSON.parse(localStorage.getItem('bmr_results_vault') || '{}');
+    const finalVal = vault.validated_hemorrhage || hemorrhageTotal;
+    const nodes = vault.calibration?.nodes || 500;
+
+    const url = `https://calendly.com/hello-bmradvisory/forensic-review?` + 
+      `name=${encodeURIComponent(data.name)}&` + 
+      `email=${encodeURIComponent(data.email)}&` + 
+      `a1=Vector_02&` + 
+      `a2=Hemorrhage_$${finalVal.toLocaleString()}&` + 
+      `a3=Nodes_${nodes}&` + 
+      `utm_campaign=${encodeURIComponent(data.organization)}`;
+
+    window.open(url, '_blank');
+  };
 
   const handleDownloadDossier = async () => {
     if (!data) return;
     setIsDownloading(true);
+    const vault = JSON.parse(localStorage.getItem('bmr_results_vault') || '{}');
+
     try {
       const response = await fetch('/api/forensic/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          archetype: data.archetype || "Replacement Trap",
-          email: data.email,
+          archetype: data.archetype,
           organization: data.organization,
-          scores: {
-            hai: data.HAI?.aggregate || 0,
-            avs: data.AVS?.aggregate || 0,
-            igf: data.IGF?.aggregate || 0
-          }
+          email: data.email,
+          validated_hemorrhage: vault.validated_hemorrhage,
+          calibration: vault.calibration
         })
       });
-
-      if (!response.ok) throw new Error('DOWNLOAD_FAILED');
-
-      const result = await response.json();
-      alert(`FORENSIC_TRANSFER_COMPLETE: Artifact ${result.artifact} is ready for review.`);
-      
+      if (response.ok) alert("FORENSIC_TRANSFER_COMPLETE: Artifact Ready.");
     } catch (err) {
-      console.error("Dossier Error:", err);
+      console.error(err);
     } finally {
       setIsDownloading(false);
     }
   };
 
-  if (!mounted || !data) return null;
-
-  const chartData = [
-    { zone: 'VECTOR 01', value: Math.round(data?.HAI?.aggregate || 0) },
-    { zone: 'VECTOR 02', value: Math.round(data?.AVS?.aggregate || 0) },
-    { zone: 'VECTOR 03', value: Math.round(data?.IGF?.aggregate || 0) },
-  ];
+  if (!data) return null;
 
   return (
-    <div className="py-12 space-y-16 text-white max-w-6xl mx-auto px-6 font-sans">
-      <div className="flex flex-col md:flex-row md:items-end justify-between border-l-4 border-[#14b8a6] bg-slate-900/20 p-10 relative overflow-hidden text-left">
-        <div className="absolute top-0 right-0 p-4 opacity-10">
-           <Activity size={80} className="text-[#14b8a6]" />
-        </div>
-        <div>
-          <h3 className="text-[#14b8a6] text-[10px] uppercase tracking-[0.5em] font-black mb-4 italic">
-            Signal Intensity captured // {data.organization}
-          </h3>
-          <h1 className="text-4xl md:text-5xl font-black italic uppercase tracking-tighter">
-            Forensic <span className="text-[#14b8a6]">Outcome</span>
-          </h1>
-          <button 
-            onClick={handleDownloadDossier}
-            disabled={isDownloading}
-            className="mt-6 flex items-center gap-3 bg-slate-800 hover:bg-[#14b8a6] text-white hover:text-slate-950 px-4 py-2 border border-slate-700 transition-all text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
-          >
-            <Download size={14} /> {isDownloading ? "Generating Packet..." : "Download Forensic Dossier"}
-          </button>
-        </div>
-        <div className="mt-8 md:mt-0 text-right">
-          <span className="block text-[9px] text-slate-500 uppercase font-black tracking-widest mb-1 italic">Reporting Lens</span>
-          <p className="font-black text-xl italic uppercase text-white">{data.role}</p>
-        </div>
+    <div className="max-w-6xl mx-auto py-12 px-6 text-white font-sans">
+      <div className="border-l-4 border-[#14b8a6] bg-slate-900/20 p-10 mb-12">
+        <h1 className="text-4xl font-black italic uppercase italic">Forensic <span className="text-[#14b8a6]">Outcome</span></h1>
+        <button onClick={handleDownloadDossier} className="mt-6 flex items-center gap-2 bg-slate-800 px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-slate-700">
+          <Download size={14} /> {isDownloading ? "Generating..." : "Download Forensic Dossier"}
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 text-left">
-        <Card className="lg:col-span-2 p-10 bg-slate-900/10 border-2 border-slate-900 rounded-none relative">
-          <div className="h-[400px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
-                <PolarGrid stroke="#1e293b" />
-                <PolarAngleAxis dataKey="zone" tick={{ fill: '#475569', fontSize: 10 }} />
-                <ReRadar name="Intensity" dataKey="value" stroke="#14b8a6" fill="#14b8a6" fillOpacity={0.2} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-        <div className="space-y-4">
-          {['Vector 01', 'Vector 02', 'Vector 03'].map((v, i) => (
-            <div key={v} className="p-8 bg-slate-900/30 border-2 border-slate-900">
-               <span className="text-[10px] font-black text-[#14b8a6] uppercase">{v} Intensity</span>
-               <div className="text-4xl font-black italic">{chartData[i].value} PTS</div>
-            </div>
-          ))}
-        </div>
+      <ForensicTriageGrid onLock={(val) => setHemorrhageTotal(val)} />
+
+      <div className="p-12 border-2 border-slate-900 bg-slate-900/40 text-center">
+        <Activity className="mx-auto mb-6 text-[#14b8a6] opacity-50" size={48} />
+        <span className="text-[10px] text-slate-500 uppercase font-black italic tracking-[0.3em]">Validated Annual Hemorrhage</span>
+        <h2 className="text-6xl font-black italic tracking-tighter mb-8">${hemorrhageTotal.toLocaleString()}</h2>
+        
+        <button onClick={handleBooking} className="bg-[#14b8a6] text-slate-950 px-12 py-6 font-black uppercase text-[12px] tracking-[0.4em] hover:bg-white transition-all flex items-center mx-auto">
+          Unlock Full Protocol <ArrowRight className="ml-3 h-4 w-4" />
+        </button>
       </div>
     </div>
   );
