@@ -13,7 +13,13 @@ const DiagnosticResultsContent = () => {
     const vault = localStorage.getItem('bmr_results_vault');
     if (vault) {
       try {
-        setData(JSON.parse(vault));
+        const parsed = JSON.parse(vault);
+        setData(parsed);
+        
+        // FORCED RESET: Even if data exists, we reset the validation 
+        // to force the user to interact with the Triage Grid on this view.
+        setHasValidated(false);
+        setHemorrhageTotal(0);
       } catch (err) {
         console.error(err);
       }
@@ -21,6 +27,7 @@ const DiagnosticResultsContent = () => {
   }, []);
 
   const handleLock = (val: number) => {
+    // This is the ONLY function that can flip the gatekeeper
     setHemorrhageTotal(val);
     setHasValidated(true);
   };
@@ -41,14 +48,6 @@ const DiagnosticResultsContent = () => {
     window.open(url, '_blank');
   };
 
-  const triggerDownload = async () => {
-    if (!data || !hasValidated) return;
-    setIsDownloading(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsDownloading(false);
-    alert("TRANSFER_COMPLETE");
-  };
-
   if (!data) return null;
 
   return (
@@ -67,16 +66,9 @@ const DiagnosticResultsContent = () => {
         <ForensicTriageGrid onLock={handleLock} />
       </div>
 
-      <div className={hasValidated ? "opacity-100 translate-y-0 transition-all duration-700" : "opacity-30 blur-sm pointer-events-none"}>
+      {/* VERDICT SECTION: Strictly controlled by hasValidated */}
+      <div className={hasValidated ? "opacity-100 translate-y-0 transition-all duration-1000" : "opacity-5 blur-xl pointer-events-none h-0 overflow-hidden"}>
         <div className="p-12 border-2 border-slate-900 bg-slate-900/40 text-center relative overflow-hidden">
-          {!hasValidated && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-slate-950/60 backdrop-blur-sm">
-               <div className="flex items-center gap-3 text-[#14b8a6] font-black uppercase text-[10px] tracking-[0.4em]">
-                 <ShieldAlert size={18} /> Calibration Required
-               </div>
-            </div>
-          )}
-          
           <Activity className="mx-auto mb-6 text-[#14b8a6] opacity-50" size={48} />
           
           <div className="inline-flex items-center gap-2 mb-2">
@@ -96,17 +88,23 @@ const DiagnosticResultsContent = () => {
             >
               Unlock Full Protocol <ArrowRight className="ml-3 h-4 w-4" />
             </button>
-            
-            <button 
-              onClick={triggerDownload} 
-              className="group flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-white transition-colors"
-            >
-              <Download size={16} className={isDownloading ? "animate-bounce" : "group-hover:translate-y-1 transition-transform"} />
-              {isDownloading ? "Generating..." : "Download Summary"}
-            </button>
           </div>
         </div>
       </div>
+
+      {!hasValidated && (
+        <div className="py-20 text-center border-2 border-dashed border-slate-800 bg-slate-950/50">
+          <div className="flex flex-col items-center gap-4">
+            <ShieldAlert size={32} className="text-[#14b8a6] animate-pulse" />
+            <span className="text-[#14b8a6] font-black uppercase text-[12px] tracking-[0.5em]">
+              Awaiting Forensic Calibration
+            </span>
+            <p className="text-slate-600 text-[10px] uppercase font-mono">
+              Adjust node density and baseline integrity above to decrypt verdict
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
