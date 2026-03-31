@@ -20,11 +20,8 @@ const DiagnosticResultsContent = () => {
     const nodes = vault.calibration?.nodes || 500;
 
     const url = `https://calendly.com/hello-bmradvisory/forensic-review?` + 
-      `name=${encodeURIComponent(data.name)}&` + 
-      `email=${encodeURIComponent(data.email)}&` + 
-      `a1=Vector_02&` + 
-      `a2=Hemorrhage_$${finalVal.toLocaleString()}&` + 
-      `a3=Nodes_${nodes}&` + 
+      `name=${encodeURIComponent(data.name)}&email=${encodeURIComponent(data.email)}&` + 
+      `a1=Vector_02&a2=Hemorrhage_$${finalVal.toLocaleString()}&a3=Nodes_${nodes}&` + 
       `utm_campaign=${encodeURIComponent(data.organization)}`;
 
     window.open(url, '_blank');
@@ -47,9 +44,9 @@ const DiagnosticResultsContent = () => {
           calibration: vault.calibration
         })
       });
-      if (response.ok) alert("FORENSIC_TRANSFER_COMPLETE: Artifact Ready.");
+      if (response.ok) alert("FORENSIC_TRANSFER_COMPLETE.");
     } catch (err) {
-      console.error(err);
+      console.error("Dossier_Transfer_Error:", err);
     } finally {
       setIsDownloading(false);
     }
@@ -59,8 +56,9 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-6 text-white font-sans">
-      <div className="border-l-4 border-[#14b8a6] bg-slate-900/20 p-10 mb-12">
-        <h1 className="text-4xl font-black italic uppercase italic">Forensic <span className="text-[#14b8a6]">Outcome</span></h1>
+      <div className="border-l-4 border-[#14b8a6] bg-slate-900/20 p-10 mb-12 relative">
+        <Lock className="absolute top-4 right-4 text-[#14b8a6] opacity-20" size={40} />
+        <h1 className="text-4xl font-black italic uppercase">Forensic <span className="text-[#14b8a6]">Outcome</span></h1>
         <button onClick={handleDownloadDossier} className="mt-6 flex items-center gap-2 bg-slate-800 px-4 py-2 text-[10px] font-black uppercase tracking-widest border border-slate-700">
           <Download size={14} /> {isDownloading ? "Generating..." : "Download Forensic Dossier"}
         </button>
