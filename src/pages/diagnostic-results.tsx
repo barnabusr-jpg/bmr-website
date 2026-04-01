@@ -14,7 +14,7 @@ import {
   Info, 
   Skull,
   Loader2 
-} from 'lucide-center';
+} from 'lucide-react'; // Fix: Corrected module name
 
 export default function DiagnosticResults() {
   const [data, setData] = useState<any>(null);
