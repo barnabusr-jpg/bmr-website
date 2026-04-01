@@ -1,7 +1,5 @@
 /**
  * BMR SOLUTIONS // FORENSIC DIAGNOSTIC ENGINE V3.2
- * -----------------------------------------------
- * Mathematical integrity for systemic friction analysis.
  */
 
 export type ShearZone = 'reworkTax' | 'shadowAI' | 'expertiseDebt' | 'deltaGap';
@@ -36,15 +34,9 @@ export class ForensicEngine {
     duration: number, 
     baseline: { nodes: number; role: string; integrity: string }
   ): DiagnosticResult {
-    
     const warnings: string[] = [];
-    
-    // 1. Velocity Protection
-    if (duration < 60) {
-      return this.generateInconclusive(['DATA_VELOCITY_TOO_HIGH']);
-    }
+    if (duration < 60) return this.generateInconclusive(['DATA_VELOCITY_TOO_HIGH']);
 
-    // 2. Weighted Calculation (Internal Friction)
     const shearZones: Record<ShearZone, number> = {
       reworkTax: (answers['reworkTax'] || 0),
       shadowAI: (answers['shadowAI'] || 0),
@@ -60,28 +52,21 @@ export class ForensicEngine {
 
     const frictionIndex = Number((weightedTotal * 10).toFixed(1)); 
     
-    // 3. Financial Decryption (External Hemorrhage)
     const roleWeights: Record<string, number> = { executive: 1.65, managerial: 1.25, technical: 1.0 };
     const integrityWeights: Record<string, number> = { legacy: 1.45, hybrid: 1.1, modern: 0.85 };
     
     const baseScale = baseline.nodes * 120000;
     const rWeight = roleWeights[baseline.role] || 1.0;
     const iWeight = integrityWeights[baseline.integrity] || 1.0;
-    
-    // Obfuscated decay curve
     const decayFactor = Math.log10(baseline.nodes + 100) / 2.7;
-    const rawTotal = baseScale * rWeight * iWeight * decayFactor;
-    const estimate = Math.round(rawTotal * 0.082);
-
-    // 4. Status Mapping
-    let status: DiagnosticStatus = 'VALIDATED';
-    if (frictionIndex > 90) status = 'CRITICAL_SYSTEM_DECAY';
+    
+    const estimate = Math.round(baseScale * rWeight * iWeight * decayFactor * 0.082);
 
     return {
       frictionIndex,
       protocol: this.determineProtocol(frictionIndex),
       shearZones,
-      status,
+      status: frictionIndex > 90 ? 'CRITICAL_SYSTEM_DECAY' : 'VALIDATED',
       warnings,
       financials: {
         estimate,
