@@ -14,6 +14,13 @@ export interface DiagnosticResult {
   shearZones: Record<ShearZone, number>;
   status: DiagnosticStatus;
   warnings: string[];
+  financials: {
+    estimate: number;
+    friction: number;
+    shadowLabor: number;
+    misalignment: number;
+    totalLiability: number;
+  };
 }
 
 export class ForensicEngine {
@@ -24,7 +31,12 @@ export class ForensicEngine {
     deltaGap: 0.10
   };
 
-  public static calculate(answers: Record<string, number>, duration: number): DiagnosticResult {
+  public static calculate(
+    answers: Record<string, number>, 
+    duration: number, 
+    baseline: { nodes: number; role: string; integrity: string }
+  ): DiagnosticResult {
+    
     const warnings: string[] = [];
     
     // 1. Velocity Protection
@@ -32,7 +44,7 @@ export class ForensicEngine {
       return this.generateInconclusive(['DATA_VELOCITY_TOO_HIGH']);
     }
 
-    // 2. Weighted Calculation
+    // 2. Weighted Calculation (Internal Friction)
     const shearZones: Record<ShearZone, number> = {
       reworkTax: (answers['reworkTax'] || 0),
       shadowAI: (answers['shadowAI'] || 0),
@@ -46,9 +58,22 @@ export class ForensicEngine {
       (shearZones.expertiseDebt * this.WEIGHTS.expertiseDebt) +
       (shearZones.deltaGap * this.WEIGHTS.deltaGap);
 
-    const frictionIndex = Number((weightedTotal * 10).toFixed(1)); // Scale to 100
+    const frictionIndex = Number((weightedTotal * 10).toFixed(1)); 
     
-    // 3. Status Mapping
+    // 3. Financial Decryption (External Hemorrhage)
+    const roleWeights: Record<string, number> = { executive: 1.65, managerial: 1.25, technical: 1.0 };
+    const integrityWeights: Record<string, number> = { legacy: 1.45, hybrid: 1.1, modern: 0.85 };
+    
+    const baseScale = baseline.nodes * 120000;
+    const rWeight = roleWeights[baseline.role] || 1.0;
+    const iWeight = integrityWeights[baseline.integrity] || 1.0;
+    
+    // Obfuscated decay curve
+    const decayFactor = Math.log10(baseline.nodes + 100) / 2.7;
+    const rawTotal = baseScale * rWeight * iWeight * decayFactor;
+    const estimate = Math.round(rawTotal * 0.082);
+
+    // 4. Status Mapping
     let status: DiagnosticStatus = 'VALIDATED';
     if (frictionIndex > 90) status = 'CRITICAL_SYSTEM_DECAY';
 
@@ -57,7 +82,14 @@ export class ForensicEngine {
       protocol: this.determineProtocol(frictionIndex),
       shearZones,
       status,
-      warnings
+      warnings,
+      financials: {
+        estimate,
+        friction: Math.round(estimate * 0.24),
+        shadowLabor: Math.round(estimate * 0.34),
+        misalignment: Math.round(estimate * 0.49),
+        totalLiability: 20400000 
+      }
     };
   }
 
@@ -73,7 +105,8 @@ export class ForensicEngine {
       protocol: 'DRIFT_DIAGNOSTICS',
       shearZones: { reworkTax: 0, shadowAI: 0, expertiseDebt: 0, deltaGap: 0 },
       status: 'INCONCLUSIVE',
-      warnings: reasons
+      warnings: reasons,
+      financials: { estimate: 0, friction: 0, shadowLabor: 0, misalignment: 0, totalLiability: 0 }
     };
   }
 }
