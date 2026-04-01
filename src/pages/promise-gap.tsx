@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Card } from "@/components/ui/card";
-import { Activity, Loader2, ArrowRight, Lock, Users, ShieldCheck } from "lucide-react";
+import { Activity, Loader2, ArrowRight, Lock, Users, ShieldCheck, AlertTriangle, TrendingUp } from "lucide-react";
 
 const diagnosticQuestions = [
   { id: 1, text: "Our organization has a shared, non-technical language for defining AI reliability." },
@@ -41,91 +41,71 @@ export default function PromiseGap() {
 
   const submitResults = async () => {
     setIsSubmitting(true);
-    // Persist baseline for the results engine
     localStorage.setItem('bmr_triage_baseline', JSON.stringify(formData));
     localStorage.setItem('bmr_diagnostic_answers', JSON.stringify(answers));
     
-    // Artificial delay for forensic "processing"
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise(resolve => setTimeout(resolve, 2500));
     router.push('/diagnostic-results');
   };
 
   return (
     <>
-      <Head>
-        <title>Forensic Triage | BMR Advisory</title>
-      </Head>
-      
+      <Head><title>Forensic Triage | BMR Advisory</title></Head>
       <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30">
         <Header />
         
         <main className="flex-grow py-32 px-6">
           <div className="container mx-auto max-w-4xl">
+            
+            {/* 1. STRATEGIC PREAMBLE */}
+            {step === 0 && (
+              <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
+                <h1 className="text-5xl font-black uppercase italic tracking-tighter mb-6 leading-tight">The Logic Decay Screening</h1>
+                <p className="text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                  Most organizations <span className="text-red-600 font-bold italic uppercase tracking-widest">automate decay</span>—turning a $1.2M AI project into a <span className="text-red-600 font-bold">$20.4M hemorrhage</span>.
+                </p>
+                <div className="mt-8 flex justify-center items-center gap-6 border-y border-slate-900 py-4 max-w-md mx-auto">
+                  <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Benchmark</span>
+                  <span className="text-[9px] font-mono text-red-600 font-bold">85% OF AI PROJECTS EXCEED BUDGET</span>
+                </div>
+              </motion.div>
+            )}
+
             <AnimatePresence mode="wait">
-              
-              {/* STAGE 0: THE FORENSIC GATEKEEPER */}
+              {/* STAGE 0: INTAKE GATE */}
               {step === 0 && (
-                <motion.div 
-                  key="intake" 
-                  initial={{ opacity: 0, y: 20 }} 
-                  animate={{ opacity: 1, y: 0 }} 
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <Card className="p-10 bg-slate-950 border-slate-800 border-2 relative overflow-hidden shadow-2xl shadow-red-900/10">
+                <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -20 }}>
+                  <Card className="p-10 bg-slate-950 border-slate-800 border-2 relative overflow-hidden shadow-2xl">
                     <div className="absolute top-0 left-0 w-full h-[1px] bg-red-600/50"></div>
-                    <div className="absolute top-0 left-0 w-[1px] h-full bg-red-600/50"></div>
-                    
-                    <div className="flex items-center justify-between mb-12 border-b border-slate-900 pb-6">
+                    <div className="flex items-center justify-between mb-10 border-b border-slate-900 pb-6 text-white uppercase italic">
                        <div className="flex items-center gap-4">
                          <Lock className="text-red-600" size={24} />
-                         <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">Systemic Intake</h2>
+                         <h2 className="text-2xl font-black tracking-tighter uppercase">Systemic Intake</h2>
                        </div>
-                       <div className="text-[10px] font-mono text-red-600 font-bold tracking-widest bg-red-600/5 px-3 py-1 border border-red-600/20">
-                         ENCRYPTION_ACTIVE
-                       </div>
+                       <div className="text-[9px] font-mono text-red-600 bg-red-600/5 px-3 py-1 border border-red-600/20 tracking-widest">ENCRYPTION_ACTIVE</div>
                     </div>
 
                     <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-widest">Operator Name</label>
-                          <input required placeholder="REQUIRED_FIELD" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono text-white outline-none focus:border-red-600 transition-colors" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-widest">Corporate Email</label>
-                          <input required type="email" placeholder="ENCRYPTED_ID" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono text-white outline-none focus:border-red-600 transition-colors" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
-                        </div>
+                        <input required placeholder="OPERATOR_NAME" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono outline-none focus:border-red-600" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                        <input required type="email" placeholder="CORPORATE_EMAIL" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono outline-none focus:border-red-600" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                       </div>
-
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-widest">Target Organization</label>
-                        <input required placeholder="ENTITY_NAME" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono text-white outline-none focus:border-red-600 transition-colors uppercase" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
-                      </div>
-
+                      <input required placeholder="ENTITY_NAME" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono outline-none focus:border-red-600 uppercase" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
+                      
                       <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-900">
-                        <div className="space-y-2">
-                          <label className="text-[9px] uppercase font-bold text-slate-500 flex items-center gap-1 font-mono"><Users size={12} className="text-red-600" /> Authority</label>
-                          <select className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono text-white uppercase" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                            <option value="executive">EXECUTIVE_NODE</option>
-                            <option value="managerial">MANAGERIAL_HUB</option>
-                            <option value="technical">TECHNICAL_GRID</option>
-                          </select>
-                        </div>
-                        <div className="space-y-2 text-slate-500">
-                          <label className="text-[9px] uppercase font-bold font-mono tracking-widest">Node Density</label>
-                          <input type="number" className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono text-red-600" value={formData.nodes} onChange={e => setFormData({...formData, nodes: parseInt(e.target.value) || 0})} />
-                        </div>
-                        <div className="space-y-2">
-                          <label className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-widest">Integrity Baseline</label>
-                          <select className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono text-white uppercase" value={formData.integrity} onChange={e => setFormData({...formData, integrity: e.target.value})}>
-                            <option value="legacy">LEGACY_SILO</option>
-                            <option value="hybrid">HYBRID_MESH</option>
-                            <option value="modern">MODERN_STACK</option>
-                          </select>
-                        </div>
+                        <select className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
+                          <option value="executive">EXECUTIVE_NODE</option>
+                          <option value="managerial">MANAGERIAL_HUB</option>
+                          <option value="technical">TECHNICAL_GRID</option>
+                        </select>
+                        <input type="number" className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono text-red-600" value={formData.nodes} onChange={e => setFormData({...formData, nodes: parseInt(e.target.value) || 0})} />
+                        <select className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono" value={formData.integrity} onChange={e => setFormData({...formData, integrity: e.target.value})}>
+                          <option value="legacy">LEGACY_SILO</option>
+                          <option value="hybrid">HYBRID_MESH</option>
+                          <option value="modern">MODERN_STACK</option>
+                        </select>
                       </div>
-
-                      <button type="submit" className="group w-full mt-8 bg-red-600 hover:bg-white text-white hover:text-black py-6 font-black uppercase italic tracking-[0.3em] text-[11px] border border-red-600 flex items-center justify-center gap-4 transition-all duration-300">
+                      <button type="submit" className="group w-full mt-8 bg-red-600 hover:bg-white text-white hover:text-black py-8 font-black uppercase italic tracking-[0.3em] text-[11px] border border-red-600 flex items-center justify-center gap-4 transition-all">
                         Initialize Audit Observation <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
                       </button>
                     </form>
@@ -133,37 +113,55 @@ export default function PromiseGap() {
                 </motion.div>
               )}
 
-              {/* STAGE 1: THE FORENSIC QUESTIONS */}
-              {step > 0 && step <= 12 && (
-                <motion.div 
-                  key="question" 
-                  initial={{ opacity: 0, x: 20 }} 
-                  animate={{ opacity: 1, x: 0 }} 
-                  exit={{ opacity: 0, x: -20 }}
-                >
-                  <Card className="p-12 bg-slate-950 border-slate-800 border-2 text-center relative overflow-hidden shadow-2xl shadow-red-900/10">
+              {/* 2. REFINED PROTOCOL CARD WITH DEEP DIVE TEASER */}
+              {step === 1 && (
+                <motion.div key="protocol" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
+                   <Card className="p-10 bg-slate-900/30 border-red-600/30 border relative overflow-hidden shadow-2xl">
+                      <div className="flex items-center gap-4 mb-6">
+                        <ShieldCheck className="text-red-600" size={28} />
+                        <h3 className="text-2xl font-black uppercase italic tracking-tighter">Forensic Protocol Engaged</h3>
+                      </div>
+                      <p className="text-slate-400 text-sm leading-relaxed mb-8 italic">
+                        These 12 signals assess critical dimensions of systemic rigidity, automation readiness, and executive reality. 
+                        Completion establishes the baseline for your <span className="text-white font-bold uppercase">Financial Hemorrhage Verdict</span>.
+                      </p>
+
+                      <div className="border-t border-slate-800 pt-6 mb-10">
+                        <p className="text-slate-500 text-[10px] font-mono uppercase tracking-[0.3em] mb-4">Phase II: Forensic Deep Dive</p>
+                        <p className="text-slate-400 text-sm mb-4 leading-relaxed">
+                          A <span className="text-red-600 font-bold uppercase italic">30-question diagnostic</span> is required to:
+                        </p>
+                        <ul className="text-slate-400 text-[11px] space-y-3 font-mono uppercase tracking-widest leading-relaxed">
+                          <li className="flex items-start gap-3"><TrendingUp size={14} className="text-red-600 shrink-0 mt-0.5" /> Quantify Logic Decay exposure in dollars.</li>
+                          <li className="flex items-start gap-3"><Activity size={14} className="text-red-600 shrink-0 mt-0.5" /> Identify top 3 decay accelerators.</li>
+                          <li className="flex items-start gap-3"><Lock size={14} className="text-red-600 shrink-0 mt-0.5" /> Generate Corrective Action Protocols.</li>
+                        </ul>
+                      </div>
+
+                      <button onClick={() => setStep(2)} className="bg-white text-black font-black uppercase text-[11px] tracking-[0.3em] px-12 py-5 hover:bg-red-600 hover:text-white transition-all w-full md:w-auto">
+                        Begin Initial Observation
+                      </button>
+                   </Card>
+                </motion.div>
+              )}
+
+              {/* 3. QUESTIONS */}
+              {step >= 2 && step <= 13 && (
+                <motion.div key="question" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+                  <Card className="p-12 bg-slate-950 border-slate-800 border-2 text-center relative shadow-2xl">
                     <div className="absolute top-0 left-0 w-full h-[1px] bg-red-600/30"></div>
-                    <div className="absolute top-0 left-0 w-[1px] h-full bg-red-600/30"></div>
-                    
-                    <div className="flex justify-center mb-8">
-                      <div className="bg-red-600/10 border border-red-600/20 px-4 py-1 rounded-full">
-                        <span className="text-red-600 font-black uppercase text-[10px] tracking-[0.3em]">Signal {step} / 12</span>
+                    <div className="flex justify-center mb-12">
+                      <div className="bg-red-600/10 border border-red-600/20 px-6 py-2 rounded-full">
+                        <span className="text-red-600 font-black uppercase text-[10px] tracking-[0.4em]">Signal {step - 1} / 12</span>
                       </div>
                     </div>
-
-                    <h2 className="text-3xl font-black mt-6 mb-16 text-white italic uppercase tracking-tighter leading-tight max-w-2xl mx-auto">
-                      {diagnosticQuestions[step - 1].text}
+                    <h2 className="text-3xl font-black mb-16 text-white italic uppercase tracking-tighter max-w-2xl mx-auto leading-tight">
+                      {diagnosticQuestions[step - 2].text}
                     </h2>
-
                     <div className="grid grid-cols-1 gap-4 max-w-lg mx-auto">
                       {options.map((opt) => (
-                        <button 
-                          key={opt} 
-                          className="group py-6 px-8 text-[11px] font-black uppercase tracking-[0.2em] border border-slate-800 bg-slate-900/30 text-slate-400 hover:border-red-600 hover:text-white hover:bg-red-600/5 transition-all text-left flex justify-between items-center" 
-                          onClick={() => handleAnswer(opt)}
-                        >
-                          {opt}
-                          <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <button key={opt} className="group py-6 px-8 text-[11px] font-black uppercase tracking-[0.2em] border border-slate-800 bg-slate-900/30 text-slate-400 hover:border-red-600 hover:text-white hover:bg-red-600/5 transition-all text-left flex justify-between items-center" onClick={() => handleAnswer(opt)}>
+                          {opt} <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity" />
                         </button>
                       ))}
                     </div>
@@ -171,33 +169,36 @@ export default function PromiseGap() {
                 </motion.div>
               )}
 
-              {/* STAGE 2: THE SYNTHESIS */}
-              {step === 13 && (
-                <motion.div 
-                  key="synthesis" 
-                  initial={{ opacity: 0, scale: 0.95 }} 
-                  animate={{ opacity: 1, scale: 1 }}
-                >
-                  <Card className="p-16 bg-slate-950 border-slate-800 border-2 text-center relative overflow-hidden shadow-2xl shadow-red-900/20">
+              {/* 4. RESULTS TRANSITION WITH RISK INDICATOR */}
+              {step === 14 && (
+                <motion.div key="synthesis" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                  <Card className="p-16 bg-slate-950 border-slate-800 border-2 text-center shadow-2xl relative overflow-hidden">
                     <Activity className="h-16 w-16 text-red-600 mx-auto mb-8 animate-pulse" />
-                    <h2 className="text-5xl font-black mb-4 text-white italic uppercase tracking-tighter">Observation Complete</h2>
-                    <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.5em] mb-12">Synthesizing Logic Chains and Financial Leakage</p>
+                    <h2 className="text-5xl font-black mb-4 text-white italic uppercase tracking-tighter leading-none">Initial Signal Detected</h2>
                     
-                    <button 
-                      className="bg-red-600 hover:bg-white text-white hover:text-black font-black w-full py-8 uppercase tracking-[0.4em] text-[12px] italic border border-red-600 flex items-center justify-center gap-4 transition-all" 
-                      onClick={submitResults} 
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="animate-spin" size={20} />
-                          Processing Logic...
-                        </>
-                      ) : (
-                        <>
-                          Generate Forensic Synthesis <ShieldCheck size={20} />
-                        </>
-                      )}
+                    <p className="text-slate-400 max-w-xl mx-auto mb-10 leading-relaxed italic">
+                      Screening identified a <span className="text-red-600 font-bold uppercase italic tracking-widest">High-Probability Logic Decay Risk</span>. 
+                      Synthesizing leakage vectors to determine organizational exposure.
+                    </p>
+
+                    {/* REFINED: RISK LEVEL INDICATOR */}
+                    <div className="mb-12 max-w-md mx-auto border border-slate-900 p-8 bg-slate-900/20">
+                      <div className="flex justify-between items-center mb-4">
+                        <p className="text-slate-500 text-[10px] font-mono uppercase tracking-[0.3em]">Risk Probability</p>
+                        <p className="text-red-600 text-[10px] font-mono font-bold tracking-[0.3em]">LEVEL: CRITICAL</p>
+                      </div>
+                      <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: '85%' }} transition={{ duration: 1.5, ease: "easeOut" }} className="bg-red-600 h-full shadow-[0_0_10px_#dc2626]"></motion.div>
+                      </div>
+                      <p className="text-slate-400 text-[10px] mt-6 font-mono uppercase tracking-widest leading-relaxed">
+                        12-Question Screening Confidence: <span className="text-white">65%</span>
+                        <br />
+                        <span className="text-red-600">Deep Dive Diagnostic required for 98% validation.</span>
+                      </p>
+                    </div>
+
+                    <button className="bg-red-600 hover:bg-white text-white hover:text-black font-black w-full py-8 uppercase tracking-[0.4em] text-[12px] italic border border-red-600 flex items-center justify-center gap-4 transition-all" onClick={submitResults} disabled={isSubmitting}>
+                      {isSubmitting ? <><Loader2 className="animate-spin" /> Verifying Decay Chains...</> : <>Unlock Financial Verdict <AlertTriangle size={20} /></>}
                     </button>
                   </Card>
                 </motion.div>
@@ -205,7 +206,6 @@ export default function PromiseGap() {
             </AnimatePresence>
           </div>
         </main>
-        
         <Footer />
       </div>
     </>
