@@ -1,7 +1,3 @@
-/**
- * BMR SOLUTIONS // FORENSIC DIAGNOSTIC ENGINE V3.2
- */
-
 export type ShearZone = 'reworkTax' | 'shadowAI' | 'expertiseDebt' | 'deltaGap';
 export type ProtocolTier = 'LOGIC_RECONSTRUCTION' | 'STRUCTURAL_HARDENING' | 'DRIFT_DIAGNOSTICS';
 export type DiagnosticStatus = 'VALIDATED' | 'INCONCLUSIVE' | 'DIVERGENT' | 'CRITICAL_SYSTEM_DECAY';
@@ -51,7 +47,6 @@ export class ForensicEngine {
       (shearZones.deltaGap * this.WEIGHTS.deltaGap);
 
     const frictionIndex = Number((weightedTotal * 10).toFixed(1)); 
-    
     const roleWeights: Record<string, number> = { executive: 1.65, managerial: 1.25, technical: 1.0 };
     const integrityWeights: Record<string, number> = { legacy: 1.45, hybrid: 1.1, modern: 0.85 };
     
@@ -59,12 +54,11 @@ export class ForensicEngine {
     const rWeight = roleWeights[baseline.role] || 1.0;
     const iWeight = integrityWeights[baseline.integrity] || 1.0;
     const decayFactor = Math.log10(baseline.nodes + 100) / 2.7;
-    
     const estimate = Math.round(baseScale * rWeight * iWeight * decayFactor * 0.082);
 
     return {
       frictionIndex,
-      protocol: this.determineProtocol(frictionIndex),
+      protocol: frictionIndex > 75 ? 'LOGIC_RECONSTRUCTION' : 'STRUCTURAL_HARDENING',
       shearZones,
       status: frictionIndex > 90 ? 'CRITICAL_SYSTEM_DECAY' : 'VALIDATED',
       warnings,
@@ -76,12 +70,6 @@ export class ForensicEngine {
         totalLiability: 20400000 
       }
     };
-  }
-
-  private static determineProtocol(score: number): ProtocolTier {
-    if (score > 75) return 'LOGIC_RECONSTRUCTION';
-    if (score > 45) return 'STRUCTURAL_HARDENING';
-    return 'DRIFT_DIAGNOSTICS';
   }
 
   private static generateInconclusive(reasons: string[]): DiagnosticResult {
