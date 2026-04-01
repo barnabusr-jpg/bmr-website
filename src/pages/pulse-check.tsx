@@ -1,140 +1,106 @@
-"use client";
+/**
+ * BMR SOLUTIONS // FORENSIC DIAGNOSTIC ENGINE V3.2
+ * -----------------------------------------------
+ * Mathematical integrity for systemic friction analysis.
+ */
 
-import React, { useState } from 'react';
-import { ShieldAlert, Activity, FileText } from 'lucide-react';
+export type ShearZone = 'reworkTax' | 'shadowAI' | 'expertiseDebt' | 'deltaGap';
+export type ProtocolTier = 'LOGIC_RECONSTRUCTION' | 'STRUCTURAL_HARDENING' | 'DRIFT_DIAGNOSTICS';
+export type DiagnosticStatus = 'VALIDATED' | 'INCONCLUSIVE' | 'DIVERGENT' | 'CRITICAL_SYSTEM_DECAY';
 
-// Forensic Engine & Type Imports
-import { ForensicEngine } from '../lib/diagnosticEngine';
-import type { DiagnosticResult } from '../lib/diagnosticEngine';
+export interface DiagnosticResult {
+  frictionIndex: number;
+  protocol: ProtocolTier;
+  shearZones: Record<ShearZone, number>;
+  status: DiagnosticStatus;
+  warnings: string[];
+  financials: {
+    estimate: number;
+    friction: number;
+    shadowLabor: number;
+    misalignment: number;
+    totalLiability: number;
+  };
+}
 
-// Component Imports
-import ForensicResultCard from '../components/ForensicResultCard';
-import ForensicSlider from '../components/ForensicSlider';
-import TriageCaptureModal from '../components/TriageCaptureModal';
-import ForensicPDFGenerator from '../lib/pdfGenerator';
-
-export default function PulseCheck() {
-  const [startTime] = useState(Date.now());
-  const [result, setResult] = useState<DiagnosticResult | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [role, setRole] = useState<'executive' | 'technical' | null>(null);
-  const [showTriageModal, setShowTriageModal] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-  
-  const [answers, setAnswers] = useState({
-    reworkTax: 5,
-    shadowAI: 5,
-    expertiseDebt: 5,
-    deltaGap: 5
-  });
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    // Psychological delay for "Analysis" - BMR Standard
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const duration = (Date.now() - startTime) / 1000;
-    const finalResult = ForensicEngine.calculate(answers, duration);
-    
-    setResult(finalResult);
-    setIsSubmitting(false);
-    setShowTriageModal(true); // Trigger lead capture immediately
+export class ForensicEngine {
+  private static WEIGHTS: Record<ShearZone, number> = {
+    reworkTax: 0.45,
+    shadowAI: 0.25,
+    expertiseDebt: 0.20,
+    deltaGap: 0.10
   };
 
-  const handleTriageSuccess = async (email: string) => {
-    if (!result) return;
-    setShowTriageModal(false);
-    // Generate PDF and store the local URL for the briefing
-    const url = await ForensicPDFGenerator.generate(result, email);
-    setPdfUrl(url);
-  };
+  public static calculate(
+    answers: Record<string, number>, 
+    duration: number, 
+    baseline: { nodes: number; role: string; integrity: string }
+  ): DiagnosticResult {
+    const warnings: string[] = [];
+    
+    if (duration < 60) {
+      return this.generateInconclusive(['DATA_VELOCITY_TOO_HIGH']);
+    }
 
-  // 1. Result State View (Forensic Briefing)
-  if (result && !showTriageModal) return (
-    <div className="min-h-screen bg-slate-950 pt-32 pb-20 px-6 flex flex-col items-center">
-      <div className="max-w-2xl w-full">
-        <ForensicResultCard 
-          result={result} 
-          onRestart={() => { 
-            setResult(null); 
-            setPdfUrl(null); 
-            setRole(null);
-          }} 
-        />
-        
-        {pdfUrl && (
-          <a 
-            href={pdfUrl} 
-            download={`BMR_FORENSIC_BRIEFING_${result.protocol}.pdf`}
-            className="w-full mt-4 bg-slate-900 border border-slate-800 text-white py-4 px-6 flex items-center justify-center gap-3 hover:bg-white hover:text-black transition-all font-mono text-[10px] uppercase tracking-[0.2em]"
-          >
-            <FileText size={14} /> Download Secure Briefing PDF
-          </a>
-        )}
-      </div>
-    </div>
-  );
+    const shearZones: Record<ShearZone, number> = {
+      reworkTax: (answers['reworkTax'] || 0),
+      shadowAI: (answers['shadowAI'] || 0),
+      expertiseDebt: (answers['expertiseDebt'] || 0),
+      deltaGap: (answers['deltaGap'] || 0),
+    };
 
-  // 2. Main Diagnostic View (Initial State)
-  return (
-    <div className="min-h-screen bg-slate-950 text-white pt-48 pb-20 px-6">
-      <div className="max-w-xl mx-auto">
-        {!role ? (
-          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="border-l-2 border-red-600 pl-6 mb-12">
-              <h1 className="text-4xl font-black italic uppercase tracking-tighter mb-2 text-white">Initialize Audit</h1>
-              <p className="text-slate-500 text-[10px] font-mono uppercase tracking-widest">Select Perspective</p>
-            </div>
-            <div className="grid grid-cols-1 gap-4">
-              <button onClick={() => setRole('executive')} className="border border-slate-800 p-8 hover:border-red-600 transition-all text-left group bg-slate-900/20">
-                <div className="text-red-600 mb-2 font-mono text-[10px]">NODE_01</div>
-                <div className="text-xl font-black uppercase italic group-hover:text-red-600">Executive / Strategic</div>
-              </button>
-              <button onClick={() => setRole('technical')} className="border border-slate-800 p-8 hover:border-red-600 transition-all text-left group bg-slate-900/20">
-                <div className="text-red-600 mb-2 font-mono text-[10px]">NODE_02</div>
-                <div className="text-xl font-black uppercase italic group-hover:text-red-600">Technical / Operational</div>
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="animate-in fade-in duration-500">
-            <div className="mb-12 flex justify-between items-center border-b border-slate-900 pb-8">
-              <h2 className="text-xl font-black italic uppercase text-white">Systemic Friction</h2>
-              <ShieldAlert className="text-red-600 h-6 w-6" />
-            </div>
+    const weightedTotal = 
+      (shearZones.reworkTax * this.WEIGHTS.reworkTax) +
+      (shearZones.shadowAI * this.WEIGHTS.shadowAI) +
+      (shearZones.expertiseDebt * this.WEIGHTS.expertiseDebt) +
+      (shearZones.deltaGap * this.WEIGHTS.deltaGap);
 
-            <div className="space-y-6">
-                <ForensicSlider label="Rework Volume" zone="Rework Tax" value={answers.reworkTax} onChange={(v) => setAnswers({...answers, reworkTax: v})} />
-                <ForensicSlider label="Unsanctioned LLMs" zone="Shadow AI" value={answers.shadowAI} onChange={(v) => setAnswers({...answers, shadowAI: v})} />
-                <ForensicSlider label="Knowledge Decay" zone="Expertise Debt" value={answers.expertiseDebt} onChange={(v) => setAnswers({...answers, expertiseDebt: v})} />
-                <ForensicSlider label="Strategic Gap" zone="Delta Gap" value={answers.deltaGap} onChange={(v) => setAnswers({...answers, deltaGap: v})} />
-            </div>
+    const frictionIndex = Number((weightedTotal * 10).toFixed(1)); 
+    
+    // Financial Hemorrhage Logic
+    const roleWeights: Record<string, number> = { executive: 1.65, managerial: 1.25, technical: 1.0 };
+    const integrityWeights: Record<string, number> = { legacy: 1.45, hybrid: 1.1, modern: 0.85 };
+    
+    const baseScale = baseline.nodes * 120000;
+    const rWeight = roleWeights[baseline.role] || 1.0;
+    const iWeight = integrityWeights[baseline.integrity] || 1.0;
+    const decayFactor = Math.log10(baseline.nodes + 100) / 2.7;
+    
+    const estimate = Math.round(baseScale * rWeight * iWeight * decayFactor * 0.082);
 
-            <button 
-              onClick={handleSubmit} 
-              disabled={isSubmitting}
-              className="w-full mt-12 bg-red-600 hover:bg-white hover:text-black text-white py-6 font-black uppercase italic tracking-[0.3em] text-[10px] border border-red-600 flex items-center justify-center gap-4 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? <><Activity className="animate-spin h-4 w-4" /> Analyzing Logic Chains...</> : 'Generate Forensic Report'}
-            </button>
-            
-            <button 
-                onClick={() => setRole(null)}
-                className="w-full mt-4 text-slate-500 hover:text-white font-mono text-[9px] uppercase tracking-widest transition-colors"
-            >
-                Return to Node Selection
-            </button>
-          </div>
-        )}
-      </div>
+    let status: DiagnosticStatus = 'VALIDATED';
+    if (frictionIndex > 90) status = 'CRITICAL_SYSTEM_DECAY';
 
-      {showTriageModal && result && (
-        <TriageCaptureModal 
-          result={result} 
-          onClose={() => setShowTriageModal(false)} 
-          onSuccess={handleTriageSuccess} 
-        />
-      )}
-    </div>
-  );
+    return {
+      frictionIndex,
+      protocol: this.determineProtocol(frictionIndex),
+      shearZones,
+      status,
+      warnings,
+      financials: {
+        estimate,
+        friction: Math.round(estimate * 0.24),
+        shadowLabor: Math.round(estimate * 0.34),
+        misalignment: Math.round(estimate * 0.49),
+        totalLiability: 20400000 
+      }
+    };
+  }
+
+  private static determineProtocol(score: number): ProtocolTier {
+    if (score > 75) return 'LOGIC_RECONSTRUCTION';
+    if (score > 45) return 'STRUCTURAL_HARDENING';
+    return 'DRIFT_DIAGNOSTICS';
+  }
+
+  private static generateInconclusive(reasons: string[]): DiagnosticResult {
+    return {
+      frictionIndex: 0,
+      protocol: 'DRIFT_DIAGNOSTICS',
+      shearZones: { reworkTax: 0, shadowAI: 0, expertiseDebt: 0, deltaGap: 0 },
+      status: 'INCONCLUSIVE',
+      warnings: reasons,
+      financials: { estimate: 0, friction: 0, shadowLabor: 0, misalignment: 0, totalLiability: 0 }
+    };
+  }
 }
