@@ -57,7 +57,6 @@ export default function PromiseGap() {
         <main className="flex-grow py-32 px-6">
           <div className="container mx-auto max-w-4xl">
             
-            {/* 1. STRATEGIC PREAMBLE */}
             {step === 0 && (
               <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
                 <h1 className="text-5xl font-black uppercase italic tracking-tighter mb-6 leading-tight">The Logic Decay Screening</h1>
@@ -72,7 +71,6 @@ export default function PromiseGap() {
             )}
 
             <AnimatePresence mode="wait">
-              {/* STAGE 0: INTAKE GATE */}
               {step === 0 && (
                 <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -20 }}>
                   <Card className="p-10 bg-slate-950 border-slate-800 border-2 relative overflow-hidden shadow-2xl">
@@ -93,17 +91,28 @@ export default function PromiseGap() {
                       <input required placeholder="ENTITY_NAME" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono outline-none focus:border-red-600 uppercase" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
                       
                       <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-900">
-                        <select className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                          <option value="executive">EXECUTIVE_NODE</option>
-                          <option value="managerial">MANAGERIAL_HUB</option>
-                          <option value="technical">TECHNICAL_GRID</option>
-                        </select>
-                        <input type="number" className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono text-red-600" value={formData.nodes} onChange={e => setFormData({...formData, nodes: parseInt(e.target.value) || 0})} />
-                        <select className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono" value={formData.integrity} onChange={e => setFormData({...formData, integrity: e.target.value})}>
-                          <option value="legacy">LEGACY_SILO</option>
-                          <option value="hybrid">HYBRID_MESH</option>
-                          <option value="modern">MODERN_STACK</option>
-                        </select>
+                        <div className="space-y-1">
+                          <label className="text-[9px] uppercase font-bold text-slate-500 flex items-center gap-1 font-mono">
+                            <Users size={10} /> Authority
+                          </label>
+                          <select className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
+                            <option value="executive">EXECUTIVE_NODE</option>
+                            <option value="managerial">MANAGERIAL_HUB</option>
+                            <option value="technical">TECHNICAL_GRID</option>
+                          </select>
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-widest">Nodes</label>
+                          <input type="number" className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono text-red-600 outline-none" value={formData.nodes} onChange={e => setFormData({...formData, nodes: parseInt(e.target.value) || 0})} />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-widest">Integrity</label>
+                          <select className="w-full p-3 bg-slate-950 border border-slate-800 text-[10px] font-mono" value={formData.integrity} onChange={e => setFormData({...formData, integrity: e.target.value})}>
+                            <option value="legacy">LEGACY_SILO</option>
+                            <option value="hybrid">HYBRID_MESH</option>
+                            <option value="modern">MODERN_STACK</option>
+                          </select>
+                        </div>
                       </div>
                       <button type="submit" className="group w-full mt-8 bg-red-600 hover:bg-white text-white hover:text-black py-8 font-black uppercase italic tracking-[0.3em] text-[11px] border border-red-600 flex items-center justify-center gap-4 transition-all">
                         Initialize Audit Observation <ArrowRight size={18} className="group-hover:translate-x-2 transition-transform" />
@@ -113,7 +122,6 @@ export default function PromiseGap() {
                 </motion.div>
               )}
 
-              {/* 2. REFINED PROTOCOL CARD WITH DEEP DIVE TEASER */}
               {step === 1 && (
                 <motion.div key="protocol" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
                    <Card className="p-10 bg-slate-900/30 border-red-600/30 border relative overflow-hidden shadow-2xl">
@@ -145,7 +153,6 @@ export default function PromiseGap() {
                 </motion.div>
               )}
 
-              {/* 3. QUESTIONS */}
               {step >= 2 && step <= 13 && (
                 <motion.div key="question" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <Card className="p-12 bg-slate-950 border-slate-800 border-2 text-center relative shadow-2xl">
@@ -169,7 +176,6 @@ export default function PromiseGap() {
                 </motion.div>
               )}
 
-              {/* 4. RESULTS TRANSITION WITH RISK INDICATOR */}
               {step === 14 && (
                 <motion.div key="synthesis" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                   <Card className="p-16 bg-slate-950 border-slate-800 border-2 text-center shadow-2xl relative overflow-hidden">
@@ -181,7 +187,6 @@ export default function PromiseGap() {
                       Synthesizing leakage vectors to determine organizational exposure.
                     </p>
 
-                    {/* REFINED: RISK LEVEL INDICATOR */}
                     <div className="mb-12 max-w-md mx-auto border border-slate-900 p-8 bg-slate-900/20">
                       <div className="flex justify-between items-center mb-4">
                         <p className="text-slate-500 text-[10px] font-mono uppercase tracking-[0.3em]">Risk Probability</p>
