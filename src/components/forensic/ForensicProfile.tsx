@@ -1,83 +1,148 @@
-import React from 'react';
+"use client";
+import React, { useState } from 'react';
+import { ShieldAlert, ArrowRight, Lock, Users, Activity } from 'lucide-react';
 
-interface ProfileProps {
-  archetype: string;
-  archetypeCode: string;
-  score: number;
-  strength: string;
-  weakness: string;
-  specificRisk: string;
-  verifiedValue: number;
+interface TriageData {
+  name: string;
+  email: string;
+  organization: string;
+  role: string;
+  nodes: number;
+  integrity: string;
 }
 
-export const ForensicProfile = ({ 
-  archetype, archetypeCode, score, strength, weakness, specificRisk, verifiedValue 
-}: ProfileProps) => {
-  const promiseGap = 100 - verifiedValue;
+interface ForensicProfileProps {
+  onComplete: (data: TriageData) => void;
+}
+
+export const ForensicProfile = ({ onComplete }: ForensicProfileProps) => {
+  const [formData, setFormData] = useState<TriageData>({
+    name: '',
+    email: '',
+    organization: '',
+    role: 'managerial',
+    nodes: 500,
+    integrity: 'hybrid'
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Validate corporate email to maintain Institutional Authority
+    if (!formData.email.includes('@')) return alert("Corporate Email Required");
+    
+    // Store in local storage to persist through the 12 questions
+    localStorage.setItem('bmr_triage_baseline', JSON.stringify(formData));
+    onComplete(formData);
+  };
 
   return (
-    <div className="bg-bmr-dark p-10 border border-bmr-red/20 text-bmr-light font-body min-h-[11in] w-full max-w-[8.5in] mx-auto relative overflow-hidden shadow-2xl">
-      {/* Background Radar Detail: Wrapped for JSX compliance */}
-      <div className="absolute top-0 right-0 opacity-5 pointer-events-none">
-        <svg width="400" height="400" viewBox="0 0 200 200">
-          <circle cx="100" cy="100" r="80" fill="none" stroke="#dc2626" strokeWidth="0.5" />
-          <line x1="100" y1="20" x2="100" y2="180" stroke="#dc2626" strokeWidth="0.5" />
-          <line x1="20" y1="100" x2="180" y2="100" stroke="#dc2626" strokeWidth="0.5" />
-        </svg>
+    <div className="bg-[#0a0a0a] p-10 border border-red-600/20 text-slate-100 font-sans min-h-[11in] w-full max-w-[8.5in] mx-auto relative overflow-hidden shadow-2xl">
+      {/* Background Radar Detail for Brand Consistency */}
+      <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
+        <Activity size={400} className="text-red-600" />
       </div>
 
       <div className="relative z-10">
-        <div className="font-forensic text-[10px] text-bmr-gray uppercase tracking-widest mb-4">
-          {"BMR-CF-2026-03-"}{archetypeCode}{" // PROTOCOL P-01"}
+        <div className="font-mono text-[10px] text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+          <ShieldAlert size={14} className="text-red-600" />
+          {"BMR-CF-2026-PROTOCOL-P-01 // INITIAL_TRIAGE"}
         </div>
         
-        <h1 className="text-4xl font-bold font-heading tracking-tighter uppercase leading-none mb-2">
-          Forensic Profile: <span className="text-bmr-red">{archetype}</span>
+        <h1 className="text-4xl font-bold tracking-tighter uppercase leading-none mb-2 italic">
+          Forensic <span className="text-red-600">Pre-Flight</span> Triage
         </h1>
+        <p className="text-slate-400 text-xs uppercase tracking-[0.3em] mb-12">
+          Baseline Calibration Required
+        </p>
 
-        <div className="flex gap-3 mb-12">
-          <span className="text-[9px] border border-bmr-gray px-2 py-0.5 rounded uppercase">Restricted Analysis</span>
-          <span className="text-[9px] border border-bmr-gray px-2 py-0.5 rounded uppercase font-forensic">Score: {score}/100</span>
-        </div>
-
-        {/* Operational Reality Block */}
-        <div className="bg-slate-900/50 border-l-2 border-bmr-red p-6 mb-10">
-          <p className="text-sm leading-relaxed mb-4 italic">
-            <strong className="text-bmr-light not-italic uppercase tracking-wide">Operational Reality:</strong>
-            {` Your organization exhibits ${archetype} traits. While this profile excels at ${strength}, forensic analysis reveals vulnerabilities in ${weakness}.`}
-          </p>
-          <div className="inline-block border border-bmr-red text-bmr-red px-3 py-1 text-[10px] font-bold uppercase tracking-tighter -rotate-1">
-            ⚠️ Archetype Shear Point: {specificRisk}
-          </div>
-        </div>
-
-        {/* Promise Gap Visualization */}
-        <div className="mt-16">
-          <h3 className="font-forensic text-xs text-bmr-gray uppercase mb-6 tracking-widest">
-            The Promise Gap&trade; Analysis
-          </h3>
-          
-          <div className="relative h-14 w-full bg-slate-950 border border-bmr-red/10 rounded overflow-hidden">
-            <div className="absolute inset-0 border border-dashed border-bmr-red/20 flex items-center justify-between px-4">
-              <span className="text-[9px] uppercase text-bmr-gray">Advertised Potential</span>
-              <span className="font-forensic text-xs text-bmr-gray">100%</span>
+        <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
+          {/* Identity Capture */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Full Name</label>
+              <input 
+                required 
+                type="text" 
+                value={formData.name} 
+                onChange={e => setFormData({...formData, name: e.target.value})} 
+                className="w-full bg-slate-900 border border-slate-800 p-3 text-white font-mono text-sm focus:border-red-600 outline-none" 
+              />
             </div>
-            <div 
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-bmr-red to-red-500 flex items-center px-4 transition-all duration-700"
-              style={{ width: `${verifiedValue}%` }}
-            >
-              <span className="text-[10px] font-bold uppercase text-white truncate">Verified Value</span>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Corporate Email</label>
+              <input 
+                required 
+                type="email" 
+                value={formData.email} 
+                onChange={e => setFormData({...formData, email: e.target.value})} 
+                className="w-full bg-slate-900 border border-slate-800 p-3 text-white font-mono text-sm focus:border-red-600 outline-none" 
+              />
             </div>
           </div>
-          <div className="flex justify-between items-center mt-4">
-            <div className="text-lg font-bold font-forensic text-bmr-red">GAP: {promiseGap}%</div>
+
+          <div className="space-y-2">
+            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Organization Name</label>
+            <input 
+              required 
+              type="text" 
+              value={formData.organization} 
+              onChange={e => setFormData({...formData, organization: e.target.value})} 
+              className="w-full bg-slate-900 border border-slate-800 p-3 text-white font-mono text-sm focus:border-red-600 outline-none" 
+            />
           </div>
-        </div>
+
+          {/* Structural Calibration */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-900">
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <Users size={12} /> Authority
+              </label>
+              <select 
+                value={formData.role} 
+                onChange={e => setFormData({...formData, role: e.target.value})} 
+                className="w-full bg-slate-900 border border-slate-800 p-3 text-white font-mono text-sm outline-none appearance-none"
+              >
+                <option value="executive">EXECUTIVE</option>
+                <option value="managerial">MANAGERIAL</option>
+                <option value="technical">TECHNICAL</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Node Density (FTE)</label>
+              <input 
+                required 
+                type="number" 
+                value={formData.nodes} 
+                onChange={e => setFormData({...formData, nodes: parseInt(e.target.value) || 0})} 
+                className="w-full bg-slate-900 border border-slate-800 p-3 text-red-600 font-bold font-mono text-sm outline-none" 
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Integrity</label>
+              <select 
+                value={formData.integrity} 
+                onChange={e => setFormData({...formData, integrity: e.target.value})} 
+                className="w-full bg-slate-900 border border-slate-800 p-3 text-white font-mono text-sm outline-none appearance-none"
+              >
+                <option value="legacy">LEGACY</option>
+                <option value="hybrid">HYBRID</option>
+                <option value="modern">MODERN</option>
+              </select>
+            </div>
+          </div>
+
+          <button 
+            type="submit" 
+            className="w-full bg-red-600 text-white py-5 font-black uppercase text-[12px] tracking-[0.4em] flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all shadow-[0_0_30px_rgba(220,38,38,0.2)] mt-8"
+          >
+            <Lock size={16} /> Initialize Diagnostic Protocol <ArrowRight size={16} />
+          </button>
+        </form>
       </div>
 
-      <div className="absolute bottom-10 left-10 right-10 border-t border-bmr-red/10 pt-4 flex justify-between items-center font-forensic text-[8px] text-bmr-gray tracking-[0.3em]">
+      <div className="absolute bottom-10 left-10 right-10 border-t border-red-600/10 pt-4 flex justify-between items-center font-mono text-[8px] text-slate-600 tracking-[0.3em]">
         <div>UNAUTHORIZED DISTRIBUTION PROHIBITED</div>
-        <div>OUTCOMES ARE ENGINEERED</div>
+        <div>BASELINE VERIFICATION MANDATORY</div>
       </div>
     </div>
   );
