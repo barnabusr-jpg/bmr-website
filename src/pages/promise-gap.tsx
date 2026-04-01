@@ -28,7 +28,7 @@ const options = ["Manual Friction", "Passive Support", "System Disconnect", "Tea
 
 export default function PromiseGap() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(0); 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ 
     name: "", email: "", organization: "", role: "managerial", nodes: 500, integrity: "hybrid" 
@@ -45,7 +45,7 @@ export default function PromiseGap() {
     localStorage.setItem('bmr_triage_baseline', JSON.stringify(formData));
     localStorage.setItem('bmr_diagnostic_answers', JSON.stringify(answers));
     
-    // Reroute to results page
+    // Explicit route to the results component
     router.push('/diagnostic/results');
   };
 
@@ -67,23 +67,21 @@ export default function PromiseGap() {
                     </div>
                     <form onSubmit={(e) => { e.preventDefault(); setStep(1); }} className="space-y-6">
                       <div className="grid grid-cols-2 gap-4">
-                        <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 text-sm font-mono outline-none" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-                        <input required type="email" placeholder="Email" className="w-full p-4 bg-slate-950 border border-slate-800 text-sm font-mono outline-none" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
+                        <input required placeholder="Full Name" className="w-full p-4 bg-slate-950 border border-slate-800 text-sm font-mono outline-none focus:border-[#14b8a6]" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+                        <input required type="email" placeholder="Email" className="w-full p-4 bg-slate-950 border border-slate-800 text-sm font-mono outline-none focus:border-[#14b8a6]" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                       </div>
-                      <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 text-sm font-mono outline-none" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
+                      <input required placeholder="Organization" className="w-full p-4 bg-slate-950 border border-slate-800 text-sm font-mono outline-none focus:border-[#14b8a6]" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
                       <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800">
                         <div className="space-y-1">
-                          <label className="text-[9px] uppercase font-bold text-slate-500 flex items-center gap-1">
-                            <Users size={10} /> Authority
-                          </label>
+                          <label className="text-[9px] uppercase font-bold text-slate-500 flex items-center gap-1"><Users size={10} /> Authority</label>
                           <select className="w-full p-3 bg-slate-950 border border-slate-800 text-xs text-white" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
                             <option value="executive">EXECUTIVE</option>
                             <option value="managerial">MANAGERIAL</option>
                             <option value="technical">TECHNICAL</option>
                           </select>
                         </div>
-                        <div className="space-y-1 text-slate-500">
-                          <label className="text-[9px] uppercase font-bold">Nodes</label>
+                        <div className="space-y-1">
+                          <label className="text-[9px] uppercase font-bold text-slate-500">Nodes</label>
                           <input type="number" className="w-full p-3 bg-slate-950 border border-slate-800 text-xs text-[#14b8a6]" value={formData.nodes} onChange={e => setFormData({...formData, nodes: parseInt(e.target.value) || 0})} />
                         </div>
                         <div className="space-y-1">
