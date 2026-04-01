@@ -8,7 +8,6 @@ const DiagnosticResultsContent = () => {
   const [showMath, setShowMath] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Forensic Calculation Logic (Proprietary Coefficients Obfuscated)
   const [metrics, setMetrics] = useState({
     estimate: 0,
     friction: 0,
@@ -23,7 +22,7 @@ const DiagnosticResultsContent = () => {
       try {
         const parsed = JSON.parse(vault);
         setData(parsed);
-        setHasValidated(false); // Force fresh calibration on every load
+        setHasValidated(false);
       } catch (err) {
         console.error("Vault Error:", err);
       }
@@ -32,8 +31,6 @@ const DiagnosticResultsContent = () => {
 
   const handleForensicLock = () => {
     if (!data) return;
-
-    // Logic Architecture: Nodes * Authority * Integrity
     const roleWeights: Record<string, number> = { executive: 1.65, managerial: 1.25, technical: 1.0 };
     const integrityWeights: Record<string, number> = { legacy: 1.45, hybrid: 1.1, modern: 0.85 };
     
@@ -49,10 +46,17 @@ const DiagnosticResultsContent = () => {
       friction: Math.round(estimate * 0.24),
       shadowLabor: Math.round(estimate * 0.34),
       misalignment: Math.round(estimate * 0.49),
-      totalLiability: 20400000 // Trajectory benchmark for 2026
+      totalLiability: 20400000 
     });
 
     setHasValidated(true);
+  };
+
+  const handleDownload = async () => {
+    setIsDownloading(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsDownloading(false);
+    alert("FORENSIC_ARTIFACT_COMPLETE");
   };
 
   const handleBooking = () => {
@@ -70,7 +74,6 @@ const DiagnosticResultsContent = () => {
 
   return (
     <div className="max-w-5xl mx-auto py-12 px-6 text-white font-sans">
-      {/* 1. Forensic Header */}
       <div className="border-b border-slate-800 pb-8 mb-12 flex justify-between items-end">
         <div>
           <h1 className="text-3xl font-black italic uppercase tracking-tighter text-red-600">
@@ -87,22 +90,21 @@ const DiagnosticResultsContent = () => {
       </div>
 
       {!hasValidated ? (
-        /* 2. Mandatory Calibration Gate */
-        <div className="py-24 text-center bg-slate-950 border border-slate-900 rounded-sm">
+        <div className="py-24 text-center bg-slate-950 border border-slate-900 rounded-sm relative overflow-hidden">
+          <Activity className="absolute top-4 right-4 text-red-600 opacity-5" size={120} />
           <ShieldAlert className="mx-auto mb-6 text-[#14b8a6]" size={48} />
           <p className="text-[10px] text-slate-500 uppercase tracking-[0.5em] mb-8 font-black">Awaiting Forensic Decryption</p>
           <button 
             onClick={handleForensicLock}
-            className="bg-[#14b8a6] text-slate-950 px-12 py-5 font-black uppercase text-xs tracking-[0.4em] hover:bg-white transition-all shadow-[0_0_40px_rgba(20,184,166,0.15)]"
+            className="bg-[#14b8a6] text-slate-950 px-12 py-5 font-black uppercase text-xs tracking-[0.4em] hover:bg-white transition-all shadow-lg"
           >
             Authorize Signal Reveal
           </button>
         </div>
       ) : (
-        /* 3. The Decrypted Verdict */
         <div className="space-y-16 animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          
-          <section className="text-center">
+          <section className="text-center relative">
+            <Skull className="absolute -top-12 left-1/2 -translate-x-1/2 text-red-600 opacity-10" size={80} />
             <h2 className="text-8xl font-black italic tracking-tighter mb-4">${metrics.estimate.toLocaleString()}</h2>
             <p className="text-[10px] text-red-600 uppercase font-black tracking-[0.5em]">Validated Annual Hemorrhage Signal (Median)</p>
           </section>
@@ -114,7 +116,7 @@ const DiagnosticResultsContent = () => {
                 The Compound Failure
               </h3>
               <p className="text-sm text-slate-400 leading-relaxed italic">
-                "Your ${metrics.estimate.toLocaleString()} hemorrhage is not a one-time cost—it is a compounding liability. When you automate a {data.integrity.toUpperCase()} baseline, hidden costs scale this liability to <span className="text-white font-bold">$20.4M</span> by Q4 2026."
+                &quot;Your ${metrics.estimate.toLocaleString()} hemorrhage is not a one-time cost&mdash;it is a compounding liability. When you automate a {data.integrity.toUpperCase()} baseline, hidden costs scale this liability to <span className="text-white font-bold">$20.4M</span> by Q4 2026.&quot;
               </p>
               <button 
                 onClick={() => setShowMath(!showMath)}
@@ -164,7 +166,7 @@ const DiagnosticResultsContent = () => {
               <AlertTriangle size={14} /> The Kill Switch Fallacy
             </h3>
             <p className="text-sm text-slate-300 italic mb-8">
-              "Most organizations believe they would 'shut it down' before costs spiral. Forensic data shows 70% of the hemorrhage occurs before leadership intervenes."
+              &quot;Most organizations believe they would &apos;shut it down&apos; before costs spiral. Forensic data shows 70% of the hemorrhage occurs before leadership intervenes.&quot;
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-[11px] font-mono uppercase text-slate-500">
                <div className="border-l border-slate-800 pl-4"><span className="text-white block font-bold">87%</span> Budget Overrun by Q3</div>
@@ -191,7 +193,7 @@ const DiagnosticResultsContent = () => {
                 className="text-[10px] font-black uppercase tracking-widest text-white/50 hover:text-white transition-colors flex items-center justify-center gap-2"
               >
                 <Download size={14} className={isDownloading ? "animate-bounce" : ""} />
-                {isDownloading ? "Generating Dossier..." : "Download Triage Summary"}
+                {isDownloading ? "Encrypting Artifact..." : "Download Triage Summary"}
               </button>
             </div>
           </div>
