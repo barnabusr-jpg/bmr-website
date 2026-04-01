@@ -1,8 +1,7 @@
 "use client";
-
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/router'; // Keep if using /pages directory
+import { useRouter } from 'next/router';
 import { Activity, ShieldAlert, Zap } from 'lucide-react';
 
 const NAV_ITEMS = [
@@ -14,7 +13,7 @@ const NAV_ITEMS = [
 export default function Header() {
   const router = useRouter();
   
-  // Safely capture the current path to avoid build-time errors
+  // Safely capture the current path
   const currentPath = router?.pathname || '';
 
   return (
@@ -58,8 +57,10 @@ export default function Header() {
              </div>
              <span className="text-[9px] font-mono text-green-500 font-bold uppercase tracking-widest">STABLE NODE-SEC-04</span>
           </div>
+          
+          {/* FIX: Redirecting to the correct Orchestrator path */}
           <button 
-            onClick={() => router.push('/pulse-check/assessment')}
+            onClick={() => router.push('/promise-gap')}
             className="bg-red-600 text-white px-6 py-3 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all shadow-lg shadow-red-900/10"
           >
             <Zap size={14} /> DIAGNOSTIC
