@@ -64,7 +64,14 @@ export default function PromiseGap() {
                 </p>
                 <div className="mt-8 flex flex-col justify-center items-center gap-2 border-y border-slate-900 py-6 max-w-md mx-auto">
                   <span className="text-[9px] font-mono text-slate-500 uppercase tracking-[0.3em]">Institutional Benchmark</span>
-                  <span className="text-[10px] font-mono text-red-600 font-bold tracking-widest uppercase italic">85% of AI projects exceed budget</span>
+                  {/* REFINED: Pulsing Benchmark */}
+                  <motion.span 
+                    animate={{ opacity: [1, 0.4, 1] }} 
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    className="text-[10px] font-mono text-red-600 font-bold tracking-widest uppercase italic"
+                  >
+                    85% of AI projects exceed budget
+                  </motion.span>
                   <span className="text-[8px] font-mono text-slate-600 uppercase tracking-widest italic">Source: Deloitte TMT Forensic Audit 2025</span>
                 </div>
               </motion.div>
@@ -122,7 +129,7 @@ export default function PromiseGap() {
                           <div className="text-right text-[7px] font-mono text-slate-600 uppercase tracking-widest">Confidence: <span className="text-red-600 font-bold">High</span></div>
                         </div>
 
-                        {/* 3. SYSTEMIC AGE */}
+                        {/* 3. SYSTEMIC AGE (REFINED: SYSTEMIC HYBRID) */}
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
                             <label className="text-[9px] uppercase font-bold text-slate-500 font-mono tracking-widest">Age</label>
@@ -130,7 +137,7 @@ export default function PromiseGap() {
                           </div>
                           <select className="w-full p-3 bg-slate-950 border-2 border-slate-800 text-[10px] font-mono text-white outline-none focus:border-red-600" value={formData.integrity} onChange={e => setFormData({...formData, integrity: e.target.value})}>
                             <option value="legacy">LEGACY (5+ YRS)</option>
-                            <option value="hybrid">HYBRID (2-5 YRS)</option>
+                            <option value="hybrid">SYSTEM HYBRID (2-5 YRS)</option>
                             <option value="modern">MODERN (&lt; 2 YRS)</option>
                           </select>
                           <div className="text-right text-[7px] font-mono text-slate-600 uppercase tracking-widest">Confidence: <span className="text-red-600 font-bold">High</span></div>
@@ -194,7 +201,7 @@ export default function PromiseGap() {
                 </motion.div>
               )}
 
-              {/* STAGE 3: SYNTHESIS WITH FORENSIC VALIDATION TOOLTIP */}
+              {/* STAGE 3: SYNTHESIS */}
               {step === 14 && (
                 <motion.div key="synthesis" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                   <Card className="p-16 bg-slate-950 border-slate-800 border-2 text-center shadow-2xl relative overflow-hidden">
