@@ -44,15 +44,13 @@ export default function PromiseGap() {
     setIsSubmitting(true);
     localStorage.setItem('bmr_triage_baseline', JSON.stringify(formData));
     localStorage.setItem('bmr_diagnostic_answers', JSON.stringify(answers));
-    
-    // Explicit route to the results component
-    router.push('/diagnostic/results');
+    router.push('/diagnostic-results');
   };
 
   return (
     <>
       <Head><title>Forensic Triage | BMR Advisory</title></Head>
-      <div className="min-h-screen bg-[#020617] text-white flex flex-col">
+      <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans">
         <Header />
         <main className="flex-grow py-32 px-6">
           <div className="container mx-auto max-w-4xl">
