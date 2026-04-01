@@ -61,11 +61,14 @@ export default function PromiseGap() {
               <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="text-center mb-16">
                 <h1 className="text-5xl font-black uppercase italic tracking-tighter mb-6 leading-tight">The Logic Decay Screening</h1>
                 <p className="text-slate-400 max-w-2xl mx-auto leading-relaxed">
-                  Most organizations <span className="text-red-600 font-bold italic uppercase tracking-widest">automate decay</span>—turning a $1.2M AI project into a <span className="text-red-600 font-bold">$20.4M hemorrhage</span>.
+                  Most organizations <span className="text-red-600 font-bold italic uppercase tracking-widest">automate decay</span>. This turns a $1.2M AI project into a <span className="text-red-600 font-bold">$20.4M hemorrhage</span>.
                 </p>
-                <div className="mt-8 flex justify-center items-center gap-6 border-y border-slate-900 py-4 max-w-md mx-auto">
-                  <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Benchmark</span>
-                  <span className="text-[9px] font-mono text-red-600 font-bold">85% OF AI PROJECTS EXCEED BUDGET</span>
+                
+                {/* REFINED: Cited Industry Benchmark */}
+                <div className="mt-8 flex flex-col justify-center items-center gap-2 border-y border-slate-900 py-6 max-w-md mx-auto">
+                  <span className="text-[9px] font-mono text-slate-500 uppercase tracking-[0.3em]">Institutional Benchmark</span>
+                  <span className="text-[10px] font-mono text-red-600 font-bold tracking-widest">85% OF AI PROJECTS EXCEED BUDGET</span>
+                  <span className="text-[8px] font-mono text-slate-600 uppercase tracking-widest italic">Source: Deloitte TMT Forensic Audit 2025</span>
                 </div>
               </motion.div>
             )}
@@ -88,7 +91,7 @@ export default function PromiseGap() {
                         <input required placeholder="OPERATOR_NAME" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono outline-none focus:border-red-600" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
                         <input required type="email" placeholder="CORPORATE_EMAIL" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono outline-none focus:border-red-600" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} />
                       </div>
-                      <input required placeholder="ENTITY_NAME" className="w-full p-4 bg-slate-900/50 border border-slate-800 text-sm font-mono outline-none focus:border-red-600 uppercase" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
+                      <input required placeholder="ENTITY_NAME" className="w-full p-4 bg-slate-950 border border-slate-800 text-sm font-mono outline-none focus:border-red-600 uppercase" value={formData.organization} onChange={(e) => setFormData({...formData, organization: e.target.value})} />
                       
                       <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-900">
                         <div className="space-y-1">
@@ -122,6 +125,7 @@ export default function PromiseGap() {
                 </motion.div>
               )}
 
+              {/* STAGE 1: PROTOCOL CARD */}
               {step === 1 && (
                 <motion.div key="protocol" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}>
                    <Card className="p-10 bg-slate-900/30 border-red-600/30 border relative overflow-hidden shadow-2xl">
@@ -153,6 +157,7 @@ export default function PromiseGap() {
                 </motion.div>
               )}
 
+              {/* STAGE 2: QUESTIONS */}
               {step >= 2 && step <= 13 && (
                 <motion.div key="question" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                   <Card className="p-12 bg-slate-950 border-slate-800 border-2 text-center relative shadow-2xl">
@@ -176,6 +181,7 @@ export default function PromiseGap() {
                 </motion.div>
               )}
 
+              {/* STAGE 3: RESULTS TRANSITION */}
               {step === 14 && (
                 <motion.div key="synthesis" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                   <Card className="p-16 bg-slate-950 border-slate-800 border-2 text-center shadow-2xl relative overflow-hidden">
@@ -195,10 +201,10 @@ export default function PromiseGap() {
                       <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                         <motion.div initial={{ width: 0 }} animate={{ width: '85%' }} transition={{ duration: 1.5, ease: "easeOut" }} className="bg-red-600 h-full shadow-[0_0_10px_#dc2626]"></motion.div>
                       </div>
-                      <p className="text-slate-400 text-[10px] mt-6 font-mono uppercase tracking-widest leading-relaxed">
-                        12-Question Screening Confidence: <span className="text-white">65%</span>
+                      <p className="text-slate-400 text-[10px] mt-6 font-mono uppercase tracking-widest leading-relaxed text-center">
+                        12-Question Screening Confidence: <span className="text-white">65%</span>. 
                         <br />
-                        <span className="text-red-600">Deep Dive Diagnostic required for 98% validation.</span>
+                        <span className="text-red-600 font-bold">Deep Dive Diagnostic required for 98% validation.</span>
                       </p>
                     </div>
 
