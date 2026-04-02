@@ -31,7 +31,7 @@ export default function ForensicVerdict() {
       <div className="container mx-auto max-w-4xl">
         <div className="flex justify-between items-start border-b border-slate-900 pb-8 mb-16">
           <div>
-            <h1 className="text-red-600 text-4xl font-black uppercase italic tracking-tighter text-white">
+            <h1 className="text-red-600 text-4xl font-black uppercase italic tracking-tighter">
               FORENSIC TRIAGE <span className="text-white">ALERT</span>
             </h1>
             <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mt-2">
@@ -64,7 +64,7 @@ export default function ForensicVerdict() {
               </p>
            </div>
            <Card className="bg-slate-950 p-8 border-l-4 border-red-600">
-              <div className="flex justify-between mb-4 font-mono text-[10px] text-slate-500 uppercase tracking-widest">
+              <div className="flex justify-between mb-4 font-mono text-[10px] text-slate-500 uppercase tracking-widest text-slate-500">
                  <span>VISIBLE TIP (AUTHORIZED)</span>
                  <span>$1.2M</span>
               </div>
@@ -77,7 +77,7 @@ export default function ForensicVerdict() {
         </div>
 
         <div className="bg-red-600 p-12 text-center shadow-[0_0_50px_rgba(220,38,38,0.2)]">
-           <h2 className="text-white text-3xl font-black uppercase italic mb-8 tracking-tighter text-white">PREVENT THE TRAP</h2>
+           <h2 className="text-white text-3xl font-black uppercase italic mb-8 tracking-tighter">PREVENT THE TRAP</h2>
            <button className="bg-black text-white px-12 py-6 font-black uppercase italic tracking-[0.3em] text-[11px] hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 mx-auto border border-black hover:border-white">
              SCHEDULE DEEP DIVE AUDIT <ArrowRight size={18} />
            </button>
