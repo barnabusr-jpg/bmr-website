@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { Clock, Activity, Lock, ShieldCheck, AlertTriangle, ArrowRight } from "lucide-react";
+import { Activity, Lock, ShieldCheck, AlertTriangle, ArrowRight, Clock } from "lucide-react";
 import { useRouter } from 'next/router';
 
 export default function TriangulationProgress() {
@@ -16,9 +16,9 @@ export default function TriangulationProgress() {
     <div className="min-h-screen bg-[#020617] text-white py-32 px-6">
       <div className="container mx-auto max-w-3xl">
         <div className="flex justify-between items-end mb-12">
-           <div>
-              <h1 className="text-4xl font-black uppercase italic tracking-tighter">Forensic Momentum</h1>
-              <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.3em] mt-2">Verification Progress: 33%</p>
+           <h1 className="text-4xl font-black uppercase italic tracking-tighter">Forensic Momentum</h1>
+           <div className="flex items-center gap-2 text-red-600 font-mono text-[10px]">
+             <Clock size={14} /> 72H WINDOW ACTIVE
            </div>
         </div>
 
@@ -38,18 +38,14 @@ export default function TriangulationProgress() {
                     <AlertTriangle size={10} className="inline mr-1" />
                     +${node.delay}K / WK
                   </p>
-                  <p className="text-[8px] text-slate-600 uppercase font-mono tracking-widest">Inherent Delay Liability</p>
                 </div>
               )}
             </Card>
           ))}
         </div>
 
-        <button 
-           onClick={() => router.push('/forensic-verdict')}
-           className="w-full bg-slate-900 border border-slate-800 py-8 text-slate-500 font-black uppercase italic tracking-[0.4em] text-[11px] hover:border-red-600 hover:text-white transition-all flex items-center justify-center gap-4 group"
-        >
-           Bypass Verification (View Partial Verdict) <ArrowRight size={16} className="group-hover:translate-x-2 transition-transform" />
+        <button onClick={() => router.push('/forensic-verdict')} className="w-full bg-slate-900 border border-slate-800 py-8 text-slate-500 font-black uppercase italic tracking-[0.4em] text-[11px] hover:border-red-600 hover:text-white transition-all flex items-center justify-center gap-4 group">
+           Bypass Verification <ArrowRight size={16} className="group-hover:translate-x-2" />
         </button>
       </div>
     </div>
