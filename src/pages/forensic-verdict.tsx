@@ -29,10 +29,9 @@ export default function ForensicVerdict() {
   return (
     <div className="min-h-screen bg-[#020617] text-white py-24 px-6 font-sans">
       <div className="container mx-auto max-w-4xl">
-        
         <div className="flex justify-between items-start border-b border-slate-900 pb-8 mb-16">
           <div>
-            <h1 className="text-red-600 text-4xl font-black uppercase italic tracking-tighter">
+            <h1 className="text-red-600 text-4xl font-black uppercase italic tracking-tighter text-white">
               FORENSIC TRIAGE <span className="text-white">ALERT</span>
             </h1>
             <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mt-2">
@@ -64,7 +63,7 @@ export default function ForensicVerdict() {
                 initial $1.2M {data.sectorLabel} investment.&rdquo;
               </p>
            </div>
-           <Card className="bg-slate-950 p-8 border-l-4 border-red-600 text-white">
+           <Card className="bg-slate-950 p-8 border-l-4 border-red-600">
               <div className="flex justify-between mb-4 font-mono text-[10px] text-slate-500 uppercase tracking-widest">
                  <span>VISIBLE TIP (AUTHORIZED)</span>
                  <span>$1.2M</span>
@@ -83,7 +82,6 @@ export default function ForensicVerdict() {
              SCHEDULE DEEP DIVE AUDIT <ArrowRight size={18} />
            </button>
         </div>
-
       </div>
     </div>
   );
