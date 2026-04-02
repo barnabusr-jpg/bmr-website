@@ -64,7 +64,7 @@ export default function ForensicVerdict() {
                 initial $1.2M {data.sectorLabel} investment.&rdquo;
               </p>
            </div>
-           <Card className="bg-slate-950 p-8 border-l-4 border-red-600">
+           <Card className="bg-slate-950 p-8 border-l-4 border-red-600 text-white">
               <div className="flex justify-between mb-4 font-mono text-[10px] text-slate-500 uppercase tracking-widest">
                  <span>VISIBLE TIP (AUTHORIZED)</span>
                  <span>$1.2M</span>
@@ -78,7 +78,7 @@ export default function ForensicVerdict() {
         </div>
 
         <div className="bg-red-600 p-12 text-center shadow-[0_0_50px_rgba(220,38,38,0.2)]">
-           <h2 className="text-white text-3xl font-black uppercase italic mb-8 tracking-tighter">PREVENT THE TRAP</h2>
+           <h2 className="text-white text-3xl font-black uppercase italic mb-8 tracking-tighter text-white">PREVENT THE TRAP</h2>
            <button className="bg-black text-white px-12 py-6 font-black uppercase italic tracking-[0.3em] text-[11px] hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 mx-auto border border-black hover:border-white">
              SCHEDULE DEEP DIVE AUDIT <ArrowRight size={18} />
            </button>
