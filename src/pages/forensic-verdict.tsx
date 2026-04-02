@@ -34,9 +34,10 @@ export default function ForensicVerdict() {
             <h1 className="text-red-600 text-4xl font-black uppercase italic tracking-tighter">
               FORENSIC TRIAGE ALERT
             </h1>
-            <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mt-2">
-              AUDIT: {data.sectorLabel} // STATUS: VALIDATED SIGNAL
-            </p>
+            <div className="flex gap-4 mt-2">
+              <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">AUDIT {data.sectorLabel}</span>
+              <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">STATUS VALIDATED</span>
+            </div>
           </section>
           <Lock className="text-slate-700" size={24} />
         </header>
@@ -45,9 +46,9 @@ export default function ForensicVerdict() {
           <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
             <Skull size={300} />
           </div>
-          <span className="text-[10rem] font-black italic tracking-tighter text-white relative z-10 leading-none">
+          <div className="text-[10rem] font-black italic tracking-tighter text-white relative z-10 leading-none">
             ${data.total}M
-          </span>
+          </div>
           <p className="text-red-600 font-mono text-sm uppercase font-black tracking-[0.6em] mt-6">
             VALIDATED ANNUAL HEMORRHAGE SIGNAL
           </p>
@@ -64,12 +65,12 @@ export default function ForensicVerdict() {
           </article>
           <Card className="bg-slate-950 p-8 border-l-4 border-red-600">
             <div className="flex justify-between mb-4 font-mono text-[10px] text-slate-500 uppercase tracking-widest">
-              <span>VISIBLE TIP (AUTHORIZED)</span>
+              <span>VISIBLE TIP</span>
               <span>$1.2M</span>
             </div>
-            <div className="h-[1px] bg-slate-900 mb-4"></div>
+            <div className="h-px bg-slate-900 mb-4" />
             <div className="flex justify-between font-mono text-xs text-red-600 font-black tracking-widest">
-              <span>TOTAL SYSTEMIC LIABILITY</span>
+              <span>TOTAL LIABILITY</span>
               <span>${(data.total * 2.5).toFixed(1)}M</span>
             </div>
           </Card>
