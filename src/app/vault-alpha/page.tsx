@@ -36,7 +36,7 @@ export default function VaultAlpha() {
                     <span>THE LOGIC </span><span className="text-red-600">DECAY SCREENING</span>
                   </h1>
                   <p className="text-slate-400 italic text-lg max-w-2xl mx-auto leading-relaxed">
-                    <span>Most organizations </span><span className="text-red-600 font-bold uppercase italic">Automate Decay</span><span>. This turns a $1.2M AI project into a </span><span className="text-red-600 font-bold italic">$20.4M hemorrhage</span><span>.</span>
+                    <span>Most organizations </span><span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span><span>. This turns a $1.2M AI project into a </span><span className="text-red-600 font-bold italic">$20.4M hemorrhage</span><span>.</span>
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -60,17 +60,17 @@ export default function VaultAlpha() {
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
                     <span>FORENSIC PROTOCOL </span><span className="text-red-600">ENGAGED</span>
                   </h2>
-                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold">
+                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold leading-none">
                     <span>Sector Calibrated: </span><span>{sector?.toUpperCase()}</span><span> // Baseline Lock Active</span>
                   </p>
                 </div>
                 <div className="bg-slate-900/10 border border-slate-900 p-12 relative rounded-sm">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none text-white uppercase" />
-                      <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none text-white uppercase" />
+                      <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white placeholder:text-slate-700 uppercase" />
+                      <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white placeholder:text-slate-700 uppercase" />
                    </div>
-                   <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none mb-12 text-white uppercase" />
-                   <button onClick={() => setStep("diagnostic")} className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4">
+                   <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all mb-12 text-white placeholder:text-slate-700 uppercase" />
+                   <button onClick={() => setStep("diagnostic")} className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 shadow-lg shadow-red-900/20">
                      <span>Initialize Audit Observation </span><ArrowRight size={18} />
                    </button>
                 </div>
