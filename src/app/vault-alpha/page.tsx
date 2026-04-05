@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock } from "lucide-react";
+import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import FieldGuide from "@/components/field-guide/FieldGuidePage";
