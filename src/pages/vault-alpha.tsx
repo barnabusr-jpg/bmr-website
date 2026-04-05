@@ -38,7 +38,7 @@ export default function VaultAlpha() {
               >
                 <div className="text-center space-y-4">
                   <h1 className="text-7xl font-black uppercase italic tracking-tighter">
-                    THE LOGIC <span className="text-red-600 font-black uppercase italic">DECAY SCREENING</span>
+                    THE LOGIC <span className="text-red-600 font-black uppercase italic leading-none">DECAY SCREENING</span>
                   </h1>
                   <p className="text-slate-400 italic text-lg max-w-2xl mx-auto leading-relaxed">
                     Most organizations <span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span>. 
@@ -56,8 +56,8 @@ export default function VaultAlpha() {
                       <div className="text-red-600 mb-4 group-hover:scale-110 transition-transform">
                         {s.icon}
                       </div>
-                      <div>
-                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-white leading-none mb-1">
+                      <div className="space-y-1">
+                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-white leading-none">
                           {s.label}
                         </h3>
                         <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-[0.2em]">
@@ -79,10 +79,10 @@ export default function VaultAlpha() {
                 className="space-y-12"
               >
                 <div className="text-center space-y-2">
-                  <h2 className="text-5xl font-black uppercase italic tracking-tighter">
+                  <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
                     FORENSIC PROTOCOL <span className="text-red-600 font-black uppercase italic">ENGAGED</span>
                   </h2>
-                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold">
+                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold leading-none">
                     Sector Calibrated: {sector?.toUpperCase()} // Baseline Lock Active
                   </p>
                 </div>
@@ -90,8 +90,8 @@ export default function VaultAlpha() {
                 <div className="bg-slate-900/10 border border-slate-900 p-12 relative rounded-sm">
                    <div className="flex items-center gap-3 mb-12 border-b border-slate-800 pb-6">
                       <Lock className="text-red-600" size={20} />
-                      <h3 className="text-2xl font-black uppercase italic tracking-tighter">Systemic Intake</h3>
-                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1 font-bold italic uppercase tracking-tighter leading-none">ENCRYPTION ACTIVE</span>
+                      <h3 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Systemic Intake</h3>
+                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1 font-bold uppercase tracking-tighter leading-none">ENCRYPTION ACTIVE</span>
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
