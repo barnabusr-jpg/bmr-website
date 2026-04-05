@@ -53,11 +53,11 @@ export default function ConsolidatedDiagnostic() {
       </div>
       <div className="bg-slate-950/30 border border-slate-900 p-12 relative backdrop-blur-md max-w-3xl mx-auto w-full">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-          <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none text-white uppercase placeholder:text-slate-800" />
-          <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none text-white uppercase placeholder:text-slate-800" />
+          <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none text-white uppercase" />
+          <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none text-white uppercase" />
         </div>
-        <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none mb-12 text-white uppercase placeholder:text-slate-800" />
-        <button onClick={() => setStep("diagnostic")} className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 shadow-xl shadow-red-900/10">
+        <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none mb-12 text-white uppercase" />
+        <button onClick={() => setStep("diagnostic")} className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4">
           <span>Initialize Audit Observation </span><ArrowRight size={18} />
         </button>
       </div>
@@ -75,13 +75,9 @@ export default function ConsolidatedDiagnostic() {
     </motion.div>
   );
 
-  let content = Triage;
-  if (step === "intake") content = Intake;
-  if (step === "diagnostic") content = Diagnostic;
-
   return (
     <AnimatePresence mode="wait">
-      {content}
+      {step === "triage" ? Triage : step === "intake" ? Intake : Diagnostic}
     </AnimatePresence>
   );
 }
