@@ -1,9 +1,5 @@
 import React from "react";
-// Option A: Using the standard alias (Recommended)
-import "@/styles/global.css"; 
-
-// Option B: Using relative pathing if aliases aren't configured
-// import "../styles/global.css"; 
+import "../styles/global.css"; // Relative path bypass
 
 export default function RootLayout({
   children,
@@ -11,7 +7,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en">
       <body className="antialiased">
         {children}
       </body>
