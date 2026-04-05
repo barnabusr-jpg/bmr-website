@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 
@@ -23,9 +24,10 @@ export default function ForensicSlider({
     <div className="mb-12 group">
       <div className="flex justify-between items-end mb-4">
         <div className="flex items-center gap-2">
-          {/* We wrap the label in a template literal to safely use the // separator */}
           <label className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500 group-hover:text-red-600 transition-colors">
-            {`${zone.toUpperCase()} // ${label.toUpperCase()}`}
+            <span>{zone.toUpperCase()}</span>
+            <span className="mx-2">//</span>
+            <span>{label.toUpperCase()}</span>
           </label>
           {isCritical && (
             <AlertTriangle className="h-3 w-3 text-red-600 animate-pulse" />
@@ -50,13 +52,15 @@ export default function ForensicSlider({
       />
 
       <div className="flex justify-between mt-2 text-[8px] font-mono uppercase tracking-widest text-slate-700">
-        <span className={value < 4 ? 'text-green-500' : ''}>OPTIMIZED</span>
-        <span className={isCritical ? 'text-red-600' : ''}>CRITICAL DECAY</span>
+        <span className={value < 4 ? 'text-green-500 font-bold' : ''}>OPTIMIZED</span>
+        <span className={isCritical ? 'text-red-600 font-bold' : ''}>CRITICAL DECAY</span>
       </div>
 
       {isCritical && (
         <div className="mt-3 text-[9px] text-red-600 font-mono uppercase tracking-widest border-l border-red-600 pl-2">
-          WARNING: SYSTEMIC {zone.toUpperCase()} EXCEEDS SAFE OPERATING PARAMETERS
+          <span>WARNING: SYSTEMIC </span>
+          <span>{zone.toUpperCase()}</span>
+          <span> EXCEEDS SAFE OPERATING PARAMETERS</span>
         </div>
       )}
     </div>
