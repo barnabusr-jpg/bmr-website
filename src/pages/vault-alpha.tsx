@@ -1,111 +1,123 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Card } from "@/components/ui/card";
-import { Banknote, Stethoscope, Factory, ShoppingCart, ShieldCheck, ArrowRight, AlertTriangle } from "lucide-react";
+import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock, Activity } from "lucide-react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 const sectors = [
-  { id: "finance", label: "Financial Services", icon: <Banknote size={24} />, mult: 1.65, desc: "Fiduciary & Regulatory Logic" },
-  { id: "healthcare", label: "Life Sciences", icon: <Stethoscope size={24} />, mult: 1.80, desc: "Clinical & Safety Logic" },
-  { id: "manufacturing", label: "Industrial / Logistics", icon: <Factory size={24} />, mult: 1.45, desc: "Operational & Margin Logic" },
-  { id: "retail", label: "Retail / E-Commerce", icon: <ShoppingCart size={24} />, mult: 1.20, desc: "Customer Trust & Churn Calibration" }
+  { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
+  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
+  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
+  { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
 ];
 
 export default function VaultAlpha() {
-  const [step, setStep] = useState("sector");
-  const [selectedSector, setSelectedSector] = useState<any>(null);
+  const [sector, setSector] = useState<string | null>(null);
+  const [step, setStep] = useState("triage"); // triage -> intake -> diagnostic
 
-  const selectSector = (s: any) => {
-    setSelectedSector(s);
-    localStorage.setItem("bmr_selected_sector", s.id);
-    setStep("diagnostic");
+  const selectSector = (id: string) => {
+    setSector(id);
+    localStorage.setItem("bmr_selected_sector", id);
+    setStep("intake");
   };
 
-  const currentHemorrhage = useMemo(() => {
-    if (!selectedSector) return "0.0";
-    // Using the 1.2M baseline as the starting point for the live signal
-    return (1.2 * selectedSector.mult).toFixed(1);
-  }, [selectedSector]);
-
   return (
-    <div className="min-h-screen bg-[#020617] text-white py-32 px-6 font-sans">
-      <div className="container mx-auto max-w-5xl">
-        <AnimatePresence mode="wait">
-          {step === "sector" && (
-            <motion.div key="sector" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <div className="text-center mb-16">
-                <h2 className="text-5xl font-black uppercase italic mb-4 tracking-tighter">
-                  Initialize <span className="text-red-600">Sector Calibration</span>
-                </h2>
-                <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.4em] italic font-bold">
-                  Select Economic Anchor to Unlock $1.2M Baseline Audit
-                </p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {sectors.map((s) => (
-                  <button 
-                    key={s.id} 
-                    onClick={() => selectSector(s)} 
-                    className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left group relative overflow-hidden flex flex-col justify-between min-h-[180px]"
-                  >
-                    <div>
-                      <div className="text-red-600 mb-6 group-hover:scale-110 transition-transform">{s.icon}</div>
-                      <h3 className="text-xl font-black uppercase italic leading-none tracking-tighter mb-2">{s.label}</h3>
-                      <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-relaxed">{s.desc}</p>
-                    </div>
-                    <ArrowRight className="absolute bottom-6 right-6 text-slate-900 group-hover:text-red-600 transition-transform group-hover:translate-x-1" size={18} />
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {step === "diagnostic" && (
-            <motion.div key="diag" initial={{ x: 20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="grid lg:grid-cols-3 gap-12">
-              <div className="lg:col-span-2">
-                <div className="flex justify-between items-center mb-12 border-b border-slate-900 pb-6">
-                  <h2 className="text-xl font-black uppercase italic flex items-center gap-3">
-                    <ShieldCheck className="text-red-600" /> {selectedSector?.label} Audit Node
-                  </h2>
-                  <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest italic">Diagnostic Active</span>
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans">
+      <Header />
+      <main className="flex-grow pt-48 pb-32 px-6">
+        <div className="max-w-5xl mx-auto">
+          <AnimatePresence mode="wait">
+            
+            {/* STEP 1: THE MISSING SECTOR BOXES */}
+            {step === "triage" && (
+              <motion.div 
+                key="triage" 
+                initial={{ opacity: 0, y: 20 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                exit={{ opacity: 0, y: -20 }}
+                className="space-y-12"
+              >
+                <div className="text-center space-y-4">
+                  <h1 className="text-7xl font-black uppercase italic tracking-tighter">
+                    THE LOGIC <span className="text-red-600">DECAY SCREENING</span>
+                  </h1>
+                  <p className="text-slate-400 italic text-lg max-w-2xl mx-auto">
+                    Most organizations <span className="text-red-600 font-bold uppercase">Automate Decay</span>. 
+                    This turns a $1.2M AI project into a <span className="text-red-600 font-bold">$20.4M hemorrhage</span>.
+                  </p>
                 </div>
 
-                <Card className="p-16 bg-slate-950 border-slate-800 border-2 border-dashed h-96 flex flex-col items-center justify-center space-y-6">
-                   <div className="h-2 w-2 rounded-full bg-red-600 animate-pulse" />
-                   <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.3em] italic text-center max-w-sm">
-                      Initializing forensic logic chains for {selectedSector?.label} environment...
-                   </p>
-                </Card>
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {sectors.map((s) => (
+                    <button
+                      key={s.id}
+                      onClick={() => selectSector(s.id)}
+                      className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left group relative overflow-hidden flex flex-col justify-between min-h-[160px]"
+                    >
+                      <div className="text-red-600 mb-4 group-hover:scale-110 transition-transform">
+                        {s.icon}
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-white leading-none mb-1">
+                          {s.label}
+                        </h3>
+                        <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-[0.2em]">
+                          {s.risk}
+                        </p>
+                      </div>
+                      <ArrowRight className="absolute bottom-6 right-6 text-slate-900 group-hover:text-red-600 group-hover:translate-x-1 transition-all" size={18} />
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
 
-              <div className="lg:col-span-1">
-                <Card className="bg-slate-900/40 border-2 border-red-600/20 p-8 sticky top-32">
-                  <div className="flex items-center gap-2 mb-8">
-                    <AlertTriangle className="text-red-600" size={16} />
-                    <span className="text-[10px] font-mono uppercase text-slate-500 tracking-widest font-bold">Baseline Signal</span>
-                  </div>
-                  
-                  <div className="text-6xl font-black italic tracking-tighter text-white mb-2">${currentHemorrhage}M</div>
-                  
-                  <p className="text-[10px] font-mono text-red-600 uppercase font-black tracking-widest mb-10">
-                    CALIBRATED {selectedSector?.id} LIABILITY
+            {/* STEP 2: THE SYSTEMIC INTAKE (Matches your Screenshot #2) */}
+            {step === "intake" && (
+              <motion.div 
+                key="intake" 
+                initial={{ opacity: 0, x: 30 }} 
+                animate={{ opacity: 1, x: 0 }}
+                className="space-y-12"
+              >
+                <div className="text-center space-y-2">
+                  <h2 className="text-5xl font-black uppercase italic tracking-tighter">
+                    FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span>
+                  </h2>
+                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic">
+                    Sector Calibrated: {sector?.toUpperCase()} // Baseline Lock Active
                   </p>
-                  
-                  <div className="space-y-6 pt-6 border-t border-slate-800">
-                    <p className="text-[10px] text-slate-400 italic leading-relaxed uppercase tracking-wider">
-                      This signal represents the compounding drift of your initial $1.2M capital investment.
-                    </p>
-                    <p className="text-[9px] text-slate-600 font-mono uppercase tracking-[0.2em]">
-                      Status: Logic Trace Validated
-                    </p>
-                  </div>
-                </Card>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+                </div>
+
+                <div className="bg-slate-900/10 border border-slate-900 p-12 relative rounded-sm">
+                   <div className="flex items-center gap-3 mb-12 border-b border-slate-800 pb-6">
+                      <Lock className="text-red-600" size={20} />
+                      <h3 className="text-2xl font-black uppercase italic tracking-tighter">Systemic Intake</h3>
+                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1">ENCRYPTION ACTIVE</span>
+                   </div>
+
+                   {/* Form Inputs matching Screenshot #2 aesthetic */}
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all" />
+                      <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all" />
+                   </div>
+                   <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all mb-12" />
+
+                   <button 
+                     onClick={() => setStep("diagnostic")}
+                     className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4"
+                   >
+                     Initialize Audit Observation <ArrowRight size={18} />
+                   </button>
+                </div>
+              </motion.div>
+            )}
+
+          </AnimatePresence>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }
