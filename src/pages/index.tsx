@@ -1,50 +1,63 @@
-"use client";
+ "use client";
 import React from "react";
 import { useRouter } from "next/router";
-import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight } from "lucide-react";
-
-const sectors = [
-  { id: "finance", label: "FINANCIAL SERVICES", icon: <Banknote size={32} />, desc: "Regulatory & Fiduciary Calibration" },
-  { id: "healthcare", label: "LIFE SCIENCES", icon: <Stethoscope size={32} />, desc: "Clinical & Safety Calibration" },
-  { id: "manufacturing", label: "INDUSTRIAL / LOGISTICS", icon: <Factory size={32} />, desc: "Margin & Operational Calibration" },
-  { id: "retail", label: "RETAIL / E-COMMERCE", icon: <ShoppingCart size={32} />, desc: "Customer Trust & Churn Calibration" }
-];
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { ArrowRight, Zap, ShieldAlert } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
 
-  const selectSector = (id: string) => {
-    localStorage.setItem("bmr_selected_sector", id);
-    router.push("/diagnostic");
-  };
-
   return (
-    <div className="min-h-screen bg-[#020617] text-white py-32 px-6 flex flex-col items-center">
-      <div className="max-w-4xl w-full text-center mb-16">
-        <h1 className="text-5xl font-black uppercase italic tracking-tighter mb-4 text-white">
-          FORENSIC <span className="text-red-600">TRIAGE</span>
-        </h1>
-        <p className="text-slate-500 font-mono text-xs uppercase tracking-[0.4em] italic">
-          Select Sector to Unlock $1.2M Baseline Audit
-        </p>
-      </div>
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30">
+      <Header />
+      <main className="flex-grow pt-48 px-6">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-start">
+          
+          <div className="space-y-12">
+            <div className="space-y-6">
+              <p className="text-red-600 font-mono text-[10px] uppercase tracking-[0.5em] font-black italic border-l-2 border-red-600 pl-4">
+                BMR Forensics | Structural Audit
+              </p>
+              <h1 className="text-[110px] font-black uppercase italic tracking-tighter leading-[0.8] text-white">
+                Strategy <br /> Is <br /> 
+                <span className="text-slate-800">Luxury.</span> <br />
+                <span className="text-red-600">Recovery</span> <br /> Is Duty.
+              </h1>
+            </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full">
-        {sectors.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => selectSector(s.id)}
-            className="group p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left relative overflow-hidden"
-          >
-            <div className="text-red-600 mb-6 group-hover:scale-110 transition-transform">{s.icon}</div>
-            <h3 className="text-lg font-black uppercase italic mb-2 tracking-tighter">{s.label}</h3>
-            <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest leading-relaxed">
-              {s.desc}
+            <p className="text-slate-400 text-lg max-w-lg italic leading-relaxed font-medium">
+              We identify the &ldquo;Log Rot&rdquo; and systemic drift in AI deployments. 
+              BMR provides the forensic tools to harden logic chains before architectural collapse becomes inevitable.
             </p>
-            <ArrowRight className="absolute bottom-6 right-6 text-slate-900 group-hover:text-red-600 group-hover:translate-x-1 transition-all" size={18} />
-          </button>
-        ))}
-      </div>
+
+            <button 
+              onClick={() => router.push('/diagnostic')}
+              className="bg-red-600 text-white px-12 py-6 font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all flex items-center gap-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)]"
+            >
+              Initialize Diagnostic <ArrowRight size={20} />
+            </button>
+          </div>
+
+          <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 relative overflow-hidden group">
+             <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white leading-none">
+               Why Systems <span className="text-red-600">Quietly Drift</span>
+             </h2>
+             <p className="text-slate-400 font-bold italic text-lg leading-tight">
+               AI failure is rarely a binary event.
+             </p>
+             <div className="pl-6 border-l border-slate-800 space-y-6">
+               <p className="text-sm text-slate-500 italic leading-relaxed">
+                 It is a slow, structural divergence where AI-enabled logic decays under operating conditions leaders cannot see.
+               </p>
+               <p className="text-sm text-slate-400 leading-relaxed italic">
+                 When human intent and machine execution decouple, you do not have an &quot;optimization&quot; problem. You have <span className="text-red-600 font-black">SYSTEMIC ROT.</span>
+               </p>
+             </div>
+          </div>
+        </div>
+      </main>
+      <Footer />
     </div>
   );
 }
