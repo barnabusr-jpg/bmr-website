@@ -41,7 +41,7 @@ export default function VaultAlpha() {
                   <h1 className="text-7xl font-black uppercase italic tracking-tighter">
                     THE LOGIC <span className="text-red-600 font-black uppercase italic">DECAY SCREENING</span>
                   </h1>
-                  <p className="text-slate-400 italic text-lg max-w-2xl mx-auto">
+                  <p className="text-slate-400 italic text-lg max-w-2xl mx-auto leading-relaxed">
                     Most organizations <span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span>. 
                     This turns a $1.2M AI project into a <span className="text-red-600 font-bold italic">$20.4M hemorrhage</span>.
                   </p>
@@ -81,7 +81,7 @@ export default function VaultAlpha() {
               >
                 <div className="text-center space-y-2">
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter">
-                    FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span>
+                    FORENSIC PROTOCOL <span className="text-red-600 font-black uppercase italic">Engaged</span>
                   </h2>
                   <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold">
                     Sector Calibrated: {sector?.toUpperCase()} // Baseline Lock Active
@@ -96,10 +96,10 @@ export default function VaultAlpha() {
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white" />
-                      <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white" />
+                      <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white placeholder:text-slate-700" />
+                      <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white placeholder:text-slate-700" />
                    </div>
-                   <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all mb-12 text-white" />
+                   <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all mb-12 text-white placeholder:text-slate-700" />
 
                    <button 
                      onClick={() => setStep("diagnostic")}
