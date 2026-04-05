@@ -24,7 +24,7 @@ export default function VaultAlpha() {
     setStep("intake");
   };
 
-  const triageView = (
+  const Triage = () => (
     <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-12">
       <div className="text-center space-y-4">
         <h1 className="text-7xl font-black uppercase italic tracking-tighter leading-none">
@@ -49,11 +49,11 @@ export default function VaultAlpha() {
     </motion.div>
   );
 
-  const intakeView = (
+  const Intake = () => (
     <motion.div key="intake" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="space-y-12">
       <div className="text-center space-y-2">
         <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-          <span>FORENSIC PROTOCOL </span><span className="text-red-600">ENGAGED</span>
+          <span>FORENSIC PROTOCOL </span><span className="text-red-600 font-black uppercase italic">ENGAGED</span>
         </h2>
         <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold leading-none">
           <span>Sector Calibrated: </span><span>{sector?.toUpperCase()}</span><span> // Baseline Lock Active</span>
@@ -72,7 +72,7 @@ export default function VaultAlpha() {
     </motion.div>
   );
 
-  const diagnosticView = (
+  const Diagnostic = () => (
     <motion.div key="diagnostic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
       <div className="text-center py-12 border-b border-slate-900">
         <h2 className="text-6xl font-black uppercase italic tracking-tighter leading-none">
@@ -89,9 +89,9 @@ export default function VaultAlpha() {
       <main className="flex-grow pt-48 pb-32 px-6">
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
-            {step === "triage" && triageView}
-            {step === "intake" && intakeView}
-            {step === "diagnostic" && diagnosticView}
+            {step === "triage" && <Triage />}
+            {step === "intake" && <Intake />}
+            {step === "diagnostic" && <Diagnostic />}
           </AnimatePresence>
         </div>
       </main>
