@@ -42,7 +42,7 @@ export default function VaultAlpha() {
                     THE LOGIC <span className="text-red-600 font-black uppercase italic">DECAY SCREENING</span>
                   </h1>
                   <p className="text-slate-400 italic text-lg max-w-2xl mx-auto">
-                    Most organizations <span className="text-red-600 font-bold uppercase italic">Automate Decay</span>. 
+                    Most organizations <span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span>. 
                     This turns a $1.2M AI project into a <span className="text-red-600 font-bold italic">$20.4M hemorrhage</span>.
                   </p>
                 </div>
