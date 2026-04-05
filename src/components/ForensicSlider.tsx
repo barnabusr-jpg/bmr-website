@@ -20,9 +20,6 @@ export default function ForensicSlider({
   const isCritical = value >= criticalThreshold;
   const fillPercentage = ((value - 1) / 9) * 100;
 
-  // We utilize a 3-span approach in the JSX below to safely handle 
-  // the zone // label formatting without triggering linting errors.
-
   return (
     <div className="mb-12 group">
       <div className="flex justify-between items-end mb-4">
