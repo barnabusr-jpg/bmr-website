@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+/* Ensure this path matches your consolidated file location */
+import FieldGuide from "@/components/field-guide/FieldGuidePage";
 
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
@@ -13,10 +15,6 @@ const sectors = [
 ];
 
 export default function VaultAlpha() {
-  /* STRICT STATE LOCK: 
-     We initialize 'step' to "triage" and ONLY change it 
-     inside the selectSector function. 
-  */
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState<string | null>(null);
 
@@ -33,7 +31,7 @@ export default function VaultAlpha() {
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
             
-            {/* 01: SECTOR CALIBRATION - THIS MUST SHOW FIRST */}
+            {/* 01: SECTOR CALIBRATION */}
             {step === "triage" && (
               <motion.div 
                 key="triage" 
@@ -70,12 +68,13 @@ export default function VaultAlpha() {
               </motion.div>
             )}
 
-            {/* 02: SYSTEMIC INTAKE - ONLY SHOWS AFTER CLICKING A BOX */}
+            {/* 02: SYSTEMIC INTAKE */}
             {step === "intake" && (
               <motion.div 
                 key="intake" 
                 initial={{ opacity: 0, x: 30 }} 
                 animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -30 }}
                 className="space-y-12"
               >
                 <div className="text-center space-y-2">
@@ -88,12 +87,6 @@ export default function VaultAlpha() {
                 </div>
 
                 <div className="bg-slate-900/10 border border-slate-900 p-12 relative rounded-sm">
-                   <div className="flex items-center gap-3 mb-12 border-b border-slate-800 pb-6">
-                      <Lock className="text-red-600" size={20} />
-                      <h3 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Systemic Intake</h3>
-                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1 font-bold uppercase tracking-tighter leading-none italic">ENCRYPTION ACTIVE</span>
-                   </div>
-
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white placeholder:text-slate-700 uppercase" />
                       <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white placeholder:text-slate-700 uppercase" />
@@ -107,6 +100,32 @@ export default function VaultAlpha() {
                      <span>Initialize Audit Observation </span><ArrowRight size={18} />
                    </button>
                 </div>
+              </motion.div>
+            )}
+
+            {/* 03: DIAGNOSTIC VERDICT & FIELD GUIDE */}
+            {step === "diagnostic" && (
+              <motion.div 
+                key="diagnostic" 
+                initial={{ opacity: 0 }} 
+                animate={{ opacity: 1 }}
+                className="space-y-12"
+              >
+                <div className="text-center py-12 border-b border-slate-900">
+                  <h2 className="text-6xl font-black uppercase italic tracking-tighter leading-none">
+                    <span>FORENSIC </span><span className="text-red-600">VERDICT</span>
+                  </h2>
+                </div>
+                
+                {/* The FieldGuide renders here behind the fence */}
+                <FieldGuide sector={sector || "general"} />
+                
+                <button 
+                   onClick={() => setStep("triage")}
+                   className="text-[10px] font-mono text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors mx-auto block"
+                >
+                  <span>// Restart Calibration</span>
+                </button>
               </motion.div>
             )}
 
