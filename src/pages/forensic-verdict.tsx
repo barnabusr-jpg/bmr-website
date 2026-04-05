@@ -12,9 +12,7 @@ export default function ForensicVerdict() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          alpha: JSON.parse(localStorage.getItem("bmr_vault_alpha_results") || "{}"),
-          beta: JSON.parse(localStorage.getItem("bmr_vault_beta_results") || "{}"),
-          gamma: JSON.parse(localStorage.getItem("bmr_vault_gamma_results") || "{}"),
+          responses: JSON.parse(localStorage.getItem("bmr_diagnostic_results") || "{}"),
           sector: localStorage.getItem("bmr_selected_sector") || "finance"
         })
       });
