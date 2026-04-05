@@ -29,11 +29,9 @@ export default function ForensicSlider({
             <span className="mx-2">//</span>
             <span>{label.toUpperCase()}</span>
           </label>
-          {isCritical && (
-            <AlertTriangle className="h-3 w-3 text-red-600 animate-pulse" />
-          )}
+          {isCritical && <AlertTriangle className="h-3 w-3 text-red-600 animate-pulse" />}
         </div>
-        <span className={`text-xl font-black italic ${isCritical ? 'text-red-600' : 'text-white'}`}>
+        <span className={isCritical ? "text-xl font-black italic text-red-600" : "text-xl font-black italic text-white"}>
           {value}
         </span>
       </div>
@@ -52,8 +50,8 @@ export default function ForensicSlider({
       />
 
       <div className="flex justify-between mt-2 text-[8px] font-mono uppercase tracking-widest text-slate-700">
-        <span className={value < 4 ? 'text-green-500 font-bold' : ''}>OPTIMIZED</span>
-        <span className={isCritical ? 'text-red-600 font-bold' : ''}>CRITICAL DECAY</span>
+        <span className={value < 4 ? "text-green-500 font-bold" : ""}>OPTIMIZED</span>
+        <span className={isCritical ? "text-red-600 font-bold" : ""}>CRITICAL DECAY</span>
       </div>
 
       {isCritical && (
