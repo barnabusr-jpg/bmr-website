@@ -1,12 +1,13 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/router";
-import { Banknote, Stethoscope, Factory, ShieldCheck, ArrowRight } from "lucide-react";
+import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight } from "lucide-react";
 
 const sectors = [
-  { id: "finance", label: "Financial Services", icon: <Banknote size={32} />, desc: "Regulatory & Fiduciary Calibration" },
-  { id: "healthcare", label: "Life Sciences", icon: <Stethoscope size={32} />, desc: "Clinical & Life-Safety Calibration" },
-  { id: "manufacturing", label: "Industrial / Logistics", icon: <Factory size={32} />, desc: "Margin & Operational Calibration" }
+  { id: "finance", label: "FINANCIAL SERVICES", icon: <Banknote size={32} />, desc: "Regulatory & Fiduciary Calibration" },
+  { id: "healthcare", label: "LIFE SCIENCES", icon: <Stethoscope size={32} />, desc: "Clinical & Safety Calibration" },
+  { id: "manufacturing", label: "INDUSTRIAL / LOGISTICS", icon: <Factory size={32} />, desc: "Margin & Operational Calibration" },
+  { id: "retail", label: "RETAIL / E-COMMERCE", icon: <ShoppingCart size={32} />, desc: "Customer Trust & Churn Calibration" }
 ];
 
 export default function Home() {
@@ -14,7 +15,7 @@ export default function Home() {
 
   const selectSector = (id: string) => {
     localStorage.setItem("bmr_selected_sector", id);
-    router.push("/vault-alpha");
+    router.push("/diagnostic");
   };
 
   return (
@@ -24,30 +25,25 @@ export default function Home() {
           FORENSIC <span className="text-red-600">TRIAGE</span>
         </h1>
         <p className="text-slate-500 font-mono text-xs uppercase tracking-[0.4em] italic">
-          Initialize Sector Calibration to Unlock $1.2M Baseline Audit
+          Select Sector to Unlock $1.2M Baseline Audit
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl w-full">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl w-full">
         {sectors.map((s) => (
           <button
             key={s.id}
             onClick={() => selectSector(s.id)}
-            className="group p-10 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left relative overflow-hidden"
+            className="group p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left relative overflow-hidden"
           >
             <div className="text-red-600 mb-6 group-hover:scale-110 transition-transform">{s.icon}</div>
-            <h3 className="text-xl font-black uppercase italic mb-2">{s.label}</h3>
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-relaxed">
+            <h3 className="text-lg font-black uppercase italic mb-2 tracking-tighter">{s.label}</h3>
+            <p className="text-[9px] font-mono text-slate-500 uppercase tracking-widest leading-relaxed">
               {s.desc}
             </p>
-            <ArrowRight className="absolute bottom-8 right-8 text-slate-800 group-hover:text-red-600 group-hover:translate-x-2 transition-all" size={20} />
+            <ArrowRight className="absolute bottom-6 right-6 text-slate-900 group-hover:text-red-600 group-hover:translate-x-1 transition-all" size={18} />
           </button>
         ))}
-      </div>
-
-      <div className="mt-24 flex items-center gap-4 text-slate-700 font-mono text-[9px] uppercase tracking-[0.3em]">
-        <ShieldCheck size={14} />
-        <span>BMR Forensic Algorithm 3.4.1 // SECURE SESSION ACTIVE</span>
       </div>
     </div>
   );
