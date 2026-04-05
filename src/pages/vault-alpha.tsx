@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock, Activity } from "lucide-react";
+import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -14,7 +14,7 @@ const sectors = [
 
 export default function VaultAlpha() {
   const [sector, setSector] = useState<string | null>(null);
-  const [step, setStep] = useState("triage"); // triage -> intake -> diagnostic
+  const [step, setStep] = useState("triage");
 
   const selectSector = (id: string) => {
     setSector(id);
@@ -23,13 +23,12 @@ export default function VaultAlpha() {
   };
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30">
       <Header />
       <main className="flex-grow pt-48 pb-32 px-6">
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
             
-            {/* STEP 1: THE MISSING SECTOR BOXES */}
             {step === "triage" && (
               <motion.div 
                 key="triage" 
@@ -40,11 +39,11 @@ export default function VaultAlpha() {
               >
                 <div className="text-center space-y-4">
                   <h1 className="text-7xl font-black uppercase italic tracking-tighter">
-                    THE LOGIC <span className="text-red-600">DECAY SCREENING</span>
+                    THE LOGIC <span className="text-red-600 font-black uppercase italic">DECAY SCREENING</span>
                   </h1>
                   <p className="text-slate-400 italic text-lg max-w-2xl mx-auto">
-                    Most organizations <span className="text-red-600 font-bold uppercase">Automate Decay</span>. 
-                    This turns a $1.2M AI project into a <span className="text-red-600 font-bold">$20.4M hemorrhage</span>.
+                    Most organizations <span className="text-red-600 font-bold uppercase italic">Automate Decay</span>. 
+                    This turns a $1.2M AI project into a <span className="text-red-600 font-bold italic">$20.4M hemorrhage</span>.
                   </p>
                 </div>
 
@@ -73,7 +72,6 @@ export default function VaultAlpha() {
               </motion.div>
             )}
 
-            {/* STEP 2: THE SYSTEMIC INTAKE (Matches your Screenshot #2) */}
             {step === "intake" && (
               <motion.div 
                 key="intake" 
@@ -85,7 +83,7 @@ export default function VaultAlpha() {
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter">
                     FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span>
                   </h2>
-                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic">
+                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold">
                     Sector Calibrated: {sector?.toUpperCase()} // Baseline Lock Active
                   </p>
                 </div>
@@ -94,19 +92,18 @@ export default function VaultAlpha() {
                    <div className="flex items-center gap-3 mb-12 border-b border-slate-800 pb-6">
                       <Lock className="text-red-600" size={20} />
                       <h3 className="text-2xl font-black uppercase italic tracking-tighter">Systemic Intake</h3>
-                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1">ENCRYPTION ACTIVE</span>
+                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1 font-bold">ENCRYPTION ACTIVE</span>
                    </div>
 
-                   {/* Form Inputs matching Screenshot #2 aesthetic */}
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all" />
-                      <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all" />
+                      <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white" />
+                      <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white" />
                    </div>
-                   <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all mb-12" />
+                   <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all mb-12 text-white" />
 
                    <button 
                      onClick={() => setStep("diagnostic")}
-                     className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4"
+                     className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 shadow-lg"
                    >
                      Initialize Audit Observation <ArrowRight size={18} />
                    </button>
