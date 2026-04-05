@@ -30,8 +30,8 @@ export default function VaultAlpha() {
     setStep("intake");
   };
 
-  // ISOLATION: Logical branches moved to standalone variables
-  const TriageNode = (
+  // ISOLATION: Define the actual JSX fragments
+  const triage = (
     <motion.div key="triage" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-16">
       <div className="text-center space-y-6">
         <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter leading-none text-white">
@@ -47,7 +47,7 @@ export default function VaultAlpha() {
             <div className="text-red-600 mb-4 group-hover:scale-110 transition-transform">{s.icon}</div>
             <div className="space-y-1">
               <h3 className="text-xl font-black uppercase italic tracking-tighter text-white leading-none">{s.label}</h3>
-              <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-[0.2em]">{s.risk}</p>
+              <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-[0.2em] leading-none">{s.risk}</p>
             </div>
             <ArrowRight className="absolute bottom-6 right-6 text-slate-800 group-hover:text-red-600 group-hover:translate-x-1 transition-all" size={18} />
           </button>
@@ -56,7 +56,7 @@ export default function VaultAlpha() {
     </motion.div>
   );
 
-  const IntakeNode = (
+  const intake = (
     <motion.div key="intake" initial={{ opacity: 0, x: 25 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -25 }} className="space-y-12">
       <div className="text-center space-y-3">
         <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none text-white">
@@ -79,7 +79,7 @@ export default function VaultAlpha() {
     </motion.div>
   );
 
-  const DiagnosticNode = (
+  const diagnostic = (
     <motion.div key="diagnostic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
       <div className="text-center py-12 border-b border-slate-900">
         <h2 className="text-6xl font-black uppercase italic tracking-tighter leading-none text-white">
@@ -90,13 +90,10 @@ export default function VaultAlpha() {
     </motion.div>
   );
 
-  // SANITIZATION: Logic execution happens here, outside the JSX return.
-  const getActiveView = () => {
-    if (step === "triage") return TriageNode;
-    if (step === "intake") return IntakeNode;
-    if (step === "diagnostic") return DiagnosticNode;
-    return null;
-  };
+  // RESOLUTION: We resolve the step to a single constant here
+  let currentDisplay = triage;
+  if (step === "intake") currentDisplay = intake;
+  if (step === "diagnostic") currentDisplay = diagnostic;
 
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans">
@@ -104,7 +101,7 @@ export default function VaultAlpha() {
       <main className="flex-grow pt-48 pb-32 px-6">
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
-            {getActiveView()}
+            {currentDisplay}
           </AnimatePresence>
         </div>
       </main>
