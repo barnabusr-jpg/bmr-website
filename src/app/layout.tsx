@@ -1,5 +1,9 @@
 import React from "react";
-import "./globals.css"; // Direct local import
+
+export const metadata = {
+  title: "BMR SOLUTIONS",
+  description: "Forensic Logic Decay Screening",
+};
 
 export default function RootLayout({
   children,
@@ -7,8 +11,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="antialiased">
+    <html lang="en">
+      <body style={{ backgroundColor: '#020617', color: 'white', margin: 0, padding: 0 }}>
         {children}
       </body>
     </html>
