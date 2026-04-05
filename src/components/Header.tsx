@@ -12,8 +12,6 @@ const NAV_ITEMS = [
 
 export default function Header() {
   const router = useRouter();
-  
-  // Safely capture the current path
   const currentPath = router?.pathname || '';
 
   return (
@@ -27,7 +25,7 @@ export default function Header() {
           </div>
           <div className="flex flex-col text-left">
             <span className="text-xl font-black italic tracking-tighter text-white uppercase leading-none">
-              BMR<span className="text-red-600">SOLUTIONS</span>
+              <span>BMR</span><span className="text-red-600">SOLUTIONS</span>
             </span>
             <span className="text-[8px] font-mono text-red-600 font-bold tracking-widest uppercase mt-1">ADMIN ACCESS</span>
           </div>
@@ -53,17 +51,16 @@ export default function Header() {
           <div className="hidden md:flex flex-col items-end pr-6 border-r border-slate-800 text-right">
              <div className="flex items-center gap-2">
                 <ShieldAlert size={10} className="text-red-600" />
-                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">STATUS</span>
+                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest leading-none">STATUS</span>
              </div>
-             <span className="text-[9px] font-mono text-green-500 font-bold uppercase tracking-widest">STABLE NODE-SEC-04</span>
+             <span className="text-[9px] font-mono text-green-500 font-bold uppercase tracking-widest leading-none mt-1">STABLE NODE-SEC-04</span>
           </div>
           
-          {/* FIX: Redirecting to the correct Orchestrator path */}
           <button 
-            onClick={() => router.push('/promise-gap')}
+            onClick={() => router.push('/vault-alpha')}
             className="bg-red-600 text-white px-6 py-3 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all shadow-lg shadow-red-900/10"
           >
-            <Zap size={14} /> DIAGNOSTIC
+            <Zap size={14} /><span>DIAGNOSTIC</span>
           </button>
         </div>
 
