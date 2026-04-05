@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { Activity, ShieldAlert, Zap } from 'lucide-react';
@@ -12,8 +12,16 @@ const NAV_ITEMS = [
 ];
 
 export default function Header() {
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+
+  // HYDRATION GUARD: Prevents the White Screen crash
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const currentPath = mounted ? pathname : "";
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-900 px-6 py-5">
@@ -37,7 +45,7 @@ export default function Header() {
               key={item.path} 
               href={item.path}
               className={`text-[10px] font-black tracking-[0.4em] uppercase transition-all hover:text-red-600 ${
-                pathname === item.path ? 'text-red-600' : 'text-slate-400'
+                currentPath === item.path ? 'text-red-600' : 'text-slate-400'
               }`}
             >
               <span>{item.label}</span>
@@ -56,7 +64,7 @@ export default function Header() {
           
           <button 
             type="button"
-            onClick={() => router.push('/vault-alpha')}
+            onClick={() => { if(mounted) router.push('/vault-alpha'); }}
             className="bg-red-600 text-white px-6 py-3 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all shadow-lg shadow-red-900/10"
           >
             <Zap size={14} /><span>DIAGNOSTIC</span>
