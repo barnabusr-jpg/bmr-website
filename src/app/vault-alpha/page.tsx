@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import DiagnosticEngine from "@/components/DiagnosticEngine";
+import ConsolidatedDiagnostic from "@/components/diagnostic/ConsolidatedDiagnostic";
 
 export default function VaultAlpha() {
   const [mounted, setMounted] = useState(false);
@@ -19,7 +19,7 @@ export default function VaultAlpha() {
       <Header />
       <main className="flex-grow pt-48 pb-32 px-6">
         <div className="max-w-5xl mx-auto">
-          <DiagnosticEngine />
+          <ConsolidatedDiagnostic />
         </div>
       </main>
       <Footer />
