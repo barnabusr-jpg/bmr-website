@@ -1,42 +1,92 @@
-// 1. Add "audit" to your step logic
-const [step, setStep] = useState("triage"); 
+"use client";
 
-// 2. Update the button in the Intake section:
-<button 
-  onClick={() => setStep("audit")} // Change "diagnostic" to "audit"
-  className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs"
->
-  <span>Initialize Audit Observation </span>
-</button>
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight } from "lucide-react";
+import FieldGuide from "@/components/field-guide/FieldGuidePage";
+import DiagnosticStep from "./DiagnosticStep";
+// Import your question data here
+import { diagnosticQuestions } from "@/data/diagnosticQuestions"; 
 
-// 3. Define the Audit UI (The Questions)
-const Audit = (
-  <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-    <div className="text-center py-12">
-      <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white leading-none">
-        <span>ACTIVE </span><span className="text-red-600">DECAY SCAN</span>
-      </h2>
-      <p className="text-slate-500 font-mono text-[10px] mt-2 tracking-widest">PROTOCOL: {sector?.toUpperCase()}</p>
-    </div>
-    
-    {/* This is where your Question component or logic goes */}
-    <div className="bg-slate-900/50 border border-slate-900 p-8">
-       <p className="text-white italic">Loading Forensic Question Set...</p>
-       {/* Call your question component here: 
-          <DiagnosticQuestions sector={sector} onComplete={() => setStep("diagnostic")} /> 
-       */}
-       <button 
-         onClick={() => setStep("diagnostic")} 
-         className="mt-8 text-red-600 font-bold uppercase text-xs tracking-widest border border-red-600 p-4 hover:bg-red-600 hover:text-white transition-all"
-       >
-         Generate Final Verdict
-       </button>
-    </div>
-  </motion.div>
-);
+export default function ConsolidatedDiagnostic() {
+  const [step, setStep] = useState("triage");
+  const [sector, setSector] = useState<string | null>(null);
+  const [currentDimension, setCurrentDimension] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
 
-// 4. Update the View Map at the bottom:
-let content = Triage;
-if (step === "intake") content = Intake;
-if (step === "audit") content = Audit; // New mapping
-if (step === "diagnostic") content = Diagnostic;
+  const handleAnswerChange = (qId: string, val: string) => {
+    setAnswers(prev => ({ ...prev, [qId]: val }));
+  };
+
+  // Logic to advance the audit or finish
+  const handleNext = () => {
+    if (currentDimension < diagnosticQuestions.length - 1) {
+      setCurrentDimension(prev => prev + 1);
+    } else {
+      setStep("diagnostic");
+    }
+  };
+
+  const Triage = (
+    <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-16">
+      {/* ... Existing Triage Header ... */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {sectors.map((s) => (
+          <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="...">
+             {/* ... Existing Button Content ... */}
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  );
+
+  const Intake = (
+    <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
+      {/* ... Existing Intake Form ... */}
+      <button onClick={() => setStep("audit")} className="...">
+        <span>Initialize Audit Observation </span><ArrowRight size={18} />
+      </button>
+    </motion.div>
+  );
+
+  const Audit = (
+    <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
+      <DiagnosticStep 
+        dimensionTitle={diagnosticQuestions[currentDimension].title}
+        dimensionDescription={diagnosticQuestions[currentDimension].description}
+        questions={diagnosticQuestions[currentDimension].questions}
+        answers={answers}
+        onAnswerChange={handleAnswerChange}
+      />
+      
+      <div className="pt-12 border-t border-slate-900 flex justify-end">
+        <button 
+          onClick={handleNext}
+          className="bg-red-600 px-12 py-6 text-white font-black uppercase italic tracking-widest text-xs hover:bg-white hover:text-black transition-all"
+        >
+          {currentDimension === diagnosticQuestions.length - 1 ? "Generate Final Verdict" : "Next Dimension"}
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  const Diagnostic = (
+    <motion.div key="diagnostic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
+      {/* ... Existing Diagnostic Verdict ... */}
+      <FieldGuide sector={sector || "general"} answers={answers} />
+    </motion.div>
+  );
+
+  // Map the views to current state
+  let content;
+  if (step === "triage") content = Triage;
+  else if (step === "intake") content = Intake;
+  else if (step === "audit") content = Audit;
+  else content = Diagnostic;
+
+  return (
+    <AnimatePresence mode="wait">
+      {content}
+    </AnimatePresence>
+  );
+}
