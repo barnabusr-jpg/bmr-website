@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock } from "lucide-react";
 import Header from "@/components/Header";
@@ -13,7 +13,7 @@ const sectors = [
 ];
 
 export default function VaultAlpha() {
-  /* CRITICAL: We force the starting step to "triage" */
+  /* Step is locked to triage to ensure industry selection occurs first */
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState<string | null>(null);
 
@@ -30,7 +30,7 @@ export default function VaultAlpha() {
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
             
-            {/* STAGE 01: SECTOR CALIBRATION (THE 4 BOXES) */}
+            {/* 01: SECTOR CALIBRATION GRID */}
             {step === "triage" && (
               <motion.div 
                 key="triage" 
@@ -67,7 +67,7 @@ export default function VaultAlpha() {
               </motion.div>
             )}
 
-            {/* STAGE 02: SYSTEMIC INTAKE (THE FORM) */}
+            {/* 02: SYSTEMIC INTAKE FORM */}
             {step === "intake" && (
               <motion.div 
                 key="intake" 
@@ -77,7 +77,7 @@ export default function VaultAlpha() {
               >
                 <div className="text-center space-y-2">
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-                    <span>FORENSIC PROTOCOL </span><span className="text-red-600">ENGAGED</span>
+                    <span>FORENSIC PROTOCOL </span><span className="text-red-600 font-black uppercase italic">ENGAGED</span>
                   </h2>
                   <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold leading-none">
                     {`Sector Calibrated: ${sector?.toUpperCase()} // Baseline Lock Active`}
