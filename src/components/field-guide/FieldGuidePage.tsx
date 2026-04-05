@@ -1,4 +1,5 @@
 "use client";
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, AlertCircle, Zap, ShieldCheck } from 'lucide-react';
@@ -28,33 +29,35 @@ export default function FieldGuide({ sector }: FieldGuideProps) {
           </span>
         </div>
       </div>
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="p-8 bg-slate-900/20 border border-slate-900 hover:border-red-600/50 transition-all group">
           <AlertCircle className="text-red-600 mb-6" size={24} />
-          <h3 className="text-lg font-black uppercase italic text-white mb-4 tracking-tight"><span>The Promise Gap</span></h3>
+          <h3 className="text-lg font-black uppercase italic text-white mb-4 tracking-tight">
+            <span>The Promise Gap</span>
+          </h3>
           <p className="text-sm text-slate-400 leading-relaxed font-light">
             <span>Most AI initiatives fail because they solve for </span><span className="text-white italic">Technical Capability</span><span> while ignoring </span><span className="text-white italic">Structural Logic</span><span>. This creates a $20M liability gap.</span>
           </p>
         </div>
-
         <div className="p-8 bg-slate-900/20 border border-slate-900 hover:border-red-600/50 transition-all group">
           <Zap className="text-red-600 mb-6" size={24} />
-          <h3 className="text-lg font-black uppercase italic text-white mb-4 tracking-tight"><span>Decay Signals</span></h3>
+          <h3 className="text-lg font-black uppercase italic text-white mb-4 tracking-tight">
+            <span>Decay Signals</span>
+          </h3>
           <p className="text-sm text-slate-400 leading-relaxed font-light">
             <span>Watch for </span><span className="text-red-600 font-bold uppercase">Logic Drift</span><span> where automated systems begin making decisions based on stale baseline data.</span>
           </p>
         </div>
-
         <div className="p-8 bg-slate-900/20 border border-slate-900 hover:border-red-600/50 transition-all group">
           <ShieldCheck className="text-red-600 mb-6" size={24} />
-          <h3 className="text-lg font-black uppercase italic text-white mb-4 tracking-tight"><span>Alignment Protocol</span></h3>
+          <h3 className="text-lg font-black uppercase italic text-white mb-4 tracking-tight">
+            <span>Alignment Protocol</span>
+          </h3>
           <p className="text-sm text-slate-400 leading-relaxed font-light">
             <span>True organizational health requires a continuous cycle of </span><span className="text-white font-bold">Forensic Observation</span><span>.</span>
           </p>
         </div>
       </div>
-
       <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} className="bg-red-600/5 border border-red-600/20 p-8 rounded-sm text-center">
         <p className="text-[10px] font-mono text-red-600 uppercase tracking-[0.4em] font-black">
           <span>Closing the Gap Requires Active Intervention</span>
