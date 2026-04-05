@@ -20,12 +20,17 @@ export default function ForensicSlider({
   const isCritical = value >= criticalThreshold;
   const fillPercentage = ((value - 1) / 9) * 100;
 
+  // We utilize a 3-span approach in the JSX below to safely handle 
+  // the zone // label formatting without triggering linting errors.
+
   return (
     <div className="mb-12 group">
       <div className="flex justify-between items-end mb-4">
         <div className="flex items-center gap-2">
           <label className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500 group-hover:text-red-600 transition-colors">
-            <span>{zone.toUpperCase()}</span><span className="mx-2">//</span><span>{label.toUpperCase()}</span>
+            <span>{zone.toUpperCase()}</span>
+            <span className="mx-2">//</span>
+            <span>{label.toUpperCase()}</span>
           </label>
           {isCritical && (
             <AlertTriangle className="h-3 w-3 text-red-600 animate-pulse" />
@@ -56,7 +61,9 @@ export default function ForensicSlider({
 
       {isCritical && (
         <div className="mt-3 text-[9px] text-red-600 font-mono uppercase tracking-widest border-l border-red-600 pl-2">
-          <span>WARNING: SYSTEMIC </span><span>{zone.toUpperCase()}</span><span> EXCEEDS SAFE OPERATING PARAMETERS</span>
+          <span>WARNING: SYSTEMIC </span>
+          <span>{zone.toUpperCase()}</span>
+          <span> EXCEEDS SAFE OPERATING PARAMETERS</span>
         </div>
       )}
     </div>
