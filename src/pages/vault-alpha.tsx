@@ -28,7 +28,6 @@ export default function VaultAlpha() {
       <main className="flex-grow pt-48 pb-32 px-6">
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
-            
             {step === "triage" && (
               <motion.div 
                 key="triage" 
@@ -81,7 +80,7 @@ export default function VaultAlpha() {
               >
                 <div className="text-center space-y-2">
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter">
-                    FORENSIC PROTOCOL <span className="text-red-600 font-black uppercase italic">Engaged</span>
+                    FORENSIC PROTOCOL <span className="text-red-600 font-black uppercase italic">ENGAGED</span>
                   </h2>
                   <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold">
                     Sector Calibrated: {sector?.toUpperCase()} // Baseline Lock Active
@@ -92,7 +91,7 @@ export default function VaultAlpha() {
                    <div className="flex items-center gap-3 mb-12 border-b border-slate-800 pb-6">
                       <Lock className="text-red-600" size={20} />
                       <h3 className="text-2xl font-black uppercase italic tracking-tighter">Systemic Intake</h3>
-                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1 font-bold">ENCRYPTION ACTIVE</span>
+                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1 font-bold italic uppercase tracking-tighter leading-none">ENCRYPTION ACTIVE</span>
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -110,7 +109,6 @@ export default function VaultAlpha() {
                 </div>
               </motion.div>
             )}
-
           </AnimatePresence>
         </div>
       </main>
