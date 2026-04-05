@@ -20,15 +20,17 @@ export default function ForensicSlider({
   const isCritical = value >= criticalThreshold;
   const fillPercentage = ((value - 1) / 9) * 100;
 
+  // We convert the label to a sanitized string to bypass JSX parser errors
+  const labelString = `${zone.toUpperCase()} // ${label.toUpperCase()}`;
+
   return (
     <div className="mb-12 group">
       <div className="flex justify-between items-end mb-4">
         <div className="flex items-center gap-2">
-          <label className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500 group-hover:text-red-600 transition-colors">
-            <span>{zone.toUpperCase()}</span>
-            <span className="mx-2">//</span>
-            <span>{label.toUpperCase()}</span>
-          </label>
+          <label 
+            className="text-[10px] font-mono uppercase tracking-[0.3em] text-slate-500 group-hover:text-red-600 transition-colors"
+            dangerouslySetInnerHTML={{ __html: labelString }}
+          />
           {isCritical && <AlertTriangle className="h-3 w-3 text-red-600 animate-pulse" />}
         </div>
         <span className={isCritical ? "text-xl font-black italic text-red-600" : "text-xl font-black italic text-white"}>
