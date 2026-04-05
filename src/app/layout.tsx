@@ -1,9 +1,5 @@
 import React from "react";
-
-export const metadata = {
-  title: "BMR SOLUTIONS",
-  description: "Forensic Logic Decay Screening",
-};
+import "../styles/globals.css"; // The exact forensic path
 
 export default function RootLayout({
   children,
@@ -11,8 +7,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body style={{ backgroundColor: '#020617', color: 'white', margin: 0, padding: 0 }}>
+    <html lang="en" className="dark">
+      <body className="bg-[#020617] antialiased selection:bg-red-600/30">
         {children}
       </body>
     </html>
