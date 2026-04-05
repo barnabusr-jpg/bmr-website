@@ -41,8 +41,7 @@ export default function VaultAlpha() {
                     THE LOGIC <span className="text-red-600 font-black uppercase italic leading-none">DECAY SCREENING</span>
                   </h1>
                   <p className="text-slate-400 italic text-lg max-w-2xl mx-auto leading-relaxed">
-                    Most organizations <span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span>. 
-                    This turns a $1.2M AI project into a <span className="text-red-600 font-bold italic">$20.4M hemorrhage</span>.
+                    Most organizations <span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span>. This turns a $1.2M AI project into a <span className="text-red-600 font-bold italic">$20.4M hemorrhage</span>.
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -52,16 +51,10 @@ export default function VaultAlpha() {
                       onClick={() => selectSector(s.id)}
                       className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left group relative overflow-hidden flex flex-col justify-between min-h-[160px]"
                     >
-                      <div className="text-red-600 mb-4 group-hover:scale-110 transition-transform">
-                        {s.icon}
-                      </div>
+                      <div className="text-red-600 mb-4 group-hover:scale-110 transition-transform">{s.icon}</div>
                       <div className="space-y-1">
-                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-white leading-none">
-                          {s.label}
-                        </h3>
-                        <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-[0.2em]">
-                          {s.risk}
-                        </p>
+                        <h3 className="text-xl font-black uppercase italic tracking-tighter text-white leading-none">{s.label}</h3>
+                        <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-[0.2em]">{s.risk}</p>
                       </div>
                       <ArrowRight className="absolute bottom-6 right-6 text-slate-900 group-hover:text-red-600 group-hover:translate-x-1 transition-all" size={18} />
                     </button>
