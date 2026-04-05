@@ -30,7 +30,7 @@ export default function VaultAlpha() {
       <main className="flex-grow pt-48 pb-32 px-6">
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
-            {step === "triage" ? (
+            {step === "triage" && (
               <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
                 <div className="text-center space-y-4">
                   <h1 className="text-7xl font-black uppercase italic tracking-tighter leading-none">
@@ -53,7 +53,9 @@ export default function VaultAlpha() {
                   ))}
                 </div>
               </motion.div>
-            ) : step === "intake" ? (
+            )}
+
+            {step === "intake" && (
               <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
                 <div className="text-center space-y-2">
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
@@ -74,7 +76,9 @@ export default function VaultAlpha() {
                   </button>
                 </div>
               </motion.div>
-            ) : (
+            )}
+
+            {step === "diagnostic" && (
               <motion.div key="diagnostic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                 <div className="text-center py-12 border-b border-slate-900">
                   <h2 className="text-6xl font-black uppercase italic tracking-tighter leading-none">
