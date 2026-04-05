@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight } from "lucide-react";
+import { Banknote, Stethoscope, Factory, ShoppingCart } from "lucide-react";
 
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
@@ -32,7 +32,7 @@ export default function VaultAlpha() {
                 <h1 className="text-6xl font-black uppercase italic tracking-tighter leading-none">
                   <span>LOGIC </span><span className="text-red-600">DECAY TEST</span>
                 </h1>
-                <p className="text-slate-400 font-mono text-xs uppercase tracking-widest">
+                <p className="text-slate-400 font-mono text-xs uppercase tracking-widest leading-none">
                   <span>Standard bypass active // Components detached</span>
                 </p>
               </div>
@@ -42,10 +42,10 @@ export default function VaultAlpha() {
                   <button 
                     key={s.id} 
                     onClick={() => setStep("check")} 
-                    className="p-8 bg-slate-950 border border-slate-900 hover:border-red-600 transition-all text-left flex flex-col gap-4"
+                    className="p-8 bg-slate-950 border border-slate-900 hover:border-red-600 transition-all text-left flex flex-col gap-4 group"
                   >
-                    <div className="text-red-600">{s.icon}</div>
-                    <span className="font-black italic uppercase text-sm tracking-tighter">{s.label}</span>
+                    <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
+                    <span className="font-black italic uppercase text-sm tracking-tighter"><span>{s.label}</span></span>
                   </button>
                 ))}
               </div>
@@ -54,10 +54,10 @@ export default function VaultAlpha() {
 
           {step === "check" && (
             <motion.div key="check" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-8">
-              <h2 className="text-4xl font-black uppercase italic italic"><span>BYPASS SUCCESSFUL</span></h2>
+              <h2 className="text-4xl font-black uppercase italic tracking-tighter"><span>BYPASS SUCCESSFUL</span></h2>
               <button 
                 onClick={() => setStep("triage")}
-                className="bg-red-600 px-8 py-4 font-black uppercase text-xs tracking-widest"
+                className="bg-red-600 px-8 py-4 font-black uppercase text-xs tracking-[0.4em] hover:bg-white hover:text-black transition-all"
               >
                 <span>Reset Protocol</span>
               </button>
