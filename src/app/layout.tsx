@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/global.css"; // Relative path bypass
+import "./globals.css"; // Direct local import
 
 export default function RootLayout({
   children,
@@ -7,7 +7,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className="dark">
       <body className="antialiased">
         {children}
       </body>
