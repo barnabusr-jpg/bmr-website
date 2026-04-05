@@ -37,11 +37,11 @@ export default function VaultAlpha() {
                 className="space-y-12"
               >
                 <div className="text-center space-y-4">
-                  <h1 className="text-7xl font-black uppercase italic tracking-tighter">
-                    THE LOGIC <span className="text-red-600 font-black uppercase italic leading-none">DECAY SCREENING</span>
+                  <h1 className="text-7xl font-black uppercase italic tracking-tighter leading-none">
+                    <span>THE LOGIC </span><span className="text-red-600">DECAY SCREENING</span>
                   </h1>
                   <p className="text-slate-400 italic text-lg max-w-2xl mx-auto leading-relaxed">
-                    Most organizations <span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span>. This turns a $1.2M AI project into a <span className="text-red-600 font-bold italic">$20.4M hemorrhage</span>.
+                    <span>Most organizations </span><span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span><span>. This turns a $1.2M AI project into a </span><span className="text-red-600 font-bold italic">$20.4M hemorrhage</span><span>.</span>
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -72,10 +72,10 @@ export default function VaultAlpha() {
               >
                 <div className="text-center space-y-2">
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-                    FORENSIC PROTOCOL <span className="text-red-600 font-black uppercase italic">ENGAGED</span>
+                    <span>FORENSIC PROTOCOL </span><span className="text-red-600">ENGAGED</span>
                   </h2>
                   <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold leading-none">
-                    Sector Calibrated: {sector?.toUpperCase()} // Baseline Lock Active
+                    {`Sector Calibrated: ${sector?.toUpperCase()} // Baseline Lock Active`}
                   </p>
                 </div>
                 <div className="bg-slate-900/10 border border-slate-900 p-12 relative rounded-sm">
@@ -93,7 +93,7 @@ export default function VaultAlpha() {
                      onClick={() => setStep("diagnostic")}
                      className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 shadow-lg shadow-red-900/20"
                    >
-                     Initialize Audit Observation <ArrowRight size={18} />
+                     <span>Initialize Audit Observation </span><ArrowRight size={18} />
                    </button>
                 </div>
               </motion.div>
