@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-/* Ensure this path matches your consolidated file location */
 import FieldGuide from "@/components/field-guide/FieldGuidePage";
 
 const sectors = [
@@ -30,32 +29,19 @@ export default function VaultAlpha() {
       <main className="flex-grow pt-48 pb-32 px-6">
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
-            
-            {/* 01: SECTOR CALIBRATION */}
             {step === "triage" && (
-              <motion.div 
-                key="triage" 
-                initial={{ opacity: 0, y: 20 }} 
-                animate={{ opacity: 1, y: 0 }} 
-                exit={{ opacity: 0, y: -20 }}
-                className="space-y-12"
-              >
+              <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-12">
                 <div className="text-center space-y-4">
                   <h1 className="text-7xl font-black uppercase italic tracking-tighter leading-none">
-                    <span>THE LOGIC </span><span className="text-red-600 font-black uppercase italic">DECAY SCREENING</span>
+                    <span>THE LOGIC </span><span className="text-red-600">DECAY SCREENING</span>
                   </h1>
                   <p className="text-slate-400 italic text-lg max-w-2xl mx-auto leading-relaxed">
-                    <span>Most organizations </span><span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span><span>. This turns a $1.2M AI project into a </span><span className="text-red-600 font-bold italic">$20.4M hemorrhage</span><span>.</span>
+                    <span>Most organizations </span><span className="text-red-600 font-bold uppercase italic">Automate Decay</span><span>. This turns a $1.2M AI project into a </span><span className="text-red-600 font-bold italic">$20.4M hemorrhage</span><span>.</span>
                   </p>
                 </div>
-
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   {sectors.map((s) => (
-                    <button
-                      key={s.id}
-                      onClick={() => selectSector(s.id)}
-                      className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left group relative overflow-hidden flex flex-col justify-between min-h-[160px]"
-                    >
+                    <button key={s.id} onClick={() => selectSector(s.id)} className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left group relative overflow-hidden flex flex-col justify-between min-h-[160px]">
                       <div className="text-red-600 mb-4 group-hover:scale-110 transition-transform">{s.icon}</div>
                       <div className="space-y-1">
                         <h3 className="text-xl font-black uppercase italic tracking-tighter text-white leading-none">{s.label}</h3>
@@ -68,67 +54,39 @@ export default function VaultAlpha() {
               </motion.div>
             )}
 
-            {/* 02: SYSTEMIC INTAKE */}
             {step === "intake" && (
-              <motion.div 
-                key="intake" 
-                initial={{ opacity: 0, x: 30 }} 
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -30 }}
-                className="space-y-12"
-              >
+              <motion.div key="intake" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="space-y-12">
                 <div className="text-center space-y-2">
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-                    <span>FORENSIC PROTOCOL </span><span className="text-red-600 font-black uppercase italic">ENGAGED</span>
+                    <span>FORENSIC PROTOCOL </span><span className="text-red-600">ENGAGED</span>
                   </h2>
-                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold leading-none">
-                    {`Sector Calibrated: ${sector?.toUpperCase()} // Baseline Lock Active`}
+                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold">
+                    <span>Sector Calibrated: </span><span>{sector?.toUpperCase()}</span><span> // Baseline Lock Active</span>
                   </p>
                 </div>
-
                 <div className="bg-slate-900/10 border border-slate-900 p-12 relative rounded-sm">
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white placeholder:text-slate-700 uppercase" />
-                      <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all text-white placeholder:text-slate-700 uppercase" />
+                      <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none text-white uppercase" />
+                      <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none text-white uppercase" />
                    </div>
-                   <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none transition-all mb-12 text-white placeholder:text-slate-700 uppercase" />
-
-                   <button 
-                     onClick={() => setStep("diagnostic")}
-                     className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 shadow-lg shadow-red-900/20"
-                   >
+                   <input placeholder="ENTITY_NAME" className="w-full bg-slate-950 border border-slate-800 p-6 text-sm font-mono focus:border-red-600 outline-none mb-12 text-white uppercase" />
+                   <button onClick={() => setStep("diagnostic")} className="w-full bg-red-600 py-8 text-white font-black uppercase italic tracking-[0.4em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4">
                      <span>Initialize Audit Observation </span><ArrowRight size={18} />
                    </button>
                 </div>
               </motion.div>
             )}
 
-            {/* 03: DIAGNOSTIC VERDICT & FIELD GUIDE */}
             {step === "diagnostic" && (
-              <motion.div 
-                key="diagnostic" 
-                initial={{ opacity: 0 }} 
-                animate={{ opacity: 1 }}
-                className="space-y-12"
-              >
+              <motion.div key="diagnostic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                 <div className="text-center py-12 border-b border-slate-900">
                   <h2 className="text-6xl font-black uppercase italic tracking-tighter leading-none">
                     <span>FORENSIC </span><span className="text-red-600">VERDICT</span>
                   </h2>
                 </div>
-                
-                {/* The FieldGuide renders here behind the fence */}
                 <FieldGuide sector={sector || "general"} />
-                
-                <button 
-                   onClick={() => setStep("triage")}
-                   className="text-[10px] font-mono text-slate-500 uppercase tracking-widest hover:text-red-600 transition-colors mx-auto block"
-                >
-                  <span>// Restart Calibration</span>
-                </button>
               </motion.div>
             )}
-
           </AnimatePresence>
         </div>
       </main>
