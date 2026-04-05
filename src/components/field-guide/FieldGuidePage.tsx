@@ -12,7 +12,6 @@ export default function FieldGuide({ sector }: FieldGuideProps) {
 
   return (
     <div className="space-y-12 py-12 border-t border-slate-900 mt-24">
-      {/* 01: HEADER NODE */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-red-600 font-mono text-[10px] tracking-[0.3em] font-bold uppercase">
@@ -30,45 +29,46 @@ export default function FieldGuide({ sector }: FieldGuideProps) {
         </div>
       </div>
 
-      {/* 02: GUIDANCE GRID */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* CARD: THE PROMISE GAP */}
         <div className="p-8 bg-slate-900/20 border border-slate-900 hover:border-red-600/50 transition-all group">
           <AlertCircle className="text-red-600 mb-6" size={24} />
           <h3 className="text-lg font-black uppercase italic text-white mb-4 tracking-tight">
             <span>The Promise Gap</span>
           </h3>
           <p className="text-sm text-slate-400 leading-relaxed font-light">
-            <span>Most AI initiatives fail because they solve for </span><span className="text-white italic">Technical Capability</span><span> while ignoring </span><span className="text-white italic">Structural Logic</span><span>. This creates a $20M liability gap.</span>
+            <span>Most AI initiatives fail because they solve for </span>
+            <span className="text-white italic">Technical Capability</span>
+            <span> while ignoring </span>
+            <span className="text-white italic">Structural Logic</span>
+            <span>. This creates a $20M liability gap.</span>
           </p>
         </div>
 
-        {/* CARD: DECAY SIGNALS */}
         <div className="p-8 bg-slate-900/20 border border-slate-900 hover:border-red-600/50 transition-all group">
           <Zap className="text-red-600 mb-6" size={24} />
           <h3 className="text-lg font-black uppercase italic text-white mb-4 tracking-tight">
             <span>Decay Signals</span>
           </h3>
           <p className="text-sm text-slate-400 leading-relaxed font-light">
-            <span>Watch for </span><span className="text-red-600 font-bold uppercase">Logic Drift</span><span> where automated systems begin making decisions based on stale baseline data. This is the first sign of systemic hemorrhage.</span>
+            <span>Watch for </span>
+            <span className="text-red-600 font-bold uppercase">Logic Drift</span>
+            <span> where automated systems begin making decisions based on stale baseline data. This is the first sign of systemic hemorrhage.</span>
           </p>
         </div>
 
-        {/* CARD: ALIGNMENT PROTOCOL */}
         <div className="p-8 bg-slate-900/20 border border-slate-900 hover:border-red-600/50 transition-all group">
           <ShieldCheck className="text-red-600 mb-6" size={24} />
           <h3 className="text-lg font-black uppercase italic text-white mb-4 tracking-tight">
             <span>Alignment Protocol</span>
           </h3>
           <p className="text-sm text-slate-400 leading-relaxed font-light">
-            <span>True organizational health requires a continuous cycle of </span><span className="text-white font-bold">Forensic Observation</span><span>. Deploy these layers to ensure your AI remains a strategic asset.</span>
+            <span>True organizational health requires a continuous cycle of </span>
+            <span className="text-white font-bold">Forensic Observation</span>
+            <span>. Deploy these layers to ensure your AI remains a strategic asset.</span>
           </p>
         </div>
-
       </div>
 
-      {/* 03: FOOTER ACTION */}
       <motion.div 
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
