@@ -13,7 +13,10 @@ const sectors = [
 ];
 
 export default function VaultAlpha() {
-  /* CRITICAL: Step must be 'triage' to show industry boxes first */
+  /* STRICT STATE LOCK: 
+     We initialize 'step' to "triage" and ONLY change it 
+     inside the selectSector function. 
+  */
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState<string | null>(null);
 
@@ -30,7 +33,7 @@ export default function VaultAlpha() {
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
             
-            {/* STAGE 01: SECTOR CALIBRATION (THE MISSING BOXES) */}
+            {/* 01: SECTOR CALIBRATION - THIS MUST SHOW FIRST */}
             {step === "triage" && (
               <motion.div 
                 key="triage" 
@@ -41,7 +44,7 @@ export default function VaultAlpha() {
               >
                 <div className="text-center space-y-4">
                   <h1 className="text-7xl font-black uppercase italic tracking-tighter leading-none">
-                    <span>THE LOGIC </span><span className="text-red-600 font-black uppercase italic leading-none">DECAY SCREENING</span>
+                    <span>THE LOGIC </span><span className="text-red-600 font-black uppercase italic">DECAY SCREENING</span>
                   </h1>
                   <p className="text-slate-400 italic text-lg max-w-2xl mx-auto leading-relaxed">
                     <span>Most organizations </span><span className="text-red-600 font-bold uppercase italic leading-none">Automate Decay</span><span>. This turns a $1.2M AI project into a </span><span className="text-red-600 font-bold italic">$20.4M hemorrhage</span><span>.</span>
@@ -67,7 +70,7 @@ export default function VaultAlpha() {
               </motion.div>
             )}
 
-            {/* STAGE 02: SYSTEMIC INTAKE (YOUR SCREENSHOT) */}
+            {/* 02: SYSTEMIC INTAKE - ONLY SHOWS AFTER CLICKING A BOX */}
             {step === "intake" && (
               <motion.div 
                 key="intake" 
@@ -77,9 +80,9 @@ export default function VaultAlpha() {
               >
                 <div className="text-center space-y-2">
                   <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
-                    <span>FORENSIC PROTOCOL </span><span className="text-red-600 font-black uppercase italic leading-none">ENGAGED</span>
+                    <span>FORENSIC PROTOCOL </span><span className="text-red-600 font-black uppercase italic">ENGAGED</span>
                   </h2>
-                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold leading-none uppercase tracking-widest">
+                  <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic font-bold leading-none">
                     {`Sector Calibrated: ${sector?.toUpperCase()} // Baseline Lock Active`}
                   </p>
                 </div>
@@ -88,7 +91,7 @@ export default function VaultAlpha() {
                    <div className="flex items-center gap-3 mb-12 border-b border-slate-800 pb-6">
                       <Lock className="text-red-600" size={20} />
                       <h3 className="text-2xl font-black uppercase italic tracking-tighter leading-none">Systemic Intake</h3>
-                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1 font-bold uppercase tracking-tighter leading-none italic tracking-widest">ENCRYPTION ACTIVE</span>
+                      <span className="ml-auto text-[9px] font-mono text-red-600 border border-red-600/30 px-2 py-1 font-bold uppercase tracking-tighter leading-none italic">ENCRYPTION ACTIVE</span>
                    </div>
 
                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
