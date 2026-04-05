@@ -53,7 +53,6 @@ export default function VaultAlpha() {
                 </div>
               </motion.div>
             )}
-
             {step === "intake" && (
               <motion.div key="intake" initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} className="space-y-12">
                 <div className="text-center space-y-2">
@@ -76,7 +75,6 @@ export default function VaultAlpha() {
                 </div>
               </motion.div>
             )}
-
             {step === "diagnostic" && (
               <motion.div key="diagnostic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
                 <div className="text-center py-12 border-b border-slate-900">
