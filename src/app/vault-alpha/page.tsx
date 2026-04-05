@@ -30,7 +30,8 @@ export default function VaultAlpha() {
     setStep("intake");
   };
 
-  const TriageView = (
+  // ISOLATION: Logical branches moved to standalone variables
+  const TriageNode = (
     <motion.div key="triage" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }} className="space-y-16">
       <div className="text-center space-y-6">
         <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter leading-none text-white">
@@ -55,7 +56,7 @@ export default function VaultAlpha() {
     </motion.div>
   );
 
-  const IntakeView = (
+  const IntakeNode = (
     <motion.div key="intake" initial={{ opacity: 0, x: 25 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -25 }} className="space-y-12">
       <div className="text-center space-y-3">
         <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none text-white">
@@ -78,7 +79,7 @@ export default function VaultAlpha() {
     </motion.div>
   );
 
-  const DiagnosticView = (
+  const DiagnosticNode = (
     <motion.div key="diagnostic" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
       <div className="text-center py-12 border-b border-slate-900">
         <h2 className="text-6xl font-black uppercase italic tracking-tighter leading-none text-white">
@@ -89,10 +90,13 @@ export default function VaultAlpha() {
     </motion.div>
   );
 
-  // SWITCH LOGIC: Calculated before the return to satisfy the linter
-  let activeView = TriageView;
-  if (step === "intake") activeView = IntakeView;
-  if (step === "diagnostic") activeView = DiagnosticView;
+  // SANITIZATION: Logic execution happens here, outside the JSX return.
+  const getActiveView = () => {
+    if (step === "triage") return TriageNode;
+    if (step === "intake") return IntakeNode;
+    if (step === "diagnostic") return DiagnosticNode;
+    return null;
+  };
 
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans">
@@ -100,7 +104,7 @@ export default function VaultAlpha() {
       <main className="flex-grow pt-48 pb-32 px-6">
         <div className="max-w-5xl mx-auto">
           <AnimatePresence mode="wait">
-            {activeView}
+            {getActiveView()}
           </AnimatePresence>
         </div>
       </main>
