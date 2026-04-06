@@ -71,278 +71,44 @@ const LOCAL_QUESTIONS = [
     text: "AI vendors are assessed for risk before contract signing.",
     options: [
       { label: "No oversight", weight: 10, forensicInsight: "UNGOVERNED_VENDORS_CREATE_$3.1M_IN_RISK.", internalTag: "SHADOW" },
-      { label: "Basic checks", weight: 6, forensicInsight: "PARTIAL_VISIBILITY_LEAVES_NODES_EXPOSED.", internalTag: "PARTIAL" },
+      { label: "Basic checks", weight: 6, forensicInsight: "PARTIAL_VISIBILITY_LEAVE_NODES_EXPOSED.", internalTag: "PARTIAL" },
       { label: "Formal audits", weight: 4, forensicInsight: "COMPREHENSIVE_AUDITS_REDUCE_LIABILITY.", internalTag: "MITIGATED" },
-      { label: "Continuous", weight: 2, forensicInsight: "REAL-TIME_OVERSIGHT_ELIMINATES_DRIFT.", internalTag: "SAFE" }
+      { label: "Continuous", weight: 2, forensicInsight: "REAL-TIME_OVERSIGHT_ELIMINATES_95%_OF_DRIFT.", internalTag: "SAFE" }
     ]
   },
   {
     id: "SA_02", protocol: "shadowAI",
-    text: "Unauthorized AI tool usage is actively monitored.",
+    text: "Unauthorized AI tool usage is actively monitored and blocked.",
     options: [
-      { label: "No monitoring", weight: 10, forensicInsight: "UNDETECTED_IP_LEAKAGE_COSTS_$1.2M/NODE.", internalTag: "LEAK" },
-      { label: "Reactive", weight: 6, forensicInsight: "DELAYED_BLOCKING_EXPOSES_DATA.", internalTag: "LATENT" },
-      { label: "Alerts", weight: 4, forensicInsight: "SIGNALING_REDUCES_UNAUTHORIZED_USE.", internalTag: "DETECT" },
-      { label: "Zero-Trust", weight: 2, forensicInsight: "ZERO-TRUST_ELIMINATES_SHADOW_LOGIC.", internalTag: "SAFE" }
+      { label: "No monitoring", weight: 10, forensicInsight: "UNDETECTED_IP_LEAKAGE_COSTS_ESTIMATED_AT_$1.2M/NODE.", internalTag: "IP_LEAK" },
+      { label: "Reactive", weight: 6, forensicInsight: "DELAYED_BLOCKING_EXPOSES_CRITICAL_DATA.", internalTag: "LATENT" },
+      { label: "Automated alerts", weight: 4, forensicInsight: "IMMEDIATE_SIGNALING_REDUCES_UNAUTHORIZED_USE.", internalTag: "DETECT" },
+      { label: "Zero-Trust", weight: 2, forensicInsight: "ZERO-TRUST_ARCHITECTURE_ELIMINATES_SHADOW_LOGIC.", internalTag: "ZERO_TRUST" }
     ]
   },
   {
     id: "ED_01", protocol: "expertiseDebt",
-    text: "Our data infrastructure can handle real-time processing.",
+    text: "Our data infrastructure can handle real-time AI processing.",
     options: [
-      { label: "Legacy", weight: 10, forensicInsight: "INFRASTRUCTURE_DEBT_PENALIZES_SPEED.", internalTag: "DECAY" },
-      { label: "Hybrid", weight: 6, forensicInsight: "LATENCY_FRICTION_CREATES_IDLE_BURNT.", internalTag: "FRICTION" },
-      { label: "Cloud-native", weight: 4, forensicInsight: "FLOW_REDUCES_OPERATIONAL_OVERHEAD.", internalTag: "CLOUD" },
-      { label: "Edge", weight: 2, forensicInsight: "PEAK_ARCHITECTURE_MINIMIZES_FRICTION.", internalTag: "PEAK" }
+      { label: "Legacy/Siloed", weight: 10, forensicInsight: "INFRASTRUCTURE_DEBT_PENALIZES_OUTPUT_SPEED_BY_60%.", internalTag: "TECH_DECAY" },
+      { label: "Partially integrated", weight: 6, forensicInsight: "LATENCY_FRICTION_CREATES_$800K/YEAR_IN_IDLE_BURNT.", internalTag: "HYBRID_DEBT" },
+      { label: "Cloud-native", weight: 4, forensicInsight: "TECHNICAL_FLOW_REDUCES_OPERATIONAL_OVERHEAD.", internalTag: "CLOUD_SCALE" },
+      { label: "Edge", weight: 2, forensicInsight: "PEAK_ARCHITECTURE_MINIMIZES_TOTAL_LOGIC_FRICTION.", internalTag: "PEAK_STACK" }
     ]
   },
   {
     id: "ED_02", protocol: "expertiseDebt",
-    text: "We leverage proprietary datasets for specialized models.",
+    text: "We leverage proprietary datasets to train specialized models.",
     options: [
-      { label: "Public only", weight: 10, forensicInsight: "RELIANCE_ON_COMMODITY_LOGIC.", internalTag: "VOID" },
-      { label: "Minimal", weight: 6, forensicInsight: "LOW_DEFENSIBILITY_INCREASES_FRAGILITY.", internalTag: "WEAK" },
-      { label: "Significant", weight: 4, forensicInsight: "DATA_FLYWEEL_SHIELDS_POSITION.", internalTag: "MOAT" },
-      { label: "Flywheel", weight: 2, forensicInsight: "UNFAIR_ADVANTAGE_REDUCES_CAC.", internalTag: "DOMINANCE" }
+      { label: "Public data only", weight: 10, forensicInsight: "ZERO_COMPETITIVE_EDGE:RELIANCE_ON_COMMODITY_LOGIC.", internalTag: "DATA_VOID" },
+      { label: "Minimal internal", weight: 6, forensicInsight: "LOW_DEFENSIBILITY_INCREASES_MARKET_FRAGILITY.", internalTag: "WEAK_ADVANTAGE" },
+      { label: "Significant internal", weight: 4, forensicInsight: "DATA_ADVANTAGE_CREATES_PROPRIETARY_FLYWEEL.", internalTag: "DATA_MOAT" },
+      { label: "Proprietary flywheel", weight: 2, forensicInsight: "UNFAIR_ADVANTAGE:IP_MOAT_REDUCES_CAC_BY_50%.", internalTag: "IP_DOMINANCE" }
     ]
   },
   {
     id: "ED_03", protocol: "expertiseDebt",
     text: "API and model versioning are strictly controlled.",
     options: [
-      { label: "Manual", weight: 10, forensicInsight: "VERSION_CHAOS_CAUSES_LOGIC_FAILURES.", internalTag: "DEBT" },
-      { label: "Basic", weight: 6, forensicInsight: "MANUAL_OVERHEAD_DRAINS_VELOCITY.", internalTag: "MANUAL" },
-      { label: "Automated", weight: 4, forensicInsight: "DEVOPS_STABILITY_REDUCES_ERRORS.", internalTag: "CI" },
-      { label: "MLOps", weight: 2, forensicInsight: "INDUSTRIAL_CONTROL_ELIMINATES_DRIFT.", internalTag: "ELITE" }
-    ]
-  },
-  {
-    id: "ED_04", protocol: "expertiseDebt",
-    text: "Computing resources (GPU/Cloud) are managed efficiently.",
-    options: [
-      { label: "High waste", weight: 10, forensicInsight: "MARGIN_EROSION:GPU_WASTE_BURNT.", internalTag: "HEMORRHAGE" },
-      { label: "Optimized", weight: 6, forensicInsight: "VARIABLE_COST_DEBT_REDUCES_MARGINS.", internalTag: "DRIFT" },
-      { label: "Managed", weight: 4, forensicInsight: "COST_CONTROL_SHIELDS_STABILITY.", internalTag: "SHIELD" },
-      { label: "Hyper-optimized", weight: 2, forensicInsight: "MAXIMUM_MARGIN_PROTECTION.", internalTag: "PROFIT" }
-    ]
-  }
-];
-
-const sectors = [
-  { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
-  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
-  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
-  { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
-];
-
-export default function ConsolidatedDiagnostic() {
-  const [mounted, setMounted] = useState(false);
-  const [step, setStep] = useState("triage");
-  const [sector, setSector] = useState("finance");
-  const [aiSpend, setAiSpend] = useState(1.2);
-  const [userRole, setUserRole] = useState("executive");
-  const [currentDimension, setCurrentDimension] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [hoveredProtocolX, setHoveredProtocolX] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
-
-  // --- 🛡️ CALCULATION HELPERS ---
-  const calculateSynthesis = () => {
-    const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
-    const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
-    const coeff = sectorWeights[sector] || 1.0;
-    const jitter = 1 + (Math.random() * 0.03 - 0.015);
-    const baseHemorrhage = (totalSum * 0.04 * coeff * jitter);
-    const multiplier = aiSpend / 1.2;
-    const scaledTotal = baseHemorrhage * multiplier;
-    const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
-
-    const getProtocolHemorrhage = (proto: string) => {
-      const pQs = LOCAL_QUESTIONS.filter(q => q.protocol === proto);
-      const pSum = pQs.map(q => parseInt(answers[q.id] || "0")).reduce((a, b) => a + b, 0);
-      return ((pSum * 0.04 * coeff * jitter) * multiplier);
-    };
-
-    return {
-      total: scaledTotal || 0,
-      decay: Math.min(decayRaw, 98),
-      reworkTax: getProtocolHemorrhage('reworkTax'),
-      deltaGap: getProtocolHemorrhage('deltaGap'),
-      roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(0) : 0
-    };
-  };
-
-  const getForensicDiagnosis = (decay: number, role: string) => {
-    const severity = decay > 80 ? 'CRITICAL' : decay > 40 ? 'WARNING' : 'STABLE';
-    const perspectives: any = {
-      executive: { CRITICAL: "CAPITAL_EROSION_EVENT", WARNING: "STRATEGIC_LIABILITY_DETECTION", STABLE: "MARGIN_PROTECTION_ACTIVE", subtext: "Fiscal Integrity Status" },
-      technical: { CRITICAL: "TERMINAL_STACK_DECAY", WARNING: "ARCHITECTURAL_DRIFT_DETECTED", STABLE: "SYSTEMIC_INTEGRITY_VERIFIED", subtext: "Technical Debt Status" },
-      managerial: { CRITICAL: "TOTAL_OPERATIONAL_STAGNATION", WARNING: "VELOCITY_LATENCY_DETECTION", STABLE: "OUTPUT_EFFICIENCY_STABLE", subtext: "Throughput Health Status" }
-    };
-    const p = perspectives[role || "executive"] || perspectives.executive;
-    return { label: p[severity], subtext: p.subtext };
-  };
-
-  if (!mounted) return null;
-
-  // --- SUB-RENDERERS ---
-  const Triage = (
-    <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
-      <div className="text-center">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {sectors.map((s) => (
-          <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
-            <div className="text-red-600 mb-4">{s.icon}</div>
-            <div>
-              <h3 className="text-xl font-black uppercase italic text-white leading-none tracking-tighter">{s.label}</h3>
-              <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-    </motion.div>
-  );
-
-  const Intake = (
-    <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white">
-      <div className="text-center space-y-3">
-        <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white leading-none tracking-tighter">FORENSIC PROTOCOL <span className="text-red-600 uppercase">ENGAGED</span></h2>
-        <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic">Sector Lock: {sector?.toUpperCase() || "PENDING"}</p>
-      </div>
-      <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto w-full space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
-          <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white" />
-          <input placeholder="ENTITY_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white" />
-        </div>
-        <div className="w-full">
-          <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none cursor-pointer focus:border-red-600 appearance-none w-full italic text-white">
-            <option value="executive">EXECUTIVE_PERSPECTIVE</option>
-            <option value="managerial">MANAGERIAL_PERSPECTIVE</option>
-            <option value="technical">TECHNICAL_PERSPECTIVE</option>
-          </select>
-        </div>
-        <button onClick={() => setStep("audit")} className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl">Initialize Audit Observation</button>
-      </div>
-    </motion.div>
-  );
-
-  const Audit = (
-    <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-      <div className="space-y-12">
-        <div className="flex items-center gap-4 text-red-600">
-          <Activity className="h-4 w-4 animate-pulse" />
-          <span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1} // ANALYZING_SIGNAL</span>
-        </div>
-        <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px]">
-          {LOCAL_QUESTIONS[currentDimension]?.text}
-        </h2>
-        <div className="grid grid-cols-1 gap-4 mt-16">
-          {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-            <button key={i} className="group relative flex flex-col justify-center py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left rounded-none overflow-hidden"
-              onClick={() => {
-                setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() });
-                if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
-                else setStep("verdict");
-              }}>
-              <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-red-600 transition-all duration-500"></div>
-              <div className="flex items-center justify-between w-full">
-                <span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white group-hover:italic group-hover:translate-x-3 transition-all duration-300">{opt.label}</span>
-                <div className="flex items-center gap-6">
-                  <div className="flex items-end gap-1 h-3 opacity-20 group-hover:opacity-100 transition-opacity">
-                    {[1, 2, 3].map((b) => (<div key={b} className="w-0.5 bg-red-600" style={{ height: `${b * 33}%` }} />))}
-                  </div>
-                  <ArrowRight size={18} className="text-slate-800 group-hover:text-red-600 transition-all group-hover:translate-x-1" />
-                </div>
-              </div>
-              <div className="h-0 overflow-hidden group-hover:h-auto group-hover:mt-4 transition-all duration-300">
-                <motion.div initial={{ opacity: 0, y: 5 }} whileInView={{ opacity: 1, y: 0 }} className="pt-4 border-t border-red-600/20">
-                  <span className="text-[9px] font-mono text-red-600 uppercase font-black tracking-[0.3em] italic">DETECTED_SIGNAL: {opt.forensicInsight}</span>
-                </motion.div>
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const Verdict = (
-    <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white text-center py-10">
-      <div className="py-12 border-b border-slate-900">
-        <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none tracking-tighter">
-          {userRole === 'executive' ? `YOUR $${aiSpend}M INVESTMENT IS DESTROYING ` : userRole === 'technical' ? `YOUR $${aiSpend}M STACK HAS ` : `YOUR $${aiSpend}M OPS ARE FUELING `}
-          <span className="text-red-600">{userRole === 'executive' ? `$${calculateSynthesis().total.toFixed(1)}M/YEAR` : `${calculateSynthesis().decay}% DECAY`}</span>
-        </h2>
-        <div className="mt-10 max-w-xs mx-auto space-y-4">
-          <label className="block text-[9px] font-mono text-red-600/60 uppercase tracking-[0.3em] font-black italic">Adjust_AI_Capital_Baseline</label>
-          <input type="range" min="0.5" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
-          <div className="flex justify-between text-[10px] font-mono font-black text-white italic">
-            <span>$0.5M</span> <span className="bg-red-600 px-2 leading-none flex items-center">${aiSpend}M</span> <span>$10.0M</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
-        <div className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-center items-center relative overflow-hidden">
-          <ShieldAlert className="absolute top-0 right-0 p-2 text-red-600/10" size={60} />
-          <span className="text-[10px] font-mono text-slate-500 uppercase mb-4 font-bold tracking-[0.2em]">{userRole === 'executive' ? 'NEGATIVE_ROI' : 'STRUCTURAL_HEALTH'}</span>
-          <span className="text-6xl font-black text-red-600 italic leading-none mb-4">{userRole === 'executive' ? `${calculateSynthesis().roi}%` : `${calculateSynthesis().decay}%`}</span>
-          <div className="border-t border-red-600/20 pt-4 w-full text-center">
-            <span className="text-[11px] font-black uppercase italic text-white tracking-widest leading-tight">{getForensicDiagnosis(calculateSynthesis().decay, userRole).label}</span>
-            <p className="text-[8px] font-mono text-slate-500 uppercase mt-1 leading-none">{getForensicDiagnosis(calculateSynthesis().decay, userRole).subtext}</p>
-          </div>
-        </div>
-
-        <div className="md:col-span-2 bg-slate-950 border border-slate-800 p-8 space-y-8">
-          <div className="flex justify-between items-center font-mono text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em] leading-none"><span>Forensic Waste Grid // Scaled to Sector: {sector.toUpperCase()}</span><Activity size={14} className="text-red-600 animate-pulse" /></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center transition-colors hover:border-red-600/40">
-              <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white">{userRole === 'executive' ? 'REWORK_TAX' : userRole === 'technical' ? 'MANUAL_OVERRIDES' : 'REWORK_LOOPS'}</span>
-              <span className="text-red-600 font-black italic text-xl">
-                {userRole === 'executive' ? `$${calculateSynthesis().reworkTax.toFixed(1)}M` : userRole === 'technical' ? `${Math.round(calculateSynthesis().reworkTax * 120)} HRS/QTR` : `${(calculateSynthesis().reworkTax * 2.5).toFixed(1)} FTEs`}
-              </span>
-            </div>
-            <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center transition-colors hover:border-red-600/40">
-              <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white">{userRole === 'executive' ? 'DELTA_GAP' : userRole === 'technical' ? 'MODEL_DRIFT' : 'VELOCITY_LOSS'}</span>
-              <span className="text-red-600 font-black italic text-xl">
-                {userRole === 'executive' ? `$${calculateSynthesis().deltaGap.toFixed(1)}M` : userRole === 'technical' ? `${Math.round(calculateSynthesis().deltaGap * 8)}% LOSS` : `${Math.round(calculateSynthesis().deltaGap * 6)}% SLOWER`}
-              </span>
-            </div>
-            <div onMouseEnter={() => setHoveredProtocolX(true)} onMouseLeave={() => setHoveredProtocolX(false)} className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center group cursor-help relative md:col-span-2 transition-all hover:border-red-600/40">
-              <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white group-hover:text-red-600 transition-colors">{hoveredProtocolX ? (userRole === 'executive' ? "Reg_Risk + Rep_Loss" : "Shadow AI + Exp_Debt") : "PROTOCOL_X [UNIDENTIFIED_LEAK]"}</span>
-              <span className="text-red-600 font-black italic text-xl">{hoveredProtocolX ? `$${(calculateSynthesis().total - calculateSynthesis().reworkTax - calculateSynthesis().deltaGap).toFixed(1)}M` : "?"}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-red-600 p-12 shadow-2xl shadow-red-900/40 relative overflow-hidden group text-left">
-        <div className="relative z-10 max-w-3xl space-y-6">
-          <h3 className="text-4xl md:text-5xl font-black text-white uppercase italic leading-none tracking-tighter">
-             {userRole === 'executive' ? `STOP THE $${calculateSynthesis().total.toFixed(1)}M EBITDA LEAK` : userRole === 'technical' ? `CLEAR $${calculateSynthesis().total.toFixed(1)}M IN TECH DEBT` : `REGAIN ${calculateSynthesis().decay}% OF TEAM BANDWIDTH`}
-          </h3>
-          <p className="text-white/95 text-sm leading-relaxed font-bold uppercase tracking-tight italic max-w-xl">
-            Your decay rate of {calculateSynthesis().decay}% indicates your ${aiSpend}M investment is generating a <span className="bg-black text-white px-2 mx-1">-{((calculateSynthesis().total / aiSpend) * 100).toFixed(0)}% ROI</span>. 
-            {userRole === 'executive' ? "Board-level intervention is required." : userRole === 'technical' ? "Technical debt has reached a terminal threshold." : "Bandwidth is being consumed by unmonitored rework loops."}
-          </p>
-          <button className="bg-white text-black px-10 py-6 font-black uppercase italic text-xs tracking-[0.3em] hover:bg-black hover:text-white transition-all shadow-xl">Initiate Full {userRole.toUpperCase()} Audit</button>
-        </div>
-        <Zap className="absolute right-[-40px] bottom-[-40px] text-white/10" size={300} />
-      </div>
-    </motion.div>
-  );
-
-  return (
-    <div className="max-w-6xl mx-auto py-20 px-4">
-      <AnimatePresence mode="wait">
-        {step === 'triage' && Triage}
-        {step === 'intake' && Intake}
-        {step === 'audit' && Audit}
-        {step === 'verdict' && Verdict}
-      </AnimatePresence>
-    </div>
-  );
-}
+      { label: "Manual/Inconsistent", weight: 10, forensicInsight: "VERSION_CHAOS_CAUSES_UNDETECTED_LOGIC_FAILURES.", internalTag: "VERSION_DEBT" },
+      { label: "Basic versioning", weight: 6, forensicInsight: "MANUAL_OVERHEAD_REDUCES_DEV_VELOCITY_BY_30%.", internalTag:
