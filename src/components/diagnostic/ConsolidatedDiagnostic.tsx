@@ -3,6 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, ShieldAlert, Zap, Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight } from "lucide-react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import ForensicLoader from "@/components/ForensicLoader";
+import LogicLeakTicker from "@/components/LogicLeakTicker";
 
 // --- 1. DATA ANCHOR: FULL 12-QUESTION SET ---
 const LOCAL_QUESTIONS = [
@@ -72,8 +76,8 @@ const LOCAL_QUESTIONS = [
     options: [
       { label: "No oversight", weight: 10, forensicInsight: "UNGOVERNED_VENDORS_CREATE_$3.1M_IN_RISK.", internalTag: "SHADOW" },
       { label: "Basic checks", weight: 6, forensicInsight: "PARTIAL_VISIBILITY_LEAVE_NODES_EXPOSED.", internalTag: "PARTIAL" },
-      { label: "Formal audits", weight: 4, forensicInsight: "COMPREHENSIVE_AUDITS_REDUCE_LIABILITY.", internalTag: "MITIGATED" },
-      { label: "Continuous", weight: 2, forensicInsight: "REAL-TIME_OVERSIGHT_ELIMINATES_95%_OF_DRIFT.", internalTag: "SAFE" }
+      { label: "Formal audits", weight: 4, forensicInsight: "COMPREHENSIVE_AUDITS_REDUCE_VENDOR_RISK_BY_60%.", internalTag: "RISK_MITIGATED" },
+      { label: "Continuous monitoring", weight: 2, forensicInsight: "REAL-TIME_MONITORING_ELIMINATES_95%_OF_VENDOR_DRIFT.", internalTag: "OPTIMIZED_SECURITY" }
     ]
   },
   {
@@ -149,6 +153,9 @@ export default function ConsolidatedDiagnostic() {
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [hoveredProtocolX, setHoveredProtocolX] = useState(false);
+  
+  // 🛡️ VECTOR 5 STATE: FORENSIC SCANNING
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -162,29 +169,22 @@ export default function ConsolidatedDiagnostic() {
 
   if (!mounted) return null;
 
-  // --- 🛡️ CALCULATION HELPERS ---
+  // --- 🛡️ NON-LINEAR CALCULATION ENGINE ---
   const calculateSynthesis = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
     const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
     const coeff = sectorWeights[sector] || 1.0;
     
-    // 🛡️ EXPONENTIAL MULTIPLIER: 1.15 Exponent
     const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
     const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
     
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
 
-    const getProtocolHemorrhage = (proto: string) => {
-      const pQs = LOCAL_QUESTIONS.filter(q => q.protocol === proto);
-      const pSum = pQs.map(q => parseInt(answers[q.id] || "0")).reduce((a, b) => a + b, 0);
-      return ((pSum * 0.04 * coeff) * multiplier);
-    };
-
     return {
       total: scaledTotal || 0,
       decay: Math.min(decayRaw, 98),
-      reworkTax: getProtocolHemorrhage('reworkTax'),
-      deltaGap: getProtocolHemorrhage('deltaGap'),
+      reworkTax: (scaledTotal * 0.38),
+      deltaGap: (scaledTotal * 0.32),
       roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(0) : 0
     };
   };
@@ -212,12 +212,25 @@ export default function ConsolidatedDiagnostic() {
     };
   };
 
+  // 🛡️ FORENSIC SCAN TRIGGER
+  const triggerForensicScan = (nextStep: string) => {
+    setIsLoading(true);
+    // Loader handles timing via onComplete
+  };
+
+  const finalizeStepTransition = () => {
+    // If coming from Audit, go to Verdict. If coming from Intake, go to Audit.
+    if (step === "intake") setStep("audit");
+    if (step === "audit") setStep("verdict");
+    setIsLoading(false);
+  };
+
   // --- SUB-RENDERERS ---
 
   const Triage = (
     <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 px-4">
       <div className="text-center">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none tracking-tighter">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
+        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {sectors.map((s) => (
@@ -243,27 +256,27 @@ export default function ConsolidatedDiagnostic() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 md:px-0">
           <div className="space-y-2">
             <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Operator_Identity</label>
-            <input placeholder="E.G. JOHN_DOE" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full" />
+            <input placeholder="E.G. JOHN_DOE" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full transition-all" />
           </div>
           <div className="space-y-2">
             <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Entity_Name</label>
-            <input placeholder="E.G. ACME_CORP" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full" />
+            <input placeholder="E.G. ACME_CORP" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full transition-all" />
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white px-4 md:px-0">
           <div className="space-y-2">
             <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Corporate_Email</label>
-            <input type="email" placeholder="EMAIL@ENTITY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 w-full" />
+            <input type="email" placeholder="EMAIL@ENTITY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 w-full transition-all" />
           </div>
           <div className="space-y-2">
             <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Verify_Protocol</label>
-            <input type="email" placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase outline-none focus:border-red-600 w-full`} />
+            <input type="email" placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase outline-none focus:border-red-600 w-full transition-all`} />
           </div>
         </div>
         <div className="w-full space-y-2 px-4 md:px-0">
           <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Operator_Perspective</label>
           <div className="relative">
-            <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none cursor-pointer focus:border-red-600 appearance-none w-full italic text-white">
+            <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none cursor-pointer focus:border-red-600 appearance-none w-full italic text-white transition-all">
               <option value="executive">EXECUTIVE_PERSPECTIVE</option>
               <option value="managerial">MANAGERIAL_PERSPECTIVE</option>
               <option value="technical">TECHNICAL_PERSPECTIVE</option>
@@ -274,7 +287,7 @@ export default function ConsolidatedDiagnostic() {
         <div className="h-4 flex items-center justify-center">
             {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black tracking-[0.3em] italic animate-pulse">⚠️ {validationError}</p>}
         </div>
-        <button disabled={!!validationError || !email || !confirmEmail || !entityName || !operatorName} onClick={() => setStep("audit")} className="disabled:opacity-20 disabled:cursor-not-allowed w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl">Initialize Audit Observation</button>
+        <button disabled={!!validationError || !email || !confirmEmail || !entityName || !operatorName} onClick={() => triggerForensicScan("audit")} className="disabled:opacity-20 disabled:cursor-not-allowed w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl">Initialize Audit Observation</button>
       </div>
     </motion.div>
   );
@@ -295,7 +308,7 @@ export default function ConsolidatedDiagnostic() {
               onClick={() => {
                 setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() });
                 if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
-                else setStep("verdict");
+                else triggerForensicScan("verdict");
               }}>
               <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-red-600 transition-all duration-500"></div>
               <div className="flex items-center justify-between w-full">
@@ -330,7 +343,7 @@ export default function ConsolidatedDiagnostic() {
         </h2>
         <div className="mt-10 max-w-md mx-auto space-y-4">
           <label className="block text-[9px] font-mono text-red-600/60 uppercase tracking-[0.3em] font-black italic">Adjust_AI_Capital_Baseline</label>
-          <input type="range" min="0.5" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
+          <input type="range" min="0.5" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600 transition-all" />
           <div className="flex justify-between text-[10px] font-mono font-black text-white italic">
             <span>$0.5M</span> <span className="bg-red-600 px-2 leading-none flex items-center shadow-lg shadow-red-600/20">${aiSpend}M</span> <span>$10.0M</span>
           </div>
@@ -383,7 +396,18 @@ export default function ConsolidatedDiagnostic() {
             <span key={`roi-pill-${aiSpend}`} className="bg-black text-white px-2 mx-1 inline-block">
               {getLiveMetrics().roi}% ROI
             </span>. 
-            {userRole === 'executive' ? "Board-level intervention is required." : "Technical debt has reached a terminal threshold."}
+            
+            {aiSpend > 3 && (
+              <span className="block mt-4 text-yellow-300 font-black animate-pulse border-l-2 border-yellow-300 pl-4 uppercase tracking-widest text-[10px]">
+                ⚠️ COMPLEXITY_TAX_DETECTED: Scale is accelerating capital erosion.
+              </span>
+            )}
+
+            <span className="block mt-2">
+              {userRole === 'executive' ? "Fiduciary intervention is required to stop capital erosion." : 
+               userRole === 'technical' ? "Technical debt has reached a terminal threshold." : 
+               "Operational bandwidth is being consumed by unmonitored rework loops."}
+            </span>
           </p>
           <button className="bg-white text-black px-10 py-6 font-black uppercase italic text-xs tracking-[0.3em] hover:bg-black hover:text-white transition-all shadow-xl">Initiate Full {userRole.toUpperCase()} Audit</button>
         </div>
@@ -393,13 +417,20 @@ export default function ConsolidatedDiagnostic() {
   );
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4">
+    <div className="max-w-6xl mx-auto py-20 px-4 relative">
+      <Header />
+      <AnimatePresence mode="wait">
+        {isLoading && <ForensicLoader onComplete={finalizeStepTransition} />}
+      </AnimatePresence>
+
       <AnimatePresence mode="wait">
         {step === 'triage' && Triage}
         {step === 'intake' && Intake}
         {step === 'audit' && Audit}
         {step === 'verdict' && Verdict}
       </AnimatePresence>
+      <LogicLeakTicker />
+      <Footer />
     </div>
   );
 }
