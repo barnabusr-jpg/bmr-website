@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, ShieldAlert, Zap, Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight } from "lucide-react";
 
-// --- 1. DATA ANCHOR ---
+// --- 1. DATA ANCHOR: FULL 12-QUESTION SET ---
 const LOCAL_QUESTIONS = [
   {
     id: "RT_01", protocol: "reworkTax",
@@ -82,7 +82,7 @@ const LOCAL_QUESTIONS = [
     options: [
       { label: "No monitoring", weight: 10, forensicInsight: "UNDETECTED_IP_LEAKAGE_COSTS_$1.2M/NODE.", internalTag: "IP_LEAK" },
       { label: "Reactive", weight: 6, forensicInsight: "DELAYED_BLOCKING_EXPOSES_CRITICAL_DATA.", internalTag: "LATENT" },
-      { label: "Automated alerts", weight: 4, forensicInsight: "IMMEDIATE_SIGNALING_REDUCES_UNAUTHORIZED_USE.", internalTag: "DETECT" },
+      { label: "Alerts", weight: 4, forensicInsight: "IMMEDIATE_SIGNALING_REDUCES_UNAUTHORIZED_USE.", internalTag: "DETECT" },
       { label: "Zero-Trust", weight: 2, forensicInsight: "ZERO-TRUST_ARCHITECTURE_ELIMINATES_SHADOW_LOGIC.", internalTag: "ZERO_TRUST" }
     ]
   },
@@ -90,40 +90,40 @@ const LOCAL_QUESTIONS = [
     id: "ED_01", protocol: "expertiseDebt",
     text: "Our data infrastructure can handle real-time AI processing.",
     options: [
-      { label: "Legacy/Siloed", weight: 10, forensicInsight: "INFRASTRUCTURE_DEBT_PENALIZES_OUTPUT_SPEED_BY_60%.", internalTag: "TECH_DECAY" },
-      { label: "Partially integrated", weight: 6, forensicInsight: "LATENCY_FRICTION_CREATES_$800K/YEAR_IN_IDLE_BURNT.", internalTag: "HYBRID_DEBT" },
-      { label: "Cloud-native", weight: 4, forensicInsight: "TECHNICAL_FLOW_REDUCES_OPERATIONAL_OVERHEAD.", internalTag: "CLOUD_SCALE" },
-      { label: "Edge", weight: 2, forensicInsight: "PEAK_ARCHITECTURE_MINIMIZES_TOTAL_LOGIC_FRICTION.", internalTag: "PEAK_STACK" }
+      { label: "Legacy", weight: 10, forensicInsight: "INFRASTRUCTURE_DEBT_PENALIZES_SPEED.", internalTag: "TECH_DECAY" },
+      { label: "Hybrid", weight: 6, forensicInsight: "LATENCY_FRICTION_CREATES_IDLE_BURNT.", internalTag: "HYBRID_DEBT" },
+      { label: "Cloud-native", weight: 4, forensicInsight: "FLOW_REDUCES_OPERATIONAL_OVERHEAD.", internalTag: "CLOUD_SCALE" },
+      { label: "Edge", weight: 2, forensicInsight: "PEAK_ARCHITECTURE_MINIMIZES_FRICTION.", internalTag: "PEAK_STACK" }
     ]
   },
   {
     id: "ED_02", protocol: "expertiseDebt",
     text: "We leverage proprietary datasets to train specialized models.",
     options: [
-      { label: "Public data only", weight: 10, forensicInsight: "ZERO_COMPETITIVE_EDGE:RELIANCE_ON_COMMODITY_LOGIC.", internalTag: "DATA_VOID" },
-      { label: "Minimal internal", weight: 6, forensicInsight: "LOW_DEFENSIBILITY_INCREASES_MARKET_FRAGILITY.", internalTag: "WEAK_ADVANTAGE" },
-      { label: "Significant internal", weight: 4, forensicInsight: "DATA_ADVANTAGE_CREATES_PROPRIETARY_FLYWEEL.", internalTag: "DATA_MOAT" },
-      { label: "Proprietary flywheel", weight: 2, forensicInsight: "UNFAIR_ADVANTAGE:IP_MOAT_REDUCES_CAC_BY_50%.", internalTag: "IP_DOMINANCE" }
+      { label: "Public only", weight: 10, forensicInsight: "RELIANCE_ON_COMMODITY_LOGIC.", internalTag: "DATA_VOID" },
+      { label: "Minimal", weight: 6, forensicInsight: "WEAK_ADVANTAGE_INVITES_EROSION.", internalTag: "WEAK" },
+      { label: "Significant", weight: 4, forensicInsight: "DATA_FLYWEEL_SHIELDS_POSITION.", internalTag: "DATA_MOAT" },
+      { label: "Proprietary", weight: 2, forensicInsight: "IP_MOAT_REDUCES_CAC_BY_50%.", internalTag: "IP_DOMINANCE" }
     ]
   },
   {
     id: "ED_03", protocol: "expertiseDebt",
     text: "API and model versioning are strictly controlled.",
     options: [
-      { label: "Manual/Inconsistent", weight: 10, forensicInsight: "VERSION_CHAOS_CAUSES_UNDETECTED_LOGIC_FAILURES.", internalTag: "VERSION_DEBT" },
-      { label: "Basic versioning", weight: 6, forensicInsight: "MANUAL_OVERHEAD_REDUCES_DEV_VELOCITY_BY_30%.", internalTag: "SEMI_MANUAL" },
-      { label: "Automated pipelines", weight: 4, forensicInsight: "DEVOPS_STABLE:REDUCED_DEPLOYMENT_ERROR_RATE.", internalTag: "AUTOMATED_CI" },
-      { label: "Full MLOps", weight: 2, forensicInsight: "INDUSTRIAL_SCALE:ZERO-DOWNTIME_VERS_CONTROL.", internalTag: "MLOPS_ELITE" }
+      { label: "Manual", weight: 10, forensicInsight: "VERSION_CHAOS_CAUSES_FAILURES.", internalTag: "VERSION_DEBT" },
+      { label: "Basic", weight: 6, forensicInsight: "MANUAL_OVERHEAD_DRAINS_VELOCITY.", internalTag: "SEMI_MANUAL" },
+      { label: "Automated", weight: 4, forensicInsight: "DEVOPS_STABLE:REDUCED_ERROR_RATE.", internalTag: "AUTOMATED_CI" },
+      { label: "MLOps", weight: 2, forensicInsight: "INDUSTRIAL_SCALE_CONTROL.", internalTag: "MLOPS_ELITE" }
     ]
   },
   {
     id: "ED_04", protocol: "expertiseDebt",
     text: "Computing resources (GPU/Cloud) are managed efficiently.",
     options: [
-      { label: "High waste", weight: 10, forensicInsight: "MARGIN_EROSION:GPU_WASTE_EQUALS_$300K/YEAR.", internalTag: "COST_HEMORRHAGE" },
-      { label: "Some optimization", weight: 6, forensicInsight: "VARIABLE_COST_DEBT_REDUCES_NET_MARGIN_BY_8%.", internalTag: "WASTE_DRIFT" },
-      { label: "Managed scaling", weight: 4, forensicInsight: "COST_CONTROL_OPTIMIZES_GROSS_MARGIN_STABILITY.", internalTag: "MARGIN_SHIELD" },
-      { label: "Hyper-optimized", weight: 2, forensicInsight: "MAXIMUM_MARGIN:LOGIC_EFFICIENCY_AT_100%.", internalTag: "PEAK_PROFIT" }
+      { label: "High waste", weight: 10, forensicInsight: "MARGIN_EROSION:GPU_WASTE_BURNT.", internalTag: "COST_HEMORRHAGE" },
+      { label: "Partial", weight: 6, forensicInsight: "VARIABLE_COST_DEBT_REDUCES_MARGIN.", internalTag: "WASTE_DRIFT" },
+      { label: "Managed", weight: 4, forensicInsight: "COST_CONTROL_SHIELDS_STABILITY.", internalTag: "MARGIN_SHIELD" },
+      { label: "Hyper", weight: 2, forensicInsight: "MAXIMUM_MARGIN_PROTECTION.", internalTag: "PEAK_PROFIT" }
     ]
   }
 ];
@@ -162,23 +162,29 @@ export default function ConsolidatedDiagnostic() {
 
   if (!mounted) return null;
 
-  // --- 🛡️ NON-LINEAR CALCULATION ENGINE ---
+  // --- 🛡️ CALCULATION HELPERS ---
   const calculateSynthesis = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
     const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
     const coeff = sectorWeights[sector] || 1.0;
     
-    // 🛡️ Power-law multiplier ensures ROI changes dynamically with slider
-    const multiplier = Math.pow(aiSpend / 1.2, 1.05); 
+    // 🛡️ EXPONENTIAL MULTIPLIER: 1.15 Exponent
+    const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
     const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
     
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
 
+    const getProtocolHemorrhage = (proto: string) => {
+      const pQs = LOCAL_QUESTIONS.filter(q => q.protocol === proto);
+      const pSum = pQs.map(q => parseInt(answers[q.id] || "0")).reduce((a, b) => a + b, 0);
+      return ((pSum * 0.04 * coeff) * multiplier);
+    };
+
     return {
       total: scaledTotal || 0,
       decay: Math.min(decayRaw, 98),
-      reworkTax: (scaledTotal * 0.38),
-      deltaGap: (scaledTotal * 0.32),
+      reworkTax: getProtocolHemorrhage('reworkTax'),
+      deltaGap: getProtocolHemorrhage('deltaGap'),
       roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(0) : 0
     };
   };
@@ -211,7 +217,7 @@ export default function ConsolidatedDiagnostic() {
   const Triage = (
     <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 px-4">
       <div className="text-center">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
+        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none tracking-tighter">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {sectors.map((s) => (
@@ -314,8 +320,8 @@ export default function ConsolidatedDiagnostic() {
   );
 
   const Verdict = (
-    <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white text-center py-10">
-      <div className="py-12 border-b border-slate-900 px-4">
+    <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white text-center py-10 px-4">
+      <div className="py-12 border-b border-slate-900">
         <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none tracking-tighter">
           {userRole === 'executive' ? `YOUR $${aiSpend}M INVESTMENT IS DESTROYING ` : userRole === 'technical' ? `YOUR $${aiSpend}M STACK HAS ` : `YOUR $${aiSpend}M OPS ARE FUELING `}
           <span className="text-red-600 block md:inline mt-2 md:mt-0" key={aiSpend}>
@@ -331,7 +337,7 @@ export default function ConsolidatedDiagnostic() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left px-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
         <div className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-center items-center relative overflow-hidden">
           <ShieldAlert className="absolute top-0 right-0 p-2 text-red-600/10" size={60} />
           <span className="text-[10px] font-mono text-slate-500 uppercase mb-4 font-bold tracking-[0.2em]">{userRole === 'executive' ? 'NEGATIVE_ROI' : 'STRUCTURAL_HEALTH'}</span>
@@ -350,7 +356,7 @@ export default function ConsolidatedDiagnostic() {
             <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center transition-colors hover:border-red-600/40">
               <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white">{userRole === 'executive' ? 'REWORK_TAX' : userRole === 'technical' ? 'MANUAL_OVERRIDES' : 'REWORK_LOOPS'}</span>
               <span className="text-red-600 font-black italic text-xl" key={aiSpend}>
-                {userRole === 'executive' ? `$${getLiveMetrics().rework}M` : userRole === 'technical' ? `${Math.round(parseFloat(getLiveMetrics().rework) * 100)} HRS/QTR` : `${(parseFloat(getLiveMetrics().rework) * 2.5).toFixed(1)} FTEs`}
+                {userRole === 'executive' ? `$${getLiveMetrics().rework}M` : userRole === 'technical' ? `${Math.round(parseFloat(getLiveMetrics().rework) * 120)} HRS/QTR` : `${(parseFloat(getLiveMetrics().rework) * 2.5).toFixed(1)} FTEs`}
               </span>
             </div>
             <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center transition-colors hover:border-red-600/40">
