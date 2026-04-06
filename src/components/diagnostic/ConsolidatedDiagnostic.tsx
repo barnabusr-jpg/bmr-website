@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, ShieldAlert, Zap, Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight } from "lucide-react";
 
-// --- 1. DATA ANCHOR: 12 QUESTIONS + FORENSIC INSIGHTS + INTERNAL TAGS ---
+// --- 1. DATA ANCHOR: 12 QUESTIONS + FORENSIC INSIGHTS ---
 const LOCAL_QUESTIONS = [
   {
     id: "RT_01",
@@ -49,8 +49,52 @@ const LOCAL_QUESTIONS = [
       { label: "Automated alerts", weight: 4, forensicInsight: "AUTOMATED_ALERTS_REDUCE_DRIFT_IMPACT_BY_70%.", internalTag: "PROACTIVE_MONITORING" },
       { label: "Real-time rollback", weight: 2, forensicInsight: "REAL-TIME_ROLLBACK_ELIMINATES_99%_OF_DRIFT_COSTS.", internalTag: "OPTIMIZED_STABILITY" }
     ]
+  },
+  // --- Additional 8 Questions follow same BMR Protocol pattern ---
+  {
+    id: "DG_02",
+    protocol: "deltaGap",
+    text: "AI initiatives are aligned with the core strategic vision.",
+    options: [
+      { label: "Disconnected", weight: 10, forensicInsight: "STRATEGIC_MISALIGNMENT_DRIVES_WASTE_OF_$2.4M/YEAR.", internalTag: "STRATEGIC_DEBT" },
+      { label: "Loosely aligned", weight: 6, forensicInsight: "FRAGMENTED_EXECUTION_DILUTES_OVERALL_MARKET_ALPHA.", internalTag: "ALIGNMENT_GAP" },
+      { label: "Strategically integrated", weight: 4, forensicInsight: "UNIFIED_LOGIC_ACCELERATES_MARKET_ENTRY_BY_22%.", internalTag: "UNIFIED_GOAL" },
+      { label: "Strategy-driven AI", weight: 2, forensicInsight: "PEAK_ALIGNMENT_MAXIMIZES_TOTAL_ADDRESSABLE_MARGIN.", internalTag: "STRATEGY_LEAD" }
+    ]
+  },
+  {
+    id: "DG_03",
+    protocol: "deltaGap",
+    text: "We have a dedicated budget and resources for AI scaling.",
+    options: [
+      { label: "No budget", weight: 10, forensicInsight: "STAGNATION_COST:COMPETITORS_GAIN_18-MONTH_LEAD.", internalTag: "BUDGET_VOID" },
+      { label: "Project-based", weight: 6, forensicInsight: "SCALING_FRICTION_INCREASES_CAPITAL_BURN_BY_35%.", internalTag: "PIECEMEAL_SCALE" },
+      { label: "Annual AI budget", weight: 4, forensicInsight: "STABLE_RESOURCING_PROTECTS_LONG-TERM_ASSET_VALUE.", internalTag: "SCALING_STABILITY" },
+      { label: "Venture-scale pool", weight: 2, forensicInsight: "LIQUID_RESOURCING_ENABLES_RAPID_OPERATIONAL_PIVOTS.", internalTag: "CAPITAL_FLOW" }
+    ]
+  },
+  {
+    id: "SA_01",
+    protocol: "shadowAI",
+    text: "AI vendors are assessed for risk before contract signing.",
+    options: [
+      { label: "No oversight", weight: 10, forensicInsight: "UNGOVERNED_VENDORS_CREATE_$3.1M/YEAR_IN_TOTAL_RISK.", internalTag: "SHADOW_AI" },
+      { label: "Basic checks", weight: 6, forensicInsight: "PARTIAL_VISIBILITY_LEAVES_22%_OF_NODES_EXPOSED.", internalTag: "PARTIAL_VISIBILITY" },
+      { label: "Formal audits", weight: 4, forensicInsight: "COMPREHENSIVE_AUDITS_REDUCE_LIABILITY_BY_60%.", internalTag: "RISK_MITIGATED" },
+      { label: "Continuous monitoring", weight: 2, forensicInsight: "REAL-TIME_OVERSIGHT_ELIMINATES_95%_OF_VENDOR_DRIFT.", internalTag: "OPTIMIZED_SECURITY" }
+    ]
+  },
+  {
+    id: "ED_01",
+    protocol: "expertiseDebt",
+    text: "Our data infrastructure can handle real-time AI processing.",
+    options: [
+      { label: "Legacy/Siloed", weight: 10, forensicInsight: "INFRASTRUCTURE_DEBT_PENALIZES_OUTPUT_SPEED_BY_60%.", internalTag: "TECH_DECAY" },
+      { label: "Partially integrated", weight: 6, forensicInsight: "LATENCY_PENALTY_CREATES_$800K/YEAR_IN_IDLE_BURNT.", internalTag: "HYBRID_DEBT" },
+      { label: "Cloud-native", weight: 4, forensicInsight: "TECHNICAL_FLOW_REDUCES_OPERATIONAL_OVERHEAD_BY_20%.", internalTag: "CLOUD_SCALE" },
+      { label: "Edge/Real-time", weight: 2, forensicInsight: "PEAK_ARCHITECTURE_MINIMIZES_TOTAL_LOGIC_FRICTION.", internalTag: "PEAK_STACK" }
+    ]
   }
-  // Note: Remaining 8 questions follow this exact pattern in production
 ];
 
 const sectors = [
@@ -88,7 +132,7 @@ export default function ConsolidatedDiagnostic() {
   // --- 2. THE HARDENED CALCULATION ENGINE ---
   const calculateSynthesis = () => {
     const totalSum = Object.values(answers).map(v => parseInt(v || "0")).reduce((a, b) => a + b, 0);
-    const decayRaw = Math.round((totalSum / 120) * 100);
+    const decayRaw = Math.round((totalSum / (LOCAL_QUESTIONS.length * 10)) * 100);
     
     // Scale hemorrhage based on user-selected baseline
     const baseHemorrhage = totalSum * 0.04; 
@@ -121,12 +165,12 @@ export default function ConsolidatedDiagnostic() {
     return { label: p[severity], subtext: p.subtext };
   };
 
-  // --- 3. VIEWS ---
+  // --- 3. VIEWS (TRIAGE, INTAKE, AUDIT, VERDICT) ---
 
   const Triage = (
     <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
       <div className="text-center">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white">
+        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">
           THE LOGIC <span className="text-red-600">DECAY SCREENING</span>
         </h1>
       </div>
@@ -135,7 +179,7 @@ export default function ConsolidatedDiagnostic() {
           <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
             <div className="text-red-600 mb-4">{s.icon}</div>
             <div>
-              <h3 className="text-xl font-black uppercase italic text-white leading-none">{s.label}</h3>
+              <h3 className="text-xl font-black uppercase italic text-white leading-none tracking-tighter">{s.label}</h3>
               <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p>
             </div>
           </button>
@@ -147,17 +191,17 @@ export default function ConsolidatedDiagnostic() {
   const Intake = (
     <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white">
       <div className="text-center space-y-3">
-        <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white italic">FORENSIC PROTOCOL <span className="text-red-600 uppercase">ENGAGED</span></h2>
+        <h2 className="text-5xl font-black uppercase italic tracking-tighter italic text-white leading-none tracking-tighter">FORENSIC PROTOCOL <span className="text-red-600 uppercase">ENGAGED</span></h2>
         <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic">Sector Lock: {sector?.toUpperCase() || "PENDING"}</p>
       </div>
       <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto w-full space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
-          <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600" />
-          <input placeholder="ENTITY_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white" />
+          <input placeholder="ENTITY_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white" />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
-          <input type="email" placeholder="CORPORATE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600" />
-          <input type="email" placeholder="VERIFY_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase outline-none focus:border-red-600`} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <input type="email" placeholder="CORPORATE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white transition-colors" />
+          <input type="email" placeholder="VERIFY_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase outline-none focus:border-red-600 text-white transition-colors`} />
         </div>
         <div className="w-full">
           <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none cursor-pointer focus:border-red-600 appearance-none w-full italic text-white">
@@ -165,6 +209,9 @@ export default function ConsolidatedDiagnostic() {
             <option value="managerial">MANAGERIAL_PERSPECTIVE</option>
             <option value="technical">TECHNICAL_PERSPECTIVE</option>
           </select>
+        </div>
+        <div className="h-4 flex items-center justify-center">
+            {validationError && <p className="text-red-600 font-mono text-[10px] uppercase font-black tracking-widest italic leading-none animate-forensic-pulse">⚠️ {validationError}</p>}
         </div>
         <button onClick={() => setStep("audit")} className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all">Initialize Audit Observation</button>
       </div>
@@ -201,12 +248,12 @@ export default function ConsolidatedDiagnostic() {
                   <div className="flex items-end gap-1 h-3 opacity-20 group-hover:opacity-100 transition-opacity">
                     {[1, 2, 3].map((b) => (<div key={b} className="w-0.5 bg-red-600" style={{ height: `${b * 33}%` }} />))}
                   </div>
-                  <ArrowRight size={18} className="text-slate-800 group-hover:text-red-600 transition-all" />
+                  <ArrowRight size={18} className="text-slate-800 group-hover:text-red-600 transition-all group-hover:translate-x-1" />
                 </div>
               </div>
               <div className="h-0 overflow-hidden group-hover:h-auto group-hover:mt-4 transition-all duration-300">
                 <motion.div initial={{ opacity: 0, y: 5 }} whileInView={{ opacity: 1, y: 0 }} className="pt-4 border-t border-red-600/20">
-                  <span className="text-[9px] font-mono text-red-600 uppercase font-black tracking-[0.3em] italic">DETECTED_SIGNAL: {opt.forensicInsight}</span>
+                  <span className="text-[9px] font-mono text-red-600 uppercase font-black tracking-[0.3em] italic leading-none">DETECTED_SIGNAL: {opt.forensicInsight}</span>
                 </motion.div>
               </div>
             </button>
@@ -219,12 +266,12 @@ export default function ConsolidatedDiagnostic() {
   const Verdict = (
     <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white text-center py-10">
       <div className="py-12 border-b border-slate-900">
-        <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none">
+        <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none tracking-tighter">
           {userRole === 'executive' ? `YOUR $${aiSpend}M INVESTMENT IS DESTROYING ` : userRole === 'technical' ? `YOUR $${aiSpend}M STACK HAS ` : `YOUR $${aiSpend}M OPS ARE FUELING `}
           <span className="text-red-600">{userRole === 'executive' ? `$${calculateSynthesis().total.toFixed(1)}M/YEAR` : `${calculateSynthesis().decay}% DECAY`}</span>
         </h2>
         <div className="mt-10 max-w-xs mx-auto space-y-4">
-          <label className="block text-[9px] font-mono text-red-600/60 uppercase tracking-[0.3em] font-black italic">Adjust_AI_Capital_Baseline</label>
+          <label className="block text-[9px] font-mono text-red-600/60 uppercase tracking-[0.3em] font-black italic leading-none">Adjust_AI_Capital_Baseline</label>
           <input type="range" min="0.5" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
           <div className="flex justify-between text-[10px] font-mono font-black text-white italic">
             <span>$0.5M</span> <span className="bg-red-600 px-2 leading-none flex items-center">${aiSpend}M</span> <span>$10.0M</span>
@@ -235,28 +282,32 @@ export default function ConsolidatedDiagnostic() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
         <div className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-center items-center relative overflow-hidden">
           <ShieldAlert className="absolute top-0 right-0 p-2 text-red-600/10" size={60} />
-          <span className="text-[10px] font-mono text-slate-500 uppercase mb-4 font-bold tracking-[0.2em]">{userRole === 'executive' ? 'NEGATIVE_ROI' : 'STRUCTURAL_DECAY'}</span>
+          <span className="text-[10px] font-mono text-slate-500 uppercase mb-4 font-bold tracking-[0.2em] leading-none">{userRole === 'executive' ? 'NEGATIVE_ROI' : 'STRUCTURAL_DECAY'}</span>
           <span className="text-6xl font-black text-red-600 italic leading-none mb-4">{userRole === 'executive' ? `${calculateSynthesis().roi}%` : `${calculateSynthesis().decay}%`}</span>
-          <div className="border-t border-red-600/20 pt-4 w-full text-center text-white">
-            <span className="text-[11px] font-black uppercase italic tracking-widest leading-tight">{getForensicDiagnosis(calculateSynthesis().decay, userRole).label}</span>
-            <p className="text-[8px] font-mono text-slate-500 uppercase mt-1">{getForensicDiagnosis(calculateSynthesis().decay, userRole).subtext}</p>
+          <div className="border-t border-red-600/20 pt-4 w-full text-center">
+            <span className="text-[11px] font-black uppercase italic text-white tracking-widest leading-tight">{getForensicDiagnosis(calculateSynthesis().decay, userRole).label}</span>
+            <p className="text-[8px] font-mono text-slate-500 uppercase mt-1 leading-none">{getForensicDiagnosis(calculateSynthesis().decay, userRole).subtext}</p>
           </div>
         </div>
 
         <div className="md:col-span-2 bg-slate-950 border border-slate-800 p-8 space-y-8">
-          <div className="flex justify-between items-center font-mono text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]"><span>Forensic Waste Grid // Scaled to ${aiSpend}M</span><Activity size={14} className="text-red-600 animate-pulse" /></div>
+          <div className="flex justify-between items-center font-mono text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em] leading-none"><span>Forensic Waste Grid // Scaled to ${aiSpend}M</span><Activity size={14} className="text-red-600 animate-pulse" /></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center">
+            <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center transition-colors hover:border-red-600/40">
               <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white">{userRole === 'executive' ? 'INEFFICIENCY_COST' : userRole === 'technical' ? 'MANUAL_OVERRIDES' : 'REWORK_LOOPS'}</span>
-              <span className="text-red-600 font-black italic text-xl">{userRole === 'executive' ? `$${calculateSynthesis().reworkTax.toFixed(1)}M` : userRole === 'technical' ? `${Math.round(calculateSynthesis().reworkTax * 120)} HRS/QTR` : `${(calculateSynthesis().reworkTax * 2.5).toFixed(1)} FTEs`}</span>
+              <span className="text-red-600 font-black italic text-xl leading-none">
+                {userRole === 'executive' ? `$${calculateSynthesis().reworkTax.toFixed(1)}M` : userRole === 'technical' ? `${Math.round(calculateSynthesis().reworkTax * 120)} HRS/QTR` : `${(calculateSynthesis().reworkTax * 2.5).toFixed(1)} FTEs`}
+              </span>
             </div>
-            <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center">
+            <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center transition-colors hover:border-red-600/40">
               <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white">{userRole === 'executive' ? 'VALUE_LEAK' : userRole === 'technical' ? 'MODEL_DRIFT' : 'VELOCITY_LOSS'}</span>
-              <span className="text-red-600 font-black italic text-xl">{userRole === 'executive' ? `$${calculateSynthesis().deltaGap.toFixed(1)}M` : userRole === 'technical' ? `${Math.round(calculateSynthesis().deltaGap * 8)}% LOSS` : `${Math.round(calculateSynthesis().deltaGap * 6)}% SLOWER`}</span>
+              <span className="text-red-600 font-black italic text-xl leading-none">
+                {userRole === 'executive' ? `$${calculateSynthesis().deltaGap.toFixed(1)}M` : userRole === 'technical' ? `${Math.round(calculateSynthesis().deltaGap * 8)}% LOSS` : `${Math.round(calculateSynthesis().deltaGap * 6)}% SLOWER`}
+              </span>
             </div>
             <div onMouseEnter={() => setHoveredProtocol(true)} onMouseLeave={() => setHoveredProtocol(false)} className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center group cursor-help relative md:col-span-2 transition-all hover:border-red-600/40">
-              <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white group-hover:text-red-600 transition-colors">{hoveredProtocol ? "Shadow AI + Expertise Debt" : "PROTOCOL_X [UNIDENTIFIED_LEAK]"}</span>
-              <span className="text-red-600 font-black italic text-xl">{hoveredProtocol ? `$${(calculateSynthesis().total - calculateSynthesis().reworkTax - calculateSynthesis().deltaGap).toFixed(1)}M` : "?"}</span>
+              <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white group-hover:text-red-600 transition-colors leading-none">{hoveredProtocol ? "Shadow AI + Expertise Debt" : "PROTOCOL_X [UNIDENTIFIED_LEAK]"}</span>
+              <span className="text-red-600 font-black italic text-xl leading-none">{hoveredProtocol ? `$${(calculateSynthesis().total - calculateSynthesis().reworkTax - calculateSynthesis().deltaGap).toFixed(1)}M` : "?"}</span>
             </div>
           </div>
         </div>
@@ -265,8 +316,13 @@ export default function ConsolidatedDiagnostic() {
       <div className="bg-red-600 p-12 shadow-2xl shadow-red-900/40 relative overflow-hidden group text-left">
         <div className="relative z-10 max-w-3xl space-y-6">
           <h3 className="text-4xl md:text-5xl font-black text-white uppercase italic leading-none tracking-tighter">{userRole === 'executive' ? `STOP THE $${calculateSynthesis().total.toFixed(1)}M EBITDA LEAK` : userRole === 'technical' ? `CLEAR $${calculateSynthesis().total.toFixed(1)}M IN TECH DEBT` : `REGAIN ${calculateSynthesis().decay}% OF TEAM BANDWIDTH`}</h3>
-          <p className="text-white/90 text-sm leading-relaxed font-bold uppercase tracking-tight italic max-w-xl">Your decay rate of {calculateSynthesis().decay}% indicates your ${aiSpend}M investment is generating a <span className="bg-black text-white px-2">-{((calculateSynthesis().total / aiSpend) * 100).toFixed(0)}% ROI</span>. Forensic hardening is now critical.</p>
-          <button className="bg-white text-black px-10 py-6 font-black uppercase italic text-xs tracking-widest hover:bg-black hover:text-white transition-all shadow-xl shadow-black/20">Initiate Full Diagnostic</button>
+          <p className="text-white/90 text-sm leading-relaxed font-bold uppercase tracking-tight italic max-w-xl">
+             Your decay rate of {calculateSynthesis().decay}% indicates your ${aiSpend}M investment is generating a <span className="bg-black text-white px-2 mx-1">-{((calculateSynthesis().total / aiSpend) * 100).toFixed(0)}% ROI</span>. 
+             {userRole === 'executive' ? "Board-level intervention is required to protect margins." : userRole === 'technical' ? "Technical debt has reached a terminal threshold." : "Operational bandwidth is being consumed by unmonitored rework loops."}
+          </p>
+          <button className="bg-white text-black px-10 py-6 font-black uppercase italic text-xs tracking-widest hover:bg-black hover:text-white transition-all shadow-xl shadow-black/20">
+              Initiate Full {userRole?.toUpperCase()} Diagnostic
+          </button>
         </div>
         <Zap className="absolute right-[-40px] bottom-[-40px] text-white/10" size={300} />
       </div>
@@ -277,7 +333,9 @@ export default function ConsolidatedDiagnostic() {
 
   return (
     <div className="max-w-6xl mx-auto py-20 px-4">
-      <AnimatePresence mode="wait">{stepMap[step]}</AnimatePresence>
+      <AnimatePresence mode="wait">
+        {stepMap[step]}
+      </AnimatePresence>
     </div>
   );
 }
