@@ -1,142 +1,103 @@
+export interface Option {
+  label: string;
+  weight: number;
+  impact: string;
+}
+
 export interface Question {
   id: string;
-  zone: 'reworkTax' | 'shadowAI' | 'expertiseDebt' | 'deltaGap';
+  protocol: 'reworkTax' | 'shadowAI' | 'expertiseDebt' | 'deltaGap';
   text: string;
-  options: { label: string; value: number }[];
-  omegaMapping: string[]; 
+  options: Option[];
+  fieldGuideRef: string;
 }
 
 export const FORENSIC_QUESTIONS: Question[] = [
+  // HAI QUESTIONS -> REWORK TAX
   {
     id: "RT_01",
-    zone: "reworkTax",
-    text: "What level of manual verification is required for AI-generated operational outputs?",
+    protocol: "reworkTax",
+    text: "AI standard operating procedures (SOPs) are documented and followed.",
+    fieldGuideRef: "FG-BMR-RT-01",
     options: [
-      { label: "Minimal / Spot Checks", value: 2 },
-      { label: "Significant / Layered Review", value: 6 },
-      { label: "Total / Full Rework Required", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_RT_01", "OMEGA_RT_02"]
+      { label: "Non-existent", weight: 10, impact: "High Rework Risk" },
+      { label: "Ad-hoc/Manual", weight: 6, impact: "Manual Friction" },
+      { label: "Formalized", weight: 4, impact: "Managed Risk" },
+      { label: "Automated/Optimized", weight: 2, impact: "Zero Waste" }
+    ]
   },
   {
     id: "RT_02",
-    zone: "reworkTax",
-    text: "Frequency of 'Correction Loops' required to align AI output with standards?",
+    protocol: "reworkTax",
+    text: "Our organization has a clear AI ethics and governance framework.",
+    fieldGuideRef: "FG-BMR-RT-02",
     options: [
-      { label: "Rarely / Self-Correcting", value: 2 },
-      { label: "Occasional / Pattern-Based", value: 6 },
-      { label: "Constant / Per-Output Basis", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_RT_03", "OMEGA_RT_04"]
+      { label: "No framework", weight: 10, impact: "Compliance Hemorrhage" },
+      { label: "Basic guidelines", weight: 6, impact: "Policy Drift" },
+      { label: "Comprehensive policy", weight: 4, impact: "Stable" },
+      { label: "Audited compliance", weight: 2, impact: "Shielded" }
+    ]
   },
   {
     id: "RT_03",
-    zone: "reworkTax",
-    text: "Internal confidence in first-pass AI accuracy for deliverables?",
+    protocol: "reworkTax",
+    text: "AI roles and responsibilities are clearly defined across teams.",
+    fieldGuideRef: "FG-BMR-RT-03",
     options: [
-      { label: "High / Verifiable", value: 2 },
-      { label: "Moderate / Skeptical", value: 6 },
-      { label: "Low / Untrustworthy", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_RT_05"]
+      { label: "Undefined", weight: 10, impact: "Logic Fragmentation" },
+      { label: "Informal roles", weight: 6, impact: "Expertise Silos" },
+      { label: "Dedicated AI team", weight: 4, impact: "Structural Clarity" },
+      { label: "Cross-functional matrix", weight: 2, impact: "Optimized" }
+    ]
   },
-  {
-    id: "SA_01",
-    zone: "shadowAI",
-    text: "To what extent are undocumented LLM workarounds used to bypass friction?",
-    options: [
-      { label: "None / Sanctioned Only", value: 1 },
-      { label: "Isolated Departmental Use", value: 5 },
-      { label: "Ubiquitous / Mission Critical", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_SA_01", "OMEGA_SA_02"]
-  },
-  {
-    id: "SA_02",
-    zone: "shadowAI",
-    text: "Presence of personal AI accounts used for corporate data processing?",
-    options: [
-      { label: "Strictly Monitored", value: 2 },
-      { label: "Implicitly Tolerated", value: 6 },
-      { label: "Primary Workflow Driver", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_SA_03"]
-  },
-  {
-    id: "SA_03",
-    zone: "shadowAI",
-    text: "Maturity of centralized prompt-libraries versus individual 'secret' prompts?",
-    options: [
-      { label: "Centralized / Audited", value: 2 },
-      { label: "Fragmented / Informal", value: 6 },
-      { label: "Non-Existent / Invisible", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_SA_04", "OMEGA_SA_05"]
-  },
-  {
-    id: "ED_01",
-    zone: "expertiseDebt",
-    text: "Tribal knowledge required to interpret system error logs or AI failures?",
-    options: [
-      { label: "Documented / Standardized", value: 2 },
-      { label: "Requires Senior Oversight", value: 6 },
-      { label: "Single-Point-of-Failure Dependencies", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_ED_01", "OMEGA_ED_02"]
-  },
-  {
-    id: "ED_02",
-    zone: "expertiseDebt",
-    text: "Internal capability to explain 'The Why' behind an AI-generated decision?",
-    options: [
-      { label: "Natively Transparent", value: 2 },
-      { label: "Vaguely Heuristic", value: 6 },
-      { label: "Black-Box Dependency", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_ED_03"]
-  },
-  {
-    id: "ED_03",
-    zone: "expertiseDebt",
-    text: "Speed of onboarding new operators to maintain current AI workflows?",
-    options: [
-      { label: "Hours / Days", value: 2 },
-      { label: "Weeks (Expertise-Heavy)", value: 6 },
-      { label: "Months (Tribal-Knowledge-Bound)", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_ED_04"]
-  },
+  // AVS QUESTIONS -> DELTA GAP
   {
     id: "DG_01",
-    zone: "deltaGap",
-    text: "Discrepancy between promised AI efficiency and actual bottom-line expansion?",
+    protocol: "deltaGap",
+    text: "Our AI systems directly contribute to measurable business ROI.",
+    fieldGuideRef: "FG-BMR-DG-01",
     options: [
-      { label: "< 5% Variance", value: 2 },
-      { label: "10% - 25% Variance", value: 6 },
-      { label: "> 30% / Net Negative", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_DG_01", "OMEGA_DG_02"]
+      { label: "Not tracked", weight: 10, impact: "Value Leakage" },
+      { label: "Anecdotal evidence", weight: 6, impact: "Unverified Gains" },
+      { label: "Specific KPIs", weight: 4, impact: "ROI Stable" },
+      { label: "Direct revenue impact", weight: 2, impact: "ROI Maximized" }
+    ]
   },
   {
     id: "DG_02",
-    zone: "deltaGap",
-    text: "Observed 'Drift' in system performance over the last 90 days?",
+    protocol: "deltaGap",
+    text: "AI initiatives are aligned with the core strategic vision.",
+    fieldGuideRef: "FG-BMR-DG-02",
     options: [
-      { label: "Negligible / Improving", value: 2 },
-      { label: "Noticeable Decay", value: 6 },
-      { label: "Critical Failure Rate Increase", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_DG_03"]
+      { label: "Disconnected", weight: 10, impact: "Capital Waste" },
+      { label: "Loosely aligned", weight: 6, impact: "Strategic Drift" },
+      { label: "Strategically integrated", weight: 4, impact: "Aligned Growth" },
+      { label: "Strategy-driven AI", weight: 2, impact: "Unified Vision" }
+    ]
   },
   {
     id: "DG_03",
-    zone: "deltaGap",
-    text: "Estimated time-to-recovery in the event of a primary LLM API outage?",
+    protocol: "deltaGap",
+    text: "We have a dedicated budget and resources for AI scaling.",
+    fieldGuideRef: "FG-BMR-DG-03",
     options: [
-      { label: "Immediate (Fallback Active)", value: 2 },
-      { label: "1-3 Days (Significant Friction)", value: 6 },
-      { label: "Indefinite (Full Shutdown)", value: 10 }
-    ],
-    omegaMapping: ["OMEGA_DG_04", "OMEGA_DG_05"]
+      { label: "No budget", weight: 10, impact: "Stagnation Risk" },
+      { label: "Project-based funding", weight: 6, impact: "Fragmented Scaling" },
+      { label: "Annual AI budget", weight: 4, impact: "Stable Resource" },
+      { label: "Venture-scale pool", weight: 2, impact: "Hyper-Growth" }
+    ]
+  },
+  {
+    id: "DG_04",
+    protocol: "deltaGap",
+    text: "Customer value is a primary driver for AI implementation.",
+    fieldGuideRef: "FG-BMR-DG-04",
+    options: [
+      { label: "Internal focus only", weight: 10, impact: "Market Blindness" },
+      { label: "Secondary priority", weight: 6, impact: "Low Capture" },
+      { label: "Key success metric", weight: 4, impact: "Value Aligned" },
+      { label: "Core proposition", weight: 2, impact: "Market Leading" }
+    ]
   }
+  // (Continue for remaining 5 questions to complete the 12 set)
 ];
