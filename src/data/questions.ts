@@ -7,7 +7,6 @@ export interface Question {
 }
 
 export const FORENSIC_QUESTIONS: Question[] = [
-  // --- REWORK TAX ---
   {
     id: "RT_01",
     zone: "reworkTax",
@@ -41,7 +40,6 @@ export const FORENSIC_QUESTIONS: Question[] = [
     ],
     omegaMapping: ["OMEGA_RT_05"]
   },
-  // --- SHADOW AI ---
   {
     id: "SA_01",
     zone: "shadowAI",
@@ -75,7 +73,6 @@ export const FORENSIC_QUESTIONS: Question[] = [
     ],
     omegaMapping: ["OMEGA_SA_04", "OMEGA_SA_05"]
   },
-  // --- EXPERTISE DEBT ---
   {
     id: "ED_01",
     zone: "expertiseDebt",
@@ -109,7 +106,6 @@ export const FORENSIC_QUESTIONS: Question[] = [
     ],
     omegaMapping: ["OMEGA_ED_04"]
   },
-  // --- DELTA GAP ---
   {
     id: "DG_01",
     zone: "deltaGap",
