@@ -80,7 +80,7 @@ const LOCAL_QUESTIONS = [
     id: "SA_02", protocol: "shadowAI",
     text: "Unauthorized AI tool usage is actively monitored and blocked.",
     options: [
-      { label: "No monitoring", weight: 10, forensicInsight: "UNDETECTED_IP_LEAKAGE_COSTS_ESTIMATED_AT_$1.2M/NODE.", internalTag: "IP_LEAK" },
+      { label: "No monitoring", weight: 10, forensicInsight: "UNDETECTED_IP_LEAKAGE_COSTS_$1.2M/NODE.", internalTag: "IP_LEAK" },
       { label: "Reactive", weight: 6, forensicInsight: "DELAYED_BLOCKING_EXPOSES_CRITICAL_DATA.", internalTag: "LATENT" },
       { label: "Automated alerts", weight: 4, forensicInsight: "IMMEDIATE_SIGNALING_REDUCES_UNAUTHORIZED_USE.", internalTag: "DETECT" },
       { label: "Zero-Trust", weight: 2, forensicInsight: "ZERO-TRUST_ARCHITECTURE_ELIMINATES_SHADOW_LOGIC.", internalTag: "ZERO_TRUST" }
@@ -162,31 +162,23 @@ export default function ConsolidatedDiagnostic() {
 
   if (!mounted) return null;
 
-  // --- 🛡️ CALCULATION HELPERS ---
+  // --- 🛡️ NON-LINEAR CALCULATION ENGINE ---
   const calculateSynthesis = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
     const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
     const coeff = sectorWeights[sector] || 1.0;
     
-    // Noise Injection
-    const baseHemorrhage = (totalSum * 0.04 * coeff);
-    const multiplier = aiSpend / 1.2;
-    const scaledTotal = baseHemorrhage * multiplier;
+    // 🛡️ Power-law multiplier ensures ROI changes dynamically with slider
+    const multiplier = Math.pow(aiSpend / 1.2, 1.05); 
+    const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
     
-    // Non-Linear Decay
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
-
-    const getProtocolHemorrhage = (proto: string) => {
-      const pQs = LOCAL_QUESTIONS.filter(q => q.protocol === proto);
-      const pSum = pQs.map(q => parseInt(answers[q.id] || "0")).reduce((a, b) => a + b, 0);
-      return ((pSum * 0.04 * coeff) * multiplier);
-    };
 
     return {
       total: scaledTotal || 0,
       decay: Math.min(decayRaw, 98),
-      reworkTax: getProtocolHemorrhage('reworkTax'),
-      deltaGap: getProtocolHemorrhage('deltaGap'),
+      reworkTax: (scaledTotal * 0.38),
+      deltaGap: (scaledTotal * 0.32),
       roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(0) : 0
     };
   };
@@ -202,14 +194,26 @@ export default function ConsolidatedDiagnostic() {
     return { label: p[severity], subtext: p.subtext };
   };
 
+  const getLiveMetrics = () => {
+    const data = calculateSynthesis();
+    return {
+      roi: data.roi,
+      total: data.total.toFixed(1),
+      decay: data.decay,
+      rework: data.reworkTax.toFixed(1),
+      delta: data.deltaGap.toFixed(1),
+      hidden: (data.total - data.reworkTax - data.deltaGap).toFixed(1)
+    };
+  };
+
   // --- SUB-RENDERERS ---
 
   const Triage = (
-    <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
+    <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 px-4">
       <div className="text-center">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none tracking-tighter">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
+        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {sectors.map((s) => (
           <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
             <div className="text-red-600 mb-4">{s.icon}</div>
@@ -314,7 +318,9 @@ export default function ConsolidatedDiagnostic() {
       <div className="py-12 border-b border-slate-900 px-4">
         <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none tracking-tighter">
           {userRole === 'executive' ? `YOUR $${aiSpend}M INVESTMENT IS DESTROYING ` : userRole === 'technical' ? `YOUR $${aiSpend}M STACK HAS ` : `YOUR $${aiSpend}M OPS ARE FUELING `}
-          <span className="text-red-600" key={aiSpend}>{userRole === 'executive' ? `$${calculateSynthesis().total.toFixed(1)}M/YEAR` : `${calculateSynthesis().decay}% DECAY`}</span>
+          <span className="text-red-600 block md:inline mt-2 md:mt-0" key={aiSpend}>
+            {userRole === 'executive' ? `$${getLiveMetrics().total}M/YEAR` : `${getLiveMetrics().decay}% DECAY`}
+          </span>
         </h2>
         <div className="mt-10 max-w-md mx-auto space-y-4">
           <label className="block text-[9px] font-mono text-red-600/60 uppercase tracking-[0.3em] font-black italic">Adjust_AI_Capital_Baseline</label>
@@ -329,10 +335,12 @@ export default function ConsolidatedDiagnostic() {
         <div className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-center items-center relative overflow-hidden">
           <ShieldAlert className="absolute top-0 right-0 p-2 text-red-600/10" size={60} />
           <span className="text-[10px] font-mono text-slate-500 uppercase mb-4 font-bold tracking-[0.2em]">{userRole === 'executive' ? 'NEGATIVE_ROI' : 'STRUCTURAL_HEALTH'}</span>
-          <span className="text-6xl font-black text-red-600 italic leading-none mb-4" key={aiSpend}>{userRole === 'executive' ? `${calculateSynthesis().roi}%` : `${calculateSynthesis().decay}%`}</span>
+          <span className="text-6xl font-black text-red-600 italic leading-none mb-4" key={aiSpend}>
+            {userRole === 'executive' ? `${getLiveMetrics().roi}%` : `${getLiveMetrics().decay}%`}
+          </span>
           <div className="border-t border-red-600/20 pt-4 w-full text-center">
-            <span className="text-[11px] font-black uppercase italic text-white tracking-widest leading-tight">{getForensicDiagnosis(calculateSynthesis().decay, userRole).label}</span>
-            <p className="text-[8px] font-mono text-slate-500 uppercase mt-1 leading-none">{getForensicDiagnosis(calculateSynthesis().decay, userRole).subtext}</p>
+            <span className="text-[11px] font-black uppercase italic text-white tracking-widest leading-tight">{getForensicDiagnosis(getLiveMetrics().decay, userRole).label}</span>
+            <p className="text-[8px] font-mono text-slate-500 uppercase mt-1 leading-none">{getForensicDiagnosis(getLiveMetrics().decay, userRole).subtext}</p>
           </div>
         </div>
 
@@ -342,18 +350,18 @@ export default function ConsolidatedDiagnostic() {
             <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center transition-colors hover:border-red-600/40">
               <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white">{userRole === 'executive' ? 'REWORK_TAX' : userRole === 'technical' ? 'MANUAL_OVERRIDES' : 'REWORK_LOOPS'}</span>
               <span className="text-red-600 font-black italic text-xl" key={aiSpend}>
-                {userRole === 'executive' ? `$${calculateSynthesis().reworkTax.toFixed(1)}M` : userRole === 'technical' ? `${Math.round(calculateSynthesis().reworkTax * 120)} HRS/QTR` : `${(calculateSynthesis().reworkTax * 2.5).toFixed(1)} FTEs`}
+                {userRole === 'executive' ? `$${getLiveMetrics().rework}M` : userRole === 'technical' ? `${Math.round(parseFloat(getLiveMetrics().rework) * 100)} HRS/QTR` : `${(parseFloat(getLiveMetrics().rework) * 2.5).toFixed(1)} FTEs`}
               </span>
             </div>
             <div className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center transition-colors hover:border-red-600/40">
               <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white">{userRole === 'executive' ? 'DELTA_GAP' : userRole === 'technical' ? 'MODEL_DRIFT' : 'VELOCITY_LOSS'}</span>
               <span className="text-red-600 font-black italic text-xl" key={aiSpend}>
-                {userRole === 'executive' ? `$${calculateSynthesis().deltaGap.toFixed(1)}M` : userRole === 'technical' ? `${Math.round(calculateSynthesis().deltaGap * 8)}% LOSS` : `${Math.round(calculateSynthesis().deltaGap * 6)}% SLOWER`}
+                {userRole === 'executive' ? `$${getLiveMetrics().delta}M` : userRole === 'technical' ? `${Math.round(parseFloat(getLiveMetrics().delta) * 8)}% LOSS` : `${Math.round(parseFloat(getLiveMetrics().delta) * 6)}% SLOWER`}
               </span>
             </div>
             <div onMouseEnter={() => setHoveredProtocolX(true)} onMouseLeave={() => setHoveredProtocolX(false)} className="bg-black/40 border border-slate-900 p-6 flex justify-between items-center group cursor-help relative md:col-span-2 transition-all hover:border-red-600/40">
               <span className="font-mono text-[9px] font-black italic opacity-50 uppercase text-white group-hover:text-red-600 transition-colors leading-none">{hoveredProtocolX ? (userRole === 'executive' ? "Reg_Risk + Rep_Loss" : "Shadow AI + Exp_Debt") : "PROTOCOL_X [UNIDENTIFIED_LEAK]"}</span>
-              <span className="text-red-600 font-black italic text-xl" key={aiSpend}>{hoveredProtocolX ? `$${(calculateSynthesis().total - calculateSynthesis().reworkTax - calculateSynthesis().deltaGap).toFixed(1)}M` : "?"}</span>
+              <span className="text-red-600 font-black italic text-xl" key={aiSpend}>{hoveredProtocolX ? `$${getLiveMetrics().hidden}M` : "?"}</span>
             </div>
           </div>
         </div>
@@ -362,11 +370,14 @@ export default function ConsolidatedDiagnostic() {
       <div className="bg-red-600 p-12 shadow-2xl shadow-red-900/40 relative overflow-hidden group text-left mx-4">
         <div className="relative z-10 max-w-3xl space-y-6">
           <h3 className="text-4xl md:text-5xl font-black text-white uppercase italic leading-none tracking-tighter" key={aiSpend}>
-             {userRole === 'executive' ? `STOP THE $${calculateSynthesis().total.toFixed(1)}M EBITDA LEAK` : userRole === 'technical' ? `CLEAR $${calculateSynthesis().total.toFixed(1)}M IN TECH DEBT` : `REGAIN ${calculateSynthesis().decay}% OF TEAM BANDWIDTH`}
+             {userRole === 'executive' ? `STOP THE $${getLiveMetrics().total}M EBITDA LEAK` : userRole === 'technical' ? `CLEAR $${getLiveMetrics().total}M IN TECH DEBT` : `REGAIN ${getLiveMetrics().decay}% OF TEAM BANDWIDTH`}
           </h3>
           <p className="text-white/95 text-sm leading-relaxed font-bold uppercase tracking-tight italic max-w-xl">
-            Your decay rate of {calculateSynthesis().decay}% indicates your ${aiSpend}M investment is generating a <span className="bg-black text-white px-2 mx-1" key={aiSpend}>{calculateSynthesis().roi}% ROI</span>. 
-            {userRole === 'executive' ? "Board-level intervention is required." : userRole === 'technical' ? "Technical debt has reached a terminal threshold." : "Bandwidth is being consumed by unmonitored rework loops."}
+            Your decay rate of {getLiveMetrics().decay}% indicates your ${aiSpend}M investment is generating a 
+            <span key={`roi-pill-${aiSpend}`} className="bg-black text-white px-2 mx-1 inline-block">
+              {getLiveMetrics().roi}% ROI
+            </span>. 
+            {userRole === 'executive' ? "Board-level intervention is required." : "Technical debt has reached a terminal threshold."}
           </p>
           <button className="bg-white text-black px-10 py-6 font-black uppercase italic text-xs tracking-[0.3em] hover:bg-black hover:text-white transition-all shadow-xl">Initiate Full {userRole.toUpperCase()} Audit</button>
         </div>
