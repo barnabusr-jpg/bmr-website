@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight } from "lucide-react";
 import FieldGuide from "@/components/field-guide/FieldGuidePage";
 import DiagnosticStep from "./DiagnosticStep";
-import { diagnosticQuestions } from "@/data/diagnosticQuestions"; 
+// 🛡️ POINTING TO THE CORRECT DATA SOURCE
+import { FORENSIC_QUESTIONS } from "@/data/questions"; 
 
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
@@ -29,10 +30,9 @@ export default function ConsolidatedDiagnostic() {
 
   if (!mounted) return <div className="min-h-screen bg-[#020617]" />;
 
-  // Transition Handler
   const handleNext = () => {
-    const totalDimensions = diagnosticQuestions?.length || 0;
-    if (currentDimension < totalDimensions - 1) {
+    const totalQuestions = FORENSIC_QUESTIONS?.length || 0;
+    if (currentDimension < totalQuestions - 1) {
       setCurrentDimension(prev => prev + 1);
     } else {
       setStep("verdict");
@@ -92,20 +92,22 @@ export default function ConsolidatedDiagnostic() {
         );
 
       case "audit":
-        const activeQuestions = diagnosticQuestions?.[currentDimension];
-        if (!activeQuestions) return <div className="text-red-600 font-mono">CRITICAL_DATA_NODE_FAILURE</div>;
+        const activeQuestion = FORENSIC_QUESTIONS?.[currentDimension];
+        if (!activeQuestion) return <div className="text-red-600 font-mono text-center p-20 border border-red-900 bg-red-900/10">CRITICAL_DATA_NODE_FAILURE</div>;
+        
         return (
           <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
             <DiagnosticStep 
-              dimensionTitle={activeQuestions.title}
-              dimensionDescription={activeQuestions.description}
-              questions={activeQuestions.questions}
+              dimensionTitle={`PROTOCOL_${activeQuestion.zone.toUpperCase()}`}
+              questionText={activeQuestion.text}
+              options={activeQuestion.options}
               answers={answers}
+              questionId={activeQuestion.id}
               onAnswerChange={(qId, val) => setAnswers(prev => ({ ...prev, [qId]: val }))}
             />
             <div className="pt-12 border-t border-slate-900 flex justify-end">
-              <button onClick={handleNext} className="bg-red-600 px-12 py-6 text-white font-black uppercase italic tracking-widest text-xs">
-                {currentDimension === (diagnosticQuestions?.length || 0) - 1 ? "Generate Final Verdict" : "Next Dimension"}
+              <button onClick={handleNext} className="bg-red-600 px-12 py-6 text-white font-black uppercase italic tracking-widest text-xs hover:bg-white hover:text-black transition-all">
+                {currentDimension === (FORENSIC_QUESTIONS?.length || 0) - 1 ? "Generate Final Verdict" : "Next Protocol"}
               </button>
             </div>
           </motion.div>
@@ -117,7 +119,7 @@ export default function ConsolidatedDiagnostic() {
             <div className="text-center py-12 border-b border-slate-900">
               <h2 className="text-6xl font-black uppercase italic tracking-tighter text-white"><span>FORENSIC </span><span className="text-red-600">VERDICT</span></h2>
             </div>
-            <FieldGuide sector={sector || "general"} answers={answers} />
+            <FieldGuide sector={sector || "general"} answers={answers} userRole={userRole} />
           </motion.div>
         );
 
@@ -127,8 +129,10 @@ export default function ConsolidatedDiagnostic() {
   };
 
   return (
-    <AnimatePresence mode="wait">
-      {renderContent()}
-    </AnimatePresence>
+    <div className="min-h-screen bg-[#020617] p-4 md:p-12">
+      <AnimatePresence mode="wait">
+        {renderContent()}
+      </AnimatePresence>
+    </div>
   );
 }
