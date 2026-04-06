@@ -2,17 +2,17 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, AlertTriangle, Activity, ShieldAlert, Zap } from "lucide-react";
+import { ArrowRight, AlertTriangle, Activity, Zap, ShieldAlert, Banknote, Stethoscope, Factory, ShoppingCart } from "lucide-react";
 import DiagnosticStep from "./DiagnosticStep";
 import { FORENSIC_QUESTIONS } from "@/data/questions";
+import { diagnosticNarratives } from "@/data/diagnosticNarratives";
 
-// --- INTERNAL LOGIC MAP (Translated from your provided files) ---
-const ZONE_WEIGHTS = {
-  reworkTax: [1, 2, 3],    // Maps to Question IDs
-  shadowAI: [4, 5, 6],
-  expertiseDebt: [7, 8, 9],
-  deltaGap: [10, 11, 12]
-};
+const sectors = [
+  { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
+  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
+  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
+  { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
+];
 
 export default function ConsolidatedDiagnostic() {
   const [mounted, setMounted] = useState(false);
@@ -27,29 +27,25 @@ export default function ConsolidatedDiagnostic() {
 
   if (!mounted) return <div className="min-h-screen bg-[#020617]" />;
 
-  // --- CALCULATION ENGINE (The "Synthesis") ---
   const calculateSynthesis = () => {
-    const values = Object.values(answers).map(v => parseInt(v) || 0);
-    const totalRaw = values.reduce((a, b) => a + b, 0);
-    const maxPossible = 120; // 12 questions * max value 10
+    const vals = Object.values(answers).map(v => parseInt(v) || 0);
+    const totalRaw = vals.reduce((a, b) => a + b, 0);
+    const decay = Math.round((totalRaw / 120) * 100);
     
-    const decay = Math.round((totalRaw / maxPossible) * 100);
-    
-    // Zone-specific "Heat" mapping
-    const getZoneHeat = (ids: string[]) => {
-      const zoneValues = ids.map(id => parseInt(answers[id]) || 0);
-      const sum = zoneValues.reduce((a, b) => a + b, 0);
-      return Math.round((sum / (ids.length * 10)) * 100);
+    const getZoneHeat = (zone: string) => {
+      const zoneQs = FORENSIC_QUESTIONS.filter(q => q.zone === zone);
+      const zoneVals = zoneQs.map(q => parseInt(answers[q.id]) || 0);
+      const sum = zoneVals.reduce((a, b) => a + b, 0);
+      return Math.round((sum / (zoneQs.length * 10)) * 100);
     };
 
     return {
       total: decay,
       projected: Math.min(decay + 14, 100),
-      confidence: 87.2,
       heatmap: {
-        strategic: getZoneHeat(["RT_01", "SA_01", "ED_01"]), // Adjusting to your actual IDs
-        operational: getZoneHeat(["RT_02", "SA_02", "ED_02"]),
-        technical: getZoneHeat(["RT_03", "SA_03", "ED_03"])
+        strategic: getZoneHeat('reworkTax'),
+        operational: getZoneHeat('shadowAI'),
+        technical: getZoneHeat('expertiseDebt')
       }
     };
   };
@@ -62,111 +58,119 @@ export default function ConsolidatedDiagnostic() {
     }
   };
 
-  // --- RENDER LOGIC ---
-  const renderContent = () => {
-    switch (step) {
-      case "triage":
-        // [TRIAGE VIEW REMAINS AS PREVIOUSLY ESTABLISHED]
-        return <div className="text-white">Loading Triage Protocol...</div>; 
-
-      case "intake":
-        // [INTAKE VIEW REMAINS AS PREVIOUSLY ESTABLISHED]
-        return <div className="text-white">Loading Intake Protocol...</div>;
-
-      case "audit":
-        const activeQuestion = FORENSIC_QUESTIONS[currentDimension];
-        return (
-          <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-            <DiagnosticStep 
-              dimensionTitle={`NODE_0${currentDimension + 1}_${activeQuestion.zone.toUpperCase()}`}
-              questionText={activeQuestion.text}
-              options={activeQuestion.options}
-              answers={answers}
-              questionId={activeQuestion.id}
-              onAnswerChange={(id, val) => setAnswers(prev => ({ ...prev, [id]: val }))}
-            />
-            <div className="flex justify-between items-center pt-8 border-t border-slate-900">
-              <span className="font-mono text-[10px] text-slate-600">ALPHA_SEQUENCE: {currentDimension + 1}/12</span>
-              <button onClick={handleNext} className="bg-red-600 px-10 py-4 text-white font-black uppercase italic text-xs tracking-widest">
-                {currentDimension === 11 ? "Execute Synthesis" : "Next Protocol"}
-              </button>
+  // --- INTERNAL VIEWS ---
+  const Triage = (
+    <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
+      <div className="text-center space-y-6">
+        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white">
+          <span>THE LOGIC </span><span className="text-red-600">DECAY SCREENING</span>
+        </h1>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {sectors.map((s) => (
+          <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left group flex flex-col justify-between h-48">
+            <div className="text-red-600 mb-4">{s.icon}</div>
+            <div>
+              <h3 className="text-xl font-black uppercase italic text-white leading-none">{s.label}</h3>
+              <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p>
             </div>
-          </motion.div>
-        );
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  );
 
-      case "verdict":
-        const results = calculateSynthesis();
-        return (
-          <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-            <div className="text-center space-y-4">
-              <h2 className="text-6xl font-black italic text-white uppercase tracking-tighter">
-                LOGIC <span className="text-red-600">DECAY</span>
-              </h2>
-              <p className="font-mono text-[10px] text-slate-500 tracking-[0.4em]">FORENSIC_ALPHA_SYNTHESIS_COMPLETE</p>
-            </div>
+  const Intake = (
+    <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+      <div className="text-center space-y-3">
+        <h2 className="text-5xl font-black uppercase italic text-white tracking-tighter">FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span></h2>
+        <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Sector Lock: {sector?.toUpperCase()}</p>
+      </div>
+      <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-3xl mx-auto w-full space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm text-white uppercase outline-none focus:border-red-600" />
+          <input placeholder="CORPORATE_EMAIL" className="bg-slate-950 border border-slate-800 p-6 text-sm text-white uppercase outline-none focus:border-red-600" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <input value={entityName} onChange={(e) => setEntityName(e.target.value)} placeholder="ENTITY_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm text-white uppercase outline-none focus:border-red-600" />
+          <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm text-white uppercase outline-none cursor-pointer focus:border-red-600 appearance-none">
+            <option value="" disabled>SELECT_ROLE</option>
+            <option value="executive">EXECUTIVE</option>
+            <option value="managerial">MANAGERIAL</option>
+            <option value="technical">TECHNICAL</option>
+          </select>
+        </div>
+        <button onClick={() => setStep("audit")} className="w-full bg-red-600 py-8 text-white font-black uppercase italic text-xs tracking-[0.4em] hover:bg-white hover:text-black transition-all">Initialize Audit Observation</button>
+      </div>
+    </motion.div>
+  );
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* PRIMARY SCORE */}
-              <div className="bg-slate-950 border border-slate-900 p-8 flex flex-col justify-center items-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-2 text-red-600/20"><ShieldAlert size={40} /></div>
-                <span className="text-[10px] font-mono text-slate-500 uppercase mb-2">Systemic Drift</span>
-                <span className="text-7xl font-black text-red-600 italic leading-none">{results.total}%</span>
-                <span className="text-[9px] font-mono text-slate-700 mt-4">CONFIDENCE_RATING: {results.confidence}%</span>
+  const Audit = (
+    <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+      <DiagnosticStep 
+        dimensionTitle={`NODE_0${currentDimension + 1}_${FORENSIC_QUESTIONS[currentDimension].zone.toUpperCase()}`}
+        questionText={FORENSIC_QUESTIONS[currentDimension].text}
+        options={FORENSIC_QUESTIONS[currentDimension].options}
+        answers={answers}
+        questionId={FORENSIC_QUESTIONS[currentDimension].id}
+        onAnswerChange={(id, val) => setAnswers(prev => ({ ...prev, [id]: val }))}
+      />
+      <div className="flex justify-between items-center pt-8 border-t border-slate-900">
+        <span className="font-mono text-[10px] text-slate-600 uppercase tracking-widest">Sequence Step {currentDimension + 1}/12</span>
+        <button onClick={handleNext} className="bg-red-600 px-12 py-6 text-white font-black uppercase italic tracking-widest text-xs hover:invert transition-all">
+          {currentDimension === 11 ? "Execute Synthesis" : "Next Protocol"}
+        </button>
+      </div>
+    </motion.div>
+  );
+
+  const Verdict = (
+    <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+      <div className="text-center py-12 border-b border-slate-900">
+        <h2 className="text-7xl font-black uppercase italic text-white tracking-tighter">DECAY <span className="text-red-600">{calculateSynthesis().total}%</span></h2>
+        <p className="text-slate-500 font-mono text-[10px] mt-4 uppercase tracking-[0.5em]">Forensic Alpha Scan Complete</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-slate-950 border border-slate-900 p-8 flex flex-col justify-center items-center relative overflow-hidden">
+          <ShieldAlert className="absolute top-0 right-0 p-2 text-red-600/10" size={60} />
+          <span className="text-[10px] font-mono text-slate-500 uppercase mb-4">Total Margin Drift</span>
+          <span className="text-6xl font-black text-red-600 italic leading-none">{calculateSynthesis().total}%</span>
+          <span className="text-[9px] font-mono text-slate-700 mt-6 uppercase">Confidence: 87.2%</span>
+        </div>
+
+        <div className="md:col-span-2 bg-slate-950 border border-slate-900 p-8 space-y-8">
+          <div className="flex justify-between items-center"><span className="text-[10px] font-mono text-slate-500 uppercase">Decay Heatmap</span><Activity size={14} className="text-red-600 animate-pulse" /></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {Object.entries(calculateSynthesis().heatmap).map(([key, val]) => (
+              <div key={key} className="bg-black/40 border border-slate-900 p-6 space-y-4">
+                <div className="flex justify-between text-[10px] font-mono text-white/50 font-bold"><span>{key.toUpperCase()}</span><span>{val}%</span></div>
+                <div className="w-full h-1 bg-slate-900"><div className="h-full bg-red-600 transition-all duration-1000" style={{ width: `${val}%` }} /></div>
               </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-              {/* HEATMAP GRID */}
-              <div className="md:col-span-2 bg-slate-950 border border-slate-900 p-8 space-y-6">
-                <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-mono text-slate-500 uppercase">Forensic Heatmap</span>
-                  <Activity size={14} className="text-red-600 animate-pulse" />
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {Object.entries(results.heatmap).map(([key, val]) => (
-                    <div key={key} className="bg-black/40 border border-slate-900 p-4 space-y-4">
-                      <div className="flex justify-between text-[9px] font-mono text-white/50">
-                        <span>{key.toUpperCase()}</span>
-                        <span>{val}%</span>
-                      </div>
-                      <div className="w-full h-1 bg-slate-900">
-                        <div className="h-full bg-red-600" style={{ width: `${val}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+      <div className="bg-red-600 p-12 shadow-2xl shadow-red-900/40 relative group overflow-hidden">
+        <div className="relative z-10 max-w-2xl space-y-6">
+          <h3 className="text-4xl font-black text-white uppercase italic leading-none">Initialize The Cure</h3>
+          <p className="text-white/90 text-sm leading-relaxed font-bold uppercase tracking-tight">The Alpha scan is symptomatic. For Structural Hardening, you must proceed to the 30-Point Forensic Diagnostic.</p>
+          <div className="flex gap-6 items-center">
+            <button className="bg-white text-black px-10 py-5 font-black uppercase italic text-xs tracking-widest hover:bg-black hover:text-white transition-all shadow-xl">Initiate Full Engagement</button>
+            <span className="text-[9px] font-mono text-white/60 uppercase leading-tight font-bold italic border-l border-white/20 pl-4">Includes Supplemental<br/>BMR Field Guide</span>
+          </div>
+        </div>
+        <Zap className="absolute right-[-20px] bottom-[-20px] text-white/10 group-hover:text-white/20 transition-all duration-700" size={240} />
+      </div>
+    </motion.div>
+  );
 
-            {/* THE BRIDGE: Gating the Cure and the Supplement */}
-            <div className="bg-red-600 p-12 shadow-2xl shadow-red-900/40 relative">
-              <div className="max-w-2xl space-y-6">
-                <h3 className="text-3xl font-black text-white uppercase italic leading-none">Initialize The Cure</h3>
-                <p className="text-white/90 text-sm leading-relaxed font-medium">
-                  The Alpha scan provides symptomatic evidence. To implement **Structural Hardening**, you must proceed to the **30-Point Forensic Diagnostic**. 
-                </p>
-                <div className="flex gap-4">
-                  <button className="bg-white text-black px-8 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-slate-200 transition-all">
-                    Initiate Full Engagement
-                  </button>
-                  <div className="flex flex-col justify-center">
-                    <span className="text-[9px] font-mono text-black/60 uppercase leading-tight font-bold">Includes:</span>
-                    <span className="text-[10px] font-black text-white uppercase italic leading-tight">BMR Field Guide (Supplemental)</span>
-                  </div>
-                </div>
-              </div>
-              <Zap className="absolute right-12 bottom-12 text-white/10" size={120} />
-            </div>
-          </motion.div>
-        );
-
-      default: return null;
-    }
-  };
+  const stepMap: Record<string, React.ReactNode> = { triage: Triage, intake: Intake, audit: Audit, verdict: Verdict };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-20">
-      <AnimatePresence mode="wait">
-        {renderContent()}
-      </AnimatePresence>
+    <div className="max-w-6xl mx-auto py-20 px-4">
+      <AnimatePresence mode="wait">{stepMap[step] || Triage}</AnimatePresence>
     </div>
   );
 }
