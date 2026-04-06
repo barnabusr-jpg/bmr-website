@@ -27,6 +27,15 @@ export default function ConsolidatedDiagnostic() {
 
   useEffect(() => { setMounted(true); }, []);
 
+  // Real-time Email Validation Logic
+  useEffect(() => {
+    if (confirmEmail.length > 0 && email !== confirmEmail) {
+      setValidationError("EMAIL_VERIFICATION_MISMATCH");
+    } else {
+      setValidationError(null);
+    }
+  }, [email, confirmEmail]);
+
   if (!mounted) return null;
 
   const calculateSynthesis = () => {
@@ -62,8 +71,8 @@ export default function ConsolidatedDiagnostic() {
   const Triage = (
     <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
       <div className="text-center space-y-6">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white">
-          <span>THE LOGIC </span><span className="text-red-600">DECAY SCREENING</span>
+        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">
+          THE LOGIC <span className="text-red-600">DECAY SCREENING</span>
         </h1>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -84,34 +93,34 @@ export default function ConsolidatedDiagnostic() {
     <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
       <div className="text-center space-y-3">
         <h2 className="text-5xl font-black uppercase italic text-white tracking-tighter italic">FORENSIC PROTOCOL <span className="text-red-600 uppercase">ENGAGED</span></h2>
-        <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">Sector Lock: {sector?.toUpperCase()}</p>
+        <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic leading-none">Sector Lock: {sector?.toUpperCase()}</p>
       </div>
       
       <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto w-full space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm text-white uppercase outline-none focus:border-red-600" />
-          <input placeholder="ENTITY_NAME" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm text-white uppercase outline-none focus:border-red-600" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
+          <input placeholder="OPERATOR_NAME" className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600" />
+          <input placeholder="ENTITY_NAME" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600" />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white">
           <input 
             type="email"
             placeholder="CORPORATE_EMAIL" 
             value={email}
-            onChange={(e) => { setEmail(e.target.value); setValidationError(null); }}
-            className={`bg-slate-950 border ${validationError === "EMAIL_PROTOCOL_ERROR" || validationError === "EMAIL_MISMATCH" ? 'border-red-600' : 'border-slate-800'} p-6 text-sm text-white uppercase outline-none focus:border-red-600`} 
+            onChange={(e) => setEmail(e.target.value)}
+            className={`bg-slate-950 border ${validationError === "EMAIL_VERIFICATION_MISMATCH" ? 'border-red-600/30' : 'border-slate-800'} p-6 text-sm uppercase outline-none focus:border-red-600 transition-colors`} 
           />
           <input 
             type="email"
             placeholder="VERIFY_EMAIL" 
             value={confirmEmail}
-            onChange={(e) => { setConfirmEmail(e.target.value); setValidationError(null); }}
-            className={`bg-slate-950 border ${validationError === "EMAIL_MISMATCH" ? 'border-red-600' : 'border-slate-800'} p-6 text-sm text-white uppercase outline-none focus:border-red-600`} 
+            onChange={(e) => setConfirmEmail(e.target.value)}
+            className={`bg-slate-950 border ${validationError === "EMAIL_VERIFICATION_MISMATCH" ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase outline-none focus:border-red-600 transition-colors`} 
           />
         </div>
 
-        <div className="w-full">
-          <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm text-white uppercase outline-none cursor-pointer focus:border-red-600 appearance-none w-full">
+        <div className="w-full text-white">
+          <select value={userRole} onChange={(e) => setUserRole(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none cursor-pointer focus:border-red-600 appearance-none w-full">
             <option value="" disabled>SELECT_ROLE</option>
             <option value="executive">EXECUTIVE</option>
             <option value="managerial">MANAGERIAL</option>
@@ -119,10 +128,10 @@ export default function ConsolidatedDiagnostic() {
           </select>
         </div>
 
-        <div className="h-4">
+        <div className="h-6 flex items-center justify-center">
           <AnimatePresence>
             {validationError && (
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-red-600 font-mono text-[10px] uppercase text-center font-bold tracking-widest">
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-red-600 font-mono text-[10px] uppercase text-center font-black tracking-widest leading-none">
                 ⚠️ {validationError}
               </motion.p>
             )}
@@ -130,19 +139,20 @@ export default function ConsolidatedDiagnostic() {
         </div>
 
         <button 
+          disabled={!!validationError || !email || !confirmEmail || !userRole || !entityName}
           onClick={() => {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             if (!emailRegex.test(email)) {
-              setValidationError("EMAIL_PROTOCOL_ERROR");
-            } else if (email !== confirmEmail) {
-              setValidationError("EMAIL_MISMATCH");
-            } else if (!userRole || !entityName) {
-              setValidationError("CORE_FIELDS_INCOMPLETE");
+              setValidationError("INVALID_EMAIL_PROTOCOL");
             } else {
               setStep("audit");
             }
           }} 
-          className="w-full bg-red-600 py-8 text-white font-black uppercase italic text-xs tracking-[0.4em] hover:bg-white hover:text-black transition-all"
+          className={`w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] transition-all ${
+            validationError || !email 
+            ? 'bg-slate-900 text-slate-700 cursor-not-allowed opacity-50' 
+            : 'bg-red-600 text-white hover:bg-white hover:text-black shadow-xl shadow-red-900/10'
+          }`}
         >
           Initialize Audit Observation
         </button>
@@ -162,7 +172,7 @@ export default function ConsolidatedDiagnostic() {
       />
       <div className="flex justify-between items-center pt-8 border-t border-slate-900">
         <span className="font-mono text-[10px] text-slate-600 uppercase tracking-widest text-xs italic">Sequence Step {currentDimension + 1}/12</span>
-        <button onClick={handleNext} className="bg-red-600 px-12 py-6 text-white font-black uppercase italic tracking-widest text-xs hover:invert transition-all">
+        <button onClick={handleNext} className="bg-red-600 px-12 py-6 text-white font-black uppercase italic tracking-widest text-xs hover:invert transition-all shadow-lg">
           {currentDimension === 11 ? "Execute Synthesis" : "Next Protocol"}
         </button>
       </div>
@@ -170,10 +180,10 @@ export default function ConsolidatedDiagnostic() {
   );
 
   const Verdict = (
-    <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+    <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white">
       <div className="text-center py-12 border-b border-slate-900">
-        <h2 className="text-7xl font-black uppercase italic text-white tracking-tighter">DECAY <span className="text-red-600 italic">{calculateSynthesis().total}%</span></h2>
-        <p className="text-slate-500 font-mono text-[10px] mt-4 uppercase tracking-[0.5em] font-bold italic">Forensic Alpha Scan Complete</p>
+        <h2 className="text-7xl font-black uppercase italic tracking-tighter leading-none">DECAY <span className="text-red-600 italic">{calculateSynthesis().total}%</span></h2>
+        <p className="text-slate-500 font-mono text-[10px] mt-4 uppercase tracking-[0.5em] font-bold italic leading-none">Forensic Alpha Scan Complete</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -181,7 +191,7 @@ export default function ConsolidatedDiagnostic() {
           <ShieldAlert className="absolute top-0 right-0 p-2 text-red-600/10" size={60} />
           <span className="text-[10px] font-mono text-slate-500 uppercase mb-4 font-bold">Total Margin Drift</span>
           <span className="text-6xl font-black text-red-600 italic leading-none">{calculateSynthesis().total}%</span>
-          <span className="text-[9px] font-mono text-slate-700 mt-6 uppercase font-bold">Confidence: 87.2%</span>
+          <span className="text-[9px] font-mono text-slate-700 mt-6 uppercase font-bold tracking-tighter">Confidence Index: 87.2%</span>
         </div>
 
         <div className="md:col-span-2 bg-slate-950 border border-slate-900 p-8 space-y-8">
