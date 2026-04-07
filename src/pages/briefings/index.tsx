@@ -13,10 +13,16 @@ export default function BriefingsIndex() {
   useEffect(() => { setMounted(true); }, []);
 
   const articles = [
-    { slug: "chatbot-liability", title: "The Air Canada Precedent", date: "February 20, 2024", risk: "HALLUCINATION_SHEAR" },
-    { slug: "salesforce-failure", title: "Salesforce AI Data Exfiltration", date: "March 15, 2024", risk: "SHADOW_AI_SHEAR" },
-    { slug: "lyft-logic-shear", title: "The Lyft Earnings Phantom", date: "February 13, 2024", risk: "ALGORITHMIC_SHEAR" },
-    { slug: "clinical-logic-shear", title: "UnitedHealth AI Care Denial", date: "April 02, 2026", risk: "EXPERTISE_SHEAR" }
+    { slug: "chatbot-liability", title: "The Air Canada Precedent", date: "Feb 20, 2024", risk: "HALLUCINATION_SHEAR" },
+    { slug: "salesforce-failure", title: "Salesforce AI Data Exfiltration", date: "Mar 15, 2024", risk: "SHADOW_AI_SHEAR" },
+    { slug: "lyft-logic-shear", title: "The Lyft Earnings Phantom", date: "Feb 13, 2024", risk: "ALGORITHMIC_SHEAR" },
+    { slug: "clinical-logic-shear", title: "UnitedHealth AI Care Denial", date: "Apr 02, 2026", risk: "EXPERTISE_SHEAR" },
+    { slug: "judicial-logic-shear", title: "Oregon Judicial Sanction", date: "Mar 25, 2026", risk: "FIDUCIARY_SHEAR" },
+    { slug: "governance-logic-shear", title: "McDonald's McHire Breach", date: "Jul 10, 2025", risk: "GOVERNANCE_SHEAR" },
+    { slug: "infrastructure-logic-shear", title: "Tokyo Logistics Blackout", date: "Dec 12, 2025", risk: "SYSTEMIC_SHEAR" },
+    { slug: "utility-grid-hallucination", title: "ERCOT Load-Balancing Drift", date: "May 19, 2024", risk: "PREDICTIVE_DRIFT" },
+    { slug: "federal-benefit-shear", title: "IRS Tax-Logic Hallucination", date: "Feb 14, 2025", risk: "SOVEREIGN_SHEAR" },
+    { slug: "defense-intelligence-shear", title: "Pentagon 'Shadow' LLM Leak", date: "Aug 09, 2024", risk: "CLASSIFIED_EXFILTRATION" }
   ];
 
   if (!mounted) return <div className="min-h-screen bg-[#020617]" />;
@@ -32,9 +38,7 @@ export default function BriefingsIndex() {
           <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">
             Forensic <span className="text-red-600">Briefings</span>
           </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-slate-500 font-mono text-[10px] uppercase tracking-widest max-w-xl leading-relaxed italic">
-            ACTIVE INTELLIGENCE LOGS: IDENTIFYING THE CRITICAL SHEAR BETWEEN HUMAN INPUT AND ALGORITHMIC ACTION.
-          </motion.p>
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-slate-500 font-mono text-[10px] uppercase tracking-widest max-w-xl leading-relaxed italic">SECURE THE SHEAR BETWEEN HUMAN OVERSIGHT AND ALGORITHMIC EXECUTION ACROSS ALL SECTORS.</motion.p>
         </div>
 
         <div className="grid gap-4 max-w-5xl">
