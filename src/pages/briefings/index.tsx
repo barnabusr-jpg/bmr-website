@@ -3,18 +3,18 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import LogicLeakTicker from "@/components/LogicLeakTicker";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 
 export default function Briefings() {
   const [mounted, setMounted] = useState(false);
 
-  // 🛡️ Guard against hydration mismatch in Pages Router
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // 🛡️ CRITICAL: Slugs must match the keys in [slug].tsx CONTENT object
+  // 🛡️ UPDATED: NEDA removed, Salesforce integrated to match [slug].tsx CONTENT
   const articles = [
     { 
       slug: "chatbot-liability", 
@@ -22,9 +22,9 @@ export default function Briefings() {
       date: "February 20, 2024" 
     },
     { 
-      slug: "helpline-collapse", 
-      title: "NEDA Systemic Failure", 
-      date: "May 15, 2023" 
+      slug: "salesforce-failure", 
+      title: "Salesforce AI Data Exfiltration", 
+      date: "March 15, 2024" 
     },
     { 
       slug: "algorithmic-shear", 
@@ -36,9 +36,9 @@ export default function Briefings() {
   if (!mounted) return <div className="min-h-screen bg-[#020617]" />;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30">
       <Header />
-      <main className="pt-48 px-6 container mx-auto pb-24">
+      <main className="pt-48 px-6 container mx-auto pb-32">
         <motion.h1 
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -82,6 +82,9 @@ export default function Briefings() {
           ))}
         </div>
       </main>
+      
+      {/* 📡 Integrating the ticker here for atmospheric consistency */}
+      <LogicLeakTicker />
     </div>
   );
 }
