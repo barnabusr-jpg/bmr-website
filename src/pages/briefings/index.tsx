@@ -3,33 +3,43 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import LogicLeakTicker from "@/components/LogicLeakTicker";
-import { motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowRight, ShieldAlert, Activity } from "lucide-react";
 
-export default function Briefings() {
+export default function BriefingsIndex() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // 🛡️ UPDATED: NEDA removed, Salesforce integrated to match [slug].tsx CONTENT
+  // 🛡️ DATA ANCHOR: ENSURE SLUGS MATCH [SLUG].TSX CONTENT KEYS
   const articles = [
     { 
       slug: "chatbot-liability", 
       title: "The Air Canada Precedent", 
-      date: "February 20, 2024" 
+      date: "February 20, 2024",
+      risk: "HALLUCINATION_LIABILITY" 
     },
     { 
       slug: "salesforce-failure", 
       title: "Salesforce AI Data Exfiltration", 
-      date: "March 15, 2024" 
+      date: "March 15, 2024",
+      risk: "DATA_EXPOSURE"
     },
     { 
       slug: "algorithmic-shear", 
       title: "The Zillow iBuying Autopsy", 
-      date: "November 01, 2021" 
+      date: "December 09, 2021",
+      risk: "FISCAL_COLLAPSE"
+    },
+    { 
+      slug: "clinical-logic-shear", 
+      title: "UnitedHealth AI Care Denial", 
+      date: "April 02, 2026",
+      risk: "CLINICAL_NEGLIGENCE"
     }
   ];
 
@@ -38,53 +48,103 @@ export default function Briefings() {
   return (
     <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30">
       <Header />
+      
       <main className="pt-48 px-6 container mx-auto pb-32">
-        <motion.h1 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter mb-12 leading-none"
-        >
-          Forensic <span className="text-red-600">Briefings</span>
-        </motion.h1>
+        {/* HEADER SECTION */}
+        <div className="max-w-5xl mb-16 space-y-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-3 text-red-600 font-mono text-[10px] font-black tracking-[0.4em] uppercase"
+          >
+            <ShieldAlert size={14} /> BMR_FORENSIC_VAULT
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-none"
+          >
+            Forensic <span className="text-red-600">Briefings</span>
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-slate-500 font-mono text-[10px] uppercase tracking-widest max-w-xl leading-relaxed italic"
+          >
+            ACTIVE INTELLIGENCE LOGS: DECLASSIFIED AUTOPSIES OF SYSTEMIC LOGIC FAILURE. ACCESSING ARCHIVE NODE-SEC-004.
+          </motion.p>
+        </div>
 
+        {/* DOSSIER LIST */}
         <div className="grid gap-4 max-w-5xl">
-          {articles.map((a, index) => (
-            <motion.div
-              key={a.slug}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Link 
-                href={`/briefings/${a.slug}`} 
-                className="group relative p-8 border border-slate-900 bg-slate-950/50 hover:border-red-600 transition-all flex justify-between items-center overflow-hidden block"
+          <AnimatePresence>
+            {articles.map((a, index) => (
+              <motion.div
+                key={a.slug}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
               >
-                {/* Left Trace Accent */}
-                <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-red-600 transition-all duration-500" />
-                
-                <div>
-                  <span className="text-red-600 font-mono text-[10px] uppercase mb-2 block font-black tracking-widest opacity-70">
-                    {a.date}
-                  </span>
-                  <h2 className="text-2xl md:text-4xl font-black uppercase italic text-slate-500 group-hover:text-white transition-colors duration-300">
-                    {a.title}
-                  </h2>
-                </div>
+                <Link 
+                  href={`/briefings/${a.slug}`} 
+                  className="group relative p-10 border border-slate-900 bg-slate-950/50 hover:border-red-600/50 transition-all flex flex-col md:flex-row md:justify-between md:items-center overflow-hidden block"
+                >
+                  {/* LEFT TRACE ACCENT */}
+                  <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-red-600 transition-all duration-500" />
+                  
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-4">
+                      <span className="text-red-600 font-mono text-[9px] uppercase font-black tracking-widest">
+                        {a.date}
+                      </span>
+                      <span className="text-slate-700 font-mono text-[9px] uppercase tracking-widest font-bold">
+                        RISK_LEVEL: CRITICAL
+                      </span>
+                    </div>
+                    
+                    <h2 className="text-3xl md:text-5xl font-black uppercase italic text-slate-500 group-hover:text-white transition-colors duration-300 tracking-tighter">
+                      {a.title}
+                    </h2>
+                    
+                    <p className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.2em] group-hover:text-red-600/80 transition-colors">
+                       CLASSIFICATION: {a.risk}
+                    </p>
+                  </div>
 
-                <div className="flex items-center gap-4">
-                  <span className="text-red-600 font-black italic text-xs tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    VIEW DOSSIER
-                  </span>
-                  <ArrowRight className="text-red-600 group-hover:translate-x-2 transition-transform" size={20} />
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                  <div className="flex items-center gap-6 mt-6 md:mt-0">
+                    <div className="hidden md:flex flex-col items-end opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0">
+                      <span className="text-red-600 font-black italic text-[10px] tracking-widest uppercase">
+                        OPEN_DOSSIER
+                      </span>
+                      <span className="text-slate-600 font-mono text-[8px] uppercase tracking-widest">
+                        NODE_STABLE
+                      </span>
+                    </div>
+                    <div className="w-12 h-12 rounded-full border border-slate-800 flex items-center justify-center group-hover:border-red-600 group-hover:bg-red-600 transition-all duration-300">
+                      <ArrowRight className="text-slate-500 group-hover:text-white transition-colors" size={20} />
+                    </div>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       </main>
-      
-      {/* 📡 Integrating the ticker here for atmospheric consistency */}
+
+      {/* FOOTER ATMOSPHERE */}
+      <footer className="py-20 flex flex-col items-center gap-6 opacity-20 border-t border-slate-900 mx-6">
+        <Activity className="text-red-600 animate-pulse" />
+        <span className="font-mono text-[8px] tracking-[0.8em] text-slate-500 uppercase">
+          BMR_FORENSIC_ALPHA_SYNTHESIS // EST_2024
+        </span>
+      </footer>
+
+      {/* 📡 GLOBAL FEED: Vector 1 */}
       <LogicLeakTicker />
+      <Footer />
     </div>
   );
 }
