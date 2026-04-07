@@ -8,7 +8,7 @@ import Footer from '@/components/Footer';
 import LogicLeakTicker from '@/components/LogicLeakTicker';
 import { FileText, ArrowLeft, Activity, ShieldAlert, ExternalLink, Database, AlertTriangle } from "lucide-react";
 
-// --- 🛡️ 1. HARDENED CONTENT ARCHIVE (Keys must match index.tsx slugs) ---
+// --- 🛡️ 1. HARDENED CONTENT ARCHIVE (Stanford GSB & Salesforce Pivot) ---
 const CONTENT = {
   "chatbot-liability": {
     title: "THE AIR CANADA PRECEDENT",
@@ -35,10 +35,10 @@ const CONTENT = {
     failureType: "ALGORITHMIC_SHEAR",
     protocolFocus: "REWORK_TAX",
     subtitle: "AUTOPSY B-03",
-    analysis: "Zillow's 'Zestimate' algorithm overpaid for 7,000 homes, forcing a $304M write-down and 25% workforce reduction. Failure occurred when model logic became disconnected from volatile market data without human drift monitoring.",
+    analysis: "Stanford GSB researchers identified a 'terminal trade-off' in Zillow's iBuying model. The algorithm sacrificed precision for speed, leading to the 'Lemons Problem'—where the system systematically overpaid for low-quality assets. This resulted in a $304M write-down.",
     reworkTax: "$304M WRITE-DOWN",
-    sourceUrl: "https://www.cnn.com/2021/11/02/tech/zillow-ibuying-home-buying-ext/index.html",
-  sourceLabel: "VIEW_FISCAL_POST_MORTEM"
+    sourceUrl: "https://www.gsb.stanford.edu/insights/flip-flop-why-zillows-algorithmic-home-buying-venture-imploded",
+    sourceLabel: "VIEW_STANFORD_GSB_AUTOPSY"
   }
 };
 
@@ -46,12 +46,12 @@ export default function BriefingDocument() {
   const router = useRouter();
   const { slug } = router.query;
   
-  // 🛡️ Guard 1: Router Readiness (Prevents null query on first render)
+  // 🛡️ Guard 1: Router Readiness
   if (!router.isReady) return <div className="min-h-screen bg-[#020617]" />;
 
   const data = CONTENT[slug as keyof typeof CONTENT];
 
-  // 🛡️ Guard 2: Safety Render if Slug is Mismatched
+  // 🛡️ Guard 2: Safety Render (Mismatched Slug)
   if (!data) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center text-white font-mono uppercase tracking-[0.3em] text-[10px]">
@@ -72,7 +72,6 @@ export default function BriefingDocument() {
       <main className="pt-44 pb-24 px-6">
         <div className="max-w-5xl mx-auto space-y-12">
           
-          {/* 📡 NAVIGATION: VAULT RETURN */}
           <button 
             onClick={() => router.push('/briefings')} 
             className="flex items-center gap-2 text-slate-500 hover:text-red-600 transition-colors font-mono text-[10px] uppercase tracking-[0.3em] font-black cursor-pointer"
@@ -80,7 +79,6 @@ export default function BriefingDocument() {
             <ArrowLeft size={14} /> BACK TO VAULT
           </button>
           
-          {/* 📡 HEADER: FAILURE TAXONOMY */}
           <header className="space-y-4 border-l-4 border-red-600 pl-8">
             <div className="flex items-center gap-3 mb-2">
               <span className="text-[9px] font-mono text-red-600 uppercase tracking-widest font-black px-2 py-1 bg-red-600/10">
@@ -101,7 +99,6 @@ export default function BriefingDocument() {
           <div className="grid md:grid-cols-3 gap-8 pt-12 border-t border-slate-900">
             <div className="md:col-span-2 space-y-8">
               
-              {/* 📁 FORENSIC ANALYSIS BLOCK */}
               <div className="bg-slate-900/40 p-8 border border-slate-800 rounded-sm">
                 <h3 className="font-mono text-[10px] font-black uppercase text-red-600 tracking-widest flex items-center gap-2 mb-6">
                   <FileText size={14} /> BMR FORENSIC ANALYSIS
@@ -116,24 +113,22 @@ export default function BriefingDocument() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-[10px] font-mono text-red-600 underline tracking-[0.2em] hover:text-white transition-colors"
                 >
-                  VIEW_RAW_EVIDENCE_LOGS <ExternalLink size={10} />
+                  {data.sourceLabel} <ExternalLink size={10} />
                 </a>
               </div>
               
-              {/* 📁 PROTOCOL SUMMARY GRID */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className={`p-6 border transition-all ${data.protocolFocus === 'REWORK_TAX' ? 'bg-red-600/15 border-red-600' : 'bg-red-600/5 border-red-600/20'}`}>
                   <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest font-black block mb-2">REWORK TAX</span>
                   <div className="text-white font-black uppercase text-[11px] tracking-widest leading-tight">{data.reworkTax}</div>
                 </div>
-                <div className={`p-6 border transition-all ${data.protocolFocus === 'SHADOW_AI' ? 'bg-red-600/15 border-red-600' : 'bg-red-600/5 border-red-600/20'}`}>
-                  <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest font-black block mb-2">PRIMARY_VECTOR</span>
-                  <div className="text-white font-black uppercase text-[11px] tracking-widest leading-tight">{data.protocolFocus}</div>
+                <div className={`p-6 border transition-all bg-red-600/5 border-red-600/20`}>
+                  <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest font-black block mb-2">FAILURE_ARCHETYPE</span>
+                  <div className="text-white font-black uppercase text-[11px] tracking-widest leading-tight">{data.failureType}</div>
                 </div>
               </div>
 
-              {/* 📁 ACCESS REQUEST BANNER */}
-              <div className="bg-gradient-to-r from-slate-950 to-red-950/20 border-y-2 border-red-600/30 py-8 px-10 my-16 shadow-2xl relative overflow-hidden group">
+              <div className="bg-gradient-to-r from-slate-950 to-red-950/20 border-y-2 border-red-600/30 py-8 px-10 my-16 shadow-2xl relative overflow-hidden">
                 <span className="text-red-500 font-mono text-[10px] font-black tracking-[0.5em] uppercase">CLASSIFIED INTELLIGENCE EYES ONLY</span>
                 <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest leading-relaxed mt-4 italic font-bold">RECOVERY PROTOCOLS REDACTED PER BMR SECURITY PROTOCOL 7</p>
                 <button 
@@ -145,7 +140,6 @@ export default function BriefingDocument() {
               </div>
             </div>
 
-            {/* 📁 SIDEBAR ACTION STACK */}
             <div className="space-y-4">
               <div className="bg-slate-950 border border-slate-800 p-6 flex flex-col gap-4 sticky top-44">
                 <div className="flex items-center gap-2 mb-2">
@@ -153,7 +147,6 @@ export default function BriefingDocument() {
                    <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Dossier_Action_Node</span>
                 </div>
                 
-                {/* 🚀 CONVERSION CTA */}
                 <button 
                   onClick={() => router.push('/pulse-check')} 
                   className="w-full bg-white text-black py-5 font-black uppercase text-[10px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all shadow-xl cursor-pointer"
@@ -163,14 +156,13 @@ export default function BriefingDocument() {
                    "PREVENT FINANCIAL LOSSES"}
                 </button>
 
-                {/* 🚀 EXTERNAL PROOF */}
                 <a 
                   href={data.sourceUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="w-full bg-red-600/10 text-red-500 py-4 font-black uppercase text-[9px] tracking-[0.2em] hover:bg-red-600 hover:text-white flex items-center justify-center gap-2 transition-all border border-red-600/30 mt-3"
+                  className="w-full bg-red-600/10 text-red-500 py-4 font-black uppercase text-[9px] tracking-[0.2em] hover:bg-red-600 hover:text-white flex items-center justify-center gap-2 transition-all border border-red-600/30 mt-3 font-mono"
                 >
-                  {data.sourceLabel} <ExternalLink size={12} />
+                  EXTERNAL_PROOF <ExternalLink size={12} />
                 </a>
               </div>
             </div>
