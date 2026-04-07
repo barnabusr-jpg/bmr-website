@@ -207,29 +207,30 @@ export default function ConsolidatedDiagnostic() {
     };
   };
 
-  // 🛡️ RE-ALIGNED TRIGGER: Connects the intake form to SendGrid
+  // 🛡️ RE-ALIGNED TRIGGER: Connects the intake form to the physical API
   const triggerForensicScan = async (nextStep: string) => {
     if (step === "intake") {
       setIsLoading(true);
       setValidationError(null);
 
       try {
+        // 📡 PHYSICAL HANDSHAKE: Fires the SendGrid POST request
         const res = await fetch('/api/auth/generate-key', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ email: email }),
         });
 
         if (res.ok) {
-          console.log("HANDSHAKE_SUCCESS: Key_Dispatched");
-          // The ForensicLoader handles timing, then calls finalizeStepTransition
+           console.log("HANDSHAKE_READY: Node Authorized");
+           // Success continues to step transition via loader
         } else {
           setIsLoading(false);
-          setValidationError("TRANSMISSION_SHEAR: SENDGRID_REJECTED");
+          setValidationError("TRANSMISSION_REJECTED: CHECK_EMAIL_NODE");
         }
       } catch (err) {
         setIsLoading(false);
-        setValidationError("LOGIC_SHEAR: CONNECTION_FAILED");
+        setValidationError("LOGIC_SHEAR: NETWORK_CONNECTION_FAILED");
       }
     } else {
       setIsLoading(true);
@@ -247,7 +248,7 @@ export default function ConsolidatedDiagnostic() {
   const Triage = (
     <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 px-4">
       <div className="text-center">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
+        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none tracking-tighter">THE LOGIC <span className="text-red-600 uppercase">DECAY SCREENING</span></h1>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {sectors.map((s) => (
@@ -304,7 +305,12 @@ export default function ConsolidatedDiagnostic() {
         <div className="h-4 flex items-center justify-center">
             {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black tracking-[0.3em] italic animate-pulse">⚠️ {validationError}</p>}
         </div>
-        <button disabled={!!validationError || !email || !confirmEmail || !entityName || !operatorName} onClick={() => triggerForensicScan("audit")} className="disabled:opacity-20 disabled:cursor-not-allowed w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl">Initialize Audit Observation</button>
+        <button 
+          onClick={() => triggerForensicScan("audit")} 
+          className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl"
+        >
+          Initialize Audit Observation
+        </button>
       </div>
     </motion.div>
   );
