@@ -153,8 +153,6 @@ export default function ConsolidatedDiagnostic() {
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [hoveredProtocolX, setHoveredProtocolX] = useState(false);
-  
-  // 🛡️ VECTOR 5 STATE: FORENSIC SCANNING
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
@@ -169,15 +167,12 @@ export default function ConsolidatedDiagnostic() {
 
   if (!mounted) return null;
 
-  // --- 🛡️ NON-LINEAR CALCULATION ENGINE ---
   const calculateSynthesis = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
     const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
     const coeff = sectorWeights[sector] || 1.0;
-    
     const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
     const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
-    
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
 
     return {
@@ -212,16 +207,38 @@ export default function ConsolidatedDiagnostic() {
     };
   };
 
-  // 🛡️ FORENSIC SCAN TRIGGER
-  const triggerForensicScan = (nextStep: string) => {
-    setIsLoading(true);
-    // Loader handles timing via onComplete
+  // 🛡️ RE-ALIGNED TRIGGER: Connects the intake form to SendGrid
+  const triggerForensicScan = async (nextStep: string) => {
+    if (step === "intake") {
+      setIsLoading(true);
+      setValidationError(null);
+
+      try {
+        const res = await fetch('/api/auth/generate-key', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email }),
+        });
+
+        if (res.ok) {
+          console.log("HANDSHAKE_SUCCESS: Key_Dispatched");
+          // The ForensicLoader handles timing, then calls finalizeStepTransition
+        } else {
+          setIsLoading(false);
+          setValidationError("TRANSMISSION_SHEAR: SENDGRID_REJECTED");
+        }
+      } catch (err) {
+        setIsLoading(false);
+        setValidationError("LOGIC_SHEAR: CONNECTION_FAILED");
+      }
+    } else {
+      setIsLoading(true);
+    }
   };
 
   const finalizeStepTransition = () => {
-    // If coming from Audit, go to Verdict. If coming from Intake, go to Audit.
     if (step === "intake") setStep("audit");
-    if (step === "audit") setStep("verdict");
+    else if (step === "audit") setStep("verdict");
     setIsLoading(false);
   };
 
@@ -418,7 +435,6 @@ export default function ConsolidatedDiagnostic() {
 
   return (
     <div className="max-w-6xl mx-auto py-20 px-4 relative">
-      <Header />
       <AnimatePresence mode="wait">
         {isLoading && <ForensicLoader onComplete={finalizeStepTransition} />}
       </AnimatePresence>
@@ -430,7 +446,6 @@ export default function ConsolidatedDiagnostic() {
         {step === 'verdict' && Verdict}
       </AnimatePresence>
       <LogicLeakTicker />
-      <Footer />
     </div>
   );
 }
