@@ -6,68 +6,123 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LogicLeakTicker from "@/components/LogicLeakTicker";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ShieldAlert, Activity } from "lucide-react";
+import { ArrowRight, ShieldAlert, Activity, Lock, Unlock, Mail, DollarSign, UserCog, Shield, Gavel } from "lucide-react";
+
+// --- 🛡️ THE FOUR HORSEMEN (HEROES) ---
+const HERO_BRIEFINGS = [
+  { slug: "lyft-logic-shear", title: "The Lyft Earnings Phantom", date: "Feb 13, 2024", risk: "TERMINAL", sector: "FINANCE", type: "ALGORITHMIC_SHEAR", persona: "CFO", hook: "A single unverified data point + high-speed bots = $2B market cap loss." },
+  { slug: "clinical-logic-shear", title: "UnitedHealth AI Care Denial", date: "Apr 02, 2026", risk: "TERMINAL", sector: "HEALTHCARE", type: "EXPERTISE_SHEAR", persona: "COO", hook: "AI overrode clinical judgment, causing patient harm and $2.4B in operational fallout." },
+  { slug: "defense-intelligence-shear", title: "Pentagon 'Shadow' LLM Leak", date: "Aug 09, 2024", risk: "TERMINAL", sector: "DEFENSE", type: "CLASSIFIED_EXFILTRATION", persona: "CSO", hook: "A 'helpful' AI summarization tool exfiltrated classified data via public-facing LLM endpoints." },
+  { slug: "chatbot-liability", title: "The Air Canada Precedent", date: "Feb 20, 2024", risk: "CRITICAL", sector: "TRAVEL", type: "HALLUCINATION_SHEAR", persona: "GC", hook: "The bot’s hallucination became a binding legal contract, creating an $812K liability for the carrier." }
+];
+
+// --- 🛡️ THE ENCRYPTED ARCHIVE (VAULT) ---
+const VAULT_BRIEFINGS = [
+  { slug: "federal-benefit-shear", title: "IRS Tax-Logic Hallucination", date: "Feb 14, 2025", risk: "TERMINAL", sector: "GOVERNMENT", type: "SOVEREIGN_SHEAR" },
+  { slug: "infrastructure-logic-shear", title: "Tokyo Logistics Blackout", date: "Dec 12, 2025", risk: "TERMINAL", sector: "INFRASTRUCTURE", type: "SYSTEMIC_SHEAR" },
+  { slug: "judicial-logic-shear", title: "Oregon Judicial Sanction", date: "Mar 25, 2026", risk: "CRITICAL", sector: "LEGAL", type: "FIDUCIARY_SHEAR" },
+  { slug: "governance-logic-shear", title: "McDonald's McHire Breach", date: "Jul 10, 2025", risk: "CRITICAL", sector: "GOVERNANCE", type: "GOVERNANCE_SHEAR" },
+  { slug: "utility-grid-hallucination", title: "ERCOT Load-Balancing Drift", date: "May 19, 2024", risk: "TERMINAL", sector: "UTILITIES", type: "PREDICTIVE_DRIFT" },
+  { slug: "salesforce-failure", title: "Salesforce Data Exfiltration", date: "Mar 15, 2024", risk: "CRITICAL", sector: "TECH/SAAS", type: "SHADOW_AI_SHEAR" }
+];
+
+const PERSONA_ICONS = {
+  CFO: <DollarSign size={20} className="text-red-600" />,
+  COO: <UserCog size={20} className="text-red-600" />,
+  CSO: <Shield size={20} className="text-red-600" />,
+  GC: <Gavel size={20} className="text-red-600" />,
+};
 
 export default function BriefingsIndex() {
   const [mounted, setMounted] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => { setMounted(true); }, []);
 
-  const articles = [
-    { slug: "chatbot-liability", title: "The Air Canada Precedent", date: "Feb 20, 2024", risk: "HALLUCINATION_SHEAR" },
-    { slug: "salesforce-failure", title: "Salesforce AI Data Exfiltration", date: "Mar 15, 2024", risk: "SHADOW_AI_SHEAR" },
-    { slug: "lyft-logic-shear", title: "The Lyft Earnings Phantom", date: "Feb 13, 2024", risk: "ALGORITHMIC_SHEAR" },
-    { slug: "clinical-logic-shear", title: "UnitedHealth AI Care Denial", date: "Apr 02, 2026", risk: "EXPERTISE_SHEAR" },
-    { slug: "judicial-logic-shear", title: "Oregon Judicial Sanction", date: "Mar 25, 2026", risk: "FIDUCIARY_SHEAR" },
-    { slug: "governance-logic-shear", title: "McDonald's McHire Breach", date: "Jul 10, 2025", risk: "GOVERNANCE_SHEAR" },
-    { slug: "infrastructure-logic-shear", title: "Tokyo Logistics Blackout", date: "Dec 12, 2025", risk: "SYSTEMIC_SHEAR" },
-    { slug: "utility-grid-hallucination", title: "ERCOT Load-Balancing Drift", date: "May 19, 2024", risk: "PREDICTIVE_DRIFT" },
-    { slug: "federal-benefit-shear", title: "IRS Tax-Logic Hallucination", date: "Feb 14, 2025", risk: "SOVEREIGN_SHEAR" },
-    { slug: "defense-intelligence-shear", title: "Pentagon 'Shadow' LLM Leak", date: "Aug 09, 2024", risk: "CLASSIFIED_EXFILTRATION" }
-  ];
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.includes("@")) return;
+    setIsSubmitting(true);
+    // Simulate API Log
+    setTimeout(() => {
+      setIsUnlocked(true);
+      setIsSubmitting(false);
+    }, 1200);
+  };
 
   if (!mounted) return <div className="min-h-screen bg-[#020617]" />;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 overflow-x-hidden">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans">
       <Header />
       <main className="pt-48 px-6 container mx-auto pb-32">
+        {/* HEADER */}
         <div className="max-w-5xl mb-20 space-y-4">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 text-red-600 font-mono text-[10px] font-black tracking-[0.4em] uppercase">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 text-red-600 font-mono text-[10px] font-black tracking-[0.4em] uppercase">
             <ShieldAlert size={14} /> BMR_FORENSIC_VAULT
           </motion.div>
-          <motion.h1 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">
-            Forensic <span className="text-red-600">Briefings</span>
-          </motion.h1>
-          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="text-slate-500 font-mono text-[10px] uppercase tracking-widest max-w-xl leading-relaxed italic">SECURE THE SHEAR BETWEEN HUMAN OVERSIGHT AND ALGORITHMIC EXECUTION ACROSS ALL SECTORS.</motion.p>
+          <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">Forensic <span className="text-red-600">Briefings</span></h1>
         </div>
 
-        <div className="grid gap-4 max-w-5xl">
-          <AnimatePresence>
-            {articles.map((a, index) => (
-              <motion.div key={a.slug} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }}>
-                <Link href={`/briefings/${a.slug}`} className="group relative p-10 border border-slate-900 bg-slate-950/50 hover:border-red-600/50 transition-all flex flex-col md:flex-row md:justify-between md:items-center overflow-hidden block">
-                  <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-red-600 transition-all duration-500" />
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-4">
-                      <span className="text-red-600 font-mono text-[9px] uppercase font-black tracking-widest">{a.date}</span>
-                      <span className="text-slate-600 font-mono text-[9px] uppercase tracking-widest font-bold">RISK_LEVEL: TERMINAL</span>
+        {/* HERO CARDS */}
+        <div className="grid gap-6 max-w-5xl mb-16">
+          {HERO_BRIEFINGS.map((a, index) => (
+            <Link key={a.slug} href={`/briefings/${a.slug}`} className="group relative p-10 border border-slate-900 bg-slate-950/50 hover:border-red-600 transition-all flex flex-col md:flex-row md:justify-between items-start md:items-center">
+              <div className="space-y-4 max-w-2xl">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-red-600/10 border border-red-600/30">{PERSONA_ICONS[a.persona as keyof typeof PERSONA_ICONS]}</div>
+                  <span className="text-red-600 font-mono text-[9px] font-black uppercase tracking-widest">{a.date}</span>
+                  <span className="bg-red-600 text-white text-[8px] font-mono px-2 py-0.5 font-black uppercase tracking-widest">{a.risk}</span>
+                </div>
+                <h2 className="text-3xl md:text-5xl font-black uppercase italic text-slate-500 group-hover:text-white transition-colors tracking-tighter">{a.title}</h2>
+                <p className="text-slate-400 font-bold uppercase text-xs italic tracking-tight group-hover:text-slate-200">{a.hook}</p>
+              </div>
+              <ArrowRight size={32} className="text-slate-800 group-hover:text-red-600 mt-6 md:mt-0 transition-colors" />
+            </Link>
+          ))}
+        </div>
+
+        {/* THE VAULT GATE */}
+        <div className="max-w-5xl border-t border-slate-900 pt-20">
+          {!isUnlocked ? (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center text-center space-y-8">
+              <div className="space-y-2">
+                <Lock size={32} className="mx-auto text-slate-700 mb-4" />
+                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-slate-400">Restricted Archive Access</h3>
+                <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest max-w-md mx-auto">Provide operator credentials to unlock the remaining 6+ sector autopsies (Infrastructure, Federal, Utilities).</p>
+              </div>
+              <form onSubmit={handleUnlock} className="flex flex-col md:flex-row gap-2 w-full max-w-md">
+                <input 
+                  type="email" required placeholder="OPERATOR_EMAIL@FIRM.COM" value={email} onChange={(e) => setEmail(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 px-6 py-4 text-[10px] font-mono text-white focus:border-red-600 outline-none flex-grow tracking-widest"
+                />
+                <button type="submit" disabled={isSubmitting} className="bg-red-600 text-white px-8 py-4 font-black font-mono text-[10px] uppercase tracking-widest hover:bg-white hover:text-black transition-all">
+                  {isSubmitting ? "VERIFYING..." : "UNLOCK_VAULT"}
+                </button>
+              </form>
+            </motion.div>
+          ) : (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
+              <div className="flex items-center gap-3 text-red-600 font-mono text-[10px] font-black tracking-[0.4em] uppercase mb-8">
+                <Unlock size={14} /> VAULT_ACCESS_GRANTED // SESSION_ACTIVE
+              </div>
+              {VAULT_BRIEFINGS.map((a) => (
+                <Link key={a.slug} href={`/briefings/${a.slug}`} className="flex justify-between items-center p-6 border border-slate-900 bg-slate-950/30 hover:border-red-600/30 transition-all group">
+                  <div className="space-y-1">
+                    <div className="flex gap-4 items-center font-mono text-[9px] uppercase font-bold text-slate-600">
+                      <span>{a.date}</span><span className="text-red-600">{a.risk}</span><span>{a.sector}</span>
                     </div>
-                    <h2 className="text-3xl md:text-5xl font-black uppercase italic text-slate-500 group-hover:text-white transition-colors duration-300 tracking-tighter leading-none">{a.title}</h2>
-                    <div className="flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
-                      <p className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.2em] group-hover:text-red-600 transition-colors">CLASSIFICATION: {a.risk}</p>
-                    </div>
+                    <h3 className="text-xl font-black uppercase italic group-hover:text-white text-slate-500">{a.title}</h3>
                   </div>
-                  <div className="w-14 h-14 rounded-none border border-slate-800 flex items-center justify-center group-hover:border-red-600 group-hover:bg-red-600 transition-all duration-300">
-                    <ArrowRight className="text-slate-500 group-hover:text-white transition-colors" size={24} />
-                  </div>
+                  <ArrowRight size={16} className="text-slate-800 group-hover:text-red-600" />
                 </Link>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+              ))}
+            </motion.div>
+          )}
         </div>
       </main>
-      <footer className="py-24 flex flex-col items-center gap-6 opacity-20 border-t border-slate-900 mx-6"><Activity className="text-red-600 animate-pulse" /><span className="font-mono text-[8px] tracking-[0.8em] text-slate-500 uppercase">BMR_FORENSIC_ALPHA_SYNTHESIS</span></footer>
       <LogicLeakTicker /><Footer />
     </div>
   );
