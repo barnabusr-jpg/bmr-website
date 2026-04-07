@@ -37,8 +37,8 @@ const CONTENT = {
     subtitle: "AUTOPSY B-03",
     analysis: "Zillow's 'Zestimate' algorithm overpaid for 7,000 homes, forcing a $304M write-down and 25% workforce reduction. Failure occurred when model logic became disconnected from volatile market data without human drift monitoring.",
     reworkTax: "$304M WRITE-DOWN",
-    sourceUrl: "https://www.wired.com/story/zillow-ibuying-algorithm/",
-    sourceLabel: "VIEW_WIRED_AUTOPSY"
+    sourceUrl: "https://www.cnn.com/2021/11/02/tech/zillow-ibuying-home-buying-ext/index.html",
+  sourceLabel: "VIEW_FISCAL_POST_MORTEM"
   }
 };
 
