@@ -15,7 +15,7 @@ export default function BriefingsIndex() {
     setMounted(true);
   }, []);
 
-  // 🛡️ DATA ANCHOR: ENSURE SLUGS MATCH [SLUG].TSX CONTENT KEYS
+  // 🛡️ DATA ANCHOR: ENSURE ALL 4 NODES ARE PRESENT & MATCH [SLUG].TSX
   const articles = [
     { 
       slug: "chatbot-liability", 
@@ -46,12 +46,12 @@ export default function BriefingsIndex() {
   if (!mounted) return <div className="min-h-screen bg-[#020617]" />;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 overflow-x-hidden">
       <Header />
       
       <main className="pt-48 px-6 container mx-auto pb-32">
-        {/* HEADER SECTION */}
-        <div className="max-w-5xl mb-16 space-y-4">
+        {/* --- FORENSIC HEADER --- */}
+        <div className="max-w-5xl mb-20 space-y-4">
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -78,7 +78,7 @@ export default function BriefingsIndex() {
           </motion.p>
         </div>
 
-        {/* DOSSIER LIST */}
+        {/* --- DOSSIER LIST --- */}
         <div className="grid gap-4 max-w-5xl">
           <AnimatePresence>
             {articles.map((a, index) => (
@@ -95,36 +95,40 @@ export default function BriefingsIndex() {
                   {/* LEFT TRACE ACCENT */}
                   <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-red-600 transition-all duration-500" />
                   
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-4">
                       <span className="text-red-600 font-mono text-[9px] uppercase font-black tracking-widest">
                         {a.date}
                       </span>
-                      <span className="text-slate-700 font-mono text-[9px] uppercase tracking-widest font-bold">
+                      <div className="h-px w-8 bg-slate-800" />
+                      <span className="text-slate-600 font-mono text-[9px] uppercase tracking-widest font-bold">
                         RISK_LEVEL: CRITICAL
                       </span>
                     </div>
                     
-                    <h2 className="text-3xl md:text-5xl font-black uppercase italic text-slate-500 group-hover:text-white transition-colors duration-300 tracking-tighter">
+                    <h2 className="text-3xl md:text-5xl font-black uppercase italic text-slate-500 group-hover:text-white transition-colors duration-300 tracking-tighter leading-none">
                       {a.title}
                     </h2>
                     
-                    <p className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.2em] group-hover:text-red-600/80 transition-colors">
-                       CLASSIFICATION: {a.risk}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />
+                      <p className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.2em] group-hover:text-red-600 transition-colors">
+                        CLASSIFICATION: {a.risk}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-6 mt-6 md:mt-0">
+                  <div className="flex items-center gap-6 mt-8 md:mt-0">
                     <div className="hidden md:flex flex-col items-end opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-4 group-hover:translate-x-0">
                       <span className="text-red-600 font-black italic text-[10px] tracking-widest uppercase">
                         OPEN_DOSSIER
                       </span>
-                      <span className="text-slate-600 font-mono text-[8px] uppercase tracking-widest">
-                        NODE_STABLE
+                      <span className="text-slate-700 font-mono text-[8px] uppercase tracking-widest">
+                        ACCESS_GRANTED
                       </span>
                     </div>
-                    <div className="w-12 h-12 rounded-full border border-slate-800 flex items-center justify-center group-hover:border-red-600 group-hover:bg-red-600 transition-all duration-300">
-                      <ArrowRight className="text-slate-500 group-hover:text-white transition-colors" size={20} />
+                    <div className="w-14 h-14 rounded-none border border-slate-800 flex items-center justify-center group-hover:border-red-600 group-hover:bg-red-600 transition-all duration-300">
+                      <ArrowRight className="text-slate-500 group-hover:text-white transition-colors" size={24} />
                     </div>
                   </div>
                 </Link>
@@ -134,15 +138,15 @@ export default function BriefingsIndex() {
         </div>
       </main>
 
-      {/* FOOTER ATMOSPHERE */}
-      <footer className="py-20 flex flex-col items-center gap-6 opacity-20 border-t border-slate-900 mx-6">
+      {/* --- VAULT FOOTER --- */}
+      <footer className="py-24 flex flex-col items-center gap-6 opacity-20 border-t border-slate-900 mx-6">
         <Activity className="text-red-600 animate-pulse" />
         <span className="font-mono text-[8px] tracking-[0.8em] text-slate-500 uppercase">
           BMR_FORENSIC_ALPHA_SYNTHESIS // EST_2024
         </span>
       </footer>
 
-      {/* 📡 GLOBAL FEED: Vector 1 */}
+      {/* 📡 PERSISTENT GLOBAL FEED */}
       <LogicLeakTicker />
       <Footer />
     </div>
