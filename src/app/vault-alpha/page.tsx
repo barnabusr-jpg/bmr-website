@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+// 🛡️ RE-ALIGNED PATHS: Points to the components folder using the '@' alias
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ConsolidatedDiagnostic from "@/components/diagnostic/ConsolidatedDiagnostic";
@@ -8,6 +9,7 @@ import ConsolidatedDiagnostic from "@/components/diagnostic/ConsolidatedDiagnost
 export default function VaultAlpha() {
   const [mounted, setMounted] = useState(false);
 
+  // HYDRATION GUARD: Prevents the "Text content does not match" error
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -19,6 +21,7 @@ export default function VaultAlpha() {
       <Header />
       <main className="flex-grow pt-48 pb-32 px-6">
         <div className="max-w-5xl mx-auto">
+          {/* 🛡️ This component is inside src/components/diagnostic/ */}
           <ConsolidatedDiagnostic />
         </div>
       </main>
