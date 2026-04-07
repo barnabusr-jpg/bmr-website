@@ -94,7 +94,7 @@ export default function BriefingDocument() {
               <div className="bg-slate-900/40 p-8 border border-slate-800 rounded-sm">
                 <h3 className="font-mono text-[10px] font-black uppercase text-red-600 tracking-widest flex items-center gap-2 mb-6"><FileText size={14} /> BMR FORENSIC ANALYSIS</h3>
                 <p className="text-slate-300 leading-relaxed font-bold uppercase text-sm tracking-tight italic mb-6">{data.analysis}</p>
-                <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[10px] font-mono text-red-600 underline tracking-[0.2em] hover:text-white transition-colors">{data.sourceLabel} <ExternalLink size={10} /></a>
+                <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-[10px] font-mono text-red-600 underline tracking-[0.2em] hover:text-white transition-colors">SOURCE_EVIDENCE <ExternalLink size={10} /></a>
               </div>
               
               <div className="bg-gradient-to-r from-slate-950 to-red-950/20 border-y-2 border-red-600/30 py-8 px-10 my-16 shadow-2xl relative overflow-hidden">
@@ -110,7 +110,7 @@ export default function BriefingDocument() {
                 <button onClick={() => router.push('/pulse-check')} className="w-full bg-white text-black py-5 font-black uppercase text-[10px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all shadow-xl">
                   {data.protocolFocus === "DELTA_GAP" ? "PREVENT FISCAL SHEAR" : data.failureType === "SHADOW_AI_SHEAR" ? "PREVENT DATA BREACHES" : "SHIELD CARE INTEGRITY"}
                 </button>
-                <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-red-600/10 text-red-500 py-4 font-black uppercase text-[9px] tracking-[0.2em] hover:bg-red-600 hover:text-white flex items-center justify-center gap-2 transition-all border border-red-600/30 mt-3 font-mono">EXTERNAL_PROOF <ExternalLink size={12} /></a>
+                <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="w-full bg-red-600/10 text-red-500 py-4 font-black uppercase text-[9px] tracking-[0.2em] hover:bg-red-600 hover:text-white flex items-center justify-center gap-2 transition-all border border-red-600/30 mt-3 font-mono">{data.sourceLabel} <ExternalLink size={12} /></a>
               </div>
             </div>
           </div>
