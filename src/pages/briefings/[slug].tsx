@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { useRouter } from 'next/router'; // 👈 FIX: Added missing import
+import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -111,7 +111,7 @@ const CONTENT = {
   }
 };
 
-// 🛡️ FIX: Added getStaticPaths to tell Next.js which pages to build
+// Next.js static build configuration
 export async function getStaticPaths() {
   const paths = Object.keys(CONTENT).map((slug) => ({
     params: { slug },
@@ -119,7 +119,6 @@ export async function getStaticPaths() {
   return { paths, fallback: false };
 }
 
-// 🛡️ FIX: Added getStaticProps to fetch the data at build time
 export async function getStaticProps({ params }: { params: { slug: string } }) {
   const data = CONTENT[params.slug as keyof typeof CONTENT];
   return { props: { data } };
@@ -127,13 +126,8 @@ export async function getStaticProps({ params }: { params: { slug: string } }) {
 
 export default function BriefingDocument({ data }: { data: any }) {
   const router = useRouter();
-  
-  // Handled by getStaticProps, but fallback for safety
-  if (!data) return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center font-mono text-red-600">
-      DOSSIER_NOT_FOUND
-    </div>
-  );
+
+  if (!data) return <div className="min-h-screen bg-[#020617]" />;
 
   return (
     <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans">
@@ -150,44 +144,56 @@ export default function BriefingDocument({ data }: { data: any }) {
             <span className="text-slate-500">PRIMARY_PROTOCOL: {data.protocolFocus}</span>
           </div>
           <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">{data.title}</h1>
+          <p className="text-red-600 font-mono text-[10px] font-black tracking-[0.3em] uppercase">{data.subtitle}</p>
         </header>
 
         <div className="grid md:grid-cols-3 gap-12 pt-12 border-t border-slate-900">
           <div className="md:col-span-2 space-y-8">
             <div className="bg-slate-900/40 p-10 border border-slate-800 rounded-sm">
-              <h3 className="font-mono text-[10px] font-black uppercase text-red-600 tracking-widest mb-6">FORENSIC ANALYSIS</h3>
+              <h3 className="font-mono text-[10px] font-black uppercase text-red-600 tracking-widest flex items-center gap-2 mb-6">
+                <FileText size={14} /> FORENSIC ANALYSIS
+              </h3>
               <p className="text-slate-200 leading-relaxed font-bold uppercase text-lg italic">{data.analysis}</p>
+              <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 mt-6 text-[10px] font-mono text-red-600 underline tracking-[0.2em] hover:text-white transition-colors uppercase">
+                {data.sourceLabel} <ExternalLink size={10} />
+              </a>
             </div>
 
             <div className="bg-red-600/5 border border-red-600/20 p-10 space-y-6">
               <h4 className="text-white font-black italic text-2xl uppercase tracking-tighter">Request Board-Level Indictment</h4>
               <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest leading-relaxed">
-                Download the full technical autopsy, rework tax breakdown, and the recovery protocol for this specific failure archetype.
+                Generate the full technical autopsy, rework tax breakdown, and specific recovery protocols for this failure.
               </p>
               <button onClick={() => router.push('/pulse-check')} className="bg-red-600 text-white px-8 py-4 font-black font-mono text-[11px] uppercase tracking-widest hover:bg-white hover:text-black transition-all">
-                DOWNLOAD_AUTOPSY_PDF
+                GENERATE_PDF_DOSSIER
               </button>
             </div>
           </div>
 
           <aside className="space-y-6">
-            <div className="bg-slate-950 border border-slate-800 p-8 sticky top-44 space-y-6">
+            <div className="bg-slate-950 border border-slate-800 p-8 sticky top-44 space-y-6 shadow-2xl">
+              <div className="flex items-center gap-2"><Activity size={12} className="text-red-600 animate-pulse" /><span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Dossier_Action_Node</span></div>
+              
               <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest italic leading-relaxed">
                 ESTIMATED REWORK TAX:<br />
                 <span className="text-red-600 font-black not-italic text-sm tracking-normal">{data.reworkTax}</span>
               </div>
+              
               <div className="h-px bg-slate-900" />
-              <button onClick={() => router.push('/pulse-check')} className="w-full bg-white text-black py-5 font-black uppercase text-[10px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all">
+              
+              <button onClick={() => router.push('/pulse-check')} className="w-full bg-white text-black py-5 font-black uppercase text-[9px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all">
                 RUN SHEAR-DIAGNOSTIC
               </button>
-              <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="block text-center text-[9px] font-mono text-slate-600 underline uppercase tracking-widest hover:text-red-600 transition-colors">
-                {data.sourceLabel}
-              </a>
+              
+              <button onClick={() => router.push('/pulse-check')} className="w-full bg-slate-900 border border-slate-700 text-slate-400 py-5 font-black uppercase text-[9px] tracking-[0.3em] hover:bg-red-600 hover:text-white hover:border-red-600 transition-all flex items-center justify-center gap-2">
+                <Download size={14} /> DOWNLOAD_INDICTMENT
+              </button>
             </div>
           </aside>
         </div>
       </main>
-      <LogicLeakTicker /><Footer />
+      <LogicLeakTicker />
+      <Footer />
     </div>
   );
 }
