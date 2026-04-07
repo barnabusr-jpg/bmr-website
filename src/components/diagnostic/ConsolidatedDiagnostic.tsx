@@ -154,6 +154,7 @@ export default function ConsolidatedDiagnostic() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [hoveredProtocolX, setHoveredProtocolX] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [apiSuccess, setApiSuccess] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -207,14 +208,14 @@ export default function ConsolidatedDiagnostic() {
     };
   };
 
-  // 🛡️ RE-ALIGNED TRIGGER: Connects the intake form to the physical API
+  // 🛡️ SYNCED TRIGGER: Now waits for the server response before moving UI
   const triggerForensicScan = async (nextStep: string) => {
     if (step === "intake") {
       setIsLoading(true);
       setValidationError(null);
+      setApiSuccess(false);
 
       try {
-        // 📡 PHYSICAL HANDSHAKE: Fires the SendGrid POST request
         const res = await fetch('/api/auth/generate-key', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -222,15 +223,16 @@ export default function ConsolidatedDiagnostic() {
         });
 
         if (res.ok) {
-           console.log("HANDSHAKE_READY: Node Authorized");
-           // Success continues to step transition via loader
+           console.log("FORENSIC_STATUS: 200_OK");
+           setApiSuccess(true); 
+           // Transition happens after loader finishes
         } else {
           setIsLoading(false);
-          setValidationError("TRANSMISSION_REJECTED: CHECK_EMAIL_NODE");
+          setValidationError("TRANSMISSION_SHEAR: API_ERROR");
         }
       } catch (err) {
         setIsLoading(false);
-        setValidationError("LOGIC_SHEAR: NETWORK_CONNECTION_FAILED");
+        setValidationError("LOGIC_FAULT: CONNECTION_LOST");
       }
     } else {
       setIsLoading(true);
@@ -238,8 +240,11 @@ export default function ConsolidatedDiagnostic() {
   };
 
   const finalizeStepTransition = () => {
-    if (step === "intake") setStep("audit");
-    else if (step === "audit") setStep("verdict");
+    if (step === "intake" && apiSuccess) {
+      setStep("audit");
+    } else if (step === "audit") {
+      setStep("verdict");
+    }
     setIsLoading(false);
   };
 
@@ -248,7 +253,7 @@ export default function ConsolidatedDiagnostic() {
   const Triage = (
     <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 px-4">
       <div className="text-center">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none tracking-tighter">THE LOGIC <span className="text-red-600 uppercase">DECAY SCREENING</span></h1>
+        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {sectors.map((s) => (
