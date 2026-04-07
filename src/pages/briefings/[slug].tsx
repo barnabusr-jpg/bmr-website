@@ -6,9 +6,9 @@ import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import LogicLeakTicker from '@/components/LogicLeakTicker';
-import { FileText, ArrowLeft, Activity, ShieldAlert, ExternalLink, Database, AlertTriangle } from "lucide-react";
+import { FileText, ArrowLeft, Activity, ShieldAlert, ExternalLink, Database, AlertTriangle, Stethoscope } from "lucide-react";
 
-// --- 🛡️ 1. HARDENED CONTENT ARCHIVE (Stanford GSB & Salesforce Pivot) ---
+// --- 🛡️ 1. HARDENED CONTENT ARCHIVE (Healthcare + Stanford + Salesforce) ---
 const CONTENT = {
   "chatbot-liability": {
     title: "THE AIR CANADA PRECEDENT",
@@ -39,6 +39,16 @@ const CONTENT = {
     reworkTax: "$304M WRITE-DOWN",
     sourceUrl: "https://www.gsb.stanford.edu/insights/flip-flop-why-zillows-algorithmic-home-buying-venture-imploded",
     sourceLabel: "VIEW_STANFORD_GSB_AUTOPSY"
+  },
+  "clinical-logic-shear": {
+    title: "UNITEDHEALTH AI CARE DENIAL",
+    failureType: "ALGORITHMIC_LIMIT_DENIAL",
+    protocolFocus: "EXPERTISE_DEBT",
+    subtitle: "AUTOPSY B-04",
+    analysis: "UnitedHealth Group's 'nH Predict' AI algorithm allegedly operated with a 90% error rate in post-acute care denials. The model overrode physician determinations with population-based 'prediction stays,' triggering a massive 2026 federal discovery order and billions in legal exposure.",
+    reworkTax: "$2.4B OPERATIONAL IMPACT",
+    sourceUrl: "https://insurancenewsnet.com/innarticle/judge-gives-unitedhealth-until-april-29-to-hand-over-ai-claim-denial-docs",
+    sourceLabel: "VIEW_LITIGATION_AUTOPSY"
   }
 };
 
@@ -46,12 +56,10 @@ export default function BriefingDocument() {
   const router = useRouter();
   const { slug } = router.query;
   
-  // 🛡️ Guard 1: Router Readiness
   if (!router.isReady) return <div className="min-h-screen bg-[#020617]" />;
 
   const data = CONTENT[slug as keyof typeof CONTENT];
 
-  // 🛡️ Guard 2: Safety Render (Mismatched Slug)
   if (!data) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center text-white font-mono uppercase tracking-[0.3em] text-[10px]">
@@ -113,7 +121,7 @@ export default function BriefingDocument() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 text-[10px] font-mono text-red-600 underline tracking-[0.2em] hover:text-white transition-colors"
                 >
-                  {data.sourceLabel} <ExternalLink size={10} />
+                  SOURCE_EVIDENCE <ExternalLink size={10} />
                 </a>
               </div>
               
@@ -122,9 +130,9 @@ export default function BriefingDocument() {
                   <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest font-black block mb-2">REWORK TAX</span>
                   <div className="text-white font-black uppercase text-[11px] tracking-widest leading-tight">{data.reworkTax}</div>
                 </div>
-                <div className={`p-6 border transition-all bg-red-600/5 border-red-600/20`}>
-                  <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest font-black block mb-2">FAILURE_ARCHETYPE</span>
-                  <div className="text-white font-black uppercase text-[11px] tracking-widest leading-tight">{data.failureType}</div>
+                <div className={`p-6 border transition-all ${data.protocolFocus === 'EXPERTISE_DEBT' ? 'bg-red-600/15 border-red-600' : 'bg-red-600/5 border-red-600/20'}`}>
+                  <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest font-black block mb-2">PRIMARY_VECTOR</span>
+                  <div className="text-white font-black uppercase text-[11px] tracking-widest leading-tight">{data.protocolFocus}</div>
                 </div>
               </div>
 
@@ -151,7 +159,7 @@ export default function BriefingDocument() {
                   onClick={() => router.push('/pulse-check')} 
                   className="w-full bg-white text-black py-5 font-black uppercase text-[10px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all shadow-xl cursor-pointer"
                 >
-                  {data.failureType === "HALLUCINATION_RISK" ? "PREVENT LEGAL LIABILITY" :
+                  {data.protocolFocus === "EXPERTISE_DEBT" ? "SHIELD CARE INTEGRITY" :
                    data.failureType === "DATA_EXPOSURE" ? "PREVENT DATA BREACHES" :
                    "PREVENT FINANCIAL LOSSES"}
                 </button>
@@ -162,7 +170,7 @@ export default function BriefingDocument() {
                   rel="noopener noreferrer"
                   className="w-full bg-red-600/10 text-red-500 py-4 font-black uppercase text-[9px] tracking-[0.2em] hover:bg-red-600 hover:text-white flex items-center justify-center gap-2 transition-all border border-red-600/30 mt-3 font-mono"
                 >
-                  EXTERNAL_PROOF <ExternalLink size={12} />
+                  {data.sourceLabel} <ExternalLink size={12} />
                 </a>
               </div>
             </div>
