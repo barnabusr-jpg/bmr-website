@@ -64,7 +64,7 @@ export default function Header() {
           
           <button 
             type="button"
-            onClick={() => { if(mounted) router.push('/vault-alpha'); }}
+            onClick={() => { if(mounted) router.push('/pulse-check'); }}
             className="bg-red-600 text-white px-6 py-3 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all shadow-lg shadow-red-900/10"
           >
             <Zap size={14} /><span>DIAGNOSTIC</span>
