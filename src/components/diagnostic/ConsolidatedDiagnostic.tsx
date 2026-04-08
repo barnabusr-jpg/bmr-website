@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, ShieldAlert, Zap, Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock } from "lucide-react";
+import { Activity, ShieldAlert, Zap, Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock, ChevronRight, Download } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ForensicLoader from "@/components/ForensicLoader";
@@ -154,7 +154,6 @@ export default function ConsolidatedDiagnostic() {
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   
-  // 🛡️ VERIFICATION STATE
   const [serverChallenge, setServerChallenge] = useState("");
   const [userInputKey, setUserInputKey] = useState("");
 
@@ -187,17 +186,6 @@ export default function ConsolidatedDiagnostic() {
     };
   };
 
-  const getForensicDiagnosis = (decay: number, role: string) => {
-    const severity = decay > 80 ? 'CRITICAL' : decay > 60 ? 'EMERGENCY' : decay > 40 ? 'WARNING' : 'STABLE';
-    const perspectives: any = {
-      executive: { CRITICAL: "CAPITAL_EROSION_EVENT", EMERGENCY: "CRITICAL_SYSTEMIC_FAILURE", WARNING: "STRATEGIC_LIABILITY_DETECTION", STABLE: "MARGIN_PROTECTION_ACTIVE", subtext: "Fiscal Integrity Status" },
-      technical: { CRITICAL: "TERMINAL_STACK_DECAY", EMERGENCY: "INFRASTRUCTURE_COLLAPSE_RISK", WARNING: "ARCHITECTURAL_DRIFT_DETECTED", STABLE: "SYSTEMIC_INTEGRITY_VERIFIED", subtext: "Technical Debt Status" },
-      managerial: { CRITICAL: "TOTAL_OPERATIONAL_STAGNATION", EMERGENCY: "BANDWIDTH_HEMORRHAGE", WARNING: "VELOCITY_LATENCY_DETECTION", STABLE: "OUTPUT_EFFICIENCY_STABLE", subtext: "Throughput Health Status" }
-    };
-    const p = perspectives[role || "executive"] || perspectives.executive;
-    return { label: p[severity], subtext: p.subtext };
-  };
-
   const getLiveMetrics = () => {
     const data = calculateSynthesis();
     return {
@@ -210,22 +198,19 @@ export default function ConsolidatedDiagnostic() {
     };
   };
 
-  // 🛡️ TRIGGER: Fires SendGrid and captures the challenge key
   const triggerForensicScan = async (nextStep: string) => {
     if (step === "intake") {
       setIsLoading(true);
       setValidationError(null);
-
       try {
         const res = await fetch('/api/auth/generate-key', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email }),
         });
-
         const data = await res.json();
         if (res.ok) {
-          setServerChallenge(data.challenge); // Store the code for later validation
+          setServerChallenge(data.challenge);
           console.log("HANDSHAKE_VERIFIED");
         } else {
           setIsLoading(false);
@@ -241,7 +226,6 @@ export default function ConsolidatedDiagnostic() {
   };
 
   const finalizeStepTransition = () => {
-    // 🛡️ NEW GATE: Intake moves to Verify, not Audit
     if (step === "intake") setStep("verify");
     else if (step === "audit") setStep("verdict");
     setIsLoading(false);
@@ -255,8 +239,6 @@ export default function ConsolidatedDiagnostic() {
       setValidationError("INVALID_NODE_AUTHORIZATION");
     }
   };
-
-  // --- SUB-RENDERERS ---
 
   const Triage = (
     <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 px-4">
@@ -368,7 +350,31 @@ export default function ConsolidatedDiagnostic() {
        <h2 className="text-7xl font-black italic uppercase tracking-tighter leading-none">
           YOUR INVESTED CAPITAL HAS <span className="text-red-600">{getLiveMetrics().decay}% DECAY</span>
        </h2>
-       {/* (Remaining Verdict logic from previous file) */}
+       
+       <div className="max-w-2xl mx-auto mt-12 space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-6 bg-slate-950 border border-slate-900 text-left">
+              <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">REWORK_TAX_ESTIMATE</p>
+              <p className="text-2xl font-black text-white italic">${getLiveMetrics().rework}M / YR</p>
+            </div>
+            <div className="p-6 bg-slate-950 border border-slate-900 text-left">
+              <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">LOGIC_DRIFT_PROBABILITY</p>
+              <p className="text-2xl font-black text-white italic">{getLiveMetrics().delta}%</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-4">
+            <button className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 group">
+              SECURE_FULL_FORENSIC_BRIEFING <ChevronRight className="group-hover:translate-x-2 transition-transform" size={16} />
+            </button>
+            <button className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic tracking-[0.2em] text-[10px] hover:bg-slate-900 hover:text-white transition-all flex items-center justify-center gap-4">
+              <Download size={14} /> DOWNLOAD_DECAY_SUMMARY_PDF
+            </button>
+            <button onClick={() => window.location.href='/'} className="mt-4 text-slate-600 font-mono text-[9px] uppercase tracking-widest hover:text-white transition-all">
+              EXIT_SECURE_TERMINAL // SESSION_PURGE_ACTIVE
+            </button>
+          </div>
+       </div>
     </motion.div>
   );
 
