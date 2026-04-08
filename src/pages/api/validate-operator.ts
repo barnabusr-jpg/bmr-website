@@ -1,5 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import clientPromise from '../../../lib/mongodb';
+import clientPromise from '../../lib/mongodb';
 import { Resend } from 'resend';
 import { BMRAuthEmail } from '../../../emails/BMRAuthEmail';
 
