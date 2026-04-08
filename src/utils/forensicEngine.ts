@@ -1,30 +1,41 @@
 import { STRESS_TEST_MANIFEST, StressTestNode } from "../data/stressTestManifest";
-import { calculateReworkTax, calculateVulnerabilityCoefficient } from "./forensicMath";
 
-export function analyzeStressTest(userAnswers: any) {
+export interface ForensicResponse {
+  nodeId: string;
+  answer: boolean;
+  confidence: "HIGH" | "MEDIUM" | "LOW";
+  evidence: "AUDIT_LOG" | "CODE_REVIEW" | "INTERVIEW" | "VERBAL_ASSURANCE" | "NONE";
+}
+
+export const analyzeForensicResults = (responses: ForensicResponse[]) => {
+  let totalProjectedLoss = 0;
   const contradictions: any[] = [];
-  let totalImpact = 0;
 
   STRESS_TEST_MANIFEST.forEach(node => {
     if (node.crossLensId) {
-      const currentAnswer = userAnswers[node.id]; // e.g., { val: true, conf: 'HIGH', env: 'VERBAL' }
-      const correlatedAnswer = userAnswers[node.crossLensId];
+      const respA = responses.find(r => r.nodeId === node.id);
+      const respB = responses.find(r => r.nodeId === node.crossLensId);
 
-      // Logic Trap: Exec says "Yes" vs Tech says "No"
-      if (currentAnswer?.val === true && correlatedAnswer?.val === false) {
-        const vulnMod = calculateVulnerabilityCoefficient(currentAnswer.conf, currentAnswer.env);
-        const impact = calculateReworkTax(node.weight * 1000, 24, node.techDebtMultiplier * vulnMod);
+      // TRIGGER: Executive says "Yes" while Tech says "No"
+      if (respA?.answer === true && respB?.answer === false) {
+        // Apply "Institutional Blindness" Multiplier (2.5x if High Confidence + Verbal Evidence)
+        const vulnMod = (respA.confidence === "HIGH" && respA.evidence === "VERBAL_ASSURANCE") ? 2.5 : 1.0;
         
+        // Base Impact (Weight * $1,000) * Tech Debt Multiplier * Vuln Mod
+        const rawImpact = node.weight * 1000;
+        const compoundingLoss = rawImpact * node.techDebtMultiplier * vulnMod * 12; // 12-month projected decay
+
         contradictions.push({
-          id: node.id,
+          zone: node.zone,
           verdict: node.verdict,
-          impact: impact.projectedTwoYearLoss,
-          zone: node.zone
+          financialLeak: compoundingLoss,
+          severity: node.weight > 12 ? "CRITICAL" : "HIGH"
         });
-        totalImpact += impact.projectedTwoYearLoss;
+
+        totalProjectedLoss += compoundingLoss;
       }
     }
   });
 
-  return { contradictions, totalImpact, frictionIndex: (contradictions.length / 15) * 100 };
-}
+  return { contradictions, totalProjectedLoss, frictionIndex: (contradictions.length / 15) * 100 };
+};
