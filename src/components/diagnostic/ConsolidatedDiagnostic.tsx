@@ -54,7 +54,7 @@ export default function ConsolidatedDiagnostic() {
     else setValidationError(null);
   }, [email, confirmEmail]);
 
-  if (!mounted) return null;
+  if (!mounted) return <div className="min-h-screen bg-slate-950" />;
 
   const getLiveMetrics = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
@@ -77,8 +77,8 @@ export default function ConsolidatedDiagnostic() {
     const doc = new jsPDF();
     const red = "#dc2626";
     const slate = "#020617";
+    const dateStr = new Date().toLocaleDateString();
 
-    // --- PAGE 1: VERDICT ---
     doc.setFillColor(2, 6, 23);
     doc.rect(0, 0, 210, 45, "F");
     doc.setTextColor(255, 255, 255);
@@ -86,7 +86,7 @@ export default function ConsolidatedDiagnostic() {
     doc.text("BMR SOLUTIONS // FORENSIC UNIT", 15, 20);
     doc.setFont("courier", "normal"); doc.setFontSize(8);
     doc.text(`NODE_ID: ${sector.toUpperCase()}_SEC_04 // CLEARANCE: ALPHA-7`, 15, 28);
-    doc.text(`STAMP: ${new Date().toLocaleDateString()} // 06:55:01`, 15, 33);
+    doc.text(`STAMP: ${dateStr} // 06:55:01`, 15, 33);
 
     doc.setTextColor(slate); doc.setFontSize(10); doc.setFont("helvetica", "bold");
     doc.text(`ENTITY: ${entityName.toUpperCase()}`, 15, 58);
@@ -108,7 +108,6 @@ export default function ConsolidatedDiagnostic() {
     doc.text(obs, 15, 155);
     doc.text("PAGE 1 of 2", 105, 285, { align: "center" });
 
-    // --- PAGE 2: LOGS ---
     doc.addPage();
     doc.setFillColor(slate); doc.rect(0, 0, 210, 15, "F");
     doc.setTextColor(255, 255, 255); doc.setFontSize(8); doc.text("BMR_INTERNAL_LOGS // NODE_FIDELITY_CHECK", 15, 10);
@@ -133,8 +132,14 @@ export default function ConsolidatedDiagnostic() {
     try {
       const res = await fetch('/api/auth/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim().toLowerCase() }) });
       const data = await res.json();
-      if (res.ok) setServerChallenge(data.challenge);
-      else { setIsLoading(false); setValidationError("TRANSMISSION_REJECTED"); }
+      if (res.ok) {
+        setServerChallenge(data.challenge);
+        setStep("verify");
+        setIsLoading(false);
+      } else {
+        setIsLoading(false);
+        setValidationError("TRANSMISSION_REJECTED");
+      }
     } catch (err) { setIsLoading(false); setValidationError("LOGIC_SHEAR_DETECTION"); }
   };
 
@@ -143,75 +148,78 @@ export default function ConsolidatedDiagnostic() {
     else setValidationError("INVALID_NODE_AUTHORIZATION");
   };
 
-  const Triage = (
-    <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 px-4">
-      <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white text-center leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {sectors.map((s) => (
-          <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
-            <div className="text-red-600">{s.icon}</div>
-            <div>
-              <h3 className="text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
-              <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-    </motion.div>
-  );
-
-  const Intake = (
-    <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-      <div className="text-center space-y-2"><h2 className="text-5xl font-black uppercase italic tracking-tighter text-white leading-none">FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span></h2></div>
-      <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
-        <div className="grid grid-cols-2 gap-6 text-left">
-          <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Operator_Identity</label><input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono" /></div>
-          <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Entity_Name</label><input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono" /></div>
-          <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Corporate_Email</label><input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono" /></div>
-          <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Confirm_Protocol</label><input placeholder="VERIFY" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono`} /></div>
-        </div>
-        {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black text-center animate-pulse">⚠️ {validationError}</p>}
-        <button disabled={!!validationError || !email || !operatorName || email.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl disabled:opacity-20">Initialize Audit Observation</button>
-      </div>
-    </motion.div>
-  );
-
-  const Verify = (
-    <motion.div key="verify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-12">
-      <h2 className="text-6xl font-black uppercase italic tracking-tighter text-white">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
-      <div className="max-w-md mx-auto flex gap-4"><input maxLength={6} placeholder="0 0 0 0 0 0" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center font-black text-white outline-none focus:border-red-600 font-mono" /><button onClick={validateOperatorKey} className="bg-white text-black px-10 font-black uppercase text-xs italic tracking-widest hover:bg-red-600 transition-all">Authorize</button></div>
-    </motion.div>
-  );
-
-  const Audit = (
-    <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left">
-      <div className="flex items-center gap-4 text-red-600"><Activity className="h-4 w-4 animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1}</span></div>
-      <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px]">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
-      <div className="grid grid-cols-1 gap-4 mt-16">{LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (<button key={i} className="group relative py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left" onClick={() => { setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() }); if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1); else setStep("verdict"); }}><span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white transition-all">{opt.label}</span></button>))}</div>
-    </motion.div>
-  );
-
-  const Verdict = (
-    <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white text-center py-10 px-4">
-       <h2 className="text-7xl font-black italic uppercase tracking-tighter leading-none">INVESTED CAPITAL HAS <span className="text-red-600">{getLiveMetrics().decay}% DECAY</span></h2>
-       <div className="max-w-2xl mx-auto mt-12 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-6 bg-slate-950 border border-slate-900 text-left"><p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-1">REWORK_TAX_ESTIMATE</p><p className="text-2xl font-black italic">${getLiveMetrics().rework}M / YR</p></div>
-            <div className="p-6 bg-slate-950 border border-slate-900 text-left"><p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-1">DRIFT_PROBABILITY</p><p className="text-2xl font-black italic">{getLiveMetrics().delta}%</p></div>
-          </div>
-          <div className="bg-slate-950 p-8 border border-slate-900 space-y-6">
-            <div className="flex justify-between items-end"><div className="text-left"><label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em]">Capital_Exposure</label><p className="text-3xl font-black text-white italic">${aiSpend.toFixed(1)}M</p></div><div className="text-right"><label className="text-[10px] font-mono text-red-600 uppercase tracking-[0.3em]">Dynamic_ROI</label><p className="text-3xl font-black text-red-600 italic">{getLiveMetrics().roi}%</p></div></div>
-            <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
-          </div>
-          <div className="flex flex-col gap-4"><button className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all">SECURE_FULL_FORENSIC_BRIEFING</button><button onClick={generateForensicPDF} className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic text-[10px] hover:text-white transition-all flex items-center justify-center gap-4"><Download size={14} /> DOWNLOAD_FORENSIC_SUMMARY_PDF</button></div>
-       </div>
-    </motion.div>
-  );
-
   return (
     <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px]">
-      <AnimatePresence mode="wait">{isLoading && <ForensicLoader onComplete={finalizeStepTransition} />}</AnimatePresence>
-      <AnimatePresence mode="wait">{step === 'triage' && Triage}{step === 'intake' && Intake}{step === 'verify' && Verify}{step === 'audit' && Audit}{step === 'verdict' && Verdict}</AnimatePresence>
+      <AnimatePresence mode="wait">
+        {isLoading && <ForensicLoader key="loader" onComplete={() => {}} />}
+      </AnimatePresence>
+
+      <AnimatePresence mode="wait">
+        {step === 'triage' && (
+          <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-16 px-4">
+            <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white text-center leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {sectors.map((s) => (
+                <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
+                  <div className="text-red-600">{s.icon}</div>
+                  <div>
+                    <h3 className="text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
+                    <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'intake' && (
+          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
+            <div className="text-center space-y-2"><h2 className="text-5xl font-black uppercase italic tracking-tighter text-white leading-none">FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span></h2></div>
+            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
+              <div className="grid grid-cols-2 gap-6 text-left">
+                <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Operator_Identity</label><input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono" /></div>
+                <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Entity_Name</label><input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono" /></div>
+                <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Corporate_Email</label><input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono" /></div>
+                <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Confirm_Protocol</label><input placeholder="VERIFY" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono`} /></div>
+              </div>
+              {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black text-center animate-pulse">⚠️ {validationError}</p>}
+              <button disabled={!!validationError || !email || !operatorName || email.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl disabled:opacity-20">Initialize Audit Observation</button>
+            </div>
+          </motion.div>
+        )}
+
+        {step === 'verify' && (
+          <motion.div key="verify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center space-y-12">
+            <h2 className="text-6xl font-black uppercase italic tracking-tighter text-white">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
+            <div className="max-w-md mx-auto flex gap-4"><input maxLength={6} placeholder="0 0 0 0 0 0" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center font-black text-white outline-none focus:border-red-600 font-mono" /><button onClick={validateOperatorKey} className="bg-white text-black px-10 font-black uppercase text-xs italic tracking-widest hover:bg-red-600 transition-all">Authorize</button></div>
+          </motion.div>
+        )}
+
+        {step === 'audit' && (
+          <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-left">
+            <div className="flex items-center gap-4 text-red-600"><Activity className="h-4 w-4 animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1}</span></div>
+            <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px]">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
+            <div className="grid grid-cols-1 gap-4 mt-16">{LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (<button key={i} className="group relative py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left" onClick={() => { setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() }); if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1); else setStep("verdict"); }}><span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white transition-all">{opt.label}</span></button>))}</div>
+          </motion.div>
+        )}
+
+        {step === 'verdict' && (
+          <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-white text-center py-10 px-4">
+            <h2 className="text-7xl font-black italic uppercase tracking-tighter leading-none">INVESTED CAPITAL HAS <span className="text-red-600">{getLiveMetrics().decay}% DECAY</span></h2>
+            <div className="max-w-2xl mx-auto mt-12 space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-6 bg-slate-950 border border-slate-900 text-left"><p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-1">REWORK_TAX_ESTIMATE</p><p className="text-2xl font-black italic">${getLiveMetrics().rework}M / YR</p></div>
+                <div className="p-6 bg-slate-950 border border-slate-900 text-left"><p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-1">DRIFT_PROBABILITY</p><p className="text-2xl font-black italic">{getLiveMetrics().delta}%</p></div>
+              </div>
+              <div className="bg-slate-950 p-8 border border-slate-900 space-y-6">
+                <div className="flex justify-between items-end"><div className="text-left"><label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em]">Capital_Exposure</label><p className="text-3xl font-black text-white italic">${aiSpend.toFixed(1)}M</p></div><div className="text-right"><label className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-1">Dynamic_ROI</label><p className="text-3xl font-black text-red-600 italic">{getLiveMetrics().roi}%</p></div></div>
+                <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
+              </div>
+              <div className="flex flex-col gap-4"><button className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all">SECURE_FULL_FORENSIC_BRIEFING</button><button onClick={generateForensicPDF} className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic text-[10px] hover:text-white transition-all flex items-center justify-center gap-4"><Download size={14} /> DOWNLOAD_FORENSIC_SUMMARY_PDF</button></div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <LogicLeakTicker />
     </div>
   );
