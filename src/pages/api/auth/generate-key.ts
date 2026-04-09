@@ -2,23 +2,16 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 
 // 🛡️ SECURITY HANDSHAKE
-// Using your specific environment variable from the previous working code
 sgMail.setApiKey(process.env.BMR_SENDGRID_KEY as string);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Pages Router uses req.method check instead of export async function POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
 
   try {
     const { email } = req.body;
+    if (!email || !email.includes('@')) return res.status(400).json({ error: 'INVALID_RECIPIENT' });
 
-    if (!email || !email.includes('@')) {
-      return res.status(400).json({ error: 'INVALID_RECIPIENT' });
-    }
-
-    // Generate a 6-digit Operator Key
+    // Generate 6-digit Operator Key
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     const msg = {
@@ -37,18 +30,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `,
     };
 
-    // 📡 DISPATCHING TO SENDGRID
     await sgMail.send(msg);
-
-    // Return the 'challenge' key so the frontend's validateOperatorKey can compare
     return res.status(200).json({ success: true, challenge: otp });
 
   } catch (error: any) {
-    // Forensic logging for Vercel
     console.error("BMR_AUTH_SHEAR:", error.response?.body || error.message);
-    return res.status(500).json({ 
-      error: 'TRANSMISSION_FAILURE', 
-      details: error.message 
-    });
+    return res.status(500).json({ error: 'TRANSMISSION_FAILURE', details: error.message });
   }
 }
