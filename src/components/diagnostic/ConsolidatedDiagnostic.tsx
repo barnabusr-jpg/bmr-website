@@ -2,132 +2,24 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, ShieldAlert, Zap, Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock, ChevronRight, Download } from "lucide-react";
+import { Activity, ArrowRight, ChevronRight, Download, Banknote, Stethoscope, Factory, ShoppingCart } from "lucide-react";
 import jsPDF from "jspdf";
 import ForensicLoader from "@/components/ForensicLoader";
 import LogicLeakTicker from "@/components/LogicLeakTicker";
 
 const LOCAL_QUESTIONS = [
-  {
-    id: "RT_01", protocol: "reworkTax",
-    text: "AI standard operating procedures (SOPs) are documented and followed.",
-    options: [
-      { label: "Non-existent", weight: 10, forensicInsight: "TRIBAL_KNOWLEDGE_DEPENDENCY_CREATES_$5.2M/YEAR_IN_REWORK.", internalTag: "LOGIC_FRAGMENTATION" },
-      { label: "Ad-hoc/Manual", weight: 6, forensicInsight: "VARIABLE_OUTPUT_QUALITY_INCREASES_COMPLIANCE_RISK_BY_40%.", internalTag: "EXPERTISE_SILOS" },
-      { label: "Formalized", weight: 4, forensicInsight: "STANDARDIZED_LOGIC_REDUCES_MARGIN_EROSION_BY_12%.", internalTag: "STRUCTURAL_CLARITY" },
-      { label: "Automated/Optimized", weight: 2, forensicInsight: "AUTOMATED_GOVERNANCE_UNLOCKS_30%_FASTER_ITERATIONS.", internalTag: "OPTIMIZED_FLOW" }
-    ]
-  },
-  {
-    id: "RT_02", protocol: "reworkTax",
-    text: "Our organization has a clear AI ethics and governance framework.",
-    options: [
-      { label: "No framework", weight: 10, forensicInsight: "UNGOVERNED_LOGIC_INVITES_$3.1M/YEAR_IN_REGULATORY_FINES.", internalTag: "GOVERNANCE_VOID" },
-      { label: "Basic guidelines", weight: 6, forensicInsight: "PARTIAL_ASSESSMENTS_LEAVE_22%_OF_RISKS_UNCOVERED.", internalTag: "PARTIAL_VISIBILITY" },
-      { label: "Formal audits", weight: 4, forensicInsight: "COMPREHENSIVE_AUDITS_REDUCE_VENDOR_RISK_BY_60%.", internalTag: "RISK_MITIGATED" },
-      { label: "Continuous monitoring", weight: 2, forensicInsight: "REAL-TIME_MONITORING_ELIMINATES_95%_OF_VENDOR_DRIFT.", internalTag: "OPTIMIZED_SECURITY" }
-    ]
-  },
-  {
-    id: "RT_03", protocol: "reworkTax",
-    text: "AI roles and responsibilities are clearly defined across teams.",
-    options: [
-      { label: "Undefined", weight: 10, forensicInsight: "UNAUDITED_ROLES_CREATE_$4.7M/YEAR_IN_OPERATIONAL_FAILURES.", internalTag: "ROLE_DEBT" },
-      { label: "Informal roles", weight: 6, forensicInsight: "REACTIVE_ROLES_MISS_35%_OF_EFFICIENCY_GAINS.", internalTag: "PARTIAL_COVERAGE" },
-      { label: "Dedicated AI team", weight: 4, forensicInsight: "PROACTIVE_GOVERNANCE_REDUCES_ROLE_DRIFT_BY_50%.", internalTag: "STABLE_OVERSIGHT" },
-      { label: "Cross-functional matrix", weight: 2, forensicInsight: "REAL-TIME_ROLE_AUDITING_ELIMINATES_90%_OF_LABOR_WASTE.", internalTag: "OPTIMIZED_LINEAGE" }
-    ]
-  },
-  {
-    id: "DG_01", protocol: "deltaGap",
-    text: "Our AI systems directly contribute to measurable business ROI.",
-    options: [
-      { label: "Not tracked", weight: 10, forensicInsight: "UNMONITORED_MODELS_LOSE_$1.9M/YEAR_IN_REVENUE.", internalTag: "PERFORMANCE_DRIFT" },
-      { label: "Anecdotal evidence", weight: 6, forensicInsight: "MANUAL_MONITORING_DELAYS_DETECTION_BY_6_WEEKS.", internalTag: "REACTIVE_DRIFT" },
-      { label: "Specific KPIs", weight: 4, forensicInsight: "AUTOMATED_ALERTS_REDUCE_DRIFT_IMPACT_BY_70%.", internalTag: "PROACTIVE_MONITORING" },
-      { label: "Direct impact", weight: 2, forensicInsight: "REAL-TIME_ROLLBACK_ELIMINATES_99%_OF_DRIFT_COSTS.", internalTag: "OPTIMIZED_STABILITY" }
-    ]
-  },
-  {
-    id: "DG_02", protocol: "deltaGap",
-    text: "AI initiatives are aligned with the core strategic vision.",
-    options: [
-      { label: "Disconnected", weight: 10, forensicInsight: "STRATEGIC_MISALIGNMENT_DRIVES_WASTE_OF_$2.4M/YEAR.", internalTag: "STRATEGIC_DEBT" },
-      { label: "Loosely aligned", weight: 6, forensicInsight: "FRAGMENTED_EXECUTION_DILUTES_MARKET_ALPHA.", internalTag: "ALIGNMENT_GAP" },
-      { label: "Integrated", weight: 4, forensicInsight: "ALIGNED_GROWTH_REDUCES_MARKET_LATENCY.", internalTag: "UNIFIED" },
-      { label: "Strategy-driven", weight: 2, forensicInsight: "UNIFIED_VISION_MAXIMIZES_MARGINS.", internalTag: "LEAD" }
-    ]
-  },
-  {
-    id: "DG_03", protocol: "deltaGap",
-    text: "We have a dedicated budget and resources for AI scaling.",
-    options: [
-      { label: "No budget", weight: 10, forensicInsight: "STAGNATION_COST:COMPETITORS_GAIN_18-MONTH_LEAD.", internalTag: "VOID" },
-      { label: "Project-based", weight: 6, forensicInsight: "SCALING_FRICTION_INCREASES_CAPITAL_BURN.", internalTag: "PIECEMEAL" },
-      { label: "Annual budget", weight: 4, forensicInsight: "STABLE_RESOURCING_PROTECTS_ASSETS.", internalTag: "STABLE" },
-      { label: "Venture-scale", weight: 2, forensicInsight: "LIQUID_RESOURCING_ENABLES_RAPID_PIVOTS.", internalTag: "LIQUID" }
-    ]
-  },
-  {
-    id: "SA_01", protocol: "shadowAI",
-    text: "AI vendors are assessed for risk before contract signing.",
-    options: [
-      { label: "No oversight", weight: 10, forensicInsight: "UNGOVERNED_VENDORS_CREATE_$3.1M_IN_RISK.", internalTag: "SHADOW" },
-      { label: "Basic checks", weight: 6, forensicInsight: "PARTIAL_VISIBILITY_LEAVE_NODES_EXPOSED.", internalTag: "PARTIAL" },
-      { label: "Formal audits", weight: 4, forensicInsight: "COMPREHENSIVE_AUDITS_REDUCE_VENDOR_RISK_BY_60%.", internalTag: "RISK_MITIGATED" },
-      { label: "Continuous monitoring", weight: 2, forensicInsight: "REAL-TIME_MONITORING_ELIMINATES_95%_OF_VENDOR_DRIFT.", internalTag: "OPTIMIZED_SECURITY" }
-    ]
-  },
-  {
-    id: "SA_02", protocol: "shadowAI",
-    text: "Unauthorized AI tool usage is actively monitored and blocked.",
-    options: [
-      { label: "No monitoring", weight: 10, forensicInsight: "UNDETECTED_IP_LEAKAGE_COSTS_$1.2M/NODE.", internalTag: "IP_LEAK" },
-      { label: "Reactive", weight: 6, forensicInsight: "DELAYED_BLOCKING_EXPOSES_CRITICAL_DATA.", internalTag: "LATENT" },
-      { label: "Alerts", weight: 4, forensicInsight: "IMMEDIATE_SIGNALING_REDUCES_UNAUTHORIZED_USE.", internalTag: "DETECT" },
-      { label: "Zero-Trust", weight: 2, forensicInsight: "ZERO-TRUST_ARCHITECTURE_ELIMINATES_SHADOW_LOGIC.", internalTag: "ZERO_TRUST" }
-    ]
-  },
-  {
-    id: "ED_01", protocol: "expertiseDebt",
-    text: "Our data infrastructure can handle real-time AI processing.",
-    options: [
-      { label: "Legacy", weight: 10, forensicInsight: "INFRASTRUCTURE_DEBT_PENALIZES_SPEED.", internalTag: "TECH_DECAY" },
-      { label: "Hybrid", weight: 6, forensicInsight: "LATENCY_FRICTION_CREATES_IDLE_BURNT.", internalTag: "HYBRID_DEBT" },
-      { label: "Cloud-native", weight: 4, forensicInsight: "FLOW_REDUCES_OPERATIONAL_OVERHEAD.", internalTag: "CLOUD_SCALE" },
-      { label: "Edge", weight: 2, forensicInsight: "PEAK_ARCHITECTURE_MINIMIZES_FRICTION.", internalTag: "PEAK_STACK" }
-    ]
-  },
-  {
-    id: "ED_02", protocol: "expertiseDebt",
-    text: "We leverage proprietary datasets to train specialized models.",
-    options: [
-      { label: "Public only", weight: 10, forensicInsight: "RELIANCE_ON_COMMODITY_LOGIC.", internalTag: "DATA_VOID" },
-      { label: "Minimal", weight: 6, forensicInsight: "WEAK_ADVANTAGE_INVITES_EROSION.", internalTag: "WEAK" },
-      { label: "Significant", weight: 4, forensicInsight: "DATA_FLYWEEL_SHIELDS_POSITION.", internalTag: "DATA_MOAT" },
-      { label: "Proprietary", weight: 2, forensicInsight: "IP_MOAT_REDUCES_CAC_BY_50%.", internalTag: "IP_DOMINANCE" }
-    ]
-  },
-  {
-    id: "ED_03", protocol: "expertiseDebt",
-    text: "API and model versioning are strictly controlled.",
-    options: [
-      { label: "Manual", weight: 10, forensicInsight: "VERSION_CHAOS_CAUSES_FAILURES.", internalTag: "VERSION_DEBT" },
-      { label: "Basic", weight: 6, forensicInsight: "MANUAL_OVERHEAD_DRAINS_VELOCITY.", internalTag: "SEMI_MANUAL" },
-      { label: "Automated", weight: 4, forensicInsight: "DEVOPS_STABLE:REDUCED_ERROR_RATE.", internalTag: "AUTOMATED_CI" },
-      { label: "MLOps", weight: 2, forensicInsight: "INDUSTRIAL_SCALE_CONTROL.", internalTag: "MLOPS_ELITE" }
-    ]
-  },
-  {
-    id: "ED_04", protocol: "expertiseDebt",
-    text: "Computing resources (GPU/Cloud) are managed efficiently.",
-    options: [
-      { label: "High waste", weight: 10, forensicInsight: "MARGIN_EROSION:GPU_WASTE_BURNT.", internalTag: "COST_HEMORRHAGE" },
-      { label: "Partial", weight: 6, forensicInsight: "VARIABLE_COST_DEBT_REDUCES_MARGIN.", internalTag: "WASTE_DRIFT" },
-      { label: "Managed", weight: 4, forensicInsight: "COST_CONTROL_SHIELDS_STABILITY.", internalTag: "MARGIN_SHIELD" },
-      { label: "Hyper", weight: 2, forensicInsight: "MAXIMUM_MARGIN_PROTECTION.", internalTag: "PEAK_PROFIT" }
-    ]
-  }
+  { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
+  { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
+  { id: "RT_03", text: "AI roles and responsibilities are clearly defined across teams.", options: [{ label: "Undefined", weight: 10 }, { label: "Informal roles", weight: 6 }, { label: "Dedicated AI team", weight: 4 }, { label: "Cross-functional matrix", weight: 2 }] },
+  { id: "DG_01", text: "Our AI systems directly contribute to measurable business ROI.", options: [{ label: "Not tracked", weight: 10 }, { label: "Anecdotal evidence", weight: 6 }, { label: "Specific KPIs", weight: 4 }, { label: "Direct impact", weight: 2 }] },
+  { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
+  { id: "DG_03", text: "We have a dedicated budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
+  { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
+  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Trust", weight: 2 }] },
+  { id: "ED_01", text: "Our data infrastructure can handle real-time AI processing.", options: [{ label: "Legacy", weight: 10 }, { label: "Hybrid", weight: 6 }, { label: "Cloud-native", weight: 4 }, { label: "Edge", weight: 2 }] },
+  { id: "ED_02", text: "We leverage proprietary datasets to train specialized models.", options: [{ label: "Public only", weight: 10 }, { label: "Minimal", weight: 6 }, { label: "Significant", weight: 4 }, { label: "Proprietary", weight: 2 }] },
+  { id: "ED_03", text: "API and model versioning are strictly controlled.", options: [{ label: "Manual", weight: 10 }, { label: "Basic", weight: 6 }, { label: "Automated", weight: 4 }, { label: "MLOps", weight: 2 }] },
+  { id: "ED_04", text: "Computing resources (GPU/Cloud) are managed efficiently.", options: [{ label: "High waste", weight: 10 }, { label: "Partial", weight: 6 }, { label: "Managed", weight: 4 }, { label: "Hyper", weight: 2 }] }
 ];
 
 const sectors = [
@@ -155,20 +47,16 @@ export default function ConsolidatedDiagnostic() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // --- SURGICAL FIX FOR EMAIL VALIDATION ---
   useEffect(() => {
     const e1 = email.trim().toLowerCase();
     const e2 = confirmEmail.trim().toLowerCase();
-    if (e2.length > 0 && e1 !== e2) {
-      setValidationError("EMAIL_VERIFICATION_MISMATCH");
-    } else {
-      setValidationError(null);
-    }
+    if (e2.length > 0 && e1 !== e2) setValidationError("EMAIL_VERIFICATION_MISMATCH");
+    else setValidationError(null);
   }, [email, confirmEmail]);
 
   if (!mounted) return null;
 
-  const calculateSynthesis = () => {
+  const getLiveMetrics = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
     const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
     const coeff = sectorWeights[sector] || 1.0;
@@ -177,127 +65,93 @@ export default function ConsolidatedDiagnostic() {
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
 
     return {
-      total: scaledTotal || 0,
       decay: Math.min(decayRaw, 98),
-      reworkTax: (scaledTotal * 0.38),
-      deltaGap: (scaledTotal * 0.32),
-      roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(0) : 0
+      rework: (scaledTotal * 0.38).toFixed(1),
+      delta: (scaledTotal * 0.32).toFixed(1),
+      roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(1) : "0"
     };
   };
 
-  const getLiveMetrics = () => {
-    const data = calculateSynthesis();
-    return {
-      roi: data.roi,
-      total: data.total.toFixed(1),
-      decay: data.decay,
-      rework: data.reworkTax.toFixed(1),
-      delta: data.deltaGap.toFixed(1),
-      hidden: (data.total - data.reworkTax - data.deltaGap).toFixed(1)
-    };
-  };
-
-  // --- BEEFED UP PDF LOGIC ---
   const generateForensicPDF = () => {
     const m = getLiveMetrics();
     const doc = new jsPDF();
-    
-    // Header
-    doc.setFillColor(2, 6, 23); // #020617
-    doc.rect(0, 0, 210, 50, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(28);
-    doc.text("BMR SOLUTIONS", 15, 25);
-    doc.setFontSize(10);
-    doc.setFont("courier", "normal");
-    doc.text(`FORENSIC_DECAY_SUMMARY // NODE: ${sector.toUpperCase()}`, 15, 38);
+    const red = "#dc2626";
+    const slate = "#020617";
 
-    // Operator Info
-    doc.setTextColor(2, 6, 23);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(`ENTITY: ${entityName.toUpperCase()}`, 15, 65);
-    doc.text(`OPERATOR: ${operatorName.toUpperCase()}`, 15, 73);
-    doc.setDrawColor(220, 38, 38); // #dc2626
-    doc.line(15, 76, 100, 76);
-
-    // Score Box
+    // --- PAGE 1: VERDICT ---
     doc.setFillColor(2, 6, 23);
-    doc.rect(15, 90, 180, 60, "F");
-    doc.setTextColor(220, 38, 38);
-    doc.setFontSize(70);
-    doc.text(`${m.decay}%`, 35, 135);
+    doc.rect(0, 0, 210, 45, "F");
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(16);
-    doc.text("CAPITAL_DECAY_INDEX", 35, 143);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(22);
+    doc.text("BMR SOLUTIONS // FORENSIC UNIT", 15, 20);
+    doc.setFont("courier", "normal"); doc.setFontSize(8);
+    doc.text(`NODE_ID: ${sector.toUpperCase()}_SEC_04 // CLEARANCE: ALPHA-7`, 15, 28);
+    doc.text(`STAMP: ${new Date().toLocaleDateString()} // 06:55:01`, 15, 33);
 
-    // Financials
-    doc.setTextColor(2, 6, 23);
-    doc.setFontSize(11);
-    doc.text("REWORK_TAX_ESTIMATE", 125, 110);
-    doc.setFontSize(22);
-    doc.text(`$${m.rework}M/YR`, 125, 122);
+    doc.setTextColor(slate); doc.setFontSize(10); doc.setFont("helvetica", "bold");
+    doc.text(`ENTITY: ${entityName.toUpperCase()}`, 15, 58);
+    doc.text(`OPERATOR: ${operatorName.toUpperCase()}`, 15, 64);
+    doc.setDrawColor(red); doc.line(15, 67, 80, 67);
 
-    // Conclusion Hook
-    doc.setFontSize(12);
-    doc.text("CONCLUSION: TRIANGULATION_PENDING", 15, 180);
+    doc.setFillColor(slate); doc.rect(15, 75, 180, 45, "F");
+    doc.setTextColor(red); doc.setFontSize(55); doc.text(`${m.decay}%`, 25, 110);
+    doc.setTextColor(255, 255, 255); doc.setFontSize(12); doc.text("CAPITAL_DECAY_INDEX", 25, 118);
+
+    doc.setTextColor(slate); doc.setFontSize(9);
+    doc.text("REWORK_TAX:", 110, 88); doc.setFontSize(16); doc.text(`$${m.rework}M/YR`, 110, 96);
+    doc.setTextColor(slate); doc.setFontSize(9);
+    doc.text("DYNAMIC_ROI:", 110, 108); doc.setTextColor(red); doc.setFontSize(16); doc.text(`${m.roi}%`, 110, 116);
+
+    doc.setTextColor(slate); doc.setFontSize(10); doc.text("FORENSIC_OBSERVATIONS:", 15, 145);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9);
+    const obs = ["- Logic fragmentation detected in production layers.", "- Hallucination rates exceed liability thresholds.", "- Invisible rework tax identified in human-in-the-loop cycles.", "- Systemic drift detected in compliance logic branches."];
+    doc.text(obs, 15, 155);
+    doc.text("PAGE 1 of 2", 105, 285, { align: "center" });
+
+    // --- PAGE 2: LOGS ---
+    doc.addPage();
+    doc.setFillColor(slate); doc.rect(0, 0, 210, 15, "F");
+    doc.setTextColor(255, 255, 255); doc.setFontSize(8); doc.text("BMR_INTERNAL_LOGS // NODE_FIDELITY_CHECK", 15, 10);
+    doc.setTextColor(slate); doc.setFont("courier", "bold"); doc.setFontSize(9);
+    doc.text("FIDELITY_CHECK: 0.002MS", 15, 30); doc.text("SECURITY_LEVEL: ALPHA-7", 15, 36);
+    doc.text("NODE_ANCHOR: BMR V3 NY", 15, 42); doc.text("PROBE_STATUS: ACTIVE", 15, 48);
+    doc.setFillColor(red); doc.rect(15, 60, 180, 8, "F");
+    doc.setTextColor(255, 255, 255); doc.setFontSize(7);
+    doc.text(`[ALERT] UNGOVERNED_LLM_NODE_DETECTED // SECTOR: ${sector.toUpperCase()}`, 20, 65);
+    doc.setTextColor(slate); doc.setFontSize(9); doc.text("SYSTEM_EVENT_LOG:", 15, 85);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text("Report indicates significant logic fragmentation. Immediate baseline stabilization required.", 15, 190);
-    doc.text("Access to BMR Field Guide V1 requires counter-signal validation.", 15, 198);
-
+    const logs = ["[06:55:01] Forensic sequence initialized...", `[06:55:08] Rework_tax detected: $${m.rework}M.`, `[06:55:12] Delta_gap: ${m.delta}% logic shear.`, "[06:55:15] Triangulation: AWAITING_MANAGERIAL_SIGNAL.", "[06:55:18] Triangulation: AWAITING_TECHNICAL_SIGNAL."];
+    doc.text(logs, 15, 95);
+    doc.setFillColor(245, 245, 245); doc.rect(15, 240, 180, 20, "F");
+    doc.setTextColor(red); doc.setFont("helvetica", "bold"); doc.text("TRIANGULATION_PENDING // FIELD_GUIDE_LOCKED", 25, 252);
+    doc.text("PAGE 2 of 2", 105, 285, { align: "center" });
     doc.save(`BMR_Forensic_${entityName}.pdf`);
   };
 
-  const triggerForensicScan = async (nextStep: string) => {
+  const triggerForensicScan = async () => {
     setIsLoading(true);
-    setValidationError(null);
     try {
-      const res = await fetch('/api/auth/generate-key', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email.trim().toLowerCase() }),
-      });
+      const res = await fetch('/api/auth/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim().toLowerCase() }) });
       const data = await res.json();
-      if (res.ok) {
-        setServerChallenge(data.challenge);
-      } else {
-        setIsLoading(false);
-        setValidationError("TRANSMISSION_REJECTED");
-      }
-    } catch (err) {
-      setIsLoading(false);
-      setValidationError("LOGIC_SHEAR_DETECTION");
-    }
-  };
-
-  const finalizeStepTransition = () => {
-    if (step === "intake") setStep("verify");
-    else if (step === "audit") setStep("verdict");
-    setIsLoading(false);
+      if (res.ok) setServerChallenge(data.challenge);
+      else { setIsLoading(false); setValidationError("TRANSMISSION_REJECTED"); }
+    } catch (err) { setIsLoading(false); setValidationError("LOGIC_SHEAR_DETECTION"); }
   };
 
   const validateOperatorKey = () => {
-    if (userInputKey === serverChallenge) {
-      setStep("audit");
-      setValidationError(null);
-    } else {
-      setValidationError("INVALID_NODE_AUTHORIZATION");
-    }
+    if (userInputKey === serverChallenge) { setStep("audit"); setValidationError(null); }
+    else setValidationError("INVALID_NODE_AUTHORIZATION");
   };
 
   const Triage = (
     <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 px-4">
-      <div className="text-center">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
-      </div>
+      <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white text-center leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {sectors.map((s) => (
           <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
-            <div className="text-red-600 mb-4">{s.icon}</div>
+            <div className="text-red-600">{s.icon}</div>
             <div>
-              <h3 className="text-xl font-black uppercase italic text-white leading-none tracking-tighter">{s.label}</h3>
+              <h3 className="text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
               <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p>
             </div>
           </button>
@@ -307,115 +161,57 @@ export default function ConsolidatedDiagnostic() {
   );
 
   const Intake = (
-    <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white">
-      <div className="text-center space-y-3 px-4">
-        <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white leading-none tracking-tighter">FORENSIC PROTOCOL <span className="text-red-600 uppercase">ENGAGED</span></h2>
-        <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic">Sector Lock: {sector?.toUpperCase() || "PENDING"}</p>
-      </div>
-      <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto w-full space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 md:px-0 text-left">
-          <div className="space-y-2">
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Operator_Identity</label>
-            <input placeholder="E.G. JOHN_DOE" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full transition-all font-mono" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Entity_Name</label>
-            <input placeholder="E.G. ACME_CORP" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full transition-all font-mono" />
-          </div>
+    <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
+      <div className="text-center space-y-2"><h2 className="text-5xl font-black uppercase italic tracking-tighter text-white leading-none">FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span></h2></div>
+      <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
+        <div className="grid grid-cols-2 gap-6 text-left">
+          <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Operator_Identity</label><input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono" /></div>
+          <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Entity_Name</label><input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono" /></div>
+          <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Corporate_Email</label><input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono" /></div>
+          <div className="space-y-1"><label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-1">Confirm_Protocol</label><input placeholder="VERIFY" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 transition-all font-mono`} /></div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white px-4 md:px-0 text-left">
-          <div className="space-y-2">
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Corporate_Email</label>
-            <input type="email" placeholder="EMAIL@ENTITY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 w-full transition-all font-mono" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Verify_Protocol</label>
-            <input type="email" placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase outline-none focus:border-red-600 w-full transition-all font-mono`} />
-          </div>
-        </div>
-        <div className="h-4 flex items-center justify-center">
-            {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black tracking-[0.3em] italic animate-pulse">⚠️ {validationError}</p>}
-        </div>
-        <button 
-          disabled={!!validationError || !email || !confirmEmail || !entityName || !operatorName || email.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()} 
-          onClick={() => triggerForensicScan("audit")} 
-          className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl disabled:opacity-20"
-        >
-          Initialize Audit Observation
-        </button>
+        {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black text-center animate-pulse">⚠️ {validationError}</p>}
+        <button disabled={!!validationError || !email || !operatorName || email.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl disabled:opacity-20">Initialize Audit Observation</button>
       </div>
     </motion.div>
   );
 
   const Verify = (
     <motion.div key="verify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-12">
-        <h2 className="text-6xl font-black uppercase italic tracking-tighter text-white leading-none">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
-        <div className="max-w-md mx-auto flex gap-4">
-          <input maxLength={6} placeholder="0 0 0 0 0 0" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center font-black text-white outline-none focus:border-red-600 font-mono" />
-          <button onClick={validateOperatorKey} className="bg-white text-black px-10 font-black uppercase text-xs italic tracking-widest hover:bg-red-600 transition-all">Authorize</button>
-        </div>
-        <button onClick={() => setStep("intake")} className="text-slate-600 font-mono text-[9px] uppercase tracking-widest hover:text-white transition-colors">Back to Request</button>
+      <h2 className="text-6xl font-black uppercase italic tracking-tighter text-white">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
+      <div className="max-w-md mx-auto flex gap-4"><input maxLength={6} placeholder="0 0 0 0 0 0" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center font-black text-white outline-none focus:border-red-600 font-mono" /><button onClick={validateOperatorKey} className="bg-white text-black px-10 font-black uppercase text-xs italic tracking-widest hover:bg-red-600 transition-all">Authorize</button></div>
     </motion.div>
   );
 
   const Audit = (
     <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left">
-      <div className="flex items-center gap-4 text-red-600">
-        <Activity className="h-4 w-4 animate-pulse" />
-        <span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1}</span>
-      </div>
-      <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px]">
-        {LOCAL_QUESTIONS[currentDimension]?.text}
-      </h2>
-      <div className="grid grid-cols-1 gap-4 mt-16">
-        {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-          <button key={i} className="group relative py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left"
-            onClick={() => {
-              setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() });
-              if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
-              else setStep("verdict");
-            }}>
-            <span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white transition-all">{opt.label}</span>
-          </button>
-        ))}
-      </div>
+      <div className="flex items-center gap-4 text-red-600"><Activity className="h-4 w-4 animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1}</span></div>
+      <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px]">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
+      <div className="grid grid-cols-1 gap-4 mt-16">{LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (<button key={i} className="group relative py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left" onClick={() => { setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() }); if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1); else setStep("verdict"); }}><span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white transition-all">{opt.label}</span></button>))}</div>
     </motion.div>
   );
 
   const Verdict = (
     <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white text-center py-10 px-4">
        <h2 className="text-7xl font-black italic uppercase tracking-tighter leading-none">INVESTED CAPITAL HAS <span className="text-red-600">{getLiveMetrics().decay}% DECAY</span></h2>
-       <div className="max-w-2xl mx-auto mt-12 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-6 bg-slate-950 border border-slate-900 text-left">
-              <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">REWORK_TAX_ESTIMATE</p>
-              <p className="text-2xl font-black italic">${getLiveMetrics().rework}M / YR</p>
-            </div>
-            <div className="p-6 bg-slate-950 border border-slate-900 text-left">
-              <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">DRIFT_PROBABILITY</p>
-              <p className="text-2xl font-black italic">{getLiveMetrics().delta}%</p>
-            </div>
+       <div className="max-w-2xl mx-auto mt-12 space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-6 bg-slate-950 border border-slate-900 text-left"><p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-1">REWORK_TAX_ESTIMATE</p><p className="text-2xl font-black italic">${getLiveMetrics().rework}M / YR</p></div>
+            <div className="p-6 bg-slate-950 border border-slate-900 text-left"><p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-1">DRIFT_PROBABILITY</p><p className="text-2xl font-black italic">{getLiveMetrics().delta}%</p></div>
           </div>
-          <button className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all">SECURE_FULL_FORENSIC_BRIEFING</button>
-          <button onClick={generateForensicPDF} className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic text-[10px] hover:text-white transition-all flex items-center justify-center gap-4">
-            <Download size={14} /> DOWNLOAD_DECAY_SUMMARY_PDF
-          </button>
+          <div className="bg-slate-950 p-8 border border-slate-900 space-y-6">
+            <div className="flex justify-between items-end"><div className="text-left"><label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em]">Capital_Exposure</label><p className="text-3xl font-black text-white italic">${aiSpend.toFixed(1)}M</p></div><div className="text-right"><label className="text-[10px] font-mono text-red-600 uppercase tracking-[0.3em]">Dynamic_ROI</label><p className="text-3xl font-black text-red-600 italic">{getLiveMetrics().roi}%</p></div></div>
+            <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
+          </div>
+          <div className="flex flex-col gap-4"><button className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all">SECURE_FULL_FORENSIC_BRIEFING</button><button onClick={generateForensicPDF} className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic text-[10px] hover:text-white transition-all flex items-center justify-center gap-4"><Download size={14} /> DOWNLOAD_FORENSIC_SUMMARY_PDF</button></div>
        </div>
     </motion.div>
   );
 
   return (
     <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px]">
-      <AnimatePresence mode="wait">
-        {isLoading && <ForensicLoader onComplete={finalizeStepTransition} />}
-      </AnimatePresence>
-      <AnimatePresence mode="wait">
-        {step === 'triage' && Triage}
-        {step === 'intake' && Intake}
-        {step === 'verify' && Verify}
-        {step === 'audit' && Audit}
-        {step === 'verdict' && Verdict}
-      </AnimatePresence>
+      <AnimatePresence mode="wait">{isLoading && <ForensicLoader onComplete={finalizeStepTransition} />}</AnimatePresence>
+      <AnimatePresence mode="wait">{step === 'triage' && Triage}{step === 'intake' && Intake}{step === 'verify' && Verify}{step === 'audit' && Audit}{step === 'verdict' && Verdict}</AnimatePresence>
       <LogicLeakTicker />
     </div>
   );
