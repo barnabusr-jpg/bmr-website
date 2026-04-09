@@ -16,7 +16,6 @@ export default function Header() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // HYDRATION GUARD: Prevents the White Screen crash
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -27,6 +26,7 @@ export default function Header() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-900 px-6 py-5">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
+        {/* LOGO SECTION */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="bg-red-600 p-2 rounded-sm group-hover:bg-white transition-colors">
             <Activity size={18} className="text-white group-hover:text-red-600 animate-pulse" />
@@ -35,10 +35,11 @@ export default function Header() {
             <span className="text-xl font-black italic tracking-tighter text-white uppercase leading-none">
               <span>BMR</span><span className="text-red-600">SOLUTIONS</span>
             </span>
-            <span className="text-[8px] font-mono text-red-600 font-bold tracking-widest uppercase mt-1"><span>ADMIN ACCESS</span></span>
+            {/* ADMIN ACCESS REMOVED FROM HERE */}
           </div>
         </Link>
 
+        {/* NAVIGATION */}
         <div className="hidden lg:flex items-center gap-12">
           {NAV_ITEMS.map((item) => (
             <Link 
@@ -53,13 +54,14 @@ export default function Header() {
           ))}
         </div>
 
+        {/* STATUS & CTA */}
         <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end pr-6 border-r border-slate-800 text-right">
              <div className="flex items-center gap-2">
                 <ShieldAlert size={10} className="text-red-600" />
-                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest leading-none"><span>STATUS</span></span>
+                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest leading-none">STATUS</span>
              </div>
-             <span className="text-[9px] font-mono text-green-500 font-bold uppercase tracking-widest leading-none mt-1"><span>STABLE NODE-SEC-04</span></span>
+             <span className="text-[9px] font-mono text-green-500 font-bold uppercase tracking-widest leading-none mt-1">STABLE NODE-SEC-04</span>
           </div>
           
           <button 
