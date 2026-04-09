@@ -1,4 +1,3 @@
-"use client";
 import React from "react";
 import { useRouter } from "next/router";
 import Header from "@/components/Header";
@@ -56,6 +55,7 @@ export default function Home() {
           </div>
         </div>
       </main>
+      {/* 🛡️ This is where your hidden link likely lives */}
       <Footer />
     </div>
   );
