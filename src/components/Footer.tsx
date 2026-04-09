@@ -2,85 +2,75 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Activity, Terminal, Lock } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 export default function Footer() {
-  const forensicTiers = [
-    { name: "DRIFT DIAGNOSTICS", href: "/protocols/rapid-de-risk" },
-    { name: "STRUCTURAL HARDENING", href: "/protocols/structural-hardening" },
-    { name: "LOGIC RECONSTRUCTION", href: "/protocols/expertise-recovery" }
-  ];
+  const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#020617] border-t border-slate-900 pt-24 pb-12 px-6">
+    <footer className="bg-[#020617] border-t border-slate-900 pt-20 pb-10 px-6">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
           
-          {/* IDENTIFIER NODE */}
-          <div className="col-span-1 md:col-span-2 space-y-8 text-left">
-            <div className="flex items-center gap-3 group cursor-default">
-              <div className="bg-slate-900 p-2 border border-slate-800 group-hover:border-red-600 transition-colors">
-                <Activity size={18} className="text-red-600" />
+          {/* LOGO & HIDDEN ADMIN ACCESS */}
+          <div className="space-y-6">
+            <Link href="/" className="flex items-center gap-3 group w-fit">
+              <div className="bg-slate-800 p-2 rounded-sm group-hover:bg-red-600 transition-colors">
+                <Activity size={18} className="text-white" />
               </div>
-              <span className="text-2xl font-black italic tracking-tighter text-white uppercase leading-none">
-                BMR<span className="text-red-600">SOLUTIONS</span>
+              <span className="text-xl font-black italic tracking-tighter text-white uppercase leading-none">
+                BMR<span className="text-slate-500 group-hover:text-red-600 transition-colors">SOLUTIONS</span>
               </span>
-            </div>
-            <p className="text-slate-500 text-[11px] font-bold leading-relaxed max-w-sm italic uppercase tracking-tight text-left">
-              We do not provide optimization services. We provide structural hardening. 
-              We eliminate systemic decay before it results in operational failure.
+            </Link>
+            <p className="text-[10px] font-mono text-slate-600 uppercase leading-relaxed tracking-widest">
+              Structural hardening for AI logic systems. Eliminating systemic decay before operational failure.
             </p>
-            <div className="flex items-center gap-4 text-[9px] font-mono text-red-900 font-bold uppercase tracking-[0.4em] text-left">
-              <Lock size={12} className="animate-pulse" /> END-TO-END ENCRYPTION ACTIVE
-            </div>
+            
+            {/* INCONSPICUOUS ADMIN ENTRANCE */}
+            <Link 
+              href="/owner" 
+              className="block text-[7px] font-mono text-slate-900 uppercase tracking-[0.5em] hover:text-red-900 transition-colors w-fit pt-4"
+            >
+              [ ADMIN_SESSION_START ]
+            </Link>
           </div>
 
-          {/* NAVIGATION NODES */}
-          <div className="space-y-8 text-left">
-            <h4 className="text-[10px] font-black tracking-[0.4em] text-slate-700 uppercase italic text-left">FORENSIC TIERS</h4>
-            <nav className="flex flex-col gap-4 text-left">
-              {forensicTiers.map((tier) => (
-                <Link 
-                  key={tier.name} 
-                  href={tier.href}
-                  className="text-slate-500 text-[10px] font-bold uppercase tracking-widest hover:text-red-600 transition-all hover:translate-x-1"
-                >
-                  {tier.name}
-                </Link>
-              ))}
-            </nav>
+          {/* FORENSIC TIERS */}
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-6 italic">Forensic Tiers</h4>
+            <ul className="space-y-2 text-[9px] font-mono text-slate-500 uppercase tracking-widest">
+              <li className="hover:text-red-600 cursor-default transition-colors">Drift Diagnostics</li>
+              <li className="hover:text-red-600 cursor-default transition-colors">Structural Hardening</li>
+              <li className="hover:text-red-600 cursor-default transition-colors">Logic Reconstruction</li>
+            </ul>
           </div>
 
-          {/* SYSTEM STATUS NODE */}
-          <div className="space-y-8 text-left">
-            <h4 className="text-[10px] font-black tracking-[0.4em] text-slate-700 uppercase italic text-left">SYSTEM STATUS</h4>
-            <div className="space-y-4 text-left">
-              <div className="flex items-center gap-3 text-left">
-                <div className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
-                <span className="text-[10px] font-mono text-red-600 font-black uppercase tracking-widest">
-                  PROBE STATUS: ACTIVE
-                </span>
-              </div>
-              <div className="text-[9px] font-mono text-slate-700 leading-loose uppercase tracking-tighter font-bold text-left">
-                NODE IDENTIFIER: BMR_V3_NY<br />
-                FIDELITY CHECK: 0.002ms<br />
-                SECURITY LEVEL: ALPHA-7
-              </div>
+          {/* SYSTEM STATUS */}
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-black text-white uppercase tracking-[0.3em] mb-6 italic">System Status</h4>
+            <div className="space-y-2">
+               <div className="flex items-center gap-2">
+                 <div className="w-1 h-1 bg-red-600 rounded-full animate-pulse" />
+                 <span className="text-[9px] font-mono text-red-600 uppercase tracking-widest">Probe Status: Active</span>
+               </div>
+               <p className="text-[8px] font-mono text-slate-700 uppercase tracking-widest leading-tight">
+                 Node Identifier: BMR_V3_NY<br />
+                 Fidelity Check: 0.002ms<br />
+                 Security Level: ALPHA-7
+               </p>
             </div>
           </div>
         </div>
 
-        {/* TERMINAL FOOTER */}
-        <div className="pt-12 border-t border-slate-900/50 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-wrap justify-center md:justify-start items-center gap-8 text-[9px] font-mono text-slate-800 font-bold uppercase tracking-[0.2em]">
-            <span>© 2026 BMR SOLUTIONS GLOBAL</span>
-            <Link href="/privacy" className="hover:text-red-900 transition-colors uppercase">PRIVACY PROTOCOLS</Link>
-            <Link href="/terms" className="hover:text-red-900 transition-colors uppercase">ENGAGEMENT TERMS</Link>
-          </div>
-          
-          <div className="flex items-center gap-3 font-mono text-[9px] text-slate-800 font-bold uppercase">
-            <Terminal size={12} className="text-green-900" />
-            <span className="tracking-[0.3em]">TERMINAL STATUS: <span className="text-green-700">OPERATIONAL</span></span>
+        {/* BOTTOM BAR */}
+        <div className="flex flex-col md:flex-row justify-between items-center pt-8 border-t border-slate-900/50 gap-4">
+          <p className="text-[8px] font-mono text-slate-700 uppercase tracking-[0.3em]">
+            © {currentYear} BMR SOLUTIONS GLOBAL. PRIVACY PROTOCOLS ENABLED.
+          </p>
+          <div className="flex gap-8 text-[8px] font-mono text-slate-700 uppercase tracking-[0.3em]">
+            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+            <span className="text-slate-800 italic">Terminal Status: Operational</span>
           </div>
         </div>
       </div>
