@@ -3,11 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, ShieldAlert, Zap, Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock, ChevronRight, Download } from "lucide-react";
-import jsPDF from "jspdf"; // Required: npm install jspdf
+import jsPDF from "jspdf";
 import ForensicLoader from "@/components/ForensicLoader";
 import LogicLeakTicker from "@/components/LogicLeakTicker";
 
-// --- 1. DATA ANCHOR: FULL 12-QUESTION SET ---
 const LOCAL_QUESTIONS = [
   {
     id: "RT_01", protocol: "reworkTax",
@@ -151,14 +150,16 @@ export default function ConsolidatedDiagnostic() {
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  
   const [serverChallenge, setServerChallenge] = useState("");
   const [userInputKey, setUserInputKey] = useState("");
 
   useEffect(() => { setMounted(true); }, []);
 
+  // --- SURGICAL FIX FOR EMAIL VALIDATION ---
   useEffect(() => {
-    if (confirmEmail.length > 0 && email !== confirmEmail) {
+    const e1 = email.trim().toLowerCase();
+    const e2 = confirmEmail.trim().toLowerCase();
+    if (e2.length > 0 && e1 !== e2) {
       setValidationError("EMAIL_VERIFICATION_MISMATCH");
     } else {
       setValidationError(null);
@@ -196,120 +197,78 @@ export default function ConsolidatedDiagnostic() {
     };
   };
 
-  // --- BEEFED UP PDF GENERATOR ---
+  // --- BEEFED UP PDF LOGIC ---
   const generateForensicPDF = () => {
-    const metrics = getLiveMetrics();
+    const m = getLiveMetrics();
     const doc = new jsPDF();
-    const red = "#dc2626";
-    const slate = "#020617";
-
-    // Header Background
-    doc.setFillColor(slate);
-    doc.rect(0, 0, 210, 45, "F");
-
-    // Branding
+    
+    // Header
+    doc.setFillColor(2, 6, 23); // #020617
+    doc.rect(0, 0, 210, 50, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(26);
+    doc.setFontSize(28);
     doc.text("BMR SOLUTIONS", 15, 25);
     doc.setFontSize(10);
     doc.setFont("courier", "normal");
-    doc.text(`FORENSIC_DECAY_REPORT // NODE_ID: ${sector.toUpperCase()}_04`, 15, 35);
-    doc.text(`DATE: ${new Date().toLocaleDateString()}`, 155, 35);
+    doc.text(`FORENSIC_DECAY_SUMMARY // NODE: ${sector.toUpperCase()}`, 15, 38);
 
-    // Operator Meta
-    doc.setTextColor(slate);
-    doc.setFontSize(12);
+    // Operator Info
+    doc.setTextColor(2, 6, 23);
     doc.setFont("helvetica", "bold");
-    doc.text(`OPERATOR: ${operatorName.toUpperCase()}`, 15, 60);
-    doc.text(`ENTITY: ${entityName.toUpperCase()}`, 15, 68);
-    doc.setDrawColor(red);
-    doc.setLineWidth(1);
-    doc.line(15, 72, 80, 72);
+    doc.setFontSize(12);
+    doc.text(`ENTITY: ${entityName.toUpperCase()}`, 15, 65);
+    doc.text(`OPERATOR: ${operatorName.toUpperCase()}`, 15, 73);
+    doc.setDrawColor(220, 38, 38); // #dc2626
+    doc.line(15, 76, 100, 76);
 
-    // Main Decay Score
-    doc.setFillColor(slate);
-    doc.rect(15, 85, 180, 60, "F");
-    doc.setTextColor(red);
-    doc.setFontSize(60);
-    doc.text(`${metrics.decay}%`, 30, 125);
+    // Score Box
+    doc.setFillColor(2, 6, 23);
+    doc.rect(15, 90, 180, 60, "F");
+    doc.setTextColor(220, 38, 38);
+    doc.setFontSize(70);
+    doc.text(`${m.decay}%`, 35, 135);
     doc.setTextColor(255, 255, 255);
-    doc.setFontSize(14);
-    doc.text("TOTAL_CAPITAL_DECAY", 30, 135);
+    doc.setFontSize(16);
+    doc.text("CAPITAL_DECAY_INDEX", 35, 143);
 
-    // Side Financials
-    doc.setTextColor(slate);
-    doc.setFontSize(10);
-    doc.text("ANNUAL_REWORK_TAX", 120, 105);
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text(`$${metrics.rework}M`, 120, 115);
-    
-    doc.setFontSize(10);
-    doc.text("DRIFT_PROBABILITY", 120, 130);
-    doc.setFontSize(20);
-    doc.text(`${metrics.delta}%`, 120, 140);
+    // Financials
+    doc.setTextColor(2, 6, 23);
+    doc.setFontSize(11);
+    doc.text("REWORK_TAX_ESTIMATE", 125, 110);
+    doc.setFontSize(22);
+    doc.text(`$${m.rework}M/YR`, 125, 122);
 
-    // Observations Header
+    // Conclusion Hook
     doc.setFontSize(12);
-    doc.text("FORENSIC_OBSERVATIONS:", 15, 170);
-    doc.setDrawColor(220, 220, 220);
-    doc.line(15, 175, 195, 175);
-
-    // Findings
+    doc.text("CONCLUSION: TRIANGULATION_PENDING", 15, 180);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
-    const findings = [
-      `1. Sector specific risk [${sector.toUpperCase()}] indicates high margin erosion.`,
-      `2. Systemic drift suggests a projected ROI of ${metrics.roi}% without correction.`,
-      `3. Hidden capital leakage estimated at $${metrics.hidden}M annually.`,
-      `4. Critical logic branches show signs of unmonitored tribal knowledge dependency.`
-    ];
-    doc.text(findings, 15, 185);
+    doc.text("Report indicates significant logic fragmentation. Immediate baseline stabilization required.", 15, 190);
+    doc.text("Access to BMR Field Guide V1 requires counter-signal validation.", 15, 198);
 
-    // Triangulation Status (The Hook)
-    doc.setFillColor(245, 245, 245);
-    doc.rect(15, 230, 180, 25, "F");
-    doc.setTextColor(red);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "bold");
-    doc.text("STATUS: TRIANGULATION_PENDING", 25, 245);
-    doc.setTextColor(slate);
-    doc.setFontSize(8);
-    doc.text("Final Field Guide V1 release requires full 3-node signal validation.", 100, 245);
-
-    // Footer
-    doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
-    doc.text("CONFIDENTIAL // BMR SOLUTIONS GLOBAL // INTERNAL USE ONLY", 105, 285, { align: "center" });
-
-    doc.save(`BMR_Forensic_${entityName}_Decay.pdf`);
+    doc.save(`BMR_Forensic_${entityName}.pdf`);
   };
 
   const triggerForensicScan = async (nextStep: string) => {
-    if (step === "intake") {
-      setIsLoading(true);
-      setValidationError(null);
-      try {
-        const res = await fetch('/api/auth/generate-key', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setServerChallenge(data.challenge);
-          console.log("HANDSHAKE_VERIFIED");
-        } else {
-          setIsLoading(false);
-          setValidationError("TRANSMISSION_REJECTED");
-        }
-      } catch (err) {
+    setIsLoading(true);
+    setValidationError(null);
+    try {
+      const res = await fetch('/api/auth/generate-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setServerChallenge(data.challenge);
+      } else {
         setIsLoading(false);
-        setValidationError("LOGIC_SHEAR_DETECTION");
+        setValidationError("TRANSMISSION_REJECTED");
       }
-    } else {
-      setIsLoading(true);
+    } catch (err) {
+      setIsLoading(false);
+      setValidationError("LOGIC_SHEAR_DETECTION");
     }
   };
 
@@ -354,22 +313,22 @@ export default function ConsolidatedDiagnostic() {
         <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic">Sector Lock: {sector?.toUpperCase() || "PENDING"}</p>
       </div>
       <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto w-full space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 md:px-0">
-          <div className="space-y-2 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 md:px-0 text-left">
+          <div className="space-y-2">
             <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Operator_Identity</label>
             <input placeholder="E.G. JOHN_DOE" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full transition-all font-mono" />
           </div>
-          <div className="space-y-2 text-left">
+          <div className="space-y-2">
             <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Entity_Name</label>
             <input placeholder="E.G. ACME_CORP" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full transition-all font-mono" />
           </div>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white px-4 md:px-0">
-          <div className="space-y-2 text-left">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white px-4 md:px-0 text-left">
+          <div className="space-y-2">
             <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Corporate_Email</label>
             <input type="email" placeholder="EMAIL@ENTITY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 w-full transition-all font-mono" />
           </div>
-          <div className="space-y-2 text-left">
+          <div className="space-y-2">
             <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Verify_Protocol</label>
             <input type="email" placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase outline-none focus:border-red-600 w-full transition-all font-mono`} />
           </div>
@@ -377,104 +336,79 @@ export default function ConsolidatedDiagnostic() {
         <div className="h-4 flex items-center justify-center">
             {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black tracking-[0.3em] italic animate-pulse">⚠️ {validationError}</p>}
         </div>
-        <button disabled={!!validationError || !email || !confirmEmail || !entityName || !operatorName} onClick={() => triggerForensicScan("audit")} className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl">Initialize Audit Observation</button>
+        <button 
+          disabled={!!validationError || !email || !confirmEmail || !entityName || !operatorName || email.trim().toLowerCase() !== confirmEmail.trim().toLowerCase()} 
+          onClick={() => triggerForensicScan("audit")} 
+          className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl disabled:opacity-20"
+        >
+          Initialize Audit Observation
+        </button>
       </div>
     </motion.div>
   );
 
   const Verify = (
     <motion.div key="verify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-12">
-        <div className="space-y-4">
-          <h2 className="text-6xl font-black uppercase italic tracking-tighter text-white leading-none">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
-          <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-none">Key Transmitted to {email}. Enter 6-digit code for node authorization.</p>
-        </div>
+        <h2 className="text-6xl font-black uppercase italic tracking-tighter text-white leading-none">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
         <div className="max-w-md mx-auto flex gap-4">
-          <input 
-            maxLength={6}
-            placeholder="0 0 0 0 0 0" 
-            value={userInputKey}
-            onChange={(e) => setUserInputKey(e.target.value)}
-            className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center font-black tracking-[0.5em] text-white outline-none focus:border-red-600 transition-all font-mono"
-          />
-          <button onClick={validateOperatorKey} className="bg-white text-black px-10 font-black uppercase text-xs italic tracking-widest hover:bg-red-600 hover:text-white transition-all">Authorize</button>
+          <input maxLength={6} placeholder="0 0 0 0 0 0" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center font-black text-white outline-none focus:border-red-600 font-mono" />
+          <button onClick={validateOperatorKey} className="bg-white text-black px-10 font-black uppercase text-xs italic tracking-widest hover:bg-red-600 transition-all">Authorize</button>
         </div>
-        {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black tracking-widest italic animate-pulse">{validationError}</p>}
         <button onClick={() => setStep("intake")} className="text-slate-600 font-mono text-[9px] uppercase tracking-widest hover:text-white transition-colors">Back to Request</button>
     </motion.div>
   );
 
   const Audit = (
-    <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-      <div className="space-y-12 px-4">
-        <div className="flex items-center gap-4 text-red-600">
-          <Activity className="h-4 w-4 animate-pulse" />
-          <span className="font-black uppercase tracking-[0.4em] text-[10px] text-left">PROTOCOL_NODE_0{currentDimension + 1} // ANALYZING_SIGNAL</span>
-        </div>
-        <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px] text-left">
-          {LOCAL_QUESTIONS[currentDimension]?.text}
-        </h2>
-        <div className="grid grid-cols-1 gap-4 mt-16">
-          {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-            <button key={i} className="group relative flex flex-col justify-center py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left rounded-none overflow-hidden"
-              onClick={() => {
-                setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() });
-                if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
-                else setStep("verdict");
-              }}>
-              <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-red-600 transition-all duration-500"></div>
-              <div className="flex items-center justify-between w-full">
-                <span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white group-hover:italic group-hover:translate-x-3 transition-all duration-300">{opt.label}</span>
-                <ArrowRight size={18} className="text-slate-800 group-hover:text-red-600 transition-all group-hover:translate-x-1" />
-              </div>
-            </button>
-          ))}
-        </div>
+    <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left">
+      <div className="flex items-center gap-4 text-red-600">
+        <Activity className="h-4 w-4 animate-pulse" />
+        <span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1}</span>
+      </div>
+      <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px]">
+        {LOCAL_QUESTIONS[currentDimension]?.text}
+      </h2>
+      <div className="grid grid-cols-1 gap-4 mt-16">
+        {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
+          <button key={i} className="group relative py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left"
+            onClick={() => {
+              setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() });
+              if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
+              else setStep("verdict");
+            }}>
+            <span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white transition-all">{opt.label}</span>
+          </button>
+        ))}
       </div>
     </motion.div>
   );
 
   const Verdict = (
     <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white text-center py-10 px-4">
-       <h2 className="text-7xl font-black italic uppercase tracking-tighter leading-none">
-          YOUR INVESTED CAPITAL HAS <span className="text-red-600">{getLiveMetrics().decay}% DECAY</span>
-       </h2>
-       
+       <h2 className="text-7xl font-black italic uppercase tracking-tighter leading-none">INVESTED CAPITAL HAS <span className="text-red-600">{getLiveMetrics().decay}% DECAY</span></h2>
        <div className="max-w-2xl mx-auto mt-12 space-y-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-6 bg-slate-950 border border-slate-900 text-left">
               <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">REWORK_TAX_ESTIMATE</p>
-              <p className="text-2xl font-black text-white italic">${getLiveMetrics().rework}M / YR</p>
+              <p className="text-2xl font-black italic">${getLiveMetrics().rework}M / YR</p>
             </div>
             <div className="p-6 bg-slate-950 border border-slate-900 text-left">
-              <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">LOGIC_DRIFT_PROBABILITY</p>
-              <p className="text-2xl font-black text-white italic">{getLiveMetrics().delta}%</p>
+              <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">DRIFT_PROBABILITY</p>
+              <p className="text-2xl font-black italic">{getLiveMetrics().delta}%</p>
             </div>
           </div>
-
-          <div className="flex flex-col gap-4">
-            <button className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 group">
-              SECURE_FULL_FORENSIC_BRIEFING <ChevronRight className="group-hover:translate-x-2 transition-transform" size={16} />
-            </button>
-            <button 
-              onClick={generateForensicPDF}
-              className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic tracking-[0.2em] text-[10px] hover:bg-slate-900 hover:text-white transition-all flex items-center justify-center gap-4"
-            >
-              <Download size={14} /> DOWNLOAD_DECAY_SUMMARY_PDF
-            </button>
-            <button onClick={() => window.location.href='/'} className="mt-4 text-slate-600 font-mono text-[9px] uppercase tracking-widest hover:text-white transition-all">
-              EXIT_SECURE_TERMINAL // SESSION_PURGE_ACTIVE
-            </button>
-          </div>
+          <button className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all">SECURE_FULL_FORENSIC_BRIEFING</button>
+          <button onClick={generateForensicPDF} className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic text-[10px] hover:text-white transition-all flex items-center justify-center gap-4">
+            <Download size={14} /> DOWNLOAD_DECAY_SUMMARY_PDF
+          </button>
        </div>
     </motion.div>
   );
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative">
+    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px]">
       <AnimatePresence mode="wait">
         {isLoading && <ForensicLoader onComplete={finalizeStepTransition} />}
       </AnimatePresence>
-
       <AnimatePresence mode="wait">
         {step === 'triage' && Triage}
         {step === 'intake' && Intake}
