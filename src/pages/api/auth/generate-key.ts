@@ -31,6 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     };
 
     await sgMail.send(msg);
+    // CRITICAL: Returning the challenge key allows the frontend to verify the session
     return res.status(200).json({ success: true, challenge: otp });
 
   } catch (error: any) {
