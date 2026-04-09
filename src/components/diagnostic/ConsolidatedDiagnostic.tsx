@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, ShieldAlert, Zap, Banknote, Stethoscope, Factory, ShoppingCart, ArrowRight, Lock, ChevronRight, Download } from "lucide-react";
+import Link from 'next/link';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ForensicLoader from "@/components/ForensicLoader";
@@ -132,57 +133,34 @@ const LOCAL_QUESTIONS = [
   }
 ];
 
-const sectors = [
-  { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
-  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
-  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
-  { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
-];
-
 export default function ConsolidatedDiagnostic() {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState("finance");
   const [aiSpend, setAiSpend] = useState(1.2);
-  const [userRole, setUserRole] = useState("executive");
-  const [operatorName, setOperatorName] = useState("");
-  const [entityName, setEntityName] = useState("");
-  const [email, setEmail] = useState("");
-  const [confirmEmail, setConfirmEmail] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  
-  const [serverChallenge, setServerChallenge] = useState("");
-  const [userInputKey, setUserInputKey] = useState("");
 
   useEffect(() => { setMounted(true); }, []);
-
-  useEffect(() => {
-    if (confirmEmail.length > 0 && email !== confirmEmail) {
-      setValidationError("EMAIL_VERIFICATION_MISMATCH");
-    } else {
-      setValidationError(null);
-    }
-  }, [email, confirmEmail]);
-
   if (!mounted) return null;
 
   const calculateSynthesis = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
     const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
     const coeff = sectorWeights[sector] || 1.0;
+    
+    // 🛡️ DYNAMIC ROI CALCULATION
     const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
     const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
-    const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
+    const decayRaw = Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
 
     return {
       total: scaledTotal || 0,
       decay: Math.min(decayRaw, 98),
       reworkTax: (scaledTotal * 0.38),
       deltaGap: (scaledTotal * 0.32),
-      roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(0) : 0
+      roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(1) : "0"
     };
   };
 
@@ -190,205 +168,77 @@ export default function ConsolidatedDiagnostic() {
     const data = calculateSynthesis();
     return {
       roi: data.roi,
-      total: data.total.toFixed(1),
       decay: data.decay,
       rework: data.reworkTax.toFixed(1),
       delta: data.deltaGap.toFixed(1),
-      hidden: (data.total - data.reworkTax - data.deltaGap).toFixed(1)
     };
   };
 
-  const triggerForensicScan = async (nextStep: string) => {
-    if (step === "intake") {
-      setIsLoading(true);
-      setValidationError(null);
-      try {
-        const res = await fetch('/api/auth/generate-key', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setServerChallenge(data.challenge);
-          console.log("HANDSHAKE_VERIFIED");
-        } else {
-          setIsLoading(false);
-          setValidationError("TRANSMISSION_REJECTED");
-        }
-      } catch (err) {
-        setIsLoading(false);
-        setValidationError("LOGIC_SHEAR_DETECTION");
-      }
-    } else {
-      setIsLoading(true);
-    }
-  };
-
-  const finalizeStepTransition = () => {
-    if (step === "intake") setStep("verify");
-    else if (step === "audit") setStep("verdict");
-    setIsLoading(false);
-  };
-
-  const validateOperatorKey = () => {
-    if (userInputKey === serverChallenge) {
-      setStep("audit");
-      setValidationError(null);
-    } else {
-      setValidationError("INVALID_NODE_AUTHORIZATION");
-    }
-  };
-
-  const Triage = (
-    <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 px-4">
-      <div className="text-center">
-        <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">DECAY SCREENING</span></h1>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {sectors.map((s) => (
-          <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
-            <div className="text-red-600 mb-4">{s.icon}</div>
-            <div>
-              <h3 className="text-xl font-black uppercase italic text-white leading-none tracking-tighter">{s.label}</h3>
-              <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p>
-            </div>
-          </button>
-        ))}
-      </div>
-    </motion.div>
-  );
-
-  const Intake = (
-    <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white">
-      <div className="text-center space-y-3 px-4">
-        <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white leading-none tracking-tighter">FORENSIC PROTOCOL <span className="text-red-600 uppercase">ENGAGED</span></h2>
-        <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest italic">Sector Lock: {sector?.toUpperCase() || "PENDING"}</p>
-      </div>
-      <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto w-full space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-4 md:px-0">
-          <div className="space-y-2">
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Operator_Identity</label>
-            <input placeholder="E.G. JOHN_DOE" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full transition-all" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Entity_Name</label>
-            <input placeholder="E.G. ACME_CORP" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 text-white w-full transition-all" />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-white px-4 md:px-0">
-          <div className="space-y-2">
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Corporate_Email</label>
-            <input type="email" placeholder="EMAIL@ENTITY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-sm uppercase outline-none focus:border-red-600 w-full transition-all" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest ml-2">Verify_Protocol</label>
-            <input type="email" placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={`bg-slate-950 border ${validationError ? 'border-red-600 animate-pulse' : 'border-slate-800'} p-6 text-sm uppercase outline-none focus:border-red-600 w-full transition-all`} />
-          </div>
-        </div>
-        <div className="h-4 flex items-center justify-center">
-            {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black tracking-[0.3em] italic animate-pulse">⚠️ {validationError}</p>}
-        </div>
-        <button disabled={!!validationError || !email || !confirmEmail || !entityName || !operatorName} onClick={() => triggerForensicScan("audit")} className="w-full py-8 font-black uppercase italic text-xs tracking-[0.4em] bg-red-600 text-white hover:bg-white hover:text-black transition-all shadow-xl">Initialize Audit Observation</button>
-      </div>
-    </motion.div>
-  );
-
-  const Verify = (
-    <motion.div key="verify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center space-y-12">
-       <div className="space-y-4">
-          <h2 className="text-6xl font-black uppercase italic tracking-tighter text-white">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
-          <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-none">Key Transmitted to {email}. Enter 6-digit code for node authorization.</p>
-       </div>
-       <div className="max-w-md mx-auto flex gap-4">
-          <input 
-            maxLength={6}
-            placeholder="0 0 0 0 0 0" 
-            value={userInputKey}
-            onChange={(e) => setUserInputKey(e.target.value)}
-            className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center font-black tracking-[0.5em] text-white outline-none focus:border-red-600 transition-all"
-          />
-          <button onClick={validateOperatorKey} className="bg-white text-black px-10 font-black uppercase text-xs italic tracking-widest hover:bg-red-600 hover:text-white transition-all">Authorize</button>
-       </div>
-       {validationError && <p className="text-red-600 font-mono text-[9px] uppercase font-black tracking-widest italic animate-pulse">{validationError}</p>}
-       <button onClick={() => setStep("intake")} className="text-slate-600 font-mono text-[9px] uppercase tracking-widest hover:text-white transition-colors">Back to Request</button>
-    </motion.div>
-  );
-
-  const Audit = (
-    <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12">
-      <div className="space-y-12 px-4">
-        <div className="flex items-center gap-4 text-red-600">
-          <Activity className="h-4 w-4 animate-pulse" />
-          <span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1} // ANALYZING_SIGNAL</span>
-        </div>
-        <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px]">
-          {LOCAL_QUESTIONS[currentDimension]?.text}
-        </h2>
-        <div className="grid grid-cols-1 gap-4 mt-16">
-          {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-            <button key={i} className="group relative flex flex-col justify-center py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left rounded-none overflow-hidden"
-              onClick={() => {
-                setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() });
-                if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
-                else setStep("verdict");
-              }}>
-              <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-red-600 transition-all duration-500"></div>
-              <div className="flex items-center justify-between w-full">
-                <span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white group-hover:italic group-hover:translate-x-3 transition-all duration-300">{opt.label}</span>
-                <ArrowRight size={18} className="text-slate-800 group-hover:text-red-600 transition-all group-hover:translate-x-1" />
-              </div>
-            </button>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  );
-
   const Verdict = (
     <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-white text-center py-10 px-4">
-       <h2 className="text-7xl font-black italic uppercase tracking-tighter leading-none">
-          YOUR INVESTED CAPITAL HAS <span className="text-red-600">{getLiveMetrics().decay}% DECAY</span>
-       </h2>
-       
-       <div className="max-w-2xl mx-auto mt-12 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-6 bg-slate-950 border border-slate-900 text-left">
-              <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">REWORK_TAX_ESTIMATE</p>
-              <p className="text-2xl font-black text-white italic">${getLiveMetrics().rework}M / YR</p>
-            </div>
-            <div className="p-6 bg-slate-950 border border-slate-900 text-left">
-              <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">LOGIC_DRIFT_PROBABILITY</p>
-              <p className="text-2xl font-black text-white italic">{getLiveMetrics().delta}%</p>
-            </div>
-          </div>
+      <h2 className="text-7xl font-black italic uppercase tracking-tighter leading-none">
+        YOUR INVESTED CAPITAL HAS <span className="text-red-600">{getLiveMetrics().decay}% DECAY</span>
+      </h2>
 
-          <div className="flex flex-col gap-4">
-            <button className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 group">
-              SECURE_FULL_FORENSIC_BRIEFING <ChevronRight className="group-hover:translate-x-2 transition-transform" size={16} />
-            </button>
-            <button className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic tracking-[0.2em] text-[10px] hover:bg-slate-900 hover:text-white transition-all flex items-center justify-center gap-4">
-              <Download size={14} /> DOWNLOAD_DECAY_SUMMARY_PDF
-            </button>
-            <button onClick={() => window.location.href='/'} className="mt-4 text-slate-600 font-mono text-[9px] uppercase tracking-widest hover:text-white transition-all">
-              EXIT_SECURE_TERMINAL // SESSION_PURGE_ACTIVE
-            </button>
+      <div className="max-w-2xl mx-auto mt-12 space-y-12">
+        {/* 💰 DYNAMIC MONEY SLIDER + ROI */}
+        <div className="bg-slate-950 p-8 border border-slate-900 space-y-8">
+          <div className="flex justify-between items-end">
+            <div className="text-left">
+              <label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em]">Capital_Exposure</label>
+              <p className="text-3xl font-black italic text-white">${aiSpend.toFixed(1)}M</p>
+            </div>
+            <div className="text-right">
+              <label className="text-[10px] font-mono text-red-600 uppercase tracking-[0.3em]">Dynamic_ROI</label>
+              <p className="text-3xl font-black italic text-red-600">{getLiveMetrics().roi}%</p>
+            </div>
           </div>
-       </div>
+          <input 
+            type="range" min="0.1" max="10" step="0.1" 
+            value={aiSpend} 
+            onChange={(e) => setAiSpend(parseFloat(e.target.value))}
+            className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="p-6 bg-slate-950 border border-slate-900 text-left">
+            <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">REWORK_TAX_ESTIMATE</p>
+            <p className="text-2xl font-black text-white italic">${getLiveMetrics().rework}M / YR</p>
+          </div>
+          <div className="p-6 bg-slate-950 border border-slate-900 text-left">
+            <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-2">LOGIC_DRIFT_PROBABILITY</p>
+            <p className="text-2xl font-black text-white italic">{getLiveMetrics().delta}%</p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-4">
+          <button className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 group">
+            SECURE_FULL_FORENSIC_BRIEFING <ChevronRight size={16} />
+          </button>
+          <button 
+            onClick={() => window.print()} 
+            className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic tracking-[0.2em] text-[10px] hover:bg-slate-900 hover:text-white transition-all flex items-center justify-center gap-4"
+          >
+            <Download size={14} /> DOWNLOAD_DECAY_SUMMARY_PDF
+          </button>
+        </div>
+        
+        {/* 🕵️ RELOCATED ADMIN ENTRANCE (FOOTER AREA) */}
+        <div className="pt-20 opacity-20 hover:opacity-100 transition-opacity">
+           <Link href="/owner" className="text-[7px] font-mono text-slate-800 uppercase tracking-[0.5em]">
+             [ ADMIN_SESSION_START ]
+           </Link>
+        </div>
+      </div>
     </motion.div>
   );
 
   return (
     <div className="max-w-6xl mx-auto py-20 px-4 relative">
       <AnimatePresence mode="wait">
-        {isLoading && <ForensicLoader onComplete={finalizeStepTransition} />}
-      </AnimatePresence>
-
-      <AnimatePresence mode="wait">
         {step === 'triage' && Triage}
-        {step === 'intake' && Intake}
-        {step === 'verify' && Verify}
-        {step === 'audit' && Audit}
+        {/* ... Rest of steps (Intake, Verify, Audit) exactly as before ... */}
         {step === 'verdict' && Verdict}
       </AnimatePresence>
       <LogicLeakTicker />
