@@ -36,14 +36,16 @@ export default function BriefingsIndex() {
   const [accessState, setAccessState] = useState<"public" | "verifying" | "granted">("public");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
+  const [serverChallenge, setServerChallenge] = useState(""); // 🛡️ Restored for handshake
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => { setMounted(true); }, []);
 
-  const initiateVerification = (e: React.FormEvent) => {
+  const initiateVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    
     // 🛡️ B2B Whitelisting Logic
     const blockedDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"];
     const domain = email.split("@")[1];
@@ -54,17 +56,36 @@ export default function BriefingsIndex() {
     }
 
     setIsSubmitting(true);
-    // 📡 TRANSMISSION SIMULATION
-    setTimeout(() => {
-      setAccessState("verifying");
+    
+    try {
+      // 📡 ACTIVE TRANSMISSION TO SENDGRID API
+      const res = await fetch('/api/auth/generate-key', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setServerChallenge(data.challenge);
+        setAccessState("verifying");
+      } else {
+        setError("TRANSMISSION_REJECTED");
+      }
+    } catch (err) {
+      setError("LOGIC_SHEAR_DETECTION");
+    } finally {
       setIsSubmitting(false);
-    }, 1500);
+    }
   };
 
   const finalizeAccess = (e: React.FormEvent) => {
     e.preventDefault();
-    if (otp === "123456") { // Simulation of verified code
+    // Compare real server-generated key
+    if (otp === serverChallenge) { 
       setAccessState("granted");
+      setError("");
     } else {
       setError("INVALID_OPERATOR_KEY");
     }
@@ -85,7 +106,7 @@ export default function BriefingsIndex() {
 
         {/* HERO DOSSIERS */}
         <div className="grid gap-6 max-w-5xl mb-24">
-          {HERO_BRIEFINGS.map((a, index) => (
+          {HERO_BRIEFINGS.map((a) => (
             <Link key={a.slug} href={`/briefings/${a.slug}`} className="group relative p-10 border border-slate-900 bg-slate-950/50 hover:border-red-600 transition-all flex flex-col md:flex-row md:justify-between items-start md:items-center">
               <div className="space-y-4 max-w-2xl">
                 <div className="flex items-center gap-4">
@@ -151,7 +172,8 @@ export default function BriefingsIndex() {
           )}
         </div>
       </main>
-      <LogicLeakTicker /><Footer />
+      <LogicLeakTicker />
+      <Footer />
     </div>
   );
 }
