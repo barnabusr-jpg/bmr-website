@@ -45,7 +45,19 @@ export default function ConsolidatedDiagnostic() {
   const [serverChallenge, setServerChallenge] = useState("");
   const [userInputKey, setUserInputKey] = useState("");
 
-  useEffect(() => { setMounted(true); }, []);
+  // 📡 UNIFIED GATEWAY LISTENER
+  useEffect(() => {
+    setMounted(true);
+    const params = new URLSearchParams(window.location.search);
+    const targetProtocol = params.get('initialProtocol');
+    
+    if (targetProtocol) {
+      setStep("intake");
+      const matchedSector = sectors.find(s => s.id === targetProtocol);
+      if (matchedSector) setSector(matchedSector.id);
+      setCurrentDimension(0); // [cite: 8]
+    }
+  }, []);
 
   useEffect(() => {
     const e1 = email.trim().toLowerCase();
@@ -86,7 +98,7 @@ export default function ConsolidatedDiagnostic() {
     doc.text("BMR SOLUTIONS // FORENSIC UNIT", 15, 20);
     doc.setFont("courier", "normal"); doc.setFontSize(8);
     doc.text(`NODE_ID: ${sector.toUpperCase()}_SEC_04 // CLEARANCE: ALPHA-7`, 15, 28);
-    doc.text(`STAMP: ${dateStr} // 06:55:01`, 15, 33);
+    doc.text(`STAMP: ${dateStr} // 06:55:01`, 15, 33); // [cite: 10, 44]
 
     doc.setTextColor(slate); doc.setFontSize(10); doc.setFont("helvetica", "bold");
     doc.text(`ENTITY: ${entityName.toUpperCase()}`, 15, 58);
@@ -113,16 +125,16 @@ export default function ConsolidatedDiagnostic() {
     doc.setTextColor(255, 255, 255); doc.setFontSize(8); doc.text("BMR_INTERNAL_LOGS // NODE_FIDELITY_CHECK", 15, 10);
     doc.setTextColor(slate); doc.setFont("courier", "bold"); doc.setFontSize(9);
     doc.text("FIDELITY_CHECK: 0.002MS", 15, 30); doc.text("SECURITY_LEVEL: ALPHA-7", 15, 36);
-    doc.text("NODE_ANCHOR: BMR V3 NY", 15, 42); doc.text("PROBE_STATUS: ACTIVE", 15, 48);
+    doc.text("NODE_ANCHOR: BMR V3 NY", 15, 42); doc.text("PROBE_STATUS: ACTIVE", 15, 48); // [cite: 37, 38, 40]
     doc.setFillColor(red); doc.rect(15, 60, 180, 8, "F");
     doc.setTextColor(255, 255, 255); doc.setFontSize(7);
-    doc.text(`[ALERT] UNGOVERNED_LLM_NODE_DETECTED // SECTOR: ${sector.toUpperCase()}`, 20, 65);
+    doc.text(`[ALERT] UNGOVERNED_LLM_NODE_DETECTED // SECTOR: ${sector.toUpperCase()}`, 20, 65); // [cite: 52]
     doc.setTextColor(slate); doc.setFontSize(9); doc.text("SYSTEM_EVENT_LOG:", 15, 85);
     doc.setFont("helvetica", "normal");
     const logs = ["[06:55:01] Forensic sequence initialized...", `[06:55:08] Rework_tax detected: $${m.rework}M.`, `[06:55:12] Delta_gap: ${m.delta}% logic shear.`, "[06:55:15] Triangulation: AWAITING_MANAGERIAL_SIGNAL.", "[06:55:18] Triangulation: AWAITING_TECHNICAL_SIGNAL."];
     doc.text(logs, 15, 95);
     doc.setFillColor(245, 245, 245); doc.rect(15, 240, 180, 20, "F");
-    doc.setTextColor(red); doc.setFont("helvetica", "bold"); doc.text("TRIANGULATION_PENDING // FIELD_GUIDE_LOCKED", 25, 252);
+    doc.setTextColor(red); doc.setFont("helvetica", "bold"); doc.text("TRIANGULATION_PENDING // FIELD_GUIDE_LOCKED", 25, 252); // [cite: 7, 9]
     doc.text("PAGE 2 of 2", 105, 285, { align: "center" });
     doc.save(`BMR_Forensic_${entityName}.pdf`);
   };
@@ -133,7 +145,7 @@ export default function ConsolidatedDiagnostic() {
       const res = await fetch('/api/auth/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim().toLowerCase() }) });
       const data = await res.json();
       if (res.ok) {
-        setServerChallenge(data.challenge);
+        setServerChallenge(data.challenge); // [cite: 37]
         setStep("verify");
         setIsLoading(false);
       } else {
@@ -191,7 +203,7 @@ export default function ConsolidatedDiagnostic() {
         {step === 'verify' && (
           <motion.div key="verify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center space-y-12">
             <h2 className="text-6xl font-black uppercase italic tracking-tighter text-white">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
-            <div className="max-w-md mx-auto flex gap-4"><input maxLength={6} placeholder="0 0 0 0 0 0" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center font-black text-white outline-none focus:border-red-600 font-mono" /><button onClick={validateOperatorKey} className="bg-white text-black px-10 font-black uppercase text-xs italic tracking-widest hover:bg-red-600 transition-all">Authorize</button></div>
+            <div className="max-w-md mx-auto flex gap-4"><input maxLength={6} placeholder="0 0 0 0 0 0" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center font-black text-white outline-none focus:border-red-600 font-mono" /><button onClick={validateOperatorKey} className="bg-white text-black px-10 font-black uppercase text-xs italic tracking-widest hover:bg-red-600 hover:text-white transition-all">Authorize</button></div>
           </motion.div>
         )}
 
