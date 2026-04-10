@@ -1,7 +1,5 @@
-"use client";
-
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/router"; // 🛡️ Corrected Import
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ArrowRight } from "lucide-react";
@@ -9,7 +7,6 @@ import { ArrowRight } from "lucide-react";
 export default function ProtocolsPage() {
   const router = useRouter();
 
-  // IDs mapped to ConsolidatedDiagnostic logic dimensions
   const protocols = [
     { 
       id: "shadowAI", 
@@ -35,7 +32,7 @@ export default function ProtocolsPage() {
   ];
 
   const handleProtocolActivation = (id: string) => {
-    // Gateway resolution: Pass the ID to skip triage and trigger the verification handshake
+    // 📡 Active Gateway: Pass the ID so ConsolidatedDiagnostic skips triage
     router.push(`/pulse-check?initialProtocol=${id}`);
   };
 
@@ -43,7 +40,7 @@ export default function ProtocolsPage() {
     <div className="min-h-screen bg-[#020617] text-white font-sans">
       <Header />
       <main className="pt-48 pb-32 px-6 container mx-auto max-w-6xl">
-        <div className="space-y-4 mb-24">
+        <div className="space-y-4 mb-24 text-left">
           <h1 className="text-[100px] font-black uppercase italic tracking-tighter leading-none">
             Hardening <br /> Protocols
           </h1>
@@ -58,10 +55,8 @@ export default function ProtocolsPage() {
               key={p.id} 
               className="bg-slate-950 border border-slate-900 p-12 flex flex-col md:flex-row justify-between items-center gap-12 group hover:border-red-600 transition-all"
             >
-              <div className="space-y-6 flex-grow">
-                <div className="flex items-center gap-4">
-                   <span className="text-red-600 font-mono text-xs font-bold">[PROTOCOL_{p.id.toUpperCase()}]</span>
-                </div>
+              <div className="space-y-6 flex-grow text-left">
+                <span className="text-red-600 font-mono text-xs font-bold uppercase">[PROTOCOL_{p.id}]</span>
                 <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none">
                   {p.title}
                 </h2>
