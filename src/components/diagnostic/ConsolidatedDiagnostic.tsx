@@ -109,8 +109,19 @@ export default function ConsolidatedDiagnostic() {
   const handleSecureBriefing = () => {
     if (typeof window === 'undefined') return;
     const m = getLiveMetrics();
+    
     const vectorId = m.decay > 60 ? 'Vector 01' : 'Vector 02';
-    const url = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(operatorName)}&email=${encodeURIComponent(email)}&a1=${vectorId}&utm_campaign=${encodeURIComponent(entityName)}&utm_content=Decay_${m.decay}%`;
+    
+    // Safely encode parameters to prevent "Bad Request" errors
+    const params = new URLSearchParams();
+    params.append('name', operatorName.trim());
+    params.append('email', email.trim());
+    params.append('a1', vectorId); 
+    params.append('utm_campaign', entityName.trim().toUpperCase());
+    params.append('utm_source', 'Pulse_Check_V3');
+    params.append('utm_content', `Decay_${m.decay}pct`); 
+    
+    const url = `https://calendly.com/hello-bmradvisory/forensic-review?${params.toString()}`;
     window.open(url, '_blank');
   };
 
@@ -187,12 +198,12 @@ export default function ConsolidatedDiagnostic() {
             <div className="text-center"><h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span></h2></div>
             <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase" />
-                <input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase" />
-                <input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase" />
-                <input placeholder="VERIFY EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase" />
+                <input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase outline-none focus:border-red-600 transition-all" />
+                <input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase outline-none focus:border-red-600 transition-all" />
+                <input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase outline-none focus:border-red-600 transition-all" />
+                <input placeholder="VERIFY EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase outline-none focus:border-red-600 transition-all" />
               </div>
-              <button disabled={!email || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic tracking-[0.4em] bg-red-600 text-white disabled:opacity-20 transition-all">Initialize Audit Observation</button>
+              <button disabled={!email || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic tracking-[0.4em] bg-red-600 text-white disabled:opacity-20 transition-all shadow-xl shadow-red-900/10">Initialize Audit Observation</button>
             </div>
           </motion.div>
         )}
@@ -201,8 +212,8 @@ export default function ConsolidatedDiagnostic() {
           <motion.div key="verify" className="text-center space-y-12">
             <h2 className="text-6xl font-black uppercase italic text-white">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
             <div className="max-w-md mx-auto flex gap-4">
-              <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono" />
-              <button onClick={() => { if(userInputKey === serverChallenge) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic">Authorize</button>
+              <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono outline-none focus:border-red-600" />
+              <button onClick={() => { if(userInputKey === serverChallenge) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic hover:bg-red-600 hover:text-white transition-all">Authorize</button>
             </div>
           </motion.div>
         )}
@@ -213,12 +224,15 @@ export default function ConsolidatedDiagnostic() {
             <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px]">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
             <div className="grid grid-cols-1 gap-4 mt-16">
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white" onClick={() => {
+                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white group relative" onClick={() => {
                   const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                   setAnswers(updatedAnswers);
                   if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
                   else { logToDatabase(getLiveMetrics()); setStep("verdict"); }
-                }}>{opt.label}</button>
+                }}>
+                  <span className="relative z-10">{opt.label}</span>
+                  <div className="absolute inset-0 bg-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                </button>
               ))}
             </div>
           </motion.div>
@@ -240,7 +254,7 @@ export default function ConsolidatedDiagnostic() {
                 <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
               </div>
               <div className="flex flex-col gap-4">
-                <button onClick={handleSecureBriefing} className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-widest text-xs hover:bg-white hover:text-black transition-all">SECURE_FULL_FORENSIC_BRIEFING</button>
+                <button onClick={handleSecureBriefing} className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-widest text-xs hover:bg-white hover:text-black transition-all shadow-xl shadow-red-900/20">SECURE_FULL_FORENSIC_BRIEFING</button>
                 <button onClick={generateForensicPDF} className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic text-[10px] flex items-center justify-center gap-4 hover:text-white transition-all"><Download size={14} /> DOWNLOAD_FORENSIC_SUMMARY_PDF</button>
               </div>
             </div>
