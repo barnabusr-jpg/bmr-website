@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Activity, ShieldAlert, Lock, ArrowLeft } from "lucide-react";
+import { Activity, ShieldAlert, Lock, ArrowLeft, Unlock, CheckCircle } from "lucide-react";
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any[]>([]);
@@ -11,8 +11,7 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // 🔑 THE ACCESS KEY
-  const ADMIN_PASSWORD = "KIMMALA_1972"; 
+  const ADMIN_PASSWORD = "KIMMALASR_03"; 
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,6 +20,27 @@ export default function AdminDashboard() {
       setError("");
     } else {
       setError("ACCESS_DENIED: INVALID_CREDENTIALS");
+    }
+  };
+
+  // 🔑 RELEASE ACCESS FUNCTION
+  const handleReleaseDeepDive = async (operatorId: string, email: string) => {
+    const confirmRelease = confirm(`Authorize Deep Dive Access for ${email}?`);
+    if (!confirmRelease) return;
+
+    const { error } = await supabase
+      .from('operators')
+      .update({ is_authorized: true })
+      .eq('id', operatorId);
+
+    if (error) {
+      alert("AUTHORIZATION_FAILURE: Check Supabase Permissions.");
+    } else {
+      // Trigger local state update to show the change immediately
+      setData(prev => prev.map(item => 
+        item.operators?.id === operatorId ? { ...item, operators: { ...item.operators, is_authorized: true } } : item
+      ));
+      alert("MRI_RELEASED: Operator credentials upgraded to Alpha-7.");
     }
   };
 
@@ -37,8 +57,10 @@ export default function AdminDashboard() {
           rework_tax,
           decay_pct,
           operators (
+            id,
             full_name,
             email,
+            is_authorized,
             entities ( name )
           )
         `)
@@ -50,7 +72,6 @@ export default function AdminDashboard() {
     fetchForensics();
   }, [isAuthenticated]);
 
-  // 🛡️ GATEKEEPER UI
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 font-mono">
@@ -76,15 +97,8 @@ export default function AdminDashboard() {
               className="w-full bg-slate-950 border border-slate-800 p-4 text-center text-red-600 font-black tracking-[0.5em] focus:outline-none focus:border-red-600 transition-colors"
               autoFocus
             />
-            {error && (
-              <p className="text-[10px] text-red-600 text-center font-bold animate-pulse uppercase">
-                {error}
-              </p>
-            )}
-            <button 
-              type="submit"
-              className="w-full bg-red-600 text-white py-4 font-black uppercase italic tracking-widest text-xs hover:bg-white hover:text-black transition-all"
-            >
+            {error && <p className="text-[10px] text-red-600 text-center font-bold uppercase">{error}</p>}
+            <button type="submit" className="w-full bg-red-600 text-white py-4 font-black uppercase italic tracking-widest text-xs hover:bg-white hover:text-black transition-all">
               Authorize_Session
             </button>
           </form>
@@ -99,7 +113,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 p-8 pt-24 font-sans relative">
-      {/* Metrics Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="bg-slate-900 border border-slate-800 p-6">
           <label className="text-[10px] font-mono text-red-600 uppercase tracking-widest block mb-2 font-black italic">Total_Rework_Tax_Identified</label>
@@ -110,75 +123,65 @@ export default function AdminDashboard() {
           <div className="text-4xl font-black italic">{data.length}</div>
         </div>
         <div className="bg-slate-900 border border-slate-800 p-6">
-          <label className="text-[10px] font-mono text-green-500 uppercase tracking-widest block mb-2">System_Status</label>
+          <label className="text-[10px] font-mono text-green-500 uppercase tracking-widest block mb-2 text-green-500">System_Status</label>
           <div className="text-xl font-black italic text-green-500 uppercase flex items-center gap-2">
             <Activity size={20} /> Operational
           </div>
         </div>
       </div>
 
-      {/* Ledger Table */}
       <div className="bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl">
         <div className="p-4 border-b border-slate-800 bg-slate-950/50 flex justify-between items-center">
           <h2 className="font-black italic uppercase tracking-tighter">Diagnostic_History_Log</h2>
-          <button 
-            onClick={() => setIsAuthenticated(false)}
-            className="text-[10px] font-mono text-slate-600 hover:text-red-600 uppercase transition-colors flex items-center gap-2 group"
-          >
+          <button onClick={() => setIsAuthenticated(false)} className="text-[10px] font-mono text-slate-600 hover:text-red-600 uppercase transition-colors flex items-center gap-2 group">
             End_Session <ArrowLeft size={10} className="group-hover:-translate-x-1 transition-transform" />
           </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-800 text-[10px] font-mono text-slate-500 uppercase tracking-widest">
+              <tr className="border-b border-slate-800 text-[10px] font-mono text-slate-500 uppercase tracking-widest text-center md:text-left">
                 <th className="p-4">Timestamp</th>
                 <th className="p-4">Operator/Entity</th>
-                <th className="p-4">Sector</th>
-                <th className="p-4 text-center">Decay Index</th>
+                <th className="p-4 text-center">MRI Access</th>
                 <th className="p-4 text-right">Inaction Cost (6mo)</th>
                 <th className="p-4 text-right">Rework Tax</th>
               </tr>
             </thead>
             <tbody className="font-mono text-xs">
               {data.map((audit) => {
-                // Radiology Calculation: Mirroring the 6-month compounding bleed
                 const inactionCost = ((Number(audit.rework_tax) / 12) * 6 * 1.12).toFixed(2);
+                const isAuthorized = audit.operators?.is_authorized;
                 
                 return (
                   <tr key={audit.id} className="border-b border-slate-800 hover:bg-white/5 transition-colors group">
-                    <td className="p-4 text-slate-500 font-medium tracking-tighter">
-                      {new Date(audit.created_at).toLocaleDateString()}
-                    </td>
+                    <td className="p-4 text-slate-500">{new Date(audit.created_at).toLocaleDateString()}</td>
                     <td className="p-4">
-                      <div className="font-bold text-white uppercase group-hover:text-red-600 transition-colors">{audit.operators?.full_name || "Unknown"}</div>
-                      <div className="text-[9px] text-slate-600">{audit.operators?.entities?.name || "Independent"}</div>
+                      <div className="font-bold text-white uppercase">{audit.operators?.full_name || "Unknown"}</div>
+                      <div className="text-[9px] text-slate-600 italic">{audit.operators?.email}</div>
                     </td>
-                    <td className="p-4 uppercase text-slate-400 font-bold">{audit.sector}</td>
                     <td className="p-4 text-center">
-                      <span className="px-2 py-1 bg-slate-950 border border-slate-800 text-white font-black italic">
-                        {audit.decay_pct}/100
-                      </span>
+                      {isAuthorized ? (
+                        <div className="flex items-center justify-center gap-2 text-green-500 font-black italic uppercase text-[9px]">
+                          <CheckCircle size={14} /> Authorized
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={() => handleReleaseDeepDive(audit.operators.id, audit.operators.email)}
+                          className="px-4 py-2 bg-green-600/10 border border-green-600/30 text-green-500 hover:bg-green-600 hover:text-white transition-all font-black uppercase tracking-tighter text-[9px] italic flex items-center gap-2 mx-auto"
+                        >
+                          <Unlock size={12} /> Release_MRI
+                        </button>
+                      )}
                     </td>
-                    <td className="p-4 text-right font-black text-red-600 underline underline-offset-4 decoration-red-900">
-                      ${inactionCost}M
-                    </td>
-                    <td className="p-4 text-right font-black text-white italic">
-                      ${audit.rework_tax}M
-                    </td>
+                    <td className="p-4 text-right font-black text-red-600 italic underline underline-offset-4 decoration-red-900">${inactionCost}M</td>
+                    <td className="p-4 text-right font-black text-white italic">${audit.rework_tax}M</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-      </div>
-      
-      {/* Background Visual Branding */}
-      <div className="fixed bottom-4 right-6 pointer-events-none">
-        <p className="text-[10px] font-mono text-slate-900 font-black uppercase tracking-[1em] opacity-30 italic">
-          BMR_FORENSIC_LEDGER_V3
-        </p>
       </div>
     </div>
   );
