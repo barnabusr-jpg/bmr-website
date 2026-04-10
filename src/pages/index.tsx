@@ -1,14 +1,16 @@
+"use client";
+
 import React from "react";
 import { useRouter } from "next/router";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Shield } from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30">
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30 relative">
       <Header />
       <main className="flex-grow pt-48 px-6 pb-32">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
@@ -55,8 +57,22 @@ export default function Home() {
           </div>
         </div>
       </main>
-      {/* 🛡️ This is where your hidden link likely lives */}
+      
       <Footer />
+
+      {/* 🛡️ HIDDEN ADMIN NODE ACCESS */}
+      <div 
+        onClick={() => router.push('/admin/dashboard')}
+        className="fixed bottom-6 left-6 z-[100] cursor-crosshair group flex items-center gap-2"
+        title="Admin_Node_Login"
+      >
+        <div className="w-8 h-8 flex items-center justify-center border border-slate-900/30 group-hover:border-red-600/50 transition-all duration-700 rounded-full bg-slate-950/20 backdrop-blur-sm">
+          <Shield size={10} className="text-slate-900 group-hover:text-red-600 opacity-10 group-hover:opacity-100 transition-all" />
+        </div>
+        <span className="text-[7px] font-mono text-slate-900 uppercase tracking-[0.5em] opacity-0 group-hover:opacity-100 group-hover:text-red-600 transition-all duration-500">
+          ALPHA-7_LOG_IN
+        </span>
+      </div>
     </div>
   );
 }
