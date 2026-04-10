@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, ArrowRight, Download, Banknote, Stethoscope, Factory, ShoppingCart } from "lucide-react";
+import { Activity, Download, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight } from "lucide-react";
 import jsPDF from "jspdf";
 import ForensicLoader from "@/components/ForensicLoader";
 import LogicLeakTicker from "@/components/LogicLeakTicker";
@@ -46,9 +46,7 @@ export default function ConsolidatedDiagnostic() {
   const [serverChallenge, setServerChallenge] = useState("");
   const [userInputKey, setUserInputKey] = useState("");
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     const e1 = email.trim().toLowerCase();
@@ -56,6 +54,27 @@ export default function ConsolidatedDiagnostic() {
     if (e2.length > 0 && e1 !== e2) setValidationError("EMAIL_VERIFICATION_MISMATCH");
     else setValidationError(null);
   }, [email, confirmEmail]);
+
+  const getLiveMetrics = () => {
+    const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
+    const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
+    const coeff = sectorWeights[sector] || 1.0;
+    const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
+    const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
+    
+    const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
+    const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
+    const monthlyBleed = reworkTax / 12;
+    const inactionPenalty = (monthlyBleed * 6 * 1.12).toFixed(2);
+
+    return {
+      decay: Math.min(decayRaw, 98),
+      rework: reworkTax.toFixed(1),
+      delta: (scaledTotal * 0.32).toFixed(1),
+      roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(1) : "0",
+      inactionCost: inactionPenalty
+    };
+  };
 
   const logToDatabase = async (finalMetrics: any) => {
     try {
@@ -90,79 +109,51 @@ export default function ConsolidatedDiagnostic() {
     }
   };
 
-  const getLiveMetrics = () => {
-    const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
-    const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
-    const coeff = sectorWeights[sector] || 1.0;
-    const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
-    const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
-    const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
-
-    return {
-      decay: Math.min(decayRaw, 98),
-      rework: (scaledTotal * 0.38).toFixed(1),
-      delta: (scaledTotal * 0.32).toFixed(1),
-      roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(1) : "0"
-    };
-  };
-
   const handleSecureBriefing = () => {
     if (typeof window === 'undefined') return;
     const m = getLiveMetrics();
-    
-    const vectorId = m.decay > 60 ? 'Vector 01' : 'Vector 02';
-    
-    // Safely encode parameters to prevent "Bad Request" errors
     const params = new URLSearchParams();
     params.append('name', operatorName.trim());
     params.append('email', email.trim());
-    params.append('a1', vectorId); 
+    params.append('a1', 'Technical_Reconstruction');
     params.append('utm_campaign', entityName.trim().toUpperCase());
     params.append('utm_source', 'Pulse_Check_V3');
-    params.append('utm_content', `Decay_${m.decay}pct`); 
+    params.append('utm_content', `Decay_${m.decay}pct_Rework_${m.rework}M`);
     
-    const url = `https://calendly.com/hello-bmradvisory/forensic-review?${params.toString()}`;
-    window.open(url, '_blank');
+    window.open(`https://calendly.com/hello-bmradvisory/forensic-review?${params.toString()}`, '_blank');
   };
 
   const generateForensicPDF = () => {
     const m = getLiveMetrics();
     const doc = new jsPDF();
-    const dateStr = new Date().toLocaleDateString();
-
-    doc.setFillColor(2, 6, 23); doc.rect(0, 0, 210, 45, "F");
-    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(22);
-    doc.text("BMR SOLUTIONS // FORENSIC UNIT", 15, 20);
+    doc.setFillColor(2, 6, 23); doc.rect(0, 0, 210, 30, "F");
+    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(16);
+    doc.text("BMR ADVISORY // FORMAL SYSTEM AUDIT", 15, 15);
     doc.setFont("courier", "normal"); doc.setFontSize(8);
-    doc.text(`NODE_ID: ${sector.toUpperCase()}_SEC_04 // CLEARANCE: ALPHA-7`, 15, 28);
-    doc.text(`STAMP: ${dateStr} // BMR_V3_NY`, 15, 33);
+    doc.text(`AUDIT_REF: ${entityName.toUpperCase()} // STATUS: CONFIDENTIAL`, 15, 22);
 
-    doc.setTextColor(2, 6, 23); doc.setFontSize(10); doc.text(`ENTITY: ${entityName.toUpperCase()}`, 15, 60);
-    doc.text(`OPERATOR: ${operatorName.toUpperCase()}`, 15, 66);
-    doc.setDrawColor(220, 38, 38); doc.line(15, 68, 80, 68);
+    doc.setTextColor(2, 6, 23); doc.setFontSize(10); doc.setFont("helvetica", "bold");
+    doc.text("EXECUTIVE SUMMARY", 15, 45);
+    doc.line(15, 47, 55, 47);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Entity: ${entityName.toUpperCase()}`, 15, 55);
+    doc.text(`Operator: ${operatorName.toUpperCase()}`, 15, 61);
 
-    doc.setFillColor(2, 6, 23); doc.rect(15, 75, 180, 45, "F");
-    doc.setTextColor(220, 38, 38); doc.setFontSize(55); doc.text(`${m.decay}%`, 25, 110);
-    doc.setTextColor(255, 255, 255); doc.setFontSize(12); doc.text("CAPITAL_DECAY_INDEX", 25, 118);
-    
-    doc.save(`BMR_Forensic_${entityName}.pdf`);
+    doc.setFillColor(245, 245, 245); doc.rect(15, 75, 180, 40, "F");
+    doc.text("Systemic Friction Index", 20, 92); doc.text(`${m.decay}/100`, 160, 92);
+    doc.text("Identified Rework Tax", 20, 100); doc.text(`$${m.rework}M/yr`, 160, 100);
+    doc.setTextColor(220, 38, 38); doc.text("6-Month Inaction Cost", 20, 108); doc.text(`$${m.inactionCost}M`, 160, 108);
+
+    doc.save(`BMR_Audit_${entityName}.pdf`);
   };
 
   const triggerForensicScan = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/auth/generate-key', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ email: email.trim().toLowerCase() }) 
-      });
+      const res = await fetch('/api/auth/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim().toLowerCase() }) });
       const data = await res.json();
-      if (res.ok) {
-        setServerChallenge(data.challenge);
-        setStep("verify");
-      } else {
-        setValidationError("TRANSMISSION_REJECTED");
-      }
+      if (res.ok) { setServerChallenge(data.challenge); setStep("verify"); }
+      else { setValidationError("TRANSMISSION_REJECTED"); }
     } catch (err) { setValidationError("LOGIC_SHEAR_DETECTION"); }
     setIsLoading(false);
   };
@@ -183,10 +174,7 @@ export default function ConsolidatedDiagnostic() {
               {sectors.map((s) => (
                 <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
                   <div className="text-red-600">{s.icon}</div>
-                  <div>
-                    <h3 className="text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
-                    <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p>
-                  </div>
+                  <div><h3 className="text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p></div>
                 </button>
               ))}
             </div>
@@ -194,16 +182,16 @@ export default function ConsolidatedDiagnostic() {
         )}
 
         {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12">
-            <div className="text-center"><h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span></h2></div>
+          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-center">
+            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">FORENSIC PROTOCOL <span className="text-red-600">ENGAGED</span></h2>
             <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase outline-none focus:border-red-600 transition-all" />
-                <input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase outline-none focus:border-red-600 transition-all" />
-                <input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase outline-none focus:border-red-600 transition-all" />
-                <input placeholder="VERIFY EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full font-mono uppercase outline-none focus:border-red-600 transition-all" />
+                <input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
+                <input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
+                <input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
+                <input placeholder="VERIFY EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
               </div>
-              <button disabled={!email || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic tracking-[0.4em] bg-red-600 text-white disabled:opacity-20 transition-all shadow-xl shadow-red-900/10">Initialize Audit Observation</button>
+              <button disabled={!email || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 transition-all">Initialize Audit Observation</button>
             </div>
           </motion.div>
         )}
@@ -212,51 +200,52 @@ export default function ConsolidatedDiagnostic() {
           <motion.div key="verify" className="text-center space-y-12">
             <h2 className="text-6xl font-black uppercase italic text-white">VERIFICATION_<span className="text-red-600">REQUIRED</span></h2>
             <div className="max-w-md mx-auto flex gap-4">
-              <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono outline-none focus:border-red-600" />
-              <button onClick={() => { if(userInputKey === serverChallenge) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic hover:bg-red-600 hover:text-white transition-all">Authorize</button>
+              <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center text-white outline-none focus:border-red-600 font-mono" />
+              <button onClick={() => { if(userInputKey === serverChallenge) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic">Authorize</button>
             </div>
           </motion.div>
         )}
 
         {step === 'audit' && (
           <motion.div key="audit" className="space-y-12 text-left">
-            <div className="flex items-center gap-4 text-red-600"><Activity className="h-4 w-4 animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1}</span></div>
+            <div className="flex items-center gap-4 text-red-600"><Activity size={16} className="animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1}</span></div>
             <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px]">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
             <div className="grid grid-cols-1 gap-4 mt-16">
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white group relative" onClick={() => {
+                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white" onClick={() => {
                   const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                   setAnswers(updatedAnswers);
                   if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
                   else { logToDatabase(getLiveMetrics()); setStep("verdict"); }
-                }}>
-                  <span className="relative z-10">{opt.label}</span>
-                  <div className="absolute inset-0 bg-red-600/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-                </button>
+                }}>{opt.label}</button>
               ))}
             </div>
           </motion.div>
         )}
 
         {step === 'verdict' && (
-          <motion.div key="verdict" className="space-y-12 text-center py-10">
-            <h2 className="text-7xl font-black italic uppercase text-white leading-none">INVESTED CAPITAL HAS <span className="text-red-600">{getLiveMetrics().decay}% DECAY</span></h2>
-            <div className="max-w-2xl mx-auto space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-6 bg-slate-950 border border-slate-900 text-left"><p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-1">REWORK_TAX_ESTIMATE</p><p className="text-2xl font-black italic">${getLiveMetrics().rework}M / YR</p></div>
-                <div className="p-6 bg-slate-950 border border-slate-900 text-left"><p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-1">DRIFT_PROBABILITY</p><p className="text-2xl font-black italic">{getLiveMetrics().delta}%</p></div>
-              </div>
-              <div className="bg-slate-950 p-8 border border-slate-900 space-y-6">
-                <div className="flex justify-between items-end text-left font-black italic">
-                   <div><label className="text-[10px] font-mono text-slate-500 uppercase">Capital_Exposure</label><p className="text-3xl">${aiSpend.toFixed(1)}M</p></div>
-                   <div className="text-right text-red-600"><label className="text-[10px] font-mono uppercase">Dynamic_ROI</label><p className="text-3xl">{getLiveMetrics().roi}%</p></div>
-                </div>
-                <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
-              </div>
-              <div className="flex flex-col gap-4">
-                <button onClick={handleSecureBriefing} className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-widest text-xs hover:bg-white hover:text-black transition-all shadow-xl shadow-red-900/20">SECURE_FULL_FORENSIC_BRIEFING</button>
-                <button onClick={generateForensicPDF} className="w-full py-4 border border-slate-800 text-slate-400 font-black uppercase italic text-[10px] flex items-center justify-center gap-4 hover:text-white transition-all"><Download size={14} /> DOWNLOAD_FORENSIC_SUMMARY_PDF</button>
-              </div>
+          <motion.div key="verdict" className="space-y-12 text-white py-10">
+            <div className="text-left border-l-4 border-red-600 pl-6 mb-12">
+              <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none mb-2">FORMAL AUDIT <span className="text-red-600">VERDICT</span></h2>
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em]">Reference_ID: {entityName.toUpperCase()} // Clearance: ALPHA-7</p>
+            </div>
+            <div className="bg-slate-900/50 border border-slate-800 overflow-hidden">
+              <table className="w-full text-left border-collapse">
+                <thead><tr className="border-b border-slate-800 bg-slate-900 text-[10px] font-mono text-slate-500 uppercase tracking-widest"><th className="p-4">Metric</th><th className="p-4 text-right">Value</th></tr></thead>
+                <tbody className="font-mono text-sm">
+                  <tr className="border-b border-slate-800"><td className="p-4 text-slate-400 uppercase font-black tracking-tighter">Systemic Friction Index</td><td className="p-4 text-right font-black text-white">{getLiveMetrics().decay}/100</td></tr>
+                  <tr className="border-b border-slate-800"><td className="p-4 text-slate-400 uppercase font-black tracking-tighter">Identified Rework Tax</td><td className="p-4 text-right font-black text-white">${getLiveMetrics().rework}M/year</td></tr>
+                  <tr className="border-b border-slate-800 bg-red-600/5"><td className="p-4 text-red-600 font-bold italic underline uppercase tracking-tighter">6-Month Inaction Cost</td><td className="p-4 text-right font-black text-red-600">${getLiveMetrics().inactionCost}M</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div className="bg-slate-950 p-8 border border-slate-800 space-y-4">
+               <div className="flex justify-between items-center"><label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest italic">Simulated Capital Exposure</label><p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p></div>
+               <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
+            </div>
+            <div className="flex flex-col md:flex-row gap-4">
+              <button onClick={handleSecureBriefing} className="flex-1 py-6 bg-red-600 text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4">SECURE_FORENSIC_BRIEFING <ChevronRight size={16} /></button>
+              <button onClick={generateForensicPDF} className="flex-1 py-6 border border-slate-800 text-slate-400 font-black uppercase text-[10px] flex items-center justify-center gap-4 hover:text-white transition-all"><Download size={16} /> DOWNLOAD_FORENSIC_AUDIT_REPORT</button>
             </div>
           </motion.div>
         )}
