@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Activity, ShieldAlert, Lock } from "lucide-react";
+import { Activity, ShieldAlert, Lock, ArrowLeft } from "lucide-react";
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any[]>([]);
@@ -11,8 +11,8 @@ export default function AdminDashboard() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // 🔑 THE ACCESS KEY (Change this to whatever you want)
-  const ADMIN_PASSWORD = "KIMMALA_72"; 
+  // 🔑 THE ACCESS KEY
+  const ADMIN_PASSWORD = "KIMMALA_1972"; 
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,13 +93,12 @@ export default function AdminDashboard() {
     );
   }
 
-  // 📊 THE ACTUAL DASHBOARD (Rendered only after password)
   if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase tracking-widest">Reconstructing_Forensic_Ledger...</div>;
 
   const totalRework = data.reduce((acc, curr) => acc + (Number(curr.rework_tax) || 0), 0);
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-8 pt-24 font-sans">
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-8 pt-24 font-sans relative">
       {/* Metrics Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="bg-slate-900 border border-slate-800 p-6">
@@ -111,7 +110,7 @@ export default function AdminDashboard() {
           <div className="text-4xl font-black italic">{data.length}</div>
         </div>
         <div className="bg-slate-900 border border-slate-800 p-6">
-          <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-2">System_Status</label>
+          <label className="text-[10px] font-mono text-green-500 uppercase tracking-widest block mb-2">System_Status</label>
           <div className="text-xl font-black italic text-green-500 uppercase flex items-center gap-2">
             <Activity size={20} /> Operational
           </div>
@@ -119,14 +118,14 @@ export default function AdminDashboard() {
       </div>
 
       {/* Ledger Table */}
-      <div className="bg-slate-900 border border-slate-800 overflow-hidden">
-        <div className="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
+      <div className="bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl">
+        <div className="p-4 border-b border-slate-800 bg-slate-950/50 flex justify-between items-center">
           <h2 className="font-black italic uppercase tracking-tighter">Diagnostic_History_Log</h2>
           <button 
             onClick={() => setIsAuthenticated(false)}
-            className="text-[10px] font-mono text-slate-600 hover:text-red-600 uppercase transition-colors"
+            className="text-[10px] font-mono text-slate-600 hover:text-red-600 uppercase transition-colors flex items-center gap-2 group"
           >
-            End_Session
+            End_Session <ArrowLeft size={10} className="group-hover:-translate-x-1 transition-transform" />
           </button>
         </div>
         <div className="overflow-x-auto">
@@ -136,28 +135,50 @@ export default function AdminDashboard() {
                 <th className="p-4">Timestamp</th>
                 <th className="p-4">Operator/Entity</th>
                 <th className="p-4">Sector</th>
-                <th className="p-4 text-right">Decay</th>
+                <th className="p-4 text-center">Decay Index</th>
+                <th className="p-4 text-right">Inaction Cost (6mo)</th>
                 <th className="p-4 text-right">Rework Tax</th>
               </tr>
             </thead>
             <tbody className="font-mono text-xs">
-              {data.map((audit) => (
-                <tr key={audit.id} className="border-b border-slate-800 hover:bg-slate-800/50 transition-colors group">
-                  <td className="p-4 text-slate-500">
-                    {new Date(audit.created_at).toLocaleDateString()}
-                  </td>
-                  <td className="p-4">
-                    <div className="font-bold text-white uppercase">{audit.operators?.full_name || "Unknown"}</div>
-                    <div className="text-[10px] text-slate-500">{audit.operators?.entities?.name || "Independent"}</div>
-                  </td>
-                  <td className="p-4 uppercase text-slate-400">{audit.sector}</td>
-                  <td className="p-4 text-right font-bold text-red-600">{audit.decay_pct}%</td>
-                  <td className="p-4 text-right font-bold text-white">${audit.rework_tax}M</td>
-                </tr>
-              ))}
+              {data.map((audit) => {
+                // Radiology Calculation: Mirroring the 6-month compounding bleed
+                const inactionCost = ((Number(audit.rework_tax) / 12) * 6 * 1.12).toFixed(2);
+                
+                return (
+                  <tr key={audit.id} className="border-b border-slate-800 hover:bg-white/5 transition-colors group">
+                    <td className="p-4 text-slate-500 font-medium tracking-tighter">
+                      {new Date(audit.created_at).toLocaleDateString()}
+                    </td>
+                    <td className="p-4">
+                      <div className="font-bold text-white uppercase group-hover:text-red-600 transition-colors">{audit.operators?.full_name || "Unknown"}</div>
+                      <div className="text-[9px] text-slate-600">{audit.operators?.entities?.name || "Independent"}</div>
+                    </td>
+                    <td className="p-4 uppercase text-slate-400 font-bold">{audit.sector}</td>
+                    <td className="p-4 text-center">
+                      <span className="px-2 py-1 bg-slate-950 border border-slate-800 text-white font-black italic">
+                        {audit.decay_pct}/100
+                      </span>
+                    </td>
+                    <td className="p-4 text-right font-black text-red-600 underline underline-offset-4 decoration-red-900">
+                      ${inactionCost}M
+                    </td>
+                    <td className="p-4 text-right font-black text-white italic">
+                      ${audit.rework_tax}M
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
+      </div>
+      
+      {/* Background Visual Branding */}
+      <div className="fixed bottom-4 right-6 pointer-events-none">
+        <p className="text-[10px] font-mono text-slate-900 font-black uppercase tracking-[1em] opacity-30 italic">
+          BMR_FORENSIC_LEDGER_V3
+        </p>
       </div>
     </div>
   );
