@@ -6,6 +6,7 @@ import { Activity, ArrowRight, ChevronRight, Download, Banknote, Stethoscope, Fa
 import jsPDF from "jspdf";
 import ForensicLoader from "@/components/ForensicLoader";
 import LogicLeakTicker from "@/components/LogicLeakTicker";
+import { supabase } from "@/lib/supabaseClient"; // 📡 1. SQL BRIDGE INITIALIZED
 
 const LOCAL_QUESTIONS = [
   { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
@@ -45,7 +46,6 @@ export default function ConsolidatedDiagnostic() {
   const [serverChallenge, setServerChallenge] = useState("");
   const [userInputKey, setUserInputKey] = useState("");
 
-  // 📡 UNIFIED GATEWAY LISTENER
   useEffect(() => {
     setMounted(true);
     const params = new URLSearchParams(window.location.search);
@@ -55,7 +55,7 @@ export default function ConsolidatedDiagnostic() {
       setStep("intake");
       const matchedSector = sectors.find(s => s.id === targetProtocol);
       if (matchedSector) setSector(matchedSector.id);
-      setCurrentDimension(0); // [cite: 8]
+      setCurrentDimension(0);
     }
   }, []);
 
@@ -65,6 +65,50 @@ export default function ConsolidatedDiagnostic() {
     if (e2.length > 0 && e1 !== e2) setValidationError("EMAIL_VERIFICATION_MISMATCH");
     else setValidationError(null);
   }, [email, confirmEmail]);
+
+  // 🏛️ 2. DATABASE LOGGER LOGIC
+  const logToDatabase = async (finalMetrics: any) => {
+    try {
+      // Step A: Upsert Entity (Company)
+      const { data: entityData, error: entityError } = await supabase
+        .from('entities')
+        .insert([{ name: entityName.trim().toUpperCase() }])
+        .select()
+        .single();
+
+      if (entityError) throw entityError;
+
+      // Step B: Upsert Operator (User)
+      const { data: operatorData, error: operatorError } = await supabase
+        .from('operators')
+        .insert([{ 
+          email: email.trim().toLowerCase(), 
+          full_name: operatorName.trim().toUpperCase(), 
+          entity_id: entityData.id 
+        }])
+        .select()
+        .single();
+
+      if (operatorError) throw operatorError;
+
+      // Step C: Record Forensic Audit
+      const { error: auditError } = await supabase
+        .from('audits')
+        .insert([{
+          operator_id: operatorData.id,
+          sector: sector,
+          ai_spend: aiSpend,
+          decay_pct: finalMetrics.decay,
+          rework_tax: parseFloat(finalMetrics.rework),
+          roi_pct: parseFloat(finalMetrics.roi)
+        }]);
+
+      if (auditError) throw auditError;
+      console.log("FORENSIC_DATA_SECURED");
+    } catch (error) {
+      console.error("DATABASE_LINK_SHEAR:", error);
+    }
+  };
 
   if (!mounted) return <div className="min-h-screen bg-slate-950" />;
 
@@ -98,7 +142,7 @@ export default function ConsolidatedDiagnostic() {
     doc.text("BMR SOLUTIONS // FORENSIC UNIT", 15, 20);
     doc.setFont("courier", "normal"); doc.setFontSize(8);
     doc.text(`NODE_ID: ${sector.toUpperCase()}_SEC_04 // CLEARANCE: ALPHA-7`, 15, 28);
-    doc.text(`STAMP: ${dateStr} // 06:55:01`, 15, 33); // [cite: 10, 44]
+    doc.text(`STAMP: ${dateStr} // 06:55:01`, 15, 33);
 
     doc.setTextColor(slate); doc.setFontSize(10); doc.setFont("helvetica", "bold");
     doc.text(`ENTITY: ${entityName.toUpperCase()}`, 15, 58);
@@ -125,16 +169,16 @@ export default function ConsolidatedDiagnostic() {
     doc.setTextColor(255, 255, 255); doc.setFontSize(8); doc.text("BMR_INTERNAL_LOGS // NODE_FIDELITY_CHECK", 15, 10);
     doc.setTextColor(slate); doc.setFont("courier", "bold"); doc.setFontSize(9);
     doc.text("FIDELITY_CHECK: 0.002MS", 15, 30); doc.text("SECURITY_LEVEL: ALPHA-7", 15, 36);
-    doc.text("NODE_ANCHOR: BMR V3 NY", 15, 42); doc.text("PROBE_STATUS: ACTIVE", 15, 48); // [cite: 37, 38, 40]
+    doc.text("NODE_ANCHOR: BMR V3 NY", 15, 42); doc.text("PROBE_STATUS: ACTIVE", 15, 48);
     doc.setFillColor(red); doc.rect(15, 60, 180, 8, "F");
     doc.setTextColor(255, 255, 255); doc.setFontSize(7);
-    doc.text(`[ALERT] UNGOVERNED_LLM_NODE_DETECTED // SECTOR: ${sector.toUpperCase()}`, 20, 65); // [cite: 52]
+    doc.text(`[ALERT] UNGOVERNED_LLM_NODE_DETECTED // SECTOR: ${sector.toUpperCase()}`, 20, 65);
     doc.setTextColor(slate); doc.setFontSize(9); doc.text("SYSTEM_EVENT_LOG:", 15, 85);
     doc.setFont("helvetica", "normal");
     const logs = ["[06:55:01] Forensic sequence initialized...", `[06:55:08] Rework_tax detected: $${m.rework}M.`, `[06:55:12] Delta_gap: ${m.delta}% logic shear.`, "[06:55:15] Triangulation: AWAITING_MANAGERIAL_SIGNAL.", "[06:55:18] Triangulation: AWAITING_TECHNICAL_SIGNAL."];
     doc.text(logs, 15, 95);
     doc.setFillColor(245, 245, 245); doc.rect(15, 240, 180, 20, "F");
-    doc.setTextColor(red); doc.setFont("helvetica", "bold"); doc.text("TRIANGULATION_PENDING // FIELD_GUIDE_LOCKED", 25, 252); // [cite: 7, 9]
+    doc.setTextColor(red); doc.setFont("helvetica", "bold"); doc.text("TRIANGULATION_PENDING // FIELD_GUIDE_LOCKED", 25, 252);
     doc.text("PAGE 2 of 2", 105, 285, { align: "center" });
     doc.save(`BMR_Forensic_${entityName}.pdf`);
   };
@@ -145,7 +189,7 @@ export default function ConsolidatedDiagnostic() {
       const res = await fetch('/api/auth/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim().toLowerCase() }) });
       const data = await res.json();
       if (res.ok) {
-        setServerChallenge(data.challenge); // [cite: 37]
+        setServerChallenge(data.challenge);
         setStep("verify");
         setIsLoading(false);
       } else {
@@ -211,7 +255,29 @@ export default function ConsolidatedDiagnostic() {
           <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-left">
             <div className="flex items-center gap-4 text-red-600"><Activity className="h-4 w-4 animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PROTOCOL_NODE_0{currentDimension + 1}</span></div>
             <h2 className="text-4xl md:text-6xl font-black italic uppercase tracking-tighter text-white leading-tight min-h-[160px]">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
-            <div className="grid grid-cols-1 gap-4 mt-16">{LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (<button key={i} className="group relative py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left" onClick={() => { setAnswers({ ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() }); if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1); else setStep("verdict"); }}><span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white transition-all">{opt.label}</span></button>))}</div>
+            <div className="grid grid-cols-1 gap-4 mt-16">
+              {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
+                <button 
+                  key={i} 
+                  className="group relative py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left" 
+                  onClick={() => { 
+                    const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
+                    setAnswers(updatedAnswers); 
+                    
+                    if (currentDimension < LOCAL_QUESTIONS.length - 1) {
+                      setCurrentDimension(currentDimension + 1); 
+                    } else {
+                      // 🛡️ 3. CALC METRICS AND TRIGGER SQL LOG BEFORE STEP CHANGE
+                      const finalMetrics = getLiveMetrics();
+                      logToDatabase(finalMetrics);
+                      setStep("verdict"); 
+                    }
+                  }}
+                >
+                  <span className="text-slate-400 uppercase tracking-[0.2em] text-[11px] font-black group-hover:text-white transition-all">{opt.label}</span>
+                </button>
+              ))}
+            </div>
           </motion.div>
         )}
 
