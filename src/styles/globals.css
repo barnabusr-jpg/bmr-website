@@ -4,9 +4,9 @@
 
 @layer base {
   :root {
-    /* Hardened Forensic Palette - HSL */
-    --background: 222 47% 4%;     /* Midnight Slate */
-    --foreground: 210 40% 98%;    /* Ghost White */
+    /* Midnight Slate */
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
 
     --card: 222 47% 6%;
     --card-foreground: 210 40% 98%;
@@ -14,10 +14,11 @@
     --popover: 222 47% 4%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 0 72% 51%;         /* Forensic Red */
+    /* Forensic Red */
+    --primary: 0 72% 51%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 215 25% 27%;      /* Deep Zinc */
+    --secondary: 215 25% 27%;
     --secondary-foreground: 210 40% 98%;
 
     --muted: 217 33% 17%;
@@ -33,44 +34,30 @@
     --input: 217 33% 17%;
     --ring: 0 72% 51%;
 
-    --radius: 0rem; /* Hardened edges for forensic aesthetic */
+    --radius: 0rem;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(var(--border));
   }
-
   body {
-    @apply bg-background text-foreground antialiased;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-feature-settings: "ss01", "ss03", "cv08", "cv11";
   }
-  
-  /* Bold, italic headers for pathology report feel */
   h1, h2, h3 {
-    @apply font-black italic tracking-tight;
+    @apply font-black italic tracking-tight uppercase text-primary;
   }
 }
 
 @layer utilities {
-  /* Forensic Animation: Shimmer for the Delta Ticker */
-  @keyframes shimmer {
-    0% { transform: translateX(-100%); }
-    100% { transform: translateX(100%); }
+  .animate-forensic-pulse {
+    animation: forensic-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-
-  .animate-shimmer {
-    animation: shimmer 2s infinite linear;
-  }
-
-  /* Status Pulse: For 'Active Shear Force Detected' indicators */
   @keyframes forensic-pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.4; }
-  }
-
-  .animate-forensic-pulse {
-    animation: forensic-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }
