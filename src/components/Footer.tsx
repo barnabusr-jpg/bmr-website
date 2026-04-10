@@ -12,7 +12,7 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
           
-          {/* LOGO & HIDDEN ADMIN ACCESS */}
+          {/* LOGO SECTION */}
           <div className="space-y-6">
             <Link href="/" className="flex items-center gap-3 group w-fit">
               <div className="bg-slate-800 p-2 rounded-sm group-hover:bg-red-600 transition-colors">
@@ -26,13 +26,7 @@ export default function Footer() {
               Structural hardening for AI logic systems. Eliminating systemic decay before operational failure.
             </p>
             
-            {/* INCONSPICUOUS ADMIN ENTRANCE */}
-            <Link 
-              href="/owner" 
-              className="block text-[7px] font-mono text-slate-900 uppercase tracking-[0.5em] hover:text-red-900 transition-colors w-fit pt-4"
-            >
-              [ ADMIN_SESSION_START ]
-            </Link>
+            {/* 🛡️ DELETED: [ ADMIN_SESSION_START ] removed to consolidate access point */}
           </div>
 
           {/* FORENSIC TIERS */}
