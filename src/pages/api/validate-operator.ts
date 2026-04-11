@@ -1,50 +1,61 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import clientPromise from '../../lib/mongodb';
-import { Resend } from 'resend';
-import { BMRAuthEmail } from '../../../emails/BMRAuthEmail';
+import { supabase } from '@/lib/supabaseClient';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
+/**
+ * 🛡️ BMR SOLUTIONS: OPERATOR VALIDATION GATEKEEPER
+ * Purpose: Verifies Alpha-7 clearance and identifies the user's specific audit lens 
+ * from the secure email link (?email=...).
+ */
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { email, protocol } = req.query;
+  // 1. Extract the identifier from the URL
+  const { email } = req.query;
 
   if (!email || typeof email !== 'string') {
     return res.status(400).json({ error: "! INVALID_IDENTIFIER" });
   }
 
   try {
-    // 🔌 CONNECT TO MONGODB
-    const client = await clientPromise;
-    const db = client.db("bmr_advisory"); // Your Database Name
-    
-    // 🔎 QUERY THE OPERATORS COLLECTION
-    const record = await db.collection("operators").findOne({ 
-      email: email.toLowerCase() 
-    });
+    /**
+     * 🔎 QUERY SUPABASE:
+     * Pulls the operator record and joins the entity name to confirm linkage.
+     */
+    const { data: record, error } = await supabase
+      .from('operators')
+      .select(`
+        id,
+        email,
+        is_authorized,
+        lens,
+        entity_id,
+        entities ( name )
+      `)
+      .eq('email', email.toLowerCase().trim())
+      .single();
 
-    if (record && record.pulseCheckComplete) {
-      const protocolName = (protocol as string) || "BMR Stabilization Protocol";
-
-      // 📧 DISPATCH FORENSIC MANIFEST
-      await resend.emails.send({
-        from: 'BMR Advisory <hello@bmradvisory.co>',
-        to: record.email,
-        subject: `Authorization Granted // ${protocolName}`,
-        react: BMRAuthEmail({
-          operatorName: record.name,
-          archetype: record.profile.archetype,
-          reworkTax: record.profile.reworkTax,
-          protocolName: protocolName,
-          calendlyLink: `https://calendly.com/bmr-advisory/stabilization?email=${encodeURIComponent(record.email)}&a1=${encodeURIComponent(record.profile.reworkTax + '%')}`
-        }),
-      });
-
-      return res.status(200).json(record);
-    } else {
+    // 2. Handle missing records
+    if (error || !record) {
+      console.error("! ACCESS_DENIED: No record found for identifier:", email);
       return res.status(404).json({ message: "! NO_DIAGNOSTIC_MATCH_FOUND" });
     }
+
+    /**
+     * 🛡️ AUTHORIZATION GATE:
+     * Even if a record exists, access is denied until the Admin releases the MRI 
+     * in the Dashboard.
+     */
+    if (!record.is_authorized) {
+      return res.status(403).json({ message: "! ACCESS_NOT_YET_RELEASED" });
+    }
+
+    /**
+     * ✅ SUCCESS: 
+     * Returns the full forensic record including the Lens (TECHNICAL/MANAGERIAL/EXECUTIVE).
+     * This allows the frontend to auto-load the correct question matrix.
+     */
+    return res.status(200).json(record);
+
   } catch (error) {
-    console.error("! DATABASE_ERROR:", error);
+    console.error("! SYSTEM_FRACTURE:", error);
     return res.status(500).json({ error: "! INTERNAL_SYSTEM_FAILURE" });
   }
 }
