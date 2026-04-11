@@ -2,7 +2,17 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Activity, ShieldAlert, Lock, ArrowLeft, Unlock, CheckCircle } from "lucide-react";
+import { Activity, Lock, ArrowLeft, Unlock, CheckCircle } from "lucide-react";
+
+/**
+ * 🛠️ BMR SOLUTIONS HELPER: BUSINESS DOMAIN VALIDATOR
+ * Prevents "Shadow Operators" by rejecting personal/disposable domains.
+ */
+const isBusinessEmail = (email: string) => {
+  const personalDomains = ['gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com', 'aol.com', 'msn.com'];
+  const domain = email.split('@')[1]?.toLowerCase();
+  return domain && !personalDomains.includes(domain);
+};
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any[]>([]);
@@ -23,24 +33,90 @@ export default function AdminDashboard() {
     }
   };
 
-  // 🔑 RELEASE ACCESS FUNCTION
-  const handleReleaseDeepDive = async (operatorId: string, email: string) => {
-    const confirmRelease = confirm(`Authorize Deep Dive Access for ${email}?`);
-    if (!confirmRelease) return;
+  /**
+   * 🔬 COMMAND: RELEASE_MRI
+   * Purpose: Assigns Tech/Manager leads via Double-Entry & Business Domain validation.
+   * Dispatches Operational Directives to initialize the 3-lens triangulation.
+   */
+  const handleReleaseMRI = async (audit: any) => {
+    const primaryOperator = audit.operators;
+    const entityName = primaryOperator?.entities?.name || "BMR_CLIENT";
 
-    const { error } = await supabase
-      .from('operators')
-      .update({ is_authorized: true })
-      .eq('id', operatorId);
+    // 1. Requirement Notification
+    const proceed = confirm(
+      `BMR SOLUTIONS PROTOCOL:\n\n1. OFFICIAL BUSINESS EMAILS REQUIRED (No Gmail/Yahoo).\n2. DOUBLE-ENTRY VALIDATION ACTIVE (Prevents link drift).\n\nProceed to lead assignment?`
+    );
+    if (!proceed) return;
 
-    if (error) {
-      alert("AUTHORIZATION_FAILURE: Check Supabase Permissions.");
-    } else {
-      // Trigger local state update to show the change immediately
-      setData(prev => prev.map(item => 
-        item.operators?.id === operatorId ? { ...item, operators: { ...item.operators, is_authorized: true } } : item
-      ));
-      alert("MRI_RELEASED: Operator credentials upgraded to Alpha-7.");
+    // 2. Technical Lead - Double Entry + Domain Check
+    const tech1 = prompt(`[TECHNICAL LEAD] Enter Business Email:`)?.toLowerCase().trim();
+    if (!tech1) return;
+    if (!isBusinessEmail(tech1)) {
+      alert("ERROR: Personal domains are prohibited. Use an official business email.");
+      return;
+    }
+    const tech2 = prompt(`[TECHNICAL LEAD] Confirm Business Email:`)?.toLowerCase().trim();
+    if (tech1 !== tech2) {
+      alert("TYPO_DETECTED: Technical lead emails do not match. Aborting.");
+      return;
+    }
+
+    // 3. Managerial Lead - Double Entry + Domain Check
+    const mgr1 = prompt(`[MANAGERIAL LEAD] Enter Business Email:`)?.toLowerCase().trim();
+    if (!mgr1) return;
+    if (!isBusinessEmail(mgr1)) {
+      alert("ERROR: Personal domains are prohibited. Use an official business email.");
+      return;
+    }
+    const mgr2 = prompt(`[MANAGERIAL LEAD] Confirm Business Email:`)?.toLowerCase().trim();
+    if (mgr1 !== mgr2) {
+      alert("TYPO_DETECTED: Managerial lead emails do not match. Aborting.");
+      return;
+    }
+
+    try {
+      // 4. Update Database: Register/Authorize All Three
+      const leads = [
+        { email: primaryOperator.email, lens: 'EXECUTIVE' },
+        { email: tech1, lens: 'TECHNICAL' },
+        { email: mgr1, lens: 'MANAGERIAL' }
+      ];
+
+      for (const lead of leads) {
+        await supabase.from('operators').upsert({
+          email: lead.email,
+          entity_id: primaryOperator.entity_id,
+          lens: lead.lens,
+          is_authorized: true,
+          authorized_at: new Date()
+        }, { onConflict: 'email' });
+      }
+
+      // 5. API Dispatch: Trigger 3-way email broadcast
+      const res = await fetch('/api/dispatch-directives', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          primaryEmail: primaryOperator.email,
+          techEmail: tech1,
+          mgrEmail: mgr1,
+          entityName,
+          reworkTax: audit.rework_tax
+        })
+      });
+
+      if (res.ok) {
+        // Refresh local UI state
+        setData(prev => prev.map(item => 
+          item.operators?.id === primaryOperator.id ? { ...item, operators: { ...item.operators, is_authorized: true } } : item
+        ));
+        alert("SUCCESS: MRI Released. Operational directives dispatched to verified business domains.");
+      } else {
+        throw new Error("API_DISPATCH_FAILURE");
+      }
+    } catch (err) {
+      console.error("MRI_RELEASE_ERROR:", err);
+      alert("SYSTEM_FRACTURE: Authorization handshake failed. Check console/API logs.");
     }
   };
 
@@ -53,14 +129,12 @@ export default function AdminDashboard() {
         .select(`
           id,
           created_at,
-          sector,
           rework_tax,
-          decay_pct,
           operators (
             id,
-            full_name,
             email,
             is_authorized,
+            entity_id,
             entities ( name )
           )
         `)
@@ -74,31 +148,19 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 font-mono">
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center font-mono">
         <div className="w-full max-w-md bg-slate-900 border border-slate-800 p-8 shadow-2xl">
-          <div className="flex justify-center mb-8">
-            <div className="p-4 bg-red-600/10 rounded-full border border-red-600/20">
-              <Lock className="text-red-600 h-8 w-8" />
-            </div>
-          </div>
-          <h2 className="text-white text-center font-black italic uppercase tracking-tighter text-xl mb-2">
-            Secure_Node_Access
-          </h2>
-          <p className="text-slate-500 text-[10px] text-center uppercase tracking-[0.3em] mb-8">
-            Clearance_Level: Alpha-7_Required
-          </p>
-          
+          <h2 className="text-white text-center font-black italic uppercase tracking-tighter text-xl mb-8">BMR_SOLUTIONS // SECURE_NODE</h2>
           <form onSubmit={handleLogin} className="space-y-4">
             <input 
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="ENTER_ACCESS_KEY"
-              className="w-full bg-slate-950 border border-slate-800 p-4 text-center text-red-600 font-black tracking-[0.5em] focus:outline-none focus:border-red-600 transition-colors"
+              placeholder="ACCESS_KEY"
+              className="w-full bg-slate-950 border border-slate-800 p-4 text-center text-red-600 font-black tracking-widest focus:outline-none focus:border-red-600"
               autoFocus
             />
-            {error && <p className="text-[10px] text-red-600 text-center font-bold uppercase">{error}</p>}
-            <button type="submit" className="w-full bg-red-600 text-white py-4 font-black uppercase italic tracking-widest text-xs hover:bg-white hover:text-black transition-all">
+            <button type="submit" className="w-full bg-red-600 text-white py-4 font-black uppercase italic text-xs hover:bg-white hover:text-black transition-all">
               Authorize_Session
             </button>
           </form>
@@ -107,45 +169,34 @@ export default function AdminDashboard() {
     );
   }
 
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase tracking-widest">Reconstructing_Forensic_Ledger...</div>;
-
-  const totalRework = data.reduce((acc, curr) => acc + (Number(curr.rework_tax) || 0), 0);
+  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase tracking-widest">RECONSTRUCTING_LEDGER...</div>;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-8 pt-24 font-sans relative">
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-8 pt-24 font-sans">
+      {/* Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
         <div className="bg-slate-900 border border-slate-800 p-6">
-          <label className="text-[10px] font-mono text-red-600 uppercase tracking-widest block mb-2 font-black italic">Total_Rework_Tax_Identified</label>
-          <div className="text-4xl font-black italic">${totalRework.toFixed(1)}M</div>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 p-6">
-          <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-2">Active_Operators</label>
-          <div className="text-4xl font-black italic">{data.length}</div>
-        </div>
-        <div className="bg-slate-900 border border-slate-800 p-6">
-          <label className="text-[10px] font-mono text-green-500 uppercase tracking-widest block mb-2 text-green-500">System_Status</label>
-          <div className="text-xl font-black italic text-green-500 uppercase flex items-center gap-2">
-            <Activity size={20} /> Operational
-          </div>
+          <label className="text-[10px] font-mono text-red-600 uppercase tracking-widest block mb-2 font-black italic">Total_Rework_Tax</label>
+          <div className="text-4xl font-black italic">${data.reduce((acc, curr) => acc + (Number(curr.rework_tax) || 0), 0).toFixed(1)}M</div>
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 overflow-hidden shadow-2xl">
+      <div className="bg-slate-900 border border-slate-800">
         <div className="p-4 border-b border-slate-800 bg-slate-950/50 flex justify-between items-center">
-          <h2 className="font-black italic uppercase tracking-tighter">Diagnostic_History_Log</h2>
-          <button onClick={() => setIsAuthenticated(false)} className="text-[10px] font-mono text-slate-600 hover:text-red-600 uppercase transition-colors flex items-center gap-2 group">
-            End_Session <ArrowLeft size={10} className="group-hover:-translate-x-1 transition-transform" />
+          <h2 className="font-black italic uppercase tracking-tighter tracking-widest">BMR_SOLUTIONS // DIAGNOSTIC_HISTORY</h2>
+          <button onClick={() => setIsAuthenticated(false)} className="text-[10px] font-mono text-slate-600 hover:text-red-600 uppercase transition-colors flex items-center gap-2">
+            End_Session <ArrowLeft size={10} />
           </button>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-800 text-[10px] font-mono text-slate-500 uppercase tracking-widest text-center md:text-left">
+              <tr className="border-b border-slate-800 text-[10px] font-mono text-slate-500 uppercase tracking-widest">
                 <th className="p-4">Timestamp</th>
-                <th className="p-4">Operator/Entity</th>
-                <th className="p-4 text-center">MRI Access</th>
-                <th className="p-4 text-right">Inaction Cost (6mo)</th>
-                <th className="p-4 text-right">Rework Tax</th>
+                <th className="p-4">Entity_Audit</th>
+                <th className="p-4 text-center">3-Lens Triangulation</th>
+                <th className="p-4 text-right italic underline decoration-red-900">Inaction_Cost</th>
+                <th className="p-4 text-right">Rework_Tax</th>
               </tr>
             </thead>
             <tbody className="font-mono text-xs">
@@ -157,25 +208,25 @@ export default function AdminDashboard() {
                   <tr key={audit.id} className="border-b border-slate-800 hover:bg-white/5 transition-colors group">
                     <td className="p-4 text-slate-500">{new Date(audit.created_at).toLocaleDateString()}</td>
                     <td className="p-4">
-                      <div className="font-bold text-white uppercase">{audit.operators?.full_name || "Unknown"}</div>
-                      <div className="text-[9px] text-slate-600 italic">{audit.operators?.email}</div>
+                      <div className="font-bold text-white uppercase">{audit.operators?.entities?.name || "BMR_PROSPECT"}</div>
+                      <div className="text-[9px] text-slate-600 italic tracking-tighter">{audit.operators?.email}</div>
                     </td>
                     <td className="p-4 text-center">
                       {isAuthorized ? (
-                        <div className="flex items-center justify-center gap-2 text-green-500 font-black italic uppercase text-[9px]">
-                          <CheckCircle size={14} /> Authorized
+                        <div className="text-green-500 font-black italic uppercase text-[9px] flex items-center justify-center gap-2">
+                          <CheckCircle size={14} /> Directives_Live
                         </div>
                       ) : (
                         <button 
-                          onClick={() => handleReleaseDeepDive(audit.operators.id, audit.operators.email)}
-                          className="px-4 py-2 bg-green-600/10 border border-green-600/30 text-green-500 hover:bg-green-600 hover:text-white transition-all font-black uppercase tracking-tighter text-[9px] italic flex items-center gap-2 mx-auto"
+                          onClick={() => handleReleaseMRI(audit)}
+                          className="px-4 py-2 bg-green-600/10 border border-green-600/30 text-green-500 hover:bg-green-600 hover:text-white transition-all font-black uppercase text-[9px] italic flex items-center gap-2 mx-auto"
                         >
                           <Unlock size={12} /> Release_MRI
                         </button>
                       )}
                     </td>
-                    <td className="p-4 text-right font-black text-red-600 italic underline underline-offset-4 decoration-red-900">${inactionCost}M</td>
-                    <td className="p-4 text-right font-black text-white italic">${audit.rework_tax}M</td>
+                    <td className="p-4 text-right font-black text-red-600 italic tracking-tighter">${inactionCost}M</td>
+                    <td className="p-4 text-right font-black text-white italic tracking-tighter">${audit.rework_tax}M</td>
                   </tr>
                 );
               })}
