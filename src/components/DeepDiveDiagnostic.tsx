@@ -30,17 +30,14 @@ export default function DeepDiveDiagnostic({
 
   useEffect(() => {
     async function validateAccess() {
-      // 1. Capture email from URL (The Lead's entry point from SendGrid)
       const urlParams = new URLSearchParams(window.location.search);
       const emailParam = urlParams.get('email');
 
       let query = supabase.from('operators').select('id, is_authorized, lens');
       
       if (emailParam) {
-        // Identify lead by email from the secure link
         query = query.eq('email', decodeURIComponent(emailParam));
       } else {
-        // Fallback to initial prop for the primary operator
         query = query.eq('id', activeOperatorId);
       }
 
@@ -49,7 +46,7 @@ export default function DeepDiveDiagnostic({
       if (data?.is_authorized) {
         setIsAuthorized(true);
         setActiveOperatorId(data.id);
-        setActiveLens(data.lens); // Auto-configures UI for Technical/Managerial
+        setActiveLens(data.lens); 
       }
       
       setIsLoading(false);
@@ -63,21 +60,28 @@ export default function DeepDiveDiagnostic({
 
     const qId = lensQuestions[currentIdx].id;
     
-    // 🧮 VULNERABILITY LOGIC: Verbal/None evidence + High Confidence = High Risk Multiplier
+    // 🧮 VULNERABILITY LOGIC: Penalize high confidence with low evidence
     const multiplier = (answer.includes("High") && (evidenceBasis === "VERBAL" || evidenceBasis === "NONE")) ? 2.5 : 1.0;
 
-    await supabase.from('audit_responses').upsert({
-      operator_id: activeOperatorId,
-      question_id: qId,
-      value: answer,
-      evidence_basis: evidenceBasis,
-      vulnerability_multiplier: multiplier,
-      lens: activeLens
-    });
+    // 🛰️ DATABASE INJECTION: Switched to .insert() for unique record history
+    const { error } = await supabase.from('audit_responses').insert([
+      {
+        operator_id: activeOperatorId,
+        question_id: qId,
+        value: answer,
+        lens: activeLens,
+        evidence_basis: evidenceBasis,
+        vulnerability_multiplier: multiplier,
+      }
+    ]);
+
+    if (error) {
+      console.error("❌ BMR_DATABASE_FRACTURE:", error.message);
+    }
 
     if (currentIdx < lensQuestions.length - 1) {
       setCurrentIdx(currentIdx + 1);
-      setEvidenceBasis("NONE"); // Reset for next forensic data point
+      setEvidenceBasis("NONE"); 
     } else {
       setIsCompleted(true);
     }
@@ -104,13 +108,25 @@ export default function DeepDiveDiagnostic({
   if (isCompleted) return (
     <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-center font-sans">
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md space-y-6">
+        
+        {/* 🔍 ACTIVE LENS IDENTIFIER: Anchored for confirmation */}
+        <div className="inline-block px-3 py-1 border border-red-600/30 bg-red-600/10 rounded-full mb-4">
+            <span className="text-[10px] font-mono font-black text-red-600 uppercase tracking-[0.3em]">
+               Active_Lens // {activeLens}
+            </span>
+         </div>
+
         <CheckCircle2 size={64} className="text-green-500 mx-auto mb-4" />
         <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter leading-none">
           LENS_SUBMISSION<br/><span className="text-green-500">COMPLETE</span>
         </h2>
-        <p className="text-slate-500 text-[10px] uppercase tracking-[0.3em] leading-loose pt-4">
-          Data secured in evidence locker. The final MRI report will crystallize once the remaining team leads complete their audit lenses.
-        </p>
+        
+        <div className="pt-6 border-t border-slate-900 mt-6 text-center">
+          <p className="text-slate-500 text-[10px] uppercase tracking-[0.3em] leading-loose pt-4">
+            Data secured in evidence locker for <strong>{activeLens}</strong> perspective. 
+            The final MRI report will crystallize once the remaining team leads complete their audit lenses.
+          </p>
+        </div>
       </motion.div>
     </div>
   );
@@ -121,11 +137,11 @@ export default function DeepDiveDiagnostic({
       <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-900 p-10 space-y-12">
         <div className="flex items-center gap-3 text-red-600">
           <BookOpen size={20} />
-          <h3 className="font-black uppercase italic text-sm tracking-tighter">BMR_FieldGuide_V3</h3>
+          <h3 className="font-black uppercase italic text-sm tracking-tighter italic">BMR_FieldGuide_V3</h3>
         </div>
 
         <div className="space-y-4">
-           <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black">Active_Chapter</label>
+           <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Active_Chapter</label>
            <div className="p-6 border border-slate-800 bg-slate-900/40 rounded-sm">
               <h4 className="text-white font-bold text-[11px] uppercase mb-2">
                 {lensQuestions[currentIdx]?.chapter || "IDENTIFYING_CHAPTER"}
@@ -152,13 +168,7 @@ export default function DeepDiveDiagnostic({
       {/* 🔬 RIGHT: THE MRI INTERFACE */}
       <main className="flex-1 p-12 md:p-24 overflow-y-auto">
         <AnimatePresence mode="wait">
-          <motion.div 
-            key={currentIdx} 
-            initial={{ opacity: 0, x: 20 }} 
-            animate={{ opacity: 1, x: 0 }} 
-            exit={{ opacity: 0, x: -20 }} 
-            className="max-w-3xl"
-          >
+          <motion.div key={currentIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-3xl">
             <div className="flex items-center gap-2 text-red-600 font-mono text-[10px] uppercase tracking-widest mb-12 italic font-black">
                <Activity size={14} className="animate-pulse" /> Zone_{lensQuestions[currentIdx]?.zone} // Lens_{activeLens}
             </div>
@@ -167,7 +177,6 @@ export default function DeepDiveDiagnostic({
                {lensQuestions[currentIdx]?.text}
             </h1>
 
-            {/* ANSWER SELECTION */}
             <div className="grid grid-cols-1 gap-4 mb-12">
               {["High Confidence / Documented", "Moderate Confidence / Verbal", "Zero Oversight / Theoretical"].map((opt) => (
                 <button 
@@ -181,7 +190,6 @@ export default function DeepDiveDiagnostic({
               ))}
             </div>
 
-            {/* EVIDENCE BASIS SELECTOR */}
             <div className="border-t border-slate-900 pt-8 mt-12">
                <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-6 block font-black">Declare_Evidence_Basis:</label>
                <div className="flex flex-wrap gap-3">
