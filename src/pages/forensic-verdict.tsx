@@ -2,13 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { TrendingUp, ArrowRight, Skull, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import Header from "@/components/Header";
 
 export default function ForensicVerdict() {
   const [data, setData] = useState<any>(null);
   const [activeLens, setActiveLens] = useState<string>("EXECUTIVE");
 
   useEffect(() => {
-    // 🔍 RETRIEVE THE LENS
+    // 🔍 PERSISTENCE BRIDGE: Pull the lens saved by DeepDiveDiagnostic
     const savedLens = localStorage.getItem("bmr_active_lens") || "EXECUTIVE";
     setActiveLens(savedLens.toUpperCase());
 
@@ -31,24 +32,25 @@ export default function ForensicVerdict() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white py-24 px-6 font-sans">
-      <div className="container mx-auto max-w-4xl">
+      <Header />
+      <div className="container mx-auto max-w-4xl mt-12">
         <header className="flex justify-between items-start border-b border-slate-900 pb-8 mb-12">
           <section>
             <h1 className="text-red-600 text-4xl font-black uppercase italic tracking-tighter leading-none">
               Forensic Triage <br/> Alert
             </h1>
             <div className="flex gap-4 mt-2">
-              <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">AUDIT {data.sectorLabel}</span>
-              <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest">STATUS VALIDATED</span>
+              <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest font-black">AUDIT {data.sectorLabel}</span>
+              <span className="text-slate-500 font-mono text-[10px] uppercase tracking-widest font-black">STATUS VALIDATED</span>
             </div>
           </section>
           <Lock className="text-slate-700" size={24} />
         </header>
 
-        {/* 🛠️ THE PERSPECTIVE NODE ROW: Now permanent in the page file */}
+        {/* 🛠️ THE PERSPECTIVE NODE ROW: Hard-coded into the page file */}
         <div className="mb-12 flex justify-between items-center bg-white/5 p-6 border-l-4 border-red-600 shadow-[0_0_30px_rgba(220,38,38,0.1)]">
            <div className="flex items-center gap-3">
-              <div className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
+              <div className="h-2 w-2 rounded-full bg-red-600 animate-pulse" />
               <span className="text-[10px] font-mono text-slate-300 uppercase tracking-[0.2em] font-black italic">Perspective_Node</span>
            </div>
            <span className="text-white font-black uppercase italic tracking-tighter text-sm bg-red-600/20 px-4 py-1.5 border border-red-600/30">
@@ -74,7 +76,7 @@ export default function ForensicVerdict() {
               <TrendingUp size={20} className="text-red-600" /> THE COMPOUND FAILURE
             </h3>
             <p className="text-slate-400 text-sm italic leading-relaxed">
-              &ldquo;Your ${data.total}M hemorrhage is a compounding liability scaling against your initial $1.2M {data.sectorLabel} investment.&rdquo;
+              &ldquo;Your ${data.total}M hemorrhage is a compounding liability scaling against your initial investment.&rdquo;
             </p>
           </article>
           <Card className="bg-slate-950 p-8 border-l-4 border-red-600 rounded-none border-t-0 border-r-0 border-b-0">
@@ -91,7 +93,7 @@ export default function ForensicVerdict() {
         </section>
 
         <footer className="bg-red-600 p-12 text-center shadow-[0_0_50px_rgba(220,38,38,0.2)]">
-          <h2 className="text-white text-3xl font-black uppercase italic mb-8 tracking-tighter">PREVENT THE TRAP</h2>
+          <h2 className="text-white text-3xl font-black uppercase italic mb-8 tracking-tighter leading-none">PREVENT THE TRAP</h2>
           <button className="bg-black text-white px-12 py-6 font-black uppercase italic tracking-[0.3em] text-[11px] hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4 mx-auto border border-black">
             SCHEDULE DEEP DIVE AUDIT <ArrowRight size={18} />
           </button>
