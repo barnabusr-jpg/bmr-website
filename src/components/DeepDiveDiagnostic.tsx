@@ -21,7 +21,7 @@ export default function DeepDiveDiagnostic({
   const [activeOperatorId, setActiveOperatorId] = useState(initialId);
   const [activeLens, setActiveLens] = useState(initialLens);
 
-  // 🎯 THE SIGNAL ANCHOR
+  // 🎯 ANCHOR: Lock lens from initial input to prevent any DB delay
   const LENS_SIGNAL = (initialLens || activeLens || "EXECUTIVE").toUpperCase();
 
   const lensQuestions = DEEP_DIVE_QUESTIONS.filter(
@@ -53,6 +53,8 @@ export default function DeepDiveDiagnostic({
 
   const handleNext = async (answer: string) => {
     if (!lensQuestions[currentIdx]) return;
+    
+    // Log response to Supabase
     await supabase.from('audit_responses').insert([{
       operator_id: activeOperatorId,
       question_id: lensQuestions[currentIdx].id,
@@ -69,13 +71,19 @@ export default function DeepDiveDiagnostic({
 
   if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase">Authorizing...</div>;
 
-  if (!isAuthorized) return <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white"><h2 className="text-3xl font-black uppercase italic tracking-tighter">Node_Locked</h2></div>;
+  if (!isAuthorized) return (
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white font-sans">
+      <div className="text-center">
+        <Lock size={48} className="mx-auto text-red-600 mb-6 opacity-50" />
+        <h2 className="text-3xl font-black uppercase italic tracking-tighter">Node_Locked</h2>
+      </div>
+    </div>
+  );
 
   if (isCompleted) {
     return (
-      <div className="min-h-screen bg-[#020617] p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-[#020617] p-6 flex items-center justify-center font-sans">
         <div className="max-w-4xl w-full">
-          {/* Passing the LENS_SIGNAL directly to the card */}
           <ForensicResultCard 
             lens={LENS_SIGNAL}
             result={{
@@ -95,11 +103,11 @@ export default function DeepDiveDiagnostic({
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col md:flex-row font-sans">
       <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-900 p-10 space-y-12">
-        <div className="flex items-center gap-3 text-red-600">
+        <div className="flex items-center gap-3 text-red-600 font-black uppercase italic text-sm tracking-tighter">
           <BookOpen size={20} />
-          <h3 className="font-black uppercase italic text-sm tracking-tighter italic">BMR_FieldGuide_V3</h3>
+          BMR_FieldGuide_V3
         </div>
         <div className="p-6 border border-slate-800 bg-slate-900/40 rounded-sm">
            <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black block mb-2">Active_Chapter</label>
@@ -116,7 +124,7 @@ export default function DeepDiveDiagnostic({
           <div className="grid grid-cols-1 gap-4">
             {["High Confidence", "Moderate Confidence", "Theoretical"].map((opt) => (
               <button key={opt} onClick={() => handleNext(opt)} className="w-full p-8 bg-slate-900/30 border border-slate-800 text-left hover:border-red-600 transition-all flex justify-between items-center group font-black uppercase italic text-slate-400 hover:text-white">
-                {opt} <ChevronRight size={20} className="text-slate-800 group-hover:text-red-600" />
+                {opt} <ChevronRight size={20} className="text-slate-800 group-hover:text-red-600 transition-colors" />
               </button>
             ))}
           </div>
