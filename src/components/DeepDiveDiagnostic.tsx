@@ -19,11 +19,13 @@ export default function DeepDiveDiagnostic({
   const [evidenceBasis, setEvidenceBasis] = useState("NONE");
   const [isCompleted, setIsCompleted] = useState(false);
   
-  // 🔄 DYNAMIC STATE
+  // 🔄 STATE MANAGEMENT
   const [activeOperatorId, setActiveOperatorId] = useState(initialId);
   const [activeLens, setActiveLens] = useState(initialLens);
 
-  // Filter questions dynamically
+  // 🎯 THE ANCHOR: We lock the lens from the initial input to prevent DB drift
+  const FINAL_DISPLAY_LENS = (initialLens || activeLens || "EXECUTIVE").toUpperCase();
+
   const lensQuestions = DEEP_DIVE_QUESTIONS.filter(
     (q) => q.lens === (activeLens?.toUpperCase() || "EXECUTIVE")
   );
@@ -44,6 +46,7 @@ export default function DeepDiveDiagnostic({
       if (data?.is_authorized) {
         setIsAuthorized(true);
         setActiveOperatorId(data.id);
+        // We still update this for the DB logic, but the UI will use our Anchor
         setActiveLens(data.lens); 
       }
       setIsLoading(false);
@@ -80,19 +83,15 @@ export default function DeepDiveDiagnostic({
       <div className="max-w-md space-y-6">
         <Lock className="mx-auto text-red-600 mb-4 opacity-50" size={48} />
         <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Diagnostic_Node_Locked</h2>
-        <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] leading-relaxed">Forensic Briefing required to engage Alpha-7 deep dive sequence.</p>
       </div>
     </div>
   );
 
   /**
    * 🏆 FINAL VERDICT RENDER
-   * Fixes Issue #1: Guarantees the Active Lens is shown in the output.
+   * This uses FINAL_DISPLAY_LENS which is captured from the initial input.
    */
   if (isCompleted) {
-    // Fail-safe logic to ensure the lens is never empty
-    const displayLens = (activeLens || initialLens || "EXECUTIVE").toUpperCase();
-
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 font-sans">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-xl w-full bg-slate-900 border border-slate-800 p-12 shadow-2xl relative overflow-hidden">
@@ -102,19 +101,19 @@ export default function DeepDiveDiagnostic({
             <Activity size={14} className="animate-pulse" /> Diagnostic_Finalized
           </div>
 
-          <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter mb-8 border-b border-red-600 pb-6">
+          <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-8 border-b border-red-600 pb-6">
             Formal_Audit_Verdict
           </h2>
 
           <div className="space-y-1 relative z-10">
-            {/* 🔍 PERSPECTIVE NODE ROW (THE FIX) */}
+            {/* 🔍 THE GUARANTEED FIX: Using the captured input signal */}
             <div className="flex justify-between items-center py-5 border-b border-slate-800/50">
               <div className="flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black">Perspective_Node</span>
               </div>
               <span className="text-white font-black uppercase italic tracking-tighter bg-red-600/10 px-3 py-1 border border-red-600/20 text-xs">
-                {displayLens} // LENS
+                {FINAL_DISPLAY_LENS} // LENS
               </span>
             </div>
 
@@ -135,7 +134,7 @@ export default function DeepDiveDiagnostic({
           </div>
 
           <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-10 leading-relaxed italic border-l-2 border-red-600 pl-4">
-            Projections based on {displayLens} lens data. Secure the full MRI via Triangulation to finalize the Structural Resilience Index.
+            Projections based on {FINAL_DISPLAY_LENS} lens data. Secure the full MRI via Triangulation to finalize the Structural Resilience Index.
           </p>
 
           <button className="w-full mt-12 bg-red-600 text-white py-6 font-black uppercase italic text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3">
@@ -151,13 +150,12 @@ export default function DeepDiveDiagnostic({
       <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-900 p-10 space-y-12">
         <div className="flex items-center gap-3 text-red-600">
           <BookOpen size={20} />
-          <h3 className="font-black uppercase italic text-sm tracking-tighter italic">BMR_FieldGuide_V3</h3>
+          <h3 className="font-black uppercase italic text-sm tracking-tighter">BMR_FieldGuide_V3</h3>
         </div>
         <div className="space-y-4">
            <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Active_Chapter</label>
            <div className="p-6 border border-slate-800 bg-slate-900/40 rounded-sm">
               <h4 className="text-white font-bold text-[11px] uppercase mb-2">{lensQuestions[currentIdx]?.chapter}</h4>
-              <p className="text-[11px] text-slate-400 italic leading-relaxed">Focus: Operational hardening and institutional memory.</p>
            </div>
         </div>
         <div className="pt-20">
@@ -172,10 +170,10 @@ export default function DeepDiveDiagnostic({
         <AnimatePresence mode="wait">
           <motion.div key={currentIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-3xl">
             <div className="flex items-center gap-2 text-red-600 font-mono text-[10px] uppercase tracking-widest mb-12 italic font-black">
-               <Activity size={14} className="animate-pulse" /> Zone_{lensQuestions[currentIdx]?.zone} // Lens_{activeLens}
+               <Activity size={14} className="animate-pulse" /> Zone_{lensQuestions[currentIdx]?.zone} // Lens_{FINAL_DISPLAY_LENS}
             </div>
             <h1 className="text-5xl font-black uppercase italic tracking-tighter leading-tight mb-16">{lensQuestions[currentIdx]?.text}</h1>
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-4 mb-12">
               {["High Confidence / Documented", "Moderate Confidence / Verbal", "Zero Oversight / Theoretical"].map((opt) => (
                 <button key={opt} onClick={() => handleNext(opt)} className="w-full p-8 bg-slate-900/30 border border-slate-800 text-left hover:border-red-600 hover:bg-red-600/5 transition-all flex justify-between items-center group">
                   <span className="font-black uppercase italic text-slate-400 group-hover:text-white transition-colors tracking-tighter">{opt}</span>
