@@ -1,7 +1,8 @@
+"use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, ShieldAlert, ArrowLeft } from "lucide-react";
+import { Lock, ShieldAlert } from "lucide-react";
 
 export default function AdminPortal() {
   const [mounted, setMounted] = useState(false);
@@ -15,7 +16,7 @@ export default function AdminPortal() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  const requestAccess = async (e) => {
+  const requestAccess = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
@@ -36,9 +37,11 @@ export default function AdminPortal() {
     finally { setIsLoading(false); }
   };
 
-  const authorizeAdmin = (e) => {
+  const authorizeAdmin = (e: React.FormEvent) => {
     e.preventDefault();
     if (otp === serverChallenge) {
+      // 🚨 PERSISTENCE: Save a session flag so the Dashboard knows you are verified
+      sessionStorage.setItem("bmr_admin_verified", "true");
       router.push("/admin/dashboard");
     } else { setError("INVALID_OPERATOR_KEY"); }
   };
