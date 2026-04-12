@@ -1,11 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useRouter } from "next/router";
 import { BookOpen, Activity, ChevronRight, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { DEEP_DIVE_QUESTIONS } from "@/data/DeepDiveMatrix";
-import ForensicResultCard from "@/components/ForensicResultCard";
 
 export default function DeepDiveDiagnostic({ 
   operatorId: initialId, 
@@ -14,33 +13,27 @@ export default function DeepDiveDiagnostic({
   operatorId: string, 
   userLens: string 
 }) {
+  const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [isCompleted, setIsCompleted] = useState(false);
   const [activeOperatorId, setActiveOperatorId] = useState(initialId);
   const [activeLens, setActiveLens] = useState(initialLens);
 
-  // 🎯 ANCHOR: Captured initial input to ensure UI consistency
   const LENS_SIGNAL = (initialLens || activeLens || "EXECUTIVE").toUpperCase();
 
   const lensQuestions = DEEP_DIVE_QUESTIONS.filter(
-    (q) => q.lens === (activeLens?.toUpperCase() || "EXECUTIVE")
+    (q) => q.lens === LENS_SIGNAL
   );
 
   useEffect(() => {
     async function validateAccess() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const emailParam = urlParams.get('email');
-      let query = supabase.from('operators').select('id, is_authorized, lens');
-      
-      if (emailParam) {
-        query = query.eq('email', decodeURIComponent(emailParam));
-      } else {
-        query = query.eq('id', activeOperatorId);
-      }
+      const { data } = await supabase
+        .from('operators')
+        .select('id, is_authorized, lens')
+        .eq('id', initialId)
+        .single();
 
-      const { data } = await query.single();
       if (data?.is_authorized) {
         setIsAuthorized(true);
         setActiveOperatorId(data.id);
@@ -49,29 +42,31 @@ export default function DeepDiveDiagnostic({
       setIsLoading(false);
     }
     validateAccess();
-  }, [activeOperatorId]);
+  }, [initialId]);
 
   const handleNext = async (answer: string) => {
     if (!lensQuestions[currentIdx]) return;
-    
+
     await supabase.from('audit_responses').insert([{
       operator_id: activeOperatorId,
       question_id: lensQuestions[currentIdx].id,
       value: answer,
-      lens: activeLens
+      lens: LENS_SIGNAL
     }]);
 
     if (currentIdx < lensQuestions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
-      setIsCompleted(true);
+      // 🚨 PERSISTENCE BRIDGE: Save lens so the next page can see it
+      localStorage.setItem("bmr_active_lens", LENS_SIGNAL);
+      router.push('/forensic-verdict');
     }
   };
 
-  if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase tracking-[0.2em]">Authorizing...</div>;
+  if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase">Authorizing...</div>;
 
   if (!isAuthorized) return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white">
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white font-sans">
       <div className="text-center">
         <Lock size={48} className="mx-auto text-red-600 mb-6 opacity-50" />
         <h2 className="text-3xl font-black uppercase italic tracking-tighter">Node_Locked</h2>
@@ -79,34 +74,11 @@ export default function DeepDiveDiagnostic({
     </div>
   );
 
-  if (isCompleted) {
-    return (
-      <div className="min-h-screen bg-[#020617] p-6 flex items-center justify-center font-sans">
-        <div className="max-w-4xl w-full">
-          <ForensicResultCard 
-            lens={LENS_SIGNAL}
-            result={{
-              protocol: 'STRUCTURAL_HARDENING',
-              frictionIndex: 75,
-              status: 'VERIFIED',
-              shearZones: {
-                HumanAIAlignment: 8,
-                AlgorithmicValueStream: 6,
-                InstitutionalGovernance: 9
-              }
-            }} 
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col md:flex-row font-sans">
       <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-900 p-10 space-y-12">
         <div className="flex items-center gap-3 text-red-600 font-black uppercase italic text-sm tracking-tighter">
-          <BookOpen size={20} />
-          BMR_FieldGuide_V3
+          <BookOpen size={20} /> BMR_FieldGuide_V3
         </div>
         <div className="p-6 border border-slate-800 bg-slate-900/40 rounded-sm">
            <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black block mb-2">Active_Chapter</label>
