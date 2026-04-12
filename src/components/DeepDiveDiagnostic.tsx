@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Activity, ChevronRight, Lock, FileText } from "lucide-react";
+import { BookOpen, Activity, ChevronRight, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { DEEP_DIVE_QUESTIONS } from "@/data/DeepDiveMatrix";
+import ForensicResultCard from "@/components/ForensicResultCard";
 
 export default function DeepDiveDiagnostic({ 
   operatorId: initialId, 
@@ -20,7 +21,7 @@ export default function DeepDiveDiagnostic({
   const [activeOperatorId, setActiveOperatorId] = useState(initialId);
   const [activeLens, setActiveLens] = useState(initialLens);
 
-  // 🎯 CAPTURE INITIAL INPUT FOR UI
+  // 🎯 THE SIGNAL ANCHOR
   const LENS_SIGNAL = (initialLens || activeLens || "EXECUTIVE").toUpperCase();
 
   const lensQuestions = DEEP_DIVE_QUESTIONS.filter(
@@ -68,97 +69,59 @@ export default function DeepDiveDiagnostic({
 
   if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase">Authorizing...</div>;
 
-  if (!isAuthorized) return <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white"><h2 className="text-3xl font-black uppercase italic">Node_Locked</h2></div>;
+  if (!isAuthorized) return <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white"><h2 className="text-3xl font-black uppercase italic tracking-tighter">Node_Locked</h2></div>;
 
-  /**
-   * 🏆 INTEGRATED VERDICT RENDER
-   * If you see the blue bar below, you will see the Node row.
-   */
   if (isCompleted) {
     return (
-      <div className="min-h-screen bg-[#020617] flex flex-col font-sans">
-        {/* 🚨 SIGNAL VERIFICATION BAR */}
-        <div className="w-full bg-blue-600 text-white text-center py-2 font-black uppercase tracking-[0.3em] text-[10px] z-[9999] relative">
-          SIGNAL_VERIFIED // VERDICT_MODE_ACTIVE
-        </div>
-
-        <div className="flex-grow flex items-center justify-center p-6">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-xl w-full bg-slate-900 border border-slate-800 p-12 shadow-2xl relative overflow-hidden text-white">
-            
-            <div className="flex items-center gap-2 text-red-600 font-mono text-[10px] uppercase tracking-[0.3em] mb-4 italic font-black">
-              <Activity size={14} className="animate-pulse" /> Diagnostic_Finalized
-            </div>
-
-            <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-8 border-b border-red-600 pb-6 leading-none">
-              Formal Audit <br/> Verdict
-            </h2>
-
-            <div className="space-y-1 relative z-10">
-              {/* 🔍 THE GUARANTEED LENS ROW */}
-              <div className="flex justify-between items-center py-5 border-b border-slate-800/50 bg-white/5 px-4 -mx-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
-                  <span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-black">Perspective_Node</span>
-                </div>
-                <span className="text-white font-black uppercase italic tracking-tighter bg-red-600/20 px-3 py-1 border border-red-600/40 text-xs">
-                  {LENS_SIGNAL} // LENS
-                </span>
-              </div>
-
-              <div className="flex justify-between items-center py-5 border-b border-slate-800/50">
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Systemic_Friction_Index</span>
-                <span className="text-white font-black uppercase italic tracking-tighter">75/100</span>
-              </div>
-
-              <div className="flex justify-between items-center py-5 border-b border-slate-800/50">
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Identified_Rework_Tax</span>
-                <span className="text-white font-black uppercase italic tracking-tighter text-red-600">$1.1M/yr</span>
-              </div>
-
-              <div className="flex justify-between items-center py-5 border-b border-slate-800/50">
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic underline decoration-red-900">6-Month_Inaction_Cost</span>
-                <span className="text-white font-black uppercase italic tracking-tighter">$0.62M</span>
-              </div>
-            </div>
-
-            <button className="w-full mt-12 bg-red-600 text-white py-6 font-black uppercase italic text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3">
-              <FileText size={18} /> Download_Forensic_Briefing_PDF
-            </button>
-          </motion.div>
+      <div className="min-h-screen bg-[#020617] p-6 flex items-center justify-center">
+        <div className="max-w-4xl w-full">
+          {/* Passing the LENS_SIGNAL directly to the card */}
+          <ForensicResultCard 
+            lens={LENS_SIGNAL}
+            result={{
+              protocol: 'STRUCTURAL_HARDENING',
+              frictionIndex: 75,
+              status: 'VERIFIED',
+              shearZones: {
+                HumanAIAlignment: 8,
+                AlgorithmicValueStream: 6,
+                InstitutionalGovernance: 9
+              }
+            }} 
+          />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans">
-      <div className="w-full bg-blue-600 text-white text-center py-2 font-black uppercase tracking-[0.3em] text-[10px] z-[9999] relative">
-          SIGNAL_VERIFIED // DIAGNOSTIC_MODE_ACTIVE
-      </div>
-      <div className="flex flex-col md:flex-row flex-grow">
-        <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-900 p-10">
-          <h3 className="text-red-600 font-black uppercase italic text-sm tracking-tighter mb-12">BMR_FieldGuide_V3</h3>
-          <div className="p-6 border border-slate-800 bg-slate-900/40 rounded-sm">
-            <h4 className="text-white font-bold text-[11px] uppercase mb-2">{lensQuestions[currentIdx]?.chapter}</h4>
-          </div>
-        </aside>
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col md:flex-row">
+      <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-900 p-10 space-y-12">
+        <div className="flex items-center gap-3 text-red-600">
+          <BookOpen size={20} />
+          <h3 className="font-black uppercase italic text-sm tracking-tighter italic">BMR_FieldGuide_V3</h3>
+        </div>
+        <div className="p-6 border border-slate-800 bg-slate-900/40 rounded-sm">
+           <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black block mb-2">Active_Chapter</label>
+           <h4 className="text-white font-bold text-[11px] uppercase">{lensQuestions[currentIdx]?.chapter}</h4>
+        </div>
+      </aside>
 
-        <main className="flex-1 p-12 md:p-24 overflow-y-auto">
-          <div className="max-w-3xl">
-            <div className="flex items-center gap-2 text-red-600 font-mono text-[10px] uppercase tracking-widest mb-12 italic font-black">
-               <Activity size={14} className="animate-pulse" /> Zone_{lensQuestions[currentIdx]?.zone} // Lens_{LENS_SIGNAL}
-            </div>
-            <h1 className="text-5xl font-black uppercase italic tracking-tighter leading-tight mb-16">{lensQuestions[currentIdx]?.text}</h1>
-            <div className="grid grid-cols-1 gap-4">
-              {["High Confidence", "Moderate Confidence", "Theoretical"].map((opt) => (
-                <button key={opt} onClick={() => handleNext(opt)} className="w-full p-8 bg-slate-900/30 border border-slate-800 text-left hover:border-red-600 transition-all flex justify-between items-center group font-black uppercase italic text-slate-400 hover:text-white">
-                  {opt} <ChevronRight size={20} className="text-slate-800 group-hover:text-red-600" />
-                </button>
-              ))}
-            </div>
+      <main className="flex-1 p-12 md:p-24 overflow-y-auto bg-[#020617]">
+        <div className="max-w-3xl">
+          <div className="flex items-center gap-2 text-red-600 font-mono text-[10px] uppercase tracking-widest mb-12 italic font-black">
+             <Activity size={14} className="animate-pulse" /> Zone_{lensQuestions[currentIdx]?.zone} // Lens_{LENS_SIGNAL}
           </div>
-        </main>
-      </div>
+          <h1 className="text-5xl font-black uppercase italic tracking-tighter leading-tight mb-16">{lensQuestions[currentIdx]?.text}</h1>
+          <div className="grid grid-cols-1 gap-4">
+            {["High Confidence", "Moderate Confidence", "Theoretical"].map((opt) => (
+              <button key={opt} onClick={() => handleNext(opt)} className="w-full p-8 bg-slate-900/30 border border-slate-800 text-left hover:border-red-600 transition-all flex justify-between items-center group font-black uppercase italic text-slate-400 hover:text-white">
+                {opt} <ChevronRight size={20} className="text-slate-800 group-hover:text-red-600" />
+              </button>
+            ))}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
