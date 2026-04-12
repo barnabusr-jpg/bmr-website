@@ -11,12 +11,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30 relative">
-      
-      {/* 🚨 BMR_SIGNAL_TEST: IF YOU SEE THIS BLUE BANNER, YOUR CODE IS UPDATING */}
-      <div className="w-full bg-blue-600 text-white text-center py-4 font-black uppercase tracking-[0.5em] z-[9999] relative border-b-4 border-white">
-        SIGNAL_VERIFIED // SYSTEM_LIVE // VER_2.0
-      </div>
-
       <Header />
       <main className="flex-grow pt-48 px-6 pb-32">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
@@ -45,14 +39,14 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 mt-12 relative overflow-hidden">
+          <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 mt-12 relative overflow-hidden text-white font-sans">
              <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
                Why Systems <span className="text-red-600 font-black">Quietly Drift</span>
              </h2>
              <p className="text-slate-400 font-bold italic text-lg leading-tight uppercase">
                AI failure is rarely a binary event.
              </p>
-             <div className="pl-6 border-l border-slate-800 space-y-6 text-slate-400">
+             <div className="pl-6 border-l border-slate-800 space-y-6 text-slate-400 font-sans">
                <p className="text-sm italic leading-relaxed">
                  It is a slow, structural divergence where AI-enabled logic decays under operating conditions leaders cannot see.
                </p>
@@ -63,7 +57,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-      
       <Footer />
 
       {/* 🛡️ HIDDEN ADMIN NODE ACCESS */}
