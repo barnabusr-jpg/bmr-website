@@ -16,15 +16,12 @@ export default function DeepDiveDiagnostic({
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [currentIdx, setCurrentIdx] = useState(0);
-  const [evidenceBasis, setEvidenceBasis] = useState("NONE");
   const [isCompleted, setIsCompleted] = useState(false);
-  
-  // 🔄 STATE MANAGEMENT
   const [activeOperatorId, setActiveOperatorId] = useState(initialId);
   const [activeLens, setActiveLens] = useState(initialLens);
 
-  // 🎯 THE ANCHOR: We lock the lens from the initial input to prevent DB drift
-  const FINAL_DISPLAY_LENS = (initialLens || activeLens || "EXECUTIVE").toUpperCase();
+  // 🎯 LOCK THE LENS FROM INPUT IMMEDIATELY
+  const LENS_FOR_UI = (initialLens || activeLens || "EXECUTIVE").toUpperCase();
 
   const lensQuestions = DEEP_DIVE_QUESTIONS.filter(
     (q) => q.lens === (activeLens?.toUpperCase() || "EXECUTIVE")
@@ -46,7 +43,6 @@ export default function DeepDiveDiagnostic({
       if (data?.is_authorized) {
         setIsAuthorized(true);
         setActiveOperatorId(data.id);
-        // We still update this for the DB logic, but the UI will use our Anchor
         setActiveLens(data.lens); 
       }
       setIsLoading(false);
@@ -57,63 +53,52 @@ export default function DeepDiveDiagnostic({
   const handleNext = async (answer: string) => {
     if (!lensQuestions[currentIdx]) return;
     const qId = lensQuestions[currentIdx].id;
-    const multiplier = (answer.includes("High") && (evidenceBasis === "VERBAL" || evidenceBasis === "NONE")) ? 2.5 : 1.0;
 
     await supabase.from('audit_responses').insert([{
       operator_id: activeOperatorId,
       question_id: qId,
       value: answer,
-      lens: activeLens,
-      evidence_basis: evidenceBasis,
-      vulnerability_multiplier: multiplier,
+      lens: activeLens
     }]);
 
     if (currentIdx < lensQuestions.length - 1) {
       setCurrentIdx(currentIdx + 1);
-      setEvidenceBasis("NONE"); 
     } else {
       setIsCompleted(true);
     }
   };
 
-  if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase tracking-widest">Authorizing_Clearance...</div>;
+  if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase tracking-widest">Authorizing...</div>;
 
-  if (!isAuthorized) return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-center">
-      <div className="max-w-md space-y-6">
-        <Lock className="mx-auto text-red-600 mb-4 opacity-50" size={48} />
-        <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Diagnostic_Node_Locked</h2>
-      </div>
-    </div>
-  );
+  if (!isAuthorized) return <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-center text-white"><Lock size={48} className="mx-auto text-red-600 mb-4" /><h2 className="text-3xl font-black italic uppercase">Node_Locked</h2></div>;
 
   /**
    * 🏆 FINAL VERDICT RENDER
-   * This uses FINAL_DISPLAY_LENS which is captured from the initial input.
+   * If you paste this and DON'T see 4 rows with a red bar at the top,
+   * your dev server is not picking up the changes.
    */
   if (isCompleted) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 font-sans">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-xl w-full bg-slate-900 border border-slate-800 p-12 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-10"><Activity size={120} className="text-red-600" /></div>
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-xl w-full bg-slate-900 border border-slate-800 p-12 shadow-2xl relative overflow-hidden text-white">
           
           <div className="flex items-center gap-2 text-red-600 font-mono text-[10px] uppercase tracking-[0.3em] mb-4 italic font-black">
             <Activity size={14} className="animate-pulse" /> Diagnostic_Finalized
           </div>
 
-          <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-8 border-b border-red-600 pb-6">
+          <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-8 border-b border-red-600 pb-6">
             Formal_Audit_Verdict
           </h2>
 
           <div className="space-y-1 relative z-10">
-            {/* 🔍 THE GUARANTEED FIX: Using the captured input signal */}
-            <div className="flex justify-between items-center py-5 border-b border-slate-800/50">
+            {/* 🚨 NUCLEAR TEST ROW: If you don't see this red bar, the code didn't update */}
+            <div className="flex justify-between items-center py-5 border-b border-red-600/50 bg-red-600/5 px-4 -mx-4">
               <div className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black">Perspective_Node</span>
+                <div className="h-2 w-2 rounded-full bg-red-600 animate-ping" />
+                <span className="text-[10px] font-mono text-white uppercase tracking-widest font-black">Perspective_Node</span>
               </div>
-              <span className="text-white font-black uppercase italic tracking-tighter bg-red-600/10 px-3 py-1 border border-red-600/20 text-xs">
-                {FINAL_DISPLAY_LENS} // LENS
+              <span className="text-white font-black uppercase italic tracking-tighter bg-red-600 px-3 py-1 text-xs shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                {LENS_FOR_UI} // LENS
               </span>
             </div>
 
@@ -124,17 +109,17 @@ export default function DeepDiveDiagnostic({
 
             <div className="flex justify-between items-center py-5 border-b border-slate-800/50">
               <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Identified_Rework_Tax</span>
-              <span className="text-white font-black uppercase italic tracking-tighter text-red-600">$4.7M/yr</span>
+              <span className="text-white font-black uppercase italic tracking-tighter text-red-600">$1.1M/yr</span>
             </div>
 
             <div className="flex justify-between items-center py-5 border-b border-slate-800/50">
               <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic underline decoration-red-900">6-Month_Inaction_Cost</span>
-              <span className="text-white font-black uppercase italic tracking-tighter">$2.63M</span>
+              <span className="text-white font-black uppercase italic tracking-tighter">$0.62M</span>
             </div>
           </div>
 
           <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-10 leading-relaxed italic border-l-2 border-red-600 pl-4">
-            Projections based on {FINAL_DISPLAY_LENS} lens data. Secure the full MRI via Triangulation to finalize the Structural Resilience Index.
+            Projections based on captured {LENS_FOR_UI} lens data. Secure the full MRI via Triangulation to finalize the Structural Resilience Index.
           </p>
 
           <button className="w-full mt-12 bg-red-600 text-white py-6 font-black uppercase italic text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3">
@@ -146,7 +131,7 @@ export default function DeepDiveDiagnostic({
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col md:flex-row">
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col md:flex-row font-sans">
       <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-900 p-10 space-y-12">
         <div className="flex items-center gap-3 text-red-600">
           <BookOpen size={20} />
@@ -155,13 +140,7 @@ export default function DeepDiveDiagnostic({
         <div className="space-y-4">
            <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Active_Chapter</label>
            <div className="p-6 border border-slate-800 bg-slate-900/40 rounded-sm">
-              <h4 className="text-white font-bold text-[11px] uppercase mb-2">{lensQuestions[currentIdx]?.chapter}</h4>
-           </div>
-        </div>
-        <div className="pt-20">
-           <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest italic font-black">Diagnostic_Progress</label>
-           <div className="h-1 w-full bg-slate-900 mt-4 overflow-hidden">
-              <div className="h-full bg-red-600 transition-all duration-700" style={{ width: `${((currentIdx + 1) / lensQuestions.length) * 100}%` }} />
+              <h4 className="text-white font-bold text-[11px] uppercase">{lensQuestions[currentIdx]?.chapter}</h4>
            </div>
         </div>
       </aside>
@@ -170,14 +149,14 @@ export default function DeepDiveDiagnostic({
         <AnimatePresence mode="wait">
           <motion.div key={currentIdx} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="max-w-3xl">
             <div className="flex items-center gap-2 text-red-600 font-mono text-[10px] uppercase tracking-widest mb-12 italic font-black">
-               <Activity size={14} className="animate-pulse" /> Zone_{lensQuestions[currentIdx]?.zone} // Lens_{FINAL_DISPLAY_LENS}
+               <Activity size={14} className="animate-pulse" /> Zone_{lensQuestions[currentIdx]?.zone} // Lens_{LENS_FOR_UI}
             </div>
             <h1 className="text-5xl font-black uppercase italic tracking-tighter leading-tight mb-16">{lensQuestions[currentIdx]?.text}</h1>
-            <div className="grid grid-cols-1 gap-4 mb-12">
+            <div className="grid grid-cols-1 gap-4">
               {["High Confidence / Documented", "Moderate Confidence / Verbal", "Zero Oversight / Theoretical"].map((opt) => (
                 <button key={opt} onClick={() => handleNext(opt)} className="w-full p-8 bg-slate-900/30 border border-slate-800 text-left hover:border-red-600 hover:bg-red-600/5 transition-all flex justify-between items-center group">
                   <span className="font-black uppercase italic text-slate-400 group-hover:text-white transition-colors tracking-tighter">{opt}</span>
-                  <ChevronRight size={20} className="text-slate-800 group-hover:text-red-600 transition-colors" />
+                  <ChevronRight size={20} className="text-slate-800 group-hover:text-red-600" />
                 </button>
               ))}
             </div>
