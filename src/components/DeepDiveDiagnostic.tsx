@@ -57,7 +57,7 @@ export default function DeepDiveDiagnostic({
     if (currentIdx < lensQuestions.length - 1) {
       setCurrentIdx(currentIdx + 1);
     } else {
-      // 🚨 PERSISTENCE BRIDGE: Save lens so the next page can see it
+      // 🚨 PERSISTENCE BRIDGE: Hand off the lens to the final page
       localStorage.setItem("bmr_active_lens", LENS_SIGNAL);
       router.push('/forensic-verdict');
     }
@@ -66,8 +66,8 @@ export default function DeepDiveDiagnostic({
   if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase">Authorizing...</div>;
 
   if (!isAuthorized) return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white font-sans">
-      <div className="text-center">
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white font-sans text-center">
+      <div>
         <Lock size={48} className="mx-auto text-red-600 mb-6 opacity-50" />
         <h2 className="text-3xl font-black uppercase italic tracking-tighter">Node_Locked</h2>
       </div>
