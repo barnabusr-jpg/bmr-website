@@ -21,7 +21,7 @@ export default function DeepDiveDiagnostic({
   const [activeOperatorId, setActiveOperatorId] = useState(initialId);
   const [activeLens, setActiveLens] = useState(initialLens);
 
-  // 🎯 ANCHOR: Lock lens from initial input to prevent any DB delay
+  // 🎯 ANCHOR: Captured initial input to ensure UI consistency
   const LENS_SIGNAL = (initialLens || activeLens || "EXECUTIVE").toUpperCase();
 
   const lensQuestions = DEEP_DIVE_QUESTIONS.filter(
@@ -54,7 +54,6 @@ export default function DeepDiveDiagnostic({
   const handleNext = async (answer: string) => {
     if (!lensQuestions[currentIdx]) return;
     
-    // Log response to Supabase
     await supabase.from('audit_responses').insert([{
       operator_id: activeOperatorId,
       question_id: lensQuestions[currentIdx].id,
@@ -69,10 +68,10 @@ export default function DeepDiveDiagnostic({
     }
   };
 
-  if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase">Authorizing...</div>;
+  if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase tracking-[0.2em]">Authorizing...</div>;
 
   if (!isAuthorized) return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white font-sans">
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-12 text-white">
       <div className="text-center">
         <Lock size={48} className="mx-auto text-red-600 mb-6 opacity-50" />
         <h2 className="text-3xl font-black uppercase italic tracking-tighter">Node_Locked</h2>
