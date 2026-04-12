@@ -11,6 +11,12 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30 relative">
+      
+      {/* 🚨 BMR_SIGNAL_TEST: IF YOU SEE THIS BLUE BANNER, YOUR CODE IS UPDATING */}
+      <div className="w-full bg-blue-600 text-white text-center py-4 font-black uppercase tracking-[0.5em] z-[9999] relative border-b-4 border-white">
+        SIGNAL_VERIFIED // SYSTEM_LIVE // VER_2.0
+      </div>
+
       <Header />
       <main className="flex-grow pt-48 px-6 pb-32">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
