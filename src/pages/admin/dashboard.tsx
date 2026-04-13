@@ -26,7 +26,7 @@ export default function AdminDashboard() {
       setLoading(true);
       const { data: auditData } = await supabase
         .from('audits')
-        .select(`*, operators (*, entities (name))`)
+        .select(`*, sfi_score, fractures, operators (*, entities (name))`)
         .order('created_at', { ascending: false });
       setData(auditData || []);
       setLoading(false);
@@ -35,25 +35,23 @@ export default function AdminDashboard() {
   }, [isAuthenticated]);
 
   const handleReleaseTriangulation = async (emails: { EXECUTIVE: string, MANAGER: string, TECHNICAL: string }) => {
-    // 1. Create the Diagnostic Group
     const { data: group, error: groupError } = await supabase
       .from('diagnostic_groups')
       .insert([{ 
         parent_audit_id: activeAudit.id, 
-        org_name: activeAudit.operators?.entities?.name || "BMR_CLIENT" 
+        org_name: activeAudit.operators?.entities?.name || "BMR_PROVISION_ORG" 
       }])
       .select().single();
 
-    if (groupError) return alert("GROUP_INITIALIZATION_FAILED");
+    if (groupError) return alert(`GROUP_INITIALIZATION_FAILED: ${groupError.message}`);
 
-    // 2. Dispatch the Triple-Invite via your SendGrid API
     const res = await fetch('/api/dispatch-directives', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         groupId: group.id,
         orgName: group.org_name,
-        emails: emails, // Sending all 3 emails to your hook
+        emails: emails,
         parentAuditId: activeAudit.id
       })
     });
@@ -89,7 +87,6 @@ export default function AdminDashboard() {
       </nav>
 
       <div className="max-w-7xl mx-auto space-y-12">
-        {/* STATS STRIP */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative overflow-hidden">
             <BarChart3 size={80} className="absolute -bottom-4 -right-4 text-red-600 opacity-5" />
@@ -110,7 +107,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* LEDGER */}
         <div className="bg-slate-950 border border-slate-900 shadow-2xl overflow-hidden">
           <div className="p-10 border-b border-slate-900 bg-slate-900/30 flex items-center gap-4 text-white">
              <Database size={20} className="text-red-600" />
@@ -131,21 +127,40 @@ export default function AdminDashboard() {
                   <tr key={audit.id} className="hover:bg-red-600/[0.03] transition-colors align-top">
                     <td className="p-10 text-slate-500 font-mono text-[11px]">{new Date(audit.created_at).toLocaleString()}</td>
                     <td className="p-10">
-                      <div className="font-black text-white uppercase text-xl italic leading-none mb-2">{audit.operators?.entities?.name || "SHADOW_SIGNAL"}</div>
+                      <div className="font-black text-white uppercase text-xl italic leading-none mb-2">{audit.operators?.entities?.name || "BMR_CLIENT"}</div>
                       <div className="text-[10px] text-slate-600 font-mono italic mb-4">{audit.operators?.email}</div>
                       
-                      {/* FRACTURE VISUALIZER */}
-                      {audit.fractures && audit.fractures.length > 0 && (
-                        <div className="space-y-2 max-w-md">
-                          {audit.fractures.map((f: any, i: number) => (
-                            <div key={i} className="flex gap-2 p-3 bg-red-950/20 border-l-2 border-red-600 text-[10px]">
-                              <AlertTriangle className="text-red-600 shrink-0" size={12} />
-                              <div>
-                                <span className="font-black text-red-600 uppercase">{f.id}</span>
-                                <p className="text-slate-400 mt-1 lowercase leading-tight">{f.description}</p>
-                              </div>
+                      {audit.status === 'COMPLETE' && (
+                        <div className="mt-8 space-y-6 border-t border-slate-800 pt-8 animate-in fade-in zoom-in-95">
+                          <div className="flex justify-between items-end">
+                            <div>
+                              <label className="text-[9px] font-mono text-red-600 uppercase tracking-[0.3em]">Forensic_Verdict</label>
+                              <h3 className="text-2xl font-black italic text-white uppercase">Hardening_Required</h3>
                             </div>
-                          ))}
+                            <div className="text-right">
+                              <div className="text-4xl font-black text-red-600 italic">{audit.sfi_score}%</div>
+                              <div className="text-[8px] text-slate-500 uppercase font-mono">Systemic_Friction_Index</div>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-4">
+                            {audit.fractures?.map((f: any, i: number) => (
+                              <div key={i} className="bg-slate-900/50 border-l-4 border-red-600 p-6 relative group overflow-hidden">
+                                <div className="flex justify-between items-start mb-2">
+                                  <span className={`text-[9px] font-black px-2 py-0.5 rounded ${f.severity === 'CRITICAL' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-black'}`}>
+                                    {f.severity}
+                                  </span>
+                                  {f.recovery && <span className="text-[10px] font-mono text-green-500 uppercase font-bold">{f.recovery}</span>}
+                                </div>
+                                <h4 className="text-xs font-bold text-white uppercase mb-2">{f.id.replace("_", " ")}</h4>
+                                <p className="text-[11px] text-slate-400 mb-5 leading-relaxed">{f.description}</p>
+                                <div className="bg-black/60 p-4 border border-red-900/20 text-[10px] font-mono">
+                                  <span className="text-red-600 font-black uppercase block mb-1">Hardening_Directive:</span>
+                                  <p className="italic text-slate-300">{f.directive}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       )}
                     </td>
