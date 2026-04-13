@@ -78,25 +78,28 @@ export default function ConsolidatedDiagnostic() {
 
   const logToDatabase = async (finalMetrics: any) => {
     try {
+      // 1. Entity Upsert (Solves Unique Name Conflict)
       const { data: entityData, error: entityError } = await supabase
         .from('entities')
-        .insert([{ name: entityName.trim().toUpperCase() }])
+        .upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' })
         .select().single();
 
       if (entityError) throw entityError;
 
+      // 2. Operator Upsert (Solves Email Duplicate Conflict)
       const { data: operatorData, error: operatorError } = await supabase
         .from('operators')
-        .insert([{ 
+        .upsert({ 
           email: email.trim().toLowerCase(), 
           full_name: operatorName.trim().toUpperCase(), 
           entity_id: entityData.id 
-        }])
+        }, { onConflict: 'email' })
         .select().single();
 
       if (operatorError) throw operatorError;
 
-      await supabase.from('audits').insert([{
+      // 3. Final Audit Submission
+      const { error: auditError } = await supabase.from('audits').insert([{
         operator_id: operatorData.id,
         sector: sector,
         ai_spend: aiSpend,
@@ -104,8 +107,12 @@ export default function ConsolidatedDiagnostic() {
         rework_tax: parseFloat(finalMetrics.rework),
         roi_pct: parseFloat(finalMetrics.roi)
       }]);
-    } catch (error) {
-      console.error("DATABASE_LINK_SHEAR:", error);
+
+      if (auditError) throw auditError;
+      console.log("SUCCESS: DATA_SYNCED");
+
+    } catch (error: any) {
+      console.error("DATABASE_LINK_SHEAR:", error.message);
     }
   };
 
@@ -160,6 +167,10 @@ export default function ConsolidatedDiagnostic() {
 
   if (!mounted) return null;
 
+  // Unlock logic for personal email testing
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isReady = isEmailValid && email === confirmEmail && operatorName && entityName;
+
   return (
     <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px]">
       <AnimatePresence mode="wait">
@@ -191,7 +202,7 @@ export default function ConsolidatedDiagnostic() {
                 <input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
                 <input placeholder="VERIFY EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
               </div>
-              <button disabled={!email || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 transition-all">Initialize Audit Observation</button>
+              <button disabled={!isReady} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 transition-all">Initialize Audit Observation</button>
             </div>
           </motion.div>
         )}
