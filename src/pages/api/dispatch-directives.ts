@@ -6,37 +6,64 @@ sgMail.setApiKey(process.env.BMR_SENDGRID_KEY as string);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
-  const { techEmail, mgrEmail, primaryEmail, entityName, reworkTax, entityId } = req.body;
+  
+  // Destructure the new payload from your updated Admin Dashboard
+  const { groupId, orgName, emails, parentAuditId } = req.body;
 
   try {
-    const leads = [
-      { email: techEmail, entity_id: entityId, lens: 'TECHNICAL', is_authorized: true },
-      { email: mgrEmail, entity_id: entityId, lens: 'MANAGERIAL', is_authorized: true },
-      { email: primaryEmail, is_authorized: true }
-    ];
+    const roles = Object.entries(emails); // ['EXECUTIVE', 'email@...'], etc.
+    const emailPromises = [];
 
-    await supabase.from('operators').upsert(leads, { onConflict: 'email' });
-    await supabase.from('audits').update({ status: 'RELEASED' }).eq('id', entityId);
+    for (const [role, email] of roles) {
+      if (!email) continue;
 
-    const emailPromises = [techEmail, mgrEmail].map(email => {
-      const lens = email === techEmail ? 'TECHNICAL' : 'MANAGERIAL';
-      return sgMail.send({
-        to: email,
+      // 1. Generate a secure 8-character access token
+      const accessToken = Math.random().toString(36).substring(2, 10).toUpperCase();
+
+      // 2. Register the persona in the Ledger (Linked to the Triangulation Group)
+      await supabase.from('operators').upsert({
+        email: email as string,
+        group_id: groupId,
+        persona_type: role,
+        access_code: accessToken,
+        is_authorized: true
+      }, { onConflict: 'email' });
+
+      // 3. Prepare the SendGrid payload
+      const diagnosticLink = `${process.env.NEXT_PUBLIC_APP_URL}/diagnostic/forensic?code=${accessToken}`;
+      
+      emailPromises.push(sgMail.send({
+        to: email as string,
         from: process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co',
-        subject: `OPERATIONAL_DIRECTIVE: ${lens} Audit Authorized`,
-        html: `<div style="font-family: monospace; background: #020617; color: white; padding: 40px; border: 2px solid #dc2626;">
-          <h2 style="color: #dc2626; text-transform: uppercase;">BMR SOLUTIONS // MRI_AUTHORIZED</h2>
-          <p>ENTITY: ${entityName} | LENS: ${lens}</p>
-          <hr style="border-top: 1px solid #1e293b; margin: 20px 0;"/>
-          <p>Initial triage identified rework tax of <strong>$${reworkTax}M</strong>.</p>
-          <a href="${process.env.NEXT_PUBLIC_APP_URL}/pulse-check?email=${encodeURIComponent(email)}" style="background: #dc2626; color: white; padding: 15px 25px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 30px;">INITIALIZE_LENS_AUDIT →</a>
-        </div>`
-      });
-    });
+        subject: `ACTION_REQUIRED: ${role} Forensic Node Authorized // ${orgName}`,
+        html: `
+          <div style="font-family: monospace; background: #020617; color: white; padding: 40px; border: 2px solid #dc2626;">
+            <h2 style="color: #dc2626; text-transform: uppercase; margin-bottom: 5px;">BMR_ADVISORY // FORENSIC_TRIANGULATION</h2>
+            <p style="font-size: 10px; color: #64748b; margin-top: 0;">ENTITY: ${orgName} | PROTOCOL: ${role}_NODE</p>
+            
+            <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;"/>
+            
+            <p style="line-height: 1.6;">You have been designated as the <strong>${role} Stakeholder</strong> for the AI Forensic Diagnostic of <strong>${orgName}</strong>.</p>
+            <p style="line-height: 1.6;">Your unique access code is: <span style="color: #dc2626; font-weight: bold;">${accessToken}</span></p>
+            
+            <div style="margin-top: 30px;">
+              <a href="${diagnosticLink}" style="background: #dc2626; color: white; padding: 18px 30px; text-decoration: none; font-weight: bold; display: inline-block; text-transform: uppercase; font-size: 12px; letter-spacing: 2px;">INITIALIZE_SECURE_NODE →</a>
+            </div>
+            
+            <p style="margin-top: 40px; font-size: 10px; color: #475569;">SECURITY_NOTICE: This link is unique to your identity. Synthesis will only begin once all three stakeholder nodes (EXECUTIVE, MANAGER, TECHNICAL) are submitted.</p>
+          </div>
+        `
+      }));
+    }
+
+    // 4. Update the parent audit status
+    await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', parentAuditId);
 
     await Promise.all(emailPromises);
     return res.status(200).json({ status: 'SUCCESS' });
+    
   } catch (error: any) {
+    console.error("SENDGRID_DISPATCH_FAILURE:", error);
     return res.status(500).json({ error: 'DISPATCH_FAILURE' });
   }
 }
