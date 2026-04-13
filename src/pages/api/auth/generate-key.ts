@@ -17,21 +17,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const msg = {
       to: email,
       from: process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co', 
-      subject: `[BMR-AUTH] Operator Access Key: ${otp}`,
+      subject: `[BMR_AUTH] FORENSIC_NODE_CHALLENGE: ${otp}`,
       html: `
-        <div style="font-family: monospace; background-color: #020617; color: white; padding: 50px; border: 2px solid #dc2626;">
-          <h1 style="color: #dc2626; text-transform: uppercase; font-style: italic;">Node Authorization</h1>
-          <p style="color: #94a3b8; text-transform: uppercase; font-size: 11px;">Verification Initiated: ${email}</p>
-          <div style="margin: 40px 0; padding: 30px; background-color: #0f172a; border: 1px solid #1e293b; text-align: center;">
-            <span style="font-size: 42px; font-weight: bold; letter-spacing: 10px; color: white; font-style: italic;">${otp}</span>
+        <div style="font-family: 'Courier New', Courier, monospace; background-color: #020617; color: white; padding: 60px; border: 2px solid #dc2626; max-width: 600px; margin: auto;">
+          <h2 style="color: #dc2626; text-transform: uppercase; font-style: italic; letter-spacing: -1px; margin-bottom: 5px;">BMR_ADVISORY // NODE_AUTHORIZATION</h2>
+          <p style="color: #64748b; text-transform: uppercase; font-size: 10px; margin-top: 0; letter-spacing: 2px;">PROTOCOL: PULSE_CHECK_VERIFICATION</p>
+          
+          <hr style="border: 0; border-top: 1px solid #1e293b; margin: 30px 0;"/>
+          
+          <p style="font-size: 14px; line-height: 1.6; color: #cbd5e1;">A forensic diagnostic session has been requested for this email address. Enter the following challenge key to initialize the node:</p>
+          
+          <div style="margin: 40px 0; padding: 40px; background-color: #0f172a; border: 1px solid #dc2626; text-align: center; box-shadow: 0 0 20px rgba(220, 38, 38, 0.1);">
+            <span style="font-size: 52px; font-weight: 900; letter-spacing: 12px; color: white; font-style: italic;">${otp}</span>
           </div>
-          <p style="color: #475569; font-size: 10px;">BMR SECURITY PROTOCOL 7 ACTIVE // KEY EXPIRES IN 5M</p>
+          
+          <p style="color: #475569; font-size: 10px; text-transform: uppercase; letter-spacing: 1px;">
+            SECURITY_NOTICE: BMR_PROTOCOL_7_ACTIVE // DO NOT SHARE THIS KEY // EXPIRES IN 5M
+          </p>
+          
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #1e293b;">
+             <p style="font-size: 9px; color: #334155;">If you did not initiate this request, terminate connection immediately.</p>
+          </div>
         </div>
       `,
     };
 
     await sgMail.send(msg);
-    // CRITICAL: Returning the challenge key allows the frontend to verify the session
+    
+    // Returning the challenge key allows the frontend to verify the session
     return res.status(200).json({ success: true, challenge: otp });
 
   } catch (error: any) {
