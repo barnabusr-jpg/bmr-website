@@ -10,7 +10,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { groupId, orgName, emails, parentAuditId } = req.body;
 
   // --- FAIL-SAFE BASE URL LOGIC ---
-  // This ensures the link works even if the Vercel variable is missing
   const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmradvisory.co';
 
   try {
@@ -20,9 +19,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for (const [role, email] of roles) {
       if (!email) continue;
 
+      // Unique access code generation
       const accessToken = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      await supabase.from('operators').upsert({
+      // Upsert operator to link them to the group and store their specific role
+      const { error: upsertError } = await supabase.from('operators').upsert({
         email: email as string,
         group_id: groupId,
         persona_type: role,
@@ -30,7 +31,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         is_authorized: true
       }, { onConflict: 'email' });
 
-      // Build the diagnostic link using the BASE_URL constant
+      if (upsertError) {
+        console.error(`DB_OPERATOR_ERROR for ${role}:`, upsertError);
+        continue;
+      }
+
+      // Build the diagnostic link
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${accessToken}`;
       
       emailPromises.push(sgMail.send({
@@ -57,7 +63,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', parentAuditId);
+    // Update the main lead status to show triangulation has started
+    if (parentAuditId) {
+        await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', parentAuditId);
+    }
 
     await Promise.all(emailPromises);
     return res.status(200).json({ status: 'SUCCESS' });
