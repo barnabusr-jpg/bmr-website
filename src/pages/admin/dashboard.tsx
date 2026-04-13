@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Activity, Lock, X, CheckCircle, Database, BarChart3, Fingerprint, Zap, AlertTriangle, ShieldAlert } from "lucide-react";
+import { Activity, Lock, X, CheckCircle, Database, BarChart3, Fingerprint, Zap, AlertTriangle, ShieldAlert, Mail, Building2 } from "lucide-react";
 
 export const dynamic = 'force-dynamic';
 
@@ -24,7 +24,7 @@ export default function AdminDashboard() {
     if (!isAuthenticated) return;
     async function fetchForensics() {
       setLoading(true);
-      // Ensure we select sfi_score and fractures explicitly
+      // We explicitly pull org_name, lead_email, and persona_type from the audit record
       const { data: auditData } = await supabase
         .from('audits')
         .select(`*, sfi_score, fractures, operators (*, entities (name))`)
@@ -40,7 +40,7 @@ export default function AdminDashboard() {
       .from('diagnostic_groups')
       .insert([{ 
         parent_audit_id: activeAudit.id, 
-        org_name: activeAudit.operators?.entities?.name || "BMR_PROVISION_ORG" 
+        org_name: activeAudit.org_name || activeAudit.operators?.entities?.name || "BMR_PROVISION_ORG" 
       }])
       .select().single();
 
@@ -88,6 +88,7 @@ export default function AdminDashboard() {
       </nav>
 
       <div className="max-w-7xl mx-auto space-y-12">
+        {/* STATS ROW */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative overflow-hidden">
             <BarChart3 size={80} className="absolute -bottom-4 -right-4 text-red-600 opacity-5" />
@@ -118,7 +119,7 @@ export default function AdminDashboard() {
               <thead>
                 <tr className="text-[10px] font-mono text-slate-600 uppercase tracking-widest bg-black">
                   <th className="p-10">Timestamp</th>
-                  <th className="p-10">Entity / Findings</th>
+                  <th className="p-10">Entity_Signal</th>
                   <th className="p-10 text-center">Status</th>
                   <th className="p-10 text-right">Tax</th>
                 </tr>
@@ -126,10 +127,30 @@ export default function AdminDashboard() {
               <tbody className="divide-y divide-slate-900">
                 {data.map((audit) => (
                   <tr key={audit.id} className="hover:bg-red-600/[0.03] transition-colors align-top">
-                    <td className="p-10 text-slate-500 font-mono text-[11px]">{new Date(audit.created_at).toLocaleString()}</td>
+                    <td className="p-10 text-slate-500 font-mono text-[11px]">
+                      {new Date(audit.created_at).toLocaleDateString()}<br/>
+                      {new Date(audit.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </td>
                     <td className="p-10">
-                      <div className="font-black text-white uppercase text-xl italic leading-none mb-2">{audit.operators?.entities?.name || "BMR_CLIENT"}</div>
-                      <div className="text-[10px] text-slate-600 font-mono italic mb-4">{audit.operators?.email}</div>
+                      {/* IDENTITY BLOCK: Capturing Customer Context */}
+                      <div className="flex flex-col mb-6">
+                        <div className="flex items-center gap-3 mb-1">
+                          <Building2 size={16} className="text-red-600" />
+                          <div className="font-black text-white uppercase text-2xl italic tracking-tighter leading-none">
+                            {audit.org_name || audit.operators?.entities?.name || "ANONYMOUS_ENTITY"}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
+                          <Mail size={12} />
+                          <span>{audit.lead_email || audit.operators?.email || "NO_EMAIL_RECORDED"}</span>
+                        </div>
+                        {/* ORIGIN SIGNAL INDICATOR */}
+                        <div className="mt-3">
+                          <span className="text-[9px] bg-red-600/10 text-red-600 px-2 py-0.5 border border-red-600/20 font-black tracking-widest uppercase">
+                            Origin: {audit.persona_type || "PULSE_CHECK"}
+                          </span>
+                        </div>
+                      </div>
                       
                       {audit.status === 'COMPLETE' && (
                         <div className="mt-8 space-y-6 border-t border-slate-800 pt-8 animate-in fade-in zoom-in-95 duration-500">
@@ -200,7 +221,7 @@ function TriangulationModal({ audit, onClose, onConfirm }: any) {
       <div className="bg-slate-900 border-2 border-red-600/30 p-16 max-w-3xl w-full shadow-2xl relative">
         <button onClick={onClose} className="absolute top-8 right-8 text-slate-600 hover:text-white transition-colors"><X size={32}/></button>
         <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4 font-sans">Forensic_Release</h2>
-        <p className="text-slate-500 font-mono text-xs uppercase mb-12 tracking-widest">Target_Entity: {audit.operators?.entities?.name}</p>
+        <p className="text-slate-500 font-mono text-[10px] uppercase mb-12 tracking-[0.3em]">Target: {audit.org_name || "BMR_ENTITY"}</p>
         
         <div className="space-y-6 mb-12 font-mono text-[10px]">
           {['EXECUTIVE', 'MANAGER', 'TECHNICAL'].map(role => (
@@ -218,7 +239,7 @@ function TriangulationModal({ audit, onClose, onConfirm }: any) {
         </div>
         <button 
           onClick={() => onConfirm(emails)} 
-          className="w-full py-7 bg-red-600 text-white font-black uppercase italic tracking-[0.5em] text-xs hover:bg-white hover:text-black transition-all duration-300"
+          className="w-full py-7 bg-red-600 text-white font-black uppercase italic tracking-[0.5em] text-xs hover:bg-white hover:text-black transition-all duration-300 shadow-xl"
         >
           Execute_Persona_Dispatch
         </button>
