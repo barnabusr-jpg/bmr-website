@@ -7,20 +7,21 @@ sgMail.setApiKey(process.env.BMR_SENDGRID_KEY as string);
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
   
-  // Destructure the new payload from your updated Admin Dashboard
   const { groupId, orgName, emails, parentAuditId } = req.body;
 
+  // --- FAIL-SAFE BASE URL LOGIC ---
+  // This ensures the link works even if the Vercel variable is missing
+  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmradvisory.co';
+
   try {
-    const roles = Object.entries(emails); // ['EXECUTIVE', 'email@...'], etc.
+    const roles = Object.entries(emails);
     const emailPromises = [];
 
     for (const [role, email] of roles) {
       if (!email) continue;
 
-      // 1. Generate a secure 8-character access token
       const accessToken = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // 2. Register the persona in the Ledger (Linked to the Triangulation Group)
       await supabase.from('operators').upsert({
         email: email as string,
         group_id: groupId,
@@ -29,8 +30,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         is_authorized: true
       }, { onConflict: 'email' });
 
-      // 3. Prepare the SendGrid payload
-      const diagnosticLink = `${process.env.NEXT_PUBLIC_APP_URL}/diagnostic/forensic?code=${accessToken}`;
+      // Build the diagnostic link using the BASE_URL constant
+      const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${accessToken}`;
       
       emailPromises.push(sgMail.send({
         to: email as string,
@@ -56,7 +57,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    // 4. Update the parent audit status
     await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', parentAuditId);
 
     await Promise.all(emailPromises);
