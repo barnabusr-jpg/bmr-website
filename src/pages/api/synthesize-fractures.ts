@@ -17,31 +17,34 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'TRIANGULATION_INCOMPLETE' });
     }
 
+    // Capture the rework tax from the initial lead entry for financial recovery logic
     const parentReworkTax = parseFloat(audits[0].rework_tax || "0");
 
-    // 2. Flatten responses
+    // 2. Flatten responses into a single lookup object for cross-referencing
     const results: any = {};
     audits.forEach(audit => {
-      Object.entries(audit.raw_responses).forEach(([qId, data]: any) => {
-        results[qId] = data.answer; 
-      });
+      if (audit.raw_responses) {
+        Object.entries(audit.raw_responses).forEach(([qId, data]: any) => {
+          results[qId] = data.answer; 
+        });
+      }
     });
 
     const fractures = [];
     let frictionScore = 0;
 
-    // 3. Logic Fracture Detection & Directive Generation
-    
+    // 3. Logic Fracture Detection Engine (10-Triangle Cross-Reference)
+
     // T1: INDEMNITY
     if (results.EXE_01 === "Yes" && results.TEC_01 === "No") {
       fractures.push({
         id: "INDEMNITY_VOID",
         severity: "CRITICAL",
-        description: "Exec assumes audit rights are enforceable; Tech confirms zero forensic logging.",
+        description: "Executive assumes enforceable audit rights; Technical confirms zero forensic logging. Legal protection is non-existent.",
         directive: "Issue BMR-T1 Technical Specification to vendors for forensic logging requirements.",
         recovery: "Full Legal Compliance"
       });
-      frictionScore += 25;
+      frictionScore += 15;
     }
 
     // T2: REWORK TAX
@@ -50,11 +53,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fractures.push({
         id: "REWORK_LEAK",
         severity: "HIGH",
-        description: "Uncapped rework tax identified; no technical reinforcement loop exists.",
-        directive: "Deploy BMR-M1 SME Feedback Protocol to capture correction data for model tuning.",
+        description: "Manager reports high SME rework time; Technical confirms no reinforcement loop exists to retrain models.",
+        directive: "Deploy BMR-M1 Feedback Loop Protocol to capture SME correction data for model tuning.",
         recovery: `Est. $${recoveryEst}M Recovery`
       });
-      frictionScore += 20;
+      frictionScore += 15;
     }
 
     // T3: SHADOW AI
@@ -62,11 +65,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fractures.push({
         id: "SHADOW_EXFIL",
         severity: "CRITICAL",
-        description: "Policy forbids Shadow AI, but no network-level DNS filtering exists.",
+        description: "Policy forbids unapproved AI, but Technical confirms zero network-level DNS filtering or blocking.",
         directive: "Implement BMR-S1 DNS Filtering standards on corporate firewall policies.",
         recovery: "IP Asset Protection"
       });
-      frictionScore += 20;
+      frictionScore += 15;
+    }
+
+    // T4: IP OWNERSHIP
+    if (results.EXE_04 === "Yes" && results.TEC_04 === "No") {
+      fractures.push({
+        id: "IP_ANONYMITY",
+        severity: "HIGH",
+        description: "Legal IP ownership assumed, but no technical watermarking or metadata exists to prove asset origin.",
+        directive: "Apply BMR-I1 Metadata Standards to all AI-generated deliverables.",
+        recovery: "Enforceable IP Rights"
+      });
+      frictionScore += 10;
     }
 
     // T5: PII MASKING
@@ -74,11 +89,59 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fractures.push({
         id: "PII_EXPOSURE",
         severity: "CRITICAL",
-        description: "Compliance standards assumed met, but no automated scrubbing layer exists.",
+        description: "Compliance standards assumed met, but no automated scrubbing layer exists for API egress.",
         directive: "Implement automated egress scrubbing based on BMR-P1 compliance specs.",
         recovery: "Data Privacy Safety"
       });
-      frictionScore += 20;
+      frictionScore += 15;
+    }
+
+    // T6: MODEL DRIFT
+    if (results.EXE_06 === "Yes" && results.TEC_06 === "No") {
+      fractures.push({
+        id: "DRIFT_BLINDSPOT",
+        severity: "MEDIUM",
+        description: "Budget exists for re-validation, but no automated benchmarking suite is currently operational.",
+        directive: "Deploy BMR-D1 Automated Benchmarking suite for quarterly performance audits.",
+        recovery: "Output Quality Assurance"
+      });
+      frictionScore += 10;
+    }
+
+    // T7: HALLUCINATION
+    if (results.MGR_07 === "Yes" && results.TEC_07 === "No") {
+      fractures.push({
+        id: "TRUTH_DECAY",
+        severity: "HIGH",
+        description: "Kill-switch protocol exists, but Technical confirmed no 'Grounding' (RAG) dataset constraints are active.",
+        directive: "Initialize BMR-H1 Grounding (RAG) architecture to constrain model hallucination.",
+        recovery: "Liability Mitigation"
+      });
+      frictionScore += 10;
+    }
+
+    // T8: COST TRANSPARENCY
+    if (results.EXE_08 === "Yes" && results.TEC_08 === "No") {
+      fractures.push({
+        id: "OPAQUE_BURN",
+        severity: "MEDIUM",
+        description: "Executive expects ROI tracking, but Technical lacks department-level API tagging for granular cost analysis.",
+        directive: "Implement BMR-C1 API Cost-Tagging across all department heads.",
+        recovery: "Budget Transparency"
+      });
+      frictionScore += 5;
+    }
+
+    // T10: RESILIENCE
+    if (results.EXE_10 === "Yes" && results.TEC_10 === "No") {
+      fractures.push({
+        id: "VENDOR_LOCK",
+        severity: "HIGH",
+        description: "Multi-model strategy exists on paper, but no emergency rollback to open-source models has been tested.",
+        directive: "Execute BMR-R1 Disaster Recovery test using local/open-source model failover.",
+        recovery: "Operational Continuity"
+      });
+      frictionScore += 5;
     }
 
     // 4. Update the Master Group Record
@@ -104,6 +167,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ status: 'SYNTHESIS_COMPLETE', sfi: frictionScore });
 
   } catch (error) {
+    console.error("SYNTHESIS_FAILURE:", error);
     return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
   }
 }
