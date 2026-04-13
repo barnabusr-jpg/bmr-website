@@ -33,8 +33,8 @@ export const FORENSIC_MATRIX = [
 
   // --- T7: HALLUCINATION LIABILITY ---
   { id: "EXE_07", lens: "EXECUTIVE", triangulationId: "T7", weight: 12, text: "Do we have a defined liability threshold for AI-driven misinformation?", evidenceOptions: ["RISK_REGISTER", "INSURANCE_POLICY", "NONE"] },
-  { id: "MGR_07", lens: "MANAGER", triangulationId: "T7", text: "Is there a 'Kill-Switch' protocol if the AI begins outputting false data?", evidenceOptions: ["EMERGENCY_SOP", "INCIDENT_PLAN", "NONE"] },
-  { id: "TEC_07", lens: "TECHNICAL", triangulationId: "T7", text: "Are we using 'Grounding' datasets to constrain AI responses to our own data?", evidenceOptions: ["RAG_PIPELINE", "VECTOR_DB", "NONE"] },
+  { id: "MGR_07", lens: "MANAGER", triangulationId: "T7", weight: 10, text: "Is there a 'Kill-Switch' protocol if the AI begins outputting false data?", evidenceOptions: ["EMERGENCY_SOP", "INCIDENT_PLAN", "NONE"] },
+  { id: "TEC_07", lens: "TECHNICAL", triangulationId: "T7", weight: 15, text: "Are we using 'Grounding' datasets to constrain AI responses to our own data?", evidenceOptions: ["RAG_PIPELINE", "VECTOR_DB", "NONE"] },
 
   // --- T8: COST TRANSPARENCY ---
   { id: "EXE_08", lens: "EXECUTIVE", triangulationId: "T8", weight: 10, text: "Is AI ROI being tracked as a line item in the quarterly financial report?", evidenceOptions: ["P&L_STATEMENT", "ROI_MODEL", "NONE"] },
