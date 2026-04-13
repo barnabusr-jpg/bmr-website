@@ -24,6 +24,7 @@ export default function AdminDashboard() {
     if (!isAuthenticated) return;
     async function fetchForensics() {
       setLoading(true);
+      // Ensure we select sfi_score and fractures explicitly
       const { data: auditData } = await supabase
         .from('audits')
         .select(`*, sfi_score, fractures, operators (*, entities (name))`)
@@ -91,7 +92,7 @@ export default function AdminDashboard() {
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative overflow-hidden">
             <BarChart3 size={80} className="absolute -bottom-4 -right-4 text-red-600 opacity-5" />
             <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block mb-5">Cumulative_Rework_Tax</label>
-            <div className="text-6xl font-black italic text-white tracking-tighter">${data.reduce((acc, curr) => acc + (Number(curr.rework_tax) || 0), 0).toFixed(1)}<span className="text-red-600 ml-1">M</span></div>
+            <div className="text-6xl font-black italic text-white tracking-tighter">${data.reduce((acc, curr) => acc + (Number(curr.rework_tax) || 0), 0).toFixed(1)}<span className="text-red-600 ml-1 text-4xl">M</span></div>
           </div>
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative overflow-hidden">
             <Fingerprint size={80} className="absolute -bottom-4 -right-4 text-slate-600 opacity-5" />
@@ -113,7 +114,7 @@ export default function AdminDashboard() {
              <span className="font-black italic uppercase tracking-widest text-xs">Diagnostic_Ledger</span>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-left font-sans">
+            <table className="w-full text-left font-sans border-collapse">
               <thead>
                 <tr className="text-[10px] font-mono text-slate-600 uppercase tracking-widest bg-black">
                   <th className="p-10">Timestamp</th>
@@ -131,14 +132,14 @@ export default function AdminDashboard() {
                       <div className="text-[10px] text-slate-600 font-mono italic mb-4">{audit.operators?.email}</div>
                       
                       {audit.status === 'COMPLETE' && (
-                        <div className="mt-8 space-y-6 border-t border-slate-800 pt-8 animate-in fade-in zoom-in-95">
+                        <div className="mt-8 space-y-6 border-t border-slate-800 pt-8 animate-in fade-in zoom-in-95 duration-500">
                           <div className="flex justify-between items-end">
                             <div>
                               <label className="text-[9px] font-mono text-red-600 uppercase tracking-[0.3em]">Forensic_Verdict</label>
-                              <h3 className="text-2xl font-black italic text-white uppercase">Hardening_Required</h3>
+                              <h3 className="text-2xl font-black italic text-white uppercase leading-tight">Hardening_Required</h3>
                             </div>
                             <div className="text-right">
-                              <div className="text-4xl font-black text-red-600 italic">{audit.sfi_score}%</div>
+                              <div className="text-4xl font-black text-red-600 italic">{(audit.sfi_score || 0)}%</div>
                               <div className="text-[8px] text-slate-500 uppercase font-mono">Systemic_Friction_Index</div>
                             </div>
                           </div>
@@ -150,13 +151,13 @@ export default function AdminDashboard() {
                                   <span className={`text-[9px] font-black px-2 py-0.5 rounded ${f.severity === 'CRITICAL' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-black'}`}>
                                     {f.severity}
                                   </span>
-                                  {f.recovery && <span className="text-[10px] font-mono text-green-500 uppercase font-bold">{f.recovery}</span>}
+                                  {f.recovery && <span className="text-[10px] font-mono text-green-500 uppercase font-bold tracking-tighter">{f.recovery}</span>}
                                 </div>
-                                <h4 className="text-xs font-bold text-white uppercase mb-2">{f.id.replace("_", " ")}</h4>
+                                <h4 className="text-xs font-bold text-white uppercase mb-2 tracking-tighter">{f.id.replace(/_/g, " ")}</h4>
                                 <p className="text-[11px] text-slate-400 mb-5 leading-relaxed">{f.description}</p>
                                 <div className="bg-black/60 p-4 border border-red-900/20 text-[10px] font-mono">
-                                  <span className="text-red-600 font-black uppercase block mb-1">Hardening_Directive:</span>
-                                  <p className="italic text-slate-300">{f.directive}</p>
+                                  <span className="text-red-600 font-black uppercase block mb-1 tracking-widest text-[9px]">Hardening_Directive:</span>
+                                  <p className="italic text-slate-300 uppercase leading-snug">{f.directive}</p>
                                 </div>
                               </div>
                             ))}
@@ -197,8 +198,8 @@ function TriangulationModal({ audit, onClose, onConfirm }: any) {
   return (
     <div className="fixed inset-0 bg-black/98 backdrop-blur-3xl flex items-center justify-center z-[100] p-6">
       <div className="bg-slate-900 border-2 border-red-600/30 p-16 max-w-3xl w-full shadow-2xl relative">
-        <button onClick={onClose} className="absolute top-8 right-8 text-slate-600 hover:text-white"><X size={32}/></button>
-        <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4 font-sans italic">Forensic_Release</h2>
+        <button onClick={onClose} className="absolute top-8 right-8 text-slate-600 hover:text-white transition-colors"><X size={32}/></button>
+        <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4 font-sans">Forensic_Release</h2>
         <p className="text-slate-500 font-mono text-xs uppercase mb-12 tracking-widest">Target_Entity: {audit.operators?.entities?.name}</p>
         
         <div className="space-y-6 mb-12 font-mono text-[10px]">
@@ -210,14 +211,14 @@ function TriangulationModal({ audit, onClose, onConfirm }: any) {
                 placeholder={`ENTER_${role}_EMAIL`}
                 value={(emails as any)[role]}
                 onChange={e => setEmails({ ...emails, [role]: e.target.value })} 
-                className="w-full bg-black border border-slate-800 p-5 text-white outline-none focus:border-red-600 uppercase font-bold text-sm" 
+                className="w-full bg-black border border-slate-800 p-5 text-white outline-none focus:border-red-600 uppercase font-bold text-sm transition-all" 
               />
             </div>
           ))}
         </div>
         <button 
           onClick={() => onConfirm(emails)} 
-          className="w-full py-7 bg-red-600 text-white font-black uppercase italic tracking-[0.5em] text-xs hover:bg-white hover:text-black transition-all"
+          className="w-full py-7 bg-red-600 text-white font-black uppercase italic tracking-[0.5em] text-xs hover:bg-white hover:text-black transition-all duration-300"
         >
           Execute_Persona_Dispatch
         </button>
