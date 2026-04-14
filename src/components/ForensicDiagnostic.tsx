@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { FORENSIC_MATRIX } from '@/lib/forensicMatrix';
-import { Fingerprint, AlertTriangle } from 'lucide-react';
+import { Fingerprint, AlertTriangle, CheckCircle, Lock } from 'lucide-react';
 
 export default function ForensicDiagnostic() {
   const [step, setStep] = useState("loading");
@@ -15,33 +15,35 @@ export default function ForensicDiagnostic() {
 
   useEffect(() => {
     const init = async () => {
-      // 1. Force extraction of code from URL
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code')?.trim();
 
       if (!code) {
-        console.error("BMR_AUTH: No code detected in URL.");
         setStep("invalid");
         return;
       }
 
-      // 2. Simplified Query: Just get the operator first
-      // This bypasses relationship errors that cause the "Invalid" screen
+      // 1. Fetch operator and check status for LINK INVALIDATION
       const { data: op, error } = await supabase
         .from('operators')
-        .select('*')
+        .select('*, diagnostic_groups(org_name)')
         .eq('access_code', code)
         .single();
 
       if (error || !op) {
-        console.error("BMR_AUTH: Ledger verification failed.", error);
         setStep("invalid");
         return;
       }
 
-      // 3. Filter the 30-question matrix for this persona
+      // 2. PROTOCOL: If status is already completed, block access
+      if (op.status === 'completed') {
+        setOperator(op);
+        setStep("finalized");
+        return;
+      }
+
+      // 3. Initialize questions if link is fresh
       const filtered = FORENSIC_MATRIX.filter(q => q.lens === op.persona_type);
-      
       setOperator(op);
       setQuestions(filtered);
       setStep("intro");
@@ -67,27 +69,27 @@ export default function ForensicDiagnostic() {
   };
 
   const submitResults = async (finalAnswers: any) => {
-    // 1. Commit to ledger
-    const { error: insertError } = await supabase.from('audits').insert([{
-      operator_id: operator.id,
-      group_id: operator.group_id,
-      persona_type: operator.persona_type,
-      raw_responses: finalAnswers,
-      status: 'completed'
-    }]);
+    // 1. Commit responses AND update status to 'completed' to burn the link
+    const { error: updateError } = await supabase
+      .from('operators')
+      .update({ 
+        status: 'completed',
+        raw_responses: finalAnswers 
+      })
+      .eq('id', operator.id);
 
-    if (insertError) {
-      console.error("BMR_LEDGER_ERROR:", insertError);
+    if (updateError) {
+      console.error("BMR_LEDGER_ERROR:", updateError);
       return;
     }
 
-    // 2. Check for completion
+    // 2. Check for group completion for automatic synthesis
     const { data: groupAudits } = await supabase
-      .from('audits')
-      .select('persona_type')
-      .eq('group_id', operator.group_id);
+      .from('operators')
+      .select('status')
+      .eq('group_id', operator.group_id)
+      .eq('status', 'completed');
 
-    // 3. Synthesis trigger
     if (groupAudits && groupAudits.length === 3) {
       await fetch('/api/synthesize-fractures', {
         method: 'POST',
@@ -98,6 +100,8 @@ export default function ForensicDiagnostic() {
     
     setStep("done");
   };
+
+  // --- RENDER LOGIC ---
 
   if (step === "loading") return (
     <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-black uppercase tracking-[0.5em] animate-pulse italic">
@@ -110,11 +114,22 @@ export default function ForensicDiagnostic() {
       <div className="border-2 border-red-600 p-16 text-center max-w-xl bg-slate-950 shadow-2xl">
         <AlertTriangle className="text-red-600 mx-auto mb-8 animate-bounce" size={64} />
         <h1 className="text-white font-black uppercase italic text-4xl mb-6 tracking-tighter">Unauthorized_Node</h1>
-        <p className="text-slate-400 font-mono text-sm uppercase leading-relaxed mb-8">
-          The forensic access code provided was not found in the diagnostic ledger. 
-          The node may have been terminated or the link is corrupted.
+        <p className="text-slate-400 font-mono text-sm uppercase leading-relaxed">The code provided is invalid or has been terminated.</p>
+      </div>
+    </div>
+  );
+
+  if (step === "finalized") return (
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 text-center font-mono">
+      <div className="max-w-md space-y-8 bg-slate-950 border-2 border-red-900/20 p-16 shadow-2xl relative overflow-hidden">
+        <Lock className="absolute top-4 right-4 text-red-600 opacity-20" size={40} />
+        <CheckCircle className="text-green-500 mx-auto mb-6" size={60} />
+        <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">NODE_FINALIZED</h2>
+        <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] leading-relaxed">
+          The diagnostic node for <strong>{operator?.diagnostic_groups?.org_name}</strong> is secure. 
+          <br/><br/>
+          To maintain forensic integrity, this access link has been deactivated. Synthesis is in progress.
         </p>
-        <div className="text-[10px] text-red-900 font-mono uppercase tracking-widest">ERROR_CODE: 403_SIGNAL_LOSS</div>
       </div>
     </div>
   );
@@ -136,70 +151,45 @@ export default function ForensicDiagnostic() {
               Protocol_<span className="text-red-600">Initialized</span>
             </h1>
             <p className="mb-10 text-slate-400 leading-relaxed text-base italic uppercase">
-              Authenticated for the Forensic Triangulation of the <strong>{operator?.persona_type}</strong> lens. 
-              Transmission of 10 data points is required to complete the diagnostic ledger.
+              Authenticated for the Forensic Triangulation of the <strong>{operator?.persona_type}</strong> lens.
             </p>
-            <button 
-              onClick={() => setStep("diagnostic")} 
-              className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.4em] hover:bg-white hover:text-black transition-all duration-500 shadow-lg shadow-red-900/20"
-            >
-              Start_Node_Audit
-            </button>
+            <button onClick={() => setStep("diagnostic")} className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.4em] hover:bg-white hover:text-black transition-all">Start_Node_Audit</button>
           </div>
         )}
 
         {step === "diagnostic" && (
           <div className="animate-in slide-in-from-right-8 duration-500">
             <div className="text-[10px] text-slate-500 mb-4 uppercase font-black tracking-widest">Data_Segment {currentIndex + 1} of 10</div>
-            <h2 className="text-2xl font-black mb-12 italic uppercase leading-tight text-white tracking-tight">
-              {questions[currentIndex].text}
-            </h2>
-            
+            <h2 className="text-2xl font-black mb-12 italic uppercase leading-tight text-white tracking-tight">{questions[currentIndex].text}</h2>
             {!selectedAnswer ? (
               <div className="grid grid-cols-2 gap-6">
                 {["Yes", "No"].map(opt => (
-                  <button 
-                    key={opt} 
-                    onClick={() => setSelectedAnswer(opt)} 
-                    className="p-10 border-2 border-slate-800 text-center font-black uppercase italic text-2xl hover:bg-red-600 hover:border-red-600 transition-all duration-300"
-                  >
-                    {opt}
-                  </button>
+                  <button key={opt} onClick={() => setSelectedAnswer(opt)} className="p-10 border-2 border-slate-800 text-center font-black uppercase italic text-2xl hover:bg-red-600 hover:border-red-600 transition-all">{opt}</button>
                 ))}
               </div>
             ) : (
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <label className="text-[11px] text-red-600 font-black block mb-4 uppercase tracking-[0.2em]">Select_Evidence_Basis</label>
-                <select 
-                  className="w-full bg-black border-2 border-red-900 p-6 mb-8 text-white font-black outline-none uppercase appearance-none cursor-pointer focus:bg-red-950/40 rounded-none text-sm tracking-widest" 
-                  onChange={(e) => handleFinalizeNode(e.target.value)}
-                  defaultValue=""
-                >
+                <select className="w-full bg-black border-2 border-red-900 p-6 mb-8 text-white font-black uppercase appearance-none" onChange={(e) => handleFinalizeNode(e.target.value)} defaultValue="">
                   <option value="" disabled>Choose_Evidence_Basis...</option>
                   {questions[currentIndex].evidenceOptions.map((opt: string) => (
                     <option key={opt} value={opt}>{opt.replace(/_/g, " ")}</option>
                   ))}
                 </select>
-                <button 
-                  onClick={() => setSelectedAnswer(null)} 
-                  className="text-[10px] text-slate-600 uppercase italic underline hover:text-red-600 transition-colors tracking-widest"
-                >
-                  Back_To_Selection
-                </button>
+                <button onClick={() => setSelectedAnswer(null)} className="text-[10px] text-slate-600 uppercase italic underline hover:text-red-600 transition-colors">Back_To_Selection</button>
               </div>
             )}
           </div>
         )}
 
         {(step === "submitting" || step === "done") && (
-          <div className="text-center py-10 animate-in zoom-in-95 duration-1000">
+          <div className="text-center py-10">
             <h1 className="text-3xl font-black italic text-red-600 mb-6 uppercase tracking-[0.2em]">
               {step === "submitting" ? "Transmitting_Segment..." : "Segment_Secured"}
             </h1>
-            <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto uppercase font-mono tracking-tighter text-center">
+            <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto uppercase font-mono tracking-tighter">
               {step === "submitting" 
-                ? "Writing node responses to the forensic diagnostic ledger. Do not terminate connection."
-                : "The forensic node is secure. Synthesis begins automatically once all nodes respond. Terminal may be closed."}
+                ? "Writing node responses to the forensic diagnostic ledger."
+                : "The forensic node is secure. Terminal may be closed."}
             </p>
           </div>
         )}
