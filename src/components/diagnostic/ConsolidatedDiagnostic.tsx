@@ -34,7 +34,7 @@ export default function ConsolidatedDiagnostic() {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState("finance");
-  const [selectedLens, setSelectedLens] = useState("EXECUTIVE"); // TRACKING THE ORIGIN LENS
+  const [selectedLens, setSelectedLens] = useState("EXECUTIVE"); 
   const [aiSpend, setAiSpend] = useState(1.2);
   const [operatorName, setOperatorName] = useState("");
   const [entityName, setEntityName] = useState("");
@@ -78,8 +78,9 @@ export default function ConsolidatedDiagnostic() {
   };
 
   const logToDatabase = async (finalMetrics: any) => {
+    console.log("BMR_SYNC: Initializing Forensic Ledger Entry...");
     try {
-      // 1. Entity Record (Solves Identity Capture)
+      // 1. Entity Reconstruction
       const { data: entityData, error: entityError } = await supabase
         .from('entities')
         .upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' })
@@ -87,7 +88,7 @@ export default function ConsolidatedDiagnostic() {
 
       if (entityError) throw entityError;
 
-      // 2. Operator Record (Capturing Who is responding)
+      // 2. Operator Authorization
       const { data: operatorData, error: operatorError } = await supabase
         .from('operators')
         .upsert({ 
@@ -99,26 +100,27 @@ export default function ConsolidatedDiagnostic() {
 
       if (operatorError) throw operatorError;
 
-      // 3. Final Audit Submission (Lenses mapped to Dashboard)
-      const { error: auditError } = await supabase.from('audits').insert([{
+      // 3. Audit Persistence (Capturing Identity for Dashboard)
+      const { data: auditData, error: auditError } = await supabase.from('audits').insert([{
         operator_id: operatorData.id,
         sector: sector,
         ai_spend: aiSpend,
         decay_pct: finalMetrics.decay,
         rework_tax: parseFloat(finalMetrics.rework),
         roi_pct: parseFloat(finalMetrics.roi),
-        persona_type: selectedLens, // Saving the Origin Lens
-        org_name: entityName.trim().toUpperCase(), // Direct field for Dashboard scanning
-        lead_email: email.trim().toLowerCase(), // Direct field for Dashboard scanning
+        persona_type: selectedLens, 
+        org_name: entityName.trim().toUpperCase(), 
+        lead_email: email.trim().toLowerCase(), 
         raw_responses: answers,
         status: 'LEAD'
-      }]);
+      }]).select().single();
 
       if (auditError) throw auditError;
-      console.log("SUCCESS: FORENSIC_IDENTITY_SECURED");
+      console.log("BMR_SYNC_SUCCESS: Node Recorded.");
 
     } catch (error: any) {
-      console.error("DATABASE_LINK_SHEAR:", error.message);
+      console.error("BMR_SYNC_CRITICAL_FAILURE:", error.message);
+      // Ensure you have run the SQL to add 'org_name' and 'lead_email' to the audits table!
     }
   };
 
@@ -189,12 +191,14 @@ export default function ConsolidatedDiagnostic() {
           <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-16">
             <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white text-center leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
             
-            {/* LENS SELECTION (SOLVES #1) */}
             <div className="flex justify-center gap-4 mb-8">
                 {["EXECUTIVE", "MANAGER", "TECHNICAL"].map((lens) => (
                     <button 
                         key={lens} 
-                        onClick={() => setSelectedLens(lens)}
+                        onClick={() => {
+                          setSelectedLens(lens);
+                          localStorage.setItem("bmr_active_lens", lens);
+                        }}
                         className={`px-6 py-2 border-2 font-black italic text-xs tracking-[0.2em] transition-all ${selectedLens === lens ? 'bg-red-600 border-red-600 text-white' : 'border-slate-800 text-slate-500 hover:border-slate-600'}`}
                     >
                         {lens}_NODE
@@ -216,14 +220,15 @@ export default function ConsolidatedDiagnostic() {
         {step === 'intake' && (
           <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-center">
             <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6 shadow-2xl shadow-red-900/10">
-              <div className="grid grid-cols-2 gap-6">
+            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6 shadow-2xl shadow-red-900/10 relative overflow-hidden">
+               <Fingerprint className="absolute -top-10 -right-10 text-red-600 opacity-5" size={200} />
+              <div className="grid grid-cols-2 gap-6 relative z-10">
                 <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
                 <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
                 <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
                 <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
               </div>
-              <button disabled={!isReady} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 transition-all text-xl tracking-[0.2em]">Initialize Diagnostic Observation</button>
+              <button disabled={!isReady} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 transition-all text-xl tracking-[0.2em] relative z-10">Initialize Diagnostic Observation</button>
             </div>
           </motion.div>
         )}
@@ -251,7 +256,11 @@ export default function ConsolidatedDiagnostic() {
                   const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                   setAnswers(updatedAnswers);
                   if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
-                  else { logToDatabase(getLiveMetrics()); setStep("verdict"); }
+                  else { 
+                    logToDatabase(getLiveMetrics()); 
+                    localStorage.setItem("bmr_diagnostic_results", JSON.stringify(updatedAnswers));
+                    setStep("verdict"); 
+                  }
                 }}>
                     <span>{opt.label}</span>
                     <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 transition-all text-red-600" />
@@ -275,15 +284,15 @@ export default function ConsolidatedDiagnostic() {
               <table className="w-full text-left border-collapse">
                 <thead><tr className="border-b border-slate-800 bg-slate-900 text-[10px] font-mono text-slate-500 uppercase tracking-widest"><th className="p-4 px-10">Metric</th><th className="p-4 px-10 text-right">Value</th></tr></thead>
                 <tbody className="font-mono text-sm">
-                  <tr className="border-b border-slate-800"><td className="p-10 text-slate-400 uppercase font-black tracking-tighter text-xl">Systemic Friction Index</td><td className="p-10 text-right font-black text-white text-3xl italic">{getLiveMetrics().decay}%</td></tr>
-                  <tr className="border-b border-slate-800"><td className="p-10 text-slate-400 uppercase font-black tracking-tighter text-xl">Identified Rework Tax</td><td className="p-10 text-right font-black text-white text-3xl italic">${getLiveMetrics().rework}M/yr</td></tr>
+                  <tr className="border-b border-slate-800"><td className="p-10 text-slate-400 uppercase font-black tracking-tighter text-xl text-white italic">Systemic Friction Index</td><td className="p-10 text-right font-black text-white text-3xl italic">{getLiveMetrics().decay}%</td></tr>
+                  <tr className="border-b border-slate-800"><td className="p-10 text-slate-400 uppercase font-black tracking-tighter text-xl text-white italic">Identified Rework Tax</td><td className="p-10 text-right font-black text-white text-3xl italic">${getLiveMetrics().rework}M/yr</td></tr>
                   <tr className="border-b border-slate-800 bg-red-600/5"><td className="p-10 text-red-600 font-bold italic underline uppercase tracking-tighter text-xl">6-Month Inaction Cost</td><td className="p-10 text-right font-black text-red-600 text-3xl italic">${getLiveMetrics().inactionCost}M</td></tr>
                 </tbody>
               </table>
             </div>
 
             <div className="bg-slate-950 p-8 border border-slate-800 space-y-4">
-                <div className="flex justify-between items-center"><label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest italic">Capital Exposure Simulation (AI Spend)</label><p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p></div>
+                <div className="flex justify-between items-center"><label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest italic text-white">Capital Exposure Simulation (AI Spend)</label><p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p></div>
                 <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
             </div>
 
