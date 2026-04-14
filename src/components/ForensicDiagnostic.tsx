@@ -19,30 +19,42 @@ export default function ForensicDiagnostic() {
       const code = params.get('code')?.trim();
 
       if (!code) {
+        console.error("BMR_AUTH: No code detected in URL.");
         setStep("invalid");
         return;
       }
 
-      // 1. Fetch operator and check status for LINK INVALIDATION
+      // 1. Fetch operator and join with group for org name
       const { data: op, error } = await supabase
         .from('operators')
         .select('*, diagnostic_groups(org_name)')
         .eq('access_code', code)
         .single();
 
+      // DEBUG LOG: Helps identify if DB status is mismatching
+      console.log("BMR_AUTH_DEBUG: Accessing Node...", { 
+        code, 
+        status: op?.status, 
+        found: !!op 
+      });
+
       if (error || !op) {
+        console.error("BMR_AUTH: Ledger verification failed.", error);
         setStep("invalid");
         return;
       }
 
-      // 2. PROTOCOL: If status is already completed, block access
-      if (op.status === 'completed') {
+      // 2. HARDENED STATUS CHECK: Only block if EXPLICITLY completed
+      // This allows 'pending', null, or empty strings to proceed to the test
+      const normalizedStatus = op.status ? op.status.toLowerCase() : 'active';
+      
+      if (normalizedStatus === 'completed') {
         setOperator(op);
         setStep("finalized");
         return;
       }
 
-      // 3. Initialize questions if link is fresh
+      // 3. Initialize questions if link is valid and not yet finished
       const filtered = FORENSIC_MATRIX.filter(q => q.lens === op.persona_type);
       setOperator(op);
       setQuestions(filtered);
@@ -69,7 +81,7 @@ export default function ForensicDiagnostic() {
   };
 
   const submitResults = async (finalAnswers: any) => {
-    // 1. Commit responses AND update status to 'completed' to burn the link
+    // 1. Update status to 'completed' to burn the link for future access
     const { error: updateError } = await supabase
       .from('operators')
       .update({ 
@@ -83,14 +95,15 @@ export default function ForensicDiagnostic() {
       return;
     }
 
-    // 2. Check for group completion for automatic synthesis
-    const { data: groupAudits } = await supabase
+    // 2. Check if the Triangulation is complete (3/3 nodes)
+    const { data: groupNodes } = await supabase
       .from('operators')
       .select('status')
       .eq('group_id', operator.group_id)
       .eq('status', 'completed');
 
-    if (groupAudits && groupAudits.length === 3) {
+    if (groupNodes && groupNodes.length === 3) {
+      console.log("BMR_LOG: Triangulation achieved. Initializing Synthesis...");
       await fetch('/api/synthesize-fractures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -101,7 +114,7 @@ export default function ForensicDiagnostic() {
     setStep("done");
   };
 
-  // --- RENDER LOGIC ---
+  // --- RENDER STATES ---
 
   if (step === "loading") return (
     <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-black uppercase tracking-[0.5em] animate-pulse italic">
@@ -113,8 +126,10 @@ export default function ForensicDiagnostic() {
     <div className="min-h-screen bg-black flex items-center justify-center p-12">
       <div className="border-2 border-red-600 p-16 text-center max-w-xl bg-slate-950 shadow-2xl">
         <AlertTriangle className="text-red-600 mx-auto mb-8 animate-bounce" size={64} />
-        <h1 className="text-white font-black uppercase italic text-4xl mb-6 tracking-tighter">Unauthorized_Node</h1>
-        <p className="text-slate-400 font-mono text-sm uppercase leading-relaxed">The code provided is invalid or has been terminated.</p>
+        <h1 className="text-white font-black uppercase italic text-4xl mb-6 tracking-tighter leading-none">Unauthorized_Node</h1>
+        <p className="text-slate-400 font-mono text-sm uppercase leading-relaxed">
+          The access code is invalid or the node session has been terminated.
+        </p>
       </div>
     </div>
   );
@@ -124,11 +139,11 @@ export default function ForensicDiagnostic() {
       <div className="max-w-md space-y-8 bg-slate-950 border-2 border-red-900/20 p-16 shadow-2xl relative overflow-hidden">
         <Lock className="absolute top-4 right-4 text-red-600 opacity-20" size={40} />
         <CheckCircle className="text-green-500 mx-auto mb-6" size={60} />
-        <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">NODE_FINALIZED</h2>
+        <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">NODE_SECURED</h2>
         <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] leading-relaxed">
-          The diagnostic node for <strong>{operator?.diagnostic_groups?.org_name}</strong> is secure. 
+          The diagnostic for <strong>{operator?.diagnostic_groups?.org_name}</strong> has been finalized. 
           <br/><br/>
-          To maintain forensic integrity, this access link has been deactivated. Synthesis is in progress.
+          Forensic integrity requires that this link remains deactivated.
         </p>
       </div>
     </div>
@@ -159,7 +174,7 @@ export default function ForensicDiagnostic() {
 
         {step === "diagnostic" && (
           <div className="animate-in slide-in-from-right-8 duration-500">
-            <div className="text-[10px] text-slate-500 mb-4 uppercase font-black tracking-widest">Data_Segment {currentIndex + 1} of 10</div>
+            <div className="text-[10px] text-slate-500 mb-4 uppercase font-black tracking-widest">Segment {currentIndex + 1} of 10</div>
             <h2 className="text-2xl font-black mb-12 italic uppercase leading-tight text-white tracking-tight">{questions[currentIndex].text}</h2>
             {!selectedAnswer ? (
               <div className="grid grid-cols-2 gap-6">
@@ -184,12 +199,10 @@ export default function ForensicDiagnostic() {
         {(step === "submitting" || step === "done") && (
           <div className="text-center py-10">
             <h1 className="text-3xl font-black italic text-red-600 mb-6 uppercase tracking-[0.2em]">
-              {step === "submitting" ? "Transmitting_Segment..." : "Segment_Secured"}
+              {step === "submitting" ? "Transmitting..." : "Segment_Secured"}
             </h1>
             <p className="text-slate-400 text-xs leading-relaxed max-w-sm mx-auto uppercase font-mono tracking-tighter">
-              {step === "submitting" 
-                ? "Writing node responses to the forensic diagnostic ledger."
-                : "The forensic node is secure. Terminal may be closed."}
+              The diagnostic for this node is complete. Closing this terminal will not affect the forensic ledger.
             </p>
           </div>
         )}
