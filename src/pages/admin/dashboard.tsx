@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { Activity, Lock, X, CheckCircle, Database, BarChart3, Fingerprint, Zap, AlertTriangle, ShieldAlert, Mail, Building2 } from "lucide-react";
+import { Activity, Lock, X, CheckCircle, Database, BarChart3, Fingerprint, Zap, ShieldAlert, Mail, Building2, Download } from "lucide-react";
+import jsPDF from "jspdf";
 
 export const dynamic = 'force-dynamic';
 
@@ -20,32 +21,70 @@ export default function AdminDashboard() {
     if (password === ADMIN_PASSWORD) setIsAuthenticated(true);
   };
 
+  // --- PDF GENERATOR: FIELD GUIDE ARCHITECTURE ---
+  const generateForensicReport = (audit: any) => {
+    const doc = new jsPDF();
+    const sfi = audit.sfi_score || 0;
+    const org = audit.org_name || "BMR_ENTITY";
+
+    // 1. Forensic Header
+    doc.setFillColor(2, 6, 23); doc.rect(0, 0, 210, 50, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold"); doc.setFontSize(22);
+    doc.text("BMR ADVISORY // FORENSIC VERDICT", 15, 25);
+    doc.setFont("courier", "normal"); doc.setFontSize(8);
+    doc.text(`AUDIT_ID: ${audit.id.substring(0, 8).toUpperCase()} // STATUS: PUBLISHED`, 15, 35);
+    doc.text(`ENTITY: ${org.toUpperCase()} // LEDGER_VERIFIED: TRUE`, 15, 40);
+
+    // 2. The Promise Gap Narrative
+    doc.setTextColor(2, 6, 23); doc.setFontSize(14); doc.setFont("helvetica", "bold");
+    doc.text("01 // THE PROMISE GAP™ ANALYSIS", 15, 65);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+    doc.text(`Your SFI of ${sfi}% indicates a major fracture between strategic intent and operational reality.`, 15, 75);
+    
+    // 3. High Frequency Data Box
+    doc.setFillColor(245, 245, 245); doc.rect(15, 85, 180, 45, "F");
+    doc.setTextColor(220, 38, 38); doc.setFontSize(24); doc.setFont("helvetica", "bold");
+    doc.text(`$${Number(audit.rework_tax).toFixed(1)}M`, 25, 110);
+    doc.setTextColor(2, 6, 23); doc.setFontSize(9); doc.setFont("courier", "bold");
+    doc.text("VALIDATED ANNUAL HEMORRHAGE", 25, 120);
+    doc.setFontSize(24); doc.text(`${sfi}%`, 130, 110);
+    doc.setFontSize(9); doc.text("SYSTEMIC FRICTION INDEX", 130, 120);
+
+    // 4. Field Guide Layers (HAI, AVS, IGF)
+    doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    doc.text("02 // STABILIZATION ARCHITECTURE (FIELD GUIDE REF)", 15, 145);
+    doc.setFontSize(9); doc.setFont("helvetica", "normal");
+    doc.text("- HAI (The Trust Lens): Anchor adoption by ensuring transparency and empathy.", 15, 155);
+    doc.text("- AVS (The Govern Lens): Establish the governing mechanism for mission value.", 15, 163);
+    doc.text("- IGF (The Evolve Lens): Implement the safeguard loop to enable rapid evolution.", 15, 171);
+
+    // 5. Hardening Directives
+    doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    doc.text("03 // HARDENING DIRECTIVES", 15, 185);
+    let yPos = 195;
+    audit.fractures?.slice(0, 3).forEach((f: any) => {
+      doc.setFontSize(8); doc.setFont("courier", "bold"); doc.setTextColor(220, 38, 38);
+      doc.text(`[${f.id.toUpperCase()}]`, 15, yPos);
+      doc.setTextColor(2, 6, 23); doc.setFont("helvetica", "normal");
+      doc.text(f.directive, 15, yPos + 5, { maxWidth: 180 });
+      yPos += 15;
+    });
+
+    doc.save(`BMR_Forensic_Report_${org.replace(/\s/g, '_')}.pdf`);
+  };
+
   useEffect(() => {
     if (!isAuthenticated) return;
     async function fetchForensics() {
       setLoading(true);
-      
-      // UPDATED QUERY: We explicitly select org_name and lead_email
-      // This ensures that even if the 'operators' relationship isn't built yet, the identity shows up.
       const { data: auditData, error } = await supabase
         .from('audits')
-        .select(`
-          *, 
-          org_name, 
-          lead_email, 
-          persona_type, 
-          sfi_score, 
-          fractures, 
-          operators (*, entities (name))
-        `)
+        .select(`*, org_name, lead_email, persona_type, sfi_score, fractures, operators (*, entities (name))`)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error("LEDGER_FETCH_ERROR:", error);
-      } else {
-        console.log("DASHBOARD_DATA:", auditData); // Check F12 console to see the raw data
-        setData(auditData || []);
-      }
+      if (error) console.error("LEDGER_FETCH_ERROR:", error);
+      else setData(auditData || []);
       setLoading(false);
     }
     fetchForensics();
@@ -54,23 +93,15 @@ export default function AdminDashboard() {
   const handleReleaseTriangulation = async (emails: { EXECUTIVE: string, MANAGER: string, TECHNICAL: string }) => {
     const { data: group, error: groupError } = await supabase
       .from('diagnostic_groups')
-      .insert([{ 
-        parent_audit_id: activeAudit.id, 
-        org_name: activeAudit.org_name || activeAudit.operators?.entities?.name || "BMR_PROVISION_ORG" 
-      }])
+      .insert([{ parent_audit_id: activeAudit.id, org_name: activeAudit.org_name || "BMR_PROVISION_ORG" }])
       .select().single();
 
-    if (groupError) return alert(`GROUP_INITIALIZATION_FAILED: ${groupError.message}`);
+    if (groupError) return alert(`GROUP_ERR: ${groupError.message}`);
 
     const res = await fetch('/api/dispatch-directives', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        groupId: group.id,
-        orgName: group.org_name,
-        emails: emails,
-        parentAuditId: activeAudit.id
-      })
+      body: JSON.stringify({ groupId: group.id, orgName: group.org_name, emails: emails, parentAuditId: activeAudit.id })
     });
 
     if (res.ok) {
@@ -96,9 +127,9 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 p-10 pt-32 font-sans">
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 border-b border-slate-900 z-50 px-10 flex items-center justify-between">
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-5 text-white">
           <Activity className="text-red-600 animate-pulse" size={20} />
-          <span className="font-black italic uppercase tracking-widest text-sm text-white">Forensic_Command_Center</span>
+          <span className="font-black italic uppercase tracking-widest text-sm">Forensic_Command_Center</span>
         </div>
         <button onClick={() => setIsAuthenticated(false)} className="text-[10px] font-mono text-slate-500 uppercase font-black">Terminate_Session</button>
       </nav>
@@ -118,9 +149,7 @@ export default function AdminDashboard() {
           <div className="bg-slate-900/40 border border-red-900/40 p-10 relative overflow-hidden">
             <ShieldAlert size={80} className="absolute -bottom-4 -right-4 text-red-600 opacity-10" />
             <label className="text-[9px] font-mono text-red-600 uppercase tracking-widest block mb-5">Critical_Fractures</label>
-            <div className="text-6xl font-black italic text-white tracking-tighter">
-              {data.reduce((acc, curr) => acc + (curr.fractures?.length || 0), 0)}
-            </div>
+            <div className="text-6xl font-black italic text-white tracking-tighter">{data.reduce((acc, curr) => acc + (curr.fractures?.length || 0), 0)}</div>
           </div>
         </div>
 
@@ -147,55 +176,24 @@ export default function AdminDashboard() {
                       {new Date(audit.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td className="p-10">
-                      <div className="flex flex-col mb-6">
-                        <div className="flex items-center gap-3 mb-1">
-                          <Building2 size={16} className="text-red-600" />
-                          <div className="font-black text-white uppercase text-2xl italic tracking-tighter leading-none">
-                            {audit.org_name || "ANONYMOUS_ENTITY"}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
-                          <Mail size={12} />
-                          <span>{audit.lead_email || "NO_EMAIL_RECORDED"}</span>
-                        </div>
-                        <div className="mt-3">
-                          <span className="text-[9px] bg-red-600/10 text-red-600 px-2 py-0.5 border border-red-600/20 font-black tracking-widest uppercase">
-                            Origin: {audit.persona_type || "PULSE_CHECK"}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-3 mb-1">
+                        <Building2 size={16} className="text-red-600" />
+                        <div className="font-black text-white uppercase text-2xl italic tracking-tighter">{audit.org_name || "ANONYMOUS"}</div>
                       </div>
+                      <div className="text-[10px] text-slate-500 font-mono mb-4">{audit.lead_email}</div>
                       
                       {audit.status === 'COMPLETE' && (
-                        <div className="mt-8 space-y-6 border-t border-slate-800 pt-8 animate-in fade-in zoom-in-95 duration-500">
-                          <div className="flex justify-between items-end">
-                            <div>
-                              <label className="text-[9px] font-mono text-red-600 uppercase tracking-[0.3em]">Forensic_Verdict</label>
-                              <h3 className="text-2xl font-black italic text-white uppercase leading-tight">Hardening_Required</h3>
-                            </div>
-                            <div className="text-right">
-                              <div className="text-4xl font-black text-red-600 italic">{(audit.sfi_score || 0)}%</div>
-                              <div className="text-[8px] text-slate-500 uppercase font-mono">Systemic_Friction_Index</div>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-4">
-                            {audit.fractures?.map((f: any, i: number) => (
-                              <div key={i} className="bg-slate-900/50 border-l-4 border-red-600 p-6 relative group overflow-hidden">
-                                <div className="flex justify-between items-start mb-2">
-                                  <span className={`text-[9px] font-black px-2 py-0.5 rounded ${f.severity === 'CRITICAL' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-black'}`}>
-                                    {f.severity}
-                                  </span>
-                                  {f.recovery && <span className="text-[10px] font-mono text-green-500 uppercase font-bold tracking-tighter">{f.recovery}</span>}
-                                </div>
-                                <h4 className="text-xs font-bold text-white uppercase mb-2 tracking-tighter">{f.id.replace(/_/g, " ")}</h4>
-                                <p className="text-[11px] text-slate-400 mb-5 leading-relaxed">{f.description}</p>
-                                <div className="bg-black/60 p-4 border border-red-900/20 text-[10px] font-mono">
-                                  <span className="text-red-600 font-black uppercase block mb-1 tracking-widest text-[9px]">Hardening_Directive:</span>
-                                  <p className="italic text-slate-300 uppercase leading-snug">{f.directive}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
+                        <div className="mt-6 p-6 bg-slate-900/50 border-l-4 border-red-600 space-y-4">
+                           <div className="flex justify-between items-center">
+                              <span className="text-[10px] font-black text-white uppercase italic tracking-widest">Forensic_Verdict_Ready</span>
+                              <span className="text-2xl font-black text-red-600 italic">{audit.sfi_score}% SFI</span>
+                           </div>
+                           <button 
+                             onClick={() => generateForensicReport(audit)}
+                             className="w-full py-3 bg-white text-black font-black uppercase text-[9px] italic flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all"
+                           >
+                             <Download size={14} /> Download_Forensic_Field_Guide
+                           </button>
                         </div>
                       )}
                     </td>
@@ -212,7 +210,7 @@ export default function AdminDashboard() {
                         <button onClick={() => { setActiveAudit(audit); setIsModalOpen(true); }} className="px-8 py-3.5 bg-red-600 text-white font-black uppercase text-[10px] italic hover:bg-white hover:text-red-600 transition-all">Initialize_Triangulation</button>
                       )}
                     </td>
-                    <td className="p-10 text-right font-black text-white italic text-3xl">${Number(audit.rework_tax).toFixed(1)}<span className="text-red-600 ml-1 text-lg">M</span></td>
+                    <td className="p-10 text-right font-black text-white italic text-3xl">${Number(audit.rework_tax).toFixed(1)}M</td>
                   </tr>
                 ))}
               </tbody>
@@ -228,34 +226,20 @@ export default function AdminDashboard() {
 
 function TriangulationModal({ audit, onClose, onConfirm }: any) {
   const [emails, setEmails] = useState({ EXECUTIVE: "", MANAGER: "", TECHNICAL: "" });
-
   return (
     <div className="fixed inset-0 bg-black/98 backdrop-blur-3xl flex items-center justify-center z-[100] p-6">
       <div className="bg-slate-900 border-2 border-red-600/30 p-16 max-w-3xl w-full shadow-2xl relative">
         <button onClick={onClose} className="absolute top-8 right-8 text-slate-600 hover:text-white transition-colors"><X size={32}/></button>
-        <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4 font-sans">Forensic_Release</h2>
-        <p className="text-slate-500 font-mono text-[10px] uppercase mb-12 tracking-[0.3em]">Target: {audit.org_name || "BMR_ENTITY"}</p>
-        
-        <div className="space-y-6 mb-12 font-mono text-[10px]">
+        <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Forensic_Release</h2>
+        <div className="space-y-6 mb-12">
           {['EXECUTIVE', 'MANAGER', 'TECHNICAL'].map(role => (
             <div key={role} className="space-y-2">
-              <label className="text-red-600 uppercase font-black tracking-widest">Protocol_Node: {role}</label>
-              <input 
-                type="email" 
-                placeholder={`ENTER_${role}_EMAIL`}
-                value={(emails as any)[role]}
-                onChange={e => setEmails({ ...emails, [role]: e.target.value })} 
-                className="w-full bg-black border border-slate-800 p-5 text-white outline-none focus:border-red-600 uppercase font-bold text-sm transition-all" 
-              />
+              <label className="text-red-600 uppercase font-black tracking-widest text-[10px]">Protocol_Node: {role}</label>
+              <input type="email" placeholder={`ENTER_${role}_EMAIL`} value={(emails as any)[role]} onChange={e => setEmails({ ...emails, [role]: e.target.value })} className="w-full bg-black border border-slate-800 p-5 text-white outline-none focus:border-red-600 uppercase font-bold text-sm" />
             </div>
           ))}
         </div>
-        <button 
-          onClick={() => onConfirm(emails)} 
-          className="w-full py-7 bg-red-600 text-white font-black uppercase italic tracking-[0.5em] text-xs hover:bg-white hover:text-black transition-all duration-300 shadow-xl"
-        >
-          Execute_Persona_Dispatch
-        </button>
+        <button onClick={() => onConfirm(emails)} className="w-full py-7 bg-red-600 text-white font-black uppercase italic tracking-[0.5em] text-xs hover:bg-white hover:text-black transition-all">Execute_Persona_Dispatch</button>
       </div>
     </div>
   );
