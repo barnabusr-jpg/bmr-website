@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, ShieldAlert, Zap } from 'lucide-react';
+import { Activity, ShieldAlert, Zap, Lock } from 'lucide-react';
 
 const NAV_ITEMS = [
   { label: "PROTOCOLS", path: "/protocols" },
@@ -29,6 +29,7 @@ export default function Header() {
           </span>
         </Link>
 
+        {/* --- CENTRAL PROTOCOL NAV --- */}
         <div className="hidden lg:flex items-center gap-12">
           {NAV_ITEMS.map((item) => (
             <Link 
@@ -44,17 +45,33 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-6">
+          {/* --- FORENSIC METADATA STAMPS (ALPHA_7) --- */}
           <div className="hidden md:flex flex-col items-end pr-6 border-r border-slate-800">
-             <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">STATUS</span>
-             <span className="text-[9px] font-mono text-green-500 font-bold uppercase tracking-widest mt-1">STABLE NODE-SEC-04</span>
+             <div className="flex items-center gap-2">
+                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">PROTOCOL</span>
+                <span className="text-[8px] font-mono text-red-600 font-black uppercase tracking-widest bg-red-600/10 px-1">ALPHA_7</span>
+             </div>
+             <span className="text-[9px] font-mono text-yellow-500 font-bold uppercase tracking-widest mt-1 italic flex items-center gap-1">
+                <ShieldAlert size={10} /> INDEMNITY_UNVERIFIED
+             </span>
           </div>
           
           <Link 
             href="/pulse-check"
-            className="bg-red-600 text-white px-6 py-3 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all shadow-lg shadow-red-900/10"
+            className="bg-red-600 text-white px-6 py-3 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all shadow-lg shadow-red-900/10 border border-red-600"
           >
-            <Zap size={14} /><span>DIAGNOSTIC</span>
+            <Zap size={14} /><span>INITIATE_DIAGNOSTIC</span>
           </Link>
+        </div>
+      </div>
+      
+      {/* --- SUB-NAV STATUS BAR (Optional Visual Polish) --- */}
+      <div className="max-w-7xl mx-auto flex justify-between pt-2">
+        <div className="text-[7px] font-mono text-slate-700 uppercase tracking-[0.5em]">
+          BMR_SEC_SYS_ACTIVE // SESSION_ENCRYPTED_256BIT
+        </div>
+        <div className="text-[7px] font-mono text-slate-700 uppercase tracking-[0.5em]">
+          U.S._DISTRICT_COMPLIANCE_ENFORCED
         </div>
       </div>
     </nav>
