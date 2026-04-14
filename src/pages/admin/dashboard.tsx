@@ -24,12 +24,28 @@ export default function AdminDashboard() {
     if (!isAuthenticated) return;
     async function fetchForensics() {
       setLoading(true);
-      // We explicitly pull org_name, lead_email, and persona_type from the audit record
-      const { data: auditData } = await supabase
+      
+      // UPDATED QUERY: We explicitly select org_name and lead_email
+      // This ensures that even if the 'operators' relationship isn't built yet, the identity shows up.
+      const { data: auditData, error } = await supabase
         .from('audits')
-        .select(`*, sfi_score, fractures, operators (*, entities (name))`)
+        .select(`
+          *, 
+          org_name, 
+          lead_email, 
+          persona_type, 
+          sfi_score, 
+          fractures, 
+          operators (*, entities (name))
+        `)
         .order('created_at', { ascending: false });
-      setData(auditData || []);
+
+      if (error) {
+        console.error("LEDGER_FETCH_ERROR:", error);
+      } else {
+        console.log("DASHBOARD_DATA:", auditData); // Check F12 console to see the raw data
+        setData(auditData || []);
+      }
       setLoading(false);
     }
     fetchForensics();
@@ -88,7 +104,6 @@ export default function AdminDashboard() {
       </nav>
 
       <div className="max-w-7xl mx-auto space-y-12">
-        {/* STATS ROW */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative overflow-hidden">
             <BarChart3 size={80} className="absolute -bottom-4 -right-4 text-red-600 opacity-5" />
@@ -132,19 +147,17 @@ export default function AdminDashboard() {
                       {new Date(audit.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </td>
                     <td className="p-10">
-                      {/* IDENTITY BLOCK: Capturing Customer Context */}
                       <div className="flex flex-col mb-6">
                         <div className="flex items-center gap-3 mb-1">
                           <Building2 size={16} className="text-red-600" />
                           <div className="font-black text-white uppercase text-2xl italic tracking-tighter leading-none">
-                            {audit.org_name || audit.operators?.entities?.name || "ANONYMOUS_ENTITY"}
+                            {audit.org_name || "ANONYMOUS_ENTITY"}
                           </div>
                         </div>
                         <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
                           <Mail size={12} />
-                          <span>{audit.lead_email || audit.operators?.email || "NO_EMAIL_RECORDED"}</span>
+                          <span>{audit.lead_email || "NO_EMAIL_RECORDED"}</span>
                         </div>
-                        {/* ORIGIN SIGNAL INDICATOR */}
                         <div className="mt-3">
                           <span className="text-[9px] bg-red-600/10 text-red-600 px-2 py-0.5 border border-red-600/20 font-black tracking-widest uppercase">
                             Origin: {audit.persona_type || "PULSE_CHECK"}
