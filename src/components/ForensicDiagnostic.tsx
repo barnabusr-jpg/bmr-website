@@ -1,193 +1,54 @@
-"use client";
+const init = async () => {
+  const params = new URLSearchParams(window.location.search);
+  const rawCode = params.get('code')?.trim();
 
-import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
-import { FORENSIC_MATRIX } from '@/lib/forensicMatrix';
-import { Fingerprint, AlertTriangle, CheckCircle, Lock, Loader2 } from 'lucide-react';
+  if (!rawCode) {
+    setStep("invalid");
+    return;
+  }
 
-function DiagnosticContent() {
-  const [step, setStep] = useState("loading");
-  const [operator, setOperator] = useState<any>(null);
-  const [questions, setQuestions] = useState<any[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  
-  const searchParams = useSearchParams();
+  // --- THE FUZZY HANDSHAKE ---
+  // We force uppercase AND convert all zeros to 'O's 
+  // because BMR access codes use letters, not numbers for clarity.
+  const sanitizedCode = rawCode.toUpperCase().replace(/0/g, "O");
 
-  useEffect(() => {
-    const init = async () => {
-      // 1. Robust Parameter Extraction
-      const code = searchParams.get('code')?.trim();
+  console.log(`BMR_HANDSHAKE: URL[${rawCode}] -> SANITIZED[${sanitizedCode}]`);
 
-      if (!code) {
-        console.error("BMR_AUTH_ERR: Signal missing from URL.");
-        setStep("invalid");
-        return;
-      }
+  const { data: results, error } = await supabase
+    .from('operators')
+    .select('*, diagnostic_groups(org_name)')
+    .eq('access_code', sanitizedCode);
 
-      // 2. Sanitize: Force Uppercase & Fix 0/O confusion
-      const sanitizedCode = code.toUpperCase().replace(/0/g, "O");
-
-      // 3. Database Handshake
-      const { data: op, error } = await supabase
-        .from('operators')
-        .select('*, diagnostic_groups(org_name)')
-        .eq('access_code', sanitizedCode)
-        .single();
-
-      if (error || !op) {
-        console.error("BMR_AUTH_ERR: Ledger rejection.", { sanitizedCode, error });
-        setStep("invalid");
-        return;
-      }
-
-      // 4. Status Check
-      if (op.status?.toLowerCase() === 'completed') {
-        setOperator(op);
-        setStep("finalized");
-        return;
-      }
-
-      // 5. Success: Map questions
-      const filtered = FORENSIC_MATRIX.filter(q => q.lens === op.persona_type);
-      setOperator(op);
-      setQuestions(filtered);
-      setStep("intro");
-    };
-
-    init();
-  }, [searchParams]);
-
-  const submitResults = async (finalAnswers: any) => {
-    setStep("submitting");
-    const { error: updateError } = await supabase
+  if (error || !results || results.length === 0) {
+    // FALLBACK: If 'O' to '0' swap failed, try a direct match just in case
+    const { data: fallback } = await supabase
       .from('operators')
-      .update({ status: 'completed', raw_responses: finalAnswers })
-      .eq('id', operator.id);
+      .select('*, diagnostic_groups(org_name)')
+      .eq('access_code', rawCode.toUpperCase());
 
-    if (updateError) {
-      alert("CRITICAL: Ledger Sync Failure.");
+    if (!fallback || fallback.length === 0) {
+      setStep("invalid");
       return;
     }
+    
+    // If fallback worked, use it
+    const op = fallback[0];
+    proceedWithNode(op);
+  } else {
+    const op = results[0];
+    proceedWithNode(op);
+  }
+};
 
-    // Synthesis Trigger (3/3 nodes)
-    const { data: nodes } = await supabase
-      .from('operators')
-      .select('status')
-      .eq('group_id', operator.group_id)
-      .eq('status', 'completed');
+const proceedWithNode = (op: any) => {
+  if (op.status?.toLowerCase() === 'completed') {
+    setOperator(op);
+    setStep("finalized");
+    return;
+  }
 
-    if (nodes && nodes.length === 3) {
-      await fetch('/api/synthesize-fractures', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId: operator.group_id })
-      });
-    }
-    setStep("done");
-  };
-
-  const handleFinalizeNode = (evidence: string) => {
-    const qId = questions[currentIndex].id;
-    const newAnswers = { ...answers, [qId]: { answer: selectedAnswer, evidence } };
-    setAnswers(newAnswers);
-    setSelectedAnswer(null);
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      submitResults(newAnswers);
-    }
-  };
-
-  if (step === "loading") return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center text-red-600 font-mono italic">
-      <Loader2 className="animate-spin mb-4" size={32} />
-      <span className="tracking-[0.5em] uppercase font-black">Establishing_Connection...</span>
-    </div>
-  );
-
-  if (step === "invalid") return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center">
-      <div className="border-2 border-red-600 p-16 bg-slate-950 shadow-2xl max-w-xl">
-        <AlertTriangle className="text-red-600 mx-auto mb-8 animate-bounce" size={64} />
-        <h1 className="text-white font-black uppercase italic text-4xl mb-6 tracking-tighter">Unauthorized_Node</h1>
-        <p className="text-slate-400 font-mono text-sm uppercase leading-relaxed">Access code rejected by ledger.</p>
-      </div>
-    </div>
-  );
-
-  if (step === "finalized") return (
-    <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 text-center font-mono">
-      <div className="max-w-md bg-slate-950 border-2 border-red-900/20 p-16 shadow-2xl relative">
-        <Lock className="absolute top-4 right-4 text-red-600 opacity-20" size={40} />
-        <CheckCircle className="text-green-500 mx-auto mb-6" size={60} />
-        <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">NODE_SECURED</h2>
-        <p className="text-slate-500 text-[10px] uppercase tracking-[0.2em] leading-relaxed">
-          Diagnostic finalized for {operator?.diagnostic_groups?.org_name}. Link deactivated.
-        </p>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-black text-white p-12 font-mono flex items-center justify-center">
-      <div className="max-w-2xl w-full border border-red-900/30 p-16 bg-slate-950 shadow-2xl relative">
-        <div className="text-[10px] text-red-600 mb-10 tracking-[0.3em] font-black uppercase border-b border-red-900/20 pb-4">
-          NODE_AUTHORIZED: {operator?.persona_type}
-        </div>
-        
-        {step === "intro" && (
-          <div className="animate-in fade-in duration-1000">
-            <h1 className="text-5xl font-black italic mb-8 text-white uppercase tracking-tighter leading-none">
-              Protocol_<span className="text-red-600">Initialized</span>
-            </h1>
-            <button onClick={() => setStep("diagnostic")} className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.4em] hover:bg-white transition-all">Start_Node_Audit</button>
-          </div>
-        )}
-
-        {step === "diagnostic" && (
-          <div className="animate-in slide-in-from-right-8 duration-500">
-             <div className="text-[10px] text-slate-500 mb-4 uppercase font-black italic">Segment {currentIndex + 1} of 10</div>
-             <h2 className="text-2xl font-black mb-12 italic uppercase text-white tracking-tight">
-               {questions[currentIndex].text}
-             </h2>
-             {!selectedAnswer ? (
-               <div className="grid grid-cols-2 gap-6">
-                 {["Yes", "No"].map(opt => (
-                   <button key={opt} onClick={() => setSelectedAnswer(opt)} className="p-10 border-2 border-slate-800 text-center font-black uppercase italic text-2xl hover:bg-red-600 transition-all">{opt}</button>
-                 ))}
-               </div>
-             ) : (
-               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                 <select className="w-full bg-black border-2 border-red-900 p-6 mb-8 text-white font-black uppercase" onChange={(e) => handleFinalizeNode(e.target.value)} defaultValue="">
-                   <option value="" disabled>Choose_Basis...</option>
-                   {questions[currentIndex].evidenceOptions.map((opt: string) => (
-                     <option key={opt} value={opt}>{opt.replace(/_/g, " ")}</option>
-                   ))}
-                 </select>
-               </div>
-             )}
-          </div>
-        )}
-
-        {step === "done" && (
-          <div className="text-center py-10 animate-in zoom-in-95 duration-1000">
-            <h1 className="text-3xl font-black italic text-red-600 mb-6 uppercase tracking-[0.2em]">Segment_Secured</h1>
-            <p className="text-slate-400 text-xs uppercase font-mono tracking-tighter italic">Terminal may be closed.</p>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// Wrap in Suspense to handle useSearchParams in Next.js Client Components
-export default function ForensicDiagnostic() {
-  return (
-    <Suspense fallback={<div className="bg-black min-h-screen" />}>
-      <DiagnosticContent />
-    </Suspense>
-  );
-}
+  const filtered = FORENSIC_MATRIX.filter(q => q.lens === op.persona_type);
+  setOperator(op);
+  setQuestions(filtered);
+  setStep("intro");
+};
