@@ -10,7 +10,7 @@ export default function ForensicPage() {
     if (router.isReady) {
       const urlCode = router.query.code;
       if (typeof urlCode === 'string') {
-        // Pass the raw, trimmed uppercase code to the engine
+        // No character swapping. Just clean up spaces and set it.
         setCode(urlCode.trim().toUpperCase());
       }
     }
@@ -22,7 +22,7 @@ export default function ForensicPage() {
         <ForensicDiagnostic accessCode={code} />
       ) : (
         <div className="min-h-screen flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-[0.3em]">
-          Handshake_Initializing...
+          INITIALIZING_HANDSHAKE...
         </div>
       )}
     </div>
