@@ -4,72 +4,57 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { FORENSIC_MATRIX } from '@/lib/forensicMatrix';
 
-export default function ForensicDiagnostic({ accessCode }: { accessCode: string | null }) {
+export default function ForensicDiagnostic() {
   const [step, setStep] = useState("loading");
   const [operator, setOperator] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
 
   useEffect(() => {
     const init = async () => {
-      // Don't fire the query until the Page hands us the code
-      if (!accessCode) return;
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code')?.trim().toUpperCase();
 
-      const { data: op, error } = await supabase
+      if (!code) {
+        setStep("invalid");
+        return;
+      }
+
+      // THE DIRECT FETCH
+      const { data, error } = await supabase
         .from('operators')
         .select('*, diagnostic_groups(org_name)')
-        .eq('access_code', accessCode)
+        .eq('access_code', code)
         .single();
 
-      if (error || !op) {
-        // QUICK FALLBACK: Try character swap (0 vs O) if first fetch failed
-        const alt = accessCode.includes('0') ? accessCode.replace(/0/g, 'O') : accessCode.replace(/O/g, '0');
-        const { data: retry } = await supabase
-          .from('operators')
-          .select('*, diagnostic_groups(org_name)')
-          .eq('access_code', alt)
-          .single();
-        
-        if (!retry) { 
-          setStep("invalid"); 
-          return; 
-        }
-        setupNode(retry);
-      } else {
-        setupNode(op);
+      if (error) {
+        // THIS IS THE TRUTH SEEKER:
+        // If this pops up, read the message. 
+        // "PGRST116" means the code isn't in the DB.
+        // "42501" means RLS is blocking you.
+        alert(`DB_REPORT: ${error.message} | Code: ${error.code}`);
+        setStep("invalid");
+        return;
+      }
+
+      if (data) {
+        const filtered = FORENSIC_MATRIX.filter(q => q.lens === data.persona_type);
+        setOperator(data);
+        setQuestions(filtered);
+        setStep("intro");
       }
     };
 
-    const setupNode = (op: any) => {
-      // Match the persona_type (e.g. TECHNICAL) to the matrix
-      const filtered = FORENSIC_MATRIX.filter(q => q.lens === op.persona_type);
-      setOperator(op);
-      setQuestions(filtered);
-      setStep("intro");
-    };
-
     init();
-  }, [accessCode]);
+  }, []);
 
-  // --- RENDERING PROTOCOLS ---
-
-  if (step === "loading") {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono italic animate-pulse">
-        ESTABLISHING_SECURE_HANDSHAKE...
-      </div>
-    );
-  }
-
-  if (step === "invalid") {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white font-mono border-2 border-red-600 p-12 text-center">
-        <div>
-          <h1 className="text-2xl font-black mb-4 uppercase">Unauthorized_Node</h1>
-          <p className="text-slate-500 text-xs">Ledger Rejection: {accessCode}</p>
-        </div>
-      </div>
-    );
-  }
+  if (step === "loading") return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono">ESTABLISHING_HANDSHAKE...</div>;
+  
+  if (step === "invalid") return (
+    <div className="min-h-screen bg-black flex items-center justify-center text-white font-mono border-2 border-red-600 p-12 text-center">
+      <h1 className="text-2xl font-black mb-4 uppercase">Unauthorized_Node</h1>
+      <p className="text-slate-500 text-xs italic uppercase">Check terminal for ledger rejection.</p>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-black text-white p-12 font-mono flex items-center justify-center">
@@ -80,8 +65,8 @@ export default function ForensicDiagnostic({ accessCode }: { accessCode: string 
         
         {step === "intro" && (
           <div className="animate-in fade-in duration-1000">
-            <h1 className="text-4xl font-black italic mb-8 uppercase tracking-tighter leading-none">Protocol_Initialized</h1>
-            <p className="mb-10 text-slate-400 leading-relaxed text-sm uppercase italic">
+            <h1 className="text-4xl font-black italic mb-8 uppercase tracking-tighter">Protocol_Initialized</h1>
+            <p className="mb-10 text-slate-400 text-sm uppercase italic">
               Authenticated for: {operator?.diagnostic_groups?.org_name || "BMR_SECURE_CLIENT"}
             </p>
             <button 
@@ -92,8 +77,6 @@ export default function ForensicDiagnostic({ accessCode }: { accessCode: string 
             </button>
           </div>
         )}
-
-        {/* Diagnostic question rendering will go here once the handshake is proven */}
       </div>
     </div>
   );
