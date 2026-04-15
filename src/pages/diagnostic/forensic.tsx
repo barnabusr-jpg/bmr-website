@@ -4,14 +4,16 @@ import ForensicDiagnostic from '@/components/ForensicDiagnostic';
 
 export default function ForensicPage() {
   const router = useRouter();
-  const [code, setCode] = useState<string | null>(null);
+  const [cleanCode, setCleanCode] = useState<string | null>(null);
 
   useEffect(() => {
+    // router.isReady is the key to stopping the "Unauthorized" loop in Pages Router
     if (router.isReady) {
-      const urlCode = router.query.code;
-      if (typeof urlCode === 'string') {
-        // Clean whitespace and force uppercase
-        setCode(urlCode.trim().toUpperCase());
+      const { code } = router.query;
+      if (typeof code === 'string') {
+        // Sanitize immediately: Uppercase and fix the 0 vs O mismatch
+        const sanitized = code.trim().toUpperCase().replace(/0/g, "O");
+        setCleanCode(sanitized);
       }
     }
   }, [router.isReady, router.query]);
@@ -19,10 +21,10 @@ export default function ForensicPage() {
   return (
     <div className="min-h-screen bg-black">
       {router.isReady ? (
-        <ForensicDiagnostic accessCode={code} />
+        <ForensicDiagnostic accessCode={cleanCode} />
       ) : (
         <div className="min-h-screen flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-[0.3em]">
-          INITIALIZING_HANDSHAKE...
+          Handshake_Initializing...
         </div>
       )}
     </div>
