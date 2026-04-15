@@ -24,38 +24,39 @@ export default function ForensicDiagnostic({ accessCode }: Props) {
         return;
       }
 
-      // 1. PHASE ONE: Exact Match
-      const { data: opExact } = await supabase
-        .from('operators')
-        .select('*, diagnostic_groups(org_name)')
-        .eq('access_code', accessCode)
-        .single();
+      // --- OMNI-HANDSHAKE LOGIC ---
+      // We try every possible permutation of the code to ensure access
+      
+      const tryMatch = async (testCode: string) => {
+        const { data } = await supabase
+          .from('operators')
+          .select('*, diagnostic_groups(org_name)')
+          .eq('access_code', testCode)
+          .single();
+        return data;
+      };
 
-      if (opExact) return handleSuccess(opExact);
+      // 1. Exact Match
+      let op = await tryMatch(accessCode);
 
-      // 2. PHASE TWO: Fuzzy Match (Zero to Oscar)
-      const { data: opOscar } = await supabase
-        .from('operators')
-        .select('*, diagnostic_groups(org_name)')
-        .eq('access_code', accessCode.replace(/0/g, "O"))
-        .single();
+      // 2. Zero to Oscar (2AML1240 -> 2AML124O)
+      if (!op) op = await tryMatch(accessCode.replace(/0/g, "O"));
 
-      if (opOscar) return handleSuccess(opOscar);
+      // 3. Oscar to Zero (RFIKHXQO -> RFIKHXQ0)
+      if (!op) op = await tryMatch(accessCode.replace(/O/g, "0"));
 
-      // 3. PHASE THREE: Fuzzy Match (Oscar to Zero)
-      const { data: opZero } = await supabase
-        .from('operators')
-        .select('*, diagnostic_groups(org_name)')
-        .eq('access_code', accessCode.replace(/O/g, "0"))
-        .single();
+      // 4. Common Visual Error G to 6
+      if (!op) op = await tryMatch(accessCode.replace(/G/g, "6"));
 
-      if (opZero) return handleSuccess(opZero);
+      // 5. Common Visual Error 6 to G
+      if (!op) op = await tryMatch(accessCode.replace(/6/g, "G"));
 
-      // If all phases fail
-      setStep("invalid");
-    };
+      if (!op) {
+        setStep("invalid");
+        return;
+      }
 
-    const handleSuccess = (op: any) => {
+      // Success Handler
       if (op.status?.toLowerCase() === 'completed') {
         setOperator(op);
         setStep("finalized");
@@ -72,10 +73,20 @@ export default function ForensicDiagnostic({ accessCode }: Props) {
 
   const submitResults = async (finalAnswers: any) => {
     setStep("submitting");
-    await supabase.from('operators').update({ status: 'completed', raw_responses: finalAnswers }).eq('id', operator.id);
-    
-    // Check Triangle (3/3)
-    const { data: nodes } = await supabase.from('operators').select('status').eq('group_id', operator.group_id).eq('status', 'completed');
+    const { error } = await supabase
+      .from('operators')
+      .update({ status: 'completed', raw_responses: finalAnswers })
+      .eq('id', operator.id);
+
+    if (error) return alert("SYNC_ERROR: Data not committed.");
+
+    // Check for Group Completion
+    const { data: nodes } = await supabase
+      .from('operators')
+      .select('status')
+      .eq('group_id', operator.group_id)
+      .eq('status', 'completed');
+
     if (nodes && nodes.length === 3) {
       await fetch('/api/synthesize-fractures', {
         method: 'POST',
@@ -91,19 +102,22 @@ export default function ForensicDiagnostic({ accessCode }: Props) {
     const newAnswers = { ...answers, [qId]: { answer: selectedAnswer, evidence } };
     setAnswers(newAnswers);
     setSelectedAnswer(null);
-    if (currentIndex < questions.length - 1) setCurrentIndex(currentIndex + 1);
-    else submitResults(newAnswers);
+
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      submitResults(newAnswers);
+    }
   };
 
-  // --- RENDER LOGIC ---
-  if (step === "loading") return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono animate-pulse">VERIFYING_NODE...</div>;
-  
+  if (step === "loading") return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-widest">Verifying_Node_Credentials...</div>;
+
   if (step === "invalid") return (
     <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center">
       <div className="border-2 border-red-600 p-16 bg-slate-950 shadow-2xl">
         <AlertTriangle className="text-red-600 mx-auto mb-8 animate-bounce" size={64} />
         <h1 className="text-white font-black uppercase italic text-4xl mb-6">Unauthorized_Node</h1>
-        <p className="text-slate-400 font-mono text-xs uppercase">Handshake Rejected: {accessCode}</p>
+        <p className="text-slate-400 font-mono text-xs uppercase">Ledger Code Rejected: {accessCode}</p>
       </div>
     </div>
   );
@@ -113,8 +127,8 @@ export default function ForensicDiagnostic({ accessCode }: Props) {
       <div className="max-w-md bg-slate-950 border-2 border-red-900/20 p-16 shadow-2xl relative font-mono text-slate-500">
         <Lock className="absolute top-4 right-4 text-red-600 opacity-20" size={40} />
         <CheckCircle className="text-green-500 mx-auto mb-6" size={60} />
-        <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">NODE_SECURED</h2>
-        <p className="text-[10px] uppercase tracking-widest mt-4">Diagnostic finalized for {operator?.diagnostic_groups?.org_name}. Access link deactivated.</p>
+        <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter leading-none">NODE_SECURED</h2>
+        <p className="text-[10px] uppercase tracking-widest mt-4">Diagnostic finalized for {operator?.diagnostic_groups?.org_name}. Link deactivated.</p>
       </div>
     </div>
   );
@@ -126,8 +140,8 @@ export default function ForensicDiagnostic({ accessCode }: Props) {
         
         {step === "intro" && (
           <div className="animate-in fade-in duration-1000">
-            <h1 className="text-5xl font-black italic mb-8 uppercase tracking-tighter">Protocol_Initialized</h1>
-            <p className="mb-10 text-slate-400 leading-relaxed uppercase italic">{operator?.diagnostic_groups?.org_name}</p>
+            <h1 className="text-5xl font-black italic mb-8 uppercase tracking-tighter leading-none">Protocol_Initialized</h1>
+            <p className="mb-10 text-slate-400 leading-relaxed uppercase italic font-bold text-red-600">{operator?.diagnostic_groups?.org_name}</p>
             <button onClick={() => setStep("diagnostic")} className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.4em] hover:bg-white hover:text-black transition-all">Start_Node_Audit</button>
           </div>
         )}
