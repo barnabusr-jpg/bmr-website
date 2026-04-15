@@ -4,27 +4,24 @@ import ForensicDiagnostic from '@/components/ForensicDiagnostic';
 
 export default function ForensicPage() {
   const router = useRouter();
-  const [cleanCode, setCleanCode] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
 
   useEffect(() => {
-    // Only proceed once Next.js has fully parsed the URL
     if (router.isReady) {
-      const { code } = router.query;
-      if (typeof code === 'string') {
-        // Fix the '0' vs 'O' mismatch immediately at the source
-        const sanitized = code.trim().toUpperCase().replace(/0/g, "O");
-        setCleanCode(sanitized);
+      const urlCode = router.query.code;
+      if (typeof urlCode === 'string') {
+        // Pass the code exactly as it appears in the URL (sanitization happens in component)
+        setCode(urlCode.trim().toUpperCase());
       }
     }
   }, [router.isReady, router.query]);
 
   return (
     <div className="min-h-screen bg-black">
-      {/* We only render the engine once the handshake signal is ready */}
       {router.isReady ? (
-        <ForensicDiagnostic accessCode={cleanCode} />
+        <ForensicDiagnostic accessCode={code} />
       ) : (
-        <div className="min-h-screen flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-widest">
+        <div className="min-h-screen flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-[0.3em]">
           Handshake_Initializing...
         </div>
       )}
