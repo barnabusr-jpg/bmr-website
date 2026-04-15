@@ -10,7 +10,7 @@ export default function ForensicPage() {
     if (router.isReady) {
       const urlCode = router.query.code;
       if (typeof urlCode === 'string') {
-        // No character swapping. Just clean up spaces and set it.
+        // Clean whitespace and force uppercase
         setCode(urlCode.trim().toUpperCase());
       }
     }
