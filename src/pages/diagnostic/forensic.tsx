@@ -10,7 +10,7 @@ export default function ForensicPage() {
     if (router.isReady) {
       const urlCode = router.query.code;
       if (typeof urlCode === 'string') {
-        // Pass the code exactly as it appears in the URL (sanitization happens in component)
+        // Pass the raw, trimmed uppercase code to the engine
         setCode(urlCode.trim().toUpperCase());
       }
     }
