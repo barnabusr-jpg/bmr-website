@@ -22,8 +22,8 @@ export default function MethodologyPage() {
               The Key <br /> To Forensic <br /> <span className="text-red-600">Integrity.</span>
             </h1>
             <div className="text-slate-400 text-lg italic max-w-2xl leading-relaxed font-medium">
-              <p>BMR Solutions identifies fractures where artificial intelligence falls short of strategic goals.</p>
-              <p className="text-white mt-2">These fractures cost organizations millions in rework, legal exposure, and lost trust.</p>
+              <p>BMR Solutions identifies the fractures where artificial intelligence falls short of your strategic goals.</p>
+              <p className="text-white mt-2">These fractures cost organizations millions in rework and legal exposure while eroding trust.</p>
               <p className="mt-2 text-red-600 font-bold">Every day you wait, these fractures grow. They turn small leaks into catastrophic failures.</p>
               <p className="mt-2">We help identify and protect logic chains before architectural collapse becomes inevitable.</p>
             </div>
@@ -46,9 +46,9 @@ export default function MethodologyPage() {
                 { 
                   title: "Human Alignment", 
                   q: "Do your AI outputs match your human expectations?", 
-                  f: "FRACTURE: Customer service tools issuing incorrect refunds.", 
+                  f: "FRACTURE: Customer service tools issuing incorrect data to users.", 
                   risk: "Ignoring this fracture erodes customer trust and exposes the company to potential lawsuits.",
-                  fix: "Forensic Logging tracks every machine decision to ensure outputs match your expectations.",
+                  fix: "Forensic Logging identifies the gap between intention and reality to ensure outputs match your expectations.",
                   node: "HAI NODE" 
                 },
                 { 
@@ -119,7 +119,7 @@ export default function MethodologyPage() {
           <section className="py-10 bg-slate-900/10 border-t border-slate-900 text-left">
             <div className="max-w-4xl space-y-8">
               <h2 className="text-3xl font-black italic uppercase tracking-tighter text-red-600 font-black">
-                The Case of the Silent Divergence
+                The Cost of the Silent Divergence
               </h2>
               <p className="text-slate-400 text-sm italic font-medium leading-relaxed">
                 Consider an organization that implements a high-scale automated system. On day one, 
@@ -153,7 +153,7 @@ export default function MethodologyPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    <div className="p-6 border border-red-900/30 bg-red-950/5">
-                      <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-4 font-black">Before BMR</p>
+                      <p className="text-[10px] font-black text-red-600 uppercase tracking-widest mb-4 font-black">Before BMR (simulation)</p>
                       <ul className="text-xs text-slate-500 space-y-2 font-mono">
                         <li>15% Systemic Friction Index</li>
                         <li>$1.2M Legal Exposure</li>
@@ -161,7 +161,7 @@ export default function MethodologyPage() {
                       </ul>
                    </div>
                    <div className="p-6 border border-green-900/30 bg-green-950/5 text-left">
-                      <p className="text-[10px] font-black text-green-500 uppercase tracking-widest mb-4 font-black">After BMR</p>
+                      <p className="text-[10px] font-black text-green-500 uppercase tracking-widest mb-4 font-black">After BMR (simulation)</p>
                       <ul className="text-xs text-slate-400 space-y-2 font-mono">
                         <li className="text-green-400 font-bold">82% Systemic Friction Index</li>
                         <li className="text-green-400 font-bold">Legal Exposure Eliminated</li>
@@ -198,7 +198,7 @@ export default function MethodologyPage() {
               </ul>
               <p className="text-slate-400 text-base italic leading-relaxed mt-6">
                 BMR Solutions provides the forensic evidence the board needs to trust your AI investments. 
-                Without it, your AI initiatives are a ticking time bomb. You are one bad headline away from disaster.
+                Without it, your AI initiatives are a ticking time bomb, and you are one bad headline away from disaster.
               </p>
             </div>
           </section>
@@ -212,8 +212,8 @@ export default function MethodologyPage() {
               <div className="text-base text-slate-300 leading-relaxed italic font-medium">
                 <p>Systemic decay is a silent killer. Logic fractures weaken contracts while 
                 increasing the verification burden on your best people. The longer these fractures 
-                exist, the more expensive the recovery becomes.</p>
-                <p className="block mt-4 text-white font-bold italic">Every day you wait, the cost of fixing these fractures increases by two percent.</p>
+                exist, the more expensive the recovery.</p>
+                <p className="block mt-4 text-white font-bold italic">Every day you wait, the cost fractures increase by two percent.</p>
               </div>
               <button 
                 onClick={() => router.push('/pulse-check')}
@@ -231,3 +231,4 @@ export default function MethodologyPage() {
     </div>
   );
 }
+
