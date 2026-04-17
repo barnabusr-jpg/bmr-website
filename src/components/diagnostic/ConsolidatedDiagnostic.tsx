@@ -78,9 +78,7 @@ export default function ConsolidatedDiagnostic() {
   };
 
   const logToDatabase = async (finalMetrics: any) => {
-    console.log("BMR_SYNC: Initializing Forensic Ledger Entry...");
     try {
-      // 1. Entity Reconstruction
       const { data: entityData, error: entityError } = await supabase
         .from('entities')
         .upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' })
@@ -88,7 +86,6 @@ export default function ConsolidatedDiagnostic() {
 
       if (entityError) throw entityError;
 
-      // 2. Operator Authorization
       const { data: operatorData, error: operatorError } = await supabase
         .from('operators')
         .upsert({ 
@@ -100,8 +97,7 @@ export default function ConsolidatedDiagnostic() {
 
       if (operatorError) throw operatorError;
 
-      // 3. Audit Persistence (Capturing Identity for Dashboard)
-      const { data: auditData, error: auditError } = await supabase.from('audits').insert([{
+      await supabase.from('audits').insert([{
         operator_id: operatorData.id,
         sector: sector,
         ai_spend: aiSpend,
@@ -113,14 +109,9 @@ export default function ConsolidatedDiagnostic() {
         lead_email: email.trim().toLowerCase(), 
         raw_responses: answers,
         status: 'LEAD'
-      }]).select().single();
-
-      if (auditError) throw auditError;
-      console.log("BMR_SYNC_SUCCESS: Node Recorded.");
-
+      }]);
     } catch (error: any) {
       console.error("BMR_SYNC_CRITICAL_FAILURE:", error.message);
-      // Ensure you have run the SQL to add 'org_name' and 'lead_email' to the audits table!
     }
   };
 
@@ -130,10 +121,8 @@ export default function ConsolidatedDiagnostic() {
     const params = new URLSearchParams();
     params.append('name', operatorName.trim());
     params.append('email', email.trim());
-    params.append('a1', 'Forensic_Triangulation_Request');
     params.append('utm_campaign', entityName.trim().toUpperCase());
     params.append('utm_content', `SFI_${m.decay}_Rework_${m.rework}M`);
-    
     window.open(`https://calendly.com/hello-bmradvisory/forensic-review?${params.toString()}`, '_blank');
   };
 
@@ -157,10 +146,6 @@ export default function ConsolidatedDiagnostic() {
     doc.text("Systemic Friction Index (SFI)", 20, 90); doc.text(`${m.decay}%`, 160, 90);
     doc.text("Current Annual Rework Tax", 20, 100); doc.text(`$${m.rework}M`, 160, 100);
     doc.setTextColor(220, 38, 38); doc.text("6-Month Inaction Cost", 20, 110); doc.text(`$${m.inactionCost}M`, 160, 110);
-
-    doc.setTextColor(2, 6, 23); doc.setFontSize(8);
-    doc.text("NEXT STEP: Initialize Forensic Triangulation Protocol to map logic fractures.", 15, 135);
-
     doc.save(`BMR_Forensic_Pulse_${entityName}.pdf`);
   };
 
@@ -284,15 +269,52 @@ export default function ConsolidatedDiagnostic() {
               <table className="w-full text-left border-collapse">
                 <thead><tr className="border-b border-slate-800 bg-slate-900 text-[10px] font-mono text-slate-500 uppercase tracking-widest"><th className="p-4 px-10">Metric</th><th className="p-4 px-10 text-right">Value</th></tr></thead>
                 <tbody className="font-mono text-sm">
-                  <tr className="border-b border-slate-800"><td className="p-10 text-slate-400 uppercase font-black tracking-tighter text-xl text-white italic">Systemic Friction Index</td><td className="p-10 text-right font-black text-white text-3xl italic">{getLiveMetrics().decay}%</td></tr>
-                  <tr className="border-b border-slate-800"><td className="p-10 text-slate-400 uppercase font-black tracking-tighter text-xl text-white italic">Identified Rework Tax</td><td className="p-10 text-right font-black text-white text-3xl italic">${getLiveMetrics().rework}M/yr</td></tr>
-                  <tr className="border-b border-slate-800 bg-red-600/5"><td className="p-10 text-red-600 font-bold italic underline uppercase tracking-tighter text-xl">6-Month Inaction Cost</td><td className="p-10 text-right font-black text-red-600 text-3xl italic">${getLiveMetrics().inactionCost}M</td></tr>
+                  {/* Systemic Friction Index */}
+                  <tr className="border-b border-slate-800">
+                    <td className="p-10">
+                      <div className="text-white uppercase font-black tracking-tighter text-xl italic mb-1">Systemic Friction Index</div>
+                      <p className="text-[10px] leading-relaxed text-slate-500 font-mono normal-case max-w-md tracking-normal">
+                        A measure of structural decay within your AI workflows; higher percentages indicate severe misalignment between executive intent and technical execution.
+                      </p>
+                    </td>
+                    <td className="p-10 text-right font-black text-white text-3xl italic">{getLiveMetrics().decay}%</td>
+                  </tr>
+
+                  {/* Identified Rework Tax */}
+                  <tr className="border-b border-slate-800">
+                    <td className="p-10">
+                      <div className="text-white uppercase font-black tracking-tighter text-xl italic mb-1">Identified Rework Tax</div>
+                      <p className="text-[10px] leading-relaxed text-slate-500 font-mono normal-case max-w-md tracking-normal">
+                        The hidden annual cost of your SMEs and engineers manually correcting, 'babysitting,' and verifying unreliable AI outputs.
+                      </p>
+                    </td>
+                    <td className="p-10 text-right font-black text-white text-3xl italic">${getLiveMetrics().rework}M/yr</td>
+                  </tr>
+
+                  {/* 6-Month Inaction Cost */}
+                  <tr className="border-b border-slate-800 bg-red-600/5">
+                    <td className="p-10">
+                      <div className="text-red-600 font-bold italic underline uppercase tracking-tighter text-xl mb-1">6-Month Inaction Cost</div>
+                      <p className="text-[10px] leading-relaxed text-red-900/60 font-mono normal-case max-w-md tracking-normal">
+                        The projected capital loss your organization will absorb over the next two quarters if current architectural fractures remain unaddressed.
+                      </p>
+                    </td>
+                    <td className="p-10 text-right font-black text-red-600 text-3xl italic">${getLiveMetrics().inactionCost}M</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
 
             <div className="bg-slate-950 p-8 border border-slate-800 space-y-4">
-                <div className="flex justify-between items-center"><label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest italic text-white">Capital Exposure Simulation (AI Spend)</label><p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p></div>
+                <div className="flex justify-between items-center">
+                  <div>
+                    <label className="text-[10px] font-mono text-white uppercase tracking-widest italic">Capital Exposure Simulation (AI Spend)</label>
+                    <p className="text-[9px] text-slate-500 font-mono uppercase mt-1 tracking-wider">
+                      // Adjust slider to simulate your current annual budget and visualize risk
+                    </p>
+                  </div>
+                  <p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p>
+                </div>
                 <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
             </div>
 
