@@ -40,7 +40,6 @@ export default function ConsolidatedDiagnostic() {
   const [entityName, setEntityName] = useState("");
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -48,13 +47,6 @@ export default function ConsolidatedDiagnostic() {
   const [userInputKey, setUserInputKey] = useState("");
 
   useEffect(() => { setMounted(true); }, []);
-
-  useEffect(() => {
-    const e1 = email.trim().toLowerCase();
-    const e2 = confirmEmail.trim().toLowerCase();
-    if (e2.length > 0 && e1 !== e2) setValidationError("EMAIL_VERIFICATION_MISMATCH");
-    else setValidationError(null);
-  }, [email, confirmEmail]);
 
   const getLiveMetrics = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
@@ -71,82 +63,75 @@ export default function ConsolidatedDiagnostic() {
     return {
       decay: Math.min(decayRaw, 98),
       rework: reworkTax.toFixed(1),
-      delta: (scaledTotal * 0.32).toFixed(1),
-      roi: aiSpend > 0 ? -((scaledTotal / aiSpend) * 100).toFixed(1) : "0",
       inactionCost: inactionPenalty
     };
-  };
-
-  const logToDatabase = async (finalMetrics: any) => {
-    try {
-      const { data: entityData, error: entityError } = await supabase
-        .from('entities')
-        .upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' })
-        .select().single();
-
-      if (entityError) throw entityError;
-
-      const { data: operatorData, error: operatorError } = await supabase
-        .from('operators')
-        .upsert({ 
-          email: email.trim().toLowerCase(), 
-          full_name: operatorName.trim().toUpperCase(), 
-          entity_id: entityData.id 
-        }, { onConflict: 'email' })
-        .select().single();
-
-      if (operatorError) throw operatorError;
-
-      await supabase.from('audits').insert([{
-        operator_id: operatorData.id,
-        sector: sector,
-        ai_spend: aiSpend,
-        decay_pct: finalMetrics.decay,
-        rework_tax: parseFloat(finalMetrics.rework),
-        roi_pct: parseFloat(finalMetrics.roi),
-        persona_type: selectedLens, 
-        org_name: entityName.trim().toUpperCase(), 
-        lead_email: email.trim().toLowerCase(), 
-        raw_responses: answers,
-        status: 'LEAD'
-      }]);
-    } catch (error: any) {
-      console.error("BMR_SYNC_CRITICAL_FAILURE:", error.message);
-    }
-  };
-
-  const handleSecureBriefing = () => {
-    if (typeof window === 'undefined') return;
-    const m = getLiveMetrics();
-    const params = new URLSearchParams();
-    params.append('name', operatorName.trim());
-    params.append('email', email.trim());
-    params.append('utm_campaign', entityName.trim().toUpperCase());
-    params.append('utm_content', `SFI_${m.decay}_Rework_${m.rework}M`);
-    window.open(`https://calendly.com/hello-bmradvisory/forensic-review?${params.toString()}`, '_blank');
   };
 
   const generateForensicPDF = () => {
     const m = getLiveMetrics();
     const doc = new jsPDF();
-    doc.setFillColor(2, 6, 23); doc.rect(0, 0, 210, 30, "F");
-    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(16);
-    doc.text("BMR ADVISORY // SYSTEMIC FRICTION AUDIT", 15, 15);
+
+    // 1. HEADER (Forensic Authority)
+    doc.setFillColor(2, 6, 23); doc.rect(0, 0, 210, 40, "F");
+    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(20);
+    doc.text("BMR ADVISORY // FORENSIC AUDIT", 15, 20);
     doc.setFont("courier", "normal"); doc.setFontSize(8);
-    doc.text(`AUDIT_REF: ${entityName.toUpperCase()} // ORIGIN: ${selectedLens}`, 15, 22);
+    doc.text(`REF_ID: ${entityName.toUpperCase()}-${Math.random().toString(36).toUpperCase().substring(2, 7)}`, 15, 28);
+    doc.text(`ORIGIN: ${selectedLens}_NODE // DATE: ${new Date().toLocaleDateString().toUpperCase()}`, 15, 33);
 
+    // 2. SUMMARY HEADER
+    doc.setTextColor(2, 6, 23); doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    doc.text("EXECUTIVE DIAGNOSTIC SUMMARY", 15, 55);
+    doc.setDrawColor(220, 38, 38); doc.setLineWidth(1); doc.line(15, 57, 45, 57);
+
+    // 3. SFI SCORE BLOCK
+    doc.setFillColor(245, 248, 250); doc.rect(15, 75, 180, 25, "F");
+    doc.setFontSize(10); doc.setFont("helvetica", "bold"); doc.text("SYSTEMIC FRICTION INDEX (SFI)", 20, 85);
+    doc.setFontSize(8); doc.setFont("helvetica", "italic"); doc.setTextColor(100, 116, 139);
+    doc.text("CURRENT STRUCTURAL DECAY", 20, 91);
+    doc.setFontSize(22); doc.setTextColor(2, 6, 23); doc.text(`${m.decay}%`, 165, 92);
+
+    // 4. FINANCIAL IMPACT (High Contrast Red)
+    doc.setFillColor(254, 242, 242); doc.rect(15, 105, 180, 50, "F");
+    
+    // Rework Tax
     doc.setTextColor(2, 6, 23); doc.setFontSize(10); doc.setFont("helvetica", "bold");
-    doc.text("EXECUTIVE DIAGNOSTIC SUMMARY", 15, 45);
-    doc.line(15, 47, 75, 47);
-    doc.setFont("helvetica", "normal");
-    doc.text(`Entity: ${entityName.toUpperCase()}`, 15, 55);
-    doc.text(`Lead Persona: ${selectedLens}`, 15, 61);
+    doc.text("IDENTIFIED REWORK TAX", 20, 118);
+    doc.setFontSize(8); doc.setFont("helvetica", "normal"); doc.setTextColor(153, 27, 27);
+    doc.text("ANNUAL VERIFICATION COST", 20, 123);
+    doc.setFontSize(16); doc.text(`$${m.rework}M/YR`, 160, 123);
 
-    doc.setFillColor(245, 245, 245); doc.rect(15, 75, 180, 45, "F");
-    doc.text("Systemic Friction Index (SFI)", 20, 90); doc.text(`${m.decay}%`, 160, 90);
-    doc.text("Current Annual Rework Tax", 20, 100); doc.text(`$${m.rework}M`, 160, 100);
-    doc.setTextColor(220, 38, 38); doc.text("6-Month Inaction Cost", 20, 110); doc.text(`$${m.inactionCost}M`, 160, 110);
-    doc.save(`BMR_Forensic_Pulse_${entityName}.pdf`);
+    // Inaction Cost
+    doc.setTextColor(185, 28, 28); doc.setFontSize(10); doc.setFont("helvetica", "bold");
+    doc.text("6-MONTH INACTION COST", 20, 138);
+    doc.setFontSize(8); doc.setFont("helvetica", "normal");
+    doc.text("PROJECTED CAPITAL LOSS", 20, 143);
+    doc.setFontSize(16); doc.text(`$${m.inactionCost}M`, 160, 143);
+
+    // 5. THE PRELIMINARY VERDICT
+    doc.setTextColor(2, 6, 23); doc.setFontSize(12); doc.setFont("helvetica", "bold");
+    doc.text("PRELIMINARY VERDICT", 15, 175);
+    doc.setDrawColor(2, 6, 23); doc.setLineWidth(0.5); doc.line(15, 177, 40, 177);
+
+    const verdict = m.decay > 70 ? "CRITICAL: DECAY DETECTED" : 
+                    m.decay > 40 ? "WARNING: OPERATIONAL FRICTION" : 
+                    "SECURED: BASELINE INTEGRITY";
+    doc.setFontSize(14); doc.text(verdict, 15, 187);
+
+    // 6. MISSION FOOTER
+    doc.setFillColor(220, 38, 38); doc.rect(15, 210, 180, 15, "F");
+    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(10);
+    doc.text("INITIALIZE FULL FORENSIC TRIANGULATION PROTOCOL", 55, 219);
+
+    doc.save(`BMR_Forensic_Dossier_${entityName}.pdf`);
+  };
+
+  const logToDatabase = async (finalMetrics: any) => {
+    try {
+      const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
+      const { data: operatorData } = await supabase.from('operators').upsert({ email: email.trim().toLowerCase(), full_name: operatorName.trim().toUpperCase(), entity_id: entityData?.id }, { onConflict: 'email' }).select().single();
+      await supabase.from('audits').insert([{ operator_id: operatorData?.id, sector, ai_spend: aiSpend, decay_pct: finalMetrics.decay, rework_tax: parseFloat(finalMetrics.rework), org_name: entityName.trim().toUpperCase(), lead_email: email.trim().toLowerCase(), raw_responses: answers, status: 'LEAD' }]);
+    } catch (e) { console.error(e); }
   };
 
   const triggerForensicScan = async () => {
@@ -155,15 +140,11 @@ export default function ConsolidatedDiagnostic() {
       const res = await fetch('/api/auth/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim().toLowerCase() }) });
       const data = await res.json();
       if (res.ok) { setServerChallenge(data.challenge); setStep("verify"); }
-      else { setValidationError("TRANSMISSION_REJECTED"); }
-    } catch (err) { setValidationError("LOGIC_SHEAR_DETECTION"); }
+    } catch (err) { console.error(err); }
     setIsLoading(false);
   };
 
   if (!mounted) return null;
-
-  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const isReady = isEmailValid && email === confirmEmail && operatorName && entityName;
 
   return (
     <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px]">
@@ -173,24 +154,13 @@ export default function ConsolidatedDiagnostic() {
 
       <AnimatePresence mode="wait">
         {step === 'triage' && (
-          <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-16">
+          <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
             <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white text-center leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
-            
-            <div className="flex justify-center gap-4 mb-8">
+            <div className="flex justify-center gap-4">
                 {["EXECUTIVE", "MANAGER", "TECHNICAL"].map((lens) => (
-                    <button 
-                        key={lens} 
-                        onClick={() => {
-                          setSelectedLens(lens);
-                          localStorage.setItem("bmr_active_lens", lens);
-                        }}
-                        className={`px-6 py-2 border-2 font-black italic text-xs tracking-[0.2em] transition-all ${selectedLens === lens ? 'bg-red-600 border-red-600 text-white' : 'border-slate-800 text-slate-500 hover:border-slate-600'}`}
-                    >
-                        {lens}_NODE
-                    </button>
+                    <button key={lens} onClick={() => setSelectedLens(lens)} className={`px-6 py-2 border-2 font-black italic text-xs tracking-[0.2em] transition-all ${selectedLens === lens ? 'bg-red-600 border-red-600 text-white' : 'border-slate-800 text-slate-500'}`}>{lens}_NODE</button>
                 ))}
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {sectors.map((s) => (
                 <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
@@ -203,17 +173,16 @@ export default function ConsolidatedDiagnostic() {
         )}
 
         {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-center">
+          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
             <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6 shadow-2xl shadow-red-900/10 relative overflow-hidden">
-               <Fingerprint className="absolute -top-10 -right-10 text-red-600 opacity-5" size={200} />
-              <div className="grid grid-cols-2 gap-6 relative z-10">
-                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
-                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
-                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
-                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 transition-all font-mono" />
+            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6 shadow-2xl relative">
+              <div className="grid grid-cols-2 gap-6">
+                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
               </div>
-              <button disabled={!isReady} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 transition-all text-xl tracking-[0.2em] relative z-10">Initialize Diagnostic Observation</button>
+              <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-xl tracking-[0.2em]">Initialize Diagnostic Observation</button>
             </div>
           </motion.div>
         )}
@@ -226,14 +195,13 @@ export default function ConsolidatedDiagnostic() {
                 <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center text-white outline-none focus:border-red-600 font-mono" />
                 <button onClick={() => { if(userInputKey === serverChallenge) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic">Authorize</button>
               </div>
-              <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">A secure challenge key has been dispatched to your email.</p>
             </div>
           </motion.div>
         )}
 
         {step === 'audit' && (
           <motion.div key="audit" className="space-y-12 text-left">
-            <div className="flex items-center gap-4 text-red-600"><Activity size={16} className="animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PULSE_SEGMENT_0{currentDimension + 1} // LENS: {selectedLens}</span></div>
+            <div className="flex items-center gap-4 text-red-600"><Activity size={16} className="animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PULSE_SEGMENT_0{currentDimension + 1}</span></div>
             <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
             <div className="grid grid-cols-1 gap-4 mt-16">
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
@@ -241,11 +209,7 @@ export default function ConsolidatedDiagnostic() {
                   const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                   setAnswers(updatedAnswers);
                   if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
-                  else { 
-                    logToDatabase(getLiveMetrics()); 
-                    localStorage.setItem("bmr_diagnostic_results", JSON.stringify(updatedAnswers));
-                    setStep("verdict"); 
-                  }
+                  else { logToDatabase(getLiveMetrics()); setStep("verdict"); }
                 }}>
                     <span>{opt.label}</span>
                     <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 transition-all text-red-600" />
@@ -259,45 +223,30 @@ export default function ConsolidatedDiagnostic() {
           <motion.div key="verdict" className="space-y-12 text-white py-10">
             <div className="text-left border-l-4 border-red-600 pl-6 mb-12">
               <h2 className="text-5xl font-black uppercase italic tracking-tighter leading-none mb-2">PULSE CHECK <span className="text-red-600">VERDICT</span></h2>
-              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em]">Entity: {entityName.toUpperCase()} // Lead Lens: {selectedLens}</p>
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em]">Entity: {entityName.toUpperCase()} // Lens: {selectedLens}</p>
             </div>
             
             <div className="bg-slate-900/50 border border-slate-800 overflow-hidden relative">
-               <div className="absolute top-0 right-0 p-10 opacity-5 pointer-events-none">
-                  <Fingerprint size={160} />
-               </div>
               <table className="w-full text-left border-collapse">
-                <thead><tr className="border-b border-slate-800 bg-slate-900 text-[10px] font-mono text-slate-500 uppercase tracking-widest"><th className="p-4 px-10">Metric</th><th className="p-4 px-10 text-right">Value</th></tr></thead>
                 <tbody className="font-mono text-sm">
-                  {/* Systemic Friction Index */}
                   <tr className="border-b border-slate-800">
                     <td className="p-10">
-                      <div className="text-white uppercase font-black tracking-tighter text-xl italic mb-1">Systemic Friction Index</div>
-                      <p className="text-[10px] leading-relaxed text-slate-500 font-mono normal-case max-w-md tracking-normal">
-                        A measure of structural decay within your AI workflows; higher percentages indicate severe misalignment between executive intent and technical execution.
-                      </p>
+                      <div className="text-white uppercase font-black tracking-tighter text-xl italic mb-2">Systemic Friction Index</div>
+                      <p className="text-[11px] leading-relaxed text-slate-400 font-mono normal-case max-w-md">CURRENT STRUCTURAL DECAY: Measure of structural decay and logic misalignment within AI workflows.</p>
                     </td>
                     <td className="p-10 text-right font-black text-white text-3xl italic">{getLiveMetrics().decay}%</td>
                   </tr>
-
-                  {/* Identified Rework Tax */}
                   <tr className="border-b border-slate-800">
                     <td className="p-10">
-                      <div className="text-white uppercase font-black tracking-tighter text-xl italic mb-1">Identified Rework Tax</div>
-                      <p className="text-[10px] leading-relaxed text-slate-500 font-mono normal-case max-w-md tracking-normal">
-                        The hidden annual cost of your SMEs and engineers manually correcting, 'babysitting,' and verifying unreliable AI outputs.
-                      </p>
+                      <div className="text-white uppercase font-black tracking-tighter text-xl italic mb-2">Identified Rework Tax</div>
+                      <p className="text-[11px] leading-relaxed text-slate-400 font-mono normal-case max-w-md">ANNUAL VERIFICATION COST: The hidden cost of experts manually correcting and verifying AI outputs.</p>
                     </td>
                     <td className="p-10 text-right font-black text-white text-3xl italic">${getLiveMetrics().rework}M/yr</td>
                   </tr>
-
-                  {/* 6-Month Inaction Cost */}
                   <tr className="border-b border-slate-800 bg-red-600/5">
                     <td className="p-10">
-                      <div className="text-red-600 font-bold italic underline uppercase tracking-tighter text-xl mb-1">6-Month Inaction Cost</div>
-                      <p className="text-[10px] leading-relaxed text-red-900/60 font-mono normal-case max-w-md tracking-normal">
-                        The projected capital loss your organization will absorb over the next two quarters if current architectural fractures remain unaddressed.
-                      </p>
+                      <div className="text-red-600 font-bold italic underline uppercase tracking-tighter text-xl mb-2">6-Month Inaction Cost</div>
+                      <p className="text-[11px] leading-relaxed text-red-400/70 font-mono normal-case max-w-md">PROJECTED CAPITAL LOSS: Capital loss absorbed if current architectural fractures remain unaddressed.</p>
                     </td>
                     <td className="p-10 text-right font-black text-red-600 text-3xl italic">${getLiveMetrics().inactionCost}M</td>
                   </tr>
@@ -305,27 +254,24 @@ export default function ConsolidatedDiagnostic() {
               </table>
             </div>
 
-            <div className="bg-slate-950 p-8 border border-slate-800 space-y-4">
-                <div className="flex justify-between items-center">
-                  <div>
+            <div className="bg-slate-950 p-8 border border-slate-800 space-y-4 text-center">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="text-left">
                     <label className="text-[10px] font-mono text-white uppercase tracking-widest italic">Capital Exposure Simulation (AI Spend)</label>
-                    <p className="text-[9px] text-slate-500 font-mono uppercase mt-1 tracking-wider">
-                      // Adjust slider to simulate your current annual budget and visualize risk
-                    </p>
+                    <p className="text-[10px] text-slate-400 font-mono uppercase mt-1 italic tracking-wider">// Adjust slider to simulate your current annual budget and visualize risk</p>
                   </div>
                   <p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p>
                 </div>
                 <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
             </div>
 
-            <div className="flex flex-col md:flex-row gap-4">
-              <button onClick={handleSecureBriefing} className="flex-1 py-6 bg-red-600 text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all flex items-center justify-center gap-4">SCHEDULE_SECURE_BRIEFING <ChevronRight size={16} /></button>
-              <button onClick={generateForensicPDF} className="flex-1 py-6 border border-slate-800 text-slate-400 font-black uppercase text-[10px] flex items-center justify-center gap-4 hover:text-white transition-all"><Download size={16} /> DOWNLOAD_DIAGNOSTIC_PDF</button>
+            <div className="flex flex-col md:flex-row gap-4 pt-10">
+              <button onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review', '_blank')} className="flex-1 py-6 bg-red-600 text-white font-black uppercase tracking-widest text-xs hover:bg-white hover:text-black transition-all">SCHEDULE_SECURE_BRIEFING</button>
+              <button onClick={generateForensicPDF} className="flex-1 py-6 border border-slate-800 text-slate-400 font-black uppercase text-[10px] hover:text-white transition-all">DOWNLOAD_FORENSIC_DOSSIER</button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-      <LogicLeakTicker />
     </div>
   );
 }
