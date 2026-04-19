@@ -3,36 +3,33 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 
 export default class ForensicPDFGenerator {
-  /**
-   * Generates a multi-page PDF by capturing the 'forensic-report-container' DOM element.
-   */
   static async generate(companyName: string = "PROSPECT"): Promise<void> {
-    // Ensure we are in a browser environment
     if (typeof window === 'undefined') return;
 
     const element = document.getElementById('forensic-report-container');
 
     if (!element) {
-      console.error("BMR_ERROR: Target container 'forensic-report-container' not found in DOM.");
+      console.error("BMR_ERROR: Container not found.");
       return;
     }
 
     try {
-      // Temporarily force height to auto to ensure full capture of Page 2
+      // 1. Force the container to its full scroll height
       const originalHeight = element.style.height;
       element.style.height = 'auto';
 
-      // Capture the UI
+      // 2. Capture the full container
       // @ts-ignore
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#020617',
         logging: false,
-        windowWidth: 1200
+        windowWidth: 1200,
+        height: element.scrollHeight, // Force the canvas to be the full height
+        windowHeight: element.scrollHeight
       });
 
-      // Restore original height
       element.style.height = originalHeight;
 
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
@@ -51,10 +48,10 @@ export default class ForensicPDFGenerator {
       pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
 
-      // PAGE 2: Shift and add if height exists
-      if (heightLeft > 0) {
-        position = heightLeft - imgHeight; 
+      // PAGE 2
+      if (heightLeft > 5) { // 5mm buffer
         pdf.addPage();
+        position = -pdfHeight; // Exactly one A4 page down
         pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
       }
 
