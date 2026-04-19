@@ -6,9 +6,9 @@ interface DiagnosticResult {
   reworkTax: string;
   inactionCost: string;
   zoneScores?: {
-    hai: number; // Human-AI Alignment
-    avs: number; // Algorithmic Value Stream
-    igf: number; // Institutional Governance
+    hai: number;
+    avs: number;
+    igf: number;
   };
 }
 
@@ -21,7 +21,6 @@ export default class ForensicPDFGenerator {
     doc.setFillColor(2, 6, 23); // Deep Slate 950
     doc.rect(0, 0, 210, 297, 'F');
 
-    // Branding Update
     doc.setFont("helvetica", "bold");
     doc.setTextColor(220, 38, 38); 
     doc.setFontSize(24);
@@ -32,7 +31,6 @@ export default class ForensicPDFGenerator {
     doc.text(`ORIGIN: BMR_DIAGNOSTIC_NODE // ${email.toUpperCase()}`, 20, 42);
     doc.text(`PROTOCOL: ${result.protocol} // TIMESTAMP: ${ts} EST`, 20, 47);
 
-    // Financial Impact
     doc.setDrawColor(30, 41, 59);
     doc.setFillColor(15, 23, 42);
     doc.rect(20, 60, 170, 45, 'FD');
@@ -62,35 +60,19 @@ export default class ForensicPDFGenerator {
     let yPos = 135;
     zones.forEach(zone => {
       const isCritical = zone.score < 50;
-      const statusLabel = isCritical ? "CRITICAL" : "COMPROMISED";
-      const statusColor = isCritical ? [220, 38, 38] : [180, 83, 9];
-
       doc.setDrawColor(30, 41, 59);
       doc.line(20, yPos, 190, yPos);
       doc.setFontSize(11);
       doc.setTextColor(255, 255, 255);
       doc.text(`${zone.id} // ${zone.name}`, 20, yPos + 10);
-
-      doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+      doc.setFillColor(isCritical ? 220 : 180, isCritical ? 38 : 83, isCritical ? 38 : 9);
       doc.rect(150, yPos + 4, 40, 8, 'F');
-      doc.setTextColor(255, 255, 255);
       doc.setFontSize(7);
-      doc.text(`STATUS: ${statusLabel}`, 153, yPos + 9.5);
-
-      doc.setTextColor(100, 116, 139);
-      doc.setFontSize(9);
-      const observation = isCritical 
-        ? "High systemic drift detected. Structural breakdown in decision-making continuity." 
-        : "Operational friction detected. Evidence logs suggest moderate efficiency decay.";
-      doc.text(observation, 20, yPos + 18);
+      doc.text(`STATUS: ${isCritical ? "CRITICAL" : "COMPROMISED"}`, 153, yPos + 9.5);
       yPos += 28;
     });
 
-    doc.setFontSize(7);
-    doc.setTextColor(51, 65, 85);
-    doc.text("INTERNAL USE ONLY // BMR SOLUTIONS // SUBJECT TO COMPLIANCE", 20, 285);
-
-    // --- PAGE 2: FORENSIC TOPOLOGY MAP (EXHIBIT B) ---
+    // --- PAGE 2: EXHIBIT B (TOPOLOGY MAP) ---
     doc.addPage();
     doc.setFillColor(2, 6, 23);
     doc.rect(0, 0, 210, 297, 'F');
@@ -103,55 +85,55 @@ export default class ForensicPDFGenerator {
     doc.setTextColor(100, 116, 139);
     doc.text("INPUT-BASED SNAPSHOT // LOGIC FLOW ASSESSMENT", 20, 38);
 
-    // Node Assessment Text (Protecting IP)
+    // DRAWING THE TRIANGLE NODES MANUALLY
+    const drawNode = (x: number, y: number, w: number, h: number, label: string, status: string, score: number) => {
+      const color = score > 70 ? [34, 197, 94] : score > 35 ? [234, 179, 8] : [220, 38, 38];
+      doc.setDrawColor(color[0], color[1], color[2]);
+      doc.setFillColor(color[0], color[1], color[2], 0.1); // Faint background
+      doc.rect(x, y, w, h, 'FD');
+      doc.setFontSize(7);
+      doc.setTextColor(color[0], color[1], color[2]);
+      doc.text(`${label} // ${status}`, x + 5, y + (h / 2) + 2);
+    };
+
+    // Node 01 (Top Center)
+    drawNode(65, 60, 80, 15, "NODE 01: HUMAN ALIGNMENT", result.zoneScores?.hai! > 50 ? "STABLE" : "FRACTURE", result.zoneScores?.hai || 45);
+    
+    // Node 02 (Bottom Left)
+    drawNode(20, 80, 80, 15, "NODE 02: BUSINESS VALUE", result.zoneScores?.avs! > 50 ? "STABLE" : "FRACTURE", result.zoneScores?.avs || 30);
+    
+    // Node 03 (Bottom Right)
+    drawNode(110, 80, 80, 15, "NODE 03: SAFE EVOLUTION", result.zoneScores?.igf! > 50 ? "STABLE" : "FRACTURE", result.zoneScores?.igf || 60);
+
+    // Definitions
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
-    doc.text("FORENSIC CONDITION DEFINITIONS", 20, 60);
+    doc.text("FORENSIC CONDITION DEFINITIONS", 20, 120);
 
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
     doc.setTextColor(148, 163, 184);
-
     const definitions = [
-      "RED ZONE (REPORTED FRACTURE):",
-      "Failures in logic based on your inputs. They create systemic risk, including legal",
-      "exposure, rework tax, and reputational damage. Stabilization required.",
+      "RED ZONE (REPORTED FRACTURE): Failures in logic based on your inputs. Stabilization required.",
       "",
-      "YELLOW ZONE (PERCEIVED DRIFT):",
-      "Potential friction points identified in your current operations. Monitor these",
-      "zones closely; they may degrade into fractures without intervention.",
+      "YELLOW ZONE (PERCEIVED DRIFT): Potential friction points identified. Monitor closely.",
       "",
-      "GREEN ZONE (REPORTED STABLE):",
-      "Matches your strategic intent according to provided data. Maintain current",
-      "protocols to sustain integrity."
+      "GREEN ZONE (REPORTED STABLE): Matches strategic intent. Maintain protocols."
     ];
-    doc.text(definitions, 20, 75);
+    doc.text(definitions, 20, 135, { maxWidth: 170 });
 
-    // Posture Callout
+    // Status Summary Box
     doc.setFillColor(15, 23, 42);
-    doc.rect(20, 160, 170, 30, 'F');
+    doc.rect(20, 180, 170, 30, 'F');
     doc.setFont("helvetica", "bold");
     doc.setTextColor(255, 255, 255);
-    doc.text("REPORTED SYSTEM POSTURE:", 30, 172);
+    doc.text("REPORTED SYSTEM POSTURE:", 30, 192);
     
     const posture = result.frictionIndex > 70 ? "STABLE" : result.frictionIndex > 35 ? "WARNING" : "CRITICAL";
-    const postureColor = result.frictionIndex > 70 ? [34, 197, 94] : result.frictionIndex > 35 ? [234, 179, 8] : [220, 38, 38];
-    
-    doc.setTextColor(postureColor[0], postureColor[1], postureColor[2]);
+    const pCol = result.frictionIndex > 70 ? [34, 197, 94] : result.frictionIndex > 35 ? [234, 179, 8] : [220, 38, 38];
+    doc.setTextColor(pCol[0], pCol[1], pCol[2]);
     doc.setFontSize(16);
-    doc.text(posture, 30, 182);
+    doc.text(posture, 30, 202);
 
-    // Final Disclaimer
-    doc.setFontSize(8);
-    doc.setTextColor(71, 85, 105);
-    const disclaimer = [
-      "DISCLAIMER: This map is a point-in-time snapshot based on provided data.",
-      "It represents a reported condition and is not an independent technical validation.",
-      "Full verification requires a primary forensic review."
-    ];
-    doc.text(disclaimer, 20, 220);
-
-    // Footer
     doc.setFontSize(7);
     doc.setTextColor(51, 65, 85);
     doc.text("END_SECTION // EXHIBIT_B // BMR SOLUTIONS", 20, 285);
