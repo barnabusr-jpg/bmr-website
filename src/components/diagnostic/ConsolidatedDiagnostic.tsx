@@ -4,7 +4,8 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight } from "lucide-react";
 import ForensicLoader from "@/components/ForensicLoader";
-import ForensicResultCard from "../ForensicResultCard"; // Ensure this path is correct
+import ForensicResultCard from "../ForensicResultCard"; 
+import { supabase } from "@/lib/supabaseClient";
 
 const LOCAL_QUESTIONS = [
   { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
@@ -65,19 +66,30 @@ export default function ConsolidatedDiagnostic() {
     };
   };
 
+  const logToDatabase = async (finalMetrics: any) => {
+    try {
+      const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
+      const { data: operatorData } = await supabase.from('operators').upsert({ email: email.trim().toLowerCase(), full_name: operatorName.trim().toUpperCase(), entity_id: entityData?.id }, { onConflict: 'email' }).select().single();
+      await supabase.from('audits').insert([{ 
+        operator_id: operatorData?.id, 
+        sector, 
+        ai_spend: aiSpend, 
+        decay_pct: finalMetrics.decay, 
+        rework_tax: parseFloat(finalMetrics.rework), 
+        org_name: entityName.trim().toUpperCase(), 
+        lead_email: email.trim().toLowerCase(), 
+        raw_responses: answers, 
+        status: 'LEAD' 
+      }]);
+    } catch (e) { console.error("Database Log Failure:", e); }
+  };
+
   const triggerForensicScan = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/auth/generate-key', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ email: email.trim().toLowerCase() }) 
-      });
+      const res = await fetch('/api/auth/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim().toLowerCase() }) });
       const data = await res.json();
-      if (res.ok) { 
-        setServerChallenge(data.challenge); 
-        setStep("verify"); 
-      }
+      if (res.ok) { setServerChallenge(data.challenge); setStep("verify"); }
     } catch (err) { console.error(err); }
     setIsLoading(false);
   };
@@ -131,13 +143,7 @@ export default function ConsolidatedDiagnostic() {
             <div className="max-w-md mx-auto space-y-6">
               <div className="flex gap-4">
                 <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center text-white outline-none focus:border-red-600 font-mono" />
-                <button 
-                  type="button" 
-                  onClick={() => { if(userInputKey.trim() === serverChallenge.trim()) setStep("audit"); }} 
-                  className="bg-white text-black px-10 font-black uppercase italic"
-                >
-                  Authorize
-                </button>
+                <button type="button" onClick={() => { if(userInputKey.trim() === serverChallenge.trim()) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic">Authorize</button>
               </div>
             </div>
           </motion.div>
@@ -149,13 +155,20 @@ export default function ConsolidatedDiagnostic() {
             <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
             <div className="grid grid-cols-1 gap-4 mt-16">
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group" onClick={() => {
-                  const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
-                  setAnswers(updatedAnswers);
-                  if (currentDimension < LOCAL_QUESTIONS.length - 1) setCurrentDimension(currentDimension + 1);
-                  else { setStep("verdict"); }
-                }}>
+                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group" 
+                  onClick={async () => {
+                    const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
+                    setAnswers(updatedAnswers);
+                    if (currentDimension < LOCAL_QUESTIONS.length - 1) {
+                      setCurrentDimension(currentDimension + 1);
+                    } else {
+                      const finalMetrics = getLiveMetrics();
+                      await logToDatabase(finalMetrics); // RESTORED LEDGER CONNECTION
+                      setStep("verdict"); 
+                    }
+                  }}>
                     <span>{opt.label}</span>
+                    <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 transition-all text-red-600" />
                 </button>
               ))}
             </div>
@@ -164,7 +177,6 @@ export default function ConsolidatedDiagnostic() {
 
         {step === 'verdict' && (
           <motion.div key="verdict" className="py-10">
-            {/* INTEGRATING THE NEW v7.0 COMPONENT */}
             <ForensicResultCard 
               result={{
                 frictionIndex: getLiveMetrics().decay,
@@ -178,9 +190,7 @@ export default function ConsolidatedDiagnostic() {
             
             <div className="max-w-4xl mx-auto bg-slate-950 p-8 border border-slate-800 space-y-4 text-center mt-12">
                 <div className="flex justify-between items-center mb-4">
-                  <div className="text-left">
-                    <label className="text-[10px] font-mono text-white uppercase tracking-widest italic">Capital Exposure Simulation (AI Spend)</label>
-                  </div>
+                  <div className="text-left"><label className="text-[10px] font-mono text-white uppercase tracking-widest italic">Capital Exposure Simulation (AI Spend)</label></div>
                   <p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p>
                 </div>
                 <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
