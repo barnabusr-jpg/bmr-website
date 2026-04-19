@@ -14,13 +14,21 @@ interface DiagnosticResult {
 
 export default class ForensicPDFGenerator {
   static async generate(result: DiagnosticResult, email: string): Promise<string> {
-    const doc = new jsPDF('p', 'mm', 'a4');
+    // 1. Initialize Document with explicit dimensions
+    const doc = new jsPDF({
+      orientation: 'p',
+      unit: 'mm',
+      format: 'a4',
+      compress: true
+    });
+    
     const ts = new Date().toLocaleString('en-US', { timeZone: 'America/New_York' });
 
     // --- PAGE 1: EXECUTIVE BRIEFING ---
     doc.setFillColor(2, 6, 23); 
     doc.rect(0, 0, 210, 297, 'F');
 
+    // Header Branding
     doc.setFont("helvetica", "bold");
     doc.setTextColor(220, 38, 38); 
     doc.setFontSize(22);
@@ -31,6 +39,7 @@ export default class ForensicPDFGenerator {
     doc.text(`ORIGIN: BMR_DIAGNOSTIC_NODE // ${email.toUpperCase()}`, 20, 40);
     doc.text(`PROTOCOL: ${result.protocol} // TIMESTAMP: ${ts} EST`, 20, 45);
 
+    // Financial Data Block
     doc.setDrawColor(30, 41, 59);
     doc.setFillColor(15, 23, 42);
     doc.rect(20, 60, 170, 45, 'FD');
@@ -47,40 +56,43 @@ export default class ForensicPDFGenerator {
     doc.setFontSize(10);
     doc.text(`6-MONTH INACTION COST: $${result.inactionCost}M`, 30, 92);
 
+    // Sector Analysis
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(13);
     doc.text("SECTOR VULNERABILITY ANALYSIS", 20, 125);
     
-    // Explicitly defined zones to ensure no mapping errors
-    const z1 = { id: 'HAI', name: 'Human Alignment', score: result.zoneScores?.hai || 45 };
-    const z2 = { id: 'AVS', name: 'Business Value', score: result.zoneScores?.avs || 30 };
-    const z3 = { id: 'IGF', name: 'Safe Evolution', score: result.zoneScores?.igf || 60 };
-    const zones = [z1, z2, z3];
+    const nodeData = [
+      { id: 'HAI', name: 'Human Alignment', s: result.zoneScores?.hai || 45 },
+      { id: 'AVS', name: 'Business Value', s: result.zoneScores?.avs || 30 },
+      { id: 'IGF', name: 'Safe Evolution', s: result.zoneScores?.igf || 60 }
+    ];
 
-    let y = 135;
-    zones.forEach(z => {
-      const crit = z.score < 50;
+    let currentY = 135;
+    nodeData.forEach(node => {
+      const critical = node.s < 50;
       doc.setDrawColor(30, 41, 59);
-      doc.line(20, y, 190, y);
+      doc.line(20, currentY, 190, currentY);
       doc.setFontSize(10);
       doc.setTextColor(255, 255, 255);
-      doc.text(`${z.id} // ${z.name}`, 20, y + 8);
+      doc.text(`${node.id} // ${node.name}`, 20, currentY + 8);
       
-      doc.setFillColor(crit ? 220 : 180, crit ? 38 : 83, crit ? 38 : 9);
-      doc.rect(150, y + 3, 40, 7, 'F');
+      doc.setFillColor(critical ? 220 : 180, critical ? 38 : 83, critical ? 38 : 9);
+      doc.rect(150, currentY + 3, 40, 7, 'F');
       doc.setFontSize(7);
-      doc.text(`STATUS: ${crit ? "CRITICAL" : "COMPROMISED"}`, 153, y + 7.5);
-      y += 25;
+      doc.setTextColor(255, 255, 255);
+      doc.text(`STATUS: ${critical ? "CRITICAL" : "COMPROMISED"}`, 153, currentY + 7.5);
+      currentY += 25;
     });
 
     doc.setFontSize(7);
     doc.setTextColor(51, 65, 85);
     doc.text("INTERNAL USE ONLY // BMR SOLUTIONS // PAGE_01", 20, 285);
 
-    // --- MANDATORY PAGE BREAK ---
-    doc.addPage();
-    
     // --- PAGE 2: EXHIBIT B ---
+    // We use a forced addPage call here
+    doc.addPage('a4', 'p');
+    
+    // Reset Background for Page 2
     doc.setFillColor(2, 6, 23); 
     doc.rect(0, 0, 210, 297, 'F');
 
@@ -94,20 +106,20 @@ export default class ForensicPDFGenerator {
     doc.text("INPUT-BASED SNAPSHOT // PERCEPTION LOGIC FLOW", 20, 38);
 
     // Manual Drawing of Triad Nodes
-    const draw = (x: number, y: number, lab: string, s: number) => {
-        const red = s <= 35;
-        const yell = s > 35 && s <= 70;
-        const c = red ? [220, 38, 38] : yell ? [234, 179, 8] : [34, 197, 94];
+    const drawTopology = (x: number, y: number, label: string, score: number) => {
+        const isRed = score <= 35;
+        const isYellow = score > 35 && score <= 70;
+        const c = isRed ? [220, 38, 38] : isYellow ? [234, 179, 8] : [34, 197, 94];
         doc.setDrawColor(c[0], c[1], c[2]);
         doc.rect(x, y, 75, 12, 'S');
         doc.setFontSize(7);
         doc.setTextColor(c[0], c[1], c[2]);
-        doc.text(`${lab} // ${red ? "FRACTURE" : yell ? "DRIFT" : "STABLE"}`, x + 4, y + 7.5);
+        doc.text(`${label} // ${isRed ? "FRACTURE" : isYellow ? "DRIFT" : "STABLE"}`, x + 4, y + 7.5);
     };
 
-    draw(67.5, 60, "NODE 01: HUMAN ALIGNMENT", z1.score);
-    draw(20, 80, "NODE 02: BUSINESS VALUE", z2.score);
-    draw(115, 80, "NODE 03: SAFE EVOLUTION", z3.score);
+    drawTopology(67.5, 60, "NODE 01: HUMAN ALIGNMENT", nodeData[0].s);
+    drawTopology(20, 80, "NODE 02: BUSINESS VALUE", nodeData[1].s);
+    drawTopology(115, 80, "NODE 03: SAFE EVOLUTION", nodeData[2].s);
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(12);
@@ -116,7 +128,7 @@ export default class ForensicPDFGenerator {
     doc.setFontSize(9);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(148, 163, 184);
-    const d = [
+    const condDefinitions = [
       "RED ZONE (REPORTED FRACTURE): Failures in logic based on your inputs. They create",
       "systemic risk, including legal exposure, rework tax, and damage to your reputation.",
       "Stabilization is required to prevent capital leaks.",
@@ -127,7 +139,7 @@ export default class ForensicPDFGenerator {
       "GREEN ZONE (REPORTED STABLE): Matches strategic intent according to provided data.",
       "Maintain current protocols to sustain integrity."
     ];
-    doc.text(d, 20, 128);
+    doc.text(condDefinitions, 20, 128);
 
     doc.setFillColor(15, 23, 42);
     doc.rect(20, 190, 170, 25, 'F');
@@ -135,17 +147,18 @@ export default class ForensicPDFGenerator {
     doc.setTextColor(255, 255, 255);
     doc.text("REPORTED SYSTEM POSTURE:", 30, 201);
     
-    const post = result.frictionIndex > 70 ? "STABLE" : result.frictionIndex > 35 ? "WARNING" : "CRITICAL";
-    const pc = result.frictionIndex > 70 ? [34, 197, 94] : result.frictionIndex > 35 ? [234, 179, 8] : [220, 38, 38];
-    doc.setTextColor(pc[0], pc[1], pc[2]);
+    const finalPosture = result.frictionIndex > 70 ? "STABLE" : result.frictionIndex > 35 ? "WARNING" : "CRITICAL";
+    const postCol = result.frictionIndex > 70 ? [34, 197, 94] : result.frictionIndex > 35 ? [234, 179, 8] : [220, 38, 38];
+    doc.setTextColor(postCol[0], postCol[1], postCol[2]);
     doc.setFontSize(14);
-    doc.text(post, 30, 208);
+    doc.text(finalPosture, 30, 208);
 
     doc.setFontSize(7);
     doc.setTextColor(51, 65, 85);
     doc.text("END_SECTION // EXHIBIT_B // BMR SOLUTIONS", 20, 285);
 
-    // This is the specific method change to ensure multi-page delivery
-    return doc.output('bloburl').toString();
+    // --- FINAL EXPORT ---
+    const blob = doc.output('blob');
+    return URL.createObjectURL(blob);
   }
 }
