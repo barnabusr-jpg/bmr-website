@@ -1,13 +1,15 @@
 import { jsPDF } from 'jspdf';
+// @ts-ignore
 import html2canvas from 'html2canvas';
 
 export default class ForensicPDFGenerator {
   /**
    * Generates a multi-page PDF by capturing the 'forensic-report-container' DOM element.
-   * This method ensures the Topology Map and styling are preserved perfectly.
    */
   static async generate(companyName: string = "PROSPECT"): Promise<void> {
-    // 1. Target the master container in ForensicResultCard.tsx
+    // Ensure we are in a browser environment
+    if (typeof window === 'undefined') return;
+
     const element = document.getElementById('forensic-report-container');
 
     if (!element) {
@@ -16,45 +18,46 @@ export default class ForensicPDFGenerator {
     }
 
     try {
-      // 2. Capture the UI as a high-resolution canvas
-      // We use scale 2 for boardroom-quality sharpness
+      // Temporarily force height to auto to ensure full capture of Page 2
+      const originalHeight = element.style.height;
+      element.style.height = 'auto';
+
+      // Capture the UI
+      // @ts-ignore
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
-        backgroundColor: '#020617', // Match BMR dark slate theme
+        backgroundColor: '#020617',
         logging: false,
-        windowWidth: 1200 // Ensures the layout does not "squish" during capture
+        windowWidth: 1200
       });
 
-      // 3. Convert the capture to Image Data
+      // Restore original height
+      element.style.height = originalHeight;
+
       const imgData = canvas.toDataURL('image/jpeg', 1.0);
       
-      // 4. Initialize the PDF Document (A4 Portrait)
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      // 5. Calculate Image scaling to maintain aspect ratio
       const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
       
       let heightLeft = imgHeight;
       let position = 0;
 
-      // 6. PAGE 1: Executive Summary
-      // Adds the top portion of the "photograph" to the first page
+      // PAGE 1
       pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
       heightLeft -= pdfHeight;
 
-      // 7. PAGE 2: Forensic Topology Exhibit
-      // If the content is longer than one page, create Page 2 and shift the image up
+      // PAGE 2: Shift and add if height exists
       if (heightLeft > 0) {
         position = heightLeft - imgHeight; 
         pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
       }
 
-      // 8. Final Export
       const fileName = `${companyName.toUpperCase().replace(/\s+/g, '_')}_BMR_FORENSIC_AUDIT.pdf`;
       pdf.save(fileName);
 
