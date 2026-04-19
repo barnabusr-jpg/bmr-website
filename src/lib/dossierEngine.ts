@@ -23,7 +23,7 @@ export default class DossierEngine {
     doc.text(`REF_ID: ${refId}`, 20, 40);
     doc.text(`ORIGIN: ${lens.toUpperCase()}_NODE // TIMESTAMP: ${ts} EST`, 20, 45);
 
-    // SFI Score Box
+    // SFI Score Box (The dark logic box from the web UI)
     doc.setDrawColor(30, 41, 59);
     doc.setFillColor(15, 23, 42);
     doc.rect(20, 60, 170, 45, 'FD');
@@ -44,6 +44,11 @@ export default class DossierEngine {
     
     doc.setTextColor(185, 28, 28);
     doc.text(`6-MONTH INACTION COST: $${result.inactionCost}M`, 20, 135);
+
+    // Vertical Sidebar Accent (Red line for forensic feel)
+    doc.setDrawColor(220, 38, 38);
+    doc.setLineWidth(1.5);
+    doc.line(15, 60, 15, 150);
 
     doc.setFontSize(7);
     doc.setTextColor(51, 65, 85);
