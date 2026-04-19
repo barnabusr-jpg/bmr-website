@@ -23,10 +23,23 @@ export default function ForensicResultCard({ result, lens }: any) {
   const protocol = protocolDetails[result.protocol] || protocolDetails.STRUCTURAL_HARDENING;
 
   return (
-    <div id="forensic-report-container" className="flex flex-col gap-0 bg-black">
+    <div 
+      id="forensic-report-container" 
+      className="flex flex-col gap-0 bg-black w-full"
+      style={{ 
+        height: 'auto', 
+        minHeight: '2100px', 
+        display: 'flex', 
+        flexDirection: 'column',
+        overflow: 'visible' 
+      }}
+    >
       
       {/* PAGE 1: EXECUTIVE DIAGNOSTIC SUMMARY */}
-      <div className="border border-slate-800 bg-[#020617] overflow-hidden font-sans text-white min-h-[1050px] flex flex-col">
+      <div 
+        className="border border-slate-800 bg-[#020617] overflow-hidden font-sans text-white flex flex-col"
+        style={{ height: '1050px', minHeight: '1050px', width: '100%' }}
+      >
         {/* HEADER */}
         <div className="p-12 border-b border-slate-900 bg-slate-900/20">
           <div className="flex items-center justify-between mb-10">
@@ -94,11 +107,14 @@ export default function ForensicResultCard({ result, lens }: any) {
         </div>
       </div>
 
-      {/* PAGE BREAK: ESSENTIAL FOR PDF GENERATION */}
-      <div className="html2pdf__page-break h-0 w-full" />
+      {/* PAGE BREAK SPACE */}
+      <div className="h-0 w-full" style={{ minHeight: '1px' }} />
 
       {/* PAGE 2: FORENSIC TOPOLOGY EXHIBIT */}
-      <div className="min-h-[1050px] bg-black border border-slate-800 flex flex-col">
+      <div 
+        className="bg-black border border-slate-800 flex flex-col"
+        style={{ height: '1050px', minHeight: '1050px', width: '100%' }}
+      >
         <TopologyMap sfiScore={result.frictionIndex} />
         <div className="p-12 pt-0 flex-grow bg-black">
            <p className="text-[9px] text-slate-700 font-mono uppercase tracking-[0.2em] mt-8">Exhibit_B // Page_02</p>
