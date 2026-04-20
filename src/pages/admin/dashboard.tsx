@@ -38,9 +38,8 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    fetchForensics(); // Initial load
+    fetchForensics(); 
 
-    // Setup Realtime Channel to listen for data entry (INSERT) and status changes (UPDATE)
     const channel = supabase
       .channel('admin-ledger-sync')
       .on(
@@ -48,7 +47,7 @@ export default function AdminDashboard() {
         { event: '*', schema: 'public', table: 'audits' },
         (payload) => {
           console.log("Forensic Signal Inbound:", payload);
-          fetchForensics(); // Automatically refresh dashboard data
+          fetchForensics(); 
         }
       )
       .subscribe();
@@ -58,13 +57,12 @@ export default function AdminDashboard() {
     };
   }, [isAuthenticated, fetchForensics]);
 
-  // --- PDF GENERATOR: UPDATED BRANDING ---
+  // --- PDF GENERATOR: SOLUTIONS BRANDING ---
   const generateForensicReport = (audit: any) => {
     const doc = new jsPDF();
     const sfi = audit.sfi_score || 0;
     const org = audit.org_name || "BMR_ENTITY";
 
-    // 1. Forensic Header (Branding Purge: Advisory -> SOLUTIONS)
     doc.setFillColor(2, 6, 23); doc.rect(0, 0, 210, 50, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold"); doc.setFontSize(22);
@@ -73,13 +71,11 @@ export default function AdminDashboard() {
     doc.text(`AUDIT_ID: ${audit.id.substring(0, 8).toUpperCase()} // STATUS: PUBLISHED`, 15, 35);
     doc.text(`ENTITY: ${org.toUpperCase()} // LEDGER_VERIFIED: TRUE`, 15, 40);
 
-    // 2. The Promise Gap Narrative
     doc.setTextColor(2, 6, 23); doc.setFontSize(14); doc.setFont("helvetica", "bold");
     doc.text("01 // THE PROMISE GAP™ ANALYSIS", 15, 65);
     doc.setFont("helvetica", "normal"); doc.setFontSize(10);
     doc.text(`Your SFI of ${sfi}% indicates a major fracture between strategic intent and operational reality.`, 15, 75);
     
-    // 3. High Frequency Data Box
     doc.setFillColor(245, 245, 245); doc.rect(15, 85, 180, 45, "F");
     doc.setTextColor(220, 38, 38); doc.setFontSize(24); doc.setFont("helvetica", "bold");
     doc.text(`$${Number(audit.rework_tax).toFixed(1)}M`, 25, 110);
@@ -87,14 +83,6 @@ export default function AdminDashboard() {
     doc.text("VALIDATED ANNUAL HEMORRHAGE", 25, 120);
     doc.setFontSize(24); doc.text(`${sfi}%`, 130, 110);
     doc.setFontSize(9); doc.text("SYSTEMIC FRICTION INDEX", 130, 120);
-
-    // 4. Field Guide Layers
-    doc.setFontSize(12); doc.setFont("helvetica", "bold");
-    doc.text("02 // STABILIZATION ARCHITECTURE", 15, 145);
-    doc.setFontSize(9); doc.setFont("helvetica", "normal");
-    doc.text("- HAI (Human Alignment): Anchor adoption by ensuring transparency.", 15, 155);
-    doc.text("- BVC (Business Value): Establish the governing mechanism for mission value.", 15, 163);
-    doc.text("- SES (Safe Evolution): Implement the safeguard loop for future scale.", 15, 171);
 
     doc.save(`BMR_Forensic_Report_${org.replace(/\s/g, '_')}.pdf`);
   };
@@ -114,7 +102,6 @@ export default function AdminDashboard() {
     });
 
     if (res.ok) {
-      // Data will refresh automatically via Realtime channel
       setIsModalOpen(false);
     }
   };
