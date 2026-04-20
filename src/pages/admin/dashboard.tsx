@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { Activity, Lock, X, CheckCircle, Database, BarChart3, Fingerprint, Zap, ShieldAlert, Mail, Building2, Download } from "lucide-react";
 import jsPDF from "jspdf";
@@ -21,17 +21,54 @@ export default function AdminDashboard() {
     if (password === ADMIN_PASSWORD) setIsAuthenticated(true);
   };
 
-  // --- PDF GENERATOR: FIELD GUIDE ARCHITECTURE ---
+  // --- MEMOIZED DATA FETCH ---
+  const fetchForensics = useCallback(async () => {
+    setLoading(true);
+    const { data: auditData, error } = await supabase
+      .from('audits')
+      .select(`*, org_name, lead_email, persona_type, sfi_score, fractures, operators (*, entities (name))`)
+      .order('created_at', { ascending: false });
+
+    if (error) console.error("LEDGER_FETCH_ERROR:", error);
+    else setData(auditData || []);
+    setLoading(false);
+  }, []);
+
+  // --- REALTIME SUBSCRIPTION LOOP ---
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    fetchForensics(); // Initial load
+
+    // Setup Realtime Channel to listen for data entry (INSERT) and status changes (UPDATE)
+    const channel = supabase
+      .channel('admin-ledger-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'audits' },
+        (payload) => {
+          console.log("Forensic Signal Inbound:", payload);
+          fetchForensics(); // Automatically refresh dashboard data
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated, fetchForensics]);
+
+  // --- PDF GENERATOR: UPDATED BRANDING ---
   const generateForensicReport = (audit: any) => {
     const doc = new jsPDF();
     const sfi = audit.sfi_score || 0;
     const org = audit.org_name || "BMR_ENTITY";
 
-    // 1. Forensic Header
+    // 1. Forensic Header (Branding Purge: Advisory -> SOLUTIONS)
     doc.setFillColor(2, 6, 23); doc.rect(0, 0, 210, 50, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold"); doc.setFontSize(22);
-    doc.text("BMR ADVISORY // FORENSIC VERDICT", 15, 25);
+    doc.text("BMR SOLUTIONS // FORENSIC VERDICT", 15, 25);
     doc.setFont("courier", "normal"); doc.setFontSize(8);
     doc.text(`AUDIT_ID: ${audit.id.substring(0, 8).toUpperCase()} // STATUS: PUBLISHED`, 15, 35);
     doc.text(`ENTITY: ${org.toUpperCase()} // LEDGER_VERIFIED: TRUE`, 15, 40);
@@ -51,44 +88,16 @@ export default function AdminDashboard() {
     doc.setFontSize(24); doc.text(`${sfi}%`, 130, 110);
     doc.setFontSize(9); doc.text("SYSTEMIC FRICTION INDEX", 130, 120);
 
-    // 4. Field Guide Layers (HAI, AVS, IGF)
+    // 4. Field Guide Layers
     doc.setFontSize(12); doc.setFont("helvetica", "bold");
-    doc.text("02 // STABILIZATION ARCHITECTURE (FIELD GUIDE REF)", 15, 145);
+    doc.text("02 // STABILIZATION ARCHITECTURE", 15, 145);
     doc.setFontSize(9); doc.setFont("helvetica", "normal");
-    doc.text("- HAI (The Trust Lens): Anchor adoption by ensuring transparency and empathy.", 15, 155);
-    doc.text("- AVS (The Govern Lens): Establish the governing mechanism for mission value.", 15, 163);
-    doc.text("- IGF (The Evolve Lens): Implement the safeguard loop to enable rapid evolution.", 15, 171);
-
-    // 5. Hardening Directives
-    doc.setFontSize(12); doc.setFont("helvetica", "bold");
-    doc.text("03 // HARDENING DIRECTIVES", 15, 185);
-    let yPos = 195;
-    audit.fractures?.slice(0, 3).forEach((f: any) => {
-      doc.setFontSize(8); doc.setFont("courier", "bold"); doc.setTextColor(220, 38, 38);
-      doc.text(`[${f.id.toUpperCase()}]`, 15, yPos);
-      doc.setTextColor(2, 6, 23); doc.setFont("helvetica", "normal");
-      doc.text(f.directive, 15, yPos + 5, { maxWidth: 180 });
-      yPos += 15;
-    });
+    doc.text("- HAI (Human Alignment): Anchor adoption by ensuring transparency.", 15, 155);
+    doc.text("- BVC (Business Value): Establish the governing mechanism for mission value.", 15, 163);
+    doc.text("- SES (Safe Evolution): Implement the safeguard loop for future scale.", 15, 171);
 
     doc.save(`BMR_Forensic_Report_${org.replace(/\s/g, '_')}.pdf`);
   };
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    async function fetchForensics() {
-      setLoading(true);
-      const { data: auditData, error } = await supabase
-        .from('audits')
-        .select(`*, org_name, lead_email, persona_type, sfi_score, fractures, operators (*, entities (name))`)
-        .order('created_at', { ascending: false });
-
-      if (error) console.error("LEDGER_FETCH_ERROR:", error);
-      else setData(auditData || []);
-      setLoading(false);
-    }
-    fetchForensics();
-  }, [isAuthenticated]);
 
   const handleReleaseTriangulation = async (emails: { EXECUTIVE: string, MANAGER: string, TECHNICAL: string }) => {
     const { data: group, error: groupError } = await supabase
@@ -105,7 +114,7 @@ export default function AdminDashboard() {
     });
 
     if (res.ok) {
-      setData(prev => prev.map(a => a.id === activeAudit.id ? {...a, status: 'TRIANGULATING'} : a));
+      // Data will refresh automatically via Realtime channel
       setIsModalOpen(false);
     }
   };
@@ -184,16 +193,16 @@ export default function AdminDashboard() {
                       
                       {audit.status === 'COMPLETE' && (
                         <div className="mt-6 p-6 bg-slate-900/50 border-l-4 border-red-600 space-y-4">
-                           <div className="flex justify-between items-center">
+                            <div className="flex justify-between items-center">
                               <span className="text-[10px] font-black text-white uppercase italic tracking-widest">Forensic_Verdict_Ready</span>
                               <span className="text-2xl font-black text-red-600 italic">{audit.sfi_score}% SFI</span>
-                           </div>
-                           <button 
-                             onClick={() => generateForensicReport(audit)}
-                             className="w-full py-3 bg-white text-black font-black uppercase text-[9px] italic flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all"
-                           >
-                             <Download size={14} /> Download_Forensic_Field_Guide
-                           </button>
+                            </div>
+                            <button 
+                               onClick={() => generateForensicReport(audit)}
+                               className="w-full py-3 bg-white text-black font-black uppercase text-[9px] italic flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all"
+                            >
+                               <Download size={14} /> Download_Forensic_Field_Guide
+                            </button>
                         </div>
                       )}
                     </td>
