@@ -21,12 +21,12 @@ export default function AdminDashboard() {
     if (password === ADMIN_PASSWORD) setIsAuthenticated(true);
   };
 
-  // --- MEMOIZED DATA FETCH ---
+  // --- 1. THE DATA ENGINE (REALTIME COMPATIBLE) ---
   const fetchForensics = useCallback(async () => {
     setLoading(true);
     const { data: auditData, error } = await supabase
       .from('audits')
-      .select(`*, org_name, lead_email, persona_type, sfi_score, fractures, operators (*, entities (name))`)
+      .select(`*, org_name, lead_email, sfi_score, fractures, status, created_at, operators (*, entities (id, name))`)
       .order('created_at', { ascending: false });
 
     if (error) console.error("LEDGER_FETCH_ERROR:", error);
@@ -34,7 +34,7 @@ export default function AdminDashboard() {
     setLoading(false);
   }, []);
 
-  // --- REALTIME SUBSCRIPTION LOOP ---
+  // --- 2. REALTIME SUBSCRIPTION (THE REFRESH FIX) ---
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -57,7 +57,7 @@ export default function AdminDashboard() {
     };
   }, [isAuthenticated, fetchForensics]);
 
-  // --- PDF GENERATOR: SOLUTIONS BRANDING ---
+  // --- 3. PDF GENERATOR (SOLUTIONS BRANDING) ---
   const generateForensicReport = (audit: any) => {
     const doc = new jsPDF();
     const sfi = audit.sfi_score || 0;
@@ -87,10 +87,18 @@ export default function AdminDashboard() {
     doc.save(`BMR_Forensic_Report_${org.replace(/\s/g, '_')}.pdf`);
   };
 
+  // --- 4. HARDENED TRIANGULATION DISPATCH ---
   const handleReleaseTriangulation = async (emails: { EXECUTIVE: string, MANAGER: string, TECHNICAL: string }) => {
+    // We explicitly pull the operator's entity_id to bridge the gap
+    const entityId = activeAudit.operators?.entity_id || null;
+
     const { data: group, error: groupError } = await supabase
       .from('diagnostic_groups')
-      .insert([{ parent_audit_id: activeAudit.id, org_name: activeAudit.org_name || "BMR_PROVISION_ORG" }])
+      .insert([{ 
+        parent_audit_id: activeAudit.id, 
+        org_name: activeAudit.org_name || "BMR_PROVISION_ORG",
+        entity_id: entityId // RESTORING THE RELATIONAL LINK
+      }])
       .select().single();
 
     if (groupError) return alert(`GROUP_ERR: ${groupError.message}`);
@@ -98,22 +106,29 @@ export default function AdminDashboard() {
     const res = await fetch('/api/dispatch-directives', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ groupId: group.id, orgName: group.org_name, emails: emails, parentAuditId: activeAudit.id })
+      body: JSON.stringify({ 
+        groupId: group.id, 
+        orgName: group.org_name, 
+        emails: emails, 
+        parentAuditId: activeAudit.id,
+        entityId: entityId // PASSING TO API FOR OPERATOR CREATION
+      })
     });
 
     if (res.ok) {
       setIsModalOpen(false);
+      // Realtime listener will handle the refresh
     }
   };
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 font-sans">
         <div className="w-full max-w-md bg-slate-900 border-2 border-red-600/20 p-12 shadow-2xl">
           <Lock className="text-red-600 mx-auto mb-8" size={40} />
           <form onSubmit={handleLogin} className="space-y-6">
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="AUTHORIZATION_KEY" className="w-full bg-black border border-slate-800 p-5 text-center text-red-600 font-black tracking-widest outline-none focus:border-red-600" autoFocus />
-            <button type="submit" className="w-full bg-red-600 text-white py-5 font-black uppercase italic">Initialize_Session</button>
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="AUTHORIZATION_KEY" className="w-full bg-black border border-slate-800 p-5 text-center text-red-600 font-black tracking-widest outline-none focus:border-red-600 font-mono" autoFocus />
+            <button type="submit" className="w-full bg-red-600 text-white py-5 font-black uppercase italic tracking-widest">Initialize_Session</button>
           </form>
         </div>
       </div>
@@ -127,32 +142,34 @@ export default function AdminDashboard() {
           <Activity className="text-red-600 animate-pulse" size={20} />
           <span className="font-black italic uppercase tracking-widest text-sm">Forensic_Command_Center</span>
         </div>
-        <button onClick={() => setIsAuthenticated(false)} className="text-[10px] font-mono text-slate-500 uppercase font-black">Terminate_Session</button>
+        <button onClick={() => setIsAuthenticated(false)} className="text-[10px] font-mono text-slate-500 uppercase font-black tracking-tighter">Terminate_Session</button>
       </nav>
 
       <div className="max-w-7xl mx-auto space-y-12">
+        {/* STATS SECTION */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative overflow-hidden">
             <BarChart3 size={80} className="absolute -bottom-4 -right-4 text-red-600 opacity-5" />
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block mb-5">Cumulative_Rework_Tax</label>
+            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block mb-5 italic">Cumulative_Rework_Tax</label>
             <div className="text-6xl font-black italic text-white tracking-tighter">${data.reduce((acc, curr) => acc + (Number(curr.rework_tax) || 0), 0).toFixed(1)}<span className="text-red-600 ml-1 text-4xl">M</span></div>
           </div>
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative overflow-hidden">
             <Fingerprint size={80} className="absolute -bottom-4 -right-4 text-slate-600 opacity-5" />
-            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block mb-5">Active_Nodes</label>
+            <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest block mb-5 italic">Active_Nodes</label>
             <div className="text-6xl font-black italic text-white tracking-tighter">{data.length}</div>
           </div>
           <div className="bg-slate-900/40 border border-red-900/40 p-10 relative overflow-hidden">
             <ShieldAlert size={80} className="absolute -bottom-4 -right-4 text-red-600 opacity-10" />
-            <label className="text-[9px] font-mono text-red-600 uppercase tracking-widest block mb-5">Critical_Fractures</label>
+            <label className="text-[9px] font-mono text-red-600 uppercase tracking-widest block mb-5 italic">Critical_Fractures</label>
             <div className="text-6xl font-black italic text-white tracking-tighter">{data.reduce((acc, curr) => acc + (curr.fractures?.length || 0), 0)}</div>
           </div>
         </div>
 
+        {/* LEDGER SECTION */}
         <div className="bg-slate-950 border border-slate-900 shadow-2xl overflow-hidden">
           <div className="p-10 border-b border-slate-900 bg-slate-900/30 flex items-center gap-4 text-white">
              <Database size={20} className="text-red-600" />
-             <span className="font-black italic uppercase tracking-widest text-xs">Diagnostic_Ledger</span>
+             <span className="font-black italic uppercase tracking-widest text-xs">Diagnostic_Ledger_v7.5</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left font-sans border-collapse">
@@ -176,7 +193,7 @@ export default function AdminDashboard() {
                         <Building2 size={16} className="text-red-600" />
                         <div className="font-black text-white uppercase text-2xl italic tracking-tighter">{audit.org_name || "ANONYMOUS"}</div>
                       </div>
-                      <div className="text-[10px] text-slate-500 font-mono mb-4">{audit.lead_email}</div>
+                      <div className="text-[10px] text-slate-500 font-mono mb-4 italic uppercase">{audit.lead_email}</div>
                       
                       {audit.status === 'COMPLETE' && (
                         <div className="mt-6 p-6 bg-slate-900/50 border-l-4 border-red-600 space-y-4">
@@ -186,9 +203,9 @@ export default function AdminDashboard() {
                             </div>
                             <button 
                                onClick={() => generateForensicReport(audit)}
-                               className="w-full py-3 bg-white text-black font-black uppercase text-[9px] italic flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all"
+                               className="w-full py-3 bg-white text-black font-black uppercase text-[9px] italic flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all tracking-widest"
                             >
-                               <Download size={14} /> Download_Forensic_Field_Guide
+                               <Download size={14} /> Download_Forensic_Dossier
                             </button>
                         </div>
                       )}
@@ -203,10 +220,10 @@ export default function AdminDashboard() {
                            <CheckCircle size={14} /> Result_Published
                         </div>
                       ) : (
-                        <button onClick={() => { setActiveAudit(audit); setIsModalOpen(true); }} className="px-8 py-3.5 bg-red-600 text-white font-black uppercase text-[10px] italic hover:bg-white hover:text-red-600 transition-all">Initialize_Triangulation</button>
+                        <button onClick={() => { setActiveAudit(audit); setIsModalOpen(true); }} className="px-8 py-3.5 bg-red-600 text-white font-black uppercase text-[10px] italic hover:bg-white hover:text-red-600 transition-all tracking-widest">Initialize_Triangulation</button>
                       )}
                     </td>
-                    <td className="p-10 text-right font-black text-white italic text-3xl">${Number(audit.rework_tax).toFixed(1)}M</td>
+                    <td className="p-10 text-right font-black text-white italic text-3xl tracking-tighter">${Number(audit.rework_tax).toFixed(1)}M</td>
                   </tr>
                 ))}
               </tbody>
@@ -226,12 +243,13 @@ function TriangulationModal({ audit, onClose, onConfirm }: any) {
     <div className="fixed inset-0 bg-black/98 backdrop-blur-3xl flex items-center justify-center z-[100] p-6">
       <div className="bg-slate-900 border-2 border-red-600/30 p-16 max-w-3xl w-full shadow-2xl relative">
         <button onClick={onClose} className="absolute top-8 right-8 text-slate-600 hover:text-white transition-colors"><X size={32}/></button>
-        <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Forensic_Release</h2>
+        <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Forensic_Release_Protocol</h2>
+        <p className="text-slate-500 text-[10px] font-mono uppercase tracking-widest mb-10 italic">Target: {audit?.org_name}</p>
         <div className="space-y-6 mb-12">
           {['EXECUTIVE', 'MANAGER', 'TECHNICAL'].map(role => (
             <div key={role} className="space-y-2">
               <label className="text-red-600 uppercase font-black tracking-widest text-[10px]">Protocol_Node: {role}</label>
-              <input type="email" placeholder={`ENTER_${role}_EMAIL`} value={(emails as any)[role]} onChange={e => setEmails({ ...emails, [role]: e.target.value })} className="w-full bg-black border border-slate-800 p-5 text-white outline-none focus:border-red-600 uppercase font-bold text-sm" />
+              <input type="email" placeholder={`ENTER_${role}_EMAIL`} value={(emails as any)[role]} onChange={e => setEmails({ ...emails, [role]: e.target.value })} className="w-full bg-black border border-slate-800 p-5 text-white outline-none focus:border-red-600 uppercase font-bold text-sm font-mono" />
             </div>
           ))}
         </div>
