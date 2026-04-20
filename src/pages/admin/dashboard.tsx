@@ -21,12 +21,28 @@ export default function AdminDashboard() {
     if (password === ADMIN_PASSWORD) setIsAuthenticated(true);
   };
 
-  // --- 1. THE DATA ENGINE (REALTIME COMPATIBLE) ---
+  // --- 1. THE DATA ENGINE: RELATIONAL JOIN ARCHITECTURE ---
+  // This explicitly pulls child triangulation data alongside parent audits
   const fetchForensics = useCallback(async () => {
     setLoading(true);
     const { data: auditData, error } = await supabase
       .from('audits')
-      .select(`*, org_name, lead_email, sfi_score, fractures, status, created_at, operators (*, entities (id, name))`)
+      .select(`
+        *,
+        org_name,
+        lead_email,
+        sfi_score,
+        fractures,
+        status,
+        created_at,
+        operators (*, entities (id, name)),
+        diagnostic_groups (
+          *,
+          is_complete,
+          sfi_score,
+          operators (*)
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) console.error("LEDGER_FETCH_ERROR:", error);
@@ -57,7 +73,7 @@ export default function AdminDashboard() {
     };
   }, [isAuthenticated, fetchForensics]);
 
-  // --- 3. PDF GENERATOR (SOLUTIONS BRANDING) ---
+  // --- 3. PDF GENERATOR: SOLUTIONS BRANDING ---
   const generateForensicReport = (audit: any) => {
     const doc = new jsPDF();
     const sfi = audit.sfi_score || 0;
@@ -87,17 +103,17 @@ export default function AdminDashboard() {
     doc.save(`BMR_Forensic_Report_${org.replace(/\s/g, '_')}.pdf`);
   };
 
-  // --- 4. HARDENED TRIANGULATION DISPATCH ---
+  // --- 4. HARDENED TRIANGULATION DISPATCH (RELATIONAL ANCHOR) ---
   const handleReleaseTriangulation = async (emails: { EXECUTIVE: string, MANAGER: string, TECHNICAL: string }) => {
-    // We explicitly pull the operator's entity_id to bridge the gap
-    const entityId = activeAudit.operators?.entity_id || null;
+    // Ensuring we pull the entity_id from the operator related to this audit
+    const entityId = activeAudit.operators?.entities?.id || activeAudit.operators?.entity_id || null;
 
     const { data: group, error: groupError } = await supabase
       .from('diagnostic_groups')
       .insert([{ 
         parent_audit_id: activeAudit.id, 
         org_name: activeAudit.org_name || "BMR_PROVISION_ORG",
-        entity_id: entityId // RESTORING THE RELATIONAL LINK
+        entity_id: entityId 
       }])
       .select().single();
 
@@ -111,13 +127,13 @@ export default function AdminDashboard() {
         orgName: group.org_name, 
         emails: emails, 
         parentAuditId: activeAudit.id,
-        entityId: entityId // PASSING TO API FOR OPERATOR CREATION
+        entityId: entityId 
       })
     });
 
     if (res.ok) {
       setIsModalOpen(false);
-      // Realtime listener will handle the refresh
+      // Realtime listener triggers refresh automatically
     }
   };
 
@@ -146,7 +162,6 @@ export default function AdminDashboard() {
       </nav>
 
       <div className="max-w-7xl mx-auto space-y-12">
-        {/* STATS SECTION */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative overflow-hidden">
             <BarChart3 size={80} className="absolute -bottom-4 -right-4 text-red-600 opacity-5" />
@@ -165,7 +180,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* LEDGER SECTION */}
         <div className="bg-slate-950 border border-slate-900 shadow-2xl overflow-hidden">
           <div className="p-10 border-b border-slate-900 bg-slate-900/30 flex items-center gap-4 text-white">
              <Database size={20} className="text-red-600" />
@@ -209,6 +223,17 @@ export default function AdminDashboard() {
                             </button>
                         </div>
                       )}
+
+                      {/* TRIANGULATION DATA SUB-PANEL */}
+                      {audit.diagnostic_groups?.[0] && (
+                        <div className="mt-4 grid grid-cols-3 gap-2">
+                           {audit.diagnostic_groups[0].operators?.map((op: any, i: number) => (
+                             <div key={i} className="p-2 bg-black border border-slate-800 rounded text-[8px] font-mono uppercase">
+                               {op.status === 'completed' ? '✅' : '⏳'} Node_{i+1}
+                             </div>
+                           ))}
+                        </div>
+                      )}
                     </td>
                     <td className="p-10 text-center">
                       {audit.status === 'TRIANGULATING' ? (
@@ -240,7 +265,7 @@ export default function AdminDashboard() {
 function TriangulationModal({ audit, onClose, onConfirm }: any) {
   const [emails, setEmails] = useState({ EXECUTIVE: "", MANAGER: "", TECHNICAL: "" });
   return (
-    <div className="fixed inset-0 bg-black/98 backdrop-blur-3xl flex items-center justify-center z-[100] p-6">
+    <div className="fixed inset-0 bg-black/98 backdrop-blur-3xl flex items-center justify-center z-[100] p-6 font-sans">
       <div className="bg-slate-900 border-2 border-red-600/30 p-16 max-w-3xl w-full shadow-2xl relative">
         <button onClick={onClose} className="absolute top-8 right-8 text-slate-600 hover:text-white transition-colors"><X size={32}/></button>
         <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter mb-4">Forensic_Release_Protocol</h2>
