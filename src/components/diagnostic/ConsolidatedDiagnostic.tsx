@@ -53,50 +53,32 @@ export default function ConsolidatedDiagnostic() {
     const scaledTotal = (totalSum * 0.04 * 1.1) * multiplier;
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
     const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
-    return { 
-        decay: Math.min(decayRaw, 98), 
-        rework: reworkTax.toFixed(1),
-        inactionCost: (reworkTax * 6 * 0.5).toFixed(2) 
-    };
+    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1), inactionCost: (reworkTax * 6 * 0.5).toFixed(2) };
   };
 
   const logToDatabase = async (finalMetrics: any) => {
     try {
-      const { data: entityData } = await supabase
-        .from('entities')
-        .upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' })
-        .select().single();
+      const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
+      
+      const payload = { 
+        org_name: entityName.trim().toUpperCase(), 
+        lead_email: email.trim().toLowerCase(),
+        sector, ai_spend: aiSpend, decay_pct: finalMetrics.decay, 
+        rework_tax: parseFloat(finalMetrics.rework), raw_responses: answers, 
+        status: 'LEAD', entity_id: entityData?.id 
+      };
 
-      const { data: auditData, error: auditErr } = await supabase
-        .from('audit_responses')
-        .insert([{ 
-          org_name: entityName.trim().toUpperCase(), 
-          lead_email: email.trim().toLowerCase(),
-          sector: sector, 
-          ai_spend: parseFloat(aiSpend.toString()), 
-          decay_pct: finalMetrics.decay, 
-          rework_tax: parseFloat(finalMetrics.rework), 
-          raw_responses: answers, 
-          status: 'LEAD',
-          entity_id: entityData?.id 
-        }]).select().single();
+      const { data: auditData, error: auditErr } = await supabase.from('audit_responses').insert([payload]).select().single();
 
       if (auditErr) throw auditErr;
 
       await supabase.from('operators').upsert({ 
-          email: email.trim().toLowerCase(), 
-          full_name: operatorName.trim().toUpperCase(), 
-          entity_id: entityData?.id,
-          audit_id: auditData?.id,
-          persona_type: 'EXECUTIVE', 
-          status: 'completed',
-          raw_responses: answers 
+        email: email.trim().toLowerCase(), full_name: operatorName.trim().toUpperCase(), 
+        entity_id: entityData?.id, audit_id: auditData?.id,
+        persona_type: 'EXECUTIVE', status: 'completed', raw_responses: answers 
       }, { onConflict: 'email' });
 
-    } catch (e: any) { 
-        console.error("SYNC_ERROR:", e.message);
-        alert(`DATABASE_REJECTION: ${e.message}. Check RLS or Column Schema.`); 
-    }
+    } catch (e: any) { alert(`SYNC_ERR: ${e.message}`); }
   };
 
   const triggerForensicScan = async () => {
@@ -120,12 +102,12 @@ export default function ConsolidatedDiagnostic() {
       <AnimatePresence mode="wait">
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 text-center">
-            <h1 className="text-7xl md:text-8xl font-black uppercase italic text-white tracking-tighter leading-none">THE LOGIC <span className="text-red-600">PULSE</span></h1>
+            <h1 className="text-7xl md:text-8xl font-black uppercase italic text-white tracking-tighter">THE LOGIC <span className="text-red-600">PULSE</span></h1>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-20">
               {sectors.map((s) => (
                 <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
                   <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
-                  <div><h3 className="text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2">{s.risk}</p></div>
+                  <div><h3 className="text-xl font-black uppercase italic text-white tracking-tighter">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2">{s.risk}</p></div>
                 </button>
               ))}
             </div>
@@ -137,10 +119,10 @@ export default function ConsolidatedDiagnostic() {
             <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
             <div className="bg-slate-950 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
-                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
-                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
-                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
+                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
               </div>
               <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white text-xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all">Initialize Diagnostic Observation</button>
             </div>
@@ -149,7 +131,7 @@ export default function ConsolidatedDiagnostic() {
 
         {step === 'verify' && (
           <motion.div key="verify" className="text-center space-y-12">
-            <h2 className="text-6xl font-black uppercase italic text-white tracking-tighter leading-none">SECURE_<span className="text-red-600">VERIFICATION</span></h2>
+            <h2 className="text-6xl font-black uppercase italic text-white tracking-tighter">SECURE_<span className="text-red-600">VERIFICATION</span></h2>
             <div className="max-w-md mx-auto space-y-6">
               <div className="flex gap-4">
                 <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-black border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono tracking-[0.3em]" />
