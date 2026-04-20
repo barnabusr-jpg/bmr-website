@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight } from "lucide-react";
@@ -53,19 +54,25 @@ export default function ConsolidatedDiagnostic() {
     const scaledTotal = (totalSum * 0.04 * 1.1) * multiplier;
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
     const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
-    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1) };
+    return { 
+      decay: Math.min(decayRaw, 98), 
+      rework: reworkTax.toFixed(1),
+      inactionCost: (reworkTax * 6 * 0.5).toFixed(2) // 6 month cost calculation
+    };
   };
 
   const logToDatabase = async (finalMetrics: any) => {
     try {
       // 1. ANCHOR ENTITY
-      const { data: entityData } = await supabase
+      const { data: entityData, error: entErr } = await supabase
         .from('entities')
         .upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' })
         .select().single();
 
+      if (entErr) throw new Error(`ENTITY_SYNC_ERROR: ${entErr.message}`);
+
       // 2. ANCHOR AUDIT (Parent entry for Ledger)
-      const { data: auditData, error: auditError } = await supabase
+      const { data: auditData, error: auditErr } = await supabase
         .from('audits')
         .insert([{ 
           org_name: entityName.trim().toUpperCase(), 
@@ -78,20 +85,25 @@ export default function ConsolidatedDiagnostic() {
           entity_id: entityData?.id 
         }]).select().single();
 
-      if (auditError) throw auditError;
+      if (auditErr) throw new Error(`AUDIT_SYNC_ERROR: ${auditErr.message}`);
 
-      // 3. ANCHOR OPERATOR (Linking to both company and specific engagement)
-      await supabase.from('operators').upsert({ 
+      // 3. ANCHOR OPERATOR (Linking to both company and engagement)
+      const { error: opErr } = await supabase.from('operators').upsert({ 
           email: email.trim().toLowerCase(), 
           full_name: operatorName.trim().toUpperCase(), 
           entity_id: entityData?.id,
-          audit_id: auditData?.id, // THE CRITICAL LINK
+          audit_id: auditData?.id,
           persona_type: 'EXECUTIVE', 
           status: 'completed',
           raw_responses: answers 
       }, { onConflict: 'email' });
 
-    } catch (e) { console.error("SYNC_FRACTURE:", e); }
+      if (opErr) throw new Error(`OPERATOR_SYNC_ERROR: ${opErr.message}`);
+
+    } catch (e: any) { 
+      console.error("DATABASE_FRACTURE:", e.message);
+      alert(`CRITICAL_DATA_LOSS: ${e.message}`);
+    }
   };
 
   const triggerForensicScan = async () => {
@@ -169,7 +181,8 @@ export default function ConsolidatedDiagnostic() {
                       setCurrentDimension(currentDimension + 1);
                     } else {
                       setIsSubmitting(true);
-                      await logToDatabase(getLiveMetrics()); 
+                      const metrics = getLiveMetrics();
+                      await logToDatabase(metrics); 
                       setStep("verdict"); 
                       setIsSubmitting(false);
                     }
@@ -184,7 +197,16 @@ export default function ConsolidatedDiagnostic() {
 
         {step === 'verdict' && (
           <motion.div key="verdict" className="py-10">
-            <ForensicResultCard result={{ frictionIndex: getLiveMetrics().decay, reworkTax: getLiveMetrics().rework, status: 'OPERATIONAL_DRIFT', protocol: 'STRUCTURAL_HARDENING' }} lens={selectedLens} />
+            <ForensicResultCard 
+              result={{ 
+                frictionIndex: getLiveMetrics().decay, 
+                reworkTax: getLiveMetrics().rework, 
+                inactionCost: getLiveMetrics().inactionCost,
+                status: 'OPERATIONAL_DRIFT', 
+                protocol: 'STRUCTURAL_HARDENING' 
+              }} 
+              lens={selectedLens} 
+            />
           </motion.div>
         )}
       </AnimatePresence>
