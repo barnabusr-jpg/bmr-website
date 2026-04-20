@@ -44,6 +44,7 @@ export default function ConsolidatedDiagnostic() {
   const [isLoading, setIsLoading] = useState(false);
   const [serverChallenge, setServerChallenge] = useState("");
   const [userInputKey, setUserInputKey] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // GUARD STATE
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -155,16 +156,22 @@ export default function ConsolidatedDiagnostic() {
             <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
             <div className="grid grid-cols-1 gap-4 mt-16">
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group" 
+                <button key={i} 
+                  disabled={isSubmitting}
+                  className={`py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`} 
                   onClick={async () => {
+                    if (isSubmitting) return;
+
                     const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                     setAnswers(updatedAnswers);
                     if (currentDimension < LOCAL_QUESTIONS.length - 1) {
                       setCurrentDimension(currentDimension + 1);
                     } else {
+                      setIsSubmitting(true); // LOCK
                       const finalMetrics = getLiveMetrics();
-                      await logToDatabase(finalMetrics); // RESTORED LEDGER CONNECTION
+                      await logToDatabase(finalMetrics); 
                       setStep("verdict"); 
+                      setIsSubmitting(false); // UNLOCK
                     }
                   }}>
                     <span>{opt.label}</span>
