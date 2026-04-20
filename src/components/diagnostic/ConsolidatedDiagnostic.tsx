@@ -57,7 +57,7 @@ export default function ConsolidatedDiagnostic() {
     return { 
       decay: Math.min(decayRaw, 98), 
       rework: reworkTax.toFixed(1),
-      inactionCost: (reworkTax * 6 * 0.5).toFixed(2) // 6 month cost calculation
+      inactionCost: (reworkTax * 6 * 0.5).toFixed(2)
     };
   };
 
@@ -71,7 +71,7 @@ export default function ConsolidatedDiagnostic() {
 
       if (entErr) throw new Error(`ENTITY_SYNC_ERROR: ${entErr.message}`);
 
-      // 2. ANCHOR AUDIT (Parent entry for Ledger)
+      // 2. ANCHOR AUDIT
       const { data: auditData, error: auditErr } = await supabase
         .from('audits')
         .insert([{ 
@@ -87,12 +87,12 @@ export default function ConsolidatedDiagnostic() {
 
       if (auditErr) throw new Error(`AUDIT_SYNC_ERROR: ${auditErr.message}`);
 
-      // 3. ANCHOR OPERATOR (Linking to both company and engagement)
+      // 3. ANCHOR OPERATOR (The specific Persona Node)
       const { error: opErr } = await supabase.from('operators').upsert({ 
           email: email.trim().toLowerCase(), 
           full_name: operatorName.trim().toUpperCase(), 
           entity_id: entityData?.id,
-          audit_id: auditData?.id,
+          audit_id: auditData?.id, // THE CRITICAL LINK
           persona_type: 'EXECUTIVE', 
           status: 'completed',
           raw_responses: answers 
@@ -109,9 +109,16 @@ export default function ConsolidatedDiagnostic() {
   const triggerForensicScan = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/auth/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim().toLowerCase() }) });
+      const res = await fetch('/api/auth/generate-key', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ email: email.trim().toLowerCase() }) 
+      });
       const data = await res.json();
-      if (res.ok) { setServerChallenge(data.challenge); setStep("verify"); }
+      if (res.ok) { 
+        setServerChallenge(data.challenge); 
+        setStep("verify"); 
+      }
     } catch (err) { console.error(err); }
     setIsLoading(false);
   };
@@ -132,7 +139,10 @@ export default function ConsolidatedDiagnostic() {
               {sectors.map((s) => (
                 <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
                   <div className="text-red-600">{s.icon}</div>
-                  <div><h3 className="text-xl font-black uppercase italic text-white tracking-tighter">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p></div>
+                  <div>
+                    <h3 className="text-xl font-black uppercase italic text-white tracking-tighter">{s.label}</h3>
+                    <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p>
+                  </div>
                 </button>
               ))}
             </div>
