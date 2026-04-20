@@ -37,7 +37,6 @@ export default function AdminDashboard() {
     fetchForensics(); 
     const channel = supabase.channel('ledger-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_responses' }, () => fetchForensics())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'operators' }, () => fetchForensics())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [isAuthenticated, fetchForensics]);
@@ -59,8 +58,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-6 md:p-10 pt-32 font-sans tracking-tighter overflow-x-hidden">
-      <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 border-b border-slate-900 z-50 px-6 md:px-10 flex items-center justify-between backdrop-blur-md">
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-6 md:p-10 pt-32 font-sans tracking-tighter">
+      <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 border-b border-slate-900 z-50 px-10 flex items-center justify-between backdrop-blur-md">
         <div className="flex items-center gap-5 text-white font-black italic uppercase tracking-widest text-sm leading-none">
           <Activity className="text-red-600 animate-pulse" size={20} />
           Forensic_Command_Center <span className="text-slate-600 font-mono not-italic ml-2 text-[10px]">v7.5_STABLE</span>
@@ -139,17 +138,12 @@ export default function AdminDashboard() {
                                         <span className="text-red-600 italic tracking-widest">{role}_NODE</span>
                                         <span className="text-slate-400 font-mono tracking-widest">{op ? 'VERIFIED' : 'AWAITING'}</span>
                                       </div>
-                                      <div className="bg-black/40 p-4 border border-slate-800/50 text-[10px] font-mono text-slate-400 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-red-600">
+                                      <div className="bg-black/40 p-4 border border-slate-800/50 text-[10px] font-mono text-slate-400 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 font-mono">
                                         {op ? <pre className="whitespace-pre-wrap leading-relaxed">{`// CAPTURE_START\n` + JSON.stringify(op.raw_responses, null, 2) + `\n// END`}</pre> : <div className="py-8 text-center opacity-30 italic font-mono tracking-[0.2em]"><Terminal size={16} className="mx-auto mb-2" />SYNCING_NODE...</div>}
                                       </div>
                                     </div>
                                   );
                                 })}
-                              </div>
-                              <div className="mt-8 flex justify-end">
-                                 <button className="bg-white text-black px-10 py-4 font-black uppercase italic text-xs tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 active:scale-95 shadow-2xl">
-                                    <Download size={16} /> DOWNLOAD_DOSSIER
-                                 </button>
                               </div>
                             </td>
                           </motion.tr>
