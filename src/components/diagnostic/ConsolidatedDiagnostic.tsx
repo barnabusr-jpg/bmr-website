@@ -60,15 +60,13 @@ export default function ConsolidatedDiagnostic() {
     try {
       const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
       
-      const payload = { 
+      const { data: auditData, error: auditErr } = await supabase.from('audit_responses').insert([{ 
         org_name: entityName.trim().toUpperCase(), 
         lead_email: email.trim().toLowerCase(),
         sector, ai_spend: aiSpend, decay_pct: finalMetrics.decay, 
         rework_tax: parseFloat(finalMetrics.rework), raw_responses: answers, 
         status: 'LEAD', entity_id: entityData?.id 
-      };
-
-      const { data: auditData, error: auditErr } = await supabase.from('audit_responses').insert([payload]).select().single();
+      }]).select().single();
 
       if (auditErr) throw auditErr;
 
@@ -78,7 +76,7 @@ export default function ConsolidatedDiagnostic() {
         persona_type: 'EXECUTIVE', status: 'completed', raw_responses: answers 
       }, { onConflict: 'email' });
 
-    } catch (e: any) { alert(`SYNC_ERR: ${e.message}`); }
+    } catch (e: any) { console.error("SYNC_ERROR:", e.message); alert(`SYNC_ERR: ${e.message}`); }
   };
 
   const triggerForensicScan = async () => {
@@ -95,10 +93,7 @@ export default function ConsolidatedDiagnostic() {
 
   return (
     <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] font-sans">
-      <AnimatePresence mode="wait">
-        {isLoading && <ForensicLoader key="loader" onComplete={() => {}} />}
-      </AnimatePresence>
-
+      <AnimatePresence mode="wait">{isLoading && <ForensicLoader key="loader" onComplete={() => {}} />}</AnimatePresence>
       <AnimatePresence mode="wait">
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 text-center">
@@ -113,34 +108,29 @@ export default function ConsolidatedDiagnostic() {
             </div>
           </motion.div>
         )}
-
         {step === 'intake' && (
           <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
+            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
             <div className="bg-slate-950 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
-                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
-                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
-                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
+                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
+                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
+                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
               </div>
-              <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white text-xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all">Initialize Diagnostic Observation</button>
+              <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white text-xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all shadow-2xl">Initialize Diagnostic Observation</button>
             </div>
           </motion.div>
         )}
-
         {step === 'verify' && (
           <motion.div key="verify" className="text-center space-y-12">
             <h2 className="text-6xl font-black uppercase italic text-white tracking-tighter">SECURE_<span className="text-red-600">VERIFICATION</span></h2>
-            <div className="max-w-md mx-auto space-y-6">
-              <div className="flex gap-4">
-                <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-black border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono tracking-[0.3em]" />
-                <button type="button" onClick={() => { if(userInputKey.trim() === serverChallenge.trim()) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic hover:bg-red-600 hover:text-white transition-all">Authorize</button>
-              </div>
+            <div className="max-w-md mx-auto space-y-6 flex gap-4">
+              <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-black border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono tracking-[0.3em]" />
+              <button type="button" onClick={() => { if(userInputKey.trim() === serverChallenge.trim()) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic hover:bg-red-600 hover:text-white transition-all">Authorize</button>
             </div>
           </motion.div>
         )}
-
         {step === 'audit' && (
           <motion.div key="audit" className="space-y-12 text-left max-w-4xl mx-auto">
             <div className="flex items-center gap-4 text-red-600 font-black"><Activity size={16} className="animate-pulse" /><span className="uppercase tracking-[0.4em] text-[10px]">PULSE_SEGMENT_0{currentDimension + 1}</span></div>
@@ -152,14 +142,8 @@ export default function ConsolidatedDiagnostic() {
                     if (isSubmitting) return;
                     const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                     setAnswers(updatedAnswers);
-                    if (currentDimension < LOCAL_QUESTIONS.length - 1) {
-                      setCurrentDimension(currentDimension + 1);
-                    } else {
-                      setIsSubmitting(true);
-                      await logToDatabase(getLiveMetrics()); 
-                      setStep("verdict"); 
-                      setIsSubmitting(false);
-                    }
+                    if (currentDimension < LOCAL_QUESTIONS.length - 1) { setCurrentDimension(currentDimension + 1); } 
+                    else { setIsSubmitting(true); await logToDatabase(getLiveMetrics()); setStep("verdict"); setIsSubmitting(false); }
                   }}>
                     <span>{opt.label}</span>
                     <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 text-red-600 transition-all" />
@@ -168,7 +152,6 @@ export default function ConsolidatedDiagnostic() {
             </div>
           </motion.div>
         )}
-
         {step === 'verdict' && (
           <motion.div key="verdict" className="py-10">
             <ForensicResultCard result={{ frictionIndex: getLiveMetrics().decay, reworkTax: getLiveMetrics().rework, inactionCost: getLiveMetrics().inactionCost, status: 'OPERATIONAL_DRIFT', protocol: 'STRUCTURAL_HARDENING' }} lens={selectedLens} />
