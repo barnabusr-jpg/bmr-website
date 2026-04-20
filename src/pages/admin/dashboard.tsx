@@ -2,11 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Activity, Lock, CheckCircle, Database, BarChart3, 
-  Fingerprint, Zap, ShieldAlert, Building2, Download, 
-  ChevronDown, ChevronUp, Terminal, Key
-} from "lucide-react";
+import { Activity, Lock, CheckCircle, Database, BarChart3, Fingerprint, Zap, ShieldAlert, Building2, Download, ChevronDown, ChevronUp, Terminal, Key } from "lucide-react";
 
 export default function AdminDashboard() {
   const [data, setData] = useState<any[]>([]);
@@ -44,26 +40,19 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-        <motion.form 
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-          onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} 
-          className="bg-slate-900 border-2 border-red-600/20 p-12 shadow-2xl text-center max-w-md w-full"
-        >
+        <motion.form initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} className="bg-slate-900 border-2 border-red-600/20 p-12 shadow-2xl text-center max-w-md w-full">
           <Key className="text-red-600 mx-auto mb-8" size={40} />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="AUTHORIZATION_KEY" className="w-full bg-black border border-slate-800 p-5 text-center text-red-600 font-black outline-none font-mono tracking-widest focus:border-red-600 transition-all" autoFocus />
-          <button type="submit" className="w-full bg-red-600 text-white py-5 font-black uppercase italic mt-6 hover:bg-white hover:text-red-600 transition-all tracking-[0.2em]">Initialize_Command</button>
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="AUTHORIZATION_KEY" className="w-full bg-black border border-slate-800 p-5 text-center text-red-600 font-black outline-none font-mono tracking-widest focus:border-red-600" autoFocus />
+          <button type="submit" className="w-full bg-red-600 text-white py-5 font-black uppercase italic mt-6 tracking-widest hover:bg-white hover:text-red-600 transition-all">Initialize_Command</button>
         </motion.form>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-6 md:p-10 pt-32 font-sans tracking-tighter">
-      <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 border-b border-slate-900 z-50 px-10 flex items-center justify-between backdrop-blur-md">
-        <div className="flex items-center gap-5 text-white font-black italic uppercase tracking-widest text-sm leading-none">
-          <Activity className="text-red-600 animate-pulse" size={20} />
-          Forensic_Command_Center <span className="text-slate-600 font-mono not-italic ml-2 text-[10px]">v7.5_STABLE</span>
-        </div>
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-6 md:p-10 pt-32 font-sans tracking-tighter overflow-x-hidden">
+      <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 border-b border-slate-900 z-50 px-6 md:px-10 flex items-center justify-between backdrop-blur-md">
+        <div className="flex items-center gap-5 text-white font-black italic uppercase tracking-widest text-sm leading-none"><Activity className="text-red-600 animate-pulse" size={20} />Forensic_Command_Center <span className="text-slate-600 font-mono not-italic ml-2 text-[10px]">v7.5_STABLE</span></div>
         <button onClick={() => setIsAuthenticated(false)} className="text-[10px] font-mono text-slate-500 uppercase hover:text-red-600 transition-colors tracking-widest">Terminate_Session</button>
       </nav>
 
@@ -77,7 +66,7 @@ export default function AdminDashboard() {
             <div key={i} className="bg-slate-900/40 border border-slate-800 p-8 relative group hover:border-red-600 transition-all">
               <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-100 transition-opacity">{stat.icon}</div>
               <label className="text-[9px] font-mono text-slate-500 uppercase block mb-4 italic tracking-widest">{stat.label}</label>
-              <div className="text-5xl font-black italic text-white leading-none tracking-tighter">{stat.val}</div>
+              <div className="text-5xl font-black italic text-white leading-none">{stat.val}</div>
             </div>
           ))}
         </div>
@@ -94,7 +83,7 @@ export default function AdminDashboard() {
               </thead>
               <tbody className="divide-y divide-slate-900">
                 {data.length === 0 && !loading && (
-                  <tr><td colSpan={3} className="p-20 text-center text-slate-700 font-mono text-xs uppercase italic tracking-[0.3em]">No active diagnostic signals detected in ledger.</td></tr>
+                  <tr><td colSpan={3} className="p-20 text-center text-slate-700 font-mono text-xs uppercase italic tracking-[0.3em]">No active diagnostic signals detected.</td></tr>
                 )}
                 {data.map((audit) => {
                   const ops = audit.operators || [];
@@ -105,25 +94,10 @@ export default function AdminDashboard() {
                     <React.Fragment key={audit.id}>
                       <tr onClick={() => setExpandedId(isExpanded ? null : audit.id)} className={`cursor-pointer transition-all ${isExpanded ? 'bg-red-600/[0.06]' : 'hover:bg-white/[0.03]'}`}>
                         <td className="p-8">
-                          <div className="flex items-center gap-4 leading-tight">
-                            <Building2 size={24} className={isFinished ? 'text-green-500' : 'text-red-600'} />
-                            <div>
-                              <div className="font-black text-white uppercase text-2xl italic tracking-tighter">{audit.org_name || "LEAD_INTAKE"}</div>
-                              <div className="text-[10px] text-slate-500 font-mono mt-1 uppercase italic tracking-widest">{audit.lead_email}</div>
-                            </div>
-                          </div>
+                          <div className="flex items-center gap-4 leading-tight"><Building2 size={24} className={isFinished ? 'text-green-500' : 'text-red-600'} /><div><div className="font-black text-white uppercase text-2xl italic tracking-tighter">{audit.org_name || "LEAD_INTAKE"}</div><div className="text-[10px] text-slate-500 font-mono mt-1 uppercase italic tracking-widest">{audit.lead_email}</div></div></div>
                         </td>
-                        <td className="p-8 text-center">
-                          <div className={`${isFinished ? 'text-green-500' : 'text-yellow-500 animate-pulse'} text-[10px] font-black uppercase italic flex items-center justify-center gap-2 tracking-[0.15em]`}>
-                            {isFinished ? <CheckCircle size={14} /> : <Zap size={14} />} {isFinished ? 'Result_Published' : 'Active_Synthesis'}
-                          </div>
-                        </td>
-                        <td className="p-8 text-right font-black text-white italic text-4xl tracking-tighter leading-none">
-                          <div className="flex justify-end items-center gap-4">
-                            ${Number(audit.rework_tax || 0).toFixed(1)}M
-                            {isExpanded ? <ChevronUp size={20} className="text-red-600" /> : <ChevronDown size={20} className="text-slate-800" />}
-                          </div>
-                        </td>
+                        <td className="p-8 text-center"><div className={`${isFinished ? 'text-green-500' : 'text-yellow-500 animate-pulse'} text-[10px] font-black uppercase italic flex items-center justify-center gap-2 tracking-[0.15em]`}>{isFinished ? <CheckCircle size={14} /> : <Zap size={14} />} {isFinished ? 'Result_Published' : 'Active_Synthesis'}</div></td>
+                        <td className="p-8 text-right font-black text-white italic text-4xl tracking-tighter leading-none"><div className="flex justify-end items-center gap-4">${Number(audit.rework_tax || 0).toFixed(1)}M{isExpanded ? <ChevronUp size={20} className="text-red-600" /> : <ChevronDown size={20} className="text-slate-800" />}</div></td>
                       </tr>
                       <AnimatePresence>
                         {isExpanded && (
@@ -134,12 +108,9 @@ export default function AdminDashboard() {
                                   const op = ops.find((o: any) => o.persona_type === role || o.role === role);
                                   return (
                                     <div key={role} className="bg-slate-900 border border-slate-800 p-6 rounded-sm relative group hover:border-red-600/30 transition-all">
-                                      <div className="flex justify-between items-start mb-6 font-black uppercase text-[10px]">
-                                        <span className="text-red-600 italic tracking-widest">{role}_NODE</span>
-                                        <span className="text-slate-400 font-mono tracking-widest">{op ? 'VERIFIED' : 'AWAITING'}</span>
-                                      </div>
-                                      <div className="bg-black/40 p-4 border border-slate-800/50 text-[10px] font-mono text-slate-400 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-red-600 font-mono">
-                                        {op ? <pre className="whitespace-pre-wrap leading-relaxed">{`// CAPTURE_START\n` + JSON.stringify(op.raw_responses, null, 2) + `\n// END`}</pre> : <div className="py-8 text-center opacity-30 italic font-mono tracking-[0.2em]"><Terminal size={16} className="mx-auto mb-2" />SYNCING_NODE...</div>}
+                                      <div className="flex justify-between items-start mb-6 font-black uppercase text-[10px]"><span className="text-red-600 italic tracking-widest">{role}_NODE</span><span className="text-slate-400 font-mono tracking-widest">{op ? 'VERIFIED' : 'AWAITING'}</span></div>
+                                      <div className="bg-black/40 p-4 border border-slate-800/50 text-[10px] font-mono text-slate-400 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-red-600">
+                                        {op ? <pre className="whitespace-pre-wrap leading-relaxed font-mono">{`// CAPTURE_START\n` + JSON.stringify(op.raw_responses, null, 2) + `\n// END`}</pre> : <div className="py-8 text-center opacity-30 italic font-mono tracking-[0.2em]"><Terminal size={16} className="mx-auto mb-2" />SYNCING_NODE...</div>}
                                       </div>
                                     </div>
                                   );
