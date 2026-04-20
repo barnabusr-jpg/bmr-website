@@ -56,14 +56,22 @@ export default function ConsolidatedDiagnostic() {
     const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
     const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
-    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1), inactionCost: (reworkTax * 0.5 * 1.12).toFixed(2) };
+    return { 
+        decay: Math.min(decayRaw, 98), 
+        rework: reworkTax.toFixed(1), 
+        inactionCost: (reworkTax * 6).toFixed(1) 
+    };
   };
 
   const logToDatabase = async (finalMetrics: any) => {
     try {
-      const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
+      // 1. Ensure Entity is created/updated
+      const { data: entityData } = await supabase
+        .from('entities')
+        .upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' })
+        .select().single();
 
-      // THE PARENT WRITE: This makes the entry visible on the Dashboard
+      // 2. Create the AUDIT Parent (This makes it appear in the Dashboard ledger)
       const { data: auditData, error: auditError } = await supabase
         .from('audits')
         .insert([{ 
@@ -79,7 +87,7 @@ export default function ConsolidatedDiagnostic() {
 
       if (auditError) throw auditError;
 
-      // THE CHILD WRITE: Linking the operator to the Entity
+      // 3. Create/Update the OPERATOR and link to the Entity
       await supabase.from('operators').upsert({ 
           email: email.trim().toLowerCase(), 
           full_name: operatorName.trim().toUpperCase(), 
@@ -89,7 +97,9 @@ export default function ConsolidatedDiagnostic() {
           raw_responses: answers 
       }, { onConflict: 'email' });
 
-    } catch (e) { console.error("DATABASE_SYNC_FAILURE:", e); }
+    } catch (e) { 
+        console.error("CRITICAL_INTAKE_FRACTURE:", e); 
+    }
   };
 
   const triggerForensicScan = async () => {
@@ -113,7 +123,7 @@ export default function ConsolidatedDiagnostic() {
       <AnimatePresence mode="wait">
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
-            <h1 className="text-7xl md:text-8xl font-black uppercase italic text-white text-center leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
+            <h1 className="text-7xl md:text-8xl font-black uppercase italic text-white text-center leading-none tracking-tighter">THE LOGIC <span className="text-red-600">PULSE</span></h1>
             <div className="flex justify-center gap-4">
                 {["EXECUTIVE", "MANAGER", "TECHNICAL"].map((lens) => (
                     <button key={lens} onClick={() => setSelectedLens(lens)} className={`px-6 py-2 border-2 font-black italic text-xs tracking-[0.2em] transition-all ${selectedLens === lens ? 'bg-red-600 border-red-600 text-white' : 'border-slate-800 text-slate-500'}`}>{lens}_NODE</button>
@@ -133,21 +143,21 @@ export default function ConsolidatedDiagnostic() {
         {step === 'intake' && (
           <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
             <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6 shadow-2xl">
+            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
                 <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
                 <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
                 <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
               </div>
-              <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white text-xl tracking-[0.2em]">Initialize Diagnostic Observation</button>
+              <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white text-xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all">Initialize Diagnostic Observation</button>
             </div>
           </motion.div>
         )}
 
         {step === 'verify' && (
           <motion.div key="verify" className="text-center space-y-12">
-            <h2 className="text-6xl font-black uppercase italic text-white">SECURE_<span className="text-red-600">VERIFICATION</span></h2>
+            <h2 className="text-6xl font-black uppercase italic text-white tracking-tighter">SECURE_<span className="text-red-600">VERIFICATION</span></h2>
             <div className="max-w-md mx-auto space-y-6">
               <div className="flex gap-4">
                 <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono" />
@@ -178,7 +188,7 @@ export default function ConsolidatedDiagnostic() {
                     }
                   }}>
                     <span>{opt.label}</span>
-                    <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 text-red-600" />
+                    <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 text-red-600 transition-all" />
                 </button>
               ))}
             </div>
