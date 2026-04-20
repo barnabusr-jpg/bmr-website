@@ -53,30 +53,50 @@ export default function ConsolidatedDiagnostic() {
     const scaledTotal = (totalSum * 0.04 * 1.1) * multiplier;
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
     const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
-    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1), inactionCost: (reworkTax * 6 * 0.5).toFixed(2) };
+    return { 
+        decay: Math.min(decayRaw, 98), 
+        rework: reworkTax.toFixed(1),
+        inactionCost: (reworkTax * 6 * 0.5).toFixed(2) 
+    };
   };
 
   const logToDatabase = async (finalMetrics: any) => {
     try {
-      const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
-      
-      const { data: auditData, error: auditErr } = await supabase.from('audit_responses').insert([{ 
-        org_name: entityName.trim().toUpperCase(), 
-        lead_email: email.trim().toLowerCase(),
-        sector, ai_spend: aiSpend, decay_pct: finalMetrics.decay, 
-        rework_tax: parseFloat(finalMetrics.rework), raw_responses: answers, 
-        status: 'LEAD', entity_id: entityData?.id 
-      }]).select().single();
+      const { data: entityData } = await supabase
+        .from('entities')
+        .upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' })
+        .select().single();
+
+      const { data: auditData, error: auditErr } = await supabase
+        .from('audit_responses')
+        .insert([{ 
+          org_name: entityName.trim().toUpperCase(), 
+          lead_email: email.trim().toLowerCase(),
+          sector: sector, 
+          ai_spend: parseFloat(aiSpend.toString()), 
+          decay_pct: finalMetrics.decay, 
+          rework_tax: parseFloat(finalMetrics.rework), 
+          raw_responses: answers, 
+          status: 'LEAD',
+          entity_id: entityData?.id 
+        }]).select().single();
 
       if (auditErr) throw auditErr;
 
       await supabase.from('operators').upsert({ 
-        email: email.trim().toLowerCase(), full_name: operatorName.trim().toUpperCase(), 
-        entity_id: entityData?.id, audit_id: auditData?.id,
-        persona_type: 'EXECUTIVE', status: 'completed', raw_responses: answers 
+          email: email.trim().toLowerCase(), 
+          full_name: operatorName.trim().toUpperCase(), 
+          entity_id: entityData?.id,
+          audit_id: auditData?.id,
+          persona_type: 'EXECUTIVE', 
+          status: 'completed',
+          raw_responses: answers 
       }, { onConflict: 'email' });
 
-    } catch (e: any) { alert(`SYNC_ERR: ${e.message}`); }
+    } catch (e: any) { 
+        console.error("SYNC_ERROR:", e.message);
+        alert(`DATABASE_REJECTION: ${e.message}. Check RLS or Column Schema.`); 
+    }
   };
 
   const triggerForensicScan = async () => {
@@ -114,7 +134,7 @@ export default function ConsolidatedDiagnostic() {
 
         {step === 'intake' && (
           <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
+            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
             <div className="bg-slate-950 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
               <div className="grid grid-cols-2 gap-6">
                 <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
@@ -160,7 +180,7 @@ export default function ConsolidatedDiagnostic() {
                     }
                   }}>
                     <span>{opt.label}</span>
-                    <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 text-red-600 transition-all transform translate-x-[-10px] group-hover:translate-x-0" />
+                    <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 text-red-600 transition-all" />
                 </button>
               ))}
             </div>
