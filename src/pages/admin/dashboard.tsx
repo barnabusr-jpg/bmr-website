@@ -17,13 +17,28 @@ export default function AdminDashboard() {
 
   const fetchForensics = useCallback(async () => {
     setLoading(true);
-    const { data: auditData, error } = await supabase
-      .from('audits')
-      .select(`*, operators (role, status, raw_responses, persona_type)`)
-      .order('created_at', { ascending: false });
+    try {
+      // FIXED: Query operators DIRECTLY via the audit_id relation
+      const { data: auditData, error } = await supabase
+        .from('audits')
+        .select(`
+          *,
+          operators (
+            role,
+            status,
+            raw_responses,
+            persona_type
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-    if (!error) setData(auditData || []);
-    setLoading(false);
+      if (error) throw error;
+      setData(auditData || []);
+    } catch (err) {
+      console.error("DASHBOARD_FETCH_ERROR:", err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -53,12 +68,13 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-6 md:p-10 pt-32 font-sans tracking-tighter">
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-6 md:p-10 pt-32 font-sans tracking-tighter overflow-x-hidden">
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 border-b border-slate-900 z-50 px-10 flex items-center justify-between backdrop-blur-md">
         <div className="flex items-center gap-5 text-white font-black italic uppercase tracking-widest text-sm">
-          <Activity className="text-red-600 animate-pulse" size={20} /> Forensic_Command_Center <span className="text-slate-600 font-mono not-italic ml-2 text-[10px]">v7.5_STABLE</span>
+          <Activity className="text-red-600 animate-pulse" size={20} />
+          Forensic_Command_Center <span className="text-slate-600 font-mono not-italic ml-2 text-[10px]">v7.5_STABLE</span>
         </div>
-        <button onClick={() => setIsAuthenticated(false)} className="text-[10px] font-mono text-slate-500 uppercase">Terminate_Session</button>
+        <button onClick={() => setIsAuthenticated(false)} className="text-[10px] font-mono text-slate-500 uppercase hover:text-red-600 transition-colors">Terminate_Session</button>
       </nav>
 
       <div className="max-w-7xl mx-auto space-y-10">
@@ -69,7 +85,7 @@ export default function AdminDashboard() {
             { label: "Critical_Fractures", val: data?.reduce((a, c) => a + (c.fractures?.length || 0), 0), icon: <ShieldAlert className="text-red-600" /> }
           ].map((stat, i) => (
             <div key={i} className="bg-slate-900/40 border border-slate-800 p-8 relative group hover:border-red-600/50 transition-all">
-              <div className="absolute top-4 right-4 opacity-20">{stat.icon}</div>
+              <div className="absolute top-4 right-4 opacity-20 group-hover:opacity-100 transition-opacity">{stat.icon}</div>
               <label className="text-[9px] font-mono text-slate-500 uppercase block mb-4 italic tracking-widest">{stat.label}</label>
               <div className="text-5xl font-black italic text-white leading-none">{stat.val}</div>
             </div>
@@ -86,6 +102,9 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-900">
+              {data?.length === 0 && (
+                <tr><td colSpan={3} className="p-20 text-center text-slate-700 font-mono text-xs uppercase italic">No active diagnostic signals detected.</td></tr>
+              )}
               {data?.map((audit) => {
                 const operators = audit?.operators || [];
                 const isFinished = operators.filter((op: any) => op.status === 'completed').length >= 1; 
@@ -104,7 +123,7 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="p-8 text-center uppercase italic font-black text-[10px] tracking-widest">
-                        {isFinished ? <span className="text-green-500">Result_Published</span> : <span className="text-yellow-500 animate-pulse">Active_Synthesis</span>}
+                        {isFinished ? <span className="text-green-500 flex items-center justify-center gap-2"><CheckCircle size={14}/> Result_Published</span> : <span className="text-yellow-500 animate-pulse flex items-center justify-center gap-2"><Zap size={14}/> Active_Synthesis</span>}
                       </td>
                       <td className="p-8 text-right font-black text-white italic text-4xl tracking-tighter">
                         <div className="flex justify-end items-center gap-4">
@@ -127,7 +146,7 @@ export default function AdminDashboard() {
                                       <span className="text-slate-400 font-mono">{op ? 'VERIFIED' : 'AWAITING'}</span>
                                     </div>
                                     <div className="bg-black/40 p-4 border border-slate-800/50 text-[10px] font-mono text-slate-400 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-red-600">
-                                      {op ? <pre className="whitespace-pre-wrap">{`// CAPTURE_START\n` + JSON.stringify(op.raw_responses, null, 2) + `\n// END`}</pre> : <div className="py-8 text-center opacity-30"><Terminal size={16} className="mx-auto mb-2" />SYNCING_NODE...</div>}
+                                      {op ? <pre className="whitespace-pre-wrap leading-relaxed">{`// CAPTURE_START\n` + JSON.stringify(op.raw_responses, null, 2) + `\n// END`}</pre> : <div className="py-8 text-center opacity-30"><Terminal size={16} className="mx-auto mb-2" />SYNCING_NODE...</div>}
                                     </div>
                                   </div>
                                 );
