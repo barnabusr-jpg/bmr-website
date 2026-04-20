@@ -1,167 +1,149 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight } from "lucide-react";
-import ForensicLoader from "@/components/ForensicLoader";
-import ForensicResultCard from "../ForensicResultCard"; 
+import React, { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { motion, AnimatePresence } from "framer-motion";
+import { Activity, Key, BarChart3, Fingerprint, ShieldAlert, Building2, ChevronDown, ChevronUp, Terminal, CheckCircle, Zap } from "lucide-react";
 
-const LOCAL_QUESTIONS = [
-  { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
-  { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "RT_03", text: "AI roles and responsibilities are clearly defined across teams.", options: [{ label: "Undefined", weight: 10 }, { label: "Informal roles", weight: 6 }, { label: "Dedicated AI team", weight: 4 }, { label: "Cross-functional matrix", weight: 2 }] },
-  { id: "DG_01", text: "Our AI systems directly contribute to measurable business ROI.", options: [{ label: "Not tracked", weight: 10 }, { label: "Anecdotal evidence", weight: 6 }, { label: "Specific KPIs", weight: 4 }, { label: "Direct impact", weight: 2 }] },
-  { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
-  { id: "DG_03", text: "We have a dedicated budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
-  { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Trust", weight: 2 }] },
-  { id: "ED_01", text: "Our data infrastructure can handle real-time AI processing.", options: [{ label: "Legacy", weight: 10 }, { label: "Hybrid", weight: 6 }, { label: "Cloud-native", weight: 4 }, { label: "Edge", weight: 2 }] },
-  { id: "ED_02", text: "We leverage proprietary datasets to train specialized models.", options: [{ label: "Public only", weight: 10 }, { label: "Minimal", weight: 6 }, { label: "Significant", weight: 4 }, { label: "Proprietary", weight: 2 }] },
-  { id: "ED_03", text: "API and model versioning are strictly controlled.", options: [{ label: "Manual", weight: 10 }, { label: "Basic", weight: 6 }, { label: "Automated", weight: 4 }, { label: "MLOps", weight: 2 }] },
-  { id: "ED_04", text: "Computing resources (GPU/Cloud) are managed efficiently.", options: [{ label: "High waste", weight: 10 }, { label: "Partial", weight: 6 }, { label: "Managed", weight: 4 }, { label: "Hyper", weight: 2 }] }
-];
+export default function AdminDashboard() {
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-const sectors = [
-  { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
-  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
-  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
-  { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
-];
-
-export default function ConsolidatedDiagnostic() {
-  const [mounted, setMounted] = useState(false);
-  const [step, setStep] = useState("triage");
-  const [sector, setSector] = useState("finance");
-  const [selectedLens, setSelectedLens] = useState("EXECUTIVE"); 
-  const [aiSpend, setAiSpend] = useState(1.2);
-  const [operatorName, setOperatorName] = useState("");
-  const [entityName, setEntityName] = useState("");
-  const [email, setEmail] = useState("");
-  const [confirmEmail, setConfirmEmail] = useState("");
-  const [currentDimension, setCurrentDimension] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [serverChallenge, setServerChallenge] = useState("");
-  const [userInputKey, setUserInputKey] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => { setMounted(true); }, []);
-
-  const getLiveMetrics = () => {
-    const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
-    const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
-    const scaledTotal = (totalSum * 0.04 * 1.1) * multiplier;
-    const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
-    const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
-    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1), inactionCost: (reworkTax * 6 * 0.5).toFixed(2) };
-  };
-
-  const logToDatabase = async (finalMetrics: any) => {
+  const fetchLedger = useCallback(async () => {
+    setLoading(true);
     try {
-      const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
+      // 1. Fetch Audit Responses (The main signal)
+      const { data: audits, error: auditError } = await supabase
+        .from('audit_responses')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (auditError) throw auditError;
+
+      // 2. Fetch Operators separately to bypass join-locking
+      const { data: allOperators } = await supabase.from('operators').select('*');
+
+      // 3. Enrich in memory for UI stability
+      const enriched = (audits || []).map(audit => ({
+        ...audit,
+        operators: (allOperators || []).filter(op => op.audit_id === audit.id)
+      }));
+
+      setData(enriched);
+    } catch (err) {
+      console.error("COMMAND_CENTER_SYNC_ERROR:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    fetchLedger(); 
+    
+    const channel = supabase.channel('ledger-pulse')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_responses' }, () => fetchLedger())
+      .subscribe();
       
-      const { data: auditData, error: auditErr } = await supabase.from('audit_responses').insert([{ 
-        org_name: entityName.trim().toUpperCase(), 
-        lead_email: email.trim().toLowerCase(),
-        sector, ai_spend: aiSpend, decay_pct: finalMetrics.decay, 
-        rework_tax: parseFloat(finalMetrics.rework), raw_responses: answers, 
-        status: 'LEAD', entity_id: entityData?.id 
-      }]).select().single();
+    return () => { supabase.removeChannel(channel); };
+  }, [isAuthenticated, fetchLedger]);
 
-      if (auditErr) throw auditErr;
-
-      await supabase.from('operators').insert([{ 
-        email: email.trim().toLowerCase(), full_name: operatorName.trim().toUpperCase(), 
-        entity_id: entityData?.id, audit_id: auditData?.id,
-        persona_type: 'EXECUTIVE', status: 'completed', raw_responses: answers 
-      }]);
-
-    } catch (e: any) { console.error("SYNC_FRACTURE:", e.message); }
-  };
-
-  const triggerForensicScan = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/auth/generate-key', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: email.trim().toLowerCase() }) });
-      const data = await res.json();
-      if (res.ok) { setServerChallenge(data.challenge); setStep("verify"); }
-    } catch (err) { console.error(err); }
-    setIsLoading(false);
-  };
-
-  if (!mounted) return null;
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+        <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} className="bg-slate-900 border-2 border-red-600/20 p-12 text-center max-w-md w-full shadow-2xl">
+          <Key className="text-red-600 mx-auto mb-8" size={40} />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="AUTHORIZATION_KEY" className="w-full bg-black border border-slate-800 p-5 text-center text-red-600 font-black outline-none font-mono tracking-widest focus:border-red-600" autoFocus />
+          <button type="submit" className="w-full bg-red-600 text-white py-5 font-black uppercase italic mt-6 hover:bg-white hover:text-red-600 transition-all tracking-[0.2em]">Initialize_Command</button>
+        </motion.form>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] font-sans">
-      <AnimatePresence mode="wait">{isLoading && <ForensicLoader key="loader" onComplete={() => {}} />}</AnimatePresence>
-      <AnimatePresence mode="wait">
-        {step === 'triage' && (
-          <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 text-center">
-            <h1 className="text-7xl md:text-8xl font-black uppercase italic text-white tracking-tighter">THE LOGIC <span className="text-red-600">PULSE</span></h1>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-20">
-              {sectors.map((s) => (
-                <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
-                  <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
-                  <div><h3 className="text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2">{s.risk}</p></div>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-6 md:p-10 pt-32 font-sans tracking-tighter">
+      <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 border-b border-slate-900 z-50 px-10 flex items-center justify-between backdrop-blur-md">
+        <div className="flex items-center gap-5 text-white font-black italic uppercase text-sm">
+          <Activity className="text-red-600 animate-pulse" size={20} /> Forensic_Command_Center <span className="text-slate-600 font-mono text-[10px] ml-2">v7.5_STABLE</span>
+        </div>
+      </nav>
 
-        {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
-                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
-                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
-                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono tracking-widest" />
-              </div>
-              <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white text-xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all">Initialize Diagnostic Observation</button>
+      <div className="max-w-7xl mx-auto space-y-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            { label: "Cumulative_Rework_Tax", val: `$${data?.reduce((a, c) => a + (Number(c.rework_tax) || 0), 0).toFixed(1)}M`, icon: <BarChart3 className="text-red-600" /> },
+            { label: "Active_Signal_Nodes", val: data?.length || 0, icon: <Fingerprint className="text-slate-500" /> },
+            { label: "Critical_Fractures", val: 0, icon: <ShieldAlert className="text-red-600" /> }
+          ].map((stat, i) => (
+            <div key={i} className="bg-slate-900/40 border border-slate-800 p-8 relative group hover:border-red-600/50 transition-all">
+              <div className="absolute top-4 right-4 opacity-20">{stat.icon}</div>
+              <label className="text-[9px] font-mono text-slate-500 uppercase block mb-4 italic tracking-widest">{stat.label}</label>
+              <div className="text-5xl font-black italic text-white leading-none tracking-tighter">{stat.val}</div>
             </div>
-          </motion.div>
-        )}
+          ))}
+        </div>
 
-        {step === 'verify' && (
-          <motion.div key="verify" className="text-center space-y-12">
-            <h2 className="text-6xl font-black uppercase italic text-white tracking-tighter leading-none">SECURE_<span className="text-red-600">VERIFICATION</span></h2>
-            <div className="max-w-md mx-auto space-y-6 flex gap-4">
-              <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-black border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono tracking-[0.3em]" />
-              <button type="button" onClick={() => { if(userInputKey.trim() === serverChallenge.trim()) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic hover:bg-red-600 hover:text-white transition-all">Authorize</button>
-            </div>
-          </motion.div>
-        )}
-
-        {step === 'audit' && (
-          <motion.div key="audit" className="space-y-12 text-left max-w-4xl mx-auto">
-            <div className="flex items-center gap-4 text-red-600 font-black"><Activity size={16} className="animate-pulse" /><span className="uppercase tracking-[0.4em] text-[10px]">PULSE_SEGMENT_0{currentDimension + 1}</span></div>
-            <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
-            <div className="grid grid-cols-1 gap-4 mt-16">
-              {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} disabled={isSubmitting} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group" 
-                  onClick={async () => {
-                    if (isSubmitting) return;
-                    const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
-                    setAnswers(updatedAnswers);
-                    if (currentDimension < LOCAL_QUESTIONS.length - 1) { setCurrentDimension(currentDimension + 1); } 
-                    else { setIsSubmitting(true); await logToDatabase(getLiveMetrics()); setStep("verdict"); setIsSubmitting(false); }
-                  }}>
-                    <span>{opt.label}</span>
-                    <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 text-red-600 transition-all" />
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {step === 'verdict' && (
-          <motion.div key="verdict" className="py-10">
-            <ForensicResultCard result={{ frictionIndex: getLiveMetrics().decay, reworkTax: getLiveMetrics().rework, inactionCost: getLiveMetrics().inactionCost, status: 'OPERATIONAL_DRIFT', protocol: 'STRUCTURAL_HARDENING' }} lens={selectedLens} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <div className="bg-slate-950 border border-slate-900 shadow-2xl rounded-sm">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="text-[10px] font-mono text-slate-600 uppercase bg-black tracking-[0.2em]">
+                <th className="p-8">Entity_Signal</th>
+                <th className="p-8 text-center">Status</th>
+                <th className="p-8 text-right">Rework_Tax</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-900">
+              {data.map((audit) => {
+                const ops = audit.operators || [];
+                const isFinished = ops.length >= 1;
+                const isExpanded = expandedId === audit.id;
+                return (
+                  <React.Fragment key={audit.id}>
+                    <tr onClick={() => setExpandedId(isExpanded ? null : audit.id)} className={`cursor-pointer transition-all ${isExpanded ? 'bg-red-600/[0.06]' : 'hover:bg-white/[0.03]'}`}>
+                      <td className="p-8">
+                        <div className="flex items-center gap-4">
+                          <Building2 size={24} className={isFinished ? 'text-green-500' : 'text-red-600'} />
+                          <div>
+                            <div className="font-black text-white uppercase text-2xl italic tracking-tighter leading-none">{audit.org_name || "LEAD_ENTRY"}</div>
+                            <div className="text-[10px] text-slate-500 font-mono mt-1 italic tracking-widest">{audit.lead_email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-8 text-center"><div className={`${isFinished ? 'text-green-500' : 'text-yellow-500 animate-pulse'} text-[10px] font-black uppercase italic flex items-center justify-center gap-2 tracking-[0.15em]`}>{isFinished ? <CheckCircle size={14} /> : <Zap size={14} />} {isFinished ? 'Result_Published' : 'Active_Synthesis'}</div></td>
+                      <td className="p-8 text-right font-black text-white italic text-4xl tracking-tighter">
+                        <div className="flex justify-end items-center gap-4 leading-none">
+                          ${Number(audit.rework_tax || 0).toFixed(1)}M
+                          {isExpanded ? <ChevronUp size={20} className="text-red-600" /> : <ChevronDown size={20} className="text-slate-800" />}
+                        </div>
+                      </td>
+                    </tr>
+                    <AnimatePresence>{isExpanded && (
+                      <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="bg-black/60 border-l-2 border-red-600">
+                        <td colSpan={3} className="p-10"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{['EXECUTIVE', 'MANAGER', 'TECHNICAL'].map((role) => {
+                          const op = ops.find((o: any) => o.persona_type === role);
+                          return (
+                            <div key={role} className="bg-slate-900 border border-slate-800 p-6 rounded-sm">
+                              <div className="flex justify-between items-start mb-6 font-black uppercase text-[10px]">
+                                <span className="text-red-600 italic tracking-widest">{role}_NODE</span>
+                                <span className="text-slate-400 font-mono">{op ? 'VERIFIED' : 'AWAITING'}</span>
+                              </div>
+                              <div className="bg-black/40 p-4 border border-slate-800/50 text-[10px] font-mono text-slate-400 max-h-48 overflow-y-auto">
+                                {op ? <pre className="whitespace-pre-wrap">{JSON.stringify(op.raw_responses, null, 2)}</pre> : <div className="py-8 text-center italic tracking-[0.2em] opacity-30"><Terminal size={16} className="mx-auto mb-2" />SYNCING...</div>}
+                              </div>
+                            </div>
+                          );
+                        })}</div></td>
+                      </motion.tr>
+                    )}</AnimatePresence>
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }
