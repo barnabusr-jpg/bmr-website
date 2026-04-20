@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight } from "lucide-react";
@@ -50,28 +49,22 @@ export default function ConsolidatedDiagnostic() {
 
   const getLiveMetrics = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
-    const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
-    const coeff = sectorWeights[sector] || 1.0;
     const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
-    const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
+    const scaledTotal = (totalSum * 0.04 * 1.1) * multiplier;
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
     const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
-    return { 
-        decay: Math.min(decayRaw, 98), 
-        rework: reworkTax.toFixed(1), 
-        inactionCost: (reworkTax * 6).toFixed(1) 
-    };
+    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1) };
   };
 
   const logToDatabase = async (finalMetrics: any) => {
     try {
-      // 1. Ensure Entity is created/updated
+      // 1. ANCHOR ENTITY
       const { data: entityData } = await supabase
         .from('entities')
         .upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' })
         .select().single();
 
-      // 2. Create the AUDIT Parent (This makes it appear in the Dashboard ledger)
+      // 2. ANCHOR AUDIT (Parent entry for Ledger)
       const { data: auditData, error: auditError } = await supabase
         .from('audits')
         .insert([{ 
@@ -87,19 +80,18 @@ export default function ConsolidatedDiagnostic() {
 
       if (auditError) throw auditError;
 
-      // 3. Create/Update the OPERATOR and link to the Entity
+      // 3. ANCHOR OPERATOR (Linking to both company and specific engagement)
       await supabase.from('operators').upsert({ 
           email: email.trim().toLowerCase(), 
           full_name: operatorName.trim().toUpperCase(), 
           entity_id: entityData?.id,
+          audit_id: auditData?.id, // THE CRITICAL LINK
           persona_type: 'EXECUTIVE', 
           status: 'completed',
           raw_responses: answers 
       }, { onConflict: 'email' });
 
-    } catch (e) { 
-        console.error("CRITICAL_INTAKE_FRACTURE:", e); 
-    }
+    } catch (e) { console.error("SYNC_FRACTURE:", e); }
   };
 
   const triggerForensicScan = async () => {
@@ -115,7 +107,7 @@ export default function ConsolidatedDiagnostic() {
   if (!mounted) return null;
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px]">
+    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] font-sans">
       <AnimatePresence mode="wait">
         {isLoading && <ForensicLoader key="loader" onComplete={() => {}} />}
       </AnimatePresence>
@@ -123,15 +115,10 @@ export default function ConsolidatedDiagnostic() {
       <AnimatePresence mode="wait">
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
-            <h1 className="text-7xl md:text-8xl font-black uppercase italic text-white text-center leading-none tracking-tighter">THE LOGIC <span className="text-red-600">PULSE</span></h1>
-            <div className="flex justify-center gap-4">
-                {["EXECUTIVE", "MANAGER", "TECHNICAL"].map((lens) => (
-                    <button key={lens} onClick={() => setSelectedLens(lens)} className={`px-6 py-2 border-2 font-black italic text-xs tracking-[0.2em] transition-all ${selectedLens === lens ? 'bg-red-600 border-red-600 text-white' : 'border-slate-800 text-slate-500'}`}>{lens}_NODE</button>
-                ))}
-            </div>
+            <h1 className="text-7xl md:text-8xl font-black uppercase italic text-white text-center tracking-tighter">THE LOGIC <span className="text-red-600">PULSE</span></h1>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {sectors.map((s) => (
-                <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
+                <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
                   <div className="text-red-600">{s.icon}</div>
                   <div><h3 className="text-xl font-black uppercase italic text-white tracking-tighter">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p></div>
                 </button>
@@ -143,12 +130,12 @@ export default function ConsolidatedDiagnostic() {
         {step === 'intake' && (
           <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
             <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
+            <div className="bg-slate-950 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6">
               <div className="grid grid-cols-2 gap-6">
-                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
-                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
-                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
-                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
+                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
               </div>
               <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white text-xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all">Initialize Diagnostic Observation</button>
             </div>
@@ -160,7 +147,7 @@ export default function ConsolidatedDiagnostic() {
             <h2 className="text-6xl font-black uppercase italic text-white tracking-tighter">SECURE_<span className="text-red-600">VERIFICATION</span></h2>
             <div className="max-w-md mx-auto space-y-6">
               <div className="flex gap-4">
-                <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono" />
+                <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-black border-2 border-slate-900 p-8 text-4xl text-center text-white font-mono" />
                 <button type="button" onClick={() => { if(userInputKey.trim() === serverChallenge.trim()) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic">Authorize</button>
               </div>
             </div>
@@ -197,7 +184,7 @@ export default function ConsolidatedDiagnostic() {
 
         {step === 'verdict' && (
           <motion.div key="verdict" className="py-10">
-            <ForensicResultCard result={{ frictionIndex: getLiveMetrics().decay, reworkTax: getLiveMetrics().rework, inactionCost: (parseFloat(getLiveMetrics().rework) * 6).toFixed(1), status: 'OPERATIONAL_DRIFT', protocol: 'STRUCTURAL_HARDENING' }} lens={selectedLens} />
+            <ForensicResultCard result={{ frictionIndex: getLiveMetrics().decay, reworkTax: getLiveMetrics().rework, status: 'OPERATIONAL_DRIFT', protocol: 'STRUCTURAL_HARDENING' }} lens={selectedLens} />
           </motion.div>
         )}
       </AnimatePresence>
