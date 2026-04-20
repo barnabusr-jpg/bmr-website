@@ -15,7 +15,14 @@ export default function AdminDashboard() {
     setLoading(true);
     const { data: auditData, error } = await supabase
       .from('audits')
-      .select(`*, diagnostic_groups (id, is_complete, sfi_score, operators (role, status, raw_responses))`)
+      .select(`
+        *,
+        diagnostic_groups (
+          id,
+          is_complete,
+          operators (role, status, raw_responses)
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (!error) setData(auditData || []);
@@ -102,16 +109,13 @@ export default function AdminDashboard() {
                                     const op = operators?.find((o: any) => o.role === role);
                                     return (
                                       <div key={role} className="bg-slate-900 border border-slate-800 p-6 rounded-sm">
-                                        <div className="flex justify-between items-start mb-4"><span className="text-[9px] font-black text-red-600 tracking-widest uppercase italic">{role}_NODE</span><span className={`text-[8px] font-mono px-2 py-0.5 rounded ${op?.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500 animate-pulse'}`}>{op ? op.status.toUpperCase() : 'PENDING'}</span></div>
+                                        <div className="flex justify-between items-start mb-4"><span className="text-[9px] font-black text-red-600 uppercase italic">{role}_NODE</span><span className={`text-[8px] font-mono px-2 py-0.5 rounded ${op?.status === 'completed' ? 'bg-green-500/10 text-green-500' : 'bg-yellow-500/10 text-yellow-500 animate-pulse'}`}>{op ? op.status.toUpperCase() : 'PENDING'}</span></div>
                                         <div className="text-[10px] text-slate-400 font-mono bg-black/40 p-4 border border-slate-800/50 max-h-40 overflow-y-auto">
                                           {op?.raw_responses ? <pre className="whitespace-pre-wrap break-words">{JSON.stringify(op.raw_responses, null, 2)}</pre> : <div className="flex items-center gap-2 text-slate-600 italic"><Terminal size={10} className="animate-pulse" />Awaiting_Signal_Packet...</div>}
                                         </div>
                                       </div>
                                     );
                                   })}
-                                </div>
-                                <div className="mt-8 pt-6 border-t border-slate-800 flex justify-end">
-                                   <button className="bg-white text-black px-10 py-4 font-black uppercase italic text-xs hover:bg-red-600 hover:text-white transition-all flex items-center gap-3"><Download size={16} /> GENERATE_CONSOLIDATED_DOSSIER</button>
                                 </div>
                               </td>
                             </motion.tr>
