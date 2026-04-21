@@ -8,22 +8,25 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [data, setData] = useState<any[]>([]);
-  const [isUpdating, setIsUpdating] = useState(false); // New loading state for button
+  const [isUpdating, setIsUpdating] = useState(false);
   
   const [selectedAudit, setSelectedAudit] = useState<any>(null);
   const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
 
   const fetchLedger = useCallback(async () => {
-    const { data: audits } = await supabase.from('audits').select('*').order('created_at', { ascending: false });
+    const { data: audits } = await supabase
+      .from('audits')
+      .select('*')
+      .order('created_at', { ascending: false });
     setData(audits || []);
   }, []);
 
-  // THE MASTER TRIGGER FUNCTION
+  // THE MASTER TRIGGER: Uses Organization Name as the anchor for maximum stability
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
     
     setIsUpdating(true);
-    console.log("SENDING_TRIANGULATION_SIGNAL:", selectedAudit.org_name);
+    const orgTarget = selectedAudit.org_name;
 
     try {
       const { error } = await supabase
@@ -34,17 +37,16 @@ export default function AdminDashboard() {
           mgr_email: emails.mgr.trim(),
           tech_email: emails.tech.trim()
         })
-        .eq('id', selectedAudit.id);
+        .match({ org_name: orgTarget });
 
       if (error) throw error;
 
-      console.log("SIGNAL_CONFIRMED");
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
-    } catch (err) {
-      console.error("SIGNAL_FAILED:", err);
-      alert("Ledger Update Failed.");
+    } catch (err: any) {
+      console.error("SYNC_CRITICAL_FAILURE:", err);
+      alert(`Ledger Sync Error: ${err.message || 'Database Connection Interrupted'}`);
     } finally {
       setIsUpdating(false);
     }
@@ -57,10 +59,22 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-        <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative">
+        <motion.form 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} 
+          className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative"
+        >
           <div className="absolute top-0 left-0 w-full h-1 bg-red-600" />
           <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="MASTER_KEY" className="w-full bg-black border border-slate-800 p-6 text-center text-red-600 font-black outline-none tracking-[0.5em] text-2xl focus:border-red-600 placeholder:text-slate-900" autoFocus />
+          <input 
+            type="password" 
+            value={password} 
+            onChange={(e) => setPassword(e.target.value)} 
+            placeholder="MASTER_KEY" 
+            className="w-full bg-black border border-slate-800 p-6 text-center text-red-600 font-black outline-none tracking-[0.5em] text-2xl focus:border-red-600 placeholder:text-slate-900" 
+            autoFocus 
+          />
           <button type="submit" className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all text-lg">INITIALIZE_COMMAND</button>
         </motion.form>
       </div>
@@ -87,7 +101,6 @@ export default function AdminDashboard() {
                 <input placeholder="MANAGERIAL_NODE_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none leading-none" />
                 <input placeholder="TECHNICAL_NODE_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none leading-none" />
                 
-                {/* BUTTON FIXED: Explicit call to triggerActivation */}
                 <button 
                   onClick={() => triggerActivation()} 
                   disabled={isUpdating}
