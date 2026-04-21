@@ -14,36 +14,30 @@ export default function AdminDashboard() {
   const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
 
   const fetchLedger = useCallback(async () => {
-    const { data: audits } = await supabase
-      .from('audits')
-      .select('*')
-      .order('created_at', { ascending: false });
+    const { data: audits } = await supabase.from('audits').select('*').order('created_at', { ascending: false });
     setData(audits || []);
   }, []);
 
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
-    
     setIsUpdating(true);
-    const orgTarget = selectedAudit.org_name;
 
     try {
-      // 1. DATABASE SYNC (The Handshake)
+      // 1. UPDATE DB STATUS (Matches your existing flow)
       const { error: dbError } = await supabase
         .from('audits')
         .update({ status: 'ACTIVE_SYNTHESIS' })
-        .match({ org_name: orgTarget });
+        .match({ org_name: selectedAudit.org_name });
 
       if (dbError) throw dbError;
 
-      // 2. SENDGRID DISPATCH (The Postman)
-      // Pointing exactly to your /api/dispatch-directives.ts file
+      // 2. RESTORE ORIGINAL PAYLOAD (Matches your SendGrid handler exactly)
       const res = await fetch('/api/dispatch-directives', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orgName: orgTarget,
-          groupId: orgTarget, 
+          groupId: selectedAudit.org_name, 
+          orgName: selectedAudit.org_name,
           parentAuditId: selectedAudit.id,
           emails: {
             EXECUTIVE: emails.exec.trim(),
@@ -53,18 +47,15 @@ export default function AdminDashboard() {
         })
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.message || "SendGrid Dispatcher Failed");
-      }
+      if (!res.ok) throw new Error("Email Dispatcher Failed");
 
-      // SUCCESS: Reset UI and refresh table
+      // SUCCESS: Clear UI and Refresh
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
 
     } catch (err: any) {
-      console.error("CRITICAL_DISPATCH_FAILURE:", err);
+      console.error("COMMAND_FAILURE:", err);
       alert(`System Error: ${err.message}`);
     } finally {
       setIsUpdating(false);
@@ -78,22 +69,10 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-        <motion.form 
-          initial={{ opacity: 0 }} 
-          animate={{ opacity: 1 }} 
-          onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} 
-          className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative"
-        >
+        <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative leading-none">
           <div className="absolute top-0 left-0 w-full h-1 bg-red-600" />
           <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
-          <input 
-            type="password" 
-            value={password} 
-            onChange={(e) => setPassword(e.target.value)} 
-            placeholder="MASTER_KEY" 
-            className="w-full bg-black border border-slate-800 p-6 text-center text-red-600 font-black outline-none tracking-[0.5em] text-2xl focus:border-red-600 placeholder:text-slate-900" 
-            autoFocus 
-          />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="MASTER_KEY" className="w-full bg-black border border-slate-800 p-6 text-center text-red-600 font-black outline-none tracking-[0.5em] text-2xl focus:border-red-600 placeholder:text-slate-900" autoFocus />
           <button type="submit" className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all text-lg">INITIALIZE_COMMAND</button>
         </motion.form>
       </div>
@@ -104,7 +83,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#020617] text-slate-200 p-10 pt-32 font-sans tracking-tighter text-left leading-none">
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black border-b border-slate-900 z-50 px-10 flex items-center gap-5">
         <Activity className="text-red-600" size={24} />
-        <span className="text-white font-black uppercase italic tracking-[0.2em] text-sm leading-none">Forensic_Command_Center</span>
+        <span className="text-white font-black uppercase italic tracking-[0.2em] text-sm">Forensic_Command_Center</span>
       </nav>
 
       <AnimatePresence>
@@ -120,11 +99,7 @@ export default function AdminDashboard() {
                 <input placeholder="MANAGERIAL_NODE_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
                 <input placeholder="TECHNICAL_NODE_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
                 
-                <button 
-                  onClick={() => triggerActivation()} 
-                  disabled={isUpdating}
-                  className="w-full bg-red-600 text-white py-8 font-black uppercase italic text-xl tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all disabled:opacity-50"
-                >
+                <button onClick={() => triggerActivation()} disabled={isUpdating} className="w-full bg-red-600 text-white py-8 font-black uppercase italic text-xl tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all disabled:opacity-50">
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={24} />} 
                   {isUpdating ? "DISPATCHING_DIRECTIVES..." : "ACTIVATE_TRIANGULATION"}
                 </button>
@@ -135,7 +110,6 @@ export default function AdminDashboard() {
       </AnimatePresence>
 
       <div className="max-w-7xl mx-auto space-y-12">
-        {/* Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative">
             <BarChart3 className="absolute top-6 right-6 text-red-600 opacity-20" />
@@ -149,7 +123,6 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Ledger Table */}
         <div className="bg-slate-950 border border-slate-900 shadow-2xl overflow-hidden text-left">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -159,22 +132,22 @@ export default function AdminDashboard() {
                 <th className="p-10 text-right">Rework_Tax</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-900">
+            <tbody className="divide-y divide-slate-900 leading-none">
               {data.map((audit) => (
                 <tr key={audit.id} className="hover:bg-white/[0.02] transition-all">
                   <td className="p-10">
-                    <div className="flex items-center gap-6 leading-none">
+                    <div className="flex items-center gap-6">
                       <Building2 size={32} className="text-red-600" />
-                      <div className="text-left">
+                      <div>
                         <div className="font-black text-white uppercase text-3xl italic tracking-tighter leading-none">{audit.org_name}</div>
-                        <div className="text-[11px] text-slate-500 font-mono mt-2 leading-none">{audit.lead_email}</div>
+                        <div className="text-[11px] text-slate-500 font-mono mt-2">{audit.lead_email}</div>
                         {audit.status === 'LEAD' && (
                           <button onClick={() => setSelectedAudit(audit)} className="mt-4 px-4 py-2 bg-red-600 text-white font-black uppercase text-[10px] italic hover:bg-white hover:text-black transition-all leading-none">Start_Triangulation</button>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="p-10 text-center leading-none">
+                  <td className="p-10 text-center">
                     {audit.status === 'ACTIVE_SYNTHESIS' ? (
                        <div className="flex items-center justify-center gap-2 text-yellow-500 text-[10px] font-black uppercase italic tracking-widest animate-pulse"><Zap size={14} /> Active_Synthesis</div>
                     ) : audit.status === 'COMPLETE' ? (
