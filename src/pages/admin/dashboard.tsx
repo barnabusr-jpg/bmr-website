@@ -21,7 +21,6 @@ export default function AdminDashboard() {
     setData(audits || []);
   }, []);
 
-  // THE MASTER TRIGGER: Uses Organization Name as the anchor for maximum stability
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
     
@@ -29,7 +28,8 @@ export default function AdminDashboard() {
     const orgTarget = selectedAudit.org_name;
 
     try {
-      const { error } = await supabase
+      // 1. UPDATE THE DATABASE (The Handshake)
+      const { error: dbError } = await supabase
         .from('audits')
         .update({ 
           status: 'ACTIVE_SYNTHESIS',
@@ -39,14 +39,35 @@ export default function AdminDashboard() {
         })
         .match({ org_name: orgTarget });
 
-      if (error) throw error;
+      if (dbError) throw dbError;
 
+      // 2. DISPATCH THE EMAILS (The Postman)
+      // This sends the signal to your email service provider
+      const emailRes = await fetch('/api/dispatch-triangulation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orgName: orgTarget,
+          executive: emails.exec.trim(),
+          manager: emails.mgr.trim(),
+          technical: emails.tech.trim()
+        })
+      });
+
+      if (!emailRes.ok) {
+        console.warn("DATABASE_UPDATED_BUT_EMAIL_RELAY_FAILED");
+        // We don't alert failure here so the UI still resets, 
+        // but it logs in console if the email route is down.
+      }
+
+      // SUCCESS: Clear UI
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
+
     } catch (err: any) {
-      console.error("SYNC_CRITICAL_FAILURE:", err);
-      alert(`Ledger Sync Error: ${err.message || 'Database Connection Interrupted'}`);
+      console.error("CRITICAL_SYNC_FAILURE:", err);
+      alert(`Ledger Sync Error: ${err.message}`);
     } finally {
       setIsUpdating(false);
     }
@@ -82,8 +103,8 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-10 pt-32 font-sans tracking-tighter text-left">
-      <nav className="fixed top-0 left-0 right-0 h-24 bg-black border-b border-slate-900 z-50 px-10 flex items-center gap-5 leading-none">
+    <div className="min-h-screen bg-[#020617] text-slate-200 p-10 pt-32 font-sans tracking-tighter text-left leading-none">
+      <nav className="fixed top-0 left-0 right-0 h-24 bg-black border-b border-slate-900 z-50 px-10 flex items-center gap-5">
         <Activity className="text-red-600" size={24} />
         <span className="text-white font-black uppercase italic tracking-[0.2em] text-sm leading-none">Forensic_Command_Center</span>
       </nav>
@@ -107,7 +128,7 @@ export default function AdminDashboard() {
                   className="w-full bg-red-600 text-white py-8 font-black uppercase italic text-xl tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all disabled:opacity-50"
                 >
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={24} />} 
-                  {isUpdating ? "SYNCING_LEDGER..." : "ACTIVATE_TRIANGULATION"}
+                  {isUpdating ? "DISPATCHING_SIGNALS..." : "ACTIVATE_TRIANGULATION"}
                 </button>
               </div>
             </motion.div>
