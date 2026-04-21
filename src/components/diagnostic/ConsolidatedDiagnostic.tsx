@@ -17,8 +17,14 @@ export default function ConsolidatedDiagnostic() {
 
   useEffect(() => { setMounted(true); }, []);
 
+  const forensicRed = "#D94032";
+
+  // STEP 1: INITIALIZE REGISTRATION (API AUTH)
   const handleStartRegistration = async () => {
-    if (!email || email !== confirmEmail) return;
+    if (!email || email !== confirmEmail) {
+        alert("EMAIL_MISMATCH: Please verify secure email addresses.");
+        return;
+    }
     setIsLoading(true);
     try {
       const res = await fetch('/api/auth/generate-key', { 
@@ -31,13 +37,61 @@ export default function ConsolidatedDiagnostic() {
         setServerChallenge(data.challenge); 
         setStep("verify"); 
       }
-    } catch (err) { console.error("AUTH_SIGNAL_LOSS:", err); }
+    } catch (err) { 
+      console.error("AUTH_SIGNAL_LOSS:", err); 
+    }
     setIsLoading(false);
   };
 
-  if (!mounted) return null;
+  // STEP 2: AUTHORIZE SESSION & SYNC TO LEDGER
+  const handleAuthorizeAndCreateAudit = async () => {
+    if (userInputKey !== serverChallenge) {
+        alert("INVALID_KEY: Authorization denied.");
+        return;
+    }
 
-  const forensicRed = "#D94032"; // The deeper, industrial red from your original screenshots
+    setIsLoading(true);
+    try {
+      // 1. Create the Operator record (The Lead)
+      const { data: operator, error: opError } = await supabase
+        .from('operators')
+        .insert([{ 
+          full_name: operatorName, 
+          email: email.trim().toLowerCase(),
+          persona_type: 'LEAD',
+          status: 'ACTIVE'
+        }])
+        .select()
+        .single();
+
+      if (opError) throw opError;
+
+      // 2. Create the Audit record for the Command Center Ledger
+      const { error: auditError } = await supabase
+        .from('audits')
+        .insert([{
+          operator_id: operator.id,
+          org_name: entityName,
+          lead_email: email.trim().toLowerCase(),
+          status: 'PENDING',
+          rework_tax: 0,
+          created_at: new Date().toISOString()
+        }]);
+
+      if (auditError) throw auditError;
+
+      // 3. Hand off to the Active Diagnostic Survey
+      setStep("audit_active");
+
+    } catch (err) {
+      console.error("LEDGER_CONNECTION_FAILURE:", err);
+      alert("SYSTEM_SYNC_ERROR: Forensic link could not be established.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!mounted) return null;
 
   return (
     <div className="min-h-screen bg-[#020617] text-white selection:bg-[#D94032]">
@@ -51,7 +105,7 @@ export default function ConsolidatedDiagnostic() {
 
       <AnimatePresence mode="wait">
         
-        {/* STEP 1: THE LOGIC PULSE HERO */}
+        {/* HERO STATE */}
         {step === "hero" && (
           <motion.div 
             key="hero" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -86,7 +140,7 @@ export default function ConsolidatedDiagnostic() {
           </motion.div>
         )}
 
-        {/* STEP 2: PROTOCOL REGISTRATION */}
+        {/* REGISTRATION STATE */}
         {step === "registration" && (
           <motion.div 
             key="registration" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -98,7 +152,7 @@ export default function ConsolidatedDiagnostic() {
               </h2>
             </div>
 
-            <div className="bg-slate-950/30 border border-slate-900/50 p-1 md:p-12 space-y-1">
+            <div className="bg-slate-950/30 border border-slate-900/50 p-6 md:p-12 space-y-1">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
                 {[
                   { p: "OPERATOR_NAME", v: operatorName, s: setOperatorName },
@@ -127,7 +181,7 @@ export default function ConsolidatedDiagnostic() {
           </motion.div>
         )}
 
-        {/* STEP 3: KEY VERIFICATION */}
+        {/* VERIFICATION STATE */}
         {step === "verify" && (
           <motion.div key="verify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center min-h-screen text-center space-y-12">
             <h2 className="forensic-font text-[10vw] font-black uppercase italic tracking-tighter" style={{ color: forensicRed }}>SECURE_KEY</h2>
@@ -142,12 +196,24 @@ export default function ConsolidatedDiagnostic() {
                 />
               </div>
               <button 
-                onClick={() => { if(userInputKey === serverChallenge) setStep("audit_active"); }} 
+                onClick={handleAuthorizeAndCreateAudit} 
+                disabled={isLoading}
                 className="w-full py-8 bg-white text-black forensic-font font-black uppercase italic tracking-widest hover:bg-[#D94032] hover:text-white transition-all text-2xl"
               >
-                AUTHORIZE_SESSION
+                {isLoading ? "ESTABLISHING_LINK..." : "AUTHORIZE_SESSION"}
               </button>
             </div>
+          </motion.div>
+        )}
+
+        {/* AUDIT ACTIVE (SURVEY UI) */}
+        {step === "audit_active" && (
+          <motion.div key="audit_active" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center min-h-screen p-10">
+             <div className="text-center space-y-4">
+                <h2 className="text-4xl font-black italic uppercase">Diagnostic_In_Progress</h2>
+                <p className="text-slate-500 font-mono tracking-widest text-xs uppercase">Please monitor the Forensic Command Center for live signal updates.</p>
+             </div>
+             {/* This is where your actual survey component or question loop would render */}
           </motion.div>
         )}
 
