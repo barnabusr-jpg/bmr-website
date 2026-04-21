@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Mail, Send } from "lucide-react";
+import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Send } from "lucide-react";
 import ForensicLoader from "@/components/ForensicLoader";
 import ForensicResultCard from "../ForensicResultCard"; 
 import { supabase } from "@/lib/supabaseClient";
@@ -40,10 +40,11 @@ export default function ConsolidatedDiagnostic() {
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
   
-  // Triangulation Emails
+  // THE THREE TRIANGULATION NODES
   const [execEmail, setExecEmail] = useState("");
   const [mgrEmail, setMgrEmail] = useState("");
-  
+  const [techEmail, setTechEmail] = useState("");
+
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +52,8 @@ export default function ConsolidatedDiagnostic() {
   const [userInputKey, setUserInputKey] = useState("");
 
   useEffect(() => { setMounted(true); }, []);
+
+  const forensicRed = "#D94032";
 
   const getLiveMetrics = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
@@ -60,20 +63,16 @@ export default function ConsolidatedDiagnostic() {
     const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
     const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
-    const monthlyBleed = reworkTax / 12;
-    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1), inactionCost: (monthlyBleed * 6 * 1.12).toFixed(2) };
+    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1), inactionCost: (reworkTax / 12 * 6 * 1.12).toFixed(2) };
   };
 
   const logToDatabase = async () => {
     const finalMetrics = getLiveMetrics();
     setIsLoading(true);
     try {
-      // 1. Resolve Entity & Operator
       const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
       const { data: operatorData } = await supabase.from('operators').upsert({ email: email.trim().toLowerCase(), full_name: operatorName.trim().toUpperCase(), entity_id: entityData?.id }, { onConflict: 'email' }).select().single();
       
-      // 2. Log to Unified 'audits' table with ACTIVE_SYNTHESIS status
-      // Using upsert on org_name prevents duplication
       await supabase.from('audits').upsert([{ 
         operator_id: operatorData?.id, 
         sector, 
@@ -85,14 +84,12 @@ export default function ConsolidatedDiagnostic() {
         raw_responses: answers, 
         status: 'ACTIVE_SYNTHESIS',
         exec_email: execEmail,
-        mgr_email: mgrEmail
+        mgr_email: mgrEmail,
+        tech_email: techEmail
       }], { onConflict: 'org_name' }); 
 
       setStep("verdict");
-    } catch (e) { 
-      console.error("Database Log Failure:", e); 
-      alert("SYSTEM_SYNC_ERROR: Check console for logs.");
-    }
+    } catch (e) { console.error("Database Log Failure:", e); }
     setIsLoading(false);
   };
 
@@ -109,128 +106,130 @@ export default function ConsolidatedDiagnostic() {
   if (!mounted) return null;
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px]">
-      <AnimatePresence mode="wait">
-        {isLoading && <ForensicLoader key="loader" onComplete={() => {}} />}
-      </AnimatePresence>
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-[#D94032]">
+      <style jsx global>{`
+        .forensic-font {
+          font-family: 'Inter', sans-serif;
+          font-stretch: 75%;
+          letter-spacing: -0.05em;
+        }
+      `}</style>
 
-      <AnimatePresence mode="wait">
-        {/* STEP 1: TRIAGE */}
-        {step === 'triage' && (
-          <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-16">
-            <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white text-center leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
-            <div className="flex justify-center gap-4">
-                {["EXECUTIVE", "MANAGER", "TECHNICAL"].map((lens) => (
-                    <button key={lens} onClick={() => setSelectedLens(lens)} className={`px-6 py-2 border-2 font-black italic text-xs tracking-[0.2em] transition-all ${selectedLens === lens ? 'bg-red-600 border-red-600 text-white' : 'border-slate-800 text-slate-500'}`}>{lens}_NODE</button>
+      <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px]">
+        <AnimatePresence mode="wait">
+          {isLoading && <ForensicLoader key="loader" onComplete={() => {}} />}
+        </AnimatePresence>
+
+        <AnimatePresence mode="wait">
+          {step === 'triage' && (
+            <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-16">
+              <h1 className="forensic-font text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white text-center leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
+              <div className="flex justify-center gap-4">
+                  {["EXECUTIVE", "MANAGER", "TECHNICAL"].map((lens) => (
+                      <button key={lens} onClick={() => setSelectedLens(lens)} className={`px-6 py-2 border-2 font-black italic text-xs tracking-[0.2em] transition-all ${selectedLens === lens ? 'bg-red-600 border-red-600 text-white' : 'border-slate-800 text-slate-500'}`}>{lens}_NODE</button>
+                  ))}
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {sectors.map((s) => (
+                  <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
+                    <div className="text-red-600">{s.icon}</div>
+                    <div><h3 className="forensic-font text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p></div>
+                  </button>
                 ))}
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              {sectors.map((s) => (
-                <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
-                  <div className="text-red-600">{s.icon}</div>
-                  <div><h3 className="text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p></div>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* STEP 2: INTAKE */}
-        {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-center">
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6 shadow-2xl">
-              <div className="grid grid-cols-2 gap-6">
-                <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
-                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
-                <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
-                <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
               </div>
-              <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-xl tracking-[0.2em]">Initialize Diagnostic Observation</button>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* STEP 3: VERIFY */}
-        {step === 'verify' && (
-          <motion.div key="verify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center space-y-12">
-            <h2 className="text-6xl font-black uppercase italic text-white tracking-tighter">SECURE_<span className="text-red-600">VERIFICATION</span></h2>
-            <div className="max-w-md mx-auto space-y-6">
-              <div className="flex gap-4">
-                <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-slate-950 border-2 border-slate-900 p-8 text-4xl text-center text-white outline-none focus:border-red-600 font-mono" />
-                <button type="button" onClick={() => { if(userInputKey.trim() === serverChallenge.trim()) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic hover:bg-red-600 hover:text-white transition-colors">Authorize</button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* STEP 4: AUDIT */}
-        {step === 'audit' && (
-          <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-left">
-            <div className="flex items-center gap-4 text-red-600"><Activity size={16} className="animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PULSE_SEGMENT_0{currentDimension + 1}</span></div>
-            <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
-            <div className="grid grid-cols-1 gap-4 mt-16">
-              {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group" 
-                  onClick={() => {
-                    const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
-                    setAnswers(updatedAnswers);
-                    if (currentDimension < LOCAL_QUESTIONS.length - 1) {
-                      setCurrentDimension(currentDimension + 1);
-                    } else {
-                      setStep("triangulation"); 
-                    }
-                  }}>
-                    <span>{opt.label}</span>
-                    <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 transition-all text-red-600" />
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {/* STEP 5: TRIANGULATION INPUT */}
-        {step === "triangulation" && (
-          <motion.div key="triangulation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-center max-w-4xl mx-auto pt-20">
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">TRIANGULATION <span className="text-red-600">DIRECTIVES</span></h2>
-            <p className="text-slate-500 font-mono uppercase text-xs tracking-widest italic">Signal convergence requires multi-node verification. Define peer targets.</p>
-            <div className="bg-slate-950/30 border border-slate-900 p-12 space-y-6">
-              <div className="grid grid-cols-1 gap-6 text-left">
-                <div>
-                  <label className="text-[10px] font-mono text-slate-500 uppercase block mb-2">Executive_Node_Email</label>
-                  <input placeholder="EXECUTIVE@ORG.COM" value={execEmail} onChange={(e) => setExecEmail(e.target.value)} className="bg-black border border-slate-900 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none" />
+          {step === 'intake' && (
+            <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-center max-w-[1200px] mx-auto pt-20">
+              <h2 className="forensic-font text-[8vw] md:text-[9rem] font-black uppercase italic leading-none tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
+              <div className="bg-slate-950/30 border border-slate-900/50 p-6 md:p-12 space-y-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
+                  <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
+                  <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
+                  <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
+                  <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
                 </div>
-                <div>
-                  <label className="text-[10px] font-mono text-slate-500 uppercase block mb-2">Manager_Node_Email</label>
-                  <input placeholder="MANAGER@ORG.COM" value={mgrEmail} onChange={(e) => setMgrEmail(e.target.value)} className="bg-black border border-slate-900 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none" />
+                <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-10 forensic-font bg-red-600 text-white font-black uppercase italic text-3xl tracking-widest hover:bg-white hover:text-black transition-all mt-8">Initialize Diagnostic Observation</button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 'verify' && (
+            <motion.div key="verify" className="text-center space-y-12 pt-40">
+              <h2 className="forensic-font text-[10vw] font-black uppercase italic tracking-tighter text-red-600">SECURE_KEY</h2>
+              <div className="max-w-md mx-auto space-y-6">
+                <div className="flex gap-4">
+                  <input maxLength={6} placeholder="000000" value={userInputKey} onChange={(e) => setUserInputKey(e.target.value)} className="flex-grow bg-black border-2 border-slate-900 p-8 text-4xl text-center text-white outline-none focus:border-red-600 font-mono tracking-[0.4em]" />
+                  <button type="button" onClick={() => { if(userInputKey.trim() === serverChallenge.trim()) setStep("audit"); }} className="bg-white text-black px-10 font-black uppercase italic hover:bg-red-600 hover:text-white transition-colors">Authorize</button>
                 </div>
               </div>
-              <button onClick={logToDatabase} className="w-full py-8 font-black uppercase italic bg-red-600 text-white flex items-center justify-center gap-4 hover:bg-white hover:text-red-600 transition-all text-xl">
-                <Send size={24} /> INITIALIZE_TRIANGULATION_SCAN
-              </button>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* STEP 6: VERDICT */}
-        {step === 'verdict' && (
-          <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-10">
-            <ForensicResultCard 
-              result={{
-                frictionIndex: getLiveMetrics().decay,
-                reworkTax: getLiveMetrics().rework,
-                inactionCost: getLiveMetrics().inactionCost,
-                status: 'ACTIVE_SYNTHESIS',
-                protocol: 'TRIANGULATION_PENDING'
-              }} 
-              lens={selectedLens} 
-            />
-            <div className="text-center mt-12 text-slate-500 font-mono text-xs uppercase tracking-[0.3em] animate-pulse">
-              Observing Signal Convergence...
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {step === 'audit' && (
+            <motion.div key="audit" className="space-y-12 text-left pt-20">
+              <div className="flex items-center gap-4 text-red-600"><Activity size={16} className="animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PULSE_SEGMENT_0{currentDimension + 1}</span></div>
+              <h2 className="forensic-font text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
+              <div className="grid grid-cols-1 gap-4 mt-16">
+                {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
+                  <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group" 
+                    onClick={() => {
+                      const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
+                      setAnswers(updatedAnswers);
+                      if (currentDimension < LOCAL_QUESTIONS.length - 1) {
+                        setCurrentDimension(currentDimension + 1);
+                      } else {
+                        setStep("triangulation"); 
+                      }
+                    }}>
+                      <span>{opt.label}</span>
+                      <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 transition-all text-red-600" />
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {step === "triangulation" && (
+            <motion.div key="triangulation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="max-w-[1200px] mx-auto pt-40 px-6 space-y-16">
+              <div className="text-center">
+                <h2 className="forensic-font text-[8vw] md:text-[9rem] font-black uppercase italic leading-none tracking-tighter text-white">TRIANGULATION <span className="text-red-600">DIRECTIVES</span></h2>
+                <p className="mt-8 text-slate-500 font-mono uppercase text-[10px] tracking-[0.4em] italic">Signal convergence requires multi-node verification. Define peer targets.</p>
+              </div>
+
+              <div className="bg-slate-950/30 border border-slate-900/50 p-6 md:p-12 space-y-1">
+                <div className="grid grid-cols-1 gap-1">
+                  <input placeholder="EXECUTIVE_NODE_EMAIL" value={execEmail} onChange={(e) => setExecEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
+                  <input placeholder="MANAGERIAL_NODE_EMAIL" value={mgrEmail} onChange={(e) => setMgrEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
+                  <input placeholder="TECHNICAL_NODE_EMAIL" value={techEmail} onChange={(e) => setTechEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
+                </div>
+                <button onClick={logToDatabase} className="w-full py-10 forensic-font bg-red-600 text-white font-black uppercase italic text-3xl tracking-widest hover:bg-white hover:text-black transition-all mt-8 flex items-center justify-center gap-6">
+                  <Send size={32} /> INITIALIZE_TRIANGULATION_SCAN
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 'verdict' && (
+            <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-10 pt-40">
+              <ForensicResultCard 
+                result={{
+                  frictionIndex: getLiveMetrics().decay,
+                  reworkTax: getLiveMetrics().rework,
+                  inactionCost: getLiveMetrics().inactionCost,
+                  status: 'ACTIVE_SYNTHESIS',
+                  protocol: 'TRIANGULATION_PENDING'
+                }} 
+                lens={selectedLens} 
+              />
+              <div className="text-center mt-12 text-slate-500 font-mono text-xs uppercase tracking-[0.3em] animate-pulse">
+                Observing Signal Convergence...
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
