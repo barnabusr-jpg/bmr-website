@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight } from "lucide-react";
+import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Mail, Send } from "lucide-react";
 import ForensicLoader from "@/components/ForensicLoader";
 import ForensicResultCard from "../ForensicResultCard"; 
 import { supabase } from "@/lib/supabaseClient";
@@ -39,6 +39,11 @@ export default function ConsolidatedDiagnostic() {
   const [entityName, setEntityName] = useState("");
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
+  
+  // Triangulation Emails
+  const [execEmail, setExecEmail] = useState("");
+  const [mgrEmail, setMgrEmail] = useState("");
+  
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -53,27 +58,22 @@ export default function ConsolidatedDiagnostic() {
     const coeff = sectorWeights[sector] || 1.0;
     const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
     const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
-    
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
     const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
     const monthlyBleed = reworkTax / 12;
-    const inactionPenalty = (monthlyBleed * 6 * 1.12).toFixed(2);
-
-    return {
-      decay: Math.min(decayRaw, 98),
-      rework: reworkTax.toFixed(1),
-      inactionCost: inactionPenalty
-    };
+    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1), inactionCost: (monthlyBleed * 6 * 1.12).toFixed(2) };
   };
 
-  const logToDatabase = async (finalMetrics: any) => {
+  const logToDatabase = async () => {
+    const finalMetrics = getLiveMetrics();
+    setIsLoading(true);
     try {
       // 1. Resolve Entity & Operator
       const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
       const { data: operatorData } = await supabase.from('operators').upsert({ email: email.trim().toLowerCase(), full_name: operatorName.trim().toUpperCase(), entity_id: entityData?.id }, { onConflict: 'email' }).select().single();
       
       // 2. Log to Unified 'audits' table with ACTIVE_SYNTHESIS status
-      // We use upsert on org_name to prevent duplication
+      // Using upsert on org_name prevents duplication
       await supabase.from('audits').upsert([{ 
         operator_id: operatorData?.id, 
         sector, 
@@ -83,15 +83,17 @@ export default function ConsolidatedDiagnostic() {
         org_name: entityName.trim().toUpperCase(), 
         lead_email: email.trim().toLowerCase(), 
         raw_responses: answers, 
-        status: 'ACTIVE_SYNTHESIS', 
-        fractures: [
-          {"id": "FR-01", "directive": "Anchor adoption by ensuring transparency and empathy."},
-          {"id": "FR-02", "directive": "Establish the governing mechanism for mission value."},
-          {"id": "FR-03", "directive": "Implement the IGF safeguard loop to enable rapid evolution."}
-        ]
+        status: 'ACTIVE_SYNTHESIS',
+        exec_email: execEmail,
+        mgr_email: mgrEmail
       }], { onConflict: 'org_name' }); 
-      
-    } catch (e) { console.error("Database Log Failure:", e); }
+
+      setStep("verdict");
+    } catch (e) { 
+      console.error("Database Log Failure:", e); 
+      alert("SYSTEM_SYNC_ERROR: Check console for logs.");
+    }
+    setIsLoading(false);
   };
 
   const triggerForensicScan = async () => {
@@ -113,8 +115,9 @@ export default function ConsolidatedDiagnostic() {
       </AnimatePresence>
 
       <AnimatePresence mode="wait">
+        {/* STEP 1: TRIAGE */}
         {step === 'triage' && (
-          <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16">
+          <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-16">
             <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white text-center leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
             <div className="flex justify-center gap-4">
                 {["EXECUTIVE", "MANAGER", "TECHNICAL"].map((lens) => (
@@ -132,8 +135,9 @@ export default function ConsolidatedDiagnostic() {
           </motion.div>
         )}
 
+        {/* STEP 2: INTAKE */}
         {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
+          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-center">
             <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
             <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6 shadow-2xl">
               <div className="grid grid-cols-2 gap-6">
@@ -147,8 +151,9 @@ export default function ConsolidatedDiagnostic() {
           </motion.div>
         )}
 
+        {/* STEP 3: VERIFY */}
         {step === 'verify' && (
-          <motion.div key="verify" className="text-center space-y-12">
+          <motion.div key="verify" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center space-y-12">
             <h2 className="text-6xl font-black uppercase italic text-white tracking-tighter">SECURE_<span className="text-red-600">VERIFICATION</span></h2>
             <div className="max-w-md mx-auto space-y-6">
               <div className="flex gap-4">
@@ -159,22 +164,21 @@ export default function ConsolidatedDiagnostic() {
           </motion.div>
         )}
 
+        {/* STEP 4: AUDIT */}
         {step === 'audit' && (
-          <motion.div key="audit" className="space-y-12 text-left">
+          <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-left">
             <div className="flex items-center gap-4 text-red-600"><Activity size={16} className="animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PULSE_SEGMENT_0{currentDimension + 1}</span></div>
             <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
             <div className="grid grid-cols-1 gap-4 mt-16">
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
                 <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group" 
-                  onClick={async () => {
+                  onClick={() => {
                     const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                     setAnswers(updatedAnswers);
                     if (currentDimension < LOCAL_QUESTIONS.length - 1) {
                       setCurrentDimension(currentDimension + 1);
                     } else {
-                      const finalMetrics = getLiveMetrics();
-                      await logToDatabase(finalMetrics); 
-                      setStep("verdict"); 
+                      setStep("triangulation"); 
                     }
                   }}>
                     <span>{opt.label}</span>
@@ -185,25 +189,44 @@ export default function ConsolidatedDiagnostic() {
           </motion.div>
         )}
 
+        {/* STEP 5: TRIANGULATION INPUT */}
+        {step === "triangulation" && (
+          <motion.div key="triangulation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-12 text-center max-w-4xl mx-auto pt-20">
+            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">TRIANGULATION <span className="text-red-600">DIRECTIVES</span></h2>
+            <p className="text-slate-500 font-mono uppercase text-xs tracking-widest italic">Signal convergence requires multi-node verification. Define peer targets.</p>
+            <div className="bg-slate-950/30 border border-slate-900 p-12 space-y-6">
+              <div className="grid grid-cols-1 gap-6 text-left">
+                <div>
+                  <label className="text-[10px] font-mono text-slate-500 uppercase block mb-2">Executive_Node_Email</label>
+                  <input placeholder="EXECUTIVE@ORG.COM" value={execEmail} onChange={(e) => setExecEmail(e.target.value)} className="bg-black border border-slate-900 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none" />
+                </div>
+                <div>
+                  <label className="text-[10px] font-mono text-slate-500 uppercase block mb-2">Manager_Node_Email</label>
+                  <input placeholder="MANAGER@ORG.COM" value={mgrEmail} onChange={(e) => setMgrEmail(e.target.value)} className="bg-black border border-slate-900 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none" />
+                </div>
+              </div>
+              <button onClick={logToDatabase} className="w-full py-8 font-black uppercase italic bg-red-600 text-white flex items-center justify-center gap-4 hover:bg-white hover:text-red-600 transition-all text-xl">
+                <Send size={24} /> INITIALIZE_TRIANGULATION_SCAN
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* STEP 6: VERDICT */}
         {step === 'verdict' && (
-          <motion.div key="verdict" className="py-10">
+          <motion.div key="verdict" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-10">
             <ForensicResultCard 
               result={{
                 frictionIndex: getLiveMetrics().decay,
                 reworkTax: getLiveMetrics().rework,
                 inactionCost: getLiveMetrics().inactionCost,
-                status: getLiveMetrics().decay > 60 ? 'CONDITION_CRITICAL' : 'OPERATIONAL_DRIFT',
-                protocol: getLiveMetrics().decay > 60 ? 'STRUCTURAL_HARDENING' : 'DRIFT_DIAGNOSTICS'
+                status: 'ACTIVE_SYNTHESIS',
+                protocol: 'TRIANGULATION_PENDING'
               }} 
               lens={selectedLens} 
             />
-            
-            <div className="max-w-4xl mx-auto bg-slate-950 p-8 border border-slate-800 space-y-4 text-center mt-12">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-left"><label className="text-[10px] font-mono text-white uppercase tracking-widest italic">Capital Exposure Simulation (AI Spend)</label></div>
-                  <p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p>
-                </div>
-                <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
+            <div className="text-center mt-12 text-slate-500 font-mono text-xs uppercase tracking-[0.3em] animate-pulse">
+              Observing Signal Convergence...
             </div>
           </motion.div>
         )}
