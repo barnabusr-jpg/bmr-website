@@ -72,23 +72,25 @@ export default function ConsolidatedDiagnostic() {
       const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
       const { data: operatorData } = await supabase.from('operators').upsert({ email: email.trim().toLowerCase(), full_name: operatorName.trim().toUpperCase(), entity_id: entityData?.id }, { onConflict: 'email' }).select().single();
       
-      // 2. Log to Unified 'audits' table with COMPLETE status
-      await supabase.from('audits').insert([{ 
+      // 2. Log to Unified 'audits' table with ACTIVE_SYNTHESIS status
+      // We use upsert on org_name to prevent duplication
+      await supabase.from('audits').upsert([{ 
         operator_id: operatorData?.id, 
         sector, 
         ai_spend: aiSpend, 
-        sfi_score: finalMetrics.decay, // SFI score for PDF
+        sfi_score: finalMetrics.decay,
         rework_tax: parseFloat(finalMetrics.rework), 
         org_name: entityName.trim().toUpperCase(), 
         lead_email: email.trim().toLowerCase(), 
         raw_responses: answers, 
-        status: 'COMPLETE', // This enables the download button in Command Center
+        status: 'ACTIVE_SYNTHESIS', 
         fractures: [
           {"id": "FR-01", "directive": "Anchor adoption by ensuring transparency and empathy."},
           {"id": "FR-02", "directive": "Establish the governing mechanism for mission value."},
           {"id": "FR-03", "directive": "Implement the IGF safeguard loop to enable rapid evolution."}
         ]
-      }]);
+      }], { onConflict: 'org_name' }); 
+      
     } catch (e) { console.error("Database Log Failure:", e); }
   };
 
@@ -209,4 +211,3 @@ export default function ConsolidatedDiagnostic() {
     </div>
   );
 }
-
