@@ -53,40 +53,43 @@ export default function ConsolidatedDiagnostic() {
     const coeff = sectorWeights[sector] || 1.0;
     const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
     const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
-    
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
     const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
     const monthlyBleed = reworkTax / 12;
-    const inactionPenalty = (monthlyBleed * 6 * 1.12).toFixed(2);
-
-    return {
-      decay: Math.min(decayRaw, 98),
-      rework: reworkTax.toFixed(1),
-      inactionCost: inactionPenalty
-    };
+    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1), inactionCost: (monthlyBleed * 6 * 1.12).toFixed(2) };
   };
 
   const logToDatabase = async (finalMetrics: any) => {
+    // FIX: Variables locked here to prevent loss during async handover
     const anchorOrg = entityName.trim().toUpperCase();
+    const anchorOp = operatorName.trim().toUpperCase();
     const anchorEmail = email.trim().toLowerCase();
-    const anchorName = operatorName.trim().toUpperCase();
 
     try {
+      // 1. Resolve Entity
       const { data: entityData } = await supabase.from('entities').upsert({ name: anchorOrg }, { onConflict: 'name' }).select().single();
-      const { data: operatorData } = await supabase.from('operators').upsert({ email: anchorEmail, full_name: anchorName, entity_id: entityData?.id }, { onConflict: 'email' }).select().single();
       
+      // 2. Resolve Operator
+      const { data: operatorData } = await supabase.from('operators').upsert({ 
+        email: anchorEmail, 
+        full_name: anchorOp, 
+        entity_id: entityData?.id 
+      }, { onConflict: 'email' }).select().single();
+      
+      // 3. Log Audit - The 'upsert' on 'org_name' ensures visibility and prevents duplicates
       await supabase.from('audits').upsert([{ 
         operator_id: operatorData?.id, 
+        org_name: anchorOrg, 
+        lead_email: anchorEmail,
         sector, 
         ai_spend: aiSpend, 
         decay_pct: finalMetrics.decay, 
         rework_tax: parseFloat(finalMetrics.rework), 
-        org_name: anchorOrg, 
-        lead_email: anchorEmail, 
         raw_responses: answers, 
         status: 'ACTIVE_SYNTHESIS' 
       }], { onConflict: 'org_name' });
-    } catch (e) { console.error("Database Log Failure:", e); }
+
+    } catch (e) { console.error("Forensic Ledger Failure:", e); }
   };
 
   const triggerForensicScan = async () => {
@@ -130,7 +133,7 @@ export default function ConsolidatedDiagnostic() {
         {step === 'intake' && (
           <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
             <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6 shadow-2xl">
+            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-6 shadow-2xl text-left">
               <div className="grid grid-cols-2 gap-6">
                 <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
                 <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-950 border border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600 font-mono" />
@@ -181,25 +184,17 @@ export default function ConsolidatedDiagnostic() {
         )}
 
         {step === 'verdict' && (
-          <motion.div key="verdict" className="py-10">
+          <motion.div key="verdict" className="py-10 text-center">
             <ForensicResultCard 
               result={{
                 frictionIndex: getLiveMetrics().decay,
                 reworkTax: getLiveMetrics().rework,
                 inactionCost: getLiveMetrics().inactionCost,
-                status: getLiveMetrics().decay > 60 ? 'CONDITION_CRITICAL' : 'OPERATIONAL_DRIFT',
-                protocol: getLiveMetrics().decay > 60 ? 'STRUCTURAL_HARDENING' : 'DRIFT_DIAGNOSTICS'
+                status: 'ACTIVE_SYNTHESIS',
+                protocol: 'LEAD_NODE_COMPLETE'
               }} 
               lens={selectedLens} 
             />
-            
-            <div className="max-w-4xl mx-auto bg-slate-950 p-8 border border-slate-800 space-y-4 text-center mt-12">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-left"><label className="text-[10px] font-mono text-white uppercase tracking-widest italic">Capital Exposure Simulation (AI Spend)</label></div>
-                  <p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p>
-                </div>
-                <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
