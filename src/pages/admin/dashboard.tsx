@@ -28,46 +28,44 @@ export default function AdminDashboard() {
     const orgTarget = selectedAudit.org_name;
 
     try {
-      // 1. UPDATE THE DATABASE (The Handshake)
+      // 1. DATABASE SYNC (The Handshake)
       const { error: dbError } = await supabase
         .from('audits')
-        .update({ 
-          status: 'ACTIVE_SYNTHESIS',
-          exec_email: emails.exec.trim(),
-          mgr_email: emails.mgr.trim(),
-          tech_email: emails.tech.trim()
-        })
+        .update({ status: 'ACTIVE_SYNTHESIS' })
         .match({ org_name: orgTarget });
 
       if (dbError) throw dbError;
 
-      // 2. DISPATCH THE EMAILS (The Postman)
-      // This sends the signal to your email service provider
-      const emailRes = await fetch('/api/dispatch-triangulation', {
+      // 2. SENDGRID DISPATCH (The Postman)
+      // Pointing exactly to your /api/dispatch-directives.ts file
+      const res = await fetch('/api/dispatch-directives', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orgName: orgTarget,
-          executive: emails.exec.trim(),
-          manager: emails.mgr.trim(),
-          technical: emails.tech.trim()
+          groupId: orgTarget, 
+          parentAuditId: selectedAudit.id,
+          emails: {
+            EXECUTIVE: emails.exec.trim(),
+            MANAGERIAL: emails.mgr.trim(),
+            TECHNICAL: emails.tech.trim()
+          }
         })
       });
 
-      if (!emailRes.ok) {
-        console.warn("DATABASE_UPDATED_BUT_EMAIL_RELAY_FAILED");
-        // We don't alert failure here so the UI still resets, 
-        // but it logs in console if the email route is down.
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "SendGrid Dispatcher Failed");
       }
 
-      // SUCCESS: Clear UI
+      // SUCCESS: Reset UI and refresh table
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
 
     } catch (err: any) {
-      console.error("CRITICAL_SYNC_FAILURE:", err);
-      alert(`Ledger Sync Error: ${err.message}`);
+      console.error("CRITICAL_DISPATCH_FAILURE:", err);
+      alert(`System Error: ${err.message}`);
     } finally {
       setIsUpdating(false);
     }
@@ -111,16 +109,16 @@ export default function AdminDashboard() {
 
       <AnimatePresence>
         {selectedAudit && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md leading-none">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative leading-none">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
-              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter leading-none">INITIATE_TRIANGULATION</h2>
-              <p className="text-red-600 font-mono text-[10px] uppercase mb-10 tracking-[0.2em] italic leading-none">Target_Entity: {selectedAudit.org_name}</p>
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter">INITIATE_TRIANGULATION</h2>
+              <p className="text-red-600 font-mono text-[10px] uppercase mb-10 tracking-[0.2em] italic">Target_Entity: {selectedAudit.org_name}</p>
               
-              <div className="space-y-4 leading-none text-left">
-                <input placeholder="EXECUTIVE_NODE_EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none leading-none" />
-                <input placeholder="MANAGERIAL_NODE_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none leading-none" />
-                <input placeholder="TECHNICAL_NODE_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none leading-none" />
+              <div className="space-y-4">
+                <input placeholder="EXECUTIVE_NODE_EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
+                <input placeholder="MANAGERIAL_NODE_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
+                <input placeholder="TECHNICAL_NODE_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
                 
                 <button 
                   onClick={() => triggerActivation()} 
@@ -128,7 +126,7 @@ export default function AdminDashboard() {
                   className="w-full bg-red-600 text-white py-8 font-black uppercase italic text-xl tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all disabled:opacity-50"
                 >
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={24} />} 
-                  {isUpdating ? "DISPATCHING_SIGNALS..." : "ACTIVATE_TRIANGULATION"}
+                  {isUpdating ? "DISPATCHING_DIRECTIVES..." : "ACTIVATE_TRIANGULATION"}
                 </button>
               </div>
             </motion.div>
@@ -137,6 +135,7 @@ export default function AdminDashboard() {
       </AnimatePresence>
 
       <div className="max-w-7xl mx-auto space-y-12">
+        {/* Metric Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-slate-900/40 border border-slate-800 p-10 relative">
             <BarChart3 className="absolute top-6 right-6 text-red-600 opacity-20" />
@@ -150,6 +149,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Ledger Table */}
         <div className="bg-slate-950 border border-slate-900 shadow-2xl overflow-hidden text-left">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -159,13 +159,13 @@ export default function AdminDashboard() {
                 <th className="p-10 text-right">Rework_Tax</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-900 leading-none">
+            <tbody className="divide-y divide-slate-900">
               {data.map((audit) => (
-                <tr key={audit.id} className="hover:bg-white/[0.02] transition-all leading-none">
-                  <td className="p-10 text-left leading-none">
+                <tr key={audit.id} className="hover:bg-white/[0.02] transition-all">
+                  <td className="p-10">
                     <div className="flex items-center gap-6 leading-none">
                       <Building2 size={32} className="text-red-600" />
-                      <div className="leading-none text-left">
+                      <div className="text-left">
                         <div className="font-black text-white uppercase text-3xl italic tracking-tighter leading-none">{audit.org_name}</div>
                         <div className="text-[11px] text-slate-500 font-mono mt-2 leading-none">{audit.lead_email}</div>
                         {audit.status === 'LEAD' && (
@@ -176,11 +176,11 @@ export default function AdminDashboard() {
                   </td>
                   <td className="p-10 text-center leading-none">
                     {audit.status === 'ACTIVE_SYNTHESIS' ? (
-                       <div className="flex items-center justify-center gap-2 text-yellow-500 text-[10px] font-black uppercase italic tracking-widest animate-pulse leading-none"><Zap size={14} /> Active_Synthesis</div>
+                       <div className="flex items-center justify-center gap-2 text-yellow-500 text-[10px] font-black uppercase italic tracking-widest animate-pulse"><Zap size={14} /> Active_Synthesis</div>
                     ) : audit.status === 'COMPLETE' ? (
-                       <div className="flex items-center justify-center gap-2 text-green-500 text-[10px] font-black uppercase italic tracking-widest leading-none"><CheckCircle size={14} /> Result_Published</div>
+                       <div className="flex items-center justify-center gap-2 text-green-500 text-[10px] font-black uppercase italic tracking-widest"><CheckCircle size={14} /> Result_Published</div>
                     ) : (
-                       <div className="text-slate-600 text-[10px] font-black uppercase italic tracking-widest opacity-40 italic leading-none">Lead_Captured</div>
+                       <div className="text-slate-600 text-[10px] font-black uppercase italic tracking-widest opacity-40 italic">Lead_Captured</div>
                     )}
                   </td>
                   <td className="p-10 text-right font-black text-white italic text-5xl tracking-tighter leading-none">
