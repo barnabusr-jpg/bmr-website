@@ -40,7 +40,6 @@ export default function ConsolidatedDiagnostic() {
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
   
-  // THREE NODES
   const [execEmail, setExecEmail] = useState("");
   const [mgrEmail, setMgrEmail] = useState("");
   const [techEmail, setTechEmail] = useState("");
@@ -57,31 +56,38 @@ export default function ConsolidatedDiagnostic() {
 
   const getLiveMetrics = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
-    const sectorWeights: any = { finance: 1.12, healthcare: 1.08, manufacturing: 1.15, retail: 1.02 };
-    const coeff = sectorWeights[sector] || 1.0;
-    const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
-    const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
-    const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
-    const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
-    const monthlyBleed = reworkTax / 12;
-    return { decay: Math.min(decayRaw, 98), rework: reworkTax.toFixed(1), inactionCost: (monthlyBleed * 6 * 1.12).toFixed(2) };
+    const reworkTax = parseFloat((totalSum * 0.04 * 1.12 * 0.38).toFixed(1));
+    return { decay: Math.round(totalSum * 0.8), rework: reworkTax.toFixed(1), inactionCost: (reworkTax / 12 * 6 * 1.12).toFixed(2) };
   };
 
   const logToDatabase = async () => {
     const finalMetrics = getLiveMetrics();
+    // FIX: Freeze variable names here to prevent state-loss during async calls
+    const targetOrg = entityName.trim().toUpperCase();
+    const targetOp = operatorName.trim().toUpperCase();
+    const targetEmail = email.trim().toLowerCase();
+
     setIsLoading(true);
     try {
-      const { data: entityData } = await supabase.from('entities').upsert({ name: entityName.trim().toUpperCase() }, { onConflict: 'name' }).select().single();
-      const { data: operatorData } = await supabase.from('operators').upsert({ email: email.trim().toLowerCase(), full_name: operatorName.trim().toUpperCase(), entity_id: entityData?.id }, { onConflict: 'email' }).select().single();
+      // 1. Resolve Entity
+      const { data: entityData } = await supabase.from('entities').upsert({ name: targetOrg }, { onConflict: 'name' }).select().single();
       
+      // 2. Resolve Operator
+      const { data: operatorData } = await supabase.from('operators').upsert({ 
+        email: targetEmail, 
+        full_name: targetOp, 
+        entity_id: entityData?.id 
+      }, { onConflict: 'email' }).select().single();
+      
+      // 3. Update Audit with full anchor data
       await supabase.from('audits').upsert([{ 
         operator_id: operatorData?.id, 
+        org_name: targetOrg, 
+        lead_email: targetEmail,
         sector, 
         ai_spend: aiSpend, 
         sfi_score: finalMetrics.decay,
         rework_tax: parseFloat(finalMetrics.rework), 
-        org_name: entityName.trim().toUpperCase(), 
-        lead_email: email.trim().toLowerCase(), 
         raw_responses: answers, 
         status: 'ACTIVE_SYNTHESIS',
         exec_email: execEmail,
@@ -106,6 +112,9 @@ export default function ConsolidatedDiagnostic() {
 
   if (!mounted) return null;
 
+  // Shared classes for consistent input styling
+  const inputStyles = "bg-slate-900/50 border border-slate-800 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-[#D94032] transition-all placeholder:text-slate-500";
+
   return (
     <div className="min-h-screen bg-[#020617] text-white selection:bg-[#D94032]">
       <style jsx global>{`
@@ -123,8 +132,8 @@ export default function ConsolidatedDiagnostic() {
 
         <AnimatePresence mode="wait">
           {step === 'triage' && (
-            <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 pt-32">
-              <h1 className="forensic-font text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white text-center leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
+            <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-16 pt-32 text-center">
+              <h1 className="forensic-font text-7xl md:text-8xl font-black uppercase italic tracking-tighter leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
               <div className="flex justify-center gap-4">
                   {["EXECUTIVE", "MANAGER", "TECHNICAL"].map((lens) => (
                       <button key={lens} onClick={() => setSelectedLens(lens)} className={`px-6 py-2 border-2 font-black italic text-xs tracking-[0.2em] transition-all ${selectedLens === lens ? 'bg-red-600 border-red-600 text-white' : 'border-slate-800 text-slate-500'}`}>{lens}_NODE</button>
@@ -134,7 +143,7 @@ export default function ConsolidatedDiagnostic() {
                 {sectors.map((s) => (
                   <button key={s.id} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-transparent border-2 border-slate-900/50 hover:border-red-600 transition-all text-left flex flex-col justify-between h-48 group">
                     <div className="text-red-600">{s.icon}</div>
-                    <div><h3 className="forensic-font text-xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p></div>
+                    <div><h3 className="forensic-font text-xl font-black uppercase italic tracking-tighter leading-none">{s.label}</h3><p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest">{s.risk}</p></div>
                   </button>
                 ))}
               </div>
@@ -142,16 +151,16 @@ export default function ConsolidatedDiagnostic() {
           )}
 
           {step === 'intake' && (
-            <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-[1200px] mx-auto pt-40 px-6 space-y-16">
-              <h2 className="forensic-font text-[8vw] md:text-[9rem] font-black uppercase italic leading-none tracking-tighter text-white text-center">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-              <div className="bg-slate-950/30 border border-slate-900/50 p-6 md:p-12 space-y-1 shadow-2xl">
+            <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center max-w-[1200px] mx-auto pt-40 px-6">
+              <h2 className="forensic-font text-[8vw] md:text-[9rem] font-black uppercase italic leading-none tracking-tighter">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
+              <div className="bg-slate-950/30 border border-slate-900/50 p-6 md:p-12 space-y-1">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-1">
-                  <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
-                  <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
-                  <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
-                  <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
+                  <input placeholder="OPERATOR_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className={inputStyles} />
+                  <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className={inputStyles} />
+                  <input placeholder="SECURE_EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className={inputStyles} />
+                  <input placeholder="CONFIRM_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className={inputStyles} />
                 </div>
-                <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-10 forensic-font bg-red-600 text-white font-black uppercase italic text-3xl tracking-widest hover:bg-white hover:text-black transition-all mt-8 shadow-xl">Initialize Diagnostic Observation</button>
+                <button disabled={!operatorName || email !== confirmEmail} onClick={triggerForensicScan} className="w-full py-10 forensic-font bg-red-600 text-white font-black uppercase italic text-3xl tracking-widest hover:bg-white hover:text-black transition-all mt-8">Initialize Diagnostic Observation</button>
               </div>
             </motion.div>
           )}
@@ -169,12 +178,12 @@ export default function ConsolidatedDiagnostic() {
           )}
 
           {step === 'audit' && (
-            <motion.div key="audit" className="space-y-12 text-left pt-20">
+            <motion.div key="audit" className="space-y-12 text-left pt-20 max-w-4xl mx-auto">
               <div className="flex items-center gap-4 text-red-600"><Activity size={16} className="animate-pulse" /><span className="font-black uppercase tracking-[0.4em] text-[10px]">PULSE_SEGMENT_0{currentDimension + 1}</span></div>
               <h2 className="forensic-font text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[160px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
               <div className="grid grid-cols-1 gap-4 mt-16">
                 {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                  <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group shadow-md" 
+                  <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group" 
                     onClick={() => {
                       const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                       setAnswers(updatedAnswers);
@@ -195,17 +204,17 @@ export default function ConsolidatedDiagnostic() {
           {step === "triangulation" && (
             <motion.div key="triangulation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-[1200px] mx-auto pt-40 px-6 space-y-16">
               <div className="text-center">
-                <h2 className="forensic-font text-[8vw] md:text-[9rem] font-black uppercase italic leading-none tracking-tighter text-white">TRIANGULATION <span className="text-red-600">DIRECTIVES</span></h2>
+                <h2 className="forensic-font text-[8vw] md:text-[9rem] font-black uppercase italic leading-none tracking-tighter">TRIANGULATION <span className="text-red-600">DIRECTIVES</span></h2>
                 <p className="mt-8 text-slate-500 font-mono uppercase text-[10px] tracking-[0.4em] italic">Signal convergence requires multi-node verification. Define peer targets.</p>
               </div>
 
-              <div className="bg-slate-950/30 border border-slate-900/50 p-6 md:p-12 space-y-1 shadow-2xl">
+              <div className="bg-slate-950/30 border border-slate-900/50 p-6 md:p-12 space-y-1">
                 <div className="grid grid-cols-1 gap-1">
-                  <input placeholder="EXECUTIVE_NODE_EMAIL" value={execEmail} onChange={(e) => setExecEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
-                  <input placeholder="MANAGERIAL_NODE_EMAIL" value={mgrEmail} onChange={(e) => setMgrEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
-                  <input placeholder="TECHNICAL_NODE_EMAIL" value={techEmail} onChange={(e) => setTechEmail(e.target.value)} className="bg-black border border-slate-900 p-10 text-white uppercase font-mono text-sm tracking-widest outline-none focus:border-red-600 transition-all placeholder:text-slate-800" />
+                  <input placeholder="EXECUTIVE_NODE_EMAIL" value={execEmail} onChange={(e) => setExecEmail(e.target.value)} className={inputStyles} />
+                  <input placeholder="MANAGERIAL_NODE_EMAIL" value={mgrEmail} onChange={(e) => setMgrEmail(e.target.value)} className={inputStyles} />
+                  <input placeholder="TECHNICAL_NODE_EMAIL" value={techEmail} onChange={(e) => setTechEmail(e.target.value)} className={inputStyles} />
                 </div>
-                <button onClick={logToDatabase} className="w-full py-10 forensic-font bg-red-600 text-white font-black uppercase italic text-3xl tracking-widest hover:bg-white hover:text-black transition-all mt-8 flex items-center justify-center gap-6 shadow-xl">
+                <button onClick={logToDatabase} className="w-full py-10 forensic-font bg-red-600 text-white font-black uppercase italic text-3xl tracking-widest hover:bg-white hover:text-black transition-all mt-8 flex items-center justify-center gap-6">
                   <Send size={32} /> INITIALIZE_TRIANGULATION_SCAN
                 </button>
               </div>
