@@ -67,28 +67,34 @@ export default function ConsolidatedDiagnostic() {
   };
 
   const logToDatabase = async (finalMetrics: any) => {
-    // ANCHOR LOCK: This fixes the "Missing from Dashboard" issue
     const anchorOrg = entityName.trim().toUpperCase();
     const anchorEmail = email.trim().toLowerCase();
     const anchorName = operatorName.trim().toUpperCase();
 
     try {
-      const { data: entityData } = await supabase.from('entities').upsert({ name: anchorOrg }, { onConflict: 'name' }).select().single();
-      const { data: operatorData } = await supabase.from('operators').upsert({ email: anchorEmail, full_name: anchorName, entity_id: entityData?.id }, { onConflict: 'email' }).select().single();
+      // 1. Ensure Entity and Operator exist (Working per screenshots)
+      const { data: ent } = await supabase.from('entities').upsert({ name: anchorOrg }, { onConflict: 'name' }).select().single();
+      const { data: op } = await supabase.from('operators').upsert({ email: anchorEmail, full_name: anchorName, entity_id: ent?.id }, { onConflict: 'email' }).select().single();
       
-      // LEAD status triggers the "Start Triangulation" button in Admin
-      await supabase.from('audits').upsert([{ 
-        operator_id: operatorData?.id, 
+      // 2. HARDENED AUDIT LOG: Explicit column targeting to bypass relational friction
+      const { error: auditError } = await supabase.from('audits').upsert([{ 
         org_name: anchorOrg,
-        sector, 
-        ai_spend: aiSpend, 
-        decay_pct: finalMetrics.decay, 
-        rework_tax: parseFloat(finalMetrics.rework), 
-        lead_email: anchorEmail, 
-        raw_responses: answers, 
+        lead_email: anchorEmail,
+        operator_id: op?.id,
+        sector: sector,
+        ai_spend: aiSpend,
+        decay_pct: finalMetrics.decay,
+        rework_tax: parseFloat(finalMetrics.rework),
+        raw_responses: answers,
         status: 'LEAD' 
       }], { onConflict: 'org_name' });
-    } catch (e) { console.error("Database Log Failure:", e); }
+
+      if (auditError) throw auditError;
+      console.log("FORENSIC_LEDGER_SYNC_COMPLETE");
+
+    } catch (e) { 
+      console.error("CRITICAL_HANDSHAKE_FAILURE:", e); 
+    }
   };
 
   const triggerForensicScan = async () => {
