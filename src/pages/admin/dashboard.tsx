@@ -8,8 +8,8 @@ export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
   const [data, setData] = useState<any[]>([]);
+  const [isUpdating, setIsUpdating] = useState(false); // New loading state for button
   
-  // This state holds the entire audit object, including the ID needed for the link
   const [selectedAudit, setSelectedAudit] = useState<any>(null);
   const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
 
@@ -18,26 +18,35 @@ export default function AdminDashboard() {
     setData(audits || []);
   }, []);
 
+  // THE MASTER TRIGGER FUNCTION
   const triggerActivation = async () => {
-    if (!selectedAudit) return;
+    if (!selectedAudit || isUpdating) return;
     
-    // The .update call specifically targets the ID of the question set you selected
-    const { error } = await supabase
-      .from('audits')
-      .update({ 
-        status: 'ACTIVE_SYNTHESIS',
-        exec_email: emails.exec.trim(),
-        mgr_email: emails.mgr.trim(),
-        tech_email: emails.tech.trim()
-      })
-      .eq('id', selectedAudit.id); // This is the 'Anchor' that attaches the emails to the correct set
+    setIsUpdating(true);
+    console.log("SENDING_TRIANGULATION_SIGNAL:", selectedAudit.org_name);
 
-    if (!error) {
+    try {
+      const { error } = await supabase
+        .from('audits')
+        .update({ 
+          status: 'ACTIVE_SYNTHESIS',
+          exec_email: emails.exec.trim(),
+          mgr_email: emails.mgr.trim(),
+          tech_email: emails.tech.trim()
+        })
+        .eq('id', selectedAudit.id);
+
+      if (error) throw error;
+
+      console.log("SIGNAL_CONFIRMED");
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
-    } else {
-      console.error("SUPABASE_UPDATE_FAILURE:", error);
+    } catch (err) {
+      console.error("SIGNAL_FAILED:", err);
+      alert("Ledger Update Failed.");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -60,25 +69,32 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 p-10 pt-32 font-sans tracking-tighter text-left">
-      <nav className="fixed top-0 left-0 right-0 h-24 bg-black border-b border-slate-900 z-50 px-10 flex items-center gap-5">
+      <nav className="fixed top-0 left-0 right-0 h-24 bg-black border-b border-slate-900 z-50 px-10 flex items-center gap-5 leading-none">
         <Activity className="text-red-600" size={24} />
         <span className="text-white font-black uppercase italic tracking-[0.2em] text-sm leading-none">Forensic_Command_Center</span>
       </nav>
 
       <AnimatePresence>
         {selectedAudit && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md leading-none">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative leading-none">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
-              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">INITIATE_TRIANGULATION</h2>
-              <p className="text-red-600 font-mono text-[10px] uppercase mb-10 tracking-[0.2em] text-left italic">Target_Entity: {selectedAudit.org_name}</p>
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter leading-none">INITIATE_TRIANGULATION</h2>
+              <p className="text-red-600 font-mono text-[10px] uppercase mb-10 tracking-[0.2em] italic leading-none">Target_Entity: {selectedAudit.org_name}</p>
               
-              <div className="space-y-4">
-                <input placeholder="EXECUTIVE_NODE_EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none placeholder:text-slate-700" />
-                <input placeholder="MANAGERIAL_NODE_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none placeholder:text-slate-700" />
-                <input placeholder="TECHNICAL_NODE_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none placeholder:text-slate-700" />
-                <button onClick={triggerActivation} className="w-full bg-red-600 text-white py-8 font-black uppercase italic text-xl tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
-                  <Send size={24} /> ACTIVATE_TRIANGULATION
+              <div className="space-y-4 leading-none text-left">
+                <input placeholder="EXECUTIVE_NODE_EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none leading-none" />
+                <input placeholder="MANAGERIAL_NODE_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none leading-none" />
+                <input placeholder="TECHNICAL_NODE_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none leading-none" />
+                
+                {/* BUTTON FIXED: Explicit call to triggerActivation */}
+                <button 
+                  onClick={() => triggerActivation()} 
+                  disabled={isUpdating}
+                  className="w-full bg-red-600 text-white py-8 font-black uppercase italic text-xl tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all disabled:opacity-50"
+                >
+                  {isUpdating ? <Activity className="animate-spin" /> : <Send size={24} />} 
+                  {isUpdating ? "SYNCING_LEDGER..." : "ACTIVATE_TRIANGULATION"}
                 </button>
               </div>
             </motion.div>
@@ -100,7 +116,7 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-slate-950 border border-slate-900 shadow-2xl overflow-hidden">
+        <div className="bg-slate-950 border border-slate-900 shadow-2xl overflow-hidden text-left">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-black text-[10px] text-slate-600 uppercase tracking-[0.3em] border-b border-slate-900">
@@ -109,22 +125,22 @@ export default function AdminDashboard() {
                 <th className="p-10 text-right">Rework_Tax</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-900">
+            <tbody className="divide-y divide-slate-900 leading-none">
               {data.map((audit) => (
-                <tr key={audit.id} className="hover:bg-white/[0.02] transition-all">
-                  <td className="p-10">
-                    <div className="flex items-center gap-6">
+                <tr key={audit.id} className="hover:bg-white/[0.02] transition-all leading-none">
+                  <td className="p-10 text-left leading-none">
+                    <div className="flex items-center gap-6 leading-none">
                       <Building2 size={32} className="text-red-600" />
-                      <div>
+                      <div className="leading-none text-left">
                         <div className="font-black text-white uppercase text-3xl italic tracking-tighter leading-none">{audit.org_name}</div>
-                        <div className="text-[11px] text-slate-500 font-mono mt-2">{audit.lead_email}</div>
+                        <div className="text-[11px] text-slate-500 font-mono mt-2 leading-none">{audit.lead_email}</div>
                         {audit.status === 'LEAD' && (
-                          <button onClick={() => setSelectedAudit(audit)} className="mt-4 px-4 py-2 bg-red-600 text-white font-black uppercase text-[10px] italic hover:bg-white hover:text-black transition-all">Start_Triangulation</button>
+                          <button onClick={() => setSelectedAudit(audit)} className="mt-4 px-4 py-2 bg-red-600 text-white font-black uppercase text-[10px] italic hover:bg-white hover:text-black transition-all leading-none">Start_Triangulation</button>
                         )}
                       </div>
                     </div>
                   </td>
-                  <td className="p-10 text-center text-left">
+                  <td className="p-10 text-center leading-none">
                     {audit.status === 'ACTIVE_SYNTHESIS' ? (
                        <div className="flex items-center justify-center gap-2 text-yellow-500 text-[10px] font-black uppercase italic tracking-widest animate-pulse leading-none"><Zap size={14} /> Active_Synthesis</div>
                     ) : audit.status === 'COMPLETE' ? (
