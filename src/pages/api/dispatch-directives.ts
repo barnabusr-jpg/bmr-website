@@ -4,6 +4,16 @@ import { supabase } from '@/lib/supabaseClient';
 
 sgMail.setApiKey(process.env.BMR_SENDGRID_KEY as string);
 
+// --- THE SOURCE OF TRUTH ---
+const ROLE_MAP: Record<string, string> = {
+  'managerial': 'MGR',
+  'technical': 'TEC',
+  'executive': 'EXE',
+  'manager': 'MGR',
+  'tech': 'TEC',
+  'exec': 'EXE'
+};
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
   
@@ -20,42 +30,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const roles = Object.entries(emails);
     const emailPromises = [];
 
-    for (const [role, email] of roles) {
+    for (const [rawRole, email] of roles) {
       const targetEmail = (email as string).trim().toLowerCase();
       if (!targetEmail) continue;
+
+      // --- STANDARDIZATION STEP ---
+      // We take whatever the frontend sends and force it into MGR, TEC, or EXE
+      const standardizedRole = ROLE_MAP[rawRole.toLowerCase().trim()] || rawRole.toUpperCase();
 
       // 1. Generate unique access code
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // 2. Database Sync - Now with UUID Anchor
+      // 2. Database Sync - Now using the Standardized Role
       const { error: dbError } = await supabase.from('operators').upsert({
         email: targetEmail,
-        group_id: groupId,       // Org Name Label
-        audit_id: parentAuditId,  // CRITICAL UUID LINK
-        persona_type: role,
+        group_id: groupId,       
+        audit_id: parentAuditId,  
+        persona_type: standardizedRole, // This is now ALWAYS 'MGR', 'TEC', or 'EXE'
         access_code: code,
         is_authorized: true,
-        status: 'pending'        // Ensure fresh start
+        status: 'pending'        
       }, { onConflict: 'email' });
 
       if (dbError) {
-        console.error(`DB_SYNC_ERROR [${role}]:`, dbError.message);
-        // We continue to send the email, but log the failure
+        console.error(`DB_SYNC_ERROR [${standardizedRole}]:`, dbError.message);
       }
 
       // 3. Build Diagnostic Link
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
       
-      console.log(`PREPARING_MAIL: ${role} -> ${targetEmail}`);
+      console.log(`PREPARING_MAIL: ${standardizedRole} -> ${targetEmail}`);
 
       emailPromises.push(sgMail.send({
         to: targetEmail,
         from: process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co',
-        subject: `ACTION_REQUIRED: ${role} Forensic Node Authorized // ${orgName}`,
+        subject: `ACTION_REQUIRED: ${standardizedRole} Forensic Node Authorized // ${orgName}`,
         html: `
           <div style="font-family: monospace; background: #020617; color: white; padding: 40px; border: 2px solid #dc2626;">
             <h2 style="color: #dc2626; text-transform: uppercase; margin-bottom: 5px;">BMR_ADVISORY // FORENSIC_TRIANGULATION</h2>
-            <p style="font-size: 10px; color: #64748b; margin-top: 0;">ENTITY: ${orgName} | PROTOCOL: ${role}_NODE</p>
+            <p style="font-size: 10px; color: #64748b; margin-top: 0;">ENTITY: ${orgName} | PROTOCOL: ${standardizedRole}_NODE</p>
             <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;"/>
             <p style="line-height: 1.6; font-size: 14px;">A forensic node has been authorized for your role. Triangulation is required to finalize the ${orgName} risk profile.</p>
             <p style="line-height: 1.6;">Your secure access code is: <span style="color: #dc2626; font-weight: bold;">${code}</span></p>
@@ -68,7 +81,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    // Update parent audit status to show it is now in the field
+    // Update parent audit status
     await supabase
       .from('audits')
       .update({ status: 'TRIANGULATING' })
