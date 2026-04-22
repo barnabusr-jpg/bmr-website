@@ -23,7 +23,7 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 1. Fetch operator by code
+      // 1. Fetch operator
       const { data: op, error: opError } = await supabase
         .from('operators')
         .select('*')
@@ -35,24 +35,33 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 2. Fetch parent audit using the UUID anchor (audit_id)
+      // 2. Fetch parent audit
       const { data: audit, error: auditError } = await supabase
         .from('audits')
         .select('status, org_name, id')
         .eq('id', op.audit_id)
         .single();
 
-      // SECURITY CHECK: Lock if op is completed or audit is fully COMPLETE
+      // SECURITY: If status is COMPLETE or user already finished, lock it.
       if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
         setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
         setStep("finalized");
-      } else {
-        // Load the right questions based on the persona (EXE, MGR, TEC)
-        const filtered = FORENSIC_MATRIX.filter(q => q.lens === op.persona_type);
-        setOperator({ ...op, org_name: audit.org_name });
-        setQuestions(filtered);
-        setStep("intro");
+        return;
       }
+
+      // 3. HARDENED: Filter and Validate Questions
+      const filtered = FORENSIC_MATRIX.filter(q => q.lens === op.persona_type);
+      
+      if (!filtered || filtered.length === 0) {
+        console.error("DATA_MISMATCH: No questions found for persona", op.persona_type);
+        setStep("invalid");
+        return;
+      }
+
+      // 4. Set state all at once to prevent race conditions
+      setQuestions(filtered);
+      setOperator({ ...op, org_name: audit.org_name });
+      setStep("intro");
     };
 
     init();
@@ -61,23 +70,18 @@ export default function ForensicDiagnostic() {
   const submitResults = async (finalAnswers: any) => {
     setStep("submitting");
 
-    // SCALE FIX: Update ONLY this operator's specific UUID row
     const { error: updateError } = await supabase
       .from('operators')
-      .update({ 
-        status: 'completed', 
-        raw_responses: finalAnswers 
-      })
+      .update({ status: 'completed', raw_responses: finalAnswers })
       .eq('id', operator.id); 
 
     if (updateError) {
-      console.error("SUBMISSION_ERROR:", updateError);
-      alert("SIGNAL_LOST: Database rejected the entry.");
+      alert("SIGNAL_LOST: Database rejection.");
       setStep("diagnostic");
       return;
     }
 
-    // TRIGGER TRIANGULATION: Check for 3 completed nodes under this UUID
+    // Trigger synthesis if this was the final node
     const { data: nodes } = await supabase
       .from('operators')
       .select('status')
@@ -85,30 +89,39 @@ export default function ForensicDiagnostic() {
       .eq('status', 'completed');
 
     if (nodes && nodes.length === 3) {
-      // Pass the audit UUID to the synthesis engine
       fetch('/api/synthesize-fractures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auditId: operator.audit_id }) 
-      }).catch(err => console.error("Synthesis trigger error:", err));
+      }).catch(err => console.error("Synthesis error:", err));
     }
 
     setStep("done");
   };
 
   const handleFinalizeNode = (evidence: string) => {
-    const qId = questions[currentIndex].id;
+    const qId = questions[currentIndex]?.id;
+    if (!qId) return;
+
     const newAnswers = { ...answers, [qId]: { answer: selectedAnswer, evidence } };
     setAnswers(newAnswers);
     setSelectedAnswer(null);
-    if (currentIndex < questions.length - 1) setCurrentIndex(currentIndex + 1);
-    else submitResults(newAnswers);
+    
+    if (currentIndex < questions.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    } else {
+      submitResults(newAnswers);
+    }
   };
 
-  // UI RENDERING
   if (step === "loading") return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-[0.3em]">Handshake_Initializing...</div>;
   if (step === "invalid") return <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center text-white font-mono uppercase tracking-widest"><ShieldAlert className="mb-4 text-red-600 mx-auto" size={48} /> Unauthorized_Node</div>;
   if (step === "finalized") return <div className="min-h-screen bg-black flex items-center justify-center p-16 text-center text-slate-500 font-mono uppercase tracking-widest border-2 border-red-900/10"><Lock className="mr-4 text-red-600 inline" /> NODE_SECURED: LINK_DEACTIVATED</div>;
+
+  // RENDER GUARD: Prevent crash if questions aren't ready
+  if (step === "diagnostic" && (!questions || !questions[currentIndex])) {
+    return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono italic animate-pulse">Syncing_Protocol_Questions...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white p-12 font-mono flex items-center justify-center">
@@ -137,7 +150,7 @@ export default function ForensicDiagnostic() {
                <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                  <select className="w-full bg-black border-2 border-red-900 p-6 mb-8 text-white font-black uppercase text-sm appearance-none cursor-pointer outline-none" onChange={(e) => handleFinalizeNode(e.target.value)} defaultValue="">
                    <option value="" disabled>Choose_Evidence_Basis...</option>
-                   {questions[currentIndex].evidenceOptions.map((opt: string) => <option key={opt} value={opt}>{opt.replace(/_/g, " ")}</option>)}
+                   {questions[currentIndex].evidenceOptions?.map((opt: string) => <option key={opt} value={opt}>{opt.replace(/_/g, " ")}</option>)}
                  </select>
                </div>
              )}
@@ -149,7 +162,7 @@ export default function ForensicDiagnostic() {
           <div className="text-center py-10 animate-in zoom-in duration-500">
             <CheckCircle className="mx-auto text-red-600 mb-6" size={48} />
             <div className="font-black italic text-red-600 uppercase tracking-widest text-3xl">Segment_Secured</div>
-            <p className="text-slate-500 mt-4 text-[10px] uppercase">Forensic data packet transmitted.</p>
+            <p className="text-slate-500 mt-4 text-[10px] uppercase tracking-widest">Forensic data packet transmitted.</p>
           </div>
         )}
       </div>
