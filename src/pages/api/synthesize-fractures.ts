@@ -4,28 +4,39 @@ import { supabase } from '@/lib/supabaseClient';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
+  // groupId now receives the Organization Name (e.g., "KIMMALA" or "FINAL FLIGHT")
   const { groupId } = req.body;
 
   try {
-    // 1. Fetch persona responses & the parent audit (to get rework_tax value)
-    const { data: audits, error: fetchError } = await supabase
-      .from('audits')
-      .select('raw_responses, persona_type, group_id, rework_tax')
+    // 1. Fetch all 3 nodes from 'operators' using the group_id text anchor
+    const { data: nodes, error: nodeError } = await supabase
+      .from('operators')
+      .select('raw_responses, persona_type')
       .eq('group_id', groupId);
 
-    if (fetchError || !audits || audits.length < 3) {
+    if (nodeError || !nodes || nodes.length < 3) {
+      console.error("TRIANGULATION_DATA_MISSING:", { groupId, count: nodes?.length });
       return res.status(400).json({ error: 'TRIANGULATION_INCOMPLETE' });
     }
 
-    // Capture the rework tax from the initial lead entry for financial recovery logic
-    const parentReworkTax = parseFloat(audits[0].rework_tax || "0");
+    // 2. Fetch the master audit to retrieve the baseline Rework Tax
+    const { data: parentAudit, error: auditError } = await supabase
+      .from('audits')
+      .select('rework_tax, id')
+      .eq('org_name', groupId)
+      .single();
 
-    // 2. Flatten responses into a single lookup object for cross-referencing
+    if (auditError || !parentAudit) throw new Error("PARENT_AUDIT_NOT_FOUND");
+
+    const parentReworkTax = parseFloat(parentAudit.rework_tax || "0");
+
+    // 3. Flatten responses into a lookup object for the detection engine
     const results: any = {};
-    audits.forEach(audit => {
-      if (audit.raw_responses) {
-        Object.entries(audit.raw_responses).forEach(([qId, data]: any) => {
-          results[qId] = data.answer; 
+    nodes.forEach(node => {
+      if (node.raw_responses) {
+        Object.entries(node.raw_responses).forEach(([qId, data]: any) => {
+          // Normalize: handle both {answer: "Yes"} and direct "Yes" formats
+          results[qId] = typeof data === 'object' ? data.answer : data;
         });
       }
     });
@@ -33,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const fractures = [];
     let frictionScore = 0;
 
-    // 3. Logic Fracture Detection Engine (10-Triangle Cross-Reference)
+    // --- LOGIC FRACTURE DETECTION ENGINE ---
 
     // T1: INDEMNITY
     if (results.EXE_01 === "Yes" && results.TEC_01 === "No") {
@@ -47,14 +58,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 15;
     }
 
-    // T2: REWORK TAX
+    // T2: REWORK TAX (Financial Recovery Calculation)
     if (results.MGR_02 === "Yes" && results.TEC_02 === "No") {
       const recoveryEst = (parentReworkTax * 0.4).toFixed(1);
       fractures.push({
         id: "REWORK_LEAK",
         severity: "HIGH",
         description: "Manager reports high SME rework time; Technical confirms no reinforcement loop exists to retrain models.",
-        directive: "Deploy BMR-M1 Feedback Loop Protocol to capture SME correction data for model tuning.",
+        directive: "Deploy BMR-M1 Feedback Loop Protocol to capture SME correction data.",
         recovery: `Est. $${recoveryEst}M Recovery`
       });
       frictionScore += 15;
@@ -65,8 +76,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fractures.push({
         id: "SHADOW_EXFIL",
         severity: "CRITICAL",
-        description: "Policy forbids unapproved AI, but Technical confirms zero network-level DNS filtering or blocking.",
-        directive: "Implement BMR-S1 DNS Filtering standards on corporate firewall policies.",
+        description: "Policy forbids unapproved AI, but Technical confirms zero network-level DNS filtering.",
+        directive: "Implement BMR-S1 DNS Filtering standards on corporate firewalls.",
         recovery: "IP Asset Protection"
       });
       frictionScore += 15;
@@ -77,7 +88,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       fractures.push({
         id: "IP_ANONYMITY",
         severity: "HIGH",
-        description: "Legal IP ownership assumed, but no technical watermarking or metadata exists to prove asset origin.",
+        description: "Legal IP ownership assumed, but no technical watermarking exists to prove asset origin.",
         directive: "Apply BMR-I1 Metadata Standards to all AI-generated deliverables.",
         recovery: "Enforceable IP Rights"
       });
@@ -96,18 +107,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 15;
     }
 
-    // T6: MODEL DRIFT
-    if (results.EXE_06 === "Yes" && results.TEC_06 === "No") {
-      fractures.push({
-        id: "DRIFT_BLINDSPOT",
-        severity: "MEDIUM",
-        description: "Budget exists for re-validation, but no automated benchmarking suite is currently operational.",
-        directive: "Deploy BMR-D1 Automated Benchmarking suite for quarterly performance audits.",
-        recovery: "Output Quality Assurance"
-      });
-      frictionScore += 10;
-    }
-
     // T7: HALLUCINATION
     if (results.MGR_07 === "Yes" && results.TEC_07 === "No") {
       fractures.push({
@@ -120,18 +119,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 10;
     }
 
-    // T8: COST TRANSPARENCY
-    if (results.EXE_08 === "Yes" && results.TEC_08 === "No") {
-      fractures.push({
-        id: "OPAQUE_BURN",
-        severity: "MEDIUM",
-        description: "Executive expects ROI tracking, but Technical lacks department-level API tagging for granular cost analysis.",
-        directive: "Implement BMR-C1 API Cost-Tagging across all department heads.",
-        recovery: "Budget Transparency"
-      });
-      frictionScore += 5;
-    }
-
     // T10: RESILIENCE
     if (results.EXE_10 === "Yes" && results.TEC_10 === "No") {
       fractures.push({
@@ -141,33 +128,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         directive: "Execute BMR-R1 Disaster Recovery test using local/open-source model failover.",
         recovery: "Operational Continuity"
       });
-      frictionScore += 5;
+      frictionScore += 10;
     }
 
-    // 4. Update the Master Group Record
-    await supabase.from('diagnostic_groups').update({ 
-      sfi_score: Math.min(frictionScore, 100), 
-      is_complete: true 
-    }).eq('id', groupId);
-
-    // 5. Update the Parent Audit for the Dashboard
-    const { data: groupInfo } = await supabase
-      .from('diagnostic_groups')
-      .select('parent_audit_id')
-      .eq('id', groupId).single();
-
-    if (groupInfo?.parent_audit_id) {
-      await supabase.from('audits').update({ 
+    // 4. UPDATE MASTER AUDIT (This publishes the Capstone)
+    const { error: finalUpdateError } = await supabase
+      .from('audits')
+      .update({ 
         fractures: fractures,
         sfi_score: Math.min(frictionScore, 100),
-        status: 'COMPLETE' 
-      }).eq('id', groupInfo.parent_audit_id);
-    }
+        status: 'COMPLETE',
+        last_synthesized: new Date().toISOString()
+      })
+      .eq('org_name', groupId);
 
-    return res.status(200).json({ status: 'SYNTHESIS_COMPLETE', sfi: frictionScore });
+    if (finalUpdateError) throw finalUpdateError;
 
-  } catch (error) {
-    console.error("SYNTHESIS_FAILURE:", error);
-    return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+    return res.status(200).json({ 
+      status: 'SYNTHESIS_COMPLETE', 
+      sfi: frictionScore,
+      org: groupId 
+    });
+
+  } catch (error: any) {
+    console.error("SYNTHESIS_CRITICAL_FAILURE:", error);
+    return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR', details: error.message });
   }
 }
