@@ -18,7 +18,10 @@ export default function ForensicDiagnostic() {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code')?.trim().toUpperCase();
 
+      console.log("DIAGNOSTIC_AUTH: Attempting handshake with code:", code);
+
       if (!code) {
+        console.error("AUTH_ERROR: No code provided in URL.");
         setStep("invalid");
         return;
       }
@@ -31,6 +34,7 @@ export default function ForensicDiagnostic() {
         .single();
 
       if (opError || !op) {
+        console.error("DB_ERROR: Operator lookup failed.", opError?.message);
         setStep("invalid");
         return;
       }
@@ -42,14 +46,16 @@ export default function ForensicDiagnostic() {
         .eq('id', op.audit_id)
         .single();
 
-      // SECURITY: Lock if status is COMPLETE or user already finished
+      // SECURITY: Check if already completed
       if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
+        console.log("NODE_ACCESS: Link is deactivated or already completed.");
         setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
         setStep("finalized");
         return;
       }
 
-      // 3. ALIAS-AWARE FILTERING: Matches MGR to MANAGERIAL, etc.
+      // 3. DEFENSIVE FILTERING: Matches MGR, MANAGERIAL, etc.
+      // This ensures the "Manager" node doesn't fail even if naming is inconsistent.
       const filtered = FORENSIC_MATRIX.filter(q => {
         const lens = q.lens?.toUpperCase();
         const persona = op.persona_type?.toUpperCase();
@@ -60,13 +66,14 @@ export default function ForensicDiagnostic() {
                (persona === 'EXECUTIVE' && lens === 'EXE');
       });
       
+      console.log(`LENS_CHECK: Persona is [${op.persona_type}]. Questions found: ${filtered.length}`);
+
       if (!filtered || filtered.length === 0) {
-        console.error("DATA_MISMATCH: No questions found for persona", op.persona_type);
+        console.error("LOGIC_ERROR: No matrix mapping for persona type:", op.persona_type);
         setStep("invalid");
         return;
       }
 
-      // 4. Set state safely
       setQuestions(filtered);
       setOperator({ ...op, org_name: audit.org_name });
       setStep("intro");
@@ -84,12 +91,13 @@ export default function ForensicDiagnostic() {
       .eq('id', operator.id); 
 
     if (updateError) {
+      console.error("SUBMIT_ERROR: Failed to save results.", updateError.message);
       alert("SIGNAL_LOST: Database rejection.");
       setStep("diagnostic");
       return;
     }
 
-    // Trigger synthesis if 3 nodes are done
+    // Trigger synthesis if all 3 nodes are done
     const { data: nodes } = await supabase
       .from('operators')
       .select('status')
@@ -97,11 +105,12 @@ export default function ForensicDiagnostic() {
       .eq('status', 'completed');
 
     if (nodes && nodes.length === 3) {
+      console.log("SYNTHESIS_TRIGGERED: All nodes complete.");
       fetch('/api/synthesize-fractures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auditId: operator.audit_id }) 
-      }).catch(err => console.error("Synthesis error:", err));
+      }).catch(err => console.error("API_SYNTHESIS_ERROR:", err));
     }
 
     setStep("done");
