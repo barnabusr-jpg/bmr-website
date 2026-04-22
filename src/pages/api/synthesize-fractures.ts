@@ -4,7 +4,6 @@ import { supabase } from '@/lib/supabaseClient';
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
 
-  // PIVOT: We now receive the unique UUID anchor
   const { auditId } = req.body;
 
   if (!auditId) {
@@ -12,18 +11,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 1. Fetch all 3 nodes using the audit_id UUID anchor
+    // 1. Fetch all nodes for this audit
     const { data: nodes, error: nodeError } = await supabase
       .from('operators')
       .select('raw_responses, persona_type')
       .eq('audit_id', auditId);
 
+    // Verify triangulation completeness (3 distinct nodes)
     if (nodeError || !nodes || nodes.length < 3) {
       console.error("TRIANGULATION_DATA_MISSING:", { auditId, count: nodes?.length });
       return res.status(400).json({ error: 'TRIANGULATION_INCOMPLETE' });
     }
 
-    // 2. Fetch the master audit record by UUID for financial baseline
+    // 2. Fetch the parent audit record for baseline data
     const { data: parentAudit, error: auditError } = await supabase
       .from('audits')
       .select('rework_tax, id, org_name')
@@ -35,11 +35,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const parentReworkTax = parseFloat(parentAudit.rework_tax || "0");
 
     // 3. Flatten responses into a lookup object
+    // PIVOT: This ensures results.MGR_01 works regardless of DB capitalization
     const results: any = {};
     nodes.forEach(node => {
       if (node.raw_responses) {
+        const persona = node.persona_type?.trim().toUpperCase();
+        
         Object.entries(node.raw_responses).forEach(([qId, data]: any) => {
-          results[qId] = typeof data === 'object' ? data.answer : data;
+          // Normalize answer extraction
+          const answer = typeof data === 'object' ? data.answer : data;
+          results[qId] = answer;
+
+          // Fail-safe: map index-only IDs to persona-prefixed keys
+          if (!qId.includes('_')) {
+            const mappedId = `${persona}_${qId}`;
+            results[mappedId] = answer;
+          }
         });
       }
     });
@@ -48,6 +59,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let frictionScore = 0;
 
     // --- LOGIC FRACTURE DETECTION ENGINE ---
+    // These keys (MGR_01, etc.) must match your forensicMatrix.ts IDs exactly.
 
     // T1: INDEMNITY
     if (results.EXE_01 === "Yes" && results.TEC_01 === "No") {
@@ -134,7 +146,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 10;
     }
 
-    // 4. FINAL UPDATE: Target the specific record via UUID
+    // 4. Finalize Audit Record
     const { error: finalUpdateError } = await supabase
       .from('audits')
       .update({ 
