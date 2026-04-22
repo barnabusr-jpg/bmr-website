@@ -42,15 +42,23 @@ export default function ForensicDiagnostic() {
         .eq('id', op.audit_id)
         .single();
 
-      // SECURITY: If status is COMPLETE or user already finished, lock it.
+      // SECURITY: Lock if status is COMPLETE or user already finished
       if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
         setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
         setStep("finalized");
         return;
       }
 
-      // 3. HARDENED: Filter and Validate Questions
-      const filtered = FORENSIC_MATRIX.filter(q => q.lens === op.persona_type);
+      // 3. ALIAS-AWARE FILTERING: Matches MGR to MANAGERIAL, etc.
+      const filtered = FORENSIC_MATRIX.filter(q => {
+        const lens = q.lens?.toUpperCase();
+        const persona = op.persona_type?.toUpperCase();
+        
+        return lens === persona || 
+               (persona === 'MANAGERIAL' && lens === 'MGR') ||
+               (persona === 'TECHNICAL' && lens === 'TEC') ||
+               (persona === 'EXECUTIVE' && lens === 'EXE');
+      });
       
       if (!filtered || filtered.length === 0) {
         console.error("DATA_MISMATCH: No questions found for persona", op.persona_type);
@@ -58,7 +66,7 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 4. Set state all at once to prevent race conditions
+      // 4. Set state safely
       setQuestions(filtered);
       setOperator({ ...op, org_name: audit.org_name });
       setStep("intro");
@@ -81,7 +89,7 @@ export default function ForensicDiagnostic() {
       return;
     }
 
-    // Trigger synthesis if this was the final node
+    // Trigger synthesis if 3 nodes are done
     const { data: nodes } = await supabase
       .from('operators')
       .select('status')
@@ -118,7 +126,6 @@ export default function ForensicDiagnostic() {
   if (step === "invalid") return <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center text-white font-mono uppercase tracking-widest"><ShieldAlert className="mb-4 text-red-600 mx-auto" size={48} /> Unauthorized_Node</div>;
   if (step === "finalized") return <div className="min-h-screen bg-black flex items-center justify-center p-16 text-center text-slate-500 font-mono uppercase tracking-widest border-2 border-red-900/10"><Lock className="mr-4 text-red-600 inline" /> NODE_SECURED: LINK_DEACTIVATED</div>;
 
-  // RENDER GUARD: Prevent crash if questions aren't ready
   if (step === "diagnostic" && (!questions || !questions[currentIndex])) {
     return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono italic animate-pulse">Syncing_Protocol_Questions...</div>;
   }
