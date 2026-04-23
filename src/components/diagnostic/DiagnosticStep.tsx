@@ -1,33 +1,30 @@
+"use client";
+
+import * as React from "react";
 import { motion } from "framer-motion";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-interface Question {
-  id: string;
-  text: string;
+interface Option {
+  label: string;
+  value: number;
 }
 
 interface DiagnosticStepProps {
   dimensionTitle: string;
-  dimensionDescription?: string;
-  questions: Question[];
+  questionText: string;
+  options: Option[];
   answers: Record<string, string>;
+  questionId: string;
   onAnswerChange: (questionId: string, value: string) => void;
 }
 
-const answerOptions = [
-  { value: "1", label: "Strongly Disagree" },
-  { value: "2", label: "Disagree" },
-  { value: "3", label: "Neutral" },
-  { value: "4", label: "Agree" },
-  { value: "5", label: "Strongly Agree" },
-];
-
 const DiagnosticStep = ({
   dimensionTitle,
-  dimensionDescription,
-  questions,
+  questionText,
+  options,
   answers,
+  questionId,
   onAnswerChange,
 }: DiagnosticStepProps) => {
   return (
@@ -38,50 +35,55 @@ const DiagnosticStep = ({
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="space-y-10"
     >
-      {/* Dimension Header */}
-      <div className="space-y-3">
-        <h2 className="text-2xl md:text-3xl font-semibold">{dimensionTitle}</h2>
-        {dimensionDescription && (
-          <p className="text-foreground/70 leading-[1.7]">{dimensionDescription}</p>
-        )}
+      {/* Forensic Header */}
+      <div className="space-y-3 border-l-2 border-red-600 pl-6">
+        <h2 className="text-xs font-mono font-bold text-red-600 uppercase tracking-[0.3em]">
+          {dimensionTitle}
+        </h2>
+        <p className="text-3xl md:text-5xl font-black text-white uppercase italic tracking-tighter leading-none max-w-4xl">
+          {questionText}
+        </p>
       </div>
 
-      {/* Questions */}
-      <div className="space-y-10">
-        {questions.map((question, index) => (
-          <motion.div
-            key={question.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: index * 0.1 }}
-            className="space-y-5"
-          >
-            <Label className="text-base font-medium leading-relaxed block">
-              {index + 1}. {question.text}
-            </Label>
-            <RadioGroup
-              value={answers[question.id] || ""}
-              onValueChange={(value) => onAnswerChange(question.id, value)}
-              className="flex flex-wrap gap-3"
-            >
-              {answerOptions.map((option) => (
-                <div key={option.value} className="flex items-center">
-                  <RadioGroupItem
-                    value={option.value}
-                    id={`${question.id}-${option.value}`}
-                    className="peer sr-only"
-                  />
-                  <Label
-                    htmlFor={`${question.id}-${option.value}`}
-                    className="px-4 py-2 rounded-lg border border-border bg-card cursor-pointer transition-all duration-200 hover:border-accent/50 peer-data-[state=checked]:border-accent peer-data-[state=checked]:bg-accent/10 peer-data-[state=checked]:text-accent text-sm"
-                  >
+      {/* Options List */}
+      <div className="space-y-4">
+        <RadioGroup
+          value={answers[questionId] || ""}
+          onValueChange={(val) => onAnswerChange(questionId, val)}
+          className="flex flex-col gap-3"
+        >
+          {options.map((option) => {
+            const optionId = `${questionId}-${option.value}`;
+            return (
+              <div key={option.value} className="flex items-center w-full">
+                <RadioGroupItem
+                  value={option.value.toString()}
+                  id={optionId}
+                  className="peer sr-only"
+                />
+                <Label
+                  htmlFor={optionId}
+                  className={
+                    "w-full px-8 py-6 border border-slate-800 bg-slate-950/50 cursor-pointer transition-all duration-300 " +
+                    "hover:border-red-600/50 peer-data-[state=checked]:border-red-600 " +
+                    "peer-data-[state=checked]:bg-red-600/10 peer-data-[state=checked]:text-red-500 " +
+                    "text-xs font-bold uppercase tracking-[0.2em] flex justify-between items-center group"
+                  }
+                >
+                  <span className="group-hover:translate-x-2 transition-transform duration-300">
                     {option.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-          </motion.div>
-        ))}
+                  </span>
+                  <div className="flex items-center gap-4">
+                    <div className="h-[1px] w-8 bg-slate-800 group-hover:bg-red-600 transition-colors" />
+                    <span className="font-mono text-[10px] opacity-30 group-hover:opacity-100 transition-opacity">
+                      VAL_{option.value.toString().padStart(2, '0')}
+                    </span>
+                  </div>
+                </Label>
+              </div>
+            );
+          })}
+        </RadioGroup>
       </div>
     </motion.div>
   );

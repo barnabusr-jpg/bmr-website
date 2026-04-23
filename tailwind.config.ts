@@ -1,27 +1,22 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-   darkMode: ["class"],
+  darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
-   prefix: "",
- theme: {
-    container: {
-      center: true,
-      padding: "2rem",
-      screens: {
-        "2xl": "1400px",
-      },
-    },
+  theme: {
     extend: {
       fontFamily: {
         heading: ['Poppins', 'sans-serif'],
         body: ['Inter', 'sans-serif'],
+        // Forensic mono for audit logs and technical data
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'monospace'],
       },
       colors: {
+        // Mapping HSL variables from globals.css
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -55,37 +50,20 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        midnight: "hsl(var(--midnight))",
-        metal: "hsl(var(--metal))",
-        "soft-white": "hsl(var(--soft-white))",
-        teal: "hsl(var(--teal))",
+        // Legacy bmr colors kept for backward compatibility
+        bmr: {
+          dark: '#0f172a',
+          slate: '#1e293b',
+          red: '#dc2626',
+          gray: '#64748b',
+          light: '#f8fafc',
+        },
       },
       borderRadius: {
+        // Sharp edges as defined by --radius: 0rem
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-      },
-      keyframes: {
-        "accordion-down": {
-          from: {
-            height: "0",
-          },
-          to: {
-            height: "var(--radix-accordion-content-height)",
-          },
-        },
-        "accordion-up": {
-          from: {
-            height: "var(--radix-accordion-content-height)",
-          },
-          to: {
-            height: "0",
-          },
-        },
-      },
-      animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
       },
     },
   },

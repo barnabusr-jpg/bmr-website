@@ -1,88 +1,77 @@
+"use client";
+
+import React from "react";
+import { useRouter } from "next/router";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import CommercialVideo from "@/components/CommercialVideo";
-import Hero from "@/components/home/HeroHome";
-import ValueBullets from "@/components/home/ValueBulletsHome";
-import ServicesPreview from "@/components/home/ServicesPreviewHome";
-import Outcomes from "@/components/home/OutcomesHome";
-import ComparisonGrid from "@/components/home/ComparisonGrid";
-import Insights from "@/components/home/InsightsHome";
-import { Activity, ArrowRight } from "lucide-react";
-import { useRouter } from "next/router";
+import { ArrowRight, Shield } from "lucide-react";
 
-const Index = () => {
+export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans">
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30 relative">
       <Header />
-      <main>
-        <Hero />
-        <CommercialVideo src="https://uuyq3t7kfckwh0je.public.blob.vercel-storage.com/bmr-commercial.mp4" />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <ValueBullets />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <ServicesPreview />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <Outcomes />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        <ComparisonGrid />
-        
-        <div className="h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent" />
-        
-        {/* TRIPLE-LENS ARCHITECTURE: Centered via the internal InsightsHome logic */}
-        <Insights />
-        
-        {/* FINAL CONVERSION SECTION */}
-        <section className="py-32 px-6 border-t border-slate-900 bg-[#020617]">
-          <div className="max-w-5xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-black mb-6 italic tracking-tighter uppercase text-white">
-              Ready to Close the Gap?
-            </h2>
-            <p className="text-slate-400 text-lg mb-16 max-w-2xl mx-auto font-light leading-relaxed italic">
-              Whether you are troubleshooting a current deployment or architecting a new initiative, 
-              start with the BMR framework to eliminate shadow labor and value leak.
+      <main className="flex-grow pt-48 px-6 pb-32">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+          <div className="space-y-12 text-white">
+            <div className="space-y-6">
+              <p className="text-red-600 font-mono text-[10px] uppercase tracking-[0.5em] font-black italic border-l-2 border-red-600 pl-4">
+                BMR Forensics | Structural Audit
+              </p>
+              <h1 className="text-[120px] font-black uppercase italic tracking-tighter leading-[0.8]">
+                Strategy <br /> Is <br /> 
+                <span className="text-slate-800 opacity-50 font-black italic">Luxury.</span> <br />
+                <span className="text-red-600 font-black italic">Recovery</span> <br /> Is Duty.
+              </h1>
+            </div>
+
+            <p className="text-slate-400 text-lg max-w-lg italic leading-relaxed font-medium">
+              We identify the &quot;Log Rot&quot; and systemic drift in AI deployments. 
+              BMR provides the forensic tools to harden logic chains before architectural collapse becomes inevitable.
             </p>
 
-            {/* Centered Single Card Layout */}
-            <div className="max-w-2xl mx-auto text-left">
-              <div className="p-10 bg-[#14b8a6]/5 border-2 border-[#14b8a6]/10 rounded-none flex flex-col justify-between hover:border-[#14b8a6]/40 transition-all duration-500 group relative overflow-hidden">
-                {/* Hover DNA Highlight */}
-                <div className="absolute top-0 left-0 w-1 h-0 group-hover:h-full bg-[#14b8a6] transition-all duration-500"></div>
-                
-                <div>
-                  <Activity className="text-[#14b8a6] mb-6 h-10 w-10 group-hover:animate-pulse" />
-                  <h3 className="text-2xl font-black mb-4 italic uppercase text-white tracking-tight">
-                    System Diagnostic
-                  </h3>
-                  <p className="text-slate-300 mb-10 font-light leading-relaxed text-sm italic">
-                    Ready for a forensic view? Our 12-question pulse check identifies your 
-                    primary friction points and defines your System Archetype.
-                  </p>
-                </div>
-                
-                <button 
-                  onClick={() => router.push('/diagnostic')}
-                  className="inline-flex items-center justify-center gap-3 bg-[#14b8a6] text-[#020617] px-8 py-6 rounded-none font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white transition-all shadow-lg shadow-[#14b8a6]/10"
-                >
-                  Begin Diagnostic <ArrowRight size={14} />
-                </button>
-              </div>
-              
-              <p className="text-center mt-8 text-[9px] text-slate-700 font-black uppercase tracking-widest italic">
-                Authorized Session: Forensic Review V3
-              </p>
-            </div>
+            <button 
+              onClick={() => router.push('/pulse-check')}
+              className="bg-red-600 text-white px-12 py-6 font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all flex items-center gap-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)]"
+            >
+              Initialize Diagnostic <ArrowRight size={20} />
+            </button>
           </div>
-        </section>
+
+          <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 mt-12 relative overflow-hidden text-white font-sans">
+             <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
+               Why Systems <span className="text-red-600 font-black">Quietly Drift</span>
+             </h2>
+             <p className="text-slate-400 font-bold italic text-lg leading-tight uppercase">
+               AI failure is rarely a binary event.
+             </p>
+             <div className="pl-6 border-l border-slate-800 space-y-6 text-slate-400 font-sans">
+               <p className="text-sm italic leading-relaxed">
+                 It is a slow, structural divergence where AI-enabled logic decays under operating conditions leaders cannot see.
+               </p>
+               <p className="text-sm leading-relaxed italic">
+                 When human intent and machine execution decouple, you do not have an &quot;optimization&quot; problem. You have <span className="text-red-600 font-black uppercase italic">Systemic Rot.</span>
+               </p>
+             </div>
+          </div>
+        </div>
       </main>
       <Footer />
+
+      {/* 🛡️ HIDDEN ADMIN NODE ACCESS */}
+      <div 
+        onClick={() => router.push('/admin/dashboard')}
+        className="fixed bottom-6 left-6 z-[100] cursor-crosshair group flex items-center gap-2"
+        title="Admin_Node_Login"
+      >
+        <div className="w-8 h-8 flex items-center justify-center border border-slate-900/30 group-hover:border-red-600/50 transition-all duration-700 rounded-full bg-slate-950/20 backdrop-blur-sm">
+          <Shield size={10} className="text-slate-900 group-hover:text-red-600 opacity-10 group-hover:opacity-100 transition-all" />
+        </div>
+        <span className="text-[7px] font-mono text-slate-900 uppercase tracking-[0.5em] opacity-0 group-hover:opacity-100 group-hover:text-red-600 transition-all duration-500">
+          ALPHA-7_LOG_IN
+        </span>
+      </div>
     </div>
   );
-};
-
-export default Index;
+}
