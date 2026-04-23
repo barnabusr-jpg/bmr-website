@@ -110,7 +110,7 @@ export default function AdminDashboard() {
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
               <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">INITIATE_TRIANGULATION</h2>
-              <div className="space-y-4 mt-10">
+              <div className="space-y-4 mt-10 text-left">
                 <input placeholder="EXECUTIVE_NODE_EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
                 <input placeholder="MANAGERIAL_NODE_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
                 <input placeholder="TECHNICAL_NODE_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
@@ -135,73 +135,82 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-900">
-              {data.map((audit) => (
-                <React.Fragment key={audit.id}>
-                  <tr onClick={() => toggleRow(audit.id)} className="hover:bg-white/[0.02] cursor-pointer transition-all">
-                    <td className="p-10 text-left">
-                      <div className="flex items-center gap-6">
-                        <Building2 size={32} className={audit.status === 'COMPLETE' ? "text-green-500" : "text-red-600"} />
-                        <div>
-                          <div className="font-black text-white uppercase text-3xl italic tracking-tighter leading-none">{audit.org_name}</div>
-                          <div className="text-[11px] text-slate-500 font-mono mt-2 uppercase">{audit.lead_email}</div>
+              {data.map((audit) => {
+                // INTERNAL STATUS CHECK: Check if all 3 nodes exist and are completed
+                // This logic normally lives in synthesis, but we simulate it for UI
+                const isTriangulated = audit.status === 'COMPLETE';
+                
+                return (
+                  <React.Fragment key={audit.id}>
+                    <tr onClick={() => toggleRow(audit.id)} className="hover:bg-white/[0.02] cursor-pointer transition-all">
+                      <td className="p-10 text-left">
+                        <div className="flex items-center gap-6">
+                          <Building2 size={32} className={isTriangulated ? "text-green-500" : "text-red-600"} />
+                          <div>
+                            <div className="font-black text-white uppercase text-3xl italic tracking-tighter">{audit.org_name}</div>
+                            <div className="text-[11px] text-slate-500 font-mono mt-2 uppercase">{audit.lead_email}</div>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-10 text-center">
-                      <span className={`text-[10px] font-black uppercase italic px-4 py-2 ${audit.status === 'COMPLETE' ? 'bg-green-500/10 text-green-500' : audit.status === 'LEAD' ? 'bg-slate-500/10 text-slate-500' : 'bg-yellow-500/10 text-yellow-500 animate-pulse'}`}>
-                        {audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : audit.status === 'LEAD' ? 'LEAD_CAPTURED' : 'IN_PROGRESS'}
-                      </span>
-                    </td>
-                    <td className="p-10 text-right text-slate-600">
-                      {expandedRow === audit.id ? <ChevronUp /> : <ChevronDown />}
-                    </td>
-                  </tr>
-                  <AnimatePresence>
-                    {expandedRow === audit.id && (
-                      <tr>
-                        <td colSpan={3} className="bg-black/50 p-0 border-b border-slate-900">
-                          <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
-                            <div className="p-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-                              {[
-                                { label: 'EXECUTIVE', key: 'EXE' },
-                                { label: 'MANAGERIAL', key: 'MGR' },
-                                { label: 'TECHNICAL', key: 'TEC' }
-                              ].map((role) => {
-                                const node = nodeDetails.find(n => n.persona_type === role.key);
-                                const isDone = node?.status?.toLowerCase() === 'completed';
-                                return (
-                                  <div key={role.label} className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-between min-h-[160px]">
-                                    <div className="flex justify-between items-start">
-                                      <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest">{role.label}_NODE</span>
-                                      {isDone ? <CheckCircle className="text-green-500" size={16}/> : <Clock className="text-slate-800" size={16}/>}
+                      </td>
+                      <td className="p-10 text-center">
+                        <span className={`text-[10px] font-black uppercase italic px-4 py-2 ${
+                          isTriangulated ? 'bg-green-500/10 text-green-500 border border-green-500/20' : 
+                          audit.status === 'LEAD' ? 'bg-slate-500/10 text-slate-500' : 'bg-yellow-500/10 text-yellow-500 animate-pulse'
+                        }`}>
+                          {isTriangulated ? 'RESULT_PUBLISHED' : audit.status === 'LEAD' ? 'LEAD_CAPTURED' : 'TRIANGULATION_ACTIVE'}
+                        </span>
+                      </td>
+                      <td className="p-10 text-right text-slate-600">
+                        {expandedRow === audit.id ? <ChevronUp /> : <ChevronDown />}
+                      </td>
+                    </tr>
+                    <AnimatePresence>
+                      {expandedRow === audit.id && (
+                        <tr>
+                          <td colSpan={3} className="bg-black/50 p-0 border-b border-slate-900">
+                            <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
+                              <div className="p-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+                                {[
+                                  { label: 'EXECUTIVE', key: 'EXE' },
+                                  { label: 'MANAGERIAL', key: 'MGR' },
+                                  { label: 'TECHNICAL', key: 'TEC' }
+                                ].map((role) => {
+                                  const node = nodeDetails.find(n => n.persona_type === role.key);
+                                  const isDone = node?.status?.toLowerCase() === 'completed';
+                                  return (
+                                    <div key={role.label} className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-between min-h-[160px]">
+                                      <div className="flex justify-between items-start">
+                                        <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest">{role.label}_NODE</span>
+                                        {isDone ? <CheckCircle className="text-green-500" size={16}/> : <Clock className="text-slate-800" size={16}/>}
+                                      </div>
+                                      <div className={`text-2xl font-black italic uppercase tracking-tighter ${isDone ? 'text-white' : 'text-slate-800'}`}>
+                                        {isDone ? 'CALCULATED' : 'WAITING'}
+                                      </div>
                                     </div>
-                                    <div className={`text-2xl font-black italic uppercase tracking-tighter ${isDone ? 'text-white' : 'text-slate-800'}`}>
-                                      {isDone ? 'CALCULATED' : 'WAITING'}
-                                    </div>
+                                  );
+                                })}
+                                <div className="md:col-span-3 flex justify-between mt-8 border-t border-slate-900 pt-8 gap-4">
+                                  <div className="flex gap-4">
+                                    {audit.status === 'LEAD' ? (
+                                      <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-red-600 text-white px-8 py-4 font-black uppercase italic text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-3"><Mail size={16} /> START_TRIANGULATION</button>
+                                    ) : (
+                                      <>
+                                        <button onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="bg-yellow-600 text-black px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-white transition-all flex items-center gap-2"><Zap size={14} /> Force_Synthesis</button>
+                                        <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-slate-800 text-white px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-2"><Send size={14} /> Re-Dispatch</button>
+                                      </>
+                                    )}
                                   </div>
-                                );
-                              })}
-                              <div className="md:col-span-3 flex justify-between mt-8 border-t border-slate-900 pt-8 gap-4">
-                                <div className="flex gap-4">
-                                  {audit.status === 'LEAD' ? (
-                                    <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-red-600 text-white px-8 py-4 font-black uppercase italic text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-3 leading-none"><Mail size={16} /> START_TRIANGULATION</button>
-                                  ) : (
-                                    <>
-                                      <button onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="bg-yellow-600 text-black px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-white transition-all flex items-center gap-2"><Zap size={14} /> Force_Synthesis</button>
-                                      <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-slate-800 text-white px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-2"><Send size={14} /> Re-Dispatch</button>
-                                    </>
-                                  )}
+                                  <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="bg-white text-black px-8 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3"><FileText size={16} /> GENERATE_FORENSIC_DOSSIER</button>
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="bg-white text-black px-8 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3"><FileText size={16} /> GENERATE_FORENSIC_DOSSIER</button>
                               </div>
-                            </div>
-                          </motion.div>
-                        </td>
-                      </tr>
-                    )}
-                  </AnimatePresence>
-                </React.Fragment>
-              ))}
+                            </motion.div>
+                          </td>
+                        </tr>
+                      )}
+                    </AnimatePresence>
+                  </React.Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>
