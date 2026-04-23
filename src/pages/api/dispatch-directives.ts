@@ -5,13 +5,18 @@ import { supabase } from '@/lib/supabaseClient';
 sgMail.setApiKey(process.env.BMR_SENDGRID_KEY as string);
 
 // --- THE SOURCE OF TRUTH ---
+// This map catches every possible variation and forces it into the forensic shorthand.
 const ROLE_MAP: Record<string, string> = {
   'managerial': 'MGR',
   'technical': 'TEC',
   'executive': 'EXE',
   'manager': 'MGR',
   'tech': 'TEC',
-  'exec': 'EXE'
+  'exec': 'EXE',
+  'man': 'MGR',
+  'executivenode': 'EXE',
+  'technicalnode': 'TEC',
+  'managerialnode': 'MGR'
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -35,18 +40,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (!targetEmail) continue;
 
       // --- STANDARDIZATION STEP ---
-      // We take whatever the frontend sends and force it into MGR, TEC, or EXE
-      const standardizedRole = ROLE_MAP[rawRole.toLowerCase().trim()] || rawRole.toUpperCase();
+      // We normalize the key to lowercase and strip whitespace to ensure the map finds it.
+      const normalizedKey = rawRole.toLowerCase().trim();
+      const standardizedRole = ROLE_MAP[normalizedKey] || rawRole.toUpperCase().substring(0, 3);
 
       // 1. Generate unique access code
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // 2. Database Sync - Now using the Standardized Role
+      // 2. Database Sync - Now using the Standardized Role (MGR, TEC, EXE)
       const { error: dbError } = await supabase.from('operators').upsert({
         email: targetEmail,
         group_id: groupId,       
         audit_id: parentAuditId,  
-        persona_type: standardizedRole, // This is now ALWAYS 'MGR', 'TEC', or 'EXE'
+        persona_type: standardizedRole, 
         access_code: code,
         is_authorized: true,
         status: 'pending'        
@@ -81,7 +87,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    // Update parent audit status
+    // Update parent audit status to move from LEAD -> TRIANGULATING
     await supabase
       .from('audits')
       .update({ status: 'TRIANGULATING' })
