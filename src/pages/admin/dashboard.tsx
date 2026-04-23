@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Key, Activity, BarChart3, Fingerprint, Building2, Send, X, Zap, CheckCircle, FileText, Globe } from "lucide-react";
+import { Key, Activity, Building2, Send, X, Zap, CheckCircle, FileText, Globe, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function AdminDashboard() {
@@ -20,6 +20,30 @@ export default function AdminDashboard() {
       .order('created_at', { ascending: false });
     setData(audits || []);
   }, []);
+
+  // --- NEW: THE HANDSHAKE TRIGGER ---
+  // This forces the API to run the math and flip the status to COMPLETE
+  const runSynthesis = async (auditId: string) => {
+    setIsUpdating(true);
+    try {
+      const res = await fetch('/api/synthesize-fracture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auditId })
+      });
+      
+      if (res.ok) {
+        await fetchLedger(); // Refresh the list to show "COMPLETE"
+      } else {
+        const err = await res.json();
+        alert(`Synthesis Error: ${err.error}`);
+      }
+    } catch (err) {
+      console.error("Manual Synthesis Failed", err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
@@ -51,7 +75,11 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) fetchLedger();
+    if (isAuthenticated) {
+      fetchLedger();
+      const interval = setInterval(fetchLedger, 10000); // Auto-refresh every 10s
+      return () => clearInterval(interval);
+    }
   }, [isAuthenticated, fetchLedger]);
 
   if (!isAuthenticated) {
@@ -74,14 +102,14 @@ export default function AdminDashboard() {
         <span className="text-white font-black uppercase italic tracking-[0.2em] text-sm">Forensic_Command_Center</span>
       </nav>
 
+      {/* Triangulation Modal */}
       <AnimatePresence>
         {selectedAudit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
               <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter">INITIATE_TRIANGULATION</h2>
-              <p className="text-red-600 font-mono text-[10px] uppercase mb-10 tracking-[0.2em] italic">Target: {selectedAudit.org_name}</p>
-              <div className="space-y-4">
+              <div className="space-y-4 mt-10">
                 <input placeholder="EXECUTIVE_NODE" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
                 <input placeholder="MANAGERIAL_NODE" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
                 <input placeholder="TECHNICAL_NODE" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
@@ -97,11 +125,11 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto space-y-12">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-slate-900/40 border border-slate-800 p-10 relative">
+          <div className="bg-slate-900/40 border border-slate-800 p-10">
             <label className="text-[10px] font-mono text-slate-500 uppercase block mb-6 italic tracking-widest">Cumulative_Rework_Tax</label>
             <div className="text-6xl font-black italic text-white tracking-tighter">${data.reduce((a, c) => a + (Number(c.rework_tax) || 0), 0).toFixed(1)}M</div>
           </div>
-          <div className="bg-slate-900/40 border border-slate-800 p-10 relative">
+          <div className="bg-slate-900/40 border border-slate-800 p-10">
             <label className="text-[10px] font-mono text-slate-500 uppercase block mb-6 italic tracking-widest">Active_Operations</label>
             <div className="text-6xl font-black italic text-white tracking-tighter">{data.filter(d => d.status !== 'COMPLETE').length}</div>
           </div>
@@ -137,15 +165,24 @@ export default function AdminDashboard() {
                        <div className="text-slate-600 text-[10px] font-black uppercase italic tracking-widest opacity-40">Lead_Captured</div>
                     )}
                   </td>
-                  <td className="p-10 text-right">
+                  <td className="p-10 text-right space-x-2">
                     {audit.status === 'LEAD' && (
                       <button onClick={() => setSelectedAudit(audit)} className="px-6 py-3 bg-red-600 text-white font-black uppercase text-[10px] italic hover:bg-white hover:text-black transition-all">Start_Triangulation</button>
                     )}
                     {audit.status === 'TRIANGULATING' && (
-                       <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="px-6 py-3 bg-yellow-600 text-black font-black uppercase text-[10px] italic hover:bg-white transition-all inline-flex items-center gap-2"><FileText size={14} /> Monitor_Synthesis</button>
+                       <>
+                        <button onClick={() => runSynthesis(audit.id)} disabled={isUpdating} className="px-4 py-3 bg-yellow-600 text-black font-black uppercase text-[10px] italic hover:bg-white transition-all inline-flex items-center gap-2">
+                           {isUpdating ? <RefreshCw className="animate-spin" size={14}/> : <Zap size={14} />} Force_Synthesis
+                        </button>
+                        <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="px-4 py-3 bg-slate-800 text-white font-black uppercase text-[10px] italic hover:bg-white hover:text-black transition-all inline-flex items-center gap-2">
+                           <FileText size={14} /> Monitor
+                        </button>
+                       </>
                     )}
                     {audit.status === 'COMPLETE' && (
-                      <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="px-6 py-3 bg-white text-black font-black uppercase text-[10px] italic hover:bg-green-500 hover:text-white transition-all inline-flex items-center gap-2"><Globe size={14} /> View_Capstone_Report</button>
+                      <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="px-6 py-3 bg-white text-black font-black uppercase text-[10px] italic hover:bg-green-500 hover:text-white transition-all inline-flex items-center gap-2">
+                        <Globe size={14} /> View_Capstone_Report
+                      </button>
                     )}
                   </td>
                 </tr>
