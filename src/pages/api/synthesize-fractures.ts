@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select('raw_responses, persona_type')
       .eq('audit_id', auditId);
 
-    // Verify triangulation completeness (3 distinct nodes)
+    // Verify triangulation completeness (Ensure 3 distinct nodes are present)
     if (nodeError || !nodes || nodes.length < 3) {
       console.error("TRIANGULATION_DATA_MISSING:", { auditId, count: nodes?.length });
       return res.status(400).json({ error: 'TRIANGULATION_INCOMPLETE' });
@@ -35,20 +35,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const parentReworkTax = parseFloat(parentAudit.rework_tax || "0");
 
     // 3. Flatten responses into a lookup object
-    // PIVOT: This ensures results.MGR_01 works regardless of DB capitalization
+    // PIVOT: Forces results.MGR_01 regardless of whether DB says 'MGR' or 'MANAGERIAL'
     const results: any = {};
     nodes.forEach(node => {
       if (node.raw_responses) {
-        const persona = node.persona_type?.trim().toUpperCase();
+        // Normalize persona mapping
+        let persona = node.persona_type?.trim().toUpperCase() || "";
+        if (persona.startsWith("EXEC")) persona = "EXE";
+        if (persona.startsWith("MAN")) persona = "MGR";
+        if (persona.startsWith("TECH")) persona = "TEC";
         
         Object.entries(node.raw_responses).forEach(([qId, data]: any) => {
-          // Normalize answer extraction
+          // Normalize answer extraction (handle object or string)
           const answer = typeof data === 'object' ? data.answer : data;
           results[qId] = answer;
 
-          // Fail-safe: map index-only IDs to persona-prefixed keys
+          // Fail-safe: map index-only IDs (e.g., '01') to persona-prefixed keys (e.g., 'MGR_01')
           if (!qId.includes('_')) {
-            const mappedId = `${persona}_${qId}`;
+            const mappedId = `${persona}_${qId.padStart(2, '0')}`;
             results[mappedId] = answer;
           }
         });
@@ -59,7 +63,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let frictionScore = 0;
 
     // --- LOGIC FRACTURE DETECTION ENGINE ---
-    // These keys (MGR_01, etc.) must match your forensicMatrix.ts IDs exactly.
+    // IDs (EXE_01, etc.) correspond directly to src/lib/forensicMatrix.ts
 
     // T1: INDEMNITY
     if (results.EXE_01 === "Yes" && results.TEC_01 === "No") {
@@ -146,7 +150,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 10;
     }
 
-    // 4. Finalize Audit Record
+    // 4. Finalize Audit Record in Supabase
     const { error: finalUpdateError } = await supabase
       .from('audits')
       .update({ 
