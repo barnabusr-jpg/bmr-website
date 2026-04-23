@@ -14,16 +14,33 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 1. Fetch all nodes for this audit
     const { data: nodes, error: nodeError } = await supabase
       .from('operators')
-      .select('raw_responses, persona_type')
+      .select('raw_responses, persona_type, status')
       .eq('audit_id', auditId);
 
-    // Verify triangulation completeness (Ensure 3 distinct nodes are present)
-    if (nodeError || !nodes || nodes.length < 3) {
-      console.error("TRIANGULATION_DATA_MISSING:", { auditId, count: nodes?.length });
-      return res.status(400).json({ error: 'TRIANGULATION_INCOMPLETE' });
+    // --- FAULT TOLERANCE & LOGGING ---
+    console.log(`[SYNTHESIS_START] Audit: ${auditId} | Nodes Found: ${nodes?.length || 0}`);
+
+    if (nodeError) throw nodeError;
+
+    // Normalizing status check (handles 'Completed', 'completed', 'COMPLETED')
+    const completedNodes = nodes?.filter(n => 
+      n.status?.toString().toLowerCase().trim() === 'completed'
+    ) || [];
+
+    console.log(`[STATUS_CHECK] Nodes marked 'completed': ${completedNodes.length}`);
+
+    // VERIFICATION: We only block if there is NO data. 
+    // If we have 1 or 2 nodes, we warn but proceed to allow partial synthesis.
+    if (nodes.length === 0) {
+      console.error("[SYNTHESIS_ABORT] No nodes found for this ID.");
+      return res.status(400).json({ error: 'TRIANGULATION_VOID' });
     }
 
-    // 2. Fetch the parent audit record for baseline data
+    if (nodes.length < 3) {
+      console.warn(`[SYNTHESIS_PARTIAL] Proceeding with ${nodes.length}/3 nodes.`);
+    }
+
+    // 2. Fetch the parent audit record
     const { data: parentAudit, error: auditError } = await supabase
       .from('audits')
       .select('rework_tax, id, org_name')
@@ -35,22 +52,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const parentReworkTax = parseFloat(parentAudit.rework_tax || "0");
 
     // 3. Flatten responses into a lookup object
-    // PIVOT: Forces results.MGR_01 regardless of whether DB says 'MGR' or 'MANAGERIAL'
     const results: any = {};
     nodes.forEach(node => {
       if (node.raw_responses) {
-        // Normalize persona mapping
+        // Normalize persona mapping to EXE, MGR, TEC shorthand
         let persona = node.persona_type?.trim().toUpperCase() || "";
-        if (persona.startsWith("EXEC")) persona = "EXE";
-        if (persona.startsWith("MAN")) persona = "MGR";
-        if (persona.startsWith("TECH")) persona = "TEC";
+        if (persona.includes("EXEC")) persona = "EXE";
+        if (persona.includes("MAN")) persona = "MGR";
+        if (persona.includes("TECH")) persona = "TEC";
         
         Object.entries(node.raw_responses).forEach(([qId, data]: any) => {
-          // Normalize answer extraction (handle object or string)
           const answer = typeof data === 'object' ? data.answer : data;
           results[qId] = answer;
 
-          // Fail-safe: map index-only IDs (e.g., '01') to persona-prefixed keys (e.g., 'MGR_01')
+          // Fail-safe: map index-only IDs to persona-prefixed keys
           if (!qId.includes('_')) {
             const mappedId = `${persona}_${qId.padStart(2, '0')}`;
             results[mappedId] = answer;
@@ -63,90 +78,46 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let frictionScore = 0;
 
     // --- LOGIC FRACTURE DETECTION ENGINE ---
-    // IDs (EXE_01, etc.) correspond directly to src/lib/forensicMatrix.ts
-
     // T1: INDEMNITY
     if (results.EXE_01 === "Yes" && results.TEC_01 === "No") {
-      fractures.push({
-        id: "INDEMNITY_VOID",
-        severity: "CRITICAL",
-        description: "Executive assumes enforceable audit rights; Technical confirms zero forensic logging.",
-        directive: "Issue BMR-T1 Technical Specification to vendors.",
-        recovery: "Full Legal Compliance"
-      });
+      fractures.push({ id: "INDEMNITY_VOID", severity: "CRITICAL", description: "Executive assumes enforceable audit rights; Technical confirms zero forensic logging.", directive: "Issue BMR-T1 Technical Specification to vendors.", recovery: "Full Legal Compliance" });
       frictionScore += 15;
     }
 
     // T2: REWORK TAX
     if (results.MGR_02 === "Yes" && results.TEC_02 === "No") {
       const recoveryEst = (parentReworkTax * 0.4).toFixed(1);
-      fractures.push({
-        id: "REWORK_LEAK",
-        severity: "HIGH",
-        description: "Manager reports high SME rework; Technical confirms no reinforcement retraining loop.",
-        directive: "Deploy BMR-M1 Feedback Loop Protocol.",
-        recovery: `Est. $${recoveryEst}M Recovery`
-      });
+      fractures.push({ id: "REWORK_LEAK", severity: "HIGH", description: "Manager reports high SME rework; Technical confirms no reinforcement retraining loop.", directive: "Deploy BMR-M1 Feedback Loop Protocol.", recovery: `Est. $${recoveryEst}M Recovery` });
       frictionScore += 15;
     }
 
     // T3: SHADOW AI
     if (results.EXE_03 === "Yes" && results.TEC_03 === "No") {
-      fractures.push({
-        id: "SHADOW_EXFIL",
-        severity: "CRITICAL",
-        description: "Policy forbids unapproved AI; Technical confirms zero network-level DNS filtering.",
-        directive: "Implement BMR-S1 DNS Filtering standards.",
-        recovery: "IP Asset Protection"
-      });
+      fractures.push({ id: "SHADOW_EXFIL", severity: "CRITICAL", description: "Policy forbids unapproved AI; Technical confirms zero network-level DNS filtering.", directive: "Implement BMR-S1 DNS Filtering standards.", recovery: "IP Asset Protection" });
       frictionScore += 15;
     }
 
     // T4: IP OWNERSHIP
     if (results.EXE_04 === "Yes" && results.TEC_04 === "No") {
-      fractures.push({
-        id: "IP_ANONYMITY",
-        severity: "HIGH",
-        description: "Legal IP ownership assumed; no technical watermarking exists to prove origin.",
-        directive: "Apply BMR-I1 Metadata Standards to deliverables.",
-        recovery: "Enforceable IP Rights"
-      });
+      fractures.push({ id: "IP_ANONYMITY", severity: "HIGH", description: "Legal IP ownership assumed; no technical watermarking exists to prove origin.", directive: "Apply BMR-I1 Metadata Standards to deliverables.", recovery: "Enforceable IP Rights" });
       frictionScore += 10;
     }
 
     // T5: PII MASKING
     if (results.EXE_05 === "Yes" && results.TEC_05 === "No") {
-      fractures.push({
-        id: "PII_EXPOSURE",
-        severity: "CRITICAL",
-        description: "Compliance standards assumed met; no automated scrubbing layer for API egress.",
-        directive: "Implement automated egress scrubbing (BMR-P1).",
-        recovery: "Data Privacy Safety"
-      });
+      fractures.push({ id: "PII_EXPOSURE", severity: "CRITICAL", description: "Compliance standards assumed met; no automated scrubbing layer for API egress.", directive: "Implement automated egress scrubbing (BMR-P1).", recovery: "Data Privacy Safety" });
       frictionScore += 15;
     }
 
     // T7: HALLUCINATION
     if (results.MGR_07 === "Yes" && results.TEC_07 === "No") {
-      fractures.push({
-        id: "TRUTH_DECAY",
-        severity: "HIGH",
-        description: "Kill-switch protocol exists; Technical confirms no 'Grounding' (RAG) active.",
-        directive: "Initialize BMR-H1 Grounding (RAG) architecture.",
-        recovery: "Liability Mitigation"
-      });
+      fractures.push({ id: "TRUTH_DECAY", severity: "HIGH", description: "Kill-switch protocol exists; Technical confirms no 'Grounding' (RAG) active.", directive: "Initialize BMR-H1 Grounding (RAG) architecture.", recovery: "Liability Mitigation" });
       frictionScore += 10;
     }
 
     // T10: RESILIENCE
     if (results.EXE_10 === "Yes" && results.TEC_10 === "No") {
-      fractures.push({
-        id: "VENDOR_LOCK",
-        severity: "HIGH",
-        description: "Multi-model strategy on paper; no rollback to open-source models tested.",
-        directive: "Execute BMR-R1 Disaster Recovery failover test.",
-        recovery: "Operational Continuity"
-      });
+      fractures.push({ id: "VENDOR_LOCK", severity: "HIGH", description: "Multi-model strategy on paper; no rollback to open-source models tested.", directive: "Execute BMR-R1 Disaster Recovery failover test.", recovery: "Operational Continuity" });
       frictionScore += 10;
     }
 
@@ -163,6 +134,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (finalUpdateError) throw finalUpdateError;
 
+    console.log(`[SYNTHESIS_COMPLETE] Audit: ${auditId} | SFI: ${frictionScore}`);
+
     return res.status(200).json({ 
       status: 'SYNTHESIS_COMPLETE', 
       sfi: frictionScore,
@@ -170,7 +143,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
   } catch (error: any) {
-    console.error("SYNTHESIS_CRITICAL_FAILURE:", error);
+    console.error("[SYNTHESIS_CRITICAL_FAILURE]:", error);
     return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR', details: error.message });
   }
 }
