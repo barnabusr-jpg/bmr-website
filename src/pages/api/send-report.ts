@@ -1,102 +1,76 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 
-// Set API key with a fallback to prevent initialization crash
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
+// 🛡️ SECURITY HANDSHAKE - Unified with BMR_SENDGRID_KEY
+sgMail.setApiKey(process.env.BMR_SENDGRID_KEY || '');
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Guard clause for non-POST requests
   if (req.method !== 'POST') {
     res.setHeader('Allow', ['POST']);
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { name, email, organization, zoneData, role } = req.body;
+  const { name, email, organization, reworkTax, role } = req.body;
 
-  // Defensive data parsing to prevent "undefined" errors in math
-  const intensities = { 
-    HAI: Math.round(zoneData?.HAI?.aggregate || 0), 
-    AVS: Math.round(zoneData?.AVS?.aggregate || 0), 
-    IGF: Math.round(zoneData?.IGF?.aggregate || 0) 
-  };
-
-  const maxStrength = Math.max(zoneData?.HAI?.max || 0, zoneData?.AVS?.max || 0, zoneData?.IGF?.max || 0);
-  const maturityStage = `Stage ${maxStrength}: ${maxStrength >= 4 ? 'Optimized' : 'Emerging'}`;
-
-  // Logic for identifying the primary drift vector
-  const focusKey = intensities.AVS >= intensities.HAI && intensities.AVS >= intensities.IGF 
-    ? 'AVS' : (intensities.IGF >= intensities.HAI ? 'IGF' : 'HAI');
-
-  const clientFacingVector = focusKey === 'HAI' ? 'Vector 01' : focusKey === 'AVS' ? 'Vector 02' : 'Vector 03';
-  const airtableFacingVector = `Vector 0${focusKey === 'HAI' ? 1 : focusKey === 'AVS' ? 2 : 3} (${focusKey})`;
-
-  // Calendly Construction
-  const calendlyBase = "https://calendly.com/hello-bmradvisory/forensic-review";
-  const calendlyUrl = `${calendlyBase}?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&a1=${clientFacingVector}&utm_campaign=${encodeURIComponent(organization)}`;
+  // 🗓️ Standardized Calendly (Ensures consistency for the briefing)
+  const calendlyUrl = `https://calendly.com/bmr-solutions/forensic-review?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&utm_campaign=${encodeURIComponent(organization)}`;
 
   const msg = {
     to: email,
-    bcc: 'hello@bmradvisory.co', // Internal monitoring
-    from: 'hello@bmradvisory.co', 
-    subject: `[Observation Report] BMR Signal Diagnostic: ${organization}`,
+    bcc: 'hello@bmradvisory.co', 
+    from: 'BMR Solutions <hello@bmradvisory.co>',
+    subject: `Your Audit Results: ${organization}`, 
     html: `
-      <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; color: #020617; padding: 40px; border: 1px solid #e2e8f0; margin: 0 auto;">
-        <h2 style="text-transform: uppercase; letter-spacing: 4px; font-size: 12px; color: #64748b; border-bottom: 2px solid #020617; padding-bottom: 10px; margin-bottom: 30px;">Forensic Signal Captured</h2>
-        <p style="font-size: 16px; line-height: 1.5;">Hello ${name.split(' ')[0] || 'Team'},</p>
-        <p style="font-size: 16px; line-height: 1.5;">Your BMR Diagnostic for <strong>${organization}</strong> has completed benchmarking for the <strong>${role} Lens</strong>.</p>
+      <div style="font-family: sans-serif; max-width: 600px; background-color: #ffffff; color: #020617; padding: 40px; border-top: 4px solid #dc2626; margin: 20px auto; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
+        <h2 style="text-transform: uppercase; font-weight: 900; font-size: 22px; color: #dc2626; margin-bottom: 20px; letter-spacing: -0.5px;">
+          Your Forensic Audit is Complete
+        </h2>
         
-        <div style="background-color: #f8fafc; padding: 30px; margin: 30px 0; border-left: 4px solid #00F2FF;">
-          <p style="font-size: 10px; text-transform: uppercase; color: #64748b; margin: 0; letter-spacing: 2px;">Primary Variance Lens</p>
-          <p style="font-size: 20px; font-weight: bold; font-style: italic; margin: 5px 0;">Observation ${clientFacingVector}</p>
+        <p style="font-size: 16px; line-height: 1.6;">Hello ${name.split(' ')[0] || 'there'},</p>
+        
+        <p style="font-size: 16px; line-height: 1.6;">
+          We have finished analyzing the data for <strong>${organization}</strong>. By looking at your business through the <strong>${role} Lens</strong>, we have identified specific areas where your operations are losing efficiency.
+        </p>
+        
+        <p style="font-size: 16px; line-height: 1.6;">
+          Our analysis shows that hidden friction in your workflow is creating a "Rework Tax." This means your team is likely losing significant time and money fixing avoidable mistakes or dealing with confusing processes.
+        </p>
+        
+        <div style="background-color: #f8fafc; padding: 30px; margin: 30px 0; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626;">
+          <p style="font-size: 12px; text-transform: uppercase; color: #64748b; margin: 0; font-weight: bold; letter-spacing: 1px;">Estimated Yearly Waste:</p>
+          <p style="font-size: 28px; font-weight: 900; margin: 10px 0; color: #020617;">
+            $${reworkTax} Million
+          </p>
+          <p style="font-size: 13px; color: #475569; margin: 0;">
+            This represents capital that is being "taxed" by inefficient systems.
+          </p>
         </div>
 
-        <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 30px;">
-          The captured signals indicate specific friction points within your current AI infrastructure. To decrypt these findings and review the strategic neutralization roadmap, please use the secure link below.
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+          I have attached your <strong>Forensic Briefing PDF</strong> to this email. It highlights the highest-risk zones in your current setup. 
+        </p>
+        
+        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+          I have opened up a few spots on my calendar this week to walk you through these results and show you a roadmap to stop this waste. You can grab 15 minutes below.
         </p>
 
-        <div style="text-align: center; margin-top: 40px;">
-          <a href="${calendlyUrl}" style="background-color: #020617; color: #ffffff; padding: 18px 30px; text-decoration: none; font-weight: bold; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; display: inline-block;">Unlock Strategic Roadmap →</a>
+        <div style="text-align: center; margin-bottom: 20px;">
+          <a href="${calendlyUrl}" style="background-color: #dc2626; color: #ffffff; padding: 20px 40px; text-decoration: none; font-weight: bold; text-transform: uppercase; font-size: 14px; display: inline-block; border-radius: 4px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);">
+            Schedule Your Result Review →
+          </a>
         </div>
         
         <p style="font-size: 10px; color: #94a3b8; margin-top: 50px; text-align: center; text-transform: uppercase; letter-spacing: 1px;">
-          Confidential Systemic Audit | BMR Advisory Co.
+          BMR ADVISORY // SECURE AUDIT DISPATCH // CONFIDENTIAL
         </p>
       </div>`
   };
 
   try {
-    // 1. Send the Email
     await sgMail.send(msg);
-
-    // 2. Log to Airtable (Fire and forget or await depending on priority)
-    if (process.env.AIRTABLE_WEBHOOK_URL) {
-      try {
-        await fetch(process.env.AIRTABLE_WEBHOOK_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            name, 
-            org: organization, 
-            email,
-            role, 
-            maturityStage,
-            focusArea: airtableFacingVector, 
-            result: `BMR Signal: ${clientFacingVector}`,
-            intensities 
-          }),
-        });
-      } catch (airtableError) {
-        console.error("Airtable Sync Failed:", airtableError);
-        // We don't return error here because the email was already sent successfully
-      }
-    }
-
     return res.status(200).json({ success: true });
   } catch (error: any) {
-    console.error("Diagnostic API Error:", error.response?.body || error.message);
-    return res.status(500).json({ 
-      error: 'Finalization failed', 
-      details: error.message 
-    });
+    console.error("BMR_DISPATCH_FRACTURE:", error.message);
+    return res.status(500).json({ error: 'TRANSMISSION_FAILURE' });
   }
 }
