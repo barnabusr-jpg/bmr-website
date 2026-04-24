@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock, Sliders, Lock, ArrowRight, CheckCircle2, EyeOff } from "lucide-react";
+import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock, Sliders, Lock, ArrowRight, CheckCircle2, EyeOff, Info } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 
@@ -56,12 +56,10 @@ export default function ForensicVerdict() {
     const isYes = (v: any) => ["yes", "1", "6", "true", "y"].some(term => String(v || "").toLowerCase().includes(term));
     const isNo = (v: any) => !v || ["no", "2", "false", "n", "0"].includes(String(v).toLowerCase().trim());
 
-    // 1. Calculate Friction Baseline (Ensures non-zero bleed)
     const rawAnswers = Object.values(reportData.resultsMap || {});
     const totalWeight = rawAnswers.reduce((acc: number, curr: any) => acc + (parseInt(curr.answer) || 0), 0);
     const calculatedSFI = Math.min(Math.round((totalWeight / 120) * 100), 100) || 74;
 
-    // 2. Specific Fiduciary Fractures (Labor Bridges)
     if (isYes(reportData.resultsMap.EXE_01?.answer) && isNo(reportData.resultsMap.TEC_01?.answer)) {
       const cost = 180000;
       fractures.push({ 
@@ -75,7 +73,6 @@ export default function ForensicVerdict() {
       cumulativeReworkTax += cost;
     }
 
-    // 3. Systemic Capital Decay (Spend Scaling)
     const systemicLeak = (liveSpend * 1000000) * (calculatedSFI / 100) * 0.15;
     const totalTax = cumulativeReworkTax + systemicLeak;
     const dailyBleed = totalTax / 365;
@@ -99,7 +96,7 @@ export default function ForensicVerdict() {
           <div className="text-left">
             <h1 className="text-red-600 text-3xl font-black uppercase italic tracking-tighter leading-none">Your AI Health Verdict</h1>
             <p className="text-[10px] font-mono text-slate-500 uppercase mt-4 tracking-widest font-bold italic leading-none">
-              Ref ID: {id?.slice(0,8).toUpperCase()} // Primary Node: {reportData?.nodes?.[0]?.persona_type || "AUTHORIZED"}
+              Ref ID: {id?.slice(0,8).toUpperCase()} // Node: {reportData?.nodes?.[0]?.persona_type || "AUTHORIZED"}
             </p>
           </div>
           <div className="bg-red-600/10 border border-red-600/30 px-4 py-2 flex items-center gap-2 animate-pulse">
@@ -110,12 +107,13 @@ export default function ForensicVerdict() {
           </div>
         </header>
 
+        {/* FINANCIAL SUMMARY */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <div className="group relative bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center overflow-visible">
             <div className="text-6xl font-black italic text-white leading-none">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-bold italic">Annual Rework Tax Liability</div>
             <div className="absolute -bottom-12 left-0 w-full bg-red-600 text-white text-[9px] p-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none uppercase tracking-tighter">
-              Bridge: Spend ($${liveSpend}M) × SFI (${activeMetrics?.sfi}%) × 15% Rework Rate = Leakage
+              Bridge: Spend ($${liveSpend}M) × Friction (${activeMetrics?.sfi}%) × 15% Tax Rate = Leakage
             </div>
           </div>
           <div className="bg-red-950/20 border border-red-600/50 p-10 flex flex-col justify-center">
@@ -124,6 +122,7 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
+        {/* FIDUCIARY SIMULATOR */}
         <div className="bg-slate-950 border border-slate-900 p-8 mb-12">
           <div className="flex justify-between items-center mb-6 text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic leading-none">
             <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Capital Exposure Simulator</div>
@@ -132,6 +131,23 @@ export default function ForensicVerdict() {
           <input type="range" min="0.1" max="10" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
         </div>
 
+        {/* THE INTERPRETIVE BRIDGE - This helps the user decide to start triangulation */}
+        <div className="mb-12 bg-slate-950/50 border border-slate-800 p-10">
+            <div className="flex items-center gap-4 mb-6">
+                <Info className="text-red-600" size={24} />
+                <h3 className="text-lg font-black uppercase italic tracking-tighter text-white">Why Triangulation is Required</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-[11px] font-mono uppercase tracking-widest leading-relaxed text-slate-400">
+                <p>
+                    This audit reflects a <span className="text-white">Single-Node Perspective</span>. While your individual answers indicate a <span className="text-red-600">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</span> rework tax, the true risk lies in <span className="text-white">Logic Shear</span> between your Executive, Managerial, and Technical teams.
+                </p>
+                <p>
+                    Triangulation cross-references your PHOENIX, TITAN, and ATLAS nodes to uncover hidden fractures that a single user cannot see. This is the only way to validate these findings and build a <span className="text-white">Hardening Roadmap</span>.
+                </p>
+            </div>
+        </div>
+
+        {/* RECOVERY ROADMAP */}
         <div className="mb-12">
            <h3 className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] mb-8 italic font-bold">Quick Wins // 3-Day Recovery Roadmap</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -154,12 +170,16 @@ export default function ForensicVerdict() {
            </div>
         </div>
 
+        {/* FINAL CTA - Corrected to /briefings */}
         <div className="bg-white p-12 flex flex-col md:flex-row justify-between items-center gap-8 group cursor-pointer hover:bg-red-600 transition-all border-l-8 border-red-600" onClick={() => window.location.href = '/briefings'}>
            <div className="text-left">
               <h4 className="text-black text-3xl font-black italic uppercase tracking-tighter leading-none group-hover:text-white transition-colors">Start 360° Triangulation</h4>
-              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 group-hover:text-red-200 transition-colors">Validate findings and reclaim capital decay.</p>
+              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 group-hover:text-red-200 transition-colors italic">Access the Evidence Vault to validate these findings and begin hardening.</p>
            </div>
-           <ArrowRight className="text-black group-hover:text-white transition-colors" size={40} />
+           <div className="flex items-center gap-3">
+              <span className="text-[10px] font-mono font-black text-black group-hover:text-white uppercase tracking-widest">Enter Vault</span>
+              <ArrowRight className="text-black group-hover:text-white transition-colors" size={40} />
+           </div>
         </div>
       </div>
     </div>
