@@ -19,16 +19,23 @@ export default function Home() {
               <p className="text-red-600 font-mono text-[10px] uppercase tracking-[0.5em] font-black italic border-l-2 border-red-600 pl-4">
                 BMR Forensics | Structural Audit
               </p>
-              <h1 className="text-[120px] font-black uppercase italic tracking-tighter leading-[0.8]">
-                Strategy <br /> Is <br /> 
-                <span className="text-slate-800 opacity-50 font-black italic">Luxury.</span> <br />
-                <span className="text-red-600 font-black italic">Recovery</span> <br /> Is Duty.
+              
+              <h1 className="text-[90px] md:text-[120px] font-black uppercase italic tracking-tighter leading-[0.8]">
+                <span className="text-red-600">
+                  THE <br /> 
+                  PROMISE <br /> 
+                  GAP<span className="text-[2vw] lowercase font-mono align-top ml-1">tm</span>
+                </span> <br /> 
+                {/* Fixed Color: Slate-600 at 90% opacity matches the original LUXURY depth */}
+                <span className="text-slate-600 opacity-90">WHERE</span> <br />
+                <span className="text-red-600 font-black italic">ROI GOES</span> <br /> 
+                <span className="text-red-600 font-black italic">TO DIE.</span>
               </h1>
             </div>
 
             <p className="text-slate-400 text-lg max-w-lg italic leading-relaxed font-medium">
-              We identify the &quot;Log Rot&quot; and systemic drift in AI deployments. 
-              BMR provides the forensic tools to harden logic chains before architectural collapse becomes inevitable.
+              We do not give you new promises. We provide the forensic tools to 
+              make the old ones work.
             </p>
 
             <button 
@@ -39,6 +46,7 @@ export default function Home() {
             </button>
           </div>
 
+          {/* RIGHT SIDE BOX: REMAINING UNTOUCHED */}
           <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 mt-12 relative overflow-hidden text-white font-sans">
              <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
                Why Systems <span className="text-red-600 font-black">Quietly Drift</span>
@@ -68,9 +76,6 @@ export default function Home() {
         <div className="w-8 h-8 flex items-center justify-center border border-slate-900/30 group-hover:border-red-600/50 transition-all duration-700 rounded-full bg-slate-950/20 backdrop-blur-sm">
           <Shield size={10} className="text-slate-900 group-hover:text-red-600 opacity-10 group-hover:opacity-100 transition-all" />
         </div>
-        <span className="text-[7px] font-mono text-slate-900 uppercase tracking-[0.5em] opacity-0 group-hover:opacity-100 group-hover:text-red-600 transition-all duration-500">
-          ALPHA-7_LOG_IN
-        </span>
       </div>
     </div>
   );
