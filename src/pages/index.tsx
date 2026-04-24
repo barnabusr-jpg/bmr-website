@@ -23,15 +23,17 @@ export default function Home() {
                 BMR Solutions | Fiduciary Intelligence
               </p>
               
-              {/* RESTORED: Massive stacked typography with leading-[0.8] */}
               <h1 className="text-[90px] md:text-[120px] font-black uppercase italic tracking-tighter leading-[0.8]">
                 THE <br /> 
-                PROMISE <br /> 
-                {/* Styled GAP to pop in white like your screenshot */}
-                <span className="text-white relative">GAP<sup className="text-[2vw] lowercase font-mono">tm</sup></span> <br /> 
-                IS WHERE <br />
-                <span className="text-red-600 font-black italic">ROI</span> <br /> 
-                GOES TO <span className="text-red-600 font-black italic">DIE.</span>
+                <span className="text-red-600 relative">
+                  PROMISE <br /> 
+                  GAP
+                  {/* TM anchored specifically to the top right of the P in GAP */}
+                  <span className="absolute text-[2vw] lowercase font-mono font-bold tracking-normal -right-[2.5vw] top-0">tm</span>
+                </span> <br /> 
+                <span className="text-slate-800 opacity-60">WHERE</span> <br />
+                <span className="text-red-600 font-black italic">ROI GOES</span> <br /> 
+                <span className="text-red-600 font-black italic">TO DIE.</span>
               </h1>
             </div>
 
@@ -39,7 +41,6 @@ export default function Home() {
               We do not give you new promises. We provide the forensic evidence required to bridge the gap between human intent and machine execution.
             </p>
 
-            {/* RESTORED: Horizontal large-scale button */}
             <button 
               onClick={() => router.push('/pulse-check')}
               className="bg-red-600 text-white px-12 py-6 font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all flex items-center gap-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)] group"
@@ -49,8 +50,7 @@ export default function Home() {
           </div>
 
           {/* RIGHT COLUMN: THE BOXED PROTOCOL */}
-          {/* RESTORED: The "Why Systems Drift" style box but with Phase logic */}
-          <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 mt-12 relative overflow-hidden text-white">
+          <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 mt-12 relative overflow-hidden text-white font-sans">
              <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
                The <span className="text-red-600">Identify / Quantify / Bridge</span> Protocol
              </h2>
@@ -62,24 +62,30 @@ export default function Home() {
              <div className="pl-6 border-l border-slate-800 space-y-8 text-slate-400">
                <div className="space-y-2">
                  <p className="text-xs font-black text-white uppercase tracking-widest">01. Identify</p>
-                 <p className="text-sm italic leading-relaxed">
+                 <p className="text-sm italic leading-relaxed font-mono">
                    Locate the logic shear where human intent and machine execution decouple.
                  </p>
                </div>
 
                <div className="space-y-2">
                  <p className="text-xs font-black text-white uppercase tracking-widest">02. Quantify</p>
-                 <p className="text-sm italic leading-relaxed">
+                 <p className="text-sm italic leading-relaxed font-mono">
                    Translate operational drift into a measurable <span className="text-red-600 font-black uppercase italic">Annual Rework Tax.</span>
                  </p>
                </div>
 
                <div className="space-y-2">
                  <p className="text-xs font-black text-white uppercase tracking-widest">03. Bridge</p>
-                 <p className="text-sm italic leading-relaxed">
+                 <p className="text-sm italic leading-relaxed font-mono">
                    Deploy zero-data hardening roadmaps to reclaim engineering capital.
                  </p>
                </div>
+             </div>
+             
+             <div className="pt-8 mt-8 border-t border-slate-800/50">
+               <p className="text-[10px] font-mono text-slate-600 uppercase tracking-widest leading-tight font-bold italic">
+                 BMR Solutions provides the forensic evidence required to identify, quantify, and bridge the promise gap™ between human intent and AI execution.
+               </p>
              </div>
           </div>
         </div>
@@ -91,6 +97,7 @@ export default function Home() {
       <div 
         onClick={() => router.push('/admin/dashboard')}
         className="fixed bottom-6 left-6 z-[100] cursor-crosshair group flex items-center gap-2"
+        title="Admin_Node_Login"
       >
         <div className="w-8 h-8 flex items-center justify-center border border-slate-900/30 group-hover:border-red-600/50 transition-all rounded-full bg-slate-950/20 backdrop-blur-sm">
           <Shield size={10} className="text-slate-900 group-hover:text-red-600 opacity-10 group-hover:opacity-100 transition-all" />
