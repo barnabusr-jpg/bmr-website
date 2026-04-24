@@ -17,7 +17,7 @@ const Hero = () => {
 
   return (
     <section className="relative pt-48 pb-32 px-6 bg-[#020617] overflow-hidden min-h-screen flex flex-col justify-center">
-      {/* BACKGROUND TEXT WATERMARK */}
+      {/* BACKGROUND WATERMARK */}
       <div className="absolute top-1/4 -left-10 opacity-[0.03] pointer-events-none select-none hidden md:block">
         <h2 className="text-[20vw] font-black leading-none uppercase italic tracking-tighter">
           FIDUCIARY
@@ -32,6 +32,7 @@ const Hero = () => {
       <div className="container mx-auto max-w-7xl relative z-10">
         <div className="flex flex-col items-center text-center md:items-start md:text-left">
           
+          {/* SYSTEM STATUS BAR */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -49,7 +50,7 @@ const Hero = () => {
             </span>
           </motion.div>
 
-          {/* THE PROMISE GAP MANDATE */}
+          {/* THE PROMISE GAP™ MANDATE */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
