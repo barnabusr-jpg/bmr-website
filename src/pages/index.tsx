@@ -20,17 +20,15 @@ export default function Home() {
                 BMR Forensics | Structural Audit
               </p>
               
-              {/* RESTORED: Exact typography stack from original screenshot */}
               <h1 className="text-[90px] md:text-[120px] font-black uppercase italic tracking-tighter leading-[0.8]">
-                THE <br /> 
-                <span className="text-red-600 relative">
-                  PROMISE
-                  {/* TM anchored to the top corner of the P */}
-                  <span className="absolute text-[2vw] lowercase font-mono font-bold tracking-normal -left-[2.2vw] top-[1vw]">tm</span>
+                <span className="text-red-600">
+                  THE <br /> 
+                  PROMISE <br /> 
+                  GAP<span className="text-[2vw] lowercase font-mono align-top ml-1">tm</span>
                 </span> <br /> 
-                <span className="text-red-600">GAP</span> <br /> 
-                <span className="text-slate-800 opacity-90 font-black italic">WHERE</span> <br />
-                <span className="text-red-600 font-black italic text-red-600">ROI GOES</span> <br /> 
+                {/* Fixed Color: Slate-600 at 90% opacity matches the original LUXURY depth */}
+                <span className="text-slate-600 opacity-90">WHERE</span> <br />
+                <span className="text-red-600 font-black italic">ROI GOES</span> <br /> 
                 <span className="text-red-600 font-black italic">TO DIE.</span>
               </h1>
             </div>
@@ -48,7 +46,7 @@ export default function Home() {
             </button>
           </div>
 
-          {/* RESTORED: Original "Why Systems Quietly Drift" box and layout */}
+          {/* RIGHT SIDE BOX: REMAINING UNTOUCHED */}
           <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 mt-12 relative overflow-hidden text-white font-sans">
              <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
                Why Systems <span className="text-red-600 font-black">Quietly Drift</span>
@@ -78,9 +76,6 @@ export default function Home() {
         <div className="w-8 h-8 flex items-center justify-center border border-slate-900/30 group-hover:border-red-600/50 transition-all duration-700 rounded-full bg-slate-950/20 backdrop-blur-sm">
           <Shield size={10} className="text-slate-900 group-hover:text-red-600 opacity-10 group-hover:opacity-100 transition-all" />
         </div>
-        <span className="text-[7px] font-mono text-slate-900 uppercase tracking-[0.5em] opacity-0 group-hover:opacity-100 group-hover:text-red-600 transition-all duration-500">
-          ALPHA-7_LOG_IN
-        </span>
       </div>
     </div>
   );
