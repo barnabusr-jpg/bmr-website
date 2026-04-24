@@ -25,7 +25,7 @@ export default function ForensicVerdict() {
         const nodes = nodesRes.data;
         const results: any = {};
 
-        // 1. DATA NORMALIZATION (Case-Insensitive & Robust)
+        // 1. DATA NORMALIZATION (Ensures DG_ keys map to Persona keys)
         nodes.forEach(n => {
           const persona = (n.persona_type || "").toUpperCase();
           const prefix = persona.includes("EXE") ? "EXE" : persona.includes("MGR") ? "MGR" : "TEC";
@@ -41,15 +41,22 @@ export default function ForensicVerdict() {
           }
         });
 
-        // 2. THE FORENSIC BRAIN (HARDENED FUZZY MATCHING)
+        // 2. THE FORENSIC BRAIN (HARDENED AGAINST NaN)
         let frictionScore = 0;
         let cumulativeReworkTax = 0;
         const fractures = [];
         
-        // Use ai_spend from DB, default to 1.2M if missing for calculation logic
-        const aiSpendBase = parseFloat(audit.ai_spend || "1.2");
-        const baseTaxMultiplier = parseFloat(audit.rework_tax || "0.9");
+        // Clean numeric strings before parsing to prevent $NaN errors
+        const cleanParse = (val: any, fallback: number) => {
+          const cleaned = String(val || "").replace(/[^0-9.]/g, '');
+          const parsed = parseFloat(cleaned);
+          return isNaN(parsed) ? fallback : parsed;
+        };
 
+        const aiSpendBase = cleanParse(audit.ai_spend, 1.2);
+        const baseTaxMultiplier = cleanParse(audit.rework_tax, 0.9);
+
+        // Advanced Fuzzy Matching for Supabase JSON
         const isYes = (v: any) => {
           if (v === undefined || v === null) return false;
           const s = String(v).toLowerCase().trim();
@@ -81,7 +88,7 @@ export default function ForensicVerdict() {
 
         // BMR-M1: REWORK (MGR vs TEC)
         if (isYes(results.MGR_01?.answer) && isNo(results.TEC_01?.answer)) {
-          // Logic: (Spend * Tax Multiplier) * 0.1 (specific fracture impact)
+          // Calculation Logic: (Spend Millions * Multiplier) * impact weight
           const cost = (aiSpendBase * 1000000) * baseTaxMultiplier * 0.15; 
           fractures.push({
             code: "BMR-M1",
@@ -122,7 +129,7 @@ export default function ForensicVerdict() {
     <div className="min-h-screen bg-[#020617] text-white py-20 px-6 font-sans text-left tracking-tighter leading-none">
       <div className="container mx-auto max-w-4xl">
         
-        {/* HEADER WITH BLEED TIMER */}
+        {/* HEADER */}
         <header className="flex justify-between items-end border-b border-slate-900 pb-8 mb-12">
           <div className="text-left">
             <h1 className="text-red-600 text-3xl font-black uppercase italic tracking-tighter">Forensic Dossier</h1>
@@ -132,7 +139,9 @@ export default function ForensicVerdict() {
             <Fingerprint className="text-slate-800" size={40} />
             <div className="bg-red-600/10 border border-red-600/30 px-4 py-2 flex items-center gap-2">
                <Clock size={14} className="text-red-600 animate-pulse" />
-               <span className="text-[10px] font-mono font-black text-red-500 tracking-widest uppercase italic">Bleed: ${report?.dailyBleed?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/Day</span>
+               <span className="text-[10px] font-mono font-black text-red-500 tracking-widest uppercase italic">
+                 Bleed: ${report?.dailyBleed?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/Day
+               </span>
             </div>
           </div>
         </header>
@@ -156,7 +165,7 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* INTEGRITY TOPOLOGY MAP */}
+        {/* TOPOLOGY MAP */}
         <div className="bg-slate-950 border border-slate-900 p-10 mb-12 relative overflow-hidden text-left">
           <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-12 italic font-bold text-left">Integrity Triangulation Map</h3>
           <div className="flex justify-between items-center max-w-2xl mx-auto relative px-10">
@@ -189,7 +198,11 @@ export default function ForensicVerdict() {
 
         {/* FRACTURE CARDS */}
         <div className="space-y-6 mb-20 text-left">
-          {report?.fractures.map((f: any, i: number) => (
+          {report?.fractures.length === 0 ? (
+            <div className="bg-slate-950 border border-slate-900 p-10 text-center text-slate-500 italic font-mono uppercase tracking-widest">
+              No fractures detected in current node configuration.
+            </div>
+          ) : report?.fractures.map((f: any, i: number) => (
             <div key={i} className="group text-left">
                <div className="bg-slate-950 border border-slate-900 p-10 flex flex-col md:flex-row justify-between items-start gap-8 text-left">
                   <div className="space-y-6 flex-1 text-left">
