@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter } from 'next/router';
-import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock, ArrowRight } from "lucide-react";
+import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 
@@ -27,36 +27,46 @@ export default function ForensicVerdict() {
 
         // 1. DATA NORMALIZATION (Ensures DG_ keys map to Persona keys)
         nodes.forEach(n => {
-          const persona = n.persona_type?.toUpperCase() || "";
+          const persona = (n.persona_type || "").toUpperCase();
           const prefix = persona.includes("EXE") ? "EXE" : persona.includes("MGR") ? "MGR" : "TEC";
+          
           if (n.raw_responses) {
             Object.entries(n.raw_responses).forEach(([qId, val]: any) => {
-              const qNum = qId.includes('_') ? qId.split('_')[1] : '01';
+              const qNum = qId.includes('_') ? qId.split('_')[1] : qId.replace(/[^0-9]/g, '');
               results[`${prefix}_${qNum}`] = {
                 answer: typeof val === 'object' ? val.answer : val,
-                evidence: val?.evidence || "No technical evidence provided."
+                evidence: val?.evidence || n.evidence_log || "No technical evidence provided."
               };
             });
           }
         });
 
-        // 2. THE FORENSIC BRAIN (FUZZY MATCHING TO RESTORE NUMBERS)
+        // 2. THE FORENSIC BRAIN (HARDENED AGAINST NaN)
         let frictionScore = 0;
         let cumulativeReworkTax = 0;
         const fractures = [];
-        const baseTax = parseFloat(audit.rework_tax || "0");
+        
+        // Clean numeric strings before parsing to prevent $NaN errors
+        const cleanParse = (val: any, fallback: number) => {
+          const cleaned = String(val || "").replace(/[^0-9.]/g, '');
+          const parsed = parseFloat(cleaned);
+          return isNaN(parsed) ? fallback : parsed;
+        };
 
-        // FUZZY HELPERS: This is the "Master Switch" that was broken
+        const aiSpendBase = cleanParse(audit.ai_spend, 1.2);
+        const baseTaxMultiplier = cleanParse(audit.rework_tax, 0.9);
+
+        // Advanced Fuzzy Matching for Supabase JSON
         const isYes = (v: any) => {
           if (v === undefined || v === null) return false;
           const s = String(v).toLowerCase().trim();
-          return ["yes", "1", "6", "true", "y"].includes(s);
+          return ["yes", "1", "6", "true", "y", "selected"].some(term => s.includes(term));
         };
 
         const isNo = (v: any) => {
-          if (v === undefined || v === null) return true; // Missing tech data = GAP
+          if (v === undefined || v === null || v === "") return true; 
           const s = String(v).toLowerCase().trim();
-          return ["no", "2", "false", "n", "0", "n/a", ""].includes(s);
+          return ["no", "2", "false", "n", "0", "n/a"].includes(s);
         };
 
         // BMR-T1: INDEMNITY (EXE vs TEC)
@@ -78,7 +88,8 @@ export default function ForensicVerdict() {
 
         // BMR-M1: REWORK (MGR vs TEC)
         if (isYes(results.MGR_01?.answer) && isNo(results.TEC_01?.answer)) {
-          const cost = baseTax * 70000;
+          // Calculation Logic: (Spend Millions * Multiplier) * impact weight
+          const cost = (aiSpendBase * 1000000) * baseTaxMultiplier * 0.15; 
           fractures.push({
             code: "BMR-M1",
             impact: "HIGH",
@@ -99,9 +110,9 @@ export default function ForensicVerdict() {
           totalTax: cumulativeReworkTax,
           dailyBleed: (cumulativeReworkTax / 365),
           nodes: {
-            exe: nodes.find(n => n.persona_type === 'EXE')?.status === 'completed',
-            mgr: nodes.find(n => n.persona_type === 'MGR')?.status === 'completed',
-            tec: nodes.find(n => n.persona_type === 'TEC')?.status === 'completed',
+            exe: nodes.find(n => n.persona_type?.toUpperCase().includes('EXE'))?.status === 'completed',
+            mgr: nodes.find(n => n.persona_type?.toUpperCase().includes('MGR'))?.status === 'completed',
+            tec: nodes.find(n => n.persona_type?.toUpperCase().includes('TEC'))?.status === 'completed',
           },
           fractures
         });
@@ -118,7 +129,7 @@ export default function ForensicVerdict() {
     <div className="min-h-screen bg-[#020617] text-white py-20 px-6 font-sans text-left tracking-tighter leading-none">
       <div className="container mx-auto max-w-4xl">
         
-        {/* HEADER WITH BLEED TIMER */}
+        {/* HEADER */}
         <header className="flex justify-between items-end border-b border-slate-900 pb-8 mb-12">
           <div className="text-left">
             <h1 className="text-red-600 text-3xl font-black uppercase italic tracking-tighter">Forensic Dossier</h1>
@@ -128,7 +139,9 @@ export default function ForensicVerdict() {
             <Fingerprint className="text-slate-800" size={40} />
             <div className="bg-red-600/10 border border-red-600/30 px-4 py-2 flex items-center gap-2">
                <Clock size={14} className="text-red-600 animate-pulse" />
-               <span className="text-[10px] font-mono font-black text-red-500 tracking-widest uppercase italic">Bleed: ${report?.dailyBleed?.toFixed(2)}/Day</span>
+               <span className="text-[10px] font-mono font-black text-red-500 tracking-widest uppercase italic">
+                 Bleed: ${report?.dailyBleed?.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}/Day
+               </span>
             </div>
           </div>
         </header>
@@ -152,7 +165,7 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* INTEGRITY TOPOLOGY MAP (COLOR LOGIC) */}
+        {/* TOPOLOGY MAP */}
         <div className="bg-slate-950 border border-slate-900 p-10 mb-12 relative overflow-hidden text-left">
           <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-12 italic font-bold text-left">Integrity Triangulation Map</h3>
           <div className="flex justify-between items-center max-w-2xl mx-auto relative px-10">
@@ -183,9 +196,13 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* FRACTURE CARDS + ROADMAP TRIGGER */}
+        {/* FRACTURE CARDS */}
         <div className="space-y-6 mb-20 text-left">
-          {report?.fractures.map((f: any, i: number) => (
+          {report?.fractures.length === 0 ? (
+            <div className="bg-slate-950 border border-slate-900 p-10 text-center text-slate-500 italic font-mono uppercase tracking-widest">
+              No fractures detected in current node configuration.
+            </div>
+          ) : report?.fractures.map((f: any, i: number) => (
             <div key={i} className="group text-left">
                <div className="bg-slate-950 border border-slate-900 p-10 flex flex-col md:flex-row justify-between items-start gap-8 text-left">
                   <div className="space-y-6 flex-1 text-left">
@@ -197,7 +214,7 @@ export default function ForensicVerdict() {
                   </div>
                   <div className="text-right min-w-[140px]">
                     <div className="text-3xl font-black italic text-white leading-none">${(f.cost / 1000).toFixed(0)}K</div>
-                    <p className="text-[9px] font-mono text-red-500 font-bold uppercase mt-2 leading-none italic text-right font-sans">REWORK TAX</p>
+                    <p className="text-[9px] font-mono text-red-500 font-bold uppercase mt-2 leading-none italic text-right">REWORK TAX</p>
                   </div>
                </div>
 
@@ -210,7 +227,7 @@ export default function ForensicVerdict() {
                       <p className="text-slate-200 font-bold text-sm leading-relaxed max-w-xl text-left font-sans">{f.action}</p>
                     </div>
                   </div>
-                  <button onClick={() => router.push(`/protocols?id=${id}`)} className="bg-red-600 text-white px-8 py-5 font-black uppercase italic text-[10px] tracking-[0.2em] hover:bg-white hover:text-black transition-all shadow-lg whitespace-nowrap leading-none">INITIALIZE ROADMAP →</button>
+                  <button onClick={() => router.push(`/briefings`)} className="bg-red-600 text-white px-8 py-5 font-black uppercase italic text-[10px] tracking-[0.2em] hover:bg-white hover:text-black transition-all shadow-lg whitespace-nowrap leading-none">INITIALIZE ROADMAP →</button>
                </div>
             </div>
           ))}
