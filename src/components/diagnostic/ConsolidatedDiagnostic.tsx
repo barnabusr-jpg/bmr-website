@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight } from "lucide-react";
 import ForensicLoader from "@/components/ForensicLoader";
-import ForensicResultCard from "../ForensicResultCard"; 
 import { supabase } from "@/lib/supabaseClient";
 
 const LOCAL_QUESTIONS = [
@@ -53,16 +52,11 @@ export default function ConsolidatedDiagnostic() {
     const coeff = sectorWeights[sector] || 1.0;
     const multiplier = Math.pow(aiSpend / 1.2, 1.15); 
     const scaledTotal = (totalSum * 0.04 * coeff) * multiplier;
-    
     const decayRaw = scaledTotal === 0 ? 0 : Math.round((1 - (1 / (1 + scaledTotal / (aiSpend * 0.8)))) * 100);
     const reworkTax = parseFloat((scaledTotal * 0.38).toFixed(1));
-    const monthlyBleed = reworkTax / 12;
-    const inactionPenalty = (monthlyBleed * 6 * 1.12).toFixed(2);
-
     return {
       decay: Math.min(decayRaw, 98),
-      rework: reworkTax.toFixed(1),
-      inactionCost: inactionPenalty
+      rework: reworkTax.toFixed(1)
     };
   };
 
@@ -72,12 +66,10 @@ export default function ConsolidatedDiagnostic() {
     const anchorName = operatorName.trim().toUpperCase();
 
     try {
-      // 1. Ensure Entity and Operator exist (Working per screenshots)
       const { data: ent } = await supabase.from('entities').upsert({ name: anchorOrg }, { onConflict: 'name' }).select().single();
       const { data: op } = await supabase.from('operators').upsert({ email: anchorEmail, full_name: anchorName, entity_id: ent?.id }, { onConflict: 'email' }).select().single();
       
-      // 2. HARDENED AUDIT LOG: Explicit column targeting to bypass relational friction
-      const { error: auditError } = await supabase.from('audits').upsert([{ 
+      const { data: auditData, error: auditError } = await supabase.from('audits').upsert([{ 
         org_name: anchorOrg,
         lead_email: anchorEmail,
         operator_id: op?.id,
@@ -87,13 +79,14 @@ export default function ConsolidatedDiagnostic() {
         rework_tax: parseFloat(finalMetrics.rework),
         raw_responses: answers,
         status: 'LEAD' 
-      }], { onConflict: 'org_name' });
+      }], { onConflict: 'org_name' }).select().single();
 
       if (auditError) throw auditError;
-      console.log("FORENSIC_LEDGER_SYNC_COMPLETE");
+      return auditData.id;
 
     } catch (e) { 
       console.error("CRITICAL_HANDSHAKE_FAILURE:", e); 
+      return null;
     }
   };
 
@@ -175,37 +168,18 @@ export default function ConsolidatedDiagnostic() {
                     if (currentDimension < LOCAL_QUESTIONS.length - 1) {
                       setCurrentDimension(currentDimension + 1);
                     } else {
+                      setIsLoading(true);
                       const finalMetrics = getLiveMetrics();
-                      await logToDatabase(finalMetrics); 
-                      setStep("verdict"); 
+                      const auditId = await logToDatabase(finalMetrics); 
+                      if (auditId) {
+                        window.location.href = `/results/${auditId}`;
+                      }
                     }
                   }}>
                     <span>{opt.label}</span>
                     <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 transition-all text-red-600" />
                 </button>
               ))}
-            </div>
-          </motion.div>
-        )}
-
-        {step === 'verdict' && (
-          <motion.div key="verdict" className="py-10">
-            <ForensicResultCard 
-              result={{
-                frictionIndex: getLiveMetrics().decay,
-                reworkTax: getLiveMetrics().rework,
-                inactionCost: getLiveMetrics().inactionCost,
-                status: getLiveMetrics().decay > 60 ? 'CONDITION_CRITICAL' : 'OPERATIONAL_DRIFT',
-                protocol: getLiveMetrics().decay > 60 ? 'STRUCTURAL_HARDENING' : 'DRIFT_DIAGNOSTICS'
-              }} 
-              lens={selectedLens} 
-            />
-            <div className="max-w-4xl mx-auto bg-slate-950 p-8 border border-slate-800 space-y-4 text-center mt-12">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="text-left"><label className="text-[10px] font-mono text-white uppercase tracking-widest italic">Capital Exposure Simulation (AI Spend)</label></div>
-                  <p className="text-2xl font-black text-white italic">${aiSpend.toFixed(1)}M</p>
-                </div>
-                <input type="range" min="0.1" max="10" step="0.1" value={aiSpend} onChange={(e) => setAiSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 accent-red-600 appearance-none cursor-pointer" />
             </div>
           </motion.div>
         )}
