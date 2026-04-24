@@ -13,74 +13,88 @@ export default function Home() {
     <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30 relative">
       <Header />
       
-      {/* ADD_PT-32 for Header clearance */}
       <main className="flex-grow pt-48 px-6 pb-32">
-        {/* MAINTAINED THE EXACT text-center | max-w-7xl centered flex-col structure */}
-        <div className="max-w-7xl mx-auto flex flex-col items-center text-center">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
           
-          {/* IDENTIFY (Branded Header) */}
-          <div className="space-y-4 mb-16 text-white max-w-4xl">
+          {/* LEFT COLUMN: THE WALL OF TEXT */}
+          <div className="space-y-12 text-white">
+            <div className="space-y-6">
               <p className="text-red-600 font-mono text-[10px] uppercase tracking-[0.5em] font-black italic border-l-2 border-red-600 pl-4">
                 BMR Solutions | Fiduciary Intelligence
               </p>
-              {/* RESTORED the stacked typography and leading-[0.8] stack */}
-              <h1 className="text-[70px] md:text-[110px] font-black uppercase italic tracking-tighter leading-[0.8]">
-                THE <br /> PROMISE <br />
-                {/* TM SYMBOL: Positioned as an inline, raised marker */}
-                <span className="text-white relative">GAP<sup className="text-[2vw] relative -top-[3vw]">™</sup></span> <br /> 
+              
+              {/* RESTORED: Massive stacked typography with leading-[0.8] */}
+              <h1 className="text-[90px] md:text-[120px] font-black uppercase italic tracking-tighter leading-[0.8]">
+                THE <br /> 
+                PROMISE <br /> 
+                {/* Styled GAP to pop in white like your screenshot */}
+                <span className="text-white relative">GAP<sup className="text-[2vw] lowercase font-mono">tm</sup></span> <br /> 
                 IS WHERE <br />
                 <span className="text-red-600 font-black italic">ROI</span> <br /> 
                 GOES TO <span className="text-red-600 font-black italic">DIE.</span>
               </h1>
-          </div>
+            </div>
 
-          {/* QUANTIFY (Revised Methodology Copy) */}
-          <div className="bg-slate-950 border border-slate-800 p-12 max-w-4xl text-left mb-16 space-y-6">
-              <h2 className="text-xl md:text-3xl font-black uppercase italic tracking-tighter text-white">The Identify/Quantify/Bridge Protocol</h2>
-              <div className="space-y-6 text-slate-400 font-mono text-xs uppercase tracking-widest leading-relaxed border-l-2 border-red-600 pl-6 max-w-2xl">
-                  <p>
-                      BMR Forensics provides the tools required to <span className="text-white">identify</span> the logic shear, <span className="text-white">quantify</span> the Annual Rework Tax, and <span className="text-white">bridge</span> the promise gap between human intent and machine execution.
-                  </p>
-                  <p>
-                      We do not give you new promises. We provide the forensic tools to make the old ones work.
-                  </p>
-              </div>
-          </div>
-
-          {/* BRIDGE (Final Injunction and Triage Request) */}
-          <div className="space-y-12 flex flex-col items-center">
-            <p className="text-slate-500 font-mono text-xs max-w-xl italic uppercase tracking-[0.2em] leading-relaxed">
-              Initialize a Perceptual Fracture Audit to locate the capital leakage.
+            <p className="text-slate-400 text-lg max-w-lg italic leading-relaxed font-medium">
+              We do not give you new promises. We provide the forensic evidence required to bridge the gap between human intent and machine execution.
             </p>
 
-            {/* RESTORED the exact horizontal, large-offset button and Arrow icon */}
+            {/* RESTORED: Horizontal large-scale button */}
             <button 
               onClick={() => router.push('/pulse-check')}
-              className="group relative bg-white text-black px-16 py-10 font-black uppercase italic text-2xl md:text-4xl hover:bg-red-600 hover:text-white transition-all shadow-[15px_15px_0px_0px_rgba(220,38,38,1)] active:shadow-none active:translate-x-[5px] active:translate-y-[5px]"
+              className="bg-red-600 text-white px-12 py-6 font-black uppercase italic tracking-[0.3em] text-xs hover:bg-white hover:text-black transition-all flex items-center gap-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)] group"
             >
-              <div className="flex items-center gap-6">
-                  INITIALIZE_AUDIT
-                  <ArrowRight size={40} className="group-hover:translate-x-2 transition-transform" />
-              </div>
+              Initialize Pulse Check <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
             </button>
+          </div>
+
+          {/* RIGHT COLUMN: THE BOXED PROTOCOL */}
+          {/* RESTORED: The "Why Systems Drift" style box but with Phase logic */}
+          <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 mt-12 relative overflow-hidden text-white">
+             <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
+               The <span className="text-red-600">Identify / Quantify / Bridge</span> Protocol
+             </h2>
+             
+             <p className="text-slate-400 font-bold italic text-lg leading-tight uppercase">
+               AI failure is rarely a binary event.
+             </p>
+
+             <div className="pl-6 border-l border-slate-800 space-y-8 text-slate-400">
+               <div className="space-y-2">
+                 <p className="text-xs font-black text-white uppercase tracking-widest">01. Identify</p>
+                 <p className="text-sm italic leading-relaxed">
+                   Locate the logic shear where human intent and machine execution decouple.
+                 </p>
+               </div>
+
+               <div className="space-y-2">
+                 <p className="text-xs font-black text-white uppercase tracking-widest">02. Quantify</p>
+                 <p className="text-sm italic leading-relaxed">
+                   Translate operational drift into a measurable <span className="text-red-600 font-black uppercase italic">Annual Rework Tax.</span>
+                 </p>
+               </div>
+
+               <div className="space-y-2">
+                 <p className="text-xs font-black text-white uppercase tracking-widest">03. Bridge</p>
+                 <p className="text-sm italic leading-relaxed">
+                   Deploy zero-data hardening roadmaps to reclaim engineering capital.
+                 </p>
+               </div>
+             </div>
           </div>
         </div>
       </main>
 
       <Footer />
 
-      {/* 🛡️ HIDDEN ADMIN NODE ACCESS (Preserved) */}
+      {/* 🛡️ HIDDEN ADMIN NODE ACCESS */}
       <div 
         onClick={() => router.push('/admin/dashboard')}
         className="fixed bottom-6 left-6 z-[100] cursor-crosshair group flex items-center gap-2"
-        title="Admin_Node_Login"
       >
-        <div className="w-8 h-8 flex items-center justify-center border border-slate-900/30 group-hover:border-red-600/50 transition-all duration-700 rounded-full bg-slate-950/20 backdrop-blur-sm">
+        <div className="w-8 h-8 flex items-center justify-center border border-slate-900/30 group-hover:border-red-600/50 transition-all rounded-full bg-slate-950/20 backdrop-blur-sm">
           <Shield size={10} className="text-slate-900 group-hover:text-red-600 opacity-10 group-hover:opacity-100 transition-all" />
         </div>
-        <span className="text-[7px] font-mono text-slate-900 uppercase tracking-[0.5em] opacity-0 group-hover:opacity-100 group-hover:text-red-600 transition-all duration-500">
-          ALPHA-7_LOG_IN
-        </span>
       </div>
     </div>
   );
