@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, ShieldAlert, Zap, Lock } from 'lucide-react';
+import { Activity, ShieldAlert, Zap } from 'lucide-react';
 
+// Updated to include FRAMEWORKS and remove internal PROTOCOLS
 const NAV_ITEMS = [
-  { label: "PROTOCOLS", path: "/protocols" },
-  { label: "BRIEFINGS", path: "/briefings" },
-  { label: "METHODOLOGY", path: "/methodology" }
+  { label: "METHODOLOGY", path: "/methodology" },
+  { label: "FRAMEWORKS", path: "/frameworks" },
+  { label: "BRIEFINGS", path: "/briefings" }
 ];
 
 export default function Header() {
@@ -18,7 +19,7 @@ export default function Header() {
   const currentPath = mounted ? pathname : "";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-900 px-6 py-5">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#020617]/90 backdrop-blur-xl border-b border-slate-900 px-6 py-5 font-sans">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="bg-red-600 p-2 rounded-sm group-hover:bg-white transition-colors">
@@ -29,7 +30,7 @@ export default function Header() {
           </span>
         </Link>
 
-        {/* --- CENTRAL PROTOCOL NAV --- */}
+        {/* --- CENTRAL NAV --- */}
         <div className="hidden lg:flex items-center gap-12">
           {NAV_ITEMS.map((item) => (
             <Link 
@@ -45,11 +46,11 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-6">
-          {/* --- FORENSIC METADATA STAMPS (ALPHA_7) --- */}
+          {/* --- FORENSIC METADATA STAMPS --- */}
           <div className="hidden md:flex flex-col items-end pr-6 border-r border-slate-800">
              <div className="flex items-center gap-2">
-                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">PROTOCOL</span>
-                <span className="text-[8px] font-mono text-red-600 font-black uppercase tracking-widest bg-red-600/10 px-1">ALPHA_7</span>
+                <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">STATUS</span>
+                <span className="text-[8px] font-mono text-red-600 font-black uppercase tracking-widest bg-red-600/10 px-1">ACTIVE_RECOVERY</span>
              </div>
              <span className="text-[9px] font-mono text-yellow-500 font-bold uppercase tracking-widest mt-1 italic flex items-center gap-1">
                 <ShieldAlert size={10} /> INDEMNITY_UNVERIFIED
@@ -65,7 +66,7 @@ export default function Header() {
         </div>
       </div>
       
-      {/* --- SUB-NAV STATUS BAR (Optional Visual Polish) --- */}
+      {/* --- SUB-NAV STATUS BAR --- */}
       <div className="max-w-7xl mx-auto flex justify-between pt-2">
         <div className="text-[7px] font-mono text-slate-700 uppercase tracking-[0.5em]">
           BMR_SEC_SYS_ACTIVE // SESSION_ENCRYPTED_256BIT
