@@ -66,7 +66,7 @@ export default function ForensicVerdict() {
         code: "BMR-T1", 
         impact: "CRITICAL", 
         title: "Indemnity Alignment Gap", 
-        finding: "Leadership assumes audit rights, but ATLAS reports zero immutable logging. This creates manual labor overhead of $180K/yr (2 FTEs @ $90K/yr).", 
+        finding: "Governance assumes audit rights, but ATLAS reports zero immutable logging. This creates manual labor overhead of $180K/yr (2 FTEs @ $90K/yr).", 
         action: "Deploy SIEM logging in 3 days.", 
         cost 
       });
@@ -107,13 +107,13 @@ export default function ForensicVerdict() {
           </div>
         </header>
 
-        {/* FINANCIAL SUMMARY: SELF-EXPLANATORY DEFINITIONS */}
+        {/* FINANCIAL FINDINGS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <div className="group relative bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center overflow-visible">
             <div className="text-6xl font-black italic text-white leading-none">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-black italic">Annual Rework Tax</div>
             <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic">
-              Hidden overhead caused by manual validation of unverified AI outputs.
+              Wasted engineering capital spent fixing unverified AI logic drift.
             </p>
             <div className="absolute top-2 right-2 p-4 opacity-20 group-hover:opacity-100 transition-opacity bg-red-600 text-[8px] font-mono uppercase text-white p-2">Bridge: Spend x SFI (${activeMetrics?.sfi}%) x 15%</div>
           </div>
@@ -121,12 +121,12 @@ export default function ForensicVerdict() {
             <div className="text-6xl font-black text-red-500 leading-none italic leading-none">${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-red-400 uppercase font-black tracking-tighter mt-4 italic">12-Month Inaction Penalty</div>
             <p className="text-[10px] text-red-900 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic">
-              Projected financial leakage if identified fractures remain unaddressed.
+              Projected financial leakage if identified fractures remain unaddressed for 1 year.
             </p>
           </div>
         </div>
 
-        {/* SCALE SIMULATOR */}
+        {/* FIDUCIARY SIMULATOR */}
         <div className="bg-slate-950 border border-slate-900 p-8 mb-12">
           <div className="flex justify-between items-center mb-6 text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic leading-none">
             <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Capital Exposure Simulator</div>
@@ -135,20 +135,15 @@ export default function ForensicVerdict() {
           <input type="range" min="0.1" max="10" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
         </div>
 
-        {/* CONCISE TRIANGULATION EXPLANATION */}
-        <div className="mb-12 bg-slate-950/50 border border-slate-800 p-10 flex flex-col md:flex-row gap-8 items-center">
-            <div className="bg-red-600/10 p-4 border border-red-600/30">
-               <Info className="text-red-600" size={32} />
-            </div>
-            <div>
-               <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2 italic">Provisional Accuracy Warning</h3>
-               <p className="text-[11px] font-mono uppercase tracking-widest leading-relaxed text-slate-500 font-bold">
-                 This verdict reflects a <span className="text-white">single-node perspective</span>. Full Triangulation is required to cross-reference Executive, Managerial, and Technical datasets to identify <span className="text-red-600">Logic Shear</span> and finalize your Hardening Roadmap.
-               </p>
-            </div>
+        {/* PROVISIONAL WARNING */}
+        <div className="mb-12 bg-slate-950/50 border border-slate-800 p-8 flex items-center gap-6">
+            <Info className="text-red-600 flex-shrink-0" size={24} />
+            <p className="text-[11px] font-mono uppercase tracking-widest leading-relaxed text-slate-500 font-bold">
+              This verdict is based on <span className="text-white">single-node perception</span>. 360° Triangulation is required to eliminate <span className="text-red-600">Logic Shear</span> between your leadership and technical datasets.
+            </p>
         </div>
 
-        {/* RECOVERY ROADMAP */}
+        {/* QUICK WINS */}
         <div className="mb-12">
            <h3 className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] mb-8 italic font-bold">Quick Wins // 3-Day Recovery Roadmap</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,16 +166,33 @@ export default function ForensicVerdict() {
            </div>
         </div>
 
-        {/* UPDATED CTA: POINTS TO BRIEFINGS */}
-        <div className="bg-white p-12 flex flex-col md:flex-row justify-between items-center gap-8 group cursor-pointer hover:bg-red-600 transition-all border-l-8 border-red-600" onClick={() => window.location.href = '/briefings'}>
+        {/* CONVERSION: TRIANGULATION REQUEST */}
+        <div 
+          className="bg-white p-12 flex flex-col md:flex-row justify-between items-center gap-8 group cursor-pointer hover:bg-slate-100 transition-all border-l-8 border-red-600" 
+          onClick={() => {
+            const subject = encodeURIComponent(`TRIANGULATION REQUEST // REF: ${id?.slice(0,8).toUpperCase()}`);
+            const body = encodeURIComponent(`Organization: ${reportData?.org}\n\nI have reviewed the Audit Verdict (Ref: ${id}).\n\nAnnual Rework Tax: $${(activeMetrics?.totalTax / 1000).toFixed(0)}K\nInaction Penalty: $${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K\n\nI am requesting a 360° Triangulation session to validate these findings.`);
+            window.location.href = `mailto:briefings@bmradvisory.co?subject=${subject}&body=${body}`;
+          }}
+        >
            <div className="text-left">
-              <h4 className="text-black text-3xl font-black italic uppercase tracking-tighter leading-none group-hover:text-white transition-colors">Start 360° Triangulation</h4>
-              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 group-hover:text-red-100 transition-colors italic">Access the Evidence Vault to validate these provisional findings.</p>
+              <h4 className="text-black text-3xl font-black italic uppercase tracking-tighter leading-none">Initialize 360° Triangulation</h4>
+              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 italic">Submit Ref ID: {id?.slice(0,8).toUpperCase()} for priority node validation.</p>
            </div>
            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono font-black text-black group-hover:text-white uppercase tracking-widest">Enter Vault</span>
-              <ArrowRight className="text-black group-hover:text-white transition-colors" size={40} />
+              <span className="text-[10px] font-mono font-black text-black uppercase tracking-widest">Request Clearance</span>
+              <ArrowRight className="text-black group-hover:translate-x-2 transition-transform" size={40} />
            </div>
+        </div>
+
+        {/* SECONDARY LINK: BRIEFINGS */}
+        <div className="mt-8 text-center">
+            <button 
+              onClick={() => window.location.href = '/briefings'}
+              className="text-[9px] font-mono text-slate-700 uppercase tracking-[0.3em] hover:text-red-600 transition-colors font-bold italic"
+            >
+              View Evidence Vault // Forensic Briefings →
+            </button>
         </div>
       </div>
     </div>
