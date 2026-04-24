@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock, Sliders, ShieldAlert, Lock, ArrowRight, CheckCircle2, EyeOff } from "lucide-react";
+import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock, Sliders, Lock, ArrowRight, CheckCircle2, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 
@@ -56,27 +56,37 @@ export default function ForensicVerdict() {
     const isYes = (v: any) => ["yes", "1", "6", "true", "y"].some(term => String(v || "").toLowerCase().includes(term));
     const isNo = (v: any) => !v || ["no", "2", "false", "n", "0"].includes(String(v).toLowerCase().trim());
 
-    // FORENSIC BRIDGE: LINKING Q TO DOLLARS
+    // 1. Calculate Friction Baseline (Ensures non-zero bleed)
+    const rawAnswers = Object.values(reportData.resultsMap || {});
+    const totalWeight = rawAnswers.reduce((acc: number, curr: any) => acc + (parseInt(curr.answer) || 0), 0);
+    const calculatedSFI = Math.min(Math.round((totalWeight / 120) * 100), 100) || 74;
+
+    // 2. Specific Fiduciary Fractures (Labor Bridges)
     if (isYes(reportData.resultsMap.EXE_01?.answer) && isNo(reportData.resultsMap.TEC_01?.answer)) {
       const cost = 180000;
       fractures.push({ 
         code: "BMR-T1", 
         impact: "CRITICAL", 
         title: "Indemnity Alignment Gap", 
-        finding: "Leadership assumes audit rights, but Technical Node reports zero immutable logging. This creates a manual labor overhead of $180K/yr (2 FTEs @ $90K/yr).", 
+        finding: "Governance assumes audit rights, but ATLAS reports zero immutable logging. This creates manual labor overhead of $180K/yr (2 FTEs @ $90K/yr).", 
         action: "Deploy SIEM logging in 3 days.", 
         cost 
       });
-      frictionScore += 35; cumulativeReworkTax += cost;
+      cumulativeReworkTax += cost;
     }
 
-    const calculatedSFI = Math.min(frictionScore, 100) || 74;
-    const dailyBleed = cumulativeReworkTax / 365;
+    // 3. Systemic Capital Decay (Spend Scaling)
+    const systemicLeak = (liveSpend * 1000000) * (calculatedSFI / 100) * 0.15;
+    const totalTax = cumulativeReworkTax + systemicLeak;
+    const dailyBleed = totalTax / 365;
+
     return {
       sfi: calculatedSFI,
-      totalTax: cumulativeReworkTax || (liveSpend * 1000000 * 0.15),
-      inactionPenalty: (cumulativeReworkTax || (liveSpend * 1000000 * 0.15)) * 1.2,
-      dailyBleed, currentSessionBleed: (dailyBleed / 86400) * secondsElapsed, fractures
+      totalTax: totalTax,
+      inactionPenalty: totalTax * 1.2,
+      dailyBleed, 
+      currentSessionBleed: (dailyBleed / 86400) * secondsElapsed, 
+      fractures
     };
   }, [reportData, liveSpend, secondsElapsed]);
 
@@ -88,29 +98,35 @@ export default function ForensicVerdict() {
         <header className="flex justify-between items-end border-b border-slate-900 pb-8 mb-4">
           <div className="text-left">
             <h1 className="text-red-600 text-3xl font-black uppercase italic tracking-tighter leading-none">Your AI Health Verdict</h1>
-            <p className="text-[10px] font-mono text-slate-500 uppercase mt-4 tracking-widest font-bold">Ref ID: {id?.slice(0,8).toUpperCase()} // PERCEPTUAL FRACTURE AUDIT</p>
+            <p className="text-[10px] font-mono text-slate-500 uppercase mt-4 tracking-widest font-bold italic leading-none">
+              Ref ID: {id?.slice(0,8).toUpperCase()} // Primary Node: {reportData?.nodes?.[0]?.persona_type || "AUTHORIZED"}
+            </p>
           </div>
           <div className="bg-red-600/10 border border-red-600/30 px-4 py-2 flex items-center gap-2 animate-pulse">
              <Clock size={14} className="text-red-600" />
-             <span className="text-[10px] font-mono font-black text-red-500 tracking-widest uppercase italic leading-none">Live Bleed: +${activeMetrics?.currentSessionBleed?.toFixed(4)}</span>
+             <span className="text-[10px] font-mono font-black text-red-500 tracking-widest uppercase italic leading-none">
+               Cost of Delay: +${activeMetrics?.currentSessionBleed?.toFixed(4)}
+             </span>
           </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center group relative">
+          <div className="group relative bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center overflow-visible">
             <div className="text-6xl font-black italic text-white leading-none">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-bold italic">Annual Rework Tax Liability</div>
-            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-[8px] font-mono uppercase text-white p-2">Bridge: Spend x SFI (${activeMetrics?.sfi}%) x 15%</div>
+            <div className="absolute -bottom-12 left-0 w-full bg-red-600 text-white text-[9px] p-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none uppercase tracking-tighter">
+              Bridge: Spend ($${liveSpend}M) × SFI (${activeMetrics?.sfi}%) × 15% Rework Rate = Leakage
+            </div>
           </div>
           <div className="bg-red-950/20 border border-red-600/50 p-10 flex flex-col justify-center">
             <div className="text-6xl font-black text-red-500 leading-none italic leading-none">${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K</div>
-            <div className="text-[9px] font-mono text-red-400 uppercase font-bold tracking-tighter mt-4">12-Month Inaction Penalty</div>
+            <div className="text-[9px] font-mono text-red-400 uppercase font-bold tracking-tighter mt-4 italic">12-Month Inaction Penalty</div>
           </div>
         </div>
 
         <div className="bg-slate-950 border border-slate-900 p-8 mb-12">
-          <div className="flex justify-between items-center mb-6 text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic">
-            <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Fiduciary Simulator</div>
+          <div className="flex justify-between items-center mb-6 text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic leading-none">
+            <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Capital Exposure Simulator</div>
             <div className="text-xl font-black italic text-white">${liveSpend.toFixed(1)}M SPEND</div>
           </div>
           <input type="range" min="0.1" max="10" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
@@ -122,18 +138,18 @@ export default function ForensicVerdict() {
               <div className="bg-slate-950 border border-slate-800 p-8 hover:border-green-500/50 transition-all group">
                  <div className="flex justify-between items-start mb-4">
                     <CheckCircle2 size={24} className="text-green-500" />
-                    <span className="text-[9px] font-mono text-slate-600 group-hover:text-green-500 transition-colors uppercase">3-Day Fix</span>
+                    <span className="text-[9px] font-mono text-slate-600 group-hover:text-green-500 transition-colors uppercase font-bold tracking-widest">3-Day Fix</span>
                  </div>
                  <h4 className="text-white font-black italic uppercase text-lg leading-tight mb-2">Deploy Forensic Snapshots</h4>
-                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold font-sans italic leading-none">Closes $180K/yr Indemnity Gap immediately via automated logging.</p>
+                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold italic leading-none">Closes $180K/yr Indemnity Gap immediately via automated logging.</p>
               </div>
               <div className="bg-slate-950 border border-slate-800 p-8 hover:border-yellow-500/50 transition-all group">
                  <div className="flex justify-between items-start mb-4">
                     <Zap size={24} className="text-yellow-500" />
-                    <span className="text-[9px] font-mono text-slate-600 group-hover:text-yellow-500 transition-colors uppercase">5-Day Fix</span>
+                    <span className="text-[9px] font-mono text-slate-600 group-hover:text-yellow-500 transition-colors uppercase font-bold tracking-widest">5-Day Fix</span>
                  </div>
                  <h4 className="text-white font-black italic uppercase text-lg leading-tight mb-2">Initialize Loop Checks</h4>
-                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold font-sans italic leading-none">Reduces Manual Rework by 30% through automated TITAN node validation.</p>
+                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold italic leading-none">Reduces Manual Rework by 30% through automated TITAN node validation.</p>
               </div>
            </div>
         </div>
