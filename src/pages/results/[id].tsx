@@ -25,11 +25,9 @@ export default function ForensicVerdict() {
         const nodes = nodesRes.data;
         const results: any = {};
 
-        // 1. DATA NORMALIZATION (Ensures DG_ keys map to Persona keys)
         nodes.forEach(n => {
           const persona = (n.persona_type || "").toUpperCase();
           const prefix = persona.includes("EXE") ? "EXE" : persona.includes("MGR") ? "MGR" : "TEC";
-          
           if (n.raw_responses) {
             Object.entries(n.raw_responses).forEach(([qId, val]: any) => {
               const qNum = qId.includes('_') ? qId.split('_')[1] : qId.replace(/[^0-9]/g, '');
@@ -41,12 +39,10 @@ export default function ForensicVerdict() {
           }
         });
 
-        // 2. THE FORENSIC BRAIN (HARDENED AGAINST NaN)
         let frictionScore = 0;
         let cumulativeReworkTax = 0;
         const fractures = [];
         
-        // Clean numeric strings before parsing to prevent $NaN errors
         const cleanParse = (val: any, fallback: number) => {
           const cleaned = String(val || "").replace(/[^0-9.]/g, '');
           const parsed = parseFloat(cleaned);
@@ -56,7 +52,6 @@ export default function ForensicVerdict() {
         const aiSpendBase = cleanParse(audit.ai_spend, 1.2);
         const baseTaxMultiplier = cleanParse(audit.rework_tax, 0.9);
 
-        // Advanced Fuzzy Matching for Supabase JSON
         const isYes = (v: any) => {
           if (v === undefined || v === null) return false;
           const s = String(v).toLowerCase().trim();
@@ -86,19 +81,19 @@ export default function ForensicVerdict() {
           cumulativeReworkTax += cost;
         }
 
-        // BMR-M1: REWORK (MGR vs TEC)
+        // BMR-M1: SYSTEMIC REWORK TAX (The "Third Item")
         if (isYes(results.MGR_01?.answer) && isNo(results.TEC_01?.answer)) {
-          // Calculation Logic: (Spend Millions * Multiplier) * impact weight
           const cost = (aiSpendBase * 1000000) * baseTaxMultiplier * 0.15; 
           fractures.push({
             code: "BMR-M1",
             impact: "HIGH",
             implicatedNodes: ['MGR', 'TEC'],
-            title: "Rework Tax Hemorrhage",
-            finding: `Structural validation gap creates systemic manual friction.`,
-            directive: "INITIALIZE REINFORCEMENT LOOPS",
-            action: "Automate validation checkpoints to reclaim manual rework hours.",
-            cost: cost
+            title: "Systemic Rework Tax Hemorrhage",
+            finding: "Managerial validation claims exist, but Technical Node reports structural validation gaps.",
+            directive: "INITIALIZE_REINFORCEMENT_LOOPS",
+            action: "Automate validation checkpoints to eliminate manual engineering rework.",
+            cost: cost,
+            isSystemic: true
           });
           frictionScore += 35;
           cumulativeReworkTax += cost;
@@ -106,6 +101,7 @@ export default function ForensicVerdict() {
 
         setReport({
           org: audit.org_name,
+          aiInvestment: aiSpendBase,
           sfi: Math.min(frictionScore, 100),
           totalTax: cumulativeReworkTax,
           dailyBleed: (cumulativeReworkTax / 365),
@@ -145,6 +141,27 @@ export default function ForensicVerdict() {
             </div>
           </div>
         </header>
+
+        {/* --- SYSTEMIC CONTEXT CARDS (The Third Item Activation) --- */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="bg-slate-950 border border-slate-900 p-8 flex flex-col justify-center">
+            <div className="text-4xl font-black italic text-white leading-none">${report?.aiInvestment}M</div>
+            <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-2 font-bold">AI_INVESTMENT_UNDER_AUDIT</div>
+          </div>
+          
+          {report?.fractures.some((f:any) => f.isSystemic) ? (
+            <div className="bg-red-600/10 border border-red-600 p-8 flex flex-col justify-center relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-2 bg-red-600 text-white text-[8px] font-black uppercase italic">Systemic_Fracture_Alert</div>
+              <div className="text-2xl font-black text-red-500 leading-none uppercase italic">Systemic Gap Detected</div>
+              <p className="text-[10px] text-slate-400 mt-2 font-mono uppercase font-bold tracking-tighter">Liability: ${(report?.fractures.find((f:any) => f.isSystemic)?.cost / 1000).toFixed(0)}K Rework Tax</p>
+            </div>
+          ) : (
+             <div className="bg-slate-950 border border-slate-900 p-8 flex flex-col justify-center">
+               <div className="text-2xl font-black text-slate-700 leading-none italic uppercase">No Systemic Gaps</div>
+               <p className="text-[10px] text-slate-500 mt-2 font-mono uppercase tracking-widest">Cross-Node Validation Active</p>
+             </div>
+          )}
+        </div>
 
         {/* SHEAR ZONE PANEL */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-1 mb-12 text-left">
@@ -198,11 +215,7 @@ export default function ForensicVerdict() {
 
         {/* FRACTURE CARDS */}
         <div className="space-y-6 mb-20 text-left">
-          {report?.fractures.length === 0 ? (
-            <div className="bg-slate-950 border border-slate-900 p-10 text-center text-slate-500 italic font-mono uppercase tracking-widest">
-              No fractures detected in current node configuration.
-            </div>
-          ) : report?.fractures.map((f: any, i: number) => (
+          {report?.fractures.map((f: any, i: number) => (
             <div key={i} className="group text-left">
                <div className="bg-slate-950 border border-slate-900 p-10 flex flex-col md:flex-row justify-between items-start gap-8 text-left">
                   <div className="space-y-6 flex-1 text-left">
