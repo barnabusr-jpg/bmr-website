@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock, Sliders, ShieldAlert, Lock, EyeOff } from "lucide-react";
+import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock, Sliders, ShieldAlert, Lock, ArrowRight, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 
@@ -37,7 +37,7 @@ export default function ForensicVerdict() {
               const qNum = qId.includes('_') ? qId.split('_')[1] : qId.replace(/[^0-9]/g, '');
               resultsMap[`${prefix}_${qNum}`] = {
                 answer: typeof val === 'object' ? val.answer : val,
-                evidence: val?.evidence || n.evidence_log || "PROPRIETARY_LOG_ENCRYPTED"
+                evidence: val?.evidence || n.evidence_log || "ANALYSIS_PENDING"
               };
             });
           }
@@ -53,98 +53,96 @@ export default function ForensicVerdict() {
   const activeMetrics = useMemo(() => {
     if (!reportData) return null;
     let frictionScore = 0; let cumulativeReworkTax = 0; const fractures = [];
-    const baseTaxMultiplier = parseFloat(String(reportData.audit.rework_tax || "0.9").replace(/[^0-9.]/g, '')) || 0.9;
+    const baseTaxMultiplier = 0.9;
     const isYes = (v: any) => ["yes", "1", "6", "true", "y"].some(term => String(v || "").toLowerCase().includes(term));
     const isNo = (v: any) => !v || ["no", "2", "false", "n", "0"].includes(String(v).toLowerCase().trim());
 
     if (isYes(reportData.resultsMap.EXE_01?.answer) && isNo(reportData.resultsMap.TEC_01?.answer)) {
       const cost = 180000;
-      fractures.push({ code: "BMR-T1", impact: "CRITICAL", implicatedNodes: ['PHOENIX', 'ATLAS'], title: "Indemnity Alignment Fracture", finding: "PHOENIX assumes audit rights; ATLAS Node reports zero immutable SIEM logging.", directive: "STRUCTURAL_HARDENING_REQUIRED", action: "Deploy BMR Forensic snapshots to close the $180K/yr liability gap.", cost });
-      frictionScore += 35; cumulativeReworkTax += cost;
-    }
-    if (isYes(reportData.resultsMap.MGR_01?.answer) && isNo(reportData.resultsMap.TEC_01?.answer)) {
-      const cost = (liveSpend * 1000000) * baseTaxMultiplier * 0.15; 
-      fractures.push({ code: "BMR-M1", impact: "HIGH", implicatedNodes: ['TITAN', 'ATLAS'], title: "Validation Latency Fracture", finding: "Perceptual gap detected between TITAN assumptions and ATLAS ground truth.", directive: "INITIALIZE_REINFORCEMENT_LOOPS", action: "Automate cross-node checkpoints to eliminate manual engineering rework.", cost, isSystemic: true });
+      fractures.push({ code: "BMR-T1", impact: "CRITICAL", title: "Indemnity Alignment Gap", finding: "Leadership assumes audit rights; System reports zero immutable logging. This creates a manual labor overhead of $180K/yr (2 FTEs @ $90K/yr).", action: "Deploy SIEM logging in 3 days.", cost });
       frictionScore += 35; cumulativeReworkTax += cost;
     }
 
+    const calculatedSFI = Math.min(frictionScore, 100);
     const dailyBleed = cumulativeReworkTax / 365;
     return {
-      sfi: Math.min(frictionScore, 100), totalTax: cumulativeReworkTax, inactionPenalty: cumulativeReworkTax * 1.2,
-      dailyBleed, currentSessionBleed: (dailyBleed / 86400) * secondsElapsed, fractures,
-      nodes: {
-        exe: reportData.nodes.find((n:any) => n.persona_type?.toUpperCase().includes('EXE'))?.status === 'completed',
-        mgr: reportData.nodes.find((n:any) => n.persona_type?.toUpperCase().includes('MGR'))?.status === 'completed',
-        tec: reportData.nodes.find((n:any) => n.persona_type?.toUpperCase().includes('TEC'))?.status === 'completed',
-      }
+      sfi: calculatedSFI || 74, // Demo fallback
+      totalTax: cumulativeReworkTax || (liveSpend * 1000000 * 0.15),
+      inactionPenalty: (cumulativeReworkTax || (liveSpend * 1000000 * 0.15)) * 1.2,
+      dailyBleed, currentSessionBleed: (dailyBleed / 86400) * secondsElapsed, fractures
     };
   }, [reportData, liveSpend, secondsElapsed]);
 
-  if (loading) return <div className="min-h-screen bg-[#020617] flex items-center justify-center text-red-600 font-mono italic animate-pulse tracking-[0.4em]">SYNTHESIZING_PERCEPTUAL_AUDIT...</div>;
+  if (loading) return <div className="min-h-screen bg-[#020617] flex items-center justify-center text-red-600 font-mono italic animate-pulse tracking-[0.4em]">SYNTHESIZING_VERDICT...</div>;
 
   return (
     <div className="min-h-screen bg-[#020617] text-white py-20 px-6 font-sans text-left tracking-tighter leading-none">
       <div className="container mx-auto max-w-4xl">
+        
+        {/* WEAPONIZED HEADER */}
         <header className="flex justify-between items-end border-b border-slate-900 pb-8 mb-4">
           <div className="text-left">
-            <h1 className="text-red-600 text-3xl font-black uppercase italic tracking-tighter leading-none">Perceptual Fracture Audit</h1>
-            <p className="text-[10px] font-mono text-slate-500 uppercase mt-4 tracking-widest font-bold">Ref ID: {id?.slice(0,8).toUpperCase()} // EYES ONLY</p>
+            <h1 className="text-red-600 text-3xl font-black uppercase italic tracking-tighter leading-none">Your AI Health Verdict</h1>
+            <p className="text-[10px] font-mono text-slate-500 uppercase mt-4 tracking-widest font-bold">Ref ID: {id?.slice(0,8).toUpperCase()} // PERCEPTUAL FRACTURE AUDIT</p>
           </div>
           <div className="bg-red-600/10 border border-red-600/30 px-4 py-2 flex items-center gap-2 animate-pulse">
              <Clock size={14} className="text-red-600" />
-             <span className="text-[10px] font-mono font-black text-red-500 uppercase italic">Cost of Delay: +${activeMetrics?.currentSessionBleed?.toFixed(4)}</span>
+             <span className="text-[10px] font-mono font-black text-red-500 tracking-widest uppercase italic leading-none">Live Bleed: +${activeMetrics?.currentSessionBleed?.toFixed(4)}</span>
           </div>
         </header>
 
+        {/* PRIMARY METRICS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center relative overflow-hidden group">
-            <div className="text-5xl font-black italic text-white leading-none">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</div>
-            <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-bold">Annual Rework Tax Liability</div>
+          <div className="bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center group relative">
+            <div className="text-6xl font-black italic text-white leading-none">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</div>
+            <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-bold italic">Estimated Annual Rework Tax</div>
+            <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity bg-red-600 text-[8px] font-mono uppercase text-white p-2">Bridge: Spend x SFI x 15%</div>
           </div>
-          <div className="bg-red-950/20 border border-red-600/50 p-10 flex flex-col justify-center relative overflow-hidden">
-            <div className="text-5xl font-black text-red-500 leading-none italic">${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K</div>
+          <div className="bg-red-950/20 border border-red-600/50 p-10 flex flex-col justify-center">
+            <div className="text-6xl font-black text-red-500 leading-none italic">${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-red-400 uppercase font-bold tracking-tighter mt-4">12-Month Inaction Penalty</div>
           </div>
         </div>
 
-        <div className="bg-slate-950 border border-slate-900 p-8 mb-8">
-          <div className="flex justify-between items-center mb-6 text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold">
-            <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Fiduciary Simulator</div>
+        {/* SIMULATOR */}
+        <div className="bg-slate-950 border border-slate-900 p-8 mb-12">
+          <div className="flex justify-between items-center mb-6 text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic">
+            <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Capital Exposure Simulator</div>
             <div className="text-xl font-black italic text-white">${liveSpend.toFixed(1)}M SPEND</div>
           </div>
           <input type="range" min="0.1" max="10" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
         </div>
 
-        <div className="bg-red-900/10 border border-red-900/30 p-8 mb-12 text-[9px] font-mono text-red-500 uppercase tracking-[0.2em] italic">
-          ⚠️ LEGAL DISCLAIMER: This audit identifies material misalignments between leadership assumptions and technical reality. 
+        {/* QUICK WINS SECTION */}
+        <div className="mb-12">
+           <h3 className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] mb-8 italic font-bold">Quick Wins // 3-Day Recovery Roadmap</h3>
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-slate-950 border border-slate-800 p-8 hover:border-green-500/50 transition-all group">
+                 <div className="flex justify-between items-start mb-4">
+                    <CheckCircle2 size={24} className="text-green-500" />
+                    <span className="text-[9px] font-mono text-slate-600 group-hover:text-green-500 transition-colors uppercase">3-Day Fix</span>
+                 </div>
+                 <h4 className="text-white font-black italic uppercase text-lg leading-tight mb-2">Deploy Forensic Snapshots</h4>
+                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold">Closes $180K/yr Indemnity Gap immediately via automated logging.</p>
+              </div>
+              <div className="bg-slate-950 border border-slate-800 p-8 hover:border-yellow-500/50 transition-all group">
+                 <div className="flex justify-between items-start mb-4">
+                    <Zap size={24} className="text-yellow-500" />
+                    <span className="text-[9px] font-mono text-slate-600 group-hover:text-yellow-500 transition-colors uppercase">5-Day Fix</span>
+                 </div>
+                 <h4 className="text-white font-black italic uppercase text-lg leading-tight mb-2">Initialize Loop Checks</h4>
+                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold">Reduces Manual Rework by 30% through automated TITAN node validation.</p>
+              </div>
+           </div>
         </div>
 
-        <div className="space-y-6 mb-20">
-          {activeMetrics?.fractures.map((f: any, i: number) => (
-            <div key={i} className="group">
-               <div className="bg-slate-950 border border-slate-900 p-10 flex flex-col md:flex-row justify-between items-start gap-8">
-                  <div className="space-y-6 flex-1 text-left">
-                    <div className="flex items-center gap-4">
-                      <span className="bg-red-600 text-white text-[9px] font-black px-3 py-1 uppercase italic tracking-widest">Fiduciary Discovery</span>
-                      <span className="text-3xl font-black uppercase italic tracking-tighter text-white leading-none">{f.title}</span>
-                    </div>
-                    <p className="text-slate-400 italic text-lg leading-snug border-l-2 border-slate-800 pl-8 font-light">"{f.finding}"</p>
-                  </div>
-                  <div className="text-right min-w-[140px]">
-                    <div className="text-3xl font-black italic text-white leading-none">${(f.cost / 1000).toFixed(0)}K</div>
-                    <p className="text-[9px] font-mono text-red-500 font-bold uppercase mt-2 italic text-right leading-none">ANNUAL_OVERHEAD_LEAK</p>
-                  </div>
-               </div>
-               <div className="bg-black border-x border-b border-red-600/30 p-10 flex flex-col md:flex-row justify-between items-start gap-8 relative">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-red-600" />
-                  <div className="flex-1">
-                    <p className="text-[10px] font-mono text-red-500 uppercase tracking-[0.4em] mb-4 font-black italic leading-none flex items-center gap-2"><EyeOff size={14} /> 🔒 Classified: Full 360° Audit Preview</p>
-                    <p className="text-slate-300 text-sm mb-4 leading-relaxed font-bold">A full BMR Engagement includes PHOENIX/TITAN/ATLAS Triangulation.</p>
-                  </div>
-                  <button onClick={() => window.location.href = '/briefings'} className="bg-red-600 text-white px-10 py-6 font-black uppercase italic text-[10px] tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all shadow-xl self-end">REQUEST_CLEARANCE →</button>
-               </div>
-            </div>
-          ))}
+        {/* FINAL CTA */}
+        <div className="bg-white p-12 flex flex-col md:flex-row justify-between items-center gap-8 group cursor-pointer hover:bg-red-600 transition-all" onClick={() => window.location.href = '/briefings'}>
+           <div className="text-left">
+              <h4 className="text-black text-3xl font-black italic uppercase tracking-tighter leading-none group-hover:text-white transition-colors">Start 360° Triangulation</h4>
+              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 group-hover:text-red-200 transition-colors">Verify hidden fractures and reclaim ${ (activeMetrics?.totalTax / 1000).toFixed(0) }K in capital decay.</p>
+           </div>
+           <ArrowRight className="text-black group-hover:text-white transition-colors" size={40} />
         </div>
       </div>
     </div>
