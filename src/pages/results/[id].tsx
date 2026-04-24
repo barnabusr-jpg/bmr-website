@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock, Sliders, Lock, ArrowRight, CheckCircle2, EyeOff, Info } from "lucide-react";
+import { Fingerprint, Activity, Zap, ShieldCheck, AlertTriangle, Clock, Sliders, Lock, ArrowRight, CheckCircle2, Info } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { motion } from "framer-motion";
 
@@ -66,7 +66,7 @@ export default function ForensicVerdict() {
         code: "BMR-T1", 
         impact: "CRITICAL", 
         title: "Indemnity Alignment Gap", 
-        finding: "Governance assumes audit rights, but ATLAS reports zero immutable logging. This creates manual labor overhead of $180K/yr (2 FTEs @ $90K/yr).", 
+        finding: "Leadership assumes audit rights, but ATLAS reports zero immutable logging. This creates manual labor overhead of $180K/yr (2 FTEs @ $90K/yr).", 
         action: "Deploy SIEM logging in 3 days.", 
         cost 
       });
@@ -94,9 +94,9 @@ export default function ForensicVerdict() {
       <div className="container mx-auto max-w-4xl">
         <header className="flex justify-between items-end border-b border-slate-900 pb-8 mb-4">
           <div className="text-left">
-            <h1 className="text-red-600 text-3xl font-black uppercase italic tracking-tighter leading-none">Your AI Health Verdict</h1>
+            <h1 className="text-red-600 text-3xl font-black uppercase italic tracking-tighter leading-none">Audit Verdict</h1>
             <p className="text-[10px] font-mono text-slate-500 uppercase mt-4 tracking-widest font-bold italic leading-none">
-              Ref ID: {id?.slice(0,8).toUpperCase()} // Node: {reportData?.nodes?.[0]?.persona_type || "AUTHORIZED"}
+              Ref ID: {id?.slice(0,8).toUpperCase()} // Primary Node: {reportData?.nodes?.[0]?.persona_type || "AUTHORIZED"}
             </p>
           </div>
           <div className="bg-red-600/10 border border-red-600/30 px-4 py-2 flex items-center gap-2 animate-pulse">
@@ -107,22 +107,26 @@ export default function ForensicVerdict() {
           </div>
         </header>
 
-        {/* FINANCIAL SUMMARY */}
+        {/* FINANCIAL SUMMARY: SELF-EXPLANATORY DEFINITIONS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
           <div className="group relative bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center overflow-visible">
             <div className="text-6xl font-black italic text-white leading-none">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</div>
-            <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-bold italic">Annual Rework Tax Liability</div>
-            <div className="absolute -bottom-12 left-0 w-full bg-red-600 text-white text-[9px] p-3 font-mono opacity-0 group-hover:opacity-100 transition-opacity z-50 pointer-events-none uppercase tracking-tighter">
-              Bridge: Spend ($${liveSpend}M) × Friction (${activeMetrics?.sfi}%) × 15% Tax Rate = Leakage
-            </div>
+            <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-black italic">Annual Rework Tax</div>
+            <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic">
+              Hidden overhead caused by manual validation of unverified AI outputs.
+            </p>
+            <div className="absolute top-2 right-2 p-4 opacity-20 group-hover:opacity-100 transition-opacity bg-red-600 text-[8px] font-mono uppercase text-white p-2">Bridge: Spend x SFI (${activeMetrics?.sfi}%) x 15%</div>
           </div>
           <div className="bg-red-950/20 border border-red-600/50 p-10 flex flex-col justify-center">
             <div className="text-6xl font-black text-red-500 leading-none italic leading-none">${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K</div>
-            <div className="text-[9px] font-mono text-red-400 uppercase font-bold tracking-tighter mt-4 italic">12-Month Inaction Penalty</div>
+            <div className="text-[9px] font-mono text-red-400 uppercase font-black tracking-tighter mt-4 italic">12-Month Inaction Penalty</div>
+            <p className="text-[10px] text-red-900 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic">
+              Projected financial leakage if identified fractures remain unaddressed.
+            </p>
           </div>
         </div>
 
-        {/* FIDUCIARY SIMULATOR */}
+        {/* SCALE SIMULATOR */}
         <div className="bg-slate-950 border border-slate-900 p-8 mb-12">
           <div className="flex justify-between items-center mb-6 text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic leading-none">
             <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Capital Exposure Simulator</div>
@@ -131,19 +135,16 @@ export default function ForensicVerdict() {
           <input type="range" min="0.1" max="10" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
         </div>
 
-        {/* THE INTERPRETIVE BRIDGE - This helps the user decide to start triangulation */}
-        <div className="mb-12 bg-slate-950/50 border border-slate-800 p-10">
-            <div className="flex items-center gap-4 mb-6">
-                <Info className="text-red-600" size={24} />
-                <h3 className="text-lg font-black uppercase italic tracking-tighter text-white">Why Triangulation is Required</h3>
+        {/* CONCISE TRIANGULATION EXPLANATION */}
+        <div className="mb-12 bg-slate-950/50 border border-slate-800 p-10 flex flex-col md:flex-row gap-8 items-center">
+            <div className="bg-red-600/10 p-4 border border-red-600/30">
+               <Info className="text-red-600" size={32} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-[11px] font-mono uppercase tracking-widest leading-relaxed text-slate-400">
-                <p>
-                    This audit reflects a <span className="text-white">Single-Node Perspective</span>. While your individual answers indicate a <span className="text-red-600">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</span> rework tax, the true risk lies in <span className="text-white">Logic Shear</span> between your Executive, Managerial, and Technical teams.
-                </p>
-                <p>
-                    Triangulation cross-references your PHOENIX, TITAN, and ATLAS nodes to uncover hidden fractures that a single user cannot see. This is the only way to validate these findings and build a <span className="text-white">Hardening Roadmap</span>.
-                </p>
+            <div>
+               <h3 className="text-xs font-black uppercase tracking-widest text-white mb-2 italic">Provisional Accuracy Warning</h3>
+               <p className="text-[11px] font-mono uppercase tracking-widest leading-relaxed text-slate-500 font-bold">
+                 This verdict reflects a <span className="text-white">single-node perspective</span>. Full Triangulation is required to cross-reference Executive, Managerial, and Technical datasets to identify <span className="text-red-600">Logic Shear</span> and finalize your Hardening Roadmap.
+               </p>
             </div>
         </div>
 
@@ -170,11 +171,11 @@ export default function ForensicVerdict() {
            </div>
         </div>
 
-        {/* FINAL CTA - Corrected to /briefings */}
+        {/* UPDATED CTA: POINTS TO BRIEFINGS */}
         <div className="bg-white p-12 flex flex-col md:flex-row justify-between items-center gap-8 group cursor-pointer hover:bg-red-600 transition-all border-l-8 border-red-600" onClick={() => window.location.href = '/briefings'}>
            <div className="text-left">
               <h4 className="text-black text-3xl font-black italic uppercase tracking-tighter leading-none group-hover:text-white transition-colors">Start 360° Triangulation</h4>
-              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 group-hover:text-red-200 transition-colors italic">Access the Evidence Vault to validate these findings and begin hardening.</p>
+              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 group-hover:text-red-100 transition-colors italic">Access the Evidence Vault to validate these provisional findings.</p>
            </div>
            <div className="flex items-center gap-3">
               <span className="text-[10px] font-mono font-black text-black group-hover:text-white uppercase tracking-widest">Enter Vault</span>
