@@ -26,17 +26,27 @@ export default function Home() {
                   PROMISE <br /> 
                   GAP<span className="text-[2vw] lowercase font-mono align-top ml-1">tm</span>
                 </span> <br /> 
-                {/* Fixed Color: Slate-600 at 90% opacity matches the original LUXURY depth */}
                 <span className="text-slate-600 opacity-90">WHERE</span> <br />
                 <span className="text-red-600 font-black italic">ROI GOES</span> <br /> 
                 <span className="text-red-600 font-black italic">TO DIE.</span>
               </h1>
             </div>
 
-            <p className="text-slate-400 text-lg max-w-lg italic leading-relaxed font-medium">
-              We do not give you new promises. We provide the forensic tools to 
-              make the old ones work.
-            </p>
+            {/* NEW: FORENSIC GLOSSARY */}
+            <div className="grid grid-cols-1 gap-4 border-t border-slate-900 pt-8 max-w-lg">
+               <div>
+                  <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-widest">Logic Shear:</span>
+                  <p className="text-[11px] text-slate-500 uppercase tracking-widest leading-relaxed mt-1 italic">
+                    Friction created when human oversight and machine execution decouple.
+                  </p>
+               </div>
+               <div>
+                  <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-widest">Capital Decay:</span>
+                  <p className="text-[11px] text-slate-500 uppercase tracking-widest leading-relaxed mt-1 italic">
+                    The erosion of ROI caused by unmonitored system drift.
+                  </p>
+               </div>
+            </div>
 
             <button 
               onClick={() => router.push('/pulse-check')}
@@ -46,19 +56,19 @@ export default function Home() {
             </button>
           </div>
 
-          {/* RIGHT SIDE BOX: REMAINING UNTOUCHED */}
+          {/* RIGHT SIDE BOX: UPDATED FOR CTO/CIO/OPS PERSONAS */}
           <div className="bg-slate-900/10 border border-slate-900 p-12 space-y-8 mt-12 relative overflow-hidden text-white font-sans">
              <h2 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
-               Why Systems <span className="text-red-600 font-black">Quietly Drift</span>
+               For <span className="text-red-600 font-black italic">CTO / CIO / OPS</span>
              </h2>
              <p className="text-slate-400 font-bold italic text-lg leading-tight uppercase">
-               AI failure is rarely a binary event.
+               Uncertainty is a measurable liability.
              </p>
              <div className="pl-6 border-l border-slate-800 space-y-6 text-slate-400 font-sans">
                <p className="text-sm italic leading-relaxed">
-                 It is a slow, structural divergence where AI-enabled logic decays under operating conditions leaders cannot see.
+                 BMR provides the forensic tools to harden logic chains before architectural collapse becomes inevitable.
                </p>
-               <p className="text-sm leading-relaxed italic">
+               <p className="text-sm leading-relaxed italic border-t border-slate-900 pt-4">
                  When human intent and machine execution decouple, you do not have an &quot;optimization&quot; problem. You have <span className="text-red-600 font-black uppercase italic">Systemic Rot.</span>
                </p>
              </div>
