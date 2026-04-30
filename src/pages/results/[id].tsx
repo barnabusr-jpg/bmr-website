@@ -54,15 +54,11 @@ export default function ForensicVerdict() {
     if (!reportData) return null;
     
     const results = reportData.resultsMap;
-    // Signal Detection Helpers
     const isFormalized = (v: any) => parseInt(v || "10") <= 4;
     const isLegacy = (v: any) => parseInt(v || "0") >= 6;
     const isHighWaste = (v: any) => parseInt(v || "0") >= 8;
 
-    // CONTRACTION TRIGGERS
-    // Alpha: Intent (RT_02) doesn't match Tech (ED_01)
     const triggerAlpha = isFormalized(results.MGR_02?.answer) && isLegacy(results.TEC_01?.answer);
-    // Beta: ROI Impact (DG_01) doesn't match Waste (ED_04)
     const triggerBeta = isFormalized(results.MGR_04?.answer) && isHighWaste(results.TEC_04?.answer);
 
     const rawAnswers = Object.values(results || {});
@@ -109,7 +105,7 @@ export default function ForensicVerdict() {
           <div className="group relative bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center">
             <div className="text-6xl font-black italic text-white leading-none">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-black italic">Annual Rework Tax</div>
-            <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic italic">
+            <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic">
               Measuring existing capital waste caused by manual validation and logic drift.
             </p>
           </div>
@@ -135,15 +131,24 @@ export default function ForensicVerdict() {
           <input type="range" min="0.1" max="10" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
         </div>
 
-        {/* DYNAMIC LOGIC CONTRADICTIONS SECTION */}
+        <div className="mb-12 bg-slate-950/50 border border-slate-800 p-8 flex items-center gap-6">
+            <Info className="text-red-600 flex-shrink-0" size={24} />
+            <p className="text-[11px] font-mono uppercase tracking-widest leading-relaxed text-slate-500 font-bold italic">
+              This verdict is <span className="text-white">Provisional</span>. A 360° Triangulation is required to verify alignment between Executive, Operational, and Technical datasets.
+            </p>
+        </div>
+
+        {/* REFINED DYNAMIC HEADER & CONTRADICTIONS SECTION */}
         <div className="mb-12">
           <div className="mb-8 border-l-2 border-red-600 pl-4">
             <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none">
-              Logic Contradictions Detected
+              {activeMetrics?.isOptimized 
+                ? "No Immediate Contradictions Detected" 
+                : "Logic Contradictions Detected"}
             </h3>
             <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mt-3 font-bold italic">
               {activeMetrics?.isOptimized 
-                ? "Initial inputs do not frame immediate logic contradictions." 
+                ? "Signal Scan: Nominal" 
                 : "Your response frames an internal misalignment, indicating a high probability of Logic Shear."}
             </p>
           </div>
@@ -179,9 +184,9 @@ export default function ForensicVerdict() {
               <div className="md:col-span-2 bg-red-950/10 border border-red-900/50 p-8 space-y-4">
                 <div className="flex items-center gap-3 text-red-500">
                   <AlertTriangle size={20} />
-                  <span className="text-[9px] font-mono font-black uppercase tracking-widest italic font-bold italic">Critical_Status</span>
+                  <span className="text-[9px] font-mono font-black uppercase tracking-widest italic font-bold">Critical_Status</span>
                 </div>
-                <h4 className="text-white font-black italic uppercase text-xl leading-tight text-red-500 italic">Total Structural Logic Shear</h4>
+                <h4 className="text-white font-black italic uppercase text-xl leading-tight text-red-500">Total Structural Logic Shear</h4>
                 <p className="text-slate-400 text-xs leading-relaxed font-medium italic">
                   Your input frames a state of total structural drift with a potential to impact your Rework Tax by compounding technical debt.
                 </p>
