@@ -11,7 +11,7 @@ const LOCAL_QUESTIONS = [
   { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
   { id: "RT_03", text: "AI roles and responsibilities are clearly defined across teams.", options: [{ label: "Undefined", weight: 10 }, { label: "Informal roles", weight: 6 }, { label: "Dedicated AI team", weight: 4 }, { label: "Cross-functional matrix", weight: 2 }] },
   { id: "DG_01", text: "Our AI systems directly contribute to measurable business ROI.", options: [{ label: "Not tracked", weight: 10 }, { label: "Anecdotal evidence", weight: 6 }, { label: "Specific KPIs", weight: 4 }, { label: "Direct impact", weight: 2 }] },
-  { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
+  { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { strategy: "Strategy-driven", weight: 2 }] },
   { id: "DG_03", text: "We have a dedicated budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
   { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
   { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Trust", weight: 2 }] },
@@ -93,12 +93,17 @@ export default function ConsolidatedDiagnostic() {
             <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
             
             <div className="max-w-3xl mx-auto">
-              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.4em] mb-6 font-bold italic">Select Active Operational Node</p>
+              {/* PULSING INSTRUCTION TEXT */}
+              <p className={`text-[10px] font-mono uppercase tracking-[0.4em] mb-6 font-bold italic transition-all duration-500 
+                ${!selectedLens ? 'animate-pulse text-red-600' : 'text-slate-500'}`}>
+                {selectedLens ? 'NODE_AUTHORIZED' : 'Select Active Operational Node'}
+              </p>
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
-                    { id: "EXECUTIVE", label: "PHOENIX", desc: "Governance Node" },
-                    { id: "MANAGER", label: "TITAN", desc: "Operational Node" },
-                    { id: "TECHNICAL", label: "ATLAS", desc: "Technical Node" }
+                    { id: "EXECUTIVE", label: "EXECUTIVE", desc: "ROI / Fiduciary" },
+                    { id: "OPERATIONAL", label: "OPERATIONAL", desc: "Value / Process" },
+                    { id: "TECHNICAL", label: "TECHNICAL", desc: "Logic / Architecture" }
                   ].map((node) => (
                       <button 
                         key={node.id} 
@@ -107,7 +112,7 @@ export default function ConsolidatedDiagnostic() {
                       >
                         {selectedLens === node.id ? <Unlock size={18} /> : <Lock size={18} />}
                         <span className="font-black italic text-sm tracking-widest">{node.label}</span>
-                        <span className="text-[8px] font-mono uppercase opacity-60">{node.desc}</span>
+                        <span className="text-[8px] font-mono uppercase opacity-60 font-black">{node.desc}</span>
                       </button>
                   ))}
               </div>
@@ -129,6 +134,7 @@ export default function ConsolidatedDiagnostic() {
           </motion.div>
         )}
 
+        {/* ... Intake and Audit steps remain unchanged ... */}
         {step === 'intake' && (
           <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
             <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white italic">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
