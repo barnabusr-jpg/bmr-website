@@ -66,8 +66,8 @@ export default function ForensicVerdict() {
         code: "BMR-T1", 
         impact: "CRITICAL", 
         title: "Indemnity Alignment Gap", 
-        finding: "Governance assumes audit rights, but ATLAS reports zero immutable logging. This creates manual labor overhead of $180K/yr (2 FTEs @ $90K/yr).", 
-        action: "Deploy SIEM logging in 3 days.", 
+        finding: "Governance assumes audit rights, but technical reporting is fragmented.", 
+        action: "Deploy Forensic Snapshots.", 
         cost 
       });
       cumulativeReworkTax += cost;
@@ -75,14 +75,13 @@ export default function ForensicVerdict() {
 
     const systemicLeak = (liveSpend * 1000000) * (calculatedSFI / 100) * 0.15;
     const totalTax = cumulativeReworkTax + systemicLeak;
-    const dailyBleed = totalTax / 365;
 
     return {
       sfi: calculatedSFI,
       totalTax: totalTax,
       inactionPenalty: totalTax * 1.2,
-      dailyBleed, 
-      currentSessionBleed: (dailyBleed / 86400) * secondsElapsed, 
+      dailyBleed: totalTax / 365, 
+      currentSessionBleed: ((totalTax / 365) / 86400) * secondsElapsed, 
       fractures
     };
   }, [reportData, liveSpend, secondsElapsed]);
@@ -109,16 +108,15 @@ export default function ForensicVerdict() {
 
         {/* FINANCIAL FINDINGS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="group relative bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center overflow-visible">
+          <div className="group relative bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center">
             <div className="text-6xl font-black italic text-white leading-none">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-black italic">Annual Rework Tax</div>
             <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic">
               Measuring existing capital waste caused by manual validation and logic drift.
             </p>
-            <div className="absolute top-2 right-2 p-4 opacity-20 group-hover:opacity-100 transition-opacity bg-red-600 text-[8px] font-mono uppercase text-white p-2">Bridge: Spend x SFI (${activeMetrics?.sfi}%) x 15%</div>
           </div>
           <div className="bg-red-950/20 border border-red-600/50 p-10 flex flex-col justify-center">
-            <div className="text-6xl font-black text-red-500 leading-none italic leading-none">${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K</div>
+            <div className="text-6xl font-black text-red-500 leading-none italic">${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-red-400 uppercase font-black tracking-tighter mt-4 italic">12-Month Inaction Penalty</div>
             <p className="text-[10px] text-red-900 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic">
               The projected financial cost of allowing identified fractures to remain unaddressed.
@@ -126,11 +124,16 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* FIDUCIARY SIMULATOR */}
+        {/* FIDUCIARY SIMULATOR WITH UPDATED INSTRUCTIONS */}
         <div className="bg-slate-950 border border-slate-900 p-8 mb-12">
-          <div className="flex justify-between items-center mb-6 text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic leading-none">
-            <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Capital Exposure Simulator</div>
-            <div className="text-xl font-black italic text-white">${liveSpend.toFixed(1)}M SPEND</div>
+          <div className="mb-6 space-y-2">
+            <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic leading-none">
+              <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Capital Exposure Simulator</div>
+              <div className="text-xl font-black italic text-white">${liveSpend.toFixed(1)}M SPEND</div>
+            </div>
+            <p className="text-[9px] font-mono text-red-600 uppercase tracking-widest animate-pulse font-bold">
+              Adjust the slider to modify AI Spend numbers to reveal adjusted results.
+            </p>
           </div>
           <input type="range" min="0.1" max="10" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
         </div>
@@ -139,13 +142,13 @@ export default function ForensicVerdict() {
         <div className="mb-12 bg-slate-950/50 border border-slate-800 p-8 flex items-center gap-6">
             <Info className="text-red-600 flex-shrink-0" size={24} />
             <p className="text-[11px] font-mono uppercase tracking-widest leading-relaxed text-slate-500 font-bold italic">
-              This verdict is <span className="text-white">Provisional</span>. A 360° Triangulation is required to verify alignment between Executive, Managerial, and Technical datasets and finalize a Hardening Roadmap.
+              This verdict is <span className="text-white">Provisional</span>. A 360° Triangulation is required to verify alignment between Executive, Operational, and Technical datasets.
             </p>
         </div>
 
-        {/* QUICK WINS */}
+        {/* RECOVERY ROADMAPS */}
         <div className="mb-12">
-           <h3 className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] mb-8 italic font-bold">Quick Wins // 3-Day Recovery Roadmap</h3>
+           <h3 className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] mb-8 italic font-bold">Active Recovery Roadmaps // Phase_03</h3>
            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-slate-950 border border-slate-800 p-8 hover:border-green-500/50 transition-all group">
                  <div className="flex justify-between items-start mb-4">
@@ -153,7 +156,7 @@ export default function ForensicVerdict() {
                     <span className="text-[9px] font-mono text-slate-600 group-hover:text-green-500 transition-colors uppercase font-bold tracking-widest">3-Day Fix</span>
                  </div>
                  <h4 className="text-white font-black italic uppercase text-lg leading-tight mb-2">Deploy Forensic Snapshots</h4>
-                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold italic leading-none">Closes $180K/yr Indemnity Gap immediately via automated logging.</p>
+                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold italic">Closes Indemnity Gap immediately via automated logging.</p>
               </div>
               <div className="bg-slate-950 border border-slate-800 p-8 hover:border-yellow-500/50 transition-all group">
                  <div className="flex justify-between items-start mb-4">
@@ -161,26 +164,22 @@ export default function ForensicVerdict() {
                     <span className="text-[9px] font-mono text-slate-600 group-hover:text-yellow-500 transition-colors uppercase font-bold tracking-widest">5-Day Fix</span>
                  </div>
                  <h4 className="text-white font-black italic uppercase text-lg leading-tight mb-2">Initialize Loop Checks</h4>
-                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold italic leading-none">Reduces Manual Rework by 30% through automated node validation.</p>
+                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold italic">Reduces Manual Rework through automated node validation.</p>
               </div>
            </div>
         </div>
 
-        {/* UPDATED CONVERSION CTA */}
+        {/* UPDATED CALENDLY CTA */}
         <div 
           className="bg-white p-12 flex flex-col md:flex-row justify-between items-center gap-8 group cursor-pointer hover:bg-slate-100 transition-all border-l-8 border-red-600" 
-          onClick={() => {
-            const subject = encodeURIComponent(`TRIANGULATION REQUEST // REF: ${id?.slice(0,8).toUpperCase()}`);
-            const body = encodeURIComponent(`Organization: ${reportData?.org}\n\nI have reviewed the Audit Verdict (Ref: ${id}).\n\nAnnual Rework Tax: $${(activeMetrics?.totalTax / 1000).toFixed(0)}K\nInaction Penalty: $${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K\n\nI am requesting a 360° Triangulation session to validate these findings.`);
-            window.location.href = `mailto:hello@bmradvisory.co?subject=${subject}&body=${body}`;
-          }}
+          onClick={() => window.location.href = 'https://calendly.com/hello-bmradvisory/forensic-review'}
         >
            <div className="text-left">
               <h4 className="text-black text-3xl font-black italic uppercase tracking-tighter leading-none">Initialize 360° Triangulation</h4>
-              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 italic">Submit Ref ID: {id?.slice(0,8).toUpperCase()} for priority cross-node validation.</p>
+              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 italic">Schedule your clinical briefing to verify Ref ID: {id?.slice(0,8).toUpperCase()}.</p>
            </div>
            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono font-black text-black uppercase tracking-widest">Request Consultation</span>
+              <span className="text-[10px] font-mono font-black text-black uppercase tracking-widest">Schedule Briefing</span>
               <ArrowRight className="text-black group-hover:translate-x-2 transition-transform" size={40} />
            </div>
         </div>
