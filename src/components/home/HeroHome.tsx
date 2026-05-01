@@ -7,27 +7,29 @@ export default function HeroHome() {
   const router = useRouter();
 
   return (
-    <section style={{ backgroundColor: '#020617', color: 'white', paddingTop: '160px', paddingBottom: '80px', width: '100%' }}>
+    <section style={{ backgroundColor: '#020617', color: 'white', paddingTop: '220px', paddingBottom: '120px', width: '100%' }}>
       <div style={{ 
         maxWidth: '1280px', 
         margin: '0 auto', 
-        padding: '0 24px', 
+        padding: '0 40px', 
         display: 'flex', 
         flexDirection: 'row',
         alignItems: 'flex-start',
         justifyContent: 'space-between',
-        gap: '40px'
+        gap: '60px'
       }}>
         
-        {/* LEFT COLUMN: FIXED 55% */}
+        {/* LEFT COLUMN: THE PROMISE GAP (55%) */}
         <div style={{ width: '55%', textAlign: 'left', flexShrink: 0 }}>
-          <div style={{ borderLeft: '4px solid #dc2626', paddingLeft: '24px', marginBottom: '40px' }}>
-            <p style={{ color: '#dc2626', fontWeight: 900, fontSize: '10px', letterSpacing: '0.4em', marginBottom: '10px', fontFamily: 'monospace' }}>FORENSIC_ENVIRONMENT</p>
+          <div style={{ borderLeft: '6px solid #dc2626', paddingLeft: '40px', marginBottom: '60px' }}>
+            <p style={{ color: '#dc2626', fontWeight: 900, fontSize: '12px', letterSpacing: '0.5em', marginBottom: '20px', fontFamily: 'monospace' }}>
+              NODE_ACCESS: FORENSIC_ENVIRONMENT // V4.0
+            </p>
             <h1 style={{ 
-              fontSize: 'clamp(3rem, 6vw, 6.5rem)', 
+              fontSize: 'clamp(4rem, 9vw, 8rem)', 
               fontWeight: 900, 
               fontStyle: 'italic', 
-              lineHeight: 0.85, 
+              lineHeight: 0.8, 
               textTransform: 'uppercase', 
               margin: 0,
               fontFamily: 'sans-serif'
@@ -38,47 +40,78 @@ export default function HeroHome() {
             </h1>
           </div>
           
-          <div style={{ borderTop: '1px solid #1e293b', paddingTop: '40px', maxWidth: '400px' }}>
-            <span style={{ color: '#dc2626', fontWeight: 900, fontSize: '10px', letterSpacing: '0.4em', fontFamily: 'monospace' }}>LOGIC SHEAR:</span>
-            <p style={{ color: '#64748b', fontSize: '12px', fontWeight: 'bold', fontStyle: 'italic', marginTop: '10px', fontFamily: 'sans-serif', textTransform: 'uppercase' }}>
-              Friction created when human oversight and machine execution decouple.
+          <div style={{ borderTop: '1px solid #1e293b', paddingTop: '50px', maxWidth: '550px' }}>
+            <span style={{ color: '#dc2626', fontWeight: 900, fontSize: '11px', letterSpacing: '0.4em', fontFamily: 'monospace' }}>LOGIC SHEAR:</span>
+            <p style={{ color: '#94a3b8', fontSize: '1.5rem', fontWeight: 500, fontStyle: 'italic', marginTop: '15px', fontFamily: 'sans-serif', textTransform: 'uppercase', lineHeight: 1.5 }}>
+              Friction created when human oversight and machine execution decouple. ROI dies in the void.
             </p>
+            <button 
+              onClick={() => router.push('/pulse-check')}
+              style={{ 
+                marginTop: '50px',
+                backgroundColor: '#dc2626', 
+                color: 'white', 
+                padding: '24px 48px', 
+                border: 'none', 
+                fontWeight: 900, 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.3em', 
+                fontSize: '12px', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '16px' 
+              }}
+            >
+              INITIALIZE DIAGNOSTIC <ArrowRight size={20} />
+            </button>
           </div>
         </div>
 
-        {/* RIGHT COLUMN: FIXED 40% */}
-        <div style={{ width: '40%', marginTop: '60px', flexShrink: 0 }}>
+        {/* RIGHT COLUMN: PERSONA BOX (40%) */}
+        <div style={{ width: '40%', marginTop: '100px', flexShrink: 0 }}>
           <div style={{ 
-            backgroundColor: 'rgba(15, 23, 42, 0.5)', 
+            backgroundColor: 'rgba(15, 23, 42, 0.4)', 
             border: '2px solid #1e293b', 
-            padding: '40px', 
-            textAlign: 'left' 
+            padding: '60px', 
+            textAlign: 'left',
+            position: 'relative'
           }}>
+            {/* Corner Accent */}
+            <div style={{ position: 'absolute', top: 0, right: 0, width: '40px', height: '40px', borderTop: '2px solid #dc2626', borderRight: '2px solid #dc2626' }} />
+            
             <h2 style={{ 
-              fontSize: '2.2rem', 
+              fontSize: '3rem', 
               fontWeight: 900, 
               fontStyle: 'italic', 
               textTransform: 'uppercase', 
               margin: 0,
               fontFamily: 'sans-serif',
-              lineHeight: 1
+              lineHeight: 1,
+              color: 'white'
             }}>
-              For <span style={{ color: '#dc2626' }}>CTOs / OPs / Tech Mgrs</span>
+              For <span style={{ color: '#dc2626' }}>CTOs / OPs</span>
             </h2>
-            <div style={{ borderLeft: '2px solid #dc2626', paddingLeft: '20px', marginTop: '30px' }}>
-              <p style={{ color: '#94a3b8', fontStyle: 'italic', fontFamily: 'sans-serif', fontSize: '0.95rem' }}>BMR provides forensic tools to harden logic chains.</p>
-              <p style={{ 
-                color: '#dc2626', 
-                fontWeight: 900, 
-                textTransform: 'uppercase', 
-                marginTop: '25px', 
-                borderTop: '1px solid #1e293b', 
-                paddingTop: '20px',
-                fontFamily: 'sans-serif',
-                fontSize: '1.1rem'
-              }}>
-                You have Systemic Rot.
+            <div style={{ borderLeft: '2px solid #dc2626', paddingLeft: '30px', marginTop: '40px' }}>
+              <p style={{ color: '#94a3b8', fontStyle: 'italic', fontFamily: 'sans-serif', fontSize: '1.3rem', lineHeight: 1.6 }}>
+                BMR provides forensic tools to harden logic chains. Uncertainty is a measurable liability.
               </p>
+              <div style={{ 
+                marginTop: '40px', 
+                borderTop: '1px solid #1e293b', 
+                paddingTop: '30px'
+              }}>
+                <p style={{ 
+                  color: '#dc2626', 
+                  fontWeight: 900, 
+                  textTransform: 'uppercase', 
+                  fontFamily: 'sans-serif',
+                  fontSize: '1.4rem',
+                  letterSpacing: '-0.02em'
+                }}>
+                  You have <span style={{ fontStyle: 'italic' }}>Systemic Rot.</span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
