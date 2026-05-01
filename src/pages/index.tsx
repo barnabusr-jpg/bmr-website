@@ -1,6 +1,5 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/router";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroHome from "@/components/home/HeroHome";
@@ -9,29 +8,59 @@ import OutcomesHome from "@/components/home/OutcomesHome";
 import ComparisonGrid from "@/components/home/ComparisonGrid";
 import ServicesPreviewHome from "@/components/home/ServicesPreviewHome";
 import { Shield } from "lucide-react";
+import { useRouter } from "next/router";
 
 export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30 relative overflow-x-hidden">
+    <div 
+      style={{ backgroundColor: '#020617', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
+      className="selection:bg-red-600/30 relative overflow-x-hidden"
+    >
+      {/* 🛠️ NAVIGATION: Hoisted to the top layer */}
       <Header />
       
-      <main className="flex-grow">
+      <main style={{ flexGrow: 1 }}>
+        {/* 1. HERO: The 55/40 Split (Glossary & CTO Box) */}
         <HeroHome />
+        
+        {/* 2. FORENSIC ANALYSIS: The 3 Cards (Human Trust, Value Leakage, etc.) */}
         <InsightsHome />
+        
+        {/* 3. RECOVERY OUTCOMES: The ROI section */}
         <OutcomesHome />
+        
+        {/* 4. COMPARISON: BMR vs Traditional Audit */}
         <ComparisonGrid />
+        
+        {/* 5. SERVICES: Final call to action segments */}
         <ServicesPreviewHome />
       </main>
 
       <Footer />
 
-      {/* ADMIN PORTAL ACCESS */}
-      <div onClick={() => router.push('/admin/dashboard')} className="fixed bottom-10 left-10 z-[110] cursor-crosshair group">
-        <div className="w-10 h-10 flex items-center justify-center border border-slate-800 group-hover:border-red-600 transition-all rounded-full bg-slate-950/80 backdrop-blur-md">
-          <Shield size={12} className="text-slate-800 group-hover:text-red-600 transition-all opacity-20 group-hover:opacity-100" />
-        </div>
+      {/* 🛡️ ADMIN ACCESS: Bottom Left */}
+      <div 
+        onClick={() => router.push('/admin/dashboard')} 
+        style={{ 
+          position: 'fixed', 
+          bottom: '40px', 
+          left: '40px', 
+          zIndex: 10000, 
+          cursor: 'crosshair',
+          width: '40px',
+          height: '40px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '50%',
+          border: '1px solid #1e293b',
+          backgroundColor: 'rgba(2, 6, 23, 0.8)',
+          backdropFilter: 'blur(8px)'
+        }}
+      >
+        <Shield size={12} color="#1e293b" />
       </div>
     </div>
   );
