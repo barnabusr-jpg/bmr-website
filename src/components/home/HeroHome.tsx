@@ -1,67 +1,61 @@
 "use client";
 import React from 'react';
-import { motion } from "framer-motion";
-import { Activity, ArrowRight } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
+import { ArrowRight } from "lucide-react";
 
-const HeroHome = () => {
+export default function HeroHome() {
   const router = useRouter();
 
   return (
-    <section className="relative min-h-[90vh] flex items-center pt-40 pb-24 px-6 overflow-hidden bg-[#020617]">
-      <div className="container mx-auto max-w-7xl relative z-10">
+    <section style={{ backgroundColor: '#020617', color: 'white', paddingTop: '160px', paddingBottom: '80px', px: '24px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px', display: 'flex', flexWrap: 'wrap', gap: '60px' }}>
         
-        {/* 🟢 THE GRID THAT FIXES THE ALIGNMENT */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-start">
-          
-          {/* LEFT COLUMN */}
-          <div className="space-y-12 text-left">
-            <div className="space-y-6 border-l-2 border-red-600/20 pl-6">
-              <p className="text-red-600 font-mono text-[10px] font-black uppercase tracking-[0.4em]">NODE_ACCESS: FORENSIC_ENVIRONMENT</p>
-              <h1 className="text-6xl md:text-[100px] font-black leading-[0.85] text-white tracking-tighter italic uppercase">
-                The <span className="text-red-600 font-black italic text-left">Promise Gap</span><br />
-                <span className="text-slate-800">Where ROI Goes</span><br />
-                <span className="text-red-600 font-black italic text-left">To Die.</span>
-              </h1>
-            </div>
-
-            {/* GLOSSARY */}
-            <div className="grid grid-cols-1 gap-6 border-t border-slate-900 pt-10 max-w-lg text-left">
-               <div>
-                  <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-[0.4em]">Logic Shear:</span>
-                  <p className="text-[12px] text-slate-500 uppercase tracking-widest mt-2 italic font-bold">Friction created when human oversight and machine execution decouple.</p>
-               </div>
-               <div>
-                  <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-[0.4em]">Capital Decay:</span>
-                  <p className="text-[12px] text-slate-500 uppercase tracking-widest mt-2 italic font-bold">The erosion of ROI caused by unmonitored system drift.</p>
-               </div>
-            </div>
-
-            <button onClick={() => router.push('/pulse-check')} className="bg-red-600 text-white px-10 py-6 font-black uppercase italic tracking-widest text-xs flex items-center gap-4 hover:bg-white hover:text-black transition-all">
-              Initialize Diagnostic <ArrowRight size={18} />
-            </button>
+        {/* LEFT COLUMN (50%) */}
+        <div style={{ flex: '1 1 500px', textAlign: 'left' }}>
+          <div style={{ borderLeft: '4px solid #dc2626', paddingLeft: '24px', marginBottom: '40px' }}>
+            <p style={{ color: '#dc2626', fontWeight: 900, fontSize: '10px', letterSpacing: '0.4em', marginBottom: '20px' }}>BMR_FORENSICS // STRUCTURAL_AUDIT</p>
+            <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 7rem)', fontWeight: 900, fontStyle: 'italic', lineHeight: 0.8, textTransform: 'uppercase', margin: 0 }}>
+              The <span style={{ color: '#dc2626' }}>Promise Gap</span><br />
+              <span style={{ color: '#1e293b' }}>Where ROI Goes</span><br />
+              <span style={{ color: '#dc2626' }}>To Die.</span>
+            </h1>
           </div>
 
-          {/* RIGHT COLUMN: PERSONA BOX (Stays Right on Desktop) */}
-          <div className="lg:mt-32 w-full">
-            <Card className="p-10 md:p-14 border-2 bg-slate-950/50 border-slate-900 rounded-none relative text-left">
-              <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-red-600/20" />
-              <h2 className="text-4xl md:text-5xl font-black uppercase italic text-white leading-none">For <span className="text-red-600 font-black italic">CTOs / OPs / Tech Mgrs</span></h2>
-              <p className="text-slate-400 font-bold italic text-lg uppercase mt-4 tracking-tight leading-none">Uncertainty is a measurable liability.</p>
-              <div className="pl-6 border-l-2 border-red-600/40 mt-10 space-y-8 text-left">
-                <p className="text-sm text-slate-400 italic leading-relaxed font-medium leading-none uppercase">BMR provides forensic tools to harden logic chains.</p>
-                <div className="pt-8 border-t border-slate-900">
-                  <p className="text-sm text-slate-400 italic font-bold uppercase tracking-tighter leading-none">You have <span className="text-red-600 font-black italic">Systemic Rot.</span></p>
-                </div>
-              </div>
-            </Card>
+          <div style={{ borderTop: '1px solid #1e293b', paddingTop: '40px', maxWidth: '450px' }}>
+             <div style={{ marginBottom: '32px' }}>
+                <span style={{ color: '#dc2626', fontWeight: 900, fontSize: '10px', letterSpacing: '0.4em' }}>LOGIC SHEAR:</span>
+                <p style={{ color: '#64748b', fontSize: '12px', fontWeight: 'bold', fontStyle: 'italic', textTransform: 'uppercase', marginTop: '8px' }}>
+                  Friction created when human oversight and machine execution decouple.
+                </p>
+             </div>
+             <button 
+                onClick={() => router.push('/pulse-check')}
+                style={{ backgroundColor: '#dc2626', color: 'white', padding: '24px 40px', border: 'none', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3em', fontSize: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px' }}
+             >
+                INITIALIZE DIAGNOSTIC <ArrowRight size={18} />
+             </button>
           </div>
-
         </div>
+
+        {/* RIGHT COLUMN (PERSONA BOX) */}
+        <div style={{ flex: '1 1 400px', marginTop: '60px' }}>
+          <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)', border: '2px solid #1e293b', padding: '50px', textAlign: 'left', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 0, right: 0, width: '60px', height: '60px', borderTop: '2px solid rgba(220,38,38,0.3)', borderRight: '2px solid rgba(220,38,38,0.3)' }} />
+            <h2 style={{ fontSize: '3rem', fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', lineHeight: 1, margin: 0 }}>
+              For <span style={{ color: '#dc2626' }}>CTOs / OPs / Tech Mgrs</span>
+            </h2>
+            <div style={{ borderLeft: '2px solid #dc2626', paddingLeft: '24px', marginTop: '40px' }}>
+              <p style={{ fontSize: '1.1rem', color: '#94a3b8', fontStyle: 'italic', marginBottom: '30px' }}>BMR provides forensic tools to harden logic chains.</p>
+              <div style={{ borderTop: '1px solid #1e293b', paddingTop: '30px' }}>
+                <p style={{ color: '#dc2626', fontWeight: 900, fontSize: '1.2rem', textTransform: 'uppercase' }}>
+                  You have <span style={{ fontStyle: 'italic' }}>Systemic Rot.</span>
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
       </div>
     </section>
   );
-};
-
-export default HeroHome;
+}
