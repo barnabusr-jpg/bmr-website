@@ -28,16 +28,17 @@ export default function Home() {
               </h1>
             </div>
 
+            {/* FORENSIC GLOSSARY */}
             <div className="grid grid-cols-1 gap-4 border-t border-slate-900 pt-8 max-w-lg">
                <div>
                   <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-widest">Logic Shear:</span>
-                  <p className="text-[11px] text-slate-500 uppercase tracking-widest leading-relaxed mt-1 italic">
+                  <p className="text-[11px] text-slate-500 uppercase tracking-widest leading-relaxed mt-1 italic font-bold">
                     Friction created when human oversight and machine execution decouple.
                   </p>
                </div>
                <div>
                   <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-widest">Capital Decay:</span>
-                  <p className="text-[11px] text-slate-500 uppercase tracking-widest leading-relaxed mt-1 italic">
+                  <p className="text-[11px] text-slate-500 uppercase tracking-widest leading-relaxed mt-1 italic font-bold">
                     The erosion of ROI caused by unmonitored system drift.
                   </p>
                </div>
@@ -51,12 +52,13 @@ export default function Home() {
             </button>
           </div>
 
+          {/* TARGET PERSONA BOX - UPDATED VERBIAGE */}
           <div className="bg-slate-900/10 border border-slate-900 p-8 md:p-12 space-y-8 mt-12 relative overflow-hidden">
              <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter leading-none">
-               For <span className="text-red-600 font-black italic">CTO / CIO / OPS</span>
+               FOR <span className="text-red-600 font-black italic">CTOs / OPs / TECH MGRS</span>
              </h2>
              <p className="text-slate-400 font-bold italic text-lg leading-tight uppercase leading-none">
-               Uncertainty is a measurable liability.
+               UNCERTAINTY IS A MEASURABLE LIABILITY.
              </p>
              <div className="pl-6 border-l border-slate-800 space-y-6 text-slate-400">
                <p className="text-sm italic leading-relaxed">
@@ -70,14 +72,6 @@ export default function Home() {
         </div>
       </main>
       <Footer />
-      <div 
-        onClick={() => router.push('/admin/dashboard')}
-        className="fixed bottom-6 left-6 z-[100] cursor-crosshair group flex items-center gap-2 no-print"
-      >
-        <div className="w-8 h-8 flex items-center justify-center border border-slate-900/30 group-hover:border-red-600/50 transition-all rounded-full bg-slate-950/20 backdrop-blur-sm">
-          <Shield size={10} className="text-slate-900 group-hover:text-red-600 opacity-10 group-hover:opacity-100 transition-all" />
-        </div>
-      </div>
     </div>
   );
 }
