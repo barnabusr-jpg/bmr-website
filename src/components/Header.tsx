@@ -4,10 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Activity, ShieldAlert, Zap } from 'lucide-react';
 
-// Updated to include FRAMEWORKS and remove internal PROTOCOLS
+// Points to the consolidated Evidence Vault / Briefings hub
 const NAV_ITEMS = [
-  { label: "METHODOLOGY", path: "/methodology" },
-  { label: "FRAMEWORKS", path: "/frameworks" },
+  { label: "METHODOLOGY", path: "/briefings" },
+  { label: "FRAMEWORKS", path: "/briefings" },
   { label: "BRIEFINGS", path: "/briefings" }
 ];
 
@@ -34,7 +34,7 @@ export default function Header() {
         <div className="hidden lg:flex items-center gap-12">
           {NAV_ITEMS.map((item) => (
             <Link 
-              key={item.path} 
+              key={item.label} 
               href={item.path}
               className={`text-[10px] font-black tracking-[0.4em] uppercase transition-all hover:text-red-600 ${
                 currentPath === item.path ? 'text-red-600' : 'text-slate-400'
@@ -46,7 +46,6 @@ export default function Header() {
         </div>
 
         <div className="flex items-center gap-6">
-          {/* --- FORENSIC METADATA STAMPS --- */}
           <div className="hidden md:flex flex-col items-end pr-6 border-r border-slate-800">
              <div className="flex items-center gap-2">
                 <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest">STATUS</span>
@@ -66,7 +65,6 @@ export default function Header() {
         </div>
       </div>
       
-      {/* --- SUB-NAV STATUS BAR --- */}
       <div className="max-w-7xl mx-auto flex justify-between pt-2">
         <div className="text-[7px] font-mono text-slate-700 uppercase tracking-[0.5em]">
           BMR_SEC_SYS_ACTIVE // SESSION_ENCRYPTED_256BIT
