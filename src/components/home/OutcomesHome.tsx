@@ -52,29 +52,29 @@ const forensicOutcomes = [
 
 const Outcomes = () => {
   return (
-    <section className="py-24 px-6 bg-slate-950 border-t border-slate-900">
-      <div className="container mx-auto max-w-7xl">
+    <section style={{ borderTop: '1px solid #1e293b', paddingTop: '120px', paddingBottom: '120px', backgroundColor: '#020617' }}>
+      <div className="container mx-auto max-w-7xl px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="text-center mb-20"
+          className="text-left mb-24 border-l-4 border-slate-800 pl-12"
         >
-          <div className="flex items-center gap-2 mb-4 justify-center">
-             <span className="text-red-600 font-black uppercase tracking-[0.4em] text-[10px] italic">
-               Validation Standards
+          <div className="flex items-center gap-3 mb-6">
+             <span className="text-red-600 font-black uppercase tracking-[0.5em] text-xs italic">
+                VALIDATION_STANDARDS // SYSTEM_RECOVERY
              </span>
           </div>
-          <h2 className="text-4xl md:text-6xl font-black mb-6 text-white tracking-tighter italic uppercase">
-            Hardened <span className="text-slate-500">Outcomes</span>
+          <h2 className="text-7xl md:text-8xl font-black mb-8 text-white tracking-tighter italic uppercase leading-[0.85]">
+            Hardened <span className="text-slate-800">Outcomes</span>
           </h2>
-          <p className="text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-light leading-relaxed italic">
+          <p className="text-2xl md:text-3xl text-slate-400 max-w-4xl font-light leading-relaxed italic">
             Restoring alignment between intent, execution, and lived experience before systemic risk hardens into permanent failure.
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
           {forensicOutcomes.map((outcome, index) => (
             <motion.div
               key={outcome.title}
@@ -83,25 +83,26 @@ const Outcomes = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1, ease: "easeOut" }}
             >
-              <Card className="p-8 h-full bg-slate-900/20 border-slate-900 border-2 relative overflow-hidden group rounded-none transition-all duration-500">
+              <Card className="p-12 h-full bg-slate-950/40 border-slate-900 border-2 relative overflow-hidden group rounded-none transition-all duration-500 shadow-2xl">
                 
                 {/* Forensic Red Vertical Highlight */}
                 <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-red-600 transition-all duration-500 ease-in-out"></div>
                 
-                <div className="flex flex-col gap-5 relative z-10">
-                  <div className="flex justify-between items-center">
-                    <div className="p-3 bg-red-600/10 w-fit">
-                      <outcome.icon className="h-6 w-6 text-red-600 group-hover:animate-pulse" />
+                <div className="flex flex-col justify-between h-full relative z-10">
+                  <div className="flex justify-between items-start mb-12">
+                    <div className="p-4 bg-red-600/10 border border-red-600/20">
+                      <outcome.icon className="h-8 w-8 text-red-600 group-hover:animate-pulse" />
                     </div>
-                    <span className="text-[10px] font-black font-mono text-slate-700 tracking-[0.3em]">
+                    <span className="text-[11px] font-black font-mono text-slate-800 tracking-[0.4em] uppercase">
                       {outcome.category}
                     </span>
                   </div>
+                  
                   <div>
-                    <h3 className="text-xl font-black mb-3 text-white tracking-tight italic uppercase group-hover:text-red-600 transition-colors">
+                    <h3 className="text-3xl font-black mb-6 text-white tracking-tighter italic uppercase group-hover:text-red-600 transition-colors leading-none">
                       {outcome.title}
                     </h3>
-                    <p className="text-slate-400 font-medium leading-relaxed italic text-sm border-l border-slate-800 pl-4">
+                    <p style={{ fontSize: '1.4rem' }} className="text-slate-500 font-medium leading-relaxed italic border-l-2 border-slate-800 pl-8 text-left uppercase tracking-tight">
                       {outcome.description}
                     </p>
                   </div>
@@ -114,9 +115,9 @@ const Outcomes = () => {
         <motion.div 
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          className="mt-20 text-center"
+          className="mt-32 text-left"
         >
-          <p className="text-slate-600 font-black uppercase tracking-[0.2em] text-[10px] italic">
+          <p className="text-slate-800 font-black uppercase tracking-[0.6em] text-xs italic border-t border-slate-900 pt-12">
             &quot;Systemic recovery begins with the rejection of technical optimism.&quot;
           </p>
         </motion.div>
