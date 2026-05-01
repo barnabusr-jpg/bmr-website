@@ -1,18 +1,50 @@
 "use client";
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Key, Activity, Building2, Send, X, Zap, CheckCircle, FileText, Clock, Mail, Shield, ChevronUp, ChevronDown } from "lucide-react";
+import { 
+  Key, Activity, Building2, ChevronUp, ChevronDown, 
+  Shield, Zap, LayoutDashboard, Binary, Eye 
+} from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+
+// INTERNAL IP: THE BMR FRAMEWORKS (Hidden from public)
+const BMR_FRAMEWORKS = [
+  {
+    id: "DIR_01",
+    label: "IMMEDIATE HARDENING",
+    price: "$45K - $75K",
+    description: "The engine identifies where capital is leaking right now. We analyze the alignment between organizational nodes. This identifies systemic rot without compromising your security perimeter.",
+    color: "text-red-600"
+  },
+  {
+    id: "DIR_02",
+    label: "STRUCTURAL ALIGNMENT",
+    price: "$150K",
+    description: "The system rebuilds the logic that connects your operational layers. We ensure that executive intent matches technical execution to stop capital leaks.",
+    color: "text-blue-500"
+  },
+  {
+    id: "DIR_03",
+    label: "GOVERNANCE OVERLAY",
+    price: "$25K/MO",
+    description: "Developing new organizational rule sets to protect fiduciary leadership and technical staff. This creates a state of financial and operational safety.",
+    color: "text-purple-500"
+  },
+  {
+    id: "DIR_04",
+    label: "FORENSIC CONTINUITY",
+    description: "Monitoring structural health through specialized reporting cadence. If a variance starts to grow, the system will detect it before the rework tax accrues.",
+    color: "text-green-500"
+  }
+];
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState("");
+  const [activeTab, setActiveTab] = useState<'ledger' | 'frameworks'>('ledger');
   const [data, setData] = useState<any[]>([]);
-  const [isUpdating, setIsUpdating] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
-  const [selectedAudit, setSelectedAudit] = useState<any>(null);
-  const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
 
   const fetchLedger = useCallback(async () => {
     const { data: audits } = await supabase.from('audits').select('*').order('created_at', { ascending: false });
@@ -31,12 +63,15 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && activeTab === 'ledger') {
       fetchLedger();
-      const interval = setInterval(() => { fetchLedger(); if (expandedRow) refreshActiveNodes(expandedRow); }, 5000); 
+      const interval = setInterval(() => { 
+        fetchLedger(); 
+        if (expandedRow) refreshActiveNodes(expandedRow); 
+      }, 5000); 
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
+  }, [isAuthenticated, activeTab, fetchLedger, expandedRow, refreshActiveNodes]);
 
   if (!isAuthenticated) {
     return (
@@ -51,99 +86,153 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 p-10 pt-32 font-sans tracking-tighter text-left leading-none">
-      <nav className="fixed top-0 left-0 right-0 h-24 bg-black border-b border-slate-900 z-50 px-10 flex items-center gap-5">
-        <Activity className="text-red-600" size={24} />
-        <span className="text-white font-black uppercase italic tracking-[0.2em] text-sm">Forensic_Command_Center</span>
+    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter">
+      {/* PERSISTENT COMMAND NAV */}
+      <nav className="fixed top-0 left-0 right-0 h-24 bg-black border-b border-slate-900 z-50 px-10 flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3">
+            <Activity className="text-red-600" size={24} />
+            <span className="text-white font-black uppercase italic tracking-[0.2em] text-sm">Forensic_Command_Center</span>
+          </div>
+          
+          <div className="flex gap-1 bg-slate-900 p-1">
+            <button 
+              onClick={() => setActiveTab('ledger')}
+              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
+            >
+              Live_Ledger
+            </button>
+            <button 
+              onClick={() => setActiveTab('frameworks')}
+              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
+            >
+              IP_Frameworks
+            </button>
+          </div>
+        </div>
+        
+        <div className="text-[10px] font-mono text-slate-700 uppercase tracking-widest">
+          Auth_Status: <span className="text-green-500">LEVEL_01_CLEARANCE</span>
+        </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto space-y-12">
-        <div className="bg-slate-950 border border-slate-900 overflow-hidden">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-black text-[10px] text-slate-600 uppercase tracking-[0.3em] border-b border-slate-900">
-                <th className="p-10">Entity_Signal</th>
-                <th className="p-10 text-center">Protocol_Status</th>
-                <th className="p-10 text-right">Action_Directives</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-900">
-              {data.map((audit) => (
-                <React.Fragment key={audit.id}>
-                  <tr onClick={() => toggleRow(audit.id)} className="hover:bg-white/[0.02] cursor-pointer transition-all">
-                    <td className="p-10">
-                      <div className="flex items-center gap-6">
-                        <Building2 size={32} className={audit.status === 'COMPLETE' ? "text-green-500" : "text-red-600"} />
-                        <div>
-                          <div className="font-black text-white uppercase text-3xl italic tracking-tighter leading-none">{audit.org_name}</div>
-                          <div className="text-[11px] text-slate-500 font-mono mt-2 uppercase">{audit.lead_email}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-10 text-center uppercase italic font-black text-[10px]">
-                      {audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : 'TRIANGULATION_ACTIVE'}
-                    </td>
-                    <td className="p-10 text-right text-slate-600">
-                      {expandedRow === audit.id ? <ChevronUp /> : <ChevronDown />}
-                    </td>
+      <main className="pt-40 px-10 max-w-7xl mx-auto pb-32">
+        <AnimatePresence mode="wait">
+          {activeTab === 'ledger' ? (
+            /* --- TAB: LIVE LEDGER --- */
+            <motion.div 
+              key="ledger" 
+              initial={{ opacity: 0, x: -20 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              exit={{ opacity: 0, x: 20 }}
+              className="bg-slate-950 border border-slate-900 overflow-hidden"
+            >
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-black text-[10px] text-slate-600 uppercase tracking-[0.3em] border-b border-slate-900">
+                    <th className="p-10">Entity_Signal</th>
+                    <th className="p-10 text-center">Protocol_Status</th>
+                    <th className="p-10 text-right">Action_Directives</th>
                   </tr>
-                  <AnimatePresence>
-                    {expandedRow === audit.id && (
-                      <tr>
-                        <td colSpan={3} className="bg-black/50 p-0 border-b border-slate-900">
-                          <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden">
-                            <div className="p-12 space-y-12">
-                              {/* NODE STATUS */}
-                              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                                {['EXE', 'MGR', 'TEC'].map((role) => {
-                                  const node = nodeDetails.find(n => n.persona_type === role);
-                                  const isDone = node?.status?.toLowerCase() === 'completed';
-                                  return (
-                                    <div key={role} className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-between min-h-[160px]">
-                                      <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest leading-none">{role}_NODE</span>
-                                      <div className={`text-2xl font-black italic uppercase tracking-tighter ${isDone ? 'text-green-500' : 'text-slate-800'}`}>
-                                        {isDone ? 'CALCULATED' : 'WAITING'}
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-
-                              {/* INTERNAL REMEDIATION FRAMEWORK (SECRET SAUCE) */}
-                              <div className="border-t border-slate-900 pt-12 text-left">
-                                <div className="flex items-center gap-3 mb-8">
-                                  <Shield size={20} className="text-red-600" />
-                                  <h3 className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.4em] font-black italic leading-none">Internal_Remediation_Directives</h3>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                  {[
-                                    { id: "DIR_01", type: "IMMEDIATE", label: "Indemnity Shield™", price: "$45K - $75K", focus: "Closing the 'Proof Void' and establishing atomic logging." },
-                                    { id: "DIR_02", type: "STRUCTURAL", label: "Rework Eradicator™", price: "$150K", focus: "Automating validation loops to reclaim engineering bandwidth." },
-                                    { id: "DIR_03", type: "STABILIZING", label: "Fiduciary Layer™", price: "$25K/mo", focus: "Ongoing drift monitoring and real-time intent alignment." }
-                                  ].map((framework) => (
-                                    <div key={framework.id} className="bg-slate-900/30 border border-slate-800 p-6 space-y-4">
-                                      <div className="flex justify-between items-center">
-                                        <span className="text-[8px] font-mono text-red-600 font-black">{framework.type}</span>
-                                        <span className="text-[10px] font-mono text-white font-black">{framework.price}</span>
-                                      </div>
-                                      <h4 className="text-xl font-black italic uppercase text-white tracking-tighter leading-none">{framework.label}</h4>
-                                      <p className="text-[10px] text-slate-500 uppercase leading-relaxed font-bold">{framework.focus}</p>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
+                </thead>
+                <tbody className="divide-y divide-slate-900">
+                  {data.map((audit) => (
+                    <React.Fragment key={audit.id}>
+                      <tr onClick={() => toggleRow(audit.id)} className="hover:bg-white/[0.02] cursor-pointer transition-all">
+                        <td className="p-10">
+                          <div className="flex items-center gap-6">
+                            <Building2 size={32} className={audit.status === 'COMPLETE' ? "text-green-500" : "text-red-600"} />
+                            <div>
+                              <div className="font-black text-white uppercase text-3xl italic tracking-tighter leading-none">{audit.org_name}</div>
+                              <div className="text-[11px] text-slate-500 font-mono mt-2 uppercase">{audit.lead_email}</div>
                             </div>
-                          </motion.div>
+                          </div>
+                        </td>
+                        <td className="p-10 text-center uppercase italic font-black text-[10px]">
+                          {audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : 'TRIANGULATION_ACTIVE'}
+                        </td>
+                        <td className="p-10 text-right text-slate-600">
+                          {expandedRow === audit.id ? <ChevronUp /> : <ChevronDown />}
                         </td>
                       </tr>
-                    )}
-                  </AnimatePresence>
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                      {expandedRow === audit.id && (
+                        <tr>
+                          <td colSpan={3} className="bg-black/50 p-12 border-b border-slate-900">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                              {['EXE', 'MGR', 'TEC'].map((role) => {
+                                const node = nodeDetails.find(n => n.persona_type === role);
+                                const isDone = node?.status?.toLowerCase() === 'completed';
+                                return (
+                                  <div key={role} className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-between min-h-[140px]">
+                                    <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest">{role}_NODE</span>
+                                    <div className={`text-2xl font-black italic uppercase ${isDone ? 'text-green-500' : 'text-slate-900'}`}>
+                                      {isDone ? 'CALCULATED' : 'WAITING'}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+              </table>
+            </motion.div>
+          ) : (
+            /* --- TAB: IP FRAMEWORKS (CONSULTATION MODE) --- */
+            <motion.div 
+              key="frameworks" 
+              initial={{ opacity: 0, x: 20 }} 
+              animate={{ opacity: 1, x: 0 }} 
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-12"
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {BMR_FRAMEWORKS.map((d) => (
+                  <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
+                      <Binary className={d.color} size={40} />
+                    </div>
+                    
+                    <div className="flex justify-between items-start mb-10">
+                      <div className="space-y-2">
+                        <span className={`text-[10px] font-mono font-black tracking-widest ${d.color}`}>
+                          PROTOCOL // {d.id}
+                        </span>
+                        <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">
+                          {d.label}
+                        </h2>
+                      </div>
+                      {d.price && (
+                        <div className="bg-red-600 text-white px-6 py-2 text-xs font-black italic tracking-widest">
+                          {d.price}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium">
+                      {d.description}
+                    </p>
+                    
+                    <div className="pt-8 border-t border-slate-900 flex items-center gap-3 text-slate-600 font-mono text-[10px] uppercase tracking-widest">
+                      <Shield size={14} /> Fiduciary_Encryption_Active
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* CONSULTATION TOOLTIP */}
+              <div className="p-8 border border-red-600/20 bg-red-600/5 text-center">
+                <p className="text-xs text-red-600 font-black uppercase tracking-[0.4em] italic">
+                  Note: Framework presentation is restricted to Level 01 Auth holders during live audits.
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
     </div>
   );
 }
