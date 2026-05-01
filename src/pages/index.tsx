@@ -18,7 +18,6 @@ export default function Home() {
       <Header />
       
       <main className="flex-grow">
-        {/* Sub-components handle the grid and glossary internally */}
         <HeroHome />
         <InsightsHome />
         <OutcomesHome />
@@ -28,7 +27,7 @@ export default function Home() {
 
       <Footer />
 
-      {/* ADMIN PORTAL HIDDEN ACCESS (Bottom Left) */}
+      {/* ADMIN PORTAL ACCESS */}
       <div onClick={() => router.push('/admin/dashboard')} className="fixed bottom-10 left-10 z-[110] cursor-crosshair group">
         <div className="w-10 h-10 flex items-center justify-center border border-slate-800 group-hover:border-red-600 transition-all rounded-full bg-slate-950/80 backdrop-blur-md">
           <Shield size={12} className="text-slate-800 group-hover:text-red-600 transition-all opacity-20 group-hover:opacity-100" />
