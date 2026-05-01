@@ -18,18 +18,18 @@ export default function Header() {
   const currentPath = mounted ? pathname : "";
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-[9999] bg-[#020617]/95 backdrop-blur-xl border-b border-slate-900 px-6 py-5 font-sans">
+    <nav className="fixed top-0 left-0 right-0 z-[9999] bg-[#020617] border-b border-slate-900 px-6 py-5 font-sans block">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="bg-red-600 p-2 rounded-sm group-hover:bg-white transition-colors">
             <Activity size={18} className="text-white group-hover:text-red-600 animate-pulse" />
           </div>
           <span className="text-xl font-black italic tracking-tighter text-white uppercase leading-none">
-            BMR<span className="text-red-600">SOLUTIONS</span>
+            BMR<span className="text-red-600 font-black">SOLUTIONS</span>
           </span>
         </Link>
 
-        {/* --- CENTRAL NAV: RESTORED --- */}
+        {/* --- CENTRAL NAV --- */}
         <div className="hidden lg:flex items-center gap-12">
           {NAV_ITEMS.map((item) => (
             <Link 
@@ -44,32 +44,23 @@ export default function Header() {
           ))}
         </div>
 
-        <div className="flex items-center gap-6 text-left">
+        <div className="flex items-center gap-6">
           <div className="hidden md:flex flex-col items-end pr-6 border-r border-slate-800">
              <div className="flex items-center gap-2 leading-none">
                 <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest leading-none">STATUS</span>
-                <span className="text-[8px] font-mono text-red-600 font-black uppercase tracking-widest bg-red-600/10 px-1 py-1 leading-none">ACTIVE_RECOVERY</span>
+                <span className="text-[8px] font-mono text-red-600 font-black uppercase tracking-widest bg-red-600/10 px-2 py-1 leading-none">ACTIVE_RECOVERY</span>
              </div>
-             <span className="text-[9px] font-mono text-yellow-500 font-bold uppercase tracking-widest mt-1 italic flex items-center gap-1 leading-none">
+             <span className="text-[9px] font-mono text-yellow-500 font-bold uppercase tracking-widest mt-1 italic flex items-center gap-1">
                 <ShieldAlert size={10} /> INDEMNITY_UNVERIFIED
              </span>
           </div>
           
           <Link 
             href="/pulse-check"
-            className="bg-red-600 text-white px-6 py-3 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all border border-red-600"
+            className="bg-red-600 text-white px-6 py-3 rounded-sm font-black uppercase text-[10px] tracking-[0.2em] flex items-center gap-2 hover:bg-white hover:text-red-600 transition-all border border-red-600 shadow-xl"
           >
             <Zap size={14} /><span>INITIATE_DIAGNOSTIC</span>
           </Link>
-        </div>
-      </div>
-      
-      <div className="max-w-7xl mx-auto flex justify-between pt-2">
-        <div className="text-[7px] font-mono text-slate-700 uppercase tracking-[0.5em]">
-          BMR_SEC_SYS_ACTIVE // SESSION_ENCRYPTED_256BIT
-        </div>
-        <div className="text-[7px] font-mono text-slate-700 uppercase tracking-[0.5em]">
-          U.S._DISTRICT_COMPLIANCE_ENFORCED
         </div>
       </div>
     </nav>
