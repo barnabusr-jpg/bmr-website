@@ -52,38 +52,32 @@ export default function ForensicVerdict() {
 
   const activeMetrics = useMemo(() => {
     if (!reportData) return null;
-    let frictionScore = 0; let cumulativeReworkTax = 0; const fractures = [];
-    const isYes = (v: any) => ["yes", "1", "6", "true", "y"].some(term => String(v || "").toLowerCase().includes(term));
-    const isNo = (v: any) => !v || ["no", "2", "false", "n", "0"].includes(String(v).toLowerCase().trim());
+    
+    const results = reportData.resultsMap;
+    const isFormalized = (v: any) => parseInt(v || "10") <= 4;
+    const isLegacy = (v: any) => parseInt(v || "0") >= 6;
+    const isHighWaste = (v: any) => parseInt(v || "0") >= 8;
 
-    const rawAnswers = Object.values(reportData.resultsMap || {});
+    const triggerAlpha = isFormalized(results.MGR_02?.answer) && isLegacy(results.TEC_01?.answer);
+    const triggerBeta = isFormalized(results.MGR_04?.answer) && isHighWaste(results.TEC_04?.answer);
+
+    const rawAnswers = Object.values(results || {});
     const totalWeight = rawAnswers.reduce((acc: number, curr: any) => acc + (parseInt(curr.answer) || 0), 0);
     const calculatedSFI = Math.min(Math.round((totalWeight / 120) * 100), 100) || 74;
 
-    if (isYes(reportData.resultsMap.EXE_01?.answer) && isNo(reportData.resultsMap.TEC_01?.answer)) {
-      const cost = 180000;
-      fractures.push({ 
-        code: "BMR-T1", 
-        impact: "CRITICAL", 
-        title: "Indemnity Alignment Gap", 
-        finding: "Governance assumes audit rights, but ATLAS reports zero immutable logging. This creates manual labor overhead of $180K/yr (2 FTEs @ $90K/yr).", 
-        action: "Deploy SIEM logging in 3 days.", 
-        cost 
-      });
-      cumulativeReworkTax += cost;
-    }
-
     const systemicLeak = (liveSpend * 1000000) * (calculatedSFI / 100) * 0.15;
-    const totalTax = cumulativeReworkTax + systemicLeak;
-    const dailyBleed = totalTax / 365;
+    const totalTax = systemicLeak;
 
     return {
       sfi: calculatedSFI,
       totalTax: totalTax,
       inactionPenalty: totalTax * 1.2,
-      dailyBleed, 
-      currentSessionBleed: (dailyBleed / 86400) * secondsElapsed, 
-      fractures
+      dailyBleed: totalTax / 365,
+      currentSessionBleed: ((totalTax / 365) / 86400) * secondsElapsed,
+      triggerAlpha,
+      triggerBeta,
+      isSystemic: triggerAlpha && triggerBeta,
+      isOptimized: !triggerAlpha && !triggerBeta
     };
   }, [reportData, liveSpend, secondsElapsed]);
 
@@ -107,18 +101,16 @@ export default function ForensicVerdict() {
           </div>
         </header>
 
-        {/* FINANCIAL FINDINGS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <div className="group relative bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center overflow-visible">
+          <div className="group relative bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center">
             <div className="text-6xl font-black italic text-white leading-none">${(activeMetrics?.totalTax / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-black italic">Annual Rework Tax</div>
             <p className="text-[10px] text-slate-500 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic">
               Measuring existing capital waste caused by manual validation and logic drift.
             </p>
-            <div className="absolute top-2 right-2 p-4 opacity-20 group-hover:opacity-100 transition-opacity bg-red-600 text-[8px] font-mono uppercase text-white p-2">Bridge: Spend x SFI (${activeMetrics?.sfi}%) x 15%</div>
           </div>
           <div className="bg-red-950/20 border border-red-600/50 p-10 flex flex-col justify-center">
-            <div className="text-6xl font-black text-red-500 leading-none italic leading-none">${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K</div>
+            <div className="text-6xl font-black text-red-500 leading-none italic">${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K</div>
             <div className="text-[9px] font-mono text-red-400 uppercase font-black tracking-tighter mt-4 italic">12-Month Inaction Penalty</div>
             <p className="text-[10px] text-red-900 font-mono mt-4 uppercase tracking-tighter leading-tight font-bold italic">
               The projected financial cost of allowing identified fractures to remain unaddressed.
@@ -126,61 +118,101 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* FIDUCIARY SIMULATOR */}
         <div className="bg-slate-950 border border-slate-900 p-8 mb-12">
-          <div className="flex justify-between items-center mb-6 text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic leading-none">
-            <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Capital Exposure Simulator</div>
-            <div className="text-xl font-black italic text-white">${liveSpend.toFixed(1)}M SPEND</div>
+          <div className="mb-6 space-y-2">
+            <div className="flex justify-between items-center text-[10px] font-mono text-slate-400 uppercase tracking-[0.3em] font-bold italic leading-none">
+              <div className="flex items-center gap-3"><Sliders size={18} className="text-red-600" /> Capital Exposure Simulator</div>
+              <div className="text-xl font-black italic text-white">${liveSpend.toFixed(1)}M SPEND</div>
+            </div>
+            <p className="text-[9px] font-mono text-red-600 uppercase tracking-widest animate-pulse font-bold">
+              Adjust the slider to modify AI Spend numbers to reveal adjusted results.
+            </p>
           </div>
           <input type="range" min="0.1" max="10" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
         </div>
 
-        {/* PROVISIONAL CONTEXT */}
         <div className="mb-12 bg-slate-950/50 border border-slate-800 p-8 flex items-center gap-6">
             <Info className="text-red-600 flex-shrink-0" size={24} />
             <p className="text-[11px] font-mono uppercase tracking-widest leading-relaxed text-slate-500 font-bold italic">
-              This verdict is <span className="text-white">Provisional</span>. A 360° Triangulation is required to verify alignment between Executive, Managerial, and Technical datasets and finalize a Hardening Roadmap.
+              This verdict is <span className="text-white">Provisional</span>. A 360° Triangulation is required to verify alignment between Executive, Operational, and Technical datasets.
             </p>
         </div>
 
-        {/* QUICK WINS */}
+        {/* REFINED DYNAMIC HEADER & CONTRADICTIONS SECTION */}
         <div className="mb-12">
-           <h3 className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] mb-8 italic font-bold">Quick Wins // 3-Day Recovery Roadmap</h3>
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-slate-950 border border-slate-800 p-8 hover:border-green-500/50 transition-all group">
-                 <div className="flex justify-between items-start mb-4">
-                    <CheckCircle2 size={24} className="text-green-500" />
-                    <span className="text-[9px] font-mono text-slate-600 group-hover:text-green-500 transition-colors uppercase font-bold tracking-widest">3-Day Fix</span>
-                 </div>
-                 <h4 className="text-white font-black italic uppercase text-lg leading-tight mb-2">Deploy Forensic Snapshots</h4>
-                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold italic leading-none">Closes $180K/yr Indemnity Gap immediately via automated logging.</p>
+          <div className="mb-8 border-l-2 border-red-600 pl-4">
+            <h3 className="text-2xl font-black uppercase italic tracking-tighter text-white leading-none">
+              {activeMetrics?.isOptimized 
+                ? "No Immediate Contradictions Detected" 
+                : "Logic Contradictions Detected"}
+            </h3>
+            <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mt-3 font-bold italic">
+              {activeMetrics?.isOptimized 
+                ? "Signal Scan: Nominal" 
+                : "Your response frames an internal misalignment, indicating a high probability of Logic Shear."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {activeMetrics?.triggerAlpha && (
+              <div className="bg-slate-950 border border-slate-900 p-8 space-y-4">
+                <div className="flex justify-between items-center text-red-600">
+                  <Fingerprint size={20} />
+                  <span className="text-[9px] font-mono font-black uppercase tracking-widest italic font-bold">Signal_Alpha</span>
+                </div>
+                <h4 className="text-white font-black italic uppercase text-lg leading-tight">Governance vs. Reality</h4>
+                <p className="text-slate-500 text-xs leading-relaxed font-medium italic">
+                  Your input frames an oversight disconnect with a potential to impact your indemnity standing and long-term regulatory compliance.
+                </p>
               </div>
-              <div className="bg-slate-950 border border-slate-800 p-8 hover:border-yellow-500/50 transition-all group">
-                 <div className="flex justify-between items-start mb-4">
-                    <Zap size={24} className="text-yellow-500" />
-                    <span className="text-[9px] font-mono text-slate-600 group-hover:text-yellow-500 transition-colors uppercase font-bold tracking-widest">5-Day Fix</span>
-                 </div>
-                 <h4 className="text-white font-black italic uppercase text-lg leading-tight mb-2">Initialize Loop Checks</h4>
-                 <p className="text-slate-500 text-[10px] leading-relaxed uppercase tracking-widest font-bold italic leading-none">Reduces Manual Rework by 30% through automated node validation.</p>
+            )}
+
+            {activeMetrics?.triggerBeta && (
+              <div className="bg-slate-950 border border-slate-900 p-8 space-y-4">
+                <div className="flex justify-between items-center text-red-600">
+                  <Activity size={20} />
+                  <span className="text-[9px] font-mono font-black uppercase tracking-widest italic font-bold">Signal_Beta</span>
+                </div>
+                <h4 className="text-white font-black italic uppercase text-lg leading-tight">Efficiency vs. Rework</h4>
+                <p className="text-slate-500 text-xs leading-relaxed font-medium italic">
+                  Your input frames a significant ROI friction point with a potential to impact your operational scale and margin preservation.
+                </p>
               </div>
-           </div>
+            )}
+
+            {activeMetrics?.isSystemic && (
+              <div className="md:col-span-2 bg-red-950/10 border border-red-900/50 p-8 space-y-4">
+                <div className="flex items-center gap-3 text-red-500">
+                  <AlertTriangle size={20} />
+                  <span className="text-[9px] font-mono font-black uppercase tracking-widest italic font-bold">Critical_Status</span>
+                </div>
+                <h4 className="text-white font-black italic uppercase text-xl leading-tight text-red-500">Total Structural Logic Shear</h4>
+                <p className="text-slate-400 text-xs leading-relaxed font-medium italic">
+                  Your input frames a state of total structural drift with a potential to impact your Rework Tax by compounding technical debt.
+                </p>
+              </div>
+            )}
+
+            {activeMetrics?.isOptimized && (
+              <div className="md:col-span-2 bg-slate-950 border border-slate-900 p-8">
+                <p className="text-slate-500 text-[11px] font-mono uppercase tracking-widest leading-relaxed font-bold italic">
+                  Your input does not frame immediate logic contradictions. However, a single-node audit cannot account for cross-departmental friction.
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* UPDATED CONVERSION CTA */}
         <div 
           className="bg-white p-12 flex flex-col md:flex-row justify-between items-center gap-8 group cursor-pointer hover:bg-slate-100 transition-all border-l-8 border-red-600" 
-          onClick={() => {
-            const subject = encodeURIComponent(`TRIANGULATION REQUEST // REF: ${id?.slice(0,8).toUpperCase()}`);
-            const body = encodeURIComponent(`Organization: ${reportData?.org}\n\nI have reviewed the Audit Verdict (Ref: ${id}).\n\nAnnual Rework Tax: $${(activeMetrics?.totalTax / 1000).toFixed(0)}K\nInaction Penalty: $${(activeMetrics?.inactionPenalty / 1000).toFixed(0)}K\n\nI am requesting a 360° Triangulation session to validate these findings.`);
-            window.location.href = `mailto:hello@bmradvisory.co?subject=${subject}&body=${body}`;
-          }}
+          onClick={() => window.location.href = 'https://calendly.com/hello-bmradvisory/forensic-review'}
         >
            <div className="text-left">
               <h4 className="text-black text-3xl font-black italic uppercase tracking-tighter leading-none">Initialize 360° Triangulation</h4>
-              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 italic">Submit Ref ID: {id?.slice(0,8).toUpperCase()} for priority cross-node validation.</p>
+              <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest mt-2 italic">Schedule your clinical briefing to verify Ref ID: {id?.slice(0,8).toUpperCase()}.</p>
            </div>
            <div className="flex items-center gap-3">
-              <span className="text-[10px] font-mono font-black text-black uppercase tracking-widest">Request Consultation</span>
+              <span className="text-[10px] font-mono font-black text-black uppercase tracking-widest">Schedule Briefing</span>
               <ArrowRight className="text-black group-hover:translate-x-2 transition-transform" size={40} />
            </div>
         </div>
