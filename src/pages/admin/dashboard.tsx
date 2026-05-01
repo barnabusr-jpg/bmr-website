@@ -3,40 +3,25 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
-  Shield, Zap, LayoutDashboard, Binary, Eye 
+  Shield, Zap, LayoutDashboard, Binary, Eye, 
+  ZoomIn, Hammer 
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// INTERNAL IP: THE BMR FRAMEWORKS (Hidden from public)
-const BMR_FRAMEWORKS = [
-  {
-    id: "DIR_01",
-    label: "IMMEDIATE HARDENING",
-    price: "$45K - $75K",
-    description: "The engine identifies where capital is leaking right now. We analyze the alignment between organizational nodes. This identifies systemic rot without compromising your security perimeter.",
-    color: "text-red-600"
-  },
-  {
-    id: "DIR_02",
-    label: "STRUCTURAL ALIGNMENT",
-    price: "$150K",
-    description: "The system rebuilds the logic that connects your operational layers. We ensure that executive intent matches technical execution to stop capital leaks.",
-    color: "text-blue-500"
-  },
-  {
-    id: "DIR_03",
-    label: "GOVERNANCE OVERLAY",
-    price: "$25K/MO",
-    description: "Developing new organizational rule sets to protect fiduciary leadership and technical staff. This creates a state of financial and operational safety.",
-    color: "text-purple-500"
-  },
-  {
-    id: "DIR_04",
-    label: "FORENSIC CONTINUITY",
-    description: "Monitoring structural health through specialized reporting cadence. If a variance starts to grow, the system will detect it before the rework tax accrues.",
-    color: "text-green-500"
-  }
-];
+// INTERNAL IP: THE BMR FRAMEWORKS & SERVICE TIERS
+const BMR_IP_SUITE = {
+  directives: [
+    { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now. We analyze the alignment between organizational nodes. This identifies systemic rot without compromising your security perimeter.", color: "text-red-600" },
+    { id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K", description: "The system rebuilds the logic that connects your operational layers. We ensure that executive intent matches technical execution to stop capital leaks.", color: "text-blue-500" },
+    { id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO", description: "Developing new organizational rule sets to protect fiduciary leadership and technical staff. This creates a state of financial and operational safety.", color: "text-purple-500" },
+    { id: "DIR_04", label: "FORENSIC CONTINUITY", description: "Monitoring structural health through specialized reporting cadence. If a variance starts to grow, the system will detect it before the rework tax accrues.", color: "text-green-500" }
+  ],
+  services: [
+    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments. Locating 'Log Rot' before it hardens." },
+    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols. Building safeguards to prevent value leakage." },
+    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse. Stabilizing long-term defensibility." }
+  ]
+};
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -96,37 +81,16 @@ export default function AdminDashboard() {
           </div>
           
           <div className="flex gap-1 bg-slate-900 p-1">
-            <button 
-              onClick={() => setActiveTab('ledger')}
-              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
-            >
-              Live_Ledger
-            </button>
-            <button 
-              onClick={() => setActiveTab('frameworks')}
-              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
-            >
-              IP_Frameworks
-            </button>
+            <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Live_Ledger</button>
+            <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP_Frameworks</button>
           </div>
-        </div>
-        
-        <div className="text-[10px] font-mono text-slate-700 uppercase tracking-widest">
-          Auth_Status: <span className="text-green-500">LEVEL_01_CLEARANCE</span>
         </div>
       </nav>
 
-      <main className="pt-40 px-10 max-w-7xl mx-auto pb-32">
+      <main className="pt-40 px-10 max-w-7xl mx-auto pb-32 text-left">
         <AnimatePresence mode="wait">
           {activeTab === 'ledger' ? (
-            /* --- TAB: LIVE LEDGER --- */
-            <motion.div 
-              key="ledger" 
-              initial={{ opacity: 0, x: -20 }} 
-              animate={{ opacity: 1, x: 0 }} 
-              exit={{ opacity: 0, x: 20 }}
-              className="bg-slate-950 border border-slate-900 overflow-hidden"
-            >
+            <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="bg-slate-950 border border-slate-900 overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-black text-[10px] text-slate-600 uppercase tracking-[0.3em] border-b border-slate-900">
@@ -148,87 +112,51 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         </td>
-                        <td className="p-10 text-center uppercase italic font-black text-[10px]">
-                          {audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : 'TRIANGULATION_ACTIVE'}
-                        </td>
-                        <td className="p-10 text-right text-slate-600">
-                          {expandedRow === audit.id ? <ChevronUp /> : <ChevronDown />}
-                        </td>
+                        <td className="p-10 text-center uppercase italic font-black text-[10px]">{audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : 'TRIANGULATION_ACTIVE'}</td>
+                        <td className="p-10 text-right text-slate-600">{expandedRow === audit.id ? <ChevronUp /> : <ChevronDown />}</td>
                       </tr>
-                      {expandedRow === audit.id && (
-                        <tr>
-                          <td colSpan={3} className="bg-black/50 p-12 border-b border-slate-900">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                              {['EXE', 'MGR', 'TEC'].map((role) => {
-                                const node = nodeDetails.find(n => n.persona_type === role);
-                                const isDone = node?.status?.toLowerCase() === 'completed';
-                                return (
-                                  <div key={role} className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-between min-h-[140px]">
-                                    <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest">{role}_NODE</span>
-                                    <div className={`text-2xl font-black italic uppercase ${isDone ? 'text-green-500' : 'text-slate-900'}`}>
-                                      {isDone ? 'CALCULATED' : 'WAITING'}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </td>
-                        </tr>
-                      )}
                     </React.Fragment>
                   ))}
                 </tbody>
               </table>
             </motion.div>
           ) : (
-            /* --- TAB: IP FRAMEWORKS (CONSULTATION MODE) --- */
-            <motion.div 
-              key="frameworks" 
-              initial={{ opacity: 0, x: 20 }} 
-              animate={{ opacity: 1, x: 0 }} 
-              exit={{ opacity: 0, x: -20 }}
-              className="space-y-12"
-            >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {BMR_FRAMEWORKS.map((d) => (
-                  <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity">
-                      <Binary className={d.color} size={40} />
-                    </div>
-                    
-                    <div className="flex justify-between items-start mb-10">
-                      <div className="space-y-2">
-                        <span className={`text-[10px] font-mono font-black tracking-widest ${d.color}`}>
-                          PROTOCOL // {d.id}
-                        </span>
-                        <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">
-                          {d.label}
-                        </h2>
-                      </div>
-                      {d.price && (
-                        <div className="bg-red-600 text-white px-6 py-2 text-xs font-black italic tracking-widest">
-                          {d.price}
-                        </div>
-                      )}
-                    </div>
-                    
-                    <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium">
-                      {d.description}
-                    </p>
-                    
-                    <div className="pt-8 border-t border-slate-900 flex items-center gap-3 text-slate-600 font-mono text-[10px] uppercase tracking-widest">
-                      <Shield size={14} /> Fiduciary_Encryption_Active
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-20">
               
-              {/* CONSULTATION TOOLTIP */}
-              <div className="p-8 border border-red-600/20 bg-red-600/5 text-center">
-                <p className="text-xs text-red-600 font-black uppercase tracking-[0.4em] italic">
-                  Note: Framework presentation is restricted to Level 01 Auth holders during live audits.
-                </p>
-              </div>
+              {/* SUB-SECTION: SERVICE TIERS (THE HOOK) */}
+              <section>
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4">Public_Service_Mapping</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {BMR_IP_SUITE.services.map((s) => (
+                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20">
+                      <div className="text-red-600 mb-6">{s.icon}</div>
+                      <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">{s.tier}</span>
+                      <h4 className="text-2xl font-black italic uppercase text-white mt-2 mb-4 leading-none">{s.title}</h4>
+                      <p className="text-xs text-slate-400 uppercase font-bold leading-relaxed">{s.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              {/* SUB-SECTION: PROPRIETARY DIRECTIVES (THE ENGINE) */}
+              <section>
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4">Proprietary_Directives</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {BMR_IP_SUITE.directives.map((d) => (
+                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-100 transition-opacity"><Binary className={d.color} size={40} /></div>
+                      <div className="flex justify-between items-start mb-10">
+                        <div className="space-y-2">
+                          <span className={`text-[10px] font-mono font-black tracking-widest ${d.color}`}>PROTOCOL // {d.id}</span>
+                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">{d.label}</h2>
+                        </div>
+                        {d.price && <div className="bg-red-600 text-white px-6 py-2 text-xs font-black italic tracking-widest">{d.price}</div>}
+                      </div>
+                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8">{d.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </motion.div>
           )}
         </AnimatePresence>
