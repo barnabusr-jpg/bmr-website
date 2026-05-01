@@ -12,7 +12,7 @@ export default function Home() {
     <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30 relative">
       <Header />
       <main className="flex-grow pt-48 px-6 pb-32">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start text-left">
           <div className="space-y-12">
             <div className="space-y-6">
               <p className="text-red-600 font-mono text-[10px] uppercase tracking-[0.5em] font-black italic border-l-2 border-red-600 pl-4">
@@ -31,13 +31,13 @@ export default function Home() {
             {/* FORENSIC GLOSSARY */}
             <div className="grid grid-cols-1 gap-4 border-t border-slate-900 pt-8 max-w-lg">
                <div>
-                  <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-widest">Logic Shear:</span>
+                  <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-widest leading-none">Logic Shear:</span>
                   <p className="text-[11px] text-slate-500 uppercase tracking-widest leading-relaxed mt-1 italic font-bold">
                     Friction created when human oversight and machine execution decouple.
                   </p>
                </div>
                <div>
-                  <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-widest">Capital Decay:</span>
+                  <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-widest leading-none">Capital Decay:</span>
                   <p className="text-[11px] text-slate-500 uppercase tracking-widest leading-relaxed mt-1 italic font-bold">
                     The erosion of ROI caused by unmonitored system drift.
                   </p>
@@ -52,20 +52,20 @@ export default function Home() {
             </button>
           </div>
 
-          {/* TARGET PERSONA BOX - UPDATED VERBIAGE */}
+          {/* TARGET PERSONA BOX - CTO / OPs / TECH MGRS */}
           <div className="bg-slate-900/10 border border-slate-900 p-8 md:p-12 space-y-8 mt-12 relative overflow-hidden">
              <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter leading-none">
                FOR <span className="text-red-600 font-black italic">CTOs / OPs / TECH MGRS</span>
              </h2>
-             <p className="text-slate-400 font-bold italic text-lg leading-tight uppercase leading-none">
+             <p className="text-slate-400 font-bold italic text-lg leading-tight uppercase">
                UNCERTAINTY IS A MEASURABLE LIABILITY.
              </p>
              <div className="pl-6 border-l border-slate-800 space-y-6 text-slate-400">
-               <p className="text-sm italic leading-relaxed">
+               <p className="text-sm italic leading-relaxed font-medium">
                  BMR provides the forensic tools to harden logic chains before architectural collapse becomes inevitable.
                </p>
-               <p className="text-sm leading-relaxed italic border-t border-slate-900 pt-4">
-                 When human intent and machine execution decouple, you do not have an &quot;optimization&quot; problem. You have <span className="text-red-600 font-black uppercase italic">Systemic Rot.</span>
+               <p className="text-sm leading-relaxed italic border-t border-slate-900 pt-4 font-medium">
+                 When human intent and machine execution decouple, you do not have an &quot;optimization&quot; problem. You have <span className="text-red-600 font-black uppercase italic">SYSTEMIC ROT.</span>
                </p>
              </div>
           </div>
