@@ -10,9 +10,13 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30 relative">
+      {/* 🛠️ RESTORED HEADER WITH NAV LINKS */}
       <Header />
+      
       <main className="flex-grow pt-48 px-6 pb-32">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-start text-left">
+          
+          {/* LEFT COLUMN: HERO + GLOSSARY */}
           <div className="space-y-12">
             <div className="space-y-6">
               <p className="text-red-600 font-mono text-[10px] uppercase tracking-[0.5em] font-black italic border-l-2 border-red-600 pl-4">
@@ -28,7 +32,7 @@ export default function Home() {
               </h1>
             </div>
 
-            {/* FORENSIC GLOSSARY */}
+            {/* FORENSIC GLOSSARY (Matches latest screenshot) */}
             <div className="grid grid-cols-1 gap-4 border-t border-slate-900 pt-8 max-w-lg">
                <div>
                   <span className="text-red-600 font-mono text-[10px] font-black uppercase tracking-widest leading-none">Logic Shear:</span>
@@ -52,7 +56,7 @@ export default function Home() {
             </button>
           </div>
 
-          {/* TARGET PERSONA BOX - CTO / OPs / TECH MGRS */}
+          {/* RIGHT COLUMN: TARGET PERSONA BOX (CTO / OPs / TECH MGRS) */}
           <div className="bg-slate-900/10 border border-slate-900 p-8 md:p-12 space-y-8 mt-12 relative overflow-hidden">
              <h2 className="text-3xl md:text-4xl font-black uppercase italic tracking-tighter leading-none">
                FOR <span className="text-red-600 font-black italic">CTOs / OPs / TECH MGRS</span>
@@ -65,13 +69,24 @@ export default function Home() {
                  BMR provides the forensic tools to harden logic chains before architectural collapse becomes inevitable.
                </p>
                <p className="text-sm leading-relaxed italic border-t border-slate-900 pt-4 font-medium">
-                 When human intent and machine execution decouple, you do not have an &quot;optimization&quot; problem. You have <span className="text-red-600 font-black uppercase italic">SYSTEMIC ROT.</span>
+                 When human intent and machine execution decouple, you do not have an "optimization" problem. You have <span className="text-red-600 font-black uppercase italic">SYSTEMIC ROT.</span>
                </p>
              </div>
           </div>
+          
         </div>
       </main>
       <Footer />
+
+      {/* ADMIN NODE - HIDDEN IN PLAIN SIGHT */}
+      <div 
+        onClick={() => router.push('/admin/dashboard')}
+        className="fixed bottom-6 left-6 z-[100] cursor-crosshair group flex items-center gap-2 no-print"
+      >
+        <div className="w-8 h-8 flex items-center justify-center border border-slate-900/30 group-hover:border-red-600/50 transition-all rounded-full bg-slate-950/20 backdrop-blur-sm">
+          <Shield size={10} className="text-slate-900 group-hover:text-red-600 opacity-10 group-hover:opacity-100 transition-all" />
+        </div>
+      </div>
     </div>
   );
 }
