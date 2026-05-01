@@ -23,7 +23,7 @@ export default function HeroHome() {
         <div style={{ width: '55%', textAlign: 'left', flexShrink: 0 }}>
           <div style={{ borderLeft: '6px solid #dc2626', paddingLeft: '40px', marginBottom: '60px' }}>
             <p style={{ color: '#dc2626', fontWeight: 900, fontSize: '12px', letterSpacing: '0.5em', marginBottom: '20px', fontFamily: 'monospace' }}>
-              NODE_ACCESS: FORENSIC_ENVIRONMENT // V4.0
+              NODE_ACCESS: FORENSIC_ENVIRONMENT
             </p>
             <h1 style={{ 
               fontSize: 'clamp(4rem, 9vw, 8rem)', 
@@ -40,10 +40,10 @@ export default function HeroHome() {
             </h1>
           </div>
           
-          <div style={{ borderTop: '1px solid #1e293b', paddingTop: '50px', maxWidth: '550px' }}>
+          <div style={{ borderTop: '1px solid #1e293b', paddingTop: '50px', maxWidth: '500px' }}>
             <span style={{ color: '#dc2626', fontWeight: 900, fontSize: '11px', letterSpacing: '0.4em', fontFamily: 'monospace' }}>LOGIC SHEAR:</span>
-            <p style={{ color: '#94a3b8', fontSize: '1.5rem', fontWeight: 500, fontStyle: 'italic', marginTop: '15px', fontFamily: 'sans-serif', textTransform: 'uppercase', lineHeight: 1.5 }}>
-              Friction created when human oversight and machine execution decouple. ROI dies in the void.
+            <p style={{ color: '#94a3b8', fontSize: '1.5rem', fontWeight: 500, fontStyle: 'italic', marginTop: '15px', fontFamily: 'sans-serif', textTransform: 'uppercase', lineHeight: 1.4 }}>
+              Friction created when human oversight and machine execution decouple.
             </p>
             <button 
               onClick={() => router.push('/pulse-check')}
@@ -77,7 +77,6 @@ export default function HeroHome() {
             textAlign: 'left',
             position: 'relative'
           }}>
-            {/* Corner Accent */}
             <div style={{ position: 'absolute', top: 0, right: 0, width: '40px', height: '40px', borderTop: '2px solid #dc2626', borderRight: '2px solid #dc2626' }} />
             
             <h2 style={{ 
@@ -90,26 +89,15 @@ export default function HeroHome() {
               lineHeight: 1,
               color: 'white'
             }}>
-              For <span style={{ color: '#dc2626' }}>CTOs / OPs</span>
+              For <span style={{ color: '#dc2626' }}>CTOs / OPs / Tech Mgrs</span>
             </h2>
             <div style={{ borderLeft: '2px solid #dc2626', paddingLeft: '30px', marginTop: '40px' }}>
               <p style={{ color: '#94a3b8', fontStyle: 'italic', fontFamily: 'sans-serif', fontSize: '1.3rem', lineHeight: 1.6 }}>
                 BMR provides forensic tools to harden logic chains. Uncertainty is a measurable liability.
               </p>
-              <div style={{ 
-                marginTop: '40px', 
-                borderTop: '1px solid #1e293b', 
-                paddingTop: '30px'
-              }}>
-                <p style={{ 
-                  color: '#dc2626', 
-                  fontWeight: 900, 
-                  textTransform: 'uppercase', 
-                  fontFamily: 'sans-serif',
-                  fontSize: '1.4rem',
-                  letterSpacing: '-0.02em'
-                }}>
-                  You have <span style={{ fontStyle: 'italic' }}>Systemic Rot.</span>
+              <div style={{ marginTop: '40px', borderTop: '1px solid #1e293b', paddingTop: '30px' }}>
+                <p style={{ color: '#dc2626', fontWeight: 900, textTransform: 'uppercase', fontFamily: 'sans-serif', fontSize: '1.4rem' }}>
+                  YOU HAVE <span style={{ fontStyle: 'italic' }}>SYSTEMIC ROT.</span>
                 </p>
               </div>
             </div>
