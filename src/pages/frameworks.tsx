@@ -1,4 +1,5 @@
-use client";
+"use client";
+
 import React from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -40,45 +41,64 @@ const frameworkDirectives = [
 
 export default function FrameworksPage() {
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30">
       <Header />
-      <main className="flex-grow pt-40 pb-20 px-6">
-        <div className="max-w-7xl mx-auto space-y-20">
-          <section className="border-l-2 border-red-600 pl-8 text-left">
-            <h1 className="text-[60px] md:text-[85px] font-black uppercase italic tracking-tighter leading-none text-white">
-              THE BMR <span className="text-red-600 text-outline">FRAMEWORKS.</span>
+      
+      <main className="flex-grow pt-48 pb-24 px-6">
+        <div className="max-w-7xl mx-auto space-y-24">
+          
+          <section className="border-l-4 border-red-600 pl-12 text-left space-y-6">
+            <h1 className="text-[80px] md:text-[110px] font-black uppercase italic tracking-tighter leading-[0.8] text-white">
+              THE BMR <br /><span className="text-red-600">FRAMEWORKS.</span>
             </h1>
-            <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.5em] mt-4">
-              Operational Recovery Framework // Non-Invasive Inference
+            <p className="text-slate-500 font-mono text-xs uppercase tracking-[0.5em] font-bold">
+              Operational Recovery Framework // Non-Invasive Inference // V4.0
             </p>
           </section>
 
-          <section className="grid grid-cols-1 md:grid-cols-4 gap-4 items-stretch">
+          <section className="max-w-4xl text-left">
+             <p className="text-2xl text-slate-400 italic leading-relaxed font-medium">
+                Our frameworks are structural requirements for the survival of machine-enabled organizations. We provide the hard logic necessary to bridge the gap between human intent and automated output.
+             </p>
+          </section>
+
+          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch">
             {frameworkDirectives.map((d) => (
-              <div key={d.id} className={`bg-black/40 border ${d.border} p-8 flex flex-col h-full hover:bg-slate-900/40 transition-colors duration-500 group`}>
-                <div className="mb-10 text-left">
-                  <span className={`text-[9px] font-mono font-black tracking-[0.3em] uppercase ${d.color}`}>
+              <div 
+                key={d.id} 
+                className={`bg-slate-900/10 border-2 ${d.border} p-10 flex flex-col h-full hover:bg-slate-900/40 transition-all duration-500 group relative overflow-hidden`}
+              >
+                <div className="absolute -right-4 -top-4 text-7xl font-black text-white/5 italic select-none">
+                    {d.id}
+                </div>
+
+                <div className="mb-12 text-left relative z-10">
+                  <span className={`text-[11px] font-mono font-black tracking-[0.3em] uppercase ${d.color}`}>
                     {d.label}
                   </span>
-                  <h2 className="text-white text-2xl font-black italic uppercase tracking-tighter leading-tight mt-2 pb-4 border-b border-white/5 group-hover:border-white/10">
+                  <h2 className="text-white text-3xl font-black italic uppercase tracking-tighter leading-none mt-4 pb-6 border-b border-white/10">
                     {d.title}
                   </h2>
                 </div>
-                <p className="text-slate-400 text-xs leading-relaxed font-light flex-grow italic text-left">
+
+                <p className="text-slate-400 text-lg leading-relaxed font-medium flex-grow italic text-left relative z-10">
                   {d.description}
                 </p>
-                <div className="mt-10 pt-4 flex justify-between items-center border-t border-white/5">
-                  <span className="text-[9px] font-mono text-slate-700 uppercase tracking-[0.2em]">
+
+                <div className="mt-12 pt-6 flex justify-between items-center border-t border-white/10 relative z-10">
+                  <span className="text-[10px] font-mono text-slate-600 font-bold uppercase tracking-[0.3em]">
                     DIRECTIVE // {d.id}
                   </span>
-                  <div className={`w-1.5 h-1.5 rounded-full ${d.color.replace('text', 'bg')} animate-pulse`} />
+                  <div className={`w-3 h-3 rounded-full ${d.color.replace('text', 'bg')} animate-pulse`} />
                 </div>
               </div>
             ))}
           </section>
         </div>
       </main>
+      
       <Footer />
     </div>
   );
 }
+
