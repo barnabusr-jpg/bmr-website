@@ -8,7 +8,7 @@ import OutcomesHome from "@/components/home/OutcomesHome";
 import ComparisonGrid from "@/components/home/ComparisonGrid";
 import ServicesPreviewHome from "@/components/home/ServicesPreviewHome";
 import { Shield } from "lucide-react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation"; // Updated for consistency
 
 export default function Home() {
   const router = useRouter();
@@ -18,35 +18,25 @@ export default function Home() {
       style={{ backgroundColor: '#020617', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
       className="selection:bg-red-600/30 relative overflow-x-hidden"
     >
-      {/* 🛠️ NAVIGATION: Hoisted to the top layer */}
       <Header />
       
       <main style={{ flexGrow: 1 }}>
-        {/* 1. HERO: The 55/40 Split (Glossary & CTO Box) */}
         <HeroHome />
-        
-        {/* 2. FORENSIC ANALYSIS: The 3 Cards (Human Trust, Value Leakage, etc.) */}
         <InsightsHome />
-        
-        {/* 3. RECOVERY OUTCOMES: The ROI section */}
         <OutcomesHome />
-        
-        {/* 4. COMPARISON: BMR vs Traditional Audit */}
         <ComparisonGrid />
-        
-        {/* 5. SERVICES: Final call to action segments */}
         <ServicesPreviewHome />
       </main>
 
       <Footer />
 
-      {/* 🛡️ ADMIN ACCESS: Bottom Left */}
+      {/* 🛡️ ADMIN ACCESS: REPOSITIONED TO BOTTOM RIGHT */}
       <div 
         onClick={() => router.push('/admin/dashboard')} 
         style={{ 
           position: 'fixed', 
           bottom: '40px', 
-          left: '40px', 
+          right: '40px', // Moved to right
           zIndex: 10000, 
           cursor: 'crosshair',
           width: '40px',
@@ -57,10 +47,12 @@ export default function Home() {
           borderRadius: '50%',
           border: '1px solid #1e293b',
           backgroundColor: 'rgba(2, 6, 23, 0.8)',
-          backdropFilter: 'blur(8px)'
+          backdropFilter: 'blur(8px)',
+          transition: 'all 0.3s ease'
         }}
+        className="hover:border-red-600/50 group"
       >
-        <Shield size={12} color="#1e293b" />
+        <Shield size={12} className="text-slate-800 group-hover:text-red-600 transition-colors" />
       </div>
     </div>
   );
