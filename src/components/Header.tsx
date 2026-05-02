@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShieldAlert } from 'lucide-react';
 
+// 'FRAMEWORKS' removed to prevent public access to proprietary IP
 const NAV_LINKS = [
   { name: 'METHODOLOGY', path: '/methodology' },
   { name: 'BRIEFINGS', path: '/briefings' },
@@ -29,7 +30,6 @@ export default function Header() {
       justifyContent: 'space-between', 
       padding: '0 40px' 
     }}>
-      {/* LOGO SECTION */}
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '15px', textDecoration: 'none' }}>
         <ShieldAlert size={28} color="#dc2626" />
         <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -38,7 +38,6 @@ export default function Header() {
         </div>
       </Link>
 
-      {/* NAVIGATION */}
       <nav style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
         {NAV_LINKS.map((link) => {
           const isActive = pathname === link.path;
@@ -61,7 +60,6 @@ export default function Header() {
         })}
       </nav>
 
-      {/* STATUS INDICATOR */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#22c55e', boxShadow: '0 0 10px #22c55e' }} />
         <span style={{ color: '#64748b', fontSize: '9px', fontWeight: 900, letterSpacing: '0.2em', fontFamily: 'monospace' }}>SYSTEMS_NOMINAL</span>
