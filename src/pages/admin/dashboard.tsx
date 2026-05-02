@@ -3,18 +3,41 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
-  Shield, Zap, LayoutDashboard, Binary, Eye, 
-  ZoomIn, Hammer 
+  Shield, Zap, Binary, ZoomIn, Hammer 
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 // INTERNAL IP: THE BMR FRAMEWORKS & SERVICE TIERS
+// Restored exact IP from approved documentation
 const BMR_IP_SUITE = {
   directives: [
-    { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now. We analyze the alignment between organizational nodes. This identifies systemic rot without compromising your security perimeter.", color: "text-red-600" },
-    { id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K", description: "The system rebuilds the logic that connects your operational layers. We ensure that executive intent matches technical execution to stop capital leaks.", color: "text-blue-500" },
-    { id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO", description: "Developing new organizational rule sets to protect fiduciary leadership and technical staff. This creates a state of financial and operational safety.", color: "text-purple-500" },
-    { id: "DIR_04", label: "FORENSIC CONTINUITY", description: "Monitoring structural health through specialized reporting cadence. If a variance starts to grow, the system will detect it before the rework tax accrues.", color: "text-green-500" }
+    { 
+      id: "DIR_01", 
+      label: "IMMEDIATE HARDENING", 
+      price: "$45K - $75K", 
+      description: "The engine identifies where capital is leaking right now. We analyze the alignment between organizational nodes. This identifies systemic rot without compromising your security perimeter.", 
+      color: "text-red-600" 
+    },
+    { 
+      id: "DIR_02", 
+      label: "STRUCTURAL ALIGNMENT", 
+      price: "$150K", 
+      description: "The system rebuilds the logic that connects your operational layers. We ensure that executive intent matches technical execution to stop capital leaks.", 
+      color: "text-blue-500" 
+    },
+    { 
+      id: "DIR_03", 
+      label: "GOVERNANCE OVERLAY", 
+      price: "$25K/MO", 
+      description: "Developing new organizational rule sets to protect fiduciary leadership and technical staff. This creates a state of financial and operational safety.", 
+      color: "text-purple-500" 
+    },
+    { 
+      id: "DIR_04", 
+      label: "FORENSIC CONTINUITY", 
+      description: "Monitoring structural health through specialized reporting cadence. If a variance starts to grow, the system will detect it before the rework tax accrues.", 
+      color: "text-green-500" 
+    }
   ],
   services: [
     { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments. Locating 'Log Rot' before it hardens." },
@@ -115,6 +138,26 @@ export default function AdminDashboard() {
                         <td className="p-10 text-center uppercase italic font-black text-[10px]">{audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : 'TRIANGULATION_ACTIVE'}</td>
                         <td className="p-10 text-right text-slate-600">{expandedRow === audit.id ? <ChevronUp /> : <ChevronDown />}</td>
                       </tr>
+                      {expandedRow === audit.id && (
+                        <tr>
+                          <td colSpan={3} className="bg-black/50 p-12 border-b border-slate-900">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                              {['EXE', 'MGR', 'TEC'].map((role) => {
+                                const node = nodeDetails.find(n => n.persona_type === role);
+                                const isDone = node?.status?.toLowerCase() === 'completed';
+                                return (
+                                  <div key={role} className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-between min-h-[140px]">
+                                    <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest">{role}_NODE</span>
+                                    <div className={`text-2xl font-black italic uppercase ${isDone ? 'text-green-500' : 'text-slate-900'}`}>
+                                      {isDone ? 'CALCULATED' : 'WAITING'}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                     </React.Fragment>
                   ))}
                 </tbody>
@@ -152,7 +195,10 @@ export default function AdminDashboard() {
                         </div>
                         {d.price && <div className="bg-red-600 text-white px-6 py-2 text-xs font-black italic tracking-widest">{d.price}</div>}
                       </div>
-                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8">{d.description}</p>
+                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium">{d.description}</p>
+                      <div className="pt-8 border-t border-slate-900 flex items-center gap-3 text-slate-600 font-mono text-[10px] uppercase tracking-widest">
+                        <Shield size={14} /> Fiduciary_Encryption_Active
+                      </div>
                     </div>
                   ))}
                 </div>
