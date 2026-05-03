@@ -2,13 +2,7 @@
 import React from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { ArrowRight, ShieldAlert, Terminal, Radio, ExternalLink } from "lucide-react";
-
-const FORENSIC_SIGNALS = [
-  { id: "SIG_01", date: "APR 2026", title: "The $4.2B Valuation Drift", source: "Enterprise Tech Journal", excerpt: "Analysis of the widening gap between AI infrastructure investment and actual operational ROI." },
-  { id: "SIG_02", date: "MAR 2026", title: "Regulatory Proof Standards", source: "Compliance Weekly", excerpt: "New fiduciary standards demand 'Atomic Logging' for all autonomous decision nodes." },
-  { id: "SIG_03", date: "FEB 2026", title: "Shadow AI & Engineering Waste", source: "Operational Excellence", excerpt: "Research identifies that 30% of senior engineering bandwidth is consumed by manual validation." }
-];
+import { ShieldAlert, Terminal } from "lucide-react";
 
 const EVIDENCE_VAULT = [
   { 
@@ -36,7 +30,7 @@ const EVIDENCE_VAULT = [
 
 export default function BriefingsPage() {
   return (
-    <div className="min-h-screen bg-[#020617] text-white">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30">
       <Header />
       <main className="pt-48 pb-32 px-10 max-w-7xl mx-auto text-left">
         <header className="mb-32 border-l-4 border-red-600 pl-12">
@@ -49,39 +43,28 @@ export default function BriefingsPage() {
           </h1>
         </header>
 
-        <section className="mb-40">
-          <h3 className="text-[10px] font-mono text-red-600 uppercase tracking-[0.5em] mb-12 border-b border-red-900/30 pb-4 italic font-black flex items-center gap-4">
-            <Radio size={14} className="animate-pulse" /> LIVE_FORENSIC_SIGNALS
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {FORENSIC_SIGNALS.map((sig) => (
-              <div key={sig.id} className="p-10 border border-slate-900 bg-slate-950 flex flex-col justify-between h-full">
-                <div>
-                  <h4 className="text-xl font-black italic uppercase text-white mb-4 leading-tight">{sig.title}</h4>
-                  <p className="text-sm text-slate-400 italic leading-relaxed">{sig.excerpt}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
         <section>
           <h3 className="text-[10px] font-mono text-slate-700 uppercase tracking-[0.5em] mb-12 border-b border-slate-900 pb-4 italic font-black">SUPPORTING_EVIDENCE_NODES</h3>
           <div className="grid grid-cols-1 gap-12">
             {EVIDENCE_VAULT.map((node) => (
-              <div key={node.id} id={node.id} style={{ scrollMarginTop: '140px' }} className="border-2 border-slate-900 bg-slate-950/20 p-12 md:p-16 relative overflow-hidden">
+              <div 
+                key={node.id} 
+                id={node.id} 
+                style={{ scrollMarginTop: '140px' }} 
+                className="border-2 border-slate-900 bg-slate-950/20 p-12 md:p-16 relative overflow-hidden"
+              >
                   <span className="text-[10px] font-mono text-red-600 font-black tracking-widest uppercase block mb-4">{node.category} // {node.id}</span>
                   <h4 className="text-5xl font-black italic uppercase text-white leading-none mb-8">{node.title}</h4>
                   <div className="grid md:grid-cols-2 gap-16 relative z-10">
                     <div className="space-y-4">
                         <p className="text-[10px] font-mono text-slate-700 uppercase tracking-widest font-black italic">ABSTRACT_DECRYPT</p>
-                        <p className="text-2xl text-slate-400 italic leading-relaxed">"{node.abstract}"</p>
+                        <p style={{ fontSize: '1.4rem' }} className="text-slate-400 italic leading-relaxed font-medium">&gt; "{node.abstract}"</p>
                     </div>
                     <div className="bg-black/40 p-10 border border-slate-900">
                       <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-4 font-black flex items-center gap-2">
                         <Terminal size={14} /> OPERATOR_NOTES
                       </p>
-                      <p className="text-lg text-slate-500 italic">"{node.notes}"</p>
+                      <p className="text-lg text-slate-500 font-medium leading-relaxed italic">"{node.notes}"</p>
                     </div>
                   </div>
               </div>
