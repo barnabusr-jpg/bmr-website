@@ -6,7 +6,7 @@ import { ShieldAlert, ArrowRight } from 'lucide-react';
 
 const NAV_LINKS = [
   { name: 'METHODOLOGY', path: '/methodology' },
-  { name: 'BRIEFINGS', path: '/briefings' },
+  { name: 'BRIEFINGS', path: '/vault' }, // Updated to /vault
   { name: 'PULSE_CHECK', path: '/pulse-check' },
 ];
 
@@ -66,17 +66,17 @@ export default function Header() {
         })}
       </nav>
 
-      {/* ACTION: INITIATE_DIAGNOSTIC (Scaled Spacing) */}
+      {/* ACTION: INITIATE_DIAGNOSTIC */}
       <button 
         onClick={() => router.push('/pulse-check')}
         style={{ 
           backgroundColor: '#dc2626', 
           color: 'white', 
-          padding: '14px 28px', // Scaled for better visual balance
+          padding: '14px 28px', 
           border: 'none', 
           fontWeight: 900, 
           textTransform: 'uppercase', 
-          letterSpacing: '0.15em', // Slightly tightened tracking to prevent "overdone" feel
+          letterSpacing: '0.15em', 
           fontSize: '10px', 
           cursor: 'pointer', 
           display: 'flex', 
