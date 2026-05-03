@@ -38,8 +38,7 @@ export default function BriefingsPage() {
   return (
     <div className="min-h-screen bg-[#020617] text-white">
       <Header />
-      
-      <main className="pt-48 pb-32 px-10 max-w-7xl mx-auto">
+      <main className="pt-48 pb-32 px-10 max-w-7xl mx-auto text-left">
         <header className="mb-32 border-l-4 border-red-600 pl-12">
           <div className="flex items-center gap-3 mb-6">
             <ShieldAlert size={18} className="text-red-600" />
@@ -50,14 +49,13 @@ export default function BriefingsPage() {
           </h1>
         </header>
 
-        {/* SECTION 1: SIGNALS */}
         <section className="mb-40">
           <h3 className="text-[10px] font-mono text-red-600 uppercase tracking-[0.5em] mb-12 border-b border-red-900/30 pb-4 italic font-black flex items-center gap-4">
             <Radio size={14} className="animate-pulse" /> LIVE_FORENSIC_SIGNALS
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {FORENSIC_SIGNALS.map((sig) => (
-              <div key={sig.id} className="p-10 border border-slate-900 bg-slate-950 flex flex-col justify-between">
+              <div key={sig.id} className="p-10 border border-slate-900 bg-slate-950 flex flex-col justify-between h-full">
                 <div>
                   <h4 className="text-xl font-black italic uppercase text-white mb-4 leading-tight">{sig.title}</h4>
                   <p className="text-sm text-slate-400 italic leading-relaxed">{sig.excerpt}</p>
@@ -67,17 +65,11 @@ export default function BriefingsPage() {
           </div>
         </section>
 
-        {/* SECTION 2: EVIDENCE NODES (The fix to make them visible) */}
         <section>
           <h3 className="text-[10px] font-mono text-slate-700 uppercase tracking-[0.5em] mb-12 border-b border-slate-900 pb-4 italic font-black">SUPPORTING_EVIDENCE_NODES</h3>
           <div className="grid grid-cols-1 gap-12">
             {EVIDENCE_VAULT.map((node) => (
-              <div 
-                key={node.id} 
-                id={node.id} 
-                style={{ scrollMarginTop: '140px' }} 
-                className="border-2 border-slate-900 bg-slate-950/20 p-12 md:p-16 relative overflow-hidden"
-              >
+              <div key={node.id} id={node.id} style={{ scrollMarginTop: '140px' }} className="border-2 border-slate-900 bg-slate-950/20 p-12 md:p-16 relative overflow-hidden">
                   <span className="text-[10px] font-mono text-red-600 font-black tracking-widest uppercase block mb-4">{node.category} // {node.id}</span>
                   <h4 className="text-5xl font-black italic uppercase text-white leading-none mb-8">{node.title}</h4>
                   <div className="grid md:grid-cols-2 gap-16 relative z-10">
