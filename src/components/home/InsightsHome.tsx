@@ -8,19 +8,19 @@ const signalEntries = [
     category: "HAI", 
     title: "THE HUMAN TRUST GAP", 
     excerpt: "Trust is a quantifiable mismatch between human mental models and system output. We identify where the promise gap creates shadow labor. Human employees must manually correct failed automated logic. This creates a hidden operational cost.", 
-    slug: "" 
+    slug: "#NODE_03" 
   },
   { 
     category: "AVS", 
     title: "VALUE STREAM LEAKAGE", 
     excerpt: "Activity is not achievement. Aligning technical tools with operational reality is the only way to stop systemic margin erosion. Most systems fail because they do not account for real world variables. This results in invisible profit loss.", 
-    slug: "" 
+    slug: "#NODE_02" 
   },
   { 
     category: "IGF", 
     title: "INSTITUTIONAL FIDELITY", 
     excerpt: "Governance is not a checkbox. It is a reconstructible logic chain. You must harden your architecture to survive a regulatory forensic review. Documentation is the only defense against system decay. We ensure your records are audit ready.", 
-    slug: "" 
+    slug: "#NODE_01" 
   }
 ];
 
