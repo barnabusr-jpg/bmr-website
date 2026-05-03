@@ -4,24 +4,9 @@ import { Activity, ShieldAlert, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 const signalEntries = [
-  { 
-    category: "HAI", 
-    title: "THE HUMAN TRUST GAP", 
-    excerpt: "Trust is a quantifiable mismatch between human mental models and system output.", 
-    slug: "NODE_03" 
-  },
-  { 
-    category: "AVS", 
-    title: "VALUE STREAM LEAKAGE", 
-    excerpt: "Activity is not achievement. Aligning technical tools with operational reality stops margin erosion.", 
-    slug: "NODE_02" 
-  },
-  { 
-    category: "IGF", 
-    title: "INSTITUTIONAL FIDELITY", 
-    excerpt: "Governance is not a checkbox. It is a reconstructible logic chain.", 
-    slug: "NODE_01" 
-  }
+  { category: "HAI", title: "THE HUMAN TRUST GAP", excerpt: "Trust is a quantifiable mismatch between human mental models and system output.", slug: "NODE_03" },
+  { category: "AVS", title: "VALUE STREAM LEAKAGE", excerpt: "Activity is not achievement. Aligning technical tools with operational reality stops margin erosion.", slug: "NODE_02" },
+  { category: "IGF", title: "INSTITUTIONAL FIDELITY", excerpt: "Governance is not a checkbox. It is a reconstructible logic chain.", slug: "NODE_01" }
 ];
 
 export default function InsightsHome() {
