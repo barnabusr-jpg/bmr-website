@@ -36,10 +36,10 @@ const EVIDENCE_VAULT = [
 
 export default function BriefingsPage() {
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30">
+    <div className="min-h-screen bg-[#020617] text-white">
       <Header />
       
-      <main className="pt-48 pb-32 px-10 max-w-7xl mx-auto text-left">
+      <main className="pt-48 pb-32 px-10 max-w-7xl mx-auto">
         <header className="mb-32 border-l-4 border-red-600 pl-12">
           <div className="flex items-center gap-3 mb-6">
             <ShieldAlert size={18} className="text-red-600" />
@@ -57,24 +57,17 @@ export default function BriefingsPage() {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {FORENSIC_SIGNALS.map((sig) => (
-              <div key={sig.id} className="p-10 border border-slate-900 bg-slate-950 hover:border-red-600/50 transition-all flex flex-col justify-between h-full">
+              <div key={sig.id} className="p-10 border border-slate-900 bg-slate-950 flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between items-center mb-6">
-                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest">APR 2026</span>
-                    <ExternalLink size={12} className="text-slate-800" />
-                  </div>
                   <h4 className="text-xl font-black italic uppercase text-white mb-4 leading-tight">{sig.title}</h4>
-                  <p className="text-sm text-slate-400 italic leading-relaxed mb-6">{sig.excerpt}</p>
-                </div>
-                <div className="text-[10px] font-black text-red-600 uppercase tracking-widest italic flex items-center gap-2 cursor-pointer">
-                  TRACE_SIGNAL <ArrowRight size={12} />
+                  <p className="text-sm text-slate-400 italic leading-relaxed">{sig.excerpt}</p>
                 </div>
               </div>
             ))}
           </div>
         </section>
 
-        {/* SECTION 2: EVIDENCE NODES (Restored Content) */}
+        {/* SECTION 2: EVIDENCE NODES (The fix to make them visible) */}
         <section>
           <h3 className="text-[10px] font-mono text-slate-700 uppercase tracking-[0.5em] mb-12 border-b border-slate-900 pb-4 italic font-black">SUPPORTING_EVIDENCE_NODES</h3>
           <div className="grid grid-cols-1 gap-12">
@@ -85,35 +78,25 @@ export default function BriefingsPage() {
                 style={{ scrollMarginTop: '140px' }} 
                 className="border-2 border-slate-900 bg-slate-950/20 p-12 md:p-16 relative overflow-hidden"
               >
-                  <div className="absolute top-0 right-0 p-8 opacity-5">
-                    <ShieldAlert size={120} className="text-white" />
-                  </div>
                   <span className="text-[10px] font-mono text-red-600 font-black tracking-widest uppercase block mb-4">{node.category} // {node.id}</span>
                   <h4 className="text-5xl font-black italic uppercase text-white leading-none mb-8">{node.title}</h4>
                   <div className="grid md:grid-cols-2 gap-16 relative z-10">
                     <div className="space-y-4">
                         <p className="text-[10px] font-mono text-slate-700 uppercase tracking-widest font-black italic">ABSTRACT_DECRYPT</p>
-                        <p style={{ fontSize: '1.4rem' }} className="text-slate-400 italic leading-relaxed font-medium">&gt; "{node.abstract}"</p>
+                        <p className="text-2xl text-slate-400 italic leading-relaxed">"{node.abstract}"</p>
                     </div>
                     <div className="bg-black/40 p-10 border border-slate-900">
                       <p className="text-[10px] font-mono text-red-600 uppercase tracking-widest mb-4 font-black flex items-center gap-2">
                         <Terminal size={14} /> OPERATOR_NOTES
                       </p>
-                      <p className="text-lg text-slate-500 font-medium leading-relaxed italic">"{node.notes}"</p>
+                      <p className="text-lg text-slate-500 italic">"{node.notes}"</p>
                     </div>
                   </div>
               </div>
             ))}
           </div>
         </section>
-
-        <footer className="mt-40 pt-16 border-t border-slate-900">
-           <p className="text-slate-900 font-black uppercase tracking-[0.6em] text-[10px] italic">
-              VAULT_INTEGRITY_VERIFIED // NO_DRIFT_DETECTED
-           </p>
-        </footer>
       </main>
-
       <Footer />
     </div>
   );
