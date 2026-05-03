@@ -8,19 +8,19 @@ const signalEntries = [
     category: "HAI", 
     title: "THE HUMAN TRUST GAP", 
     excerpt: "Trust is a quantifiable mismatch between human mental models and system output. We identify where the promise gap creates shadow labor. Human employees must manually correct failed automated logic. This creates a hidden operational cost.", 
-    slug: "helpline-collapse" // Updated to point to the Air Canada Story
+    slug: "" 
   },
   { 
     category: "AVS", 
     title: "VALUE STREAM LEAKAGE", 
     excerpt: "Activity is not achievement. Aligning technical tools with operational reality is the only way to stop systemic margin erosion. Most systems fail because they do not account for real world variables. This results in invisible profit loss.", 
-    slug: "rework-tax-calculus" // Updated to point to the restored Evidence Vault article
+    slug: "" 
   },
   { 
     category: "IGF", 
     title: "INSTITUTIONAL FIDELITY", 
     excerpt: "Governance is not a checkbox. It is a reconstructible logic chain. You must harden your architecture to survive a regulatory forensic review. Documentation is the only defense against system decay. We ensure your records are audit ready.", 
-    slug: "fiduciary-disconnect" // Updated to point to the restored Evidence Vault article
+    slug: "" 
   }
 ];
 
@@ -37,7 +37,7 @@ export default function InsightsHome() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '40px' }}>
           {signalEntries.map((insight) => (
-            <Link key={insight.slug} href={`/briefings/${insight.slug}`} style={{ textDecoration: 'none' }}>
+            <Link key={insight.title} href={`/briefings/${insight.slug}`} style={{ textDecoration: 'none' }}>
               <div style={{ padding: '60px', border: '2px solid #0f172a', background: 'rgba(15, 23, 42, 0.2)', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#dc2626', marginBottom: '30px' }}>
