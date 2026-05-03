@@ -12,7 +12,7 @@ const EVIDENCE_VAULT = [
     category: "GOVERNANCE_ANALYSIS", 
     abstract: "An internal analysis reveals a 70% failure rate in audit defensibility. The absence of atomic-level technical logging creates a Proof Void.",
     notes: "I close these gaps by building atomic-level logging that makes your intent verifiable at the code level.",
-    caseStudy: "/briefings/case-study/united-health"
+    caseStudyPath: "/briefings/case-study/unitedhealth-ai"
   },
   { 
     id: "NODE_02", 
@@ -20,7 +20,7 @@ const EVIDENCE_VAULT = [
     category: "ROI_EROSION", 
     abstract: "Organizations are losing $0.30 of every $1 invested in automated logic to manual rework.",
     notes: "If you check machine errors manually, your automation is a liability. Reclaiming that effort requires automated validation.",
-    caseStudy: "/briefings/case-study/lyft"
+    caseStudyPath: "/briefings/case-study/lyft-earnings"
   },
   { 
     id: "NODE_03", 
@@ -28,7 +28,7 @@ const EVIDENCE_VAULT = [
     category: "SYSTEM_DRIFT", 
     abstract: "The point at which strategic goals and machine execution layers decouple.",
     notes: "Systems drift. Neutralizing this requires a fiduciary layer that enforces alignment between intent and execution.",
-    caseStudy: "/briefings/case-study/pentagon"
+    caseStudyPath: "/briefings/case-study/pentagon-leak"
   }
 ];
 
@@ -43,7 +43,7 @@ export default function BriefingsPage() {
             <p className="font-black uppercase tracking-[0.5em] text-[10px] italic">BMR_VAULT // INTEL_DISTRIBUTION</p>
           </div>
           <h1 className="text-7xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85] mb-8">
-            Evidence <br /><span className="text-slate-800 font-black">Vault.</span>
+            Evidence <br /><span className="text-slate-800 font-black text-7xl md:text-8xl italic uppercase tracking-tighter leading-[0.85]">Vault.</span>
           </h1>
         </header>
 
@@ -66,8 +66,8 @@ export default function BriefingsPage() {
                     <p className="text-lg text-slate-500 font-medium leading-relaxed italic">"{node.notes}"</p>
                   </div>
                 </div>
-                <Link href={node.caseStudy} className="inline-flex items-center gap-4 text-xs font-black uppercase tracking-widest text-red-600 hover:text-white transition-colors border-t border-slate-900 pt-8 w-full">
-                  Access Forensic Case Study <ArrowRight size={14} />
+                <Link href={node.caseStudyPath} className="inline-flex items-center gap-4 text-xs font-black uppercase tracking-widest text-red-600 hover:text-white transition-colors border-t border-slate-900 pt-8 w-full group">
+                  Access Forensic Case Study <ArrowRight size={14} className="group-hover:translate-x-2 transition-transform" />
                 </Link>
               </div>
             ))}
