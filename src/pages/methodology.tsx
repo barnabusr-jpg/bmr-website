@@ -19,7 +19,7 @@ export default function MethodologyPage() {
       <Header />
       <main className="flex-grow pt-48 pb-20 px-10">
         <div className="max-w-7xl mx-auto space-y-32">
-          <section id="forensic-integrity" style={{ scrollMarginTop: '140px' }} className="space-y-8 border-l-4 border-red-600 pl-12">
+          <section id="forensic-integrity" style={{ scrollMarginTop: '140px' }} className="space-y-8 border-l-4 border-red-600 pl-12 text-left">
             <h1 className="text-7xl md:text-[110px] font-black uppercase italic tracking-tighter leading-[0.8]">
               The Key <br /> To Forensic <br /> <span className="text-red-600">Integrity.</span>
             </h1>
@@ -29,7 +29,7 @@ export default function MethodologyPage() {
             </div>
           </section>
 
-          <section id="integrity-triad" style={{ scrollMarginTop: '140px' }} className="py-20 border-y border-slate-900">
+          <section id="integrity-triad" style={{ scrollMarginTop: '140px' }} className="py-20 border-y border-slate-900 text-left">
             <h2 className="text-5xl font-black italic uppercase tracking-tighter mb-16">The <span className="text-red-600">Integrity Triad</span></h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
               {TRIAD_DATA.map((layer, i) => (
@@ -37,7 +37,7 @@ export default function MethodologyPage() {
                   <div>
                     <h3 className="text-2xl font-black mb-4 italic uppercase text-white">{layer.title}</h3>
                     <p className="text-base text-slate-400 mb-6 italic font-bold">{layer.q}</p>
-                    <div className="space-y-4 text-[11px] font-mono uppercase tracking-widest">
+                    <div className="space-y-4 text-[11px] font-mono uppercase tracking-widest text-left">
                       <p className="text-red-600 font-black">{layer.f}</p>
                       <p className="text-slate-500">THE RISK: {layer.risk}</p>
                       <p className="text-green-500">THE BMR FIX: {layer.fix}</p>
@@ -51,7 +51,7 @@ export default function MethodologyPage() {
             </div>
           </section>
 
-          <section id="rework-tax" style={{ scrollMarginTop: '140px' }} className="grid grid-cols-1 lg:grid-cols-2 gap-20 py-12">
+          <section id="rework-tax" style={{ scrollMarginTop: '140px' }} className="grid grid-cols-1 lg:grid-cols-2 gap-20 py-12 text-left">
             <div className="space-y-8">
               <h2 className="text-5xl font-black italic uppercase tracking-tighter text-white">Rework Tax <span className="text-red-600">Exposure</span></h2>
               <p className="text-slate-400 text-xl italic font-medium leading-relaxed">There is a hidden tax for unreliable automation that every organization pays. We identify these leaks through forensic triage.</p>
