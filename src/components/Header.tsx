@@ -6,7 +6,7 @@ import { ShieldAlert, ArrowRight } from 'lucide-react';
 
 const NAV_LINKS = [
   { name: 'METHODOLOGY', path: '/methodology' },
-  { name: 'BRIEFINGS', path: '/vault' }, // Updated to /vault
+  { name: 'BRIEFINGS', path: '/vault' },
   { name: 'PULSE_CHECK', path: '/pulse-check' },
 ];
 
@@ -30,7 +30,6 @@ export default function Header() {
       justifyContent: 'space-between', 
       padding: '0 40px' 
     }}>
-      {/* LOGO: STACKED ORIGINAL BRANDING */}
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '15px', textDecoration: 'none' }}>
         <ShieldAlert size={28} color="#dc2626" />
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '0.9' }}>
@@ -43,7 +42,6 @@ export default function Header() {
         </div>
       </Link>
 
-      {/* NAVIGATION */}
       <nav style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
         {NAV_LINKS.map((link) => {
           const isActive = pathname === link.path;
@@ -66,7 +64,6 @@ export default function Header() {
         })}
       </nav>
 
-      {/* ACTION: INITIATE_DIAGNOSTIC */}
       <button 
         onClick={() => router.push('/pulse-check')}
         style={{ 
