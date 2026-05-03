@@ -1,8 +1,8 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ShieldAlert } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { ShieldAlert, ArrowRight } from 'lucide-react';
 
 const NAV_LINKS = [
   { name: 'METHODOLOGY', path: '/methodology' },
@@ -12,6 +12,7 @@ const NAV_LINKS = [
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
 
   return (
     <header style={{ 
@@ -20,8 +21,8 @@ export default function Header() {
       left: 0, 
       right: 0, 
       height: '100px', 
-      backgroundColor: 'rgba(2, 6, 23, 0.7)', // Matches original transparency
-      backdropFilter: 'blur(20px)', // Original deep blur
+      backgroundColor: 'rgba(2, 6, 23, 0.7)', 
+      backdropFilter: 'blur(20px)', 
       borderBottom: '1px solid #1e293b', 
       zIndex: 1000, 
       display: 'flex', 
@@ -29,7 +30,7 @@ export default function Header() {
       justifyContent: 'space-between', 
       padding: '0 40px' 
     }}>
-      {/* LOGO: RESTORED ORIGINAL STACKED BRANDING */}
+      {/* LOGO: STACKED ORIGINAL BRANDING */}
       <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: '15px', textDecoration: 'none' }}>
         <ShieldAlert size={28} color="#dc2626" />
         <div style={{ display: 'flex', flexDirection: 'column', lineHeight: '0.9' }}>
@@ -42,7 +43,7 @@ export default function Header() {
         </div>
       </Link>
 
-      {/* NAVIGATION: UNCHANGED LOGIC */}
+      {/* NAVIGATION */}
       <nav style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
         {NAV_LINKS.map((link) => {
           const isActive = pathname === link.path;
@@ -65,19 +66,28 @@ export default function Header() {
         })}
       </nav>
 
-      {/* STATUS INDICATOR: RESTORED ORIGINAL GLOW & SPACING */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ 
-          width: '8px', 
-          height: '8px', 
-          borderRadius: '50%', 
-          backgroundColor: '#22c55e', 
-          boxShadow: '0 0 10px #22c55e' 
-        }} />
-        <span style={{ color: '#64748b', fontSize: '9px', fontWeight: 900, letterSpacing: '0.2em', fontFamily: 'monospace' }}>
-          SYSTEMS_NOMINAL
-        </span>
-      </div>
+      {/* ACTION: INITIATE_DIAGNOSTIC (Scaled Spacing) */}
+      <button 
+        onClick={() => router.push('/pulse-check')}
+        style={{ 
+          backgroundColor: '#dc2626', 
+          color: 'white', 
+          padding: '14px 28px', // Scaled for better visual balance
+          border: 'none', 
+          fontWeight: 900, 
+          textTransform: 'uppercase', 
+          letterSpacing: '0.15em', // Slightly tightened tracking to prevent "overdone" feel
+          fontSize: '10px', 
+          cursor: 'pointer', 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '12px',
+          borderRadius: '2px',
+          lineHeight: '1'
+        }}
+      >
+        INITIATE_DIAGNOSTIC <ArrowRight size={14} />
+      </button>
     </header>
   );
 }
