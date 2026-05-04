@@ -23,24 +23,26 @@ const vaultData = [
   }
 ];
 
-export default function VaultPage() {
+export default function IntelPage() {
   return (
     <div className="bg-[#020617] min-h-screen text-white">
       <Header />
       <main className="pt-32 pb-20 px-10 max-w-7xl mx-auto">
-        <h1 className="text-6xl font-black italic uppercase mb-20 border-b border-red-600 pb-10">EVIDENCE_VAULT</h1>
+        <h1 className="text-6xl font-black italic uppercase mb-20 border-b border-red-600 pb-10 tracking-tighter">
+          FORENSIC_INTEL
+        </h1>
         
         <div className="space-y-32">
           {vaultData.map((item) => (
             <section key={item.id} id={item.id} className="scroll-mt-32">
               <div className="flex items-center gap-4 text-red-600 mb-6">
-                <span className="font-black tracking-widest text-sm uppercase">[{item.category}]</span>
-                <div className="h-[1px] flex-grow bg-slate-800" />
-                <span className="font-mono text-xs text-slate-500">{item.id}</span>
+                <span className="font-black tracking-[0.3em] text-xs uppercase">PROTOCOL_{item.category}</span>
+                <div className="h-[1px] flex-grow bg-slate-900" />
+                <span className="font-mono text-[10px] text-slate-500">{item.id}</span>
               </div>
-              <h2 className="text-5xl font-black italic uppercase mb-8">{item.title}</h2>
-              <div className="max-w-3xl">
-                <p className="text-xl text-slate-400 leading-relaxed italic border-l-4 border-red-600 pl-8">
+              <h2 className="text-5xl font-black italic uppercase mb-8 tracking-tight">{item.title}</h2>
+              <div className="max-w-3xl border-l-2 border-slate-900 pl-8">
+                <p className="text-xl text-slate-400 leading-relaxed italic">
                   {item.content}
                 </p>
               </div>
