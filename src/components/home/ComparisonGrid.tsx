@@ -1,89 +1,47 @@
 "use client";
-
 import React from 'react';
-import { motion } from "framer-motion";
-import { ShieldAlert, X, Check } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 
-const ComparisonGrid = () => {
-  const data = [
-    {
-      area: "Audit Scope",
-      traditional: "Technical uptime and token usage volume.",
-      bmr: "HAI: Forensic analysis of human-in-the-loop logic rot."
-    },
-    {
-      area: "Leakage Detection",
-      traditional: "General project cost vs. static budget.",
-      bmr: "AVS: Identifying &quot;Shadow Labor&quot; and systemic value leakage."
-    },
-    {
-      area: "System Drift",
-      traditional: "Annual compliance checklists and surveys.",
-      bmr: "IGF: Continuous Δ (Delta) probes to prevent architectural decay."
-    },
-    {
-      area: "Final Output",
-      traditional: "Executive summary and high-level PPT.",
-      bmr: "Drift Diagnostic: Structural recovery and protocol hardening."
-    }
-  ];
+const comparisonData = [
+  { area: "Audit Scope", traditional: "Technical uptime and token usage volume.", bmr: "HAI: Forensic analysis of human-in-the-loop logic rot." },
+  { area: "Leakage Detection", traditional: "General project cost vs. static budget.", bmr: "AVS: Identifying \"Shadow Labor\" and systemic value leakage." },
+  { area: "System Drift", traditional: "Annual compliance checklists and surveys.", bmr: "IGF: Continuous Δ (Delta) probes to prevent architectural decay." },
+  { area: "Final Output", traditional: "Executive summary and high-level PPT.", bmr: "Drift Diagnostic: Structural recovery and protocol hardening." }
+];
 
+export default function ComparisonGrid() {
   return (
-    <section className="py-32 bg-slate-950 px-6 border-t border-slate-900">
-      <div className="container mx-auto max-w-7xl">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
-          <div className="max-w-xl text-left">
-             <motion.div 
-               initial={{ opacity: 0, scale: 0.9 }}
-               whileInView={{ opacity: 1, scale: 1 }}
-               className="bg-red-600/10 p-2 w-fit mb-4"
-             >
-              <ShieldAlert className="h-6 w-6 text-red-600" />
-            </motion.div>
-            <h2 className="text-4xl md:text-5xl font-black italic text-white uppercase tracking-tighter leading-none">
-              Traditional <span className="text-slate-700">vs.</span> <br />
-              <span className="text-red-600">Forensic Audit.</span>
-            </h2>
-          </div>
-          <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.3em] max-w-[240px] leading-relaxed border-l border-slate-800 pl-6 italic">
+    <section style={{ borderTop: '1px solid #1e293b', paddingTop: '140px', paddingBottom: '140px', backgroundColor: '#020617' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 40px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '80px', borderLeft: '6px solid #dc2626', paddingLeft: '40px' }}>
+          <h2 style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', fontWeight: 900, color: 'white', fontStyle: 'italic', textTransform: 'uppercase', lineHeight: 0.85, margin: 0 }}>
+            Traditional <span style={{ color: '#1e293b' }}>vs</span><br /><span style={{ color: '#dc2626' }}>Forensic Audit.</span>
+          </h2>
+          <p style={{ color: '#64748b', fontSize: '12px', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3em', maxWidth: '250px', fontStyle: 'italic', margin: 0 }}>
             Most agencies measure adoption. We measure the divergence between intent and reality.
           </p>
         </div>
-        
-        <div className="overflow-hidden border border-slate-900 bg-slate-900/10 backdrop-blur-sm">
-          <table className="w-full text-left border-collapse">
+
+        <div style={{ border: '2px solid #0f172a' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
-              <tr className="border-b border-slate-900 bg-slate-900/40">
-                <th className="p-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Audit Vector</th>
-                <th className="p-8 text-[10px] font-black text-slate-500 uppercase tracking-[0.4em]">Standard Approach</th>
-                <th className="p-8 text-[10px] font-black text-red-600 uppercase tracking-[0.4em]">BMR Forensics</th>
+              <tr style={{ background: 'rgba(15, 23, 42, 0.5)', borderBottom: '2px solid #0f172a' }}>
+                <th style={{ padding: '30px', color: '#64748b', fontSize: '10px', fontWeight: 900, letterSpacing: '0.4em' }}>AUDIT VECTOR</th>
+                <th style={{ padding: '30px', color: '#64748b', fontSize: '10px', fontWeight: 900, letterSpacing: '0.4em' }}>STANDARD APPROACH</th>
+                <th style={{ padding: '30px', color: '#dc2626', fontSize: '10px', fontWeight: 900, letterSpacing: '0.4em' }}>BMR FORENSICS</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-900">
-              {data.map((row, index) => (
-                <motion.tr 
-                  key={index}
-                  initial={{ opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="group hover:bg-red-600/[0.02] transition-colors"
-                >
-                  <td className="p-8 text-white font-black italic uppercase text-xs tracking-tight bg-slate-900/20">
-                    {row.area}
+            <tbody>
+              {comparisonData.map((row, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #0f172a' }}>
+                  <td style={{ padding: '40px', color: 'white', fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', fontSize: '1.5rem', background: 'rgba(15, 23, 42, 0.2)', borderRight: '1px solid #0f172a' }}>{row.area}</td>
+                  <td style={{ padding: '40px', color: '#64748b', fontSize: '1.4rem', fontStyle: 'italic' }}>
+                    <div style={{ display: 'flex', gap: '15px' }}><X size={18} /> {row.traditional}</div>
                   </td>
-                  <td className="p-8 text-slate-500 text-sm italic leading-relaxed">
-                    <div className="flex items-start gap-3">
-                      <X className="h-4 w-4 text-slate-800 mt-0.5 shrink-0" />
-                      {row.traditional}
-                    </div>
+                  <td style={{ padding: '40px', color: 'white', fontSize: '1.4rem', fontWeight: 'bold', fontStyle: 'italic', borderLeft: '1px solid #0f172a' }}>
+                    <div style={{ display: 'flex', gap: '15px' }}><Check size={18} color="#dc2626" /> {row.bmr}</div>
                   </td>
-                  <td className="p-8 text-slate-200 text-sm leading-relaxed font-bold italic border-l border-slate-900">
-                    <div className="flex items-start gap-3">
-                      <Check className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
-                      {row.bmr}
-                    </div>
-                  </td>
-                </motion.tr>
+                </tr>
               ))}
             </tbody>
           </table>
@@ -91,6 +49,4 @@ const ComparisonGrid = () => {
       </div>
     </section>
   );
-};
-
-export default ComparisonGrid;
+}
