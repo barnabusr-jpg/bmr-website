@@ -24,7 +24,7 @@ export default function InsightsHome() {
           {signalEntries.map((insight) => (
             <Link 
               key={insight.title} 
-              href={{ pathname: '/vault', hash: insight.slug }} 
+              href={`/vault#${insight.slug}`} 
               className="no-underline group"
             >
               <div className="p-12 border-2 border-slate-900 bg-slate-950/20 h-full flex flex-col justify-between hover:border-red-600/40 transition-all text-left">
