@@ -1,7 +1,6 @@
 "use client";
 import React from 'react';
 import { Activity, ShieldAlert, ArrowRight } from "lucide-react";
-import Link from "next/link";
 
 const signalEntries = [
   { category: "HAI", title: "THE HUMAN TRUST GAP", excerpt: "Trust is a quantifiable mismatch between human mental models and system output.", slug: "NODE_03" },
@@ -20,9 +19,10 @@ export default function InsightsHome() {
           </div>
           <h2 className="text-6xl md:text-8xl font-black text-white italic uppercase tracking-tighter text-left">FORENSIC <br />ANALYSIS</h2>
         </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {signalEntries.map((insight) => (
-            <Link 
+            <a 
               key={insight.title} 
               href={`/vault#${insight.slug}`} 
               className="no-underline group"
@@ -40,7 +40,7 @@ export default function InsightsHome() {
                   ACCESS FORENSIC VAULT <ArrowRight size={14} />
                 </div>
               </div>
-            </Link>
+            </a>
           ))}
         </div>
       </div>
