@@ -1,86 +1,54 @@
 "use client";
-
 import React from 'react';
-import { motion } from "framer-motion";
-import { Activity } from "lucide-react"; // ShieldAlert removed to satisfy linter
-import { Card } from "@/components/ui/card";
-import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { ArrowRight } from "lucide-react";
 
-const HeroHome = () => {
-  const subheadline = "NODE_ACCESS: FORENSIC_ENVIRONMENT // STRUCTURAL_AUDIT_V3";
+export default function HeroHome() {
+  const router = useRouter();
 
   return (
-    <section className="relative min-h-[90vh] flex items-center py-24 px-6 overflow-hidden bg-[#020617]">
-      <div className="absolute inset-0 opacity-10 pointer-events-none bg-[url('/grid.svg')] [mask-image:radial-gradient(ellipse_at_center,black,transparent)]" />
-      
-      <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+    <section style={{ backgroundColor: '#020617', color: 'white', paddingTop: '220px', paddingBottom: '120px', width: '100%' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 40px', display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between', gap: '60px' }}>
+        
+        {/* LEFT COLUMN: 55% SPLIT */}
+        <div style={{ width: '55%', textAlign: 'left', flexShrink: 0 }}>
+          <div style={{ borderLeft: '6px solid #dc2626', paddingLeft: '40px', marginBottom: '60px' }}>
+            <p style={{ color: '#dc2626', fontWeight: 900, fontSize: '12px', letterSpacing: '0.5em', marginBottom: '20px', fontFamily: 'monospace' }}>NODE_ACCESS: FORENSIC_ENVIRONMENT</p>
+            <h1 style={{ fontSize: 'clamp(4rem, 9vw, 8rem)', fontWeight: 900, fontStyle: 'italic', lineHeight: 0.8, textTransform: 'uppercase', margin: 0, fontFamily: 'sans-serif' }}>
+              The <span style={{ color: '#dc2626' }}>Promise Gap</span><br />
+              <span style={{ color: '#1e293b' }}>Where ROI Goes</span><br />
+              <span style={{ color: '#dc2626' }}>To Die.</span>
+            </h1>
+          </div>
           
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="space-y-10 text-left"
-          >
-            <div className="space-y-4 text-left border-l-2 border-red-600/20 pl-6">
-              <div className="flex items-center gap-3">
-                <div className="h-px w-8 bg-red-600" />
-                <p className="text-[10px] font-black tracking-[0.4em] text-red-600 uppercase italic">
-                  {subheadline}
-                </p>
-              </div>
-
-              <h1 className="text-6xl md:text-8xl font-black leading-[0.85] text-white tracking-tighter italic uppercase text-left">
-                Strategy is <span className="text-slate-800">Luxury.</span>
-                <span className="text-red-600 block mt-2">Recovery is Duty.</span>
-              </h1>
-            </div>
-
-            <p className="text-lg md:text-xl text-slate-500 font-medium max-w-xl leading-relaxed italic text-left uppercase tracking-tight">
-              We identify the log rot and systemic drift in AI deployments. 
-              BMR provides the forensic tools to harden logic chains before 
-              architectural collapse becomes inevitable.
+          <div style={{ borderTop: '1px solid #1e293b', paddingTop: '50px', maxWidth: '550px' }}>
+            <span style={{ color: '#dc2626', fontWeight: 900, fontSize: '11px', letterSpacing: '0.4em', fontFamily: 'monospace' }}>LOGIC SHEAR:</span>
+            <p style={{ color: '#94a3b8', fontSize: '1.5rem', fontWeight: 500, fontStyle: 'italic', marginTop: '15px', fontFamily: 'sans-serif', textTransform: 'uppercase', lineHeight: 1.4 }}>
+              Friction created when human oversight and machine execution decouple.
             </p>
+            <button onClick={() => router.push('/pulse-check')} style={{ marginTop: '50px', backgroundColor: '#dc2626', color: 'white', padding: '24px 48px', border: 'none', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.3em', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '16px' }}>
+              INITIALIZE DIAGNOSTIC <ArrowRight size={20} />
+            </button>
+          </div>
+        </div>
 
-            <div className="flex flex-wrap gap-4">
-              <Link 
-                href="/pulse-check/assessment"
-                className="group bg-red-600 hover:bg-white text-white hover:text-red-600 font-black h-16 px-10 uppercase tracking-[0.2em] text-[10px] flex items-center gap-3 transition-all duration-500 shadow-[0_0_30px_rgba(220,38,38,0.2)]"
-              >
-                <Activity className="h-4 w-4 group-hover:animate-pulse" />
-                Initialize Diagnostic
-              </Link>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <Card className="p-12 border-2 shadow-2xl bg-slate-900/10 backdrop-blur-sm border-slate-900 rounded-none relative overflow-hidden group text-left">
-              <div className="absolute top-0 left-0 w-1.5 h-0 group-hover:h-full bg-red-600 transition-all duration-700" />
-              <h3 className="text-3xl font-black mb-10 text-white tracking-tighter italic uppercase relative z-10 text-left">
-                Why Systems <span className="text-red-600">Quietly Drift</span>
-              </h3>
-              <div className="space-y-8 relative z-10 text-slate-500 italic text-left uppercase tracking-tight">
-                <p className="text-slate-300 font-bold leading-relaxed italic">AI failure is rarely a binary event.</p>
-                <p className="border-l border-slate-800 pl-6 text-sm leading-relaxed">
-                  It is a slow, structural divergence where AI-enabled 
-                  logic decays under operating conditions that leaders 
-                  cannot see.
-                </p>
-                <p className="leading-relaxed">
-                  When human intent and machine execution decouple, you do not have an optimization 
-                  problem. You have <span className="text-red-600 font-black uppercase">Systemic Rot.</span>
-                </p>
+        {/* RIGHT COLUMN: PERSONA BOX */}
+        <div style={{ width: '40%', marginTop: '100px', flexShrink: 0 }}>
+          <div style={{ backgroundColor: 'rgba(15, 23, 42, 0.4)', border: '2px solid #1e293b', padding: '60px', textAlign: 'left', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 0, right: 0, width: '40px', height: '40px', borderTop: '2px solid #dc2626', borderRight: '2px solid #dc2626' }} />
+            <h2 style={{ fontSize: '3rem', fontWeight: 900, fontStyle: 'italic', textTransform: 'uppercase', margin: 0, fontFamily: 'sans-serif', lineHeight: 1, color: 'white' }}>
+              For <span style={{ color: '#dc2626' }}>CTOs / OPs / Tech Mgrs</span>
+            </h2>
+            <div style={{ borderLeft: '2px solid #dc2626', paddingLeft: '30px', marginTop: '40px' }}>
+              <p style={{ color: '#94a3b8', fontStyle: 'italic', fontFamily: 'sans-serif', fontSize: '1.3rem', lineHeight: 1.6 }}>BMR provides forensic tools to harden logic chains. Uncertainty is a measurable liability.</p>
+              <div style={{ marginTop: '40px', borderTop: '1px solid #1e293b', paddingTop: '30px' }}>
+                <p style={{ color: '#dc2626', fontWeight: 900, textTransform: 'uppercase', fontFamily: 'sans-serif', fontSize: '1.4rem' }}>YOU HAVE <span style={{ fontStyle: 'italic' }}>SYSTEMIC ROT.</span></p>
               </div>
-            </Card>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
-};
+}
 
-export default HeroHome;
