@@ -6,7 +6,7 @@ import { ShieldAlert, ArrowRight } from 'lucide-react';
 
 const NAV_LINKS = [
   { name: 'METHODOLOGY', path: '/methodology' },
-  { name: 'BRIEFINGS', path: '/vault' },
+  { name: 'BRIEFINGS', path: '/intel' }, // Updated Path
   { name: 'PULSE_CHECK', path: '/pulse-check' },
 ];
 
