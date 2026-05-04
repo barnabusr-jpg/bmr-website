@@ -22,10 +22,12 @@ export default function InsightsHome() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           {signalEntries.map((insight) => (
+            /* We use a raw <a> tag with an absolute path to bypass the internal router entirely */
             <a 
               key={insight.title} 
               href={`/intel#${insight.slug}`} 
               className="no-underline group"
+              rel="noopener noreferrer"
             >
               <div className="p-12 border-2 border-slate-900 bg-slate-950/20 h-full flex flex-col justify-between hover:border-red-600/40 transition-all text-left">
                 <div>
