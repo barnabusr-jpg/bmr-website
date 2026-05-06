@@ -4,8 +4,10 @@ export default function Document() {
   return (
     <Html lang="en">
       <Head>
+        {/* 📱 MISSION CRITICAL: THIS STOPS THE "SHAVED" HEADER & CLIPPING */}
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        
         {/* 📡 PRIMARY FORENSIC METADATA */}
-        <title>BMR Advisory | Forensic AI Audit & Structural Hardening</title>
         <meta 
           name="description" 
           content="Enterprise-grade forensic diagnostic for identifying AI logic decay and quantifying rework tax across global architectures." 
@@ -30,7 +32,8 @@ export default function Document() {
           rel="stylesheet"
         />
       </Head>
-      <body className="antialiased bg-[#020617] selection:bg-red-600/30">
+      {/* Added overflow-x-hidden to the body to prevent horizontal sliding */}
+      <body className="antialiased bg-[#020617] selection:bg-red-600/30 overflow-x-hidden">
         <Main />
         <NextScript />
       </body>
