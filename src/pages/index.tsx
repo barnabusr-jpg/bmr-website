@@ -8,19 +8,19 @@ import OutcomesHome from "@/components/home/OutcomesHome";
 import ComparisonGrid from "@/components/home/ComparisonGrid";
 import ServicesPreviewHome from "@/components/home/ServicesPreviewHome";
 import { Shield } from "lucide-react";
-import { useRouter } from "next/navigation"; // Updated for consistency
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
 
   return (
-    <div 
-      style={{ backgroundColor: '#020617', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}
-      className="selection:bg-red-600/30 relative overflow-x-hidden"
-    >
+    <div className="min-h-screen bg-[#020617] flex flex-col selection:bg-red-600/30 relative overflow-x-hidden w-full">
+      {/* 🧭 NAVIGATION LOCK */}
       <Header />
       
-      <main style={{ flexGrow: 1 }}>
+      {/* 🧪 THE CORE ENGINE */}
+      <main className="flex-grow w-full pt-24 md:pt-0">
+        {/* Note: If HeroHome is still too wide, the header will remain clipped */}
         <HeroHome />
         <InsightsHome />
         <OutcomesHome />
@@ -30,27 +30,10 @@ export default function Home() {
 
       <Footer />
 
-      {/* 🛡️ ADMIN ACCESS: REPOSITIONED TO BOTTOM RIGHT */}
+      {/* 🛡️ ADMIN ACCESS: MOBILE-SAFE POSITIONING */}
       <div 
         onClick={() => router.push('/admin/dashboard')} 
-        style={{ 
-          position: 'fixed', 
-          bottom: '40px', 
-          right: '40px', // Moved to right
-          zIndex: 10000, 
-          cursor: 'crosshair',
-          width: '40px',
-          height: '40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '50%',
-          border: '1px solid #1e293b',
-          backgroundColor: 'rgba(2, 6, 23, 0.8)',
-          backdropFilter: 'blur(8px)',
-          transition: 'all 0.3s ease'
-        }}
-        className="hover:border-red-600/50 group"
+        className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[10000] cursor-crosshair w-10 h-10 flex items-center justify-center rounded-full border border-slate-800 bg-slate-950/80 backdrop-blur-md transition-all hover:border-red-600/50 group"
       >
         <Shield size={12} className="text-slate-800 group-hover:text-red-600 transition-colors" />
       </div>
