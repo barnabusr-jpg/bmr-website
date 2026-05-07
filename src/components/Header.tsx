@@ -1,7 +1,9 @@
 "use client";
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+// 🛠️ CRITICAL: Using 'next/router' for Pages Router compatibility
+import { useRouter } from 'next/router'; 
+import { usePathname } from 'next/navigation';
 import { ShieldAlert, ArrowRight, Menu, X } from 'lucide-react';
 
 const NAV_LINKS = [
@@ -11,9 +13,19 @@ const NAV_LINKS = [
 ];
 
 export default function Header() {
-  const pathname = usePathname();
   const router = useRouter();
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // 🛡️ Fail-safe navigation function
+  const handleDiagnosticClick = () => {
+    if (router && typeof router.push === 'function') {
+      router.push('/pulse-check');
+    } else {
+      window.location.href = '/pulse-check';
+    }
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 h-24 bg-[#020617]/70 backdrop-blur-xl border-b border-slate-900 z-[1000] flex items-center justify-between px-6 md:px-12">
@@ -31,7 +43,7 @@ export default function Header() {
         </div>
       </Link>
 
-      {/* DESKTOP NAVIGATION (Hidden on Mobile) */}
+      {/* DESKTOP NAVIGATION */}
       <nav className="hidden md:flex items-center gap-10">
         {NAV_LINKS.map((link) => {
           const isActive = pathname === link.path;
@@ -49,9 +61,9 @@ export default function Header() {
         })}
       </nav>
 
-      {/* ACTION BUTTON (Hidden on Mobile) */}
+      {/* ACTION BUTTON (DESKTOP) */}
       <button 
-        onClick={() => router.push('/pulse-check')}
+        onClick={handleDiagnosticClick}
         className="hidden md:flex items-center gap-3 bg-red-600 text-white px-7 py-3 font-black uppercase tracking-[0.15em] text-[10px] hover:bg-white hover:text-black transition-all rounded-sm"
       >
         INITIATE_DIAGNOSTIC <ArrowRight size={14} />
@@ -79,10 +91,7 @@ export default function Header() {
             </Link>
           ))}
           <button 
-            onClick={() => {
-              router.push('/pulse-check');
-              setIsMobileMenuOpen(false);
-            }}
+            onClick={handleDiagnosticClick}
             className="w-full bg-red-600 text-white py-5 font-black uppercase tracking-widest text-[10px]"
           >
             INITIATE_DIAGNOSTIC
