@@ -3,12 +3,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
-  Shield, Zap, Binary, ZoomIn, Hammer 
+  Shield, Zap, Binary, ZoomIn, Hammer, Play 
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// INTERNAL IP: THE BMR FRAMEWORKS & SERVICE TIERS
-// Restored exact IP from approved documentation
+// 🏛️ RESTORED: THE BMR FRAMEWORKS & SERVICE TIERS
 const BMR_IP_SUITE = {
   directives: [
     { 
@@ -60,9 +59,15 @@ export default function AdminDashboard() {
   }, []);
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
-    const { data: nodes } = await supabase.from('operators').select('persona_type, status').eq('audit_id', auditId);
+    const { data: nodes } = await supabase.from('operators').select('*').eq('audit_id', auditId);
     if (nodes) setNodeDetails(nodes);
   }, []);
+
+  const initiateTriangulation = async (auditId: string) => {
+    console.log(`INITIATING_TRIANGULATION: ${auditId}`);
+    await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', auditId);
+    await fetchLedger();
+  };
 
   const toggleRow = async (auditId: string) => {
     if (expandedRow === auditId) { setExpandedRow(null); return; }
@@ -84,9 +89,9 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-        <form onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center relative font-sans">
+        <form onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center font-sans">
           <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="MASTER_KEY" className="w-full bg-black border border-slate-800 p-6 text-center text-red-600 font-black outline-none tracking-[0.5em] text-2xl focus:border-red-600 placeholder:text-slate-900" autoFocus />
+          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="MASTER_KEY" className="w-full bg-black border border-slate-800 p-6 text-center text-red-600 font-black outline-none tracking-[0.5em] text-2xl focus:border-red-600" autoFocus />
           <button type="submit" className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all leading-none">INITIALIZE_COMMAND</button>
         </form>
       </div>
@@ -95,14 +100,13 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter">
-      {/* PERSISTENT COMMAND NAV */}
+      {/* 🧭 NAVIGATION */}
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black border-b border-slate-900 z-50 px-10 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3">
             <Activity className="text-red-600" size={24} />
             <span className="text-white font-black uppercase italic tracking-[0.2em] text-sm">Forensic_Command_Center</span>
           </div>
-          
           <div className="flex gap-1 bg-slate-900 p-1">
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Live_Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP_Frameworks</button>
@@ -118,7 +122,7 @@ export default function AdminDashboard() {
                 <thead>
                   <tr className="bg-black text-[10px] text-slate-600 uppercase tracking-[0.3em] border-b border-slate-900">
                     <th className="p-10">Entity_Signal</th>
-                    <th className="p-10 text-center">Protocol_Status</th>
+                    <th className="p-10 text-center border-x border-slate-900">Protocol_Status</th>
                     <th className="p-10 text-right">Action_Directives</th>
                   </tr>
                 </thead>
@@ -135,8 +139,12 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                         </td>
-                        <td className="p-10 text-center uppercase italic font-black text-[10px]">{audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : 'TRIANGULATION_ACTIVE'}</td>
-                        <td className="p-10 text-right text-slate-600">{expandedRow === audit.id ? <ChevronUp /> : <ChevronDown />}</td>
+                        <td className="p-10 text-center border-x border-slate-900 font-black text-[10px] uppercase italic text-red-600 animate-pulse">
+                           {audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : 'TRIANGULATION_ACTIVE'}
+                        </td>
+                        <td className="p-10 text-right text-slate-600">
+                          <div className="flex justify-end">{expandedRow === audit.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}</div>
+                        </td>
                       </tr>
                       {expandedRow === audit.id && (
                         <tr>
@@ -144,13 +152,22 @@ export default function AdminDashboard() {
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                               {['EXE', 'MGR', 'TEC'].map((role) => {
                                 const node = nodeDetails.find(n => n.persona_type === role);
-                                const isDone = node?.status?.toLowerCase() === 'completed';
                                 return (
-                                  <div key={role} className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-between min-h-[140px]">
-                                    <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest">{role}_NODE</span>
-                                    <div className={`text-2xl font-black italic uppercase ${isDone ? 'text-green-500' : 'text-slate-900'}`}>
-                                      {isDone ? 'CALCULATED' : 'WAITING'}
+                                  <div key={role} className="bg-slate-950 border border-slate-800 p-8 flex flex-col justify-between min-h-[220px] relative group overflow-hidden">
+                                    <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-20 transition-opacity"><Binary size={30} /></div>
+                                    <div>
+                                      <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest block mb-6">{role}_NODE</span>
+                                      <div className={`text-2xl font-black italic uppercase tracking-tighter ${node?.status?.toLowerCase() === 'completed' ? 'text-green-500' : 'text-red-600'}`}>
+                                        {node?.status || 'WAITING'}
+                                      </div>
+                                      {node?.results && <div className="text-[9px] font-mono text-slate-400 mt-2 uppercase">Signal: {node.results}</div>}
                                     </div>
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); initiateTriangulation(audit.id); }}
+                                      className="mt-8 w-full border border-red-600/30 py-3 text-[10px] font-black text-red-600 uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3"
+                                    >
+                                      <Play size={10} fill="currentColor" /> Initiate_Triangulation
+                                    </button>
                                   </div>
                                 );
                               })}
@@ -165,9 +182,8 @@ export default function AdminDashboard() {
             </motion.div>
           ) : (
             <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-20">
-              
-              {/* SUB-SECTION: SERVICE TIERS (THE HOOK) */}
-              <section>
+               {/* SERVICE TIERS */}
+               <section>
                 <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4">Public_Service_Mapping</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {BMR_IP_SUITE.services.map((s) => (
@@ -181,7 +197,7 @@ export default function AdminDashboard() {
                 </div>
               </section>
 
-              {/* SUB-SECTION: PROPRIETARY DIRECTIVES (THE ENGINE) */}
+              {/* PROPRIETARY DIRECTIVES */}
               <section>
                 <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4">Proprietary_Directives</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
