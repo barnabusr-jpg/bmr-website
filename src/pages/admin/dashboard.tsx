@@ -3,12 +3,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
-  Shield, Zap, Binary, ZoomIn, Hammer 
+  Shield, Zap, Binary, ZoomIn, Hammer, Mail, FileText, X, Send 
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 // INTERNAL IP: THE BMR FRAMEWORKS & SERVICE TIERS
-// Restored exact IP from approved documentation
 const BMR_IP_SUITE = {
   directives: [
     { 
@@ -53,6 +52,11 @@ export default function AdminDashboard() {
   const [data, setData] = useState<any[]>([]);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
+  
+  // 🛡️ ACTION STATE
+  const [selectedAudit, setSelectedAudit] = useState<any>(null);
+  const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchLedger = useCallback(async () => {
     const { data: audits } = await supabase.from('audits').select('*').order('created_at', { ascending: false });
@@ -68,6 +72,28 @@ export default function AdminDashboard() {
     if (expandedRow === auditId) { setExpandedRow(null); return; }
     setExpandedRow(auditId);
     await refreshActiveNodes(auditId);
+  };
+
+  const triggerActivation = async () => {
+    if (!selectedAudit || isUpdating) return;
+    setIsUpdating(true);
+    try {
+      const res = await fetch('/api/dispatch-directives', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orgName: selectedAudit.org_name,
+          parentAuditId: selectedAudit.id,
+          emails: { EXECUTIVE: emails.exec, MANAGERIAL: emails.mgr, TECHNICAL: emails.tech }
+        })
+      });
+      if (res.ok) {
+        setSelectedAudit(null);
+        setEmails({ exec: "", mgr: "" , tech: "" });
+        fetchLedger();
+      }
+    } catch (e) { console.error("DISPATCH_ERROR:", e); }
+    finally { setIsUpdating(false); }
   };
 
   useEffect(() => {
@@ -109,6 +135,26 @@ export default function AdminDashboard() {
           </div>
         </div>
       </nav>
+
+      {/* DISPATCH OVERLAY */}
+      <AnimatePresence>
+        {selectedAudit && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative">
+              <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
+              <h2 className="text-4xl font-black uppercase italic text-white mb-8 tracking-tighter">DISPATCH_DIRECTIVES</h2>
+              <div className="space-y-4">
+                <input placeholder="EXECUTIVE_EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-black border border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
+                <input placeholder="MANAGERIAL_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-black border border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
+                <input placeholder="TECHNICAL_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-black border border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none" />
+                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-8 font-black uppercase italic tracking-widest mt-4">
+                  {isUpdating ? "SYNCING..." : "ACTIVATE_TRIANGULATION"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <main className="pt-40 px-10 max-w-7xl mx-auto pb-32 text-left">
         <AnimatePresence mode="wait">
@@ -155,6 +201,22 @@ export default function AdminDashboard() {
                                 );
                               })}
                             </div>
+                            
+                            {/* ⚡ RESTORED ACTION DIRECTIVES BAR */}
+                            <div className="flex justify-between items-center border-t border-slate-900 pt-10 mt-8">
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }}
+                                className="bg-red-600 text-white px-8 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-3"
+                              >
+                                <Mail size={16} /> RE-DISPATCH_PROTOCOL
+                              </button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }}
+                                className="bg-white text-black px-10 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3"
+                              >
+                                <FileText size={18} /> GENERATE_FORENSIC_DOSSIER
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       )}
@@ -166,7 +228,6 @@ export default function AdminDashboard() {
           ) : (
             <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-20">
               
-              {/* SUB-SECTION: SERVICE TIERS (THE HOOK) */}
               <section>
                 <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4">Public_Service_Mapping</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -181,7 +242,6 @@ export default function AdminDashboard() {
                 </div>
               </section>
 
-              {/* SUB-SECTION: PROPRIETARY DIRECTIVES (THE ENGINE) */}
               <section>
                 <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4">Proprietary_Directives</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
