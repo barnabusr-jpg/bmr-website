@@ -1,8 +1,6 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-// 🛠️ CRITICAL: Using 'next/router' for Pages Router compatibility
-import { useRouter } from 'next/router'; 
 import { usePathname } from 'next/navigation';
 import { ShieldAlert, ArrowRight, Menu, X } from 'lucide-react';
 
@@ -13,18 +11,20 @@ const NAV_LINKS = [
 ];
 
 export default function Header() {
-  const router = useRouter();
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
-  // 🛡️ Fail-safe navigation function
-  const handleDiagnosticClick = () => {
-    if (router && typeof router.push === 'function') {
-      router.push('/pulse-check');
-    } else {
-      window.location.href = '/pulse-check';
+  // Ensure component is mounted to prevent hydration flickers
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // 🛡️ HARD NAV: Direct browser redirect to bypass Router conflicts
+  const forceNavigate = (path: string) => {
+    if (typeof window !== 'undefined') {
+      window.location.href = path;
     }
-    setIsMobileMenuOpen(false);
   };
 
   return (
@@ -61,17 +61,17 @@ export default function Header() {
         })}
       </nav>
 
-      {/* ACTION BUTTON (DESKTOP) */}
+      {/* ⚡ ACTION BUTTON: Switched to onClick for maximum reliability */}
       <button 
-        onClick={handleDiagnosticClick}
-        className="hidden md:flex items-center gap-3 bg-red-600 text-white px-7 py-3 font-black uppercase tracking-[0.15em] text-[10px] hover:bg-white hover:text-black transition-all rounded-sm"
+        onClick={() => forceNavigate('/pulse-check')}
+        className="hidden md:flex items-center gap-3 bg-red-600 text-white px-7 py-3 font-black uppercase tracking-[0.15em] text-[10px] hover:bg-white hover:text-black transition-all rounded-sm border-none cursor-pointer"
       >
         INITIATE_DIAGNOSTIC <ArrowRight size={14} />
       </button>
 
       {/* MOBILE MENU TOGGLE */}
       <button 
-        className="md:hidden text-white"
+        className="md:hidden text-white bg-transparent border-none outline-none"
         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
       >
         {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
@@ -91,8 +91,8 @@ export default function Header() {
             </Link>
           ))}
           <button 
-            onClick={handleDiagnosticClick}
-            className="w-full bg-red-600 text-white py-5 font-black uppercase tracking-widest text-[10px]"
+            onClick={() => forceNavigate('/pulse-check')}
+            className="w-full bg-red-600 text-white py-5 font-black uppercase tracking-widest text-[10px] border-none"
           >
             INITIATE_DIAGNOSTIC
           </button>
