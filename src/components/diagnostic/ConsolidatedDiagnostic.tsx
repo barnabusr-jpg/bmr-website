@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Lock, Unlock } from "lucide-react";
@@ -32,7 +31,6 @@ export default function ConsolidatedDiagnostic() {
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState("finance");
   const [selectedLens, setSelectedLens] = useState<string | null>(null); 
-  const [aiSpend, setAiSpend] = useState(1.2);
   const [operatorName, setOperatorName] = useState("");
   const [entityName, setEntityName] = useState("");
   const [email, setEmail] = useState("");
@@ -45,32 +43,25 @@ export default function ConsolidatedDiagnostic() {
 
   const getLiveMetrics = () => {
     const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
-    // 🛡️ Forensic Scalar: Converts raw weights into the decimal factor used by the id.tsx engine
     const scaledTotal = (totalSum * 0.04);
-    // 🛡️ Decay Calculation: Maps total weights to a percentage of structural logic shear
     const decayRaw = Math.round((1 - (1 / (1 + (totalSum * 0.05) / 10))) * 100);
     return { decay: Math.min(decayRaw, 98), rework: scaledTotal.toFixed(2) };
   };
 
   const logToDatabase = async (finalMetrics: any) => {
     try {
-      const { data: ent } = await supabase.from('entities')
-        .upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' })
-        .select().single();
-
+      const { data: ent } = await supabase.from('entities').upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' }).select().single();
       const { data: auditData, error: auditError } = await supabase.from('audits').insert([{ 
         org_name: entityName.toUpperCase(),
         lead_email: email.toLowerCase(),
         sector: sector,
-        ai_spend: aiSpend,
+        ai_spend: 1.2,
         decay_pct: finalMetrics.decay,
         rework_tax: parseFloat(finalMetrics.rework),
         raw_responses: answers,
         status: 'TRIANGULATION_ACTIVE' 
       }]).select().single();
-
       if (auditError) throw auditError;
-
       await supabase.from('operators').upsert({ 
         email: email.toLowerCase(), 
         full_name: operatorName.toUpperCase(), 
@@ -80,12 +71,8 @@ export default function ConsolidatedDiagnostic() {
         status: 'COMPLETED',
         raw_responses: answers
       }, { onConflict: 'email,audit_id' });
-      
       return auditData.id;
-    } catch (e) { 
-      console.error("FORENSIC_SYNC_ERROR:", e);
-      return null; 
-    }
+    } catch (e) { return null; }
   };
 
   if (!mounted) return null;
@@ -93,24 +80,19 @@ export default function ConsolidatedDiagnostic() {
   return (
     <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left">
       <AnimatePresence mode="wait">
-        {isLoading && (
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/95 z-[9999] flex flex-col items-center justify-center text-red-600"
-          >
-            <Activity className="animate-spin mb-4" size={64} />
-            <p className="font-black italic uppercase tracking-[0.5em] text-sm">Synthesizing_Forensic_Data...</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence mode="wait">
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-16 text-center">
-            <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">THE LOGIC <span className="text-red-600">PULSE CHECK</span></h1>
+            <div className="space-y-4">
+              <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">
+                AI <span className="text-red-600">EFFICIENCY</span> AUDIT
+              </h1>
+              <p className="max-w-2xl mx-auto text-slate-400 text-lg font-medium italic leading-relaxed">
+                Most AI systems leak capital through manual rework. Identify your Operational Focus to begin.
+              </p>
+            </div>
             
-            <div className="max-w-3xl mx-auto">
-              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.4em] mb-8 font-black italic">Select Active Operational Node</p>
+            <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
+              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-8 font-black italic underline decoration-2 underline-offset-8">Step 1: Select Your Perspective</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
                     { id: "EXECUTIVE", label: "EXECUTIVE", desc: "Fiduciary & Governance" },
@@ -123,7 +105,7 @@ export default function ConsolidatedDiagnostic() {
                         className={`p-8 border-2 flex flex-col items-center gap-3 transition-all ${selectedLens === node.id ? 'bg-red-600 border-red-600 text-white shadow-[0_0_30px_rgba(220,38,38,0.4)] scale-105' : 'bg-slate-950 border-slate-900 text-slate-500 hover:border-slate-700'}`}
                       >
                         {selectedLens === node.id ? <Unlock size={20} /> : <Lock size={20} />}
-                        <span className="font-black italic text-md tracking-[0.1em] uppercase leading-none">{node.label}</span>
+                        <span className="font-black italic text-md tracking-[0.1em] uppercase">{node.label}</span>
                         <span className="text-[9px] font-mono uppercase opacity-60 font-bold">{node.desc}</span>
                       </button>
                   ))}
@@ -136,7 +118,7 @@ export default function ConsolidatedDiagnostic() {
                   key={s.id} 
                   disabled={!selectedLens}
                   onClick={() => { setSector(s.id); setStep("intake"); }} 
-                  className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-52 group disabled:opacity-20 disabled:grayscale"
+                  className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-52 group disabled:opacity-20"
                 >
                   <div className="text-red-600 transition-transform group-hover:scale-110">{s.icon}</div>
                   <div>
@@ -150,34 +132,16 @@ export default function ConsolidatedDiagnostic() {
         )}
 
         {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12 text-center">
+          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
             <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white italic">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
             <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-8 text-left">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-bold italic">Operator_Identity</label>
-                  <input placeholder="FULL NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-bold italic">Entity_Signal</label>
-                  <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-bold italic">Secure_Channel</label>
-                  <input placeholder="EMAIL ADDRESS" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-bold italic">Verification</label>
-                  <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
-                </div>
+                <input placeholder="FULL NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
+                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
+                <input placeholder="EMAIL ADDRESS" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
+                <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
               </div>
-              <button 
-                disabled={!operatorName || !email || email !== confirmEmail} 
-                onClick={() => setStep("audit")} 
-                className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-2xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-4 shadow-lg shadow-red-600/10"
-              >
-                Initialize Observation
-              </button>
+              <button disabled={!operatorName || email !== confirmEmail || !email} onClick={() => setStep("audit")} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-2xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-4 shadow-lg shadow-red-600/10">Initialize Observation</button>
             </div>
           </motion.div>
         )}
@@ -185,7 +149,7 @@ export default function ConsolidatedDiagnostic() {
         {step === 'audit' && (
           <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left">
             <div className="flex items-center gap-4 text-red-600 font-black uppercase tracking-[0.5em] text-[11px] border-l-4 border-red-600 pl-4 leading-none">
-              <Activity size={18} className="animate-pulse" /> SEGMENT_0{currentDimension + 1} // {selectedLens}
+              <Activity size={18} className="animate-pulse" /> CASE_FILE: BMR-2026-SEG_0{currentDimension + 1}
             </div>
             <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[180px] tracking-tighter">
               {LOCAL_QUESTIONS[currentDimension]?.text}
