@@ -7,41 +7,42 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🏛️ 2.0 PROPRIETARY IP SUITE (MATCHED TO MAIN)
+// 🏛️ INTERNAL IP: THE BMR FRAMEWORKS & SERVICE TIERS
 const BMR_IP_SUITE = {
   directives: [
     { 
       id: "DIR_01", 
       label: "IMMEDIATE HARDENING", 
       price: "$45K - $75K",
-      description: "Identify where capital is leaking. Analyze alignment between nodes to isolate systemic rot without perimeter compromise.", 
+      description: "The engine identifies where capital is leaking right now. We analyze the alignment between organizational nodes. This identifies systemic rot without compromising your security perimeter.", 
       color: "text-red-600" 
     },
     { 
       id: "DIR_02", 
       label: "STRUCTURAL ALIGNMENT", 
       price: "$150K",
-      description: "Rebuild logic connecting operational layers. Ensure executive intent matches technical execution to stop capital leaks.", 
+      description: "The system rebuilds the logic that connects your operational layers. We ensure that executive intent matches technical execution to stop capital leaks.", 
       color: "text-blue-500" 
     },
     { 
       id: "DIR_03", 
       label: "GOVERNANCE OVERLAY", 
       price: "$25K/MO",
-      description: "Develop new rule sets to protect fiduciary leadership. Establishes financial and operational safety.", 
+      description: "Developing new organizational rule sets to protect fiduciary leadership and technical staff. This creates a state of financial and operational safety.", 
       color: "text-purple-500" 
     },
     { 
       id: "DIR_04", 
       label: "FORENSIC CONTINUITY", 
-      description: "Monitoring structural health through specialized reporting. Detects variance before the rework tax accrues.", 
+      // 🛡️ UNPRICED PER ADMIN SPEC
+      description: "Monitoring structural health through specialized reporting cadence. If a variance starts to grow, the system will detect it before the rework tax accrues.", 
       color: "text-green-500" 
     }
   ],
   services: [
-    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit. Locating 'Log Rot' before it hardens." },
-    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols. Building safeguards against value leakage." },
-    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in collapse. Stabilizing long-term defensibility." }
+    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments. Locating 'Log Rot' before it hardens." },
+    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols. Building safeguards to prevent value leakage." },
+    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse. Stabilizing long-term defensibility." }
   ]
 };
 
@@ -81,6 +82,7 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
 
+  // 🛡️ SECURITY GATE
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 italic">
@@ -100,7 +102,7 @@ export default function AdminDashboard() {
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3">
             <Activity className="text-red-600 animate-pulse" size={24} />
-            <span className="text-white font-black uppercase tracking-[0.2em] text-sm font-mono">FORENSIC_COMMAND_CENTER</span>
+            <span className="text-white font-black uppercase italic tracking-[0.2em] text-sm font-mono">FORENSIC_COMMAND_CENTER</span>
           </div>
           <div className="flex gap-1 bg-slate-900 p-1">
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Live_Ledger</button>
@@ -109,7 +111,7 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 font-sans">
+      <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32">
         <AnimatePresence mode="wait">
           {activeTab === 'ledger' ? (
             <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
@@ -137,70 +139,66 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   
-                  <AnimatePresence>
-                    {expandedRow === audit.id && (
-                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                        <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20">
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10 mb-10">
-                            {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((role) => {
-                              const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role);
-                              const isDone = node?.status?.toLowerCase() === 'completed';
-                              return (
-                                <div key={role} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[160px] flex flex-col justify-between">
-                                  <div className="flex justify-between items-start">
-                                    <span className="text-[10px] font-mono text-slate-600 font-black tracking-widest italic">{role}_NODE</span>
-                                    {isDone ? <CheckCircle className="text-red-600" size={18}/> : <Clock className="text-slate-800" size={18}/>}
-                                  </div>
-                                  <div className={`text-5xl font-black italic uppercase tracking-tighter ${isDone ? 'text-white' : 'text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="flex justify-between items-center border-t border-slate-900/50 pt-10">
-                            <div className="flex gap-4">
-                               <button className="bg-red-600/80 text-white px-8 py-5 font-black uppercase italic text-[11px] tracking-widest hover:bg-red-600 flex items-center gap-3"><Mail size={18} /> RE-DISPATCH_PROTOCOL</button>
-                               <button className="bg-[#b48c3b] text-black px-8 py-5 font-black uppercase italic text-[11px] tracking-widest hover:bg-yellow-500 flex items-center gap-3"><Zap size={18} /> FORCE_SYNTHESIS</button>
+                  {expandedRow === audit.id && (
+                    <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-10 mb-10">
+                        {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((role) => {
+                          const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role);
+                          const isDone = node?.status?.toLowerCase() === 'completed';
+                          return (
+                            <div key={role} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[160px] flex flex-col justify-between">
+                              <div className="flex justify-between items-start">
+                                <span className="text-[10px] font-mono text-slate-600 font-black tracking-widest italic">{role}_NODE</span>
+                                {isDone ? <CheckCircle className="text-red-600" size={18}/> : <Clock className="text-slate-800" size={18}/>}
+                              </div>
+                              <div className={`text-5xl font-black italic uppercase tracking-tighter ${isDone ? 'text-white' : 'text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
                             </div>
-                            <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="bg-white text-black px-12 py-5 font-black uppercase italic text-[11px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl"><FileText size={20} /> GENERATE_FORENSIC_DOSSIER</button>
-                          </div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex justify-between items-center border-t border-slate-900/50 pt-10">
+                        <div className="flex gap-4">
+                           <button className="bg-red-600/80 text-white px-8 py-5 font-black uppercase italic text-[11px] tracking-widest hover:bg-red-600 flex items-center gap-3"><Mail size={18} /> RE-DISPATCH_PROTOCOL</button>
+                           <button className="bg-[#b48c3b] text-black px-8 py-5 font-black uppercase italic text-[11px] tracking-widest hover:bg-yellow-500 flex items-center gap-3"><Zap size={18} /> FORCE_SYNTHESIS</button>
                         </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
+                        <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="bg-white text-black px-12 py-5 font-black uppercase italic text-[11px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl"><FileText size={20} /> GENERATE_FORENSIC_DOSSIER</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
             </motion.div>
           ) : (
-            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-20">
+            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-20">
               <section>
-                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4">Public_Service_Mapping</h3>
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic">Public_Service_Mapping</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {BMR_IP_SUITE.services.map((s) => (
-                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20">
+                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
                       <div className="text-red-600 mb-6">{s.icon}</div>
-                      <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">{s.tier}</span>
-                      <h4 className="text-2xl font-black italic uppercase text-white mt-2 mb-4 leading-none">{s.title}</h4>
-                      <p className="text-xs text-slate-400 uppercase font-bold leading-relaxed">{s.description}</p>
+                      <span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest italic">{s.tier}</span>
+                      <h4 className="text-2xl font-black italic uppercase text-white mt-2 mb-4 leading-none italic">{s.title}</h4>
+                      <p className="text-xs text-slate-400 uppercase font-bold leading-relaxed italic">{s.description}</p>
                     </div>
                   ))}
                 </div>
               </section>
 
               <section>
-                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4">Proprietary_Directives</h3>
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic">Proprietary_Directives</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {BMR_IP_SUITE.directives.map((d) => (
-                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden">
+                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
                       <div className="absolute top-0 right-0 p-4 opacity-10"><Binary className={d.color} size={40} /></div>
                       <div className="flex justify-between items-start mb-10">
                         <div className="space-y-2">
-                          <span className={`text-[10px] font-mono font-black tracking-widest ${d.color}`}>PROTOCOL // {d.id}</span>
-                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">{d.label}</h2>
+                          <span className={`text-[10px] font-mono font-black tracking-widest ${d.color} italic`}>PROTOCOL // {d.id}</span>
+                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
                         </div>
-                        {d.price && <div className="bg-red-600 text-white px-6 py-2 text-xs font-black italic tracking-widest">{d.price}</div>}
+                        {d.price && <div className="bg-red-600 text-white px-6 py-2 text-xs font-black italic tracking-widest italic">{d.price}</div>}
                       </div>
-                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium">{d.description}</p>
-                      <div className="pt-8 border-t border-slate-900 flex items-center gap-3 text-slate-600 font-mono text-[10px] uppercase tracking-widest">
+                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium italic">{d.description}</p>
+                      <div className="pt-8 border-t border-slate-900 flex items-center gap-3 text-slate-600 font-mono text-[10px] uppercase tracking-widest italic">
                         <Shield size={14} /> Fiduciary_Encryption_Active
                       </div>
                     </div>
