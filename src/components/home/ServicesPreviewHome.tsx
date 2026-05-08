@@ -19,7 +19,7 @@ export default function ServicesPreviewHome() {
           </h2>
         </div>
 
-        {/* 🛡️ BORDER FIX: bg-slate-900 acts as the border color between items */}
+        {/* 🛡️ FIX: gap-[2px] with bg-slate-900 ensures borders are consistent under all cards */}
         <div className="grid md:grid-cols-3 gap-[2px] bg-slate-900 border-[2px] border-slate-900">
           {SERVICES.map((service, index) => (
             <Link key={index} href={service.href} className="group block no-underline bg-[#020617] h-full">
@@ -32,7 +32,6 @@ export default function ServicesPreviewHome() {
                     </div>
                     <span className="text-[10px] font-mono font-black text-slate-700 tracking-[0.4em] uppercase">{service.tier}</span>
                   </div>
-                  {/* 🛡️ FONT SCALE: ensure 'FORENSIC' fits in the landing grid */}
                   <h3 className="text-4xl lg:text-5xl font-black text-white italic uppercase tracking-tighter group-hover:text-red-600 transition-colors leading-none">
                     {service.title}
                   </h3>
