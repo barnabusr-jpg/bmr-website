@@ -7,22 +7,59 @@ import InsightsHome from "@/components/home/InsightsHome";
 import OutcomesHome from "@/components/home/OutcomesHome";
 import ComparisonGrid from "@/components/home/ComparisonGrid";
 import ServicesPreviewHome from "@/components/home/ServicesPreviewHome";
-import { Shield } from "lucide-react";
+import { Shield, ArrowRight, TrendingUp, Activity, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 
 export default function Home() {
   const router = useRouter();
 
   return (
     <div className="min-h-screen bg-[#020617] flex flex-col selection:bg-red-600/30 relative overflow-x-hidden w-full">
-      {/* 🧭 NAVIGATION LOCK */}
       <Header />
       
-      {/* 🧪 THE CORE ENGINE */}
       <main className="flex-grow w-full pt-24 md:pt-0">
-        {/* Note: If HeroHome is still too wide, the header will remain clipped */}
+        {/* HERO SECTION - REFRAMED FOR CAPITAL RECOVERY */}
         <HeroHome />
-        <InsightsHome />
+
+        {/* 🛡️ ACCESSIBLE EXECUTIVE SUMMARY BLOCK */}
+        <section className="py-24 px-6 bg-slate-950/50 border-y border-slate-900">
+          <div className="container mx-auto max-w-6xl">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { 
+                  icon: <Activity className="text-red-600" size={40} />, 
+                  title: "The Problem", 
+                  desc: "Unmonitored AI drift creates a 'Hidden Rework Tax' that drains engineering capacity and ROI." 
+                },
+                { 
+                  icon: <TrendingUp className="text-red-600" size={40} />, 
+                  title: "The Leak", 
+                  desc: "For every $1M spent, up to $400K is lost to manual intervention and validation loops." 
+                },
+                { 
+                  icon: <ShieldCheck className="text-red-600" size={40} />, 
+                  title: "The Shield", 
+                  desc: "Our 360° Triangulation hardens your roadmap and secures your fiduciary standing." 
+                }
+              ].map((card, i) => (
+                <motion.div 
+                  key={i} 
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.2 }}
+                  viewport={{ once: true }}
+                  className="bg-white p-12 shadow-[0_30px_60px_rgba(0,0,0,0.5)] border-l-[12px] border-red-600 group hover:-translate-y-3 transition-all duration-500"
+                >
+                  <div className="mb-8 transform group-hover:scale-110 transition-transform">{card.icon}</div>
+                  <h3 className="text-black text-2xl font-black uppercase italic mb-4 tracking-tighter">{card.title}</h3>
+                  <p className="text-slate-600 font-bold uppercase text-xs leading-relaxed italic tracking-tight">{card.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         <OutcomesHome />
         <ComparisonGrid />
         <ServicesPreviewHome />
@@ -30,12 +67,12 @@ export default function Home() {
 
       <Footer />
 
-      {/* 🛡️ ADMIN ACCESS: MOBILE-SAFE POSITIONING */}
+      {/* 🛡️ ADMIN ACCESS */}
       <div 
         onClick={() => router.push('/admin/dashboard')} 
-        className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[10000] cursor-crosshair w-10 h-10 flex items-center justify-center rounded-full border border-slate-800 bg-slate-950/80 backdrop-blur-md transition-all hover:border-red-600/50 group"
+        className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[10000] cursor-crosshair w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-800 bg-slate-950 shadow-2xl transition-all hover:border-red-600 group"
       >
-        <Shield size={12} className="text-slate-800 group-hover:text-red-600 transition-colors" />
+        <Shield size={16} className="text-slate-600 group-hover:text-red-600 transition-colors" />
       </div>
     </div>
   );
