@@ -9,7 +9,6 @@ export default function Footer() {
     <footer className="bg-[#020617] border-t border-slate-900 pt-24 pb-12 px-6 md:px-12 text-left">
       <div className="max-w-[1280px] mx-auto grid grid-cols-1 md:grid-cols-3 gap-16 md:gap-24 mb-24">
         
-        {/* COLUMN 1: MISSION & BRANDING */}
         <div className="space-y-8">
           <div className="flex items-center gap-4">
             <div className="w-8 h-[2px] bg-red-600" />
@@ -22,7 +21,6 @@ export default function Footer() {
           </p>
         </div>
 
-        {/* COLUMN 2: FORENSIC TIERS */}
         <div className="space-y-8">
           <h4 className="text-white font-black text-[10px] tracking-[0.5em] uppercase italic">Forensic_Tiers</h4>
           <ul className="space-y-4 font-mono text-[11px] text-slate-500 uppercase tracking-widest italic">
@@ -32,7 +30,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* COLUMN 3: SYSTEM STATUS */}
         <div className="space-y-8">
           <h4 className="text-white font-black text-[10px] tracking-[0.5em] uppercase italic">System_Status</h4>
           <div className="space-y-4 font-mono text-[11px] uppercase tracking-widest italic leading-loose">
@@ -49,10 +46,9 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* BOTTOM BAR: PROTOCOLS */}
       <div className="max-w-[1280px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-center border-t border-slate-900 pt-12 gap-8">
         <p className="text-slate-700 font-mono text-[9px] uppercase tracking-[0.4em] italic">
-          © {currentYear} BMR SOLUTIONS GLOBAL. PRIVACY PROTOCOLS ENABLED.
+          © {currentYear} BMR Solutions Global. Privacy Protocols Enabled.
         </p>
         <div className="flex gap-10 font-mono text-[9px] text-slate-700 uppercase tracking-[0.4em] italic">
           <Link href="/privacy" className="hover:text-white transition-colors no-underline">Privacy</Link>
