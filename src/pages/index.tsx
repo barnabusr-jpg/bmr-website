@@ -7,22 +7,20 @@ import InsightsHome from "@/components/home/InsightsHome";
 import OutcomesHome from "@/components/home/OutcomesHome";
 import ComparisonGrid from "@/components/home/ComparisonGrid";
 import ServicesPreviewHome from "@/components/home/ServicesPreviewHome";
-import { Shield, ArrowRight, TrendingUp, Activity, ShieldCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Shield, TrendingUp, Activity, ShieldCheck } from "lucide-react";
+import { useRouter } from "next/router";
 import { motion } from "framer-motion";
 
 export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] flex flex-col selection:bg-red-600/30 relative overflow-x-hidden w-full">
+    <div className="min-h-screen bg-[#020617] flex flex-col selection:bg-red-600/30 w-full font-sans">
       <Header />
-      
       <main className="flex-grow w-full pt-24 md:pt-0">
-        {/* HERO SECTION - REFRAMED FOR CAPITAL RECOVERY */}
         <HeroHome />
-
-        {/* 🛡️ ACCESSIBLE EXECUTIVE SUMMARY BLOCK */}
+        
+        {/* 🛡️ EXECUTIVE SUMMARY: HIGH-CONTRAST ACCESSIBILITY ISLAND */}
         <section className="py-24 px-6 bg-slate-950/50 border-y border-slate-900">
           <div className="container mx-auto max-w-6xl">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -48,31 +46,30 @@ export default function Home() {
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.2 }}
-                  viewport={{ once: true }}
-                  className="bg-white p-12 shadow-[0_30px_60px_rgba(0,0,0,0.5)] border-l-[12px] border-red-600 group hover:-translate-y-3 transition-all duration-500"
+                  className="bg-white p-12 shadow-2xl border-l-[12px] border-red-600"
                 >
-                  <div className="mb-8 transform group-hover:scale-110 transition-transform">{card.icon}</div>
-                  <h3 className="text-black text-2xl font-black uppercase italic mb-4 tracking-tighter">{card.title}</h3>
-                  <p className="text-slate-600 font-bold uppercase text-xs leading-relaxed italic tracking-tight">{card.desc}</p>
+                  <div className="mb-8">{card.icon}</div>
+                  <h3 className="text-black text-2xl font-black uppercase italic mb-4 tracking-tighter leading-none">{card.title}</h3>
+                  <p className="text-slate-600 font-bold uppercase text-[10px] leading-relaxed italic tracking-tight">{card.desc}</p>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
 
+        <InsightsHome />
         <OutcomesHome />
         <ComparisonGrid />
         <ServicesPreviewHome />
       </main>
-
       <Footer />
 
-      {/* 🛡️ ADMIN ACCESS */}
+      {/* ADMIN SHORTCUT */}
       <div 
         onClick={() => router.push('/admin/dashboard')} 
-        className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[10000] cursor-crosshair w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-800 bg-slate-950 shadow-2xl transition-all hover:border-red-600 group"
+        className="fixed bottom-10 right-10 z-[10000] cursor-crosshair w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-800 bg-slate-950 hover:border-red-600 transition-all group"
       >
-        <Shield size={16} className="text-slate-600 group-hover:text-red-600 transition-colors" />
+        <Shield size={16} className="text-slate-600 group-hover:text-red-600" />
       </div>
     </div>
   );
