@@ -99,21 +99,38 @@ export default function PulseCheck() {
 
         <AnimatePresence mode="wait">
           {step === 'triage' && (
-            <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-16 text-center">
-              <h1 className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter leading-none italic">AI <span className="text-red-600">EFFICIENCY</span> AUDIT</h1>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12">
-                {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => (
-                  <button key={node} onClick={() => setSelectedLens(node)} className={`p-10 border-2 flex flex-col items-center gap-3 transition-all ${selectedLens === node ? 'bg-red-600 border-red-600 shadow-2xl' : 'bg-slate-950 border-slate-900'}`}>
-                    {selectedLens === node ? <Unlock size={24} /> : <Lock size={24} />}
-                    <span className="font-black italic text-lg uppercase">{node}</span>
-                  </button>
-                ))}
+            <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-16 text-center">
+              <h1 className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter leading-none italic">AI <span className="text-red-600 italic">EFFICIENCY</span> AUDIT</h1>
+              
+              <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
+                <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic underline decoration-red-600/30 underline-offset-8">Step 1: Choose Operational Focus</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => (
+                    <button 
+                      key={node} 
+                      onClick={() => setSelectedLens(node)} 
+                      className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node ? 'bg-red-600 border-red-600 text-white shadow-[0_0_50px_rgba(220,38,38,0.3)] scale-105' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}
+                    >
+                      {selectedLens === node ? <Unlock size={28} /> : <Lock size={28} className="opacity-20 group-hover:opacity-100 transition-opacity" />}
+                      <span className="font-black italic text-xl tracking-[0.1em] uppercase">{node}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-10">
                 {sectors.map((s) => (
-                  <button key={s.id} disabled={!selectedLens} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-8 bg-slate-950 border-2 border-slate-900 hover:border-red-600 disabled:opacity-20 flex flex-col h-48 text-left justify-between">
-                    <div className="text-red-600">{s.icon}</div>
-                    <h3 className="text-2xl font-black uppercase italic">{s.label}</h3>
+                  <button 
+                    key={s.id} 
+                    disabled={!selectedLens} 
+                    onClick={() => { setSector(s.id); setStep("intake"); }} 
+                    className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-56 group disabled:opacity-20 disabled:grayscale"
+                  >
+                    <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
+                    <div>
+                      <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none italic">{s.label}</h3>
+                      <p className="text-[11px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2 italic">{s.risk}</p>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -121,23 +138,56 @@ export default function PulseCheck() {
           )}
 
           {step === 'intake' && (
-            <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="max-w-4xl mx-auto space-y-12">
-              <h2 className="text-5xl font-black uppercase italic text-center">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-              <div className="bg-slate-950 border border-slate-900 p-12 space-y-8">
-                <input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600" />
-                <input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b border-slate-800 p-6 text-white w-full uppercase outline-none focus:border-red-600" />
-                <button disabled={!operatorName || !email} onClick={() => setStep("audit")} className="w-full py-8 font-black uppercase italic bg-red-600 text-white tracking-widest text-2xl italic">Initialize Observation</button>
+            <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 text-center max-w-4xl mx-auto italic">
+              <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600 italic">REGISTRATION</span></h2>
+              <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Full Name</label>
+                    <input placeholder="OPERATOR_ID" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Organization</label>
+                    <input placeholder="ENTITY_NAME" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Email Address</label>
+                    <input placeholder="INTEL_CHANNEL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Confirm Email</label>
+                    <input placeholder="VERIFY_CHANNEL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  </div>
+                </div>
+                <button 
+                  disabled={!operatorName || !entityName || email !== confirmEmail || !email} 
+                  onClick={() => setStep("audit")} 
+                  className="w-full py-10 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-3xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-[0_20px_50px_rgba(220,38,38,0.2)] italic"
+                >
+                  Initialize Observation
+                </button>
               </div>
             </motion.div>
           )}
 
           {step === 'audit' && (
-            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 max-w-5xl mx-auto">
-              <div className="text-red-600 font-mono text-[10px] tracking-[0.4em] italic uppercase">CASE_BMR_2026_SEG_0{currentDimension + 1}</div>
-              <h2 className="text-4xl md:text-7xl font-black italic uppercase leading-none min-h-[200px]">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
+            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 max-w-5xl mx-auto italic">
+              <div className="flex flex-col md:flex-row md:items-center gap-6 mb-16 border-b border-slate-900 pb-8">
+                <div className="bg-red-600 text-white px-4 py-1">
+                  <p className="font-mono text-[10px] font-black tracking-[0.2em] uppercase italic">LIVE_SIGNAL_ACTIVE</p>
+                </div>
+                <div className="flex items-center gap-4 text-slate-500 font-mono text-[11px] font-bold tracking-[0.3em] uppercase italic">
+                  <Activity size={16} className="text-red-600 animate-pulse" />
+                  <span>CASE_FILE: BMR_2026_SEG_0{currentDimension + 1}</span>
+                  <span className="text-slate-800 italic">//</span>
+                  <span className="text-red-600/50">TRNGL_REF: {sector.toUpperCase()}_{selectedLens}</span>
+                </div>
+              </div>
+
+              <h2 className="text-4xl md:text-7xl font-black italic uppercase leading-none min-h-[200px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
               <div className="grid grid-cols-1 gap-4">
                 {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                  <button key={i} className="py-8 px-10 border-2 border-slate-900 bg-slate-950/40 hover:border-red-600 transition-all text-left uppercase font-black text-2xl flex justify-between items-center group" 
+                  <button key={i} className="py-8 px-10 border-2 border-slate-900 bg-slate-950/40 hover:border-red-600 transition-all text-left uppercase font-black text-2xl flex justify-between items-center group italic" 
                     onClick={async () => {
                       const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                       setAnswers(updatedAnswers);
@@ -150,7 +200,7 @@ export default function PulseCheck() {
                         else setIsLoading(false);
                       }
                     }}>
-                    {opt.label} <ChevronRight size={32} className="opacity-0 group-hover:opacity-100 transition-all" />
+                    {opt.label} <ChevronRight size={32} className="opacity-0 group-hover:opacity-100 transition-all text-red-600" />
                   </button>
                 ))}
               </div>
