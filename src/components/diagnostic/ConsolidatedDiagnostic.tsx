@@ -31,7 +31,6 @@ export default function ConsolidatedDiagnostic() {
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState("finance");
   const [selectedLens, setSelectedLens] = useState<string | null>(null); 
-  const [aiSpend, setAiSpend] = useState(1.2);
   const [operatorName, setOperatorName] = useState("");
   const [entityName, setEntityName] = useState("");
   const [email, setEmail] = useState("");
@@ -56,7 +55,7 @@ export default function ConsolidatedDiagnostic() {
         org_name: entityName.toUpperCase(),
         lead_email: email.toLowerCase(),
         sector: sector,
-        ai_spend: aiSpend,
+        ai_spend: 1.2,
         decay_pct: finalMetrics.decay,
         rework_tax: parseFloat(finalMetrics.rework),
         raw_responses: answers,
@@ -81,24 +80,19 @@ export default function ConsolidatedDiagnostic() {
   return (
     <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left">
       <AnimatePresence mode="wait">
-        {isLoading && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/95 z-[9999] flex flex-col items-center justify-center text-red-600">
-            <Activity className="animate-spin mb-4" size={64} />
-            <p className="font-black uppercase tracking-[0.5em] text-sm italic">Analyzing_Value_Leaks...</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence mode="wait">
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-16 text-center">
             <div className="space-y-4">
-              <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">AI <span className="text-red-600">EFFICIENCY</span> AUDIT</h1>
-              <p className="max-w-2xl mx-auto text-slate-400 text-lg font-medium italic leading-relaxed">Identify where your AI investment is leaking capital through manual rework and hidden errors.</p>
+              <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">
+                AI <span className="text-red-600">EFFICIENCY</span> AUDIT
+              </h1>
+              <p className="max-w-2xl mx-auto text-slate-400 text-lg font-medium italic leading-relaxed">
+                Most AI systems leak capital through manual rework. Identify your Operational Focus to begin.
+              </p>
             </div>
             
             <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
-              <p className="text-[10px] font-mono text-red-500 uppercase tracking-[0.4em] mb-8 font-black italic underline decoration-2 underline-offset-8">Select Your Operational Focus</p>
+              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-8 font-black italic underline decoration-2 underline-offset-8">Step 1: Select Your Perspective</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {[
                     { id: "EXECUTIVE", label: "EXECUTIVE", desc: "Fiduciary & Governance" },
@@ -118,7 +112,7 @@ export default function ConsolidatedDiagnostic() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {sectors.map((s) => (
                 <button 
                   key={s.id} 
@@ -126,7 +120,7 @@ export default function ConsolidatedDiagnostic() {
                   onClick={() => { setSector(s.id); setStep("intake"); }} 
                   className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-52 group disabled:opacity-20"
                 >
-                  <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
+                  <div className="text-red-600 transition-transform group-hover:scale-110">{s.icon}</div>
                   <div>
                     <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
                     <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest mt-1">{s.risk}</p>
@@ -139,38 +133,30 @@ export default function ConsolidatedDiagnostic() {
 
         {step === 'intake' && (
           <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
+            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white italic">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
             <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-8 text-left">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Operator Name</label>
-                  <input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Organization</label>
-                  <input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Intel Channel</label>
-                  <input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Verify Channel</label>
-                  <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors" />
-                </div>
+                <input placeholder="FULL NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
+                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
+                <input placeholder="EMAIL ADDRESS" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
+                <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
               </div>
-              <button disabled={!operatorName || email !== confirmEmail || !email} onClick={() => setStep("audit")} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-2xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-4">Initialize Observation</button>
+              <button disabled={!operatorName || email !== confirmEmail || !email} onClick={() => setStep("audit")} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-2xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-4 shadow-lg shadow-red-600/10">Initialize Observation</button>
             </div>
           </motion.div>
         )}
 
         {step === 'audit' && (
           <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left">
-            <div className="flex items-center gap-4 text-red-600 font-black uppercase tracking-[0.4em] text-[11px] border-l-4 border-red-600 pl-4"><Activity size={18} className="animate-pulse" /> SEGMENT_0{currentDimension + 1}</div>
-            <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[180px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
+            <div className="flex items-center gap-4 text-red-600 font-black uppercase tracking-[0.5em] text-[11px] border-l-4 border-red-600 pl-4 leading-none">
+              <Activity size={18} className="animate-pulse" /> CASE_FILE: BMR-2026-SEG_0{currentDimension + 1}
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[180px] tracking-tighter">
+              {LOCAL_QUESTIONS[currentDimension]?.text}
+            </h2>
             <div className="grid grid-cols-1 gap-4 mt-16">
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group" 
+                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group relative overflow-hidden" 
                   onClick={async () => {
                     const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                     setAnswers(updatedAnswers);
@@ -182,7 +168,7 @@ export default function ConsolidatedDiagnostic() {
                       if (auditId) window.location.href = `/results/${auditId}`;
                     }
                   }}>
-                    <span className="text-xl md:text-2xl italic">{opt.label}</span>
+                    <span className="text-xl md:text-2xl tracking-tight italic transition-transform group-hover:translate-x-2">{opt.label}</span>
                     <ChevronRight size={32} className="opacity-0 group-hover:opacity-100 transition-all text-red-600 -translate-x-4 group-hover:translate-x-0" />
                 </button>
               ))}
