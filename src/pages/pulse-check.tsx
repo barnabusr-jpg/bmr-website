@@ -9,7 +9,10 @@ export default function PulseCheck() {
   const router = useRouter();
 
   const handleStartAudit = (node: string) => {
-    router.push(`/assessment?node=${node.toLowerCase()}`);
+    // 🛡️ FIX: Redirecting to the 'diagnostic' folder and the node's specific page
+    // This assumes you have executive.tsx, managerial.tsx, and technical.tsx 
+    // inside your src/pages/diagnostic/ folder.
+    router.push(`/diagnostic/${node.toLowerCase()}`);
   };
 
   return (
