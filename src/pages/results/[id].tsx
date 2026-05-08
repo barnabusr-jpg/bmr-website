@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { Sliders, Users, Activity, Clock, ArrowRight, ShieldAlert, BarChart3 } from "lucide-react";
+import { Sliders, Users, Activity, ArrowRight, ShieldAlert, BarChart3 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function ForensicVerdict() {
@@ -40,11 +40,11 @@ export default function ForensicVerdict() {
       inactionPenalty: inactionPenalty,
       wasteRatio: reworkPercent * 100,
       ghostFTEs: Math.round(fteCount * reworkPercent),
-      riskLevel: dbDecay > 60 ? 'FRACTURED' : 'NOMINAL'
+      riskStatus: dbDecay > 60 ? 'FRACTURED' : 'STABLE'
     };
   }, [reportData, liveSpend, fteCount]);
 
-  if (loading) return <div className="bg-[#020617] min-h-screen text-red-600 p-20 font-mono italic animate-pulse text-center uppercase tracking-widest">Synthesizing_Verdict...</div>;
+  if (loading) return <div className="bg-[#020617] min-h-screen text-red-600 p-20 font-mono italic animate-pulse text-center">GENERATING_CASE_FILE...</div>;
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 py-12 px-6 font-sans text-left tracking-tight">
@@ -52,19 +52,23 @@ export default function ForensicVerdict() {
         
         <header className="flex justify-between items-end mb-12 border-b border-slate-900 pb-8">
           <div>
-            <h1 className="text-white text-5xl font-black uppercase italic tracking-tighter leading-none">AI <span className="text-red-600">EFFICIENCY</span> VERDICT</h1>
-            <p className="text-slate-500 font-mono text-[10px] mt-4 uppercase tracking-widest font-black italic">Ref ID: {id?.toString().slice(0,8).toUpperCase()} // Status: {activeMetrics?.riskLevel}</p>
+            <h1 className="text-white text-5xl font-black uppercase italic tracking-tighter leading-none">
+              AI <span className="text-red-600">EFFICIENCY</span> VERDICT
+            </h1>
+            <p className="text-slate-500 font-mono text-[10px] mt-4 uppercase tracking-[0.3em] font-black italic">
+              CASE_FILE: BMR-2026-{id?.toString().slice(0,4).toUpperCase()} // STATUS: {activeMetrics?.riskStatus}
+            </p>
           </div>
           <BarChart3 className="text-slate-800 hidden md:block" size={48} />
         </header>
 
-        {/* 🛡️ HIGH CONTRAST EXECUTIVE SUMMARY */}
-        <div className="bg-white p-10 mb-12 border-l-[12px] border-red-600 shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
+        {/* 🛡️ EXECUTIVE SUMMARY CARD (HIGH ACCESSIBILITY) */}
+        <div className="bg-white p-10 mb-12 border-l-[12px] border-red-600 shadow-[0_20px_60px_rgba(0,0,0,0.5)]">
           <h2 className="text-black text-3xl font-black uppercase italic mb-8 tracking-tighter">Executive Summary</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-slate-800">
             <div className="space-y-2">
               <span className="text-[10px] font-black uppercase text-red-600 tracking-widest font-mono">Operational Leak</span>
-              <p className="text-sm font-bold leading-snug uppercase italic">Your team is losing <span className="text-red-600">{activeMetrics?.wasteRatio.toFixed(0)}%</span> of capacity to manual rework and drift.</p>
+              <p className="text-sm font-bold leading-snug uppercase italic">Your team is losing <span className="text-red-600">{activeMetrics?.wasteRatio.toFixed(0)}%</span> capacity to manual rework and drift.</p>
             </div>
             <div className="space-y-2">
               <span className="text-[10px] font-black uppercase text-red-600 tracking-widest font-mono">Financial Tax</span>
@@ -77,49 +81,52 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12">
-          <div className="bg-slate-950 border border-slate-900 p-10">
-            <div className="text-6xl font-black italic text-white">${activeMetrics?.totalTax.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
-            <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-black italic">Hidden Labor Waste / Year</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-12 text-center md:text-left">
+          <div className="bg-slate-950 border border-slate-900 p-10 flex flex-col justify-center">
+            <div className="text-5xl md:text-6xl font-black italic text-white leading-none tracking-tighter">
+              ${activeMetrics?.totalTax.toLocaleString(undefined, {maximumFractionDigits:0})}
+            </div>
+            <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-4 font-black italic">Annual Hidden Labor Waste</div>
           </div>
-          <div className="bg-red-950/20 border border-red-600/50 p-10">
-            <div className="text-6xl font-black text-red-500 leading-none italic">${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
+          <div className="bg-red-950/20 border border-red-600/50 p-10 flex flex-col justify-center border-l-8 border-l-red-600">
+            <div className="text-5xl md:text-6xl font-black text-red-500 leading-none italic tracking-tighter">
+              ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
+            </div>
             <div className="text-[10px] font-mono text-red-400 uppercase font-black tracking-widest mt-4 italic">Total Capital Exposure</div>
           </div>
         </div>
 
-        {/* GHOST FTE BLOCK */}
         <div className="bg-slate-950 border border-slate-900 p-10 mb-12 flex items-center gap-8 relative overflow-hidden group">
-            <ShieldAlert size={80} className="text-red-600 absolute right-10 opacity-10 group-hover:opacity-30 transition-opacity" />
+            <ShieldAlert size={80} className="text-red-600 absolute right-10 opacity-10" />
             <div className="relative z-10">
                 <div className="text-5xl font-black italic text-white mb-2">{activeMetrics?.wasteRatio.toFixed(0)}%</div>
-                <div className="text-[10px] font-mono text-red-600 uppercase font-black tracking-widest mb-6 italic italic">Engineering Waste Ratio</div>
-                <p className="text-xs text-slate-400 font-mono uppercase tracking-tight leading-relaxed max-w-xl font-black italic">
-                    Your team of <span className="text-white">{fteCount} engineers</span> is spending {activeMetrics?.wasteRatio.toFixed(0)}% capacity on manual fixes—equivalent to losing <span className="text-red-500">{activeMetrics?.ghostFTEs} full-time salaries</span> to drift.
+                <div className="text-[10px] font-mono text-red-600 uppercase font-black tracking-widest mb-6 italic">Engineering Waste Ratio</div>
+                <p className="text-[13px] text-slate-400 font-mono uppercase tracking-tight leading-relaxed max-w-xl font-bold italic">
+                    Your team of <span className="text-white">{fteCount} engineers</span> is spending capacity on manual fixes—equivalent to losing <span className="text-red-500">{activeMetrics?.ghostFTEs} full-time salaries</span> to system drift.
                 </p>
             </div>
         </div>
 
         <div className="bg-slate-900/30 border border-slate-800 p-10 space-y-12 mb-12 rounded-lg">
-          <div className="flex items-center gap-3 text-red-600"><Sliders size={20} /><h3 className="text-[10px] font-mono font-black uppercase tracking-[0.4em] italic">Exposure Simulator</h3></div>
+          <div className="flex items-center gap-3 text-red-600"><Sliders size={20} /><h3 className="text-[10px] font-mono font-black uppercase tracking-[0.4em] italic">Forensic Simulator</h3></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div className="space-y-4">
-              <div className="flex justify-between items-end"><span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-black italic">AI_Investment</span><span className="text-xl font-black italic text-white">${liveSpend.toFixed(1)}M</span></div>
+              <div className="flex justify-between items-end"><span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-black italic italic">Capital_Spend</span><span className="text-xl font-black italic text-white">${liveSpend.toFixed(1)}M</span></div>
               <input type="range" min="0.1" max="50" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
             </div>
             <div className="space-y-4">
-              <div className="flex justify-between items-end"><span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-black italic">Headcount</span><span className="text-xl font-black italic text-white">{fteCount} FTEs</span></div>
+              <div className="flex justify-between items-end"><span className="text-[10px] font-mono text-slate-400 uppercase tracking-widest font-black italic italic">Headcount</span><span className="text-xl font-black italic text-white">{fteCount} FTEs</span></div>
               <input type="range" min="1" max="200" step="1" value={fteCount} onChange={(e) => setFteCount(parseInt(e.target.value))} className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-red-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white p-12 flex flex-col md:flex-row justify-between items-center gap-8 group cursor-pointer hover:bg-slate-100 transition-all border-l-[12px] border-red-600" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}>
+        <div className="bg-white p-12 flex flex-col md:flex-row justify-between items-center gap-8 group cursor-pointer hover:bg-slate-100 transition-all border-l-[12px] border-red-600 shadow-2xl" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}>
           <div className="text-left">
             <h4 className="text-black text-4xl font-black italic uppercase tracking-tighter leading-none">Eradicate the Tax</h4>
-            <p className="text-slate-600 text-[11px] font-black uppercase tracking-widest mt-4 italic leading-relaxed max-w-md">Schedule your clinical briefing to harden your system and recover lost engineering capacity.</p>
+            <p className="text-slate-600 text-[12px] font-bold uppercase tracking-widest mt-4 italic leading-relaxed max-w-md">Schedule your clinical briefing to recover lost capacity.</p>
           </div>
-          <div className="bg-red-600 text-white p-6 group-hover:scale-110 transition-transform"><ArrowRight size={32} /></div>
+          <div className="bg-red-600 text-white p-6 group-hover:translate-x-2 transition-transform"><ArrowRight size={32} /></div>
         </div>
       </div>
     </div>
