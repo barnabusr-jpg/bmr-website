@@ -1,9 +1,12 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Lock, Unlock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
+// 🏛️ 2.0 HARDENED QUESTION SET
 const LOCAL_QUESTIONS = [
   { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
   { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
@@ -26,7 +29,7 @@ const sectors = [
   { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
 ];
 
-export default function ConsolidatedDiagnostic() {
+export default function PulseCheck() {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState("finance");
@@ -61,7 +64,9 @@ export default function ConsolidatedDiagnostic() {
         raw_responses: answers,
         status: 'TRIANGULATION_ACTIVE' 
       }]).select().single();
+      
       if (auditError) throw auditError;
+
       await supabase.from('operators').upsert({ 
         email: email.toLowerCase(), 
         full_name: operatorName.toUpperCase(), 
@@ -71,130 +76,177 @@ export default function ConsolidatedDiagnostic() {
         status: 'COMPLETED',
         raw_responses: answers
       }, { onConflict: 'email,audit_id' });
+
       return auditData.id;
-    } catch (e) { return null; }
+    } catch (e) { 
+      console.error("Database Log Error:", e);
+      return null; 
+    }
   };
 
   if (!mounted) return null;
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left">
-      <AnimatePresence mode="wait">
-        {isLoading && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/98 z-[9999] flex flex-col items-center justify-center text-red-600">
-            <Activity className="animate-spin mb-4" size={64} />
-            <p className="font-black uppercase tracking-[0.5em] text-sm italic">SYNTHESIZING_VALUE_LEAKS...</p>
-          </motion.div>
-        )}
-      </AnimatePresence>
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden">
+      <Header />
+      
+      <main className="max-w-6xl mx-auto py-40 px-6 relative min-h-[900px] text-left">
+        <AnimatePresence mode="wait">
+          {isLoading && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/98 z-[9999] flex flex-col items-center justify-center text-red-600">
+              <Activity className="animate-spin mb-4" size={64} />
+              <p className="font-black uppercase tracking-[0.5em] text-sm italic">SYNTHESIZING_VALUE_LEAKS...</p>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <AnimatePresence mode="wait">
-        {step === 'triage' && (
-          <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-16 text-center">
-            <div className="space-y-4">
-              <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">
-                AI <span className="text-red-600 font-black">EFFICIENCY</span> AUDIT
-              </h1>
-              <p className="max-w-2xl mx-auto text-slate-400 text-lg font-medium italic leading-relaxed">Most AI deployments leak capital through manual rework. Select your node to begin the forensic pulse check.</p>
-            </div>
-            
-            <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
-              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic">Step 1: Choose Operational Focus</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <AnimatePresence mode="wait">
+          {/* STEP 1: TRIAGE (Lens & Sector Selection) */}
+          {step === 'triage' && (
+            <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-16 text-center">
+              <div className="space-y-4">
+                <h1 className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter text-white leading-none italic">
+                  AI <span className="text-red-600 font-black italic">EFFICIENCY</span> AUDIT
+                </h1>
+                <p className="max-w-2xl mx-auto text-slate-400 text-lg md:text-2xl font-bold italic leading-relaxed uppercase">
+                   Most AI deployments leak capital through manual rework. Identify your Operational Focus to begin.
+                </p>
+              </div>
+              
+              <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
+                <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic underline decoration-red-600/30 underline-offset-8">
+                  Step 1: Choose Operational Focus
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {[
                     { id: "EXECUTIVE", label: "EXECUTIVE", desc: "Fiduciary & Governance" },
                     { id: "MANAGER", label: "MANAGERIAL", desc: "Operational Efficiency" },
                     { id: "TECHNICAL", label: "TECHNICAL", desc: "Structural Execution" }
                   ].map((node) => (
-                      <button 
-                        key={node.id} 
-                        onClick={() => setSelectedLens(node.id)} 
-                        className={`p-10 border-2 flex flex-col items-center gap-3 transition-all min-h-[160px] ${selectedLens === node.id ? 'bg-red-600 border-red-600 text-white shadow-[0_0_30px_rgba(220,38,38,0.4)] scale-105' : 'bg-slate-950 border-slate-900 text-slate-500 hover:border-slate-700'}`}
-                      >
-                        {selectedLens === node.id ? <Unlock size={24} /> : <Lock size={24} />}
-                        <span className="font-black italic text-lg tracking-[0.1em] uppercase">{node.label}</span>
-                        <span className="text-[10px] font-mono uppercase opacity-70 font-bold">{node.desc}</span>
-                      </button>
+                    <button 
+                      key={node.id} 
+                      onClick={() => setSelectedLens(node.id)} 
+                      className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node.id ? 'bg-red-600 border-red-600 text-white shadow-[0_0_50px_rgba(220,38,38,0.3)] scale-105' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}
+                    >
+                      {selectedLens === node.id ? <Unlock size={28} /> : <Lock size={28} className="opacity-20 group-hover:opacity-100 transition-opacity" />}
+                      <span className="font-black italic text-xl tracking-[0.1em] uppercase">{node.label}</span>
+                      <span className="text-[10px] font-mono uppercase opacity-50 font-bold">{node.desc}</span>
+                    </button>
                   ))}
+                </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-10">
-              {sectors.map((s) => (
-                <button 
-                  key={s.id} 
-                  disabled={!selectedLens}
-                  onClick={() => { setSector(s.id); setStep("intake"); }} 
-                  className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-56 group disabled:opacity-30 disabled:grayscale"
-                >
-                  <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
-                  <div>
-                    <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
-                    <p className="text-[11px] font-mono font-bold text-red-600 uppercase tracking-widest mt-1 italic">{s.risk}</p>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-10">
+                {sectors.map((s) => (
+                  <button 
+                    key={s.id} 
+                    disabled={!selectedLens}
+                    onClick={() => { setSector(s.id); setStep("intake"); }} 
+                    className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-56 group disabled:opacity-20 disabled:grayscale"
+                  >
+                    <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
+                    <div>
+                      <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none italic">{s.label}</h3>
+                      <p className="text-[11px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2 italic">{s.risk}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* STEP 2: INTAKE (Registration) */}
+          {step === 'intake' && (
+            <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 text-center max-w-4xl mx-auto">
+              <h2 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter text-white leading-none italic">
+                PROTOCOL <span className="text-red-600 italic">REGISTRATION</span>
+              </h2>
+              <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic italic">Operator Name</label>
+                    <input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic italic">Organization</label>
+                    <input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic italic">Intel Channel</label>
+                    <input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  </div>
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic italic">Verify Channel</label>
+                    <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  </div>
+                </div>
+                <button 
+                  disabled={!operatorName || email !== confirmEmail || !email} 
+                  onClick={() => setStep("audit")} 
+                  className="w-full py-10 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-3xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)] italic"
+                >
+                  Initialize Observation
                 </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white italic leading-none">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-8 text-left rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Operator Name</label>
-                  <input placeholder="NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-lg" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Organization</label>
-                  <input placeholder="ENTITY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-lg" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Intel Channel</label>
-                  <input placeholder="EMAIL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-lg" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Verify Channel</label>
-                  <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-lg" />
-                </div>
               </div>
-              <button disabled={!operatorName || email !== confirmEmail || !email} onClick={() => setStep("audit")} className="w-full py-10 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-3xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-4 shadow-xl">Initialize Observation</button>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {step === 'audit' && (
-          <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left">
-            <div className="flex items-center gap-4 text-red-600 font-black uppercase tracking-[0.5em] text-[12px] border-l-4 border-red-600 pl-4 leading-none italic font-mono">
-              <Activity size={20} className="animate-pulse" /> CASE_BMR-2026-SEG_0{currentDimension + 1}
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[220px] tracking-tighter">
-              {LOCAL_QUESTIONS[currentDimension]?.text}
-            </h2>
-            <div className="grid grid-cols-1 gap-5 mt-16">
-              {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/40 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group relative overflow-hidden" 
-                  onClick={async () => {
-                    const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
-                    setAnswers(updatedAnswers);
-                    if (currentDimension < LOCAL_QUESTIONS.length - 1) {
-                      setCurrentDimension(currentDimension + 1);
-                    } else {
-                      setIsLoading(true);
-                      const auditId = await logToDatabase(getLiveMetrics()); 
-                      if (auditId) window.location.href = `/results/${auditId}`;
-                    }
-                  }}>
-                    <span className="text-xl md:text-3xl italic tracking-tighter transition-transform group-hover:translate-x-2">{opt.label}</span>
-                    <ChevronRight size={36} className="opacity-0 group-hover:opacity-100 transition-all text-red-600 -translate-x-4 group-hover:translate-x-0" />
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          {/* STEP 3: AUDIT (Questions) */}
+          {step === 'audit' && (
+            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left max-w-5xl mx-auto">
+              <div className="flex items-center gap-6 text-red-600 font-black uppercase tracking-[0.5em] text-[12px] border-l-8 border-red-600 pl-6 leading-none italic font-mono">
+                <Activity size={24} className="animate-pulse" /> CASE_BMR_2026_SEG_0{currentDimension + 1}
+              </div>
+              
+              <div className="min-h-[250px] flex items-center">
+                <h2 className="text-4xl md:text-7xl font-black italic uppercase text-white leading-[0.9] tracking-tighter italic">
+                  {LOCAL_QUESTIONS[currentDimension]?.text}
+                </h2>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4 mt-20">
+                {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
+                  <button 
+                    key={i} 
+                    className="py-10 px-12 border-2 border-slate-900 bg-slate-950/40 hover:border-red-600 hover:bg-red-600/5 transition-all text-left uppercase font-black text-slate-500 hover:text-white flex justify-between items-center group relative overflow-hidden" 
+                    onClick={async () => {
+                      const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
+                      setAnswers(updatedAnswers);
+                      if (currentDimension < LOCAL_QUESTIONS.length - 1) {
+                        setCurrentDimension(currentDimension + 1);
+                      } else {
+                        setIsLoading(true);
+                        const auditId = await logToDatabase(getLiveMetrics()); 
+                        if (auditId) window.location.href = `/results/${auditId}`;
+                        else setIsLoading(false);
+                      }
+                    }}
+                  >
+                    <span className="text-2xl md:text-4xl italic tracking-tighter transition-transform group-hover:translate-x-4 italic">{opt.label}</span>
+                    <ChevronRight size={40} className="opacity-0 group-hover:opacity-100 transition-all text-red-600 -translate-x-8 group-hover:translate-x-0" />
+                  </button>
+                ))}
+              </div>
+
+              {/* PROGRESS BAR */}
+              <div className="pt-20">
+                <div className="h-1 w-full bg-slate-900 relative">
+                   <motion.div 
+                     className="absolute top-0 left-0 h-full bg-red-600"
+                     initial={{ width: 0 }}
+                     animate={{ width: `${((currentDimension + 1) / LOCAL_QUESTIONS.length) * 100}%` }}
+                   />
+                </div>
+                <p className="text-slate-800 font-mono text-[10px] mt-4 tracking-widest italic uppercase">
+                  Analyzing_Dimension: {currentDimension + 1} / {LOCAL_QUESTIONS.length}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      <Footer />
     </div>
   );
 }
