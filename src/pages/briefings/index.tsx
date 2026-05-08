@@ -25,7 +25,7 @@ export default function EvidenceVault() {
               STATUS: PROTECTED_ACCESS // CASE_ARCHIVE_2026
             </p>
           </div>
-          <Lock className="text-slate-800 hidden md:block mb-4 opacity-20" size={120} />
+          <Lock className="text-slate-900 hidden md:block mb-4 opacity-20" size={120} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
@@ -35,11 +35,11 @@ export default function EvidenceVault() {
                 <ShieldAlert className="absolute top-10 right-10 text-red-600 opacity-5 group-hover:opacity-20 transition-opacity" size={140} />
                 
                 <div className="relative z-10">
+                  {/* 🛡️ NO DASH: Using double slashes to match BMR metadata style */}
                   <span className="font-mono text-[10px] text-red-600 font-black tracking-[0.4em] uppercase">
                     FILE_REF: {item.id} // {item.node}_NODE
                   </span>
                   
-                  {/* 🛡️ FONT FIX: Leading and size adjusted to prevent layout overflow */}
                   <h2 className="text-4xl lg:text-5xl xl:text-6xl font-black uppercase italic tracking-tighter text-white mt-10 mb-8 leading-[0.8] break-words">
                     {item.title}
                   </h2>
@@ -49,7 +49,7 @@ export default function EvidenceVault() {
                   </p>
                 </div>
 
-                <div className="flex items-center gap-4 text-red-600 font-black uppercase italic text-[11px] tracking-[0.3em] group-hover:text-white transition-all mt-auto italic">
+                <div className="inline-flex items-center gap-4 text-red-600 font-black uppercase italic text-[11px] tracking-[0.3em] group-hover:text-white transition-all mt-auto">
                   ACCESS CASE AUTOPSY 
                   <ChevronRight size={18} className="group-hover:translate-x-2 transition-transform" />
                 </div>
