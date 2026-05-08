@@ -18,6 +18,7 @@ export default function Header() {
   return (
     <header className="fixed top-0 left-0 right-0 h-24 bg-[#020617]/80 backdrop-blur-xl border-b border-slate-900 z-[1000] flex items-center justify-between px-6 md:px-12">
       
+      {/* 🏛️ BRANDING: BMR SOLUTIONS */}
       <Link href="/" className="flex items-center gap-4 no-underline group">
         <ShieldAlert size={28} className="text-red-600 group-hover:scale-110 transition-transform" />
         <div className="flex flex-col leading-[0.9]">
@@ -30,6 +31,7 @@ export default function Header() {
         </div>
       </Link>
 
+      {/* NAVIGATION */}
       <nav className="hidden md:flex items-center gap-10">
         {NAV_LINKS.map((link) => {
           const isActive = pathname === link.path;
@@ -47,6 +49,7 @@ export default function Header() {
         })}
       </nav>
 
+      {/* UNIFIED CTA */}
       <button 
         onClick={() => router.push('/pulse-check')}
         className="hidden md:flex items-center gap-3 bg-red-600 text-white px-7 py-3 font-black uppercase tracking-[0.15em] text-[10px] hover:bg-white hover:text-red-600 transition-all rounded-sm italic"
@@ -54,6 +57,7 @@ export default function Header() {
         INITIATE_DIAGNOSTIC <ArrowRight size={14} />
       </button>
 
+      {/* MOBILE */}
       <button className="md:hidden text-white" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
         {isMobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
       </button>
