@@ -7,9 +7,27 @@ import Link from 'next/link';
 
 export default function EvidenceVault() {
   const caseStudies = [
-    { id: "CASE_01", title: "EXECUTIVE VARIANCE", node: "EXECUTIVE", slug: "chatbot-liability" },
-    { id: "CASE_02", title: "FORENSIC INSIGHTS", node: "TECHNICAL", slug: "salesforce-failure" },
-    { id: "CASE_03", title: "LOGIC SHEAR", node: "MANAGERIAL", slug: "lyft-logic-shear" }
+    { 
+      id: "CASE_01", 
+      title: "EXECUTIVE VARIANCE", 
+      node: "EXECUTIVE", 
+      slug: "chatbot-liability",
+      summary: "A forensic autopsy of the Air Canada tribunal ruling where algorithmic 'hallucination' created binding legal liability." 
+    },
+    { 
+      id: "CASE_02", 
+      title: "FORENSIC INSIGHTS", 
+      node: "TECHNICAL", 
+      slug: "salesforce-failure",
+      summary: "Detecting 'Log Rot' within permission-based architectures that led to unauthorized AI data exfiltration." 
+    },
+    { 
+      id: "CASE_03", 
+      title: "LOGIC SHEAR", 
+      node: "MANAGERIAL", 
+      slug: "lyft-logic-shear",
+      summary: "Analyzing the $2B market cap volatility caused by a single-digit reporting error in an automated earnings release." 
+    }
   ];
 
   return (
@@ -32,18 +50,17 @@ export default function EvidenceVault() {
                 <ShieldAlert className="absolute top-10 right-10 text-red-600 opacity-5 group-hover:opacity-20 transition-opacity" size={140} />
                 
                 <div className="relative z-10 w-full">
-                  {/* 🛡️ METADATA FIX: Extra tight tracking and nowrap for 'EXECUTIVE' and 'FORENSIC' */}
-                  <div className="font-mono text-[9px] md:text-[10px] text-red-600 font-black tracking-[-0.02em] md:tracking-[0.2em] uppercase italic whitespace-nowrap overflow-hidden text-ellipsis">
-                    FILE_REF: {item.id} // <span className="text-slate-400">{item.node}_NODE</span>
+                  <div className="font-mono text-[9px] md:text-[10px] text-red-600 font-black tracking-[-0.01em] uppercase italic whitespace-nowrap overflow-hidden text-ellipsis">
+                    FILE_REF: {item.id} // <span className="text-slate-500">{item.node}_NODE</span>
                   </div>
                   
-                  {/* 🛡️ HEADER SCALE FIX: Using clamp-style logic to fit long words */}
-                  <h2 className="text-4xl lg:text-[38px] xl:text-[48px] font-black uppercase italic tracking-tighter text-white mt-10 mb-8 leading-[0.8] break-words">
+                  {/* 🛡️ FONT FIX: tracking-tight and specific sizing to prevent 'EXECUTIVE' break */}
+                  <h2 className="text-4xl lg:text-[40px] xl:text-[50px] font-black uppercase italic tracking-tight text-white mt-10 mb-8 leading-[0.8] break-words">
                     {item.title}
                   </h2>
 
                   <p className="text-base lg:text-lg text-slate-500 font-medium italic leading-relaxed mb-12 border-l-2 border-slate-800 pl-6">
-                    "70% of AI governance failures stem from logic drift."
+                    "{item.summary}"
                   </p>
                 </div>
 
