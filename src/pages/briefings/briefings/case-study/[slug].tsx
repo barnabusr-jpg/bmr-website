@@ -10,112 +10,59 @@ import { FileText, ArrowLeft, Activity, ShieldAlert, ExternalLink, Download } fr
 
 const CONTENT = {
   "chatbot-liability": {
-    title: "THE AIR CANADA PRECEDENT",
-    failureType: "HALLUCINATION_SHEAR",
-    protocolFocus: "DELTA_GAP",
-    subtitle: "AUTOPSY B-01",
-    analysis: "A Canadian tribunal ruled that Air Canada's chatbot 'hallucinated' a refund policy, creating a binding legal obligation. This proves that unmonitored automation creates a 'Logic Leak' where the machine acts as a legal representative without human verification.",
-    reworkTax: "$812,000 LEGAL SETTLEMENT",
+    title: "AIR CANADA PRECEDENT",
+    failureType: "LIABILITY_SHEAR",
+    nodeFocus: "EXECUTIVE",
+    caseId: "BMR-2026-LIAB-01",
+    analysis: "A Canadian tribunal ruled that Air Canada's chatbot issued an unauthorized refund policy, creating a binding legal obligation. This proves that unmonitored automation creates a 'Logic Leak' where machines act as legal representatives without human oversight.",
+    reworkTax: "$812,000 SETTLEMENT",
     sourceUrl: "https://www.canlii.org/en/bc/bccrt/doc/2024/2024bccrt149/2024bccrt149.html",
-    sourceLabel: "VIEW_TRIBUNAL_RULING"
+    sourceLabel: "TRIBUNAL_RULING_DOC"
   },
   "salesforce-failure": {
-    title: "SALESFORCE AI DATA EXFILTRATION",
-    failureType: "SHADOW_AI_SHEAR",
-    protocolFocus: "SHADOW_AI",
-    subtitle: "AUTOPSY B-02",
-    analysis: "Hackers exploited the 'Gap' between employee permissions and algorithmic endpoints. This exfiltration occurred because the system lacked 'Logic-Gates' to detect anomalous behavior, allowing data to bleed out faster than human security could respond.",
+    title: "SALESFORCE DATA EXFILTRATION",
+    failureType: "SECURITY_SHEAR",
+    nodeFocus: "TECHNICAL",
+    caseId: "BMR-2026-SEC-02",
+    analysis: "Hackers exploited the 'Gap' between employee permissions and algorithmic endpoints. This occurred because the system lacked logic-gates to detect anomalous behavior, allowing data to bleed out faster than manual security could respond.",
     reworkTax: "$4.2M REGULATORY FINES",
     sourceUrl: "https://www.bankinfosecurity.com/salesforce-sounds-alarm-over-fresh-data-extortion-campaign-a-30958",
-    sourceLabel: "VIEW_TECHNICAL_AUTOPSY"
+    sourceLabel: "TECHNICAL_AUTOPSY"
   },
   "lyft-logic-shear": {
-    title: "THE LYFT EARNINGS PHANTOM",
-    failureType: "ALGORITHMIC_SHEAR",
-    protocolFocus: "DELTA_GAP",
-    subtitle: "AUTOPSY B-03",
-    analysis: "A human clerical error (500bps vs 50bps) was instantly weaponized by high-frequency trading bots, triggering a $2B market-cap spike in 45 minutes. CEO David Risher's admission that 'it was a bad mistake' highlights the terminal risk of the Human-Machine Shear.",
+    title: "LYFT EARNINGS PHANTOM",
+    failureType: "FINANCIAL_DRIFT",
+    nodeFocus: "EXECUTIVE",
+    caseId: "BMR-2026-FIN-03",
+    analysis: "A human clerical error (500bps vs 50bps) was instantly weaponized by high-frequency trading bots, triggering a $2B market-cap spike in 45 minutes. This highlights the terminal risk of unhardened human-machine handoffs.",
     reworkTax: "$2B MARKET-CAP VOLATILITY",
     sourceUrl: "https://www.inc.com/justin-bariso/lyfts-ceo-gave-a-humble-6-word-response-to-a-2-billion-dollar-mistake-its-a-lesson-in-emotional-intelligence.html",
-    sourceLabel: "VIEW_INC_POST_MORTEM"
+    sourceLabel: "INC_POST_MORTEM"
   },
   "clinical-logic-shear": {
-    title: "UNITEDHEALTH AI CARE DENIAL",
-    failureType: "EXPERTISE_SHEAR",
-    protocolFocus: "EXPERTISE_DEBT",
-    subtitle: "AUTOPSY B-04",
-    analysis: "UnitedHealth’s 'nH Predict' algorithm operated with a 90% error rate by overriding physician expertise. This 'Expertise Shear' prioritized algorithmic averages over clinical reality, leading to a $2.4B operational collapse.",
+    title: "UNITEDHEALTH CARE DENIAL",
+    failureType: "OPERATIONAL_SHEAR",
+    nodeFocus: "MANAGERIAL",
+    caseId: "BMR-2026-OPS-04",
+    analysis: "UnitedHealth’s algorithm operated with a 90% error rate by overriding physician expertise. This prioritized algorithmic averages over clinical reality, leading to a $2.4B operational collapse and federal investigation.",
     reworkTax: "$2.4B OPERATIONAL IMPACT",
     sourceUrl: "https://litigationtracker.law.georgetown.edu/litigation/estate-of-gene-b-lokken-the-et-al-v-unitedhealth-group-inc-et-al/",
-    sourceLabel: "VIEW_LITIGATION_AUTOPSY"
+    sourceLabel: "LITIGATION_AUTOPSY"
   },
   "judicial-logic-shear": {
-    title: "OREGON JUDICIAL SANCTION",
-    failureType: "FIDUCIARY_SHEAR",
-    protocolFocus: "EXPERTISE_DEBT",
-    subtitle: "AUTOPSY B-05",
-    analysis: "An Oregon attorney was fined for submitting a brief with 15 fabricated AI citations. This 'Judicial Shear' highlights the Expertise Debt of delegating legal research to LLMs without manual verification.",
+    title: "JUDICIAL SANCTION PRECEDENT",
+    failureType: "GOVERNANCE_SHEAR",
+    nodeFocus: "EXECUTIVE",
+    caseId: "BMR-2026-GOV-05",
+    analysis: "An attorney was fined for submitting a brief with fabricated AI citations. This highlights the 'Expertise Debt' of delegating critical research to LLMs without manual verification loops.",
     reworkTax: "$10,000 FINE + DISBARMENT RISK",
     sourceUrl: "https://www.inc.com/kevin-haynes/faulty-ai-leads-to-record-10000-fine-for-oregon-lawyer/91322007",
-    sourceLabel: "VIEW_JUDICIAL_ORDER"
-  },
-  "governance-logic-shear": {
-    title: "MCDONALD'S MCHIRE BREACH",
-    failureType: "GOVERNANCE_SHEAR",
-    protocolFocus: "SHADOW_AI",
-    subtitle: "AUTOPSY B-06",
-    analysis: "The 'McHire' AI platform exposed 64 million applicant records due to a default credential vulnerability. This 'Governance Shear' proves that AI tools are often deployed with critical security 'Gaps.'",
-    reworkTax: "64M RECORDS EXPOSED",
-    sourceUrl: "https://breezy.hr/blog/mcdonalds-hiring-data-breach",
-    sourceLabel: "VIEW_SECURITY_AUTOPSY"
-  },
-  "infrastructure-logic-shear": {
-    title: "TOKYO LOGISTICS BLACKOUT",
-    failureType: "SYSTEMIC_SHEAR",
-    protocolFocus: "DELTA_GAP",
-    subtitle: "AUTOPSY B-07",
-    analysis: "An automated port-scheduling algorithm ingested a corrupted sensor feed. The resulting 800% acceleration in container throughput caused a physical bottleneck that paralyzed logistics for 72 hours.",
-    reworkTax: "$1.4B MACRO-ECONOMIC IMPACT",
-    sourceUrl: "https://www.reuters.com/business/logistics/",
-    sourceLabel: "VIEW_LOGISTICS_AUTOPSY"
-  },
-  "utility-grid-hallucination": {
-    title: "ERCOT LOAD-BALANCING DRIFT",
-    failureType: "PREDICTIVE_DRIFT",
-    protocolFocus: "EXPERTISE_DEBT",
-    subtitle: "AUTOPSY B-08",
-    analysis: "A predictive load-balancing model failed to account for a thermal inversion, over-predicting demand and triggering a cascading shutdown. Operators deferred to the model despite contradictory physical gauges.",
-    reworkTax: "4.2M RESIDENTS OFFLINE",
-    sourceUrl: "https://www.technologyreview.com/2024/05/20/1092683/ai-power-grid-reliability/",
-    sourceLabel: "VIEW_GRID_AUDIT"
-  },
-  "federal-benefit-shear": {
-    title: "IRS TAX-LOGIC HALLUCINATION",
-    failureType: "SOVEREIGN_SHEAR",
-    protocolFocus: "DELTA_GAP",
-    subtitle: "AUTOPSY B-09",
-    analysis: "A pilot AI auditor incorrectly flagged 140,000 tax returns for fraud due to a logic-hallucination. This led to a $400M admin recovery tax, proving automated government logic requires a manual BMR circuit breaker.",
-    reworkTax: "$400M ADMIN RECOVERY",
-    sourceUrl: "https://www.gao.gov/products/gao-24-106500",
-    sourceLabel: "VIEW_GAO_AUDIT"
-  },
-  "defense-intelligence-shear": {
-    title: "PENTAGON 'SHADOW' LLM LEAK",
-    failureType: "CLASSIFIED_EXFILTRATION",
-    protocolFocus: "SHADOW_AI",
-    subtitle: "AUTOPSY B-10",
-    analysis: "Sensitive data was ingested into a public-facing LLM for summarization. The model subsequently hallucinated troop movements. This highlights the terminal risk of unvetted AI in secure environments.",
-    reworkTax: "TERMINAL SECURITY BREACH",
-    sourceUrl: "https://www.defense.gov/News/Releases/Release/Article/3613030/dod-announces-establishment-of-generative-ai-task-force/",
-    sourceLabel: "VIEW_DOD_POST_MORTEM"
+    sourceLabel: "JUDICIAL_ORDER_DOC"
   }
 };
 
-// Next.js static build configuration
 export async function getStaticPaths() {
-  const paths = Object.keys(CONTENT).map((slug) => ({
-    params: { slug },
-  }));
+  const paths = Object.keys(CONTENT).map((slug) => ({ params: { slug } }));
   return { paths, fallback: false };
 }
 
@@ -126,72 +73,104 @@ export async function getStaticProps({ params }: { params: { slug: string } }) {
 
 export default function BriefingDocument({ data }: { data: any }) {
   const router = useRouter();
-
   if (!data) return <div className="min-h-screen bg-[#020617]" />;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans tracking-tight">
       <Head><title>BMR | {data.title}</title></Head>
       <Header />
+      
       <main className="pt-44 pb-24 px-6 max-w-5xl mx-auto space-y-12">
-        <button onClick={() => router.push('/briefings')} className="flex items-center gap-2 text-slate-500 hover:text-red-600 transition-colors font-mono text-[10px] uppercase tracking-[0.4em] font-black">
-          <ArrowLeft size={14} /> BACK TO VAULT
+        {/* ACCESSIBLE NAVIGATION */}
+        <button 
+          onClick={() => router.push('/briefings')} 
+          className="group flex items-center gap-3 text-slate-500 hover:text-white transition-all font-mono text-[11px] uppercase tracking-[0.4em] font-black"
+        >
+          <ArrowLeft size={16} className="group-hover:-translate-x-2 transition-transform" /> BACK TO THE VAULT
         </button>
         
-        <header className="space-y-4 border-l-4 border-red-600 pl-8">
-          <div className="flex items-center gap-3 text-[9px] font-mono uppercase tracking-widest font-black italic">
-            <span className="text-red-600 bg-red-600/10 px-2 py-1">{data.failureType.replace(/_/g, " ")}</span>
-            <span className="text-slate-500">PRIMARY_PROTOCOL: {data.protocolFocus}</span>
+        {/* CLINICAL HEADER */}
+        <header className="space-y-6 border-l-8 border-red-600 pl-10 md:pl-16">
+          <div className="flex flex-wrap items-center gap-4 text-[10px] font-mono uppercase tracking-widest font-black italic">
+            <span className="text-white bg-red-600 px-3 py-1">{data.failureType.replace(/_/g, " ")}</span>
+            <span className="text-slate-500">AFFECTED_NODE: {data.nodeFocus}</span>
+            <span className="text-slate-700">ID: {data.caseId}</span>
           </div>
-          <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-none">{data.title}</h1>
-          <p className="text-red-600 font-mono text-[10px] font-black tracking-[0.3em] uppercase">{data.subtitle}</p>
+          <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter leading-[0.85] text-white">
+            {data.title}
+          </h1>
         </header>
 
-        <div className="grid md:grid-cols-3 gap-12 pt-12 border-t border-slate-900">
-          <div className="md:col-span-2 space-y-8">
-            <div className="bg-slate-900/40 p-10 border border-slate-800 rounded-sm">
-              <h3 className="font-mono text-[10px] font-black uppercase text-red-600 tracking-widest flex items-center gap-2 mb-6">
-                <FileText size={14} /> FORENSIC ANALYSIS
+        <div className="grid md:grid-cols-3 gap-12 pt-16 border-t border-slate-900">
+          <div className="md:col-span-2 space-y-10">
+            
+            {/* 🛡️ THE "ISLAND" ANALYSIS CARD (ACCESSIBILITY FOCUS) */}
+            <div className="bg-white p-12 shadow-[0_30px_60px_rgba(0,0,0,0.5)] border-l-[12px] border-red-600">
+              <h3 className="font-mono text-[11px] font-black uppercase text-red-600 tracking-[0.3em] flex items-center gap-2 mb-8">
+                <ShieldAlert size={18} /> FORENSIC_AUTOPSY_REPORT
               </h3>
-              <p className="text-slate-200 leading-relaxed font-bold uppercase text-lg italic">{data.analysis}</p>
-              <a href={data.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 mt-6 text-[10px] font-mono text-red-600 underline tracking-[0.2em] hover:text-white transition-colors uppercase">
-                {data.sourceLabel} <ExternalLink size={10} />
+              <p className="text-slate-800 leading-relaxed font-bold uppercase text-2xl italic tracking-tighter">
+                {data.analysis}
+              </p>
+              <a 
+                href={data.sourceUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="inline-flex items-center gap-3 mt-10 text-[11px] font-mono text-red-600 border-b-2 border-red-600/20 pb-1 hover:text-black hover:border-black transition-all uppercase font-black"
+              >
+                {data.sourceLabel} <ExternalLink size={12} />
               </a>
             </div>
 
-            <div className="bg-red-600/5 border border-red-600/20 p-10 space-y-6">
-              <h4 className="text-white font-black italic text-2xl uppercase tracking-tighter">Request Board-Level Indictment</h4>
-              <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest leading-relaxed">
-                Generate the full technical autopsy, rework tax breakdown, and specific recovery protocols for this failure.
+            {/* ACTION PROMPT */}
+            <div className="bg-slate-950 border border-slate-800 p-12 space-y-8 rounded-lg shadow-2xl">
+              <h4 className="text-white font-black italic text-3xl uppercase tracking-tighter">Initialize Fracture Audit</h4>
+              <p className="text-slate-400 font-medium italic text-lg leading-relaxed">
+                Analyze your own deployment for the same fractures identified in this autopsy. 
+                Identify your rework tax before it hardens into a permanent financial loss.
               </p>
-              <button onClick={() => router.push('/pulse-check')} className="bg-red-600 text-white px-8 py-4 font-black font-mono text-[11px] uppercase tracking-widest hover:bg-white hover:text-black transition-all">
-                GENERATE_PDF_DOSSIER
+              <button 
+                onClick={() => router.push('/diagnostic')} 
+                className="w-full md:w-auto bg-red-600 text-white px-10 py-6 font-black uppercase italic tracking-widest text-lg hover:bg-white hover:text-red-600 transition-all shadow-lg"
+              >
+                Run Node Triangulation
               </button>
             </div>
           </div>
 
+          {/* SIDEBAR DOSSIER METRICS */}
           <aside className="space-y-6">
-            <div className="bg-slate-950 border border-slate-800 p-8 sticky top-44 space-y-6 shadow-2xl">
-              <div className="flex items-center gap-2"><Activity size={12} className="text-red-600 animate-pulse" /><span className="text-[9px] font-mono text-slate-500 uppercase tracking-widest">Dossier_Action_Node</span></div>
+            <div className="bg-slate-950 border-2 border-slate-900 p-10 sticky top-44 space-y-8 shadow-2xl">
+              <div className="flex items-center gap-3">
+                <Activity size={14} className="text-red-600 animate-pulse" />
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black">Case_Metrics</span>
+              </div>
               
-              <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest italic leading-relaxed">
-                ESTIMATED REWORK TAX:<br />
-                <span className="text-red-600 font-black not-italic text-sm tracking-normal">{data.reworkTax}</span>
+              <div className="space-y-2">
+                <span className="text-[10px] font-mono text-slate-600 uppercase tracking-widest font-black italic block">Calculated Rework Tax:</span>
+                <div className="text-red-600 font-black text-2xl leading-none tracking-tighter italic uppercase underline decoration-2 underline-offset-4">
+                  {data.reworkTax}
+                </div>
               </div>
               
               <div className="h-px bg-slate-900" />
               
-              <button onClick={() => router.push('/pulse-check')} className="w-full bg-white text-black py-5 font-black uppercase text-[9px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all">
-                RUN SHEAR-DIAGNOSTIC
-              </button>
+              <p className="text-[10px] font-mono text-slate-500 uppercase leading-relaxed font-bold italic">
+                Status: Verified Case File.<br/> 
+                Access level: Public Executive Briefing.
+              </p>
               
-              <button onClick={() => router.push('/pulse-check')} className="w-full bg-slate-900 border border-slate-700 text-slate-400 py-5 font-black uppercase text-[9px] tracking-[0.3em] hover:bg-red-600 hover:text-white hover:border-red-600 transition-all flex items-center justify-center gap-2">
-                <Download size={14} /> DOWNLOAD_INDICTMENT
+              <button 
+                onClick={() => router.push('/diagnostic')} 
+                className="w-full bg-white text-black py-6 font-black uppercase text-[10px] tracking-[0.3em] hover:bg-red-600 hover:text-white transition-all shadow-xl"
+              >
+                Download Full Indictment
               </button>
             </div>
           </aside>
         </div>
       </main>
+
       <LogicLeakTicker />
       <Footer />
     </div>
