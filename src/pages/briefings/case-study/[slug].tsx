@@ -1,96 +1,145 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { ShieldAlert, Activity, ArrowLeft, ExternalLink } from "lucide-react";
+import { ShieldAlert, Activity, ArrowLeft, FileText, X, ExternalLink } from "lucide-react";
 
-const CONTENT: Record<string, any> = {
+const ARCHIVE_CONTENT: Record<string, any> = {
   "chatbot-liability": {
     title: "THE AIR CANADA PRECEDENT",
-    failureType: "HALLUCINATION_SHEAR",
-    nodeFocus: "EXECUTIVE",
-    subtitle: "AUTOPSY B-01",
-    analysis: "A Canadian tribunal ruled that Air Canada's chatbot 'hallucinated' a refund policy. BMR identifies this as a failure of Expectation Continuity.",
-    reworkTax: "$812,000 LEGAL SETTLEMENT",
-    sourceUrl: "https://www.canlii.org/en/bc/bccrt/doc/2024/2024bccrt149/2024bccrt149.html",
-    sourceLabel: "VIEW_TRIBUNAL_RULING"
+    node: "EXECUTIVE",
+    impact: "$812.00 CAN SETTLEMENT",
+    analysis: "A landmark legal ruling confirmed corporate liability for the 'hallucinations' of autonomous agents.",
+    ref: "ARCHIVE_REF_B01 // STATUS: IMMUTABLE",
+    citation: "Civil Resolution Tribunal. (2024). Moffatt v. Air Canada (2024 BCCRT 149).",
+    dossierBody: ["INCIDENT: Chatbot provided invented refund policy for bereavement travel.", "DEFENSE: Company claimed chatbot was a 'separate legal entity'.", "VERDICT: Tribunal ruled the company is responsible for all info it provides via automated systems."]
+  },
+  "fiduciary-gate-failure": {
+    title: "UNITEDHEALTH ALGO_BIAS",
+    node: "EXECUTIVE",
+    impact: "$1.5B CLASS ACTION",
+    analysis: "A federal suit alleges AI was used to override clinical judgment, creating a catastrophic Fiduciary Gate failure.",
+    ref: "ARCHIVE_REF_B02 // STATUS: IMMUTABLE",
+    citation: "U.S. District Court. (2024). Estate of Lokken v. UnitedHealth Group.",
+    dossierBody: ["INCIDENT: AI tool 'nH Predict' used to deny Medicare Advantage claims.", "FRACTURE: Algorithm override of clinical recommendations.", "VERDICT: AI logs ruled discoverable, stripping 'Black Box' corporate defense."]
   },
   "salesforce-failure": {
-    title: "SALESFORCE AI DATA EXFILTRATION",
-    failureType: "SHADOW_AI_SHEAR",
-    nodeFocus: "TECHNICAL",
-    subtitle: "AUTOPSY B-02",
-    analysis: "Hackers exploited the 'Gap' between employee permissions and algorithmic drift. BMR protocols identify this as systemic 'Log Rot'.",
-    reworkTax: "$4.2M REGULATORY FINES",
-    sourceUrl: "https://www.bankinfosecurity.com/salesforce-sounds-alarm-over-fresh-data-leak-a-24856",
-    sourceLabel: "VIEW_TECHNICAL_AUTOPSY"
+    title: "FORCEDLEAK AGENT BYPASS",
+    node: "TECHNICAL",
+    impact: "CVSS 9.4 CRITICAL",
+    analysis: "Investigating the ForcedLeak vulnerability where malicious instructions hijacked internal AI agents.",
+    ref: "ARCHIVE_REF_B03 // STATUS: IMMUTABLE",
+    citation: "Noma Security. (2025). ForcedLeak: Prompt injection in Agentforce.",
+    dossierBody: ["VULNERABILITY: Web-to-Lead logic hijacked via jailbreak commands.", "MECHANISM: Malicious input forced agents to query CRM data.", "VERDICT: Requirement for character-level Zero-Trust logic hardening."]
+  },
+  "echoleak-vulnerability": {
+    title: "ECHOLEAK ZERO-CLICK",
+    node: "TECHNICAL",
+    impact: "CVSS 9.3 RISK",
+    analysis: "A 'Zero-Click' exploit where a single email hijacked an enterprise AI agent.",
+    ref: "ARCHIVE_REF_B04 // STATUS: IMMUTABLE",
+    citation: "Aim Security. (2025). EchoLeak: Zero-click prompt injection in M365 Copilot.",
+    dossierBody: ["INCIDENT: Copilot hijacked via inbound email summary.", "MECHANISM: Agent queried OneDrive/SharePoint silently via hidden commands.", "VERDICT: Ingestion of untrusted data requires a Logic Air-Gap."]
   },
   "lyft-logic-shear": {
     title: "THE LYFT EARNINGS PHANTOM",
-    failureType: "ALGORITHMIC_DRIFT",
-    nodeFocus: "MANAGERIAL",
-    subtitle: "AUTOPSY B-03",
-    analysis: "An extra zero in an earnings release caused a 60% stock surge. This was a failure in the Fiduciary Safeguard Loop.",
-    reworkTax: "$2B MARKET CAP VOLATILITY",
-    sourceUrl: "https://www.cnbc.com/2024/02/13/lyft-shares-jump-on-earnings-beat.html",
-    sourceLabel: "VIEW_FINANCIAL_LOG"
+    node: "MANAGERIAL",
+    impact: "$2B MARKET VOLATILITY",
+    analysis: "A single-digit logic shear triggered a 60% market cap surge and subsequent collapse.",
+    ref: "ARCHIVE_REF_B05 // STATUS: IMMUTABLE",
+    citation: "Gizmodo. (2024). Lyft stock surges after 'extra zero' typo.",
+    dossierBody: ["INCIDENT: Automated release projected 500bps expansion instead of 50bps.", "MARKET: Shares surged 67% before live correction caused collapse.", "VERDICT: Failure of the Fiduciary Kill-Switch gate."]
+  },
+  "mexico-agency-breach": {
+    title: "CLAUDE_CODE EXFILTRATION",
+    node: "MANAGERIAL",
+    impact: "150GB DATA LOSS",
+    analysis: "Attacker leveraged autonomous coding agents to breach nine government agencies.",
+    ref: "ARCHIVE_REF_B06 // STATUS: IMMUTABLE",
+    citation: "Live Science. (2026). Hackers used AI to steal government records.",
+    dossierBody: ["INCIDENT: Attacker used AI agents to execute 5,300 remote commands.", "FRACTURE: Excessive Agency—agents granted high-privilege without oversight.", "VERDICT: Failure of Agency Segmentation and Managerial Oversight."]
   }
 };
 
 export default function CaseAutopsy() {
   const router = useRouter();
   const { slug } = router.query;
-  const [activeData, setActiveData] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
+  const [active, setActive] = useState<any>(null);
+  const [showDossier, setShowDossier] = useState(false);
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    // 🛡️ WAIT FOR ROUTER READY TO KILL THE HANG
-    if (router.isReady && slug) {
-      setActiveData(CONTENT[slug as string]);
+    if (mounted && router.isReady && slug) {
+      const data = ARCHIVE_CONTENT[slug as string];
+      if (data) { setActive(data); } else { router.push('/briefings'); }
     }
-  }, [router.isReady, slug]);
+  }, [mounted, router.isReady, slug, router]);
 
-  if (!activeData) {
-    return (
-      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center font-mono text-red-600 italic uppercase">
-        <Activity className="animate-spin mb-4" size={48} />
-        <p className="tracking-[0.4em] text-[10px]">DECRYPTING_CASE_DATA...</p>
-      </div>
-    );
-  }
+  if (!mounted || !active) return (
+    <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+      <Activity className="animate-spin text-red-600" size={48} />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans tracking-tight text-left italic">
+    <div className="min-h-screen bg-[#020617] text-white font-sans italic selection:bg-red-600/30 overflow-x-hidden uppercase">
       <Header />
-      <main className="pt-44 pb-24 px-6 max-w-5xl mx-auto space-y-12">
-        <button onClick={() => router.push('/briefings')} className="flex items-center gap-3 text-slate-500 hover:text-white transition-all font-mono text-[11px] uppercase tracking-[0.4em] font-black italic">
-          <ArrowLeft size={16} /> BACK TO THE VAULT
+      <main className="pt-44 pb-24 px-6 max-w-7xl mx-auto text-left relative">
+        <button onClick={() => router.push('/briefings')} className="flex items-center gap-3 text-slate-600 hover:text-white transition-all font-mono text-[10px] uppercase tracking-[0.4em] font-black mb-16 italic">
+          <ArrowLeft size={14} /> BACK_TO_THE_VAULT
         </button>
 
-        <header className="space-y-6 border-l-8 border-red-600 pl-10 md:pl-16 italic">
-          <div className="flex flex-wrap items-center gap-4 text-[10px] font-mono uppercase tracking-widest font-black">
-            <span className="text-white bg-red-600 px-3 py-1 font-black italic">CASE_STUDY</span>
-            <span className="text-slate-500 italic uppercase font-black">NODE: {activeData.nodeFocus}</span>
-          </div>
-          <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85] italic">{activeData.title}</h1>
-        </header>
+        <div className="border-l-8 border-red-600 pl-10 mb-20 max-w-5xl">
+          <span className="text-red-600 font-mono text-[11px] font-black uppercase tracking-[0.4em]">IDENTIFIED_NODE: {active.node}</span>
+          <h1 className="text-5xl md:text-8xl font-black uppercase tracking-tighter leading-[0.85] mt-4 italic">{active.title}</h1>
+        </div>
 
-        <div className="grid md:grid-cols-3 gap-12 pt-16 border-t border-slate-900">
-          <div className="md:col-span-2 space-y-10">
-            <div className="bg-white p-12 shadow-2xl border-l-[12px] border-red-600 text-slate-800 italic">
-              <h3 className="font-mono text-[11px] font-black uppercase text-red-600 tracking-[0.3em] flex items-center gap-2 mb-8 italic"><ShieldAlert size={18} /> FORENSIC_AUTOPSY_REPORT</h3>
-              <p className="text-2xl font-black uppercase italic leading-tight">{activeData.analysis}</p>
-              <a href={activeData.sourceUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-3 mt-10 text-[11px] font-mono text-red-600 border-b-2 border-red-600/20 pb-1 hover:text-black transition-all uppercase font-black italic">{activeData.sourceLabel} <ExternalLink size={12} /></a>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch">
+          <div className="lg:col-span-8 flex flex-col gap-12">
+            <div className="bg-white p-10 md:p-14 text-slate-950 shadow-2xl border-l-[12px] border-red-600 flex-grow">
+              <div className="flex items-center gap-3 text-red-600 font-mono text-[10px] font-black uppercase tracking-widest mb-8 italic"><ShieldAlert size={18} /> FORENSIC_AUTOPSY_REPORT</div>
+              <p className="text-xl md:text-3xl font-black uppercase italic leading-tight mb-12">{active.analysis}</p>
+              <button onClick={() => setShowDossier(true)} className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-red-600 border-b-2 border-red-600 pb-1 hover:text-black hover:border-black transition-all italic underline-offset-4">VIEW_DOSSIER // DEEP_DIVE <ExternalLink size={12} /></button>
             </div>
-            <button onClick={() => router.push('/pulse-check')} className="w-full bg-red-600 text-white py-6 font-black uppercase italic tracking-widest text-lg hover:bg-white hover:text-red-600 transition-all shadow-xl">Initialize Recovery Protocol</button>
+            <button onClick={() => router.push('/pulse-check')} className="w-full bg-red-600 text-white py-8 font-black uppercase tracking-widest hover:bg-white hover:text-red-600 transition-all shadow-2xl italic text-xl">INITIALIZE RECOVERY PROTOCOL</button>
           </div>
-          <aside className="bg-slate-950 border border-slate-800 p-10 h-fit space-y-8 shadow-2xl italic">
-              <div className="flex items-center gap-3 text-red-600"><Activity size={14} className="animate-pulse" /><span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Impact_Metrics</span></div>
-              <div className="text-red-600 font-black text-2xl uppercase underline decoration-2 underline-offset-4 leading-none italic">{activeData.reworkTax}</div>
-              <button onClick={() => router.push('/pulse-check')} className="w-full bg-white text-black py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all italic italic">Generate Indictment</button>
+
+          <aside className="lg:col-span-4 flex flex-col gap-8 h-full min-h-full">
+            {/* 🛡️ TYPOGRAPHY FIX: clamp() prevents the font from exploding past container limits */}
+            <div className="bg-slate-950 border border-slate-900 p-8 md:p-10 shadow-2xl flex flex-col justify-center min-h-[450px] flex-grow">
+              <div className="flex items-center gap-3 text-red-600 mb-8">
+                <Activity size={16} className="animate-pulse" />
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic tracking-[0.3em]">IMPACT_METRIC</span>
+              </div>
+              {/* 🛡️ RENDER FIX: text-[clamp(1.5rem,4vw,2.5rem)] for tighter control */}
+              <div className="text-red-600 font-black text-[clamp(1.5rem,3.5vw,2.75rem)] uppercase italic leading-[1.1] tracking-tighter break-words underline decoration-4 underline-offset-[8px]">
+                {active.impact}
+              </div>
+            </div>
+            <button onClick={() => router.push('/pulse-check')} className="w-full bg-white text-black py-6 font-black uppercase text-[12px] tracking-widest hover:bg-red-600 hover:text-white transition-all shadow-xl italic">GENERATE INDICTMENT</button>
           </aside>
         </div>
+
+        {/* Dossier Modal Logic */}
+        {showDossier && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 italic">
+            <div className="absolute inset-0 bg-slate-950/98 backdrop-blur-sm" onClick={() => setShowDossier(false)} />
+            <div className="bg-white text-slate-950 max-w-2xl w-full p-12 shadow-2xl relative z-10 border-t-[16px] border-red-600 italic">
+              <button onClick={() => setShowDossier(false)} className="absolute top-6 right-6 text-slate-400 hover:text-red-600 transition-colors"><X size={24} /></button>
+              <h3 className="text-4xl font-black uppercase tracking-tighter mb-10 italic leading-none">PRIMARY_EVIDENCE_LOG</h3>
+              <div className="space-y-6">
+                {active.dossierBody.map((paragraph: string, i: number) => (
+                  <p key={i} className="text-base font-bold leading-relaxed uppercase italic text-slate-800 border-l-2 border-slate-200 pl-6">{paragraph}</p>
+                ))}
+              </div>
+              <div className="mt-12 pt-6 border-t border-slate-100 font-mono text-[9px] text-slate-400 uppercase tracking-widest font-black leading-tight italic">CITED_MATERIAL: {active.citation}</div>
+              <button onClick={() => setShowDossier(false)} className="mt-8 w-full bg-slate-950 text-white py-4 font-black uppercase tracking-widest text-[11px] hover:bg-red-600 transition-all shadow-xl italic">CLOSE_DOSSIER</button>
+            </div>
+          </div>
+        )}
       </main>
       <Footer />
     </div>
