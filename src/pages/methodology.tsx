@@ -2,74 +2,91 @@
 import React from 'react';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { ChevronRight } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Activity, ShieldAlert, ArrowRight, Zap, Target, Search } from "lucide-react";
+import Link from 'next/link';
 
-const TRIAD_DATA = [
-  { title: "Human Alignment", q: "Do your AI outputs match your human expectations?", f: "FRACTURE: Customer service tools issuing incorrect data to users.", risk: "Ignoring this fracture erodes customer trust and exposes legal risk.", fix: "Forensic Logging identifies the gap between intention and reality.", node: "HAI NODE" },
-  { title: "Business Value", q: "Does your tool provide a clear return on investment?", f: "FRACTURE: AI costs exceeding realized labor savings.", risk: "Ignoring this leads to wasted budgets and executive skepticism.", fix: "We align machine execution with realized operational value.", node: "AVS NODE" },
-  { title: "Safe Evolution", q: "Is your AI drifting into unknown risks?", f: "FRACTURE: Hallucinating models training on bad data.", risk: "Ignoring this leads to public failure and exposure.", fix: "Constant integrity monitoring prevents system drift.", node: "IGF NODE" }
+const METHODOLOGY_LENSES = [
+  { 
+    id: "HAI", 
+    label: "HUMAN-AI INTERFACE", 
+    description: "Detecting the Trust Gap. We measure where shadow labor replaces system efficiency.",
+    icon: <Search className="text-red-600" size={24} /> 
+  },
+  { 
+    id: "AVS", 
+    label: "ADOPTION VALUE SYSTEM", 
+    description: "Analyzing operational resonance. We identify activity that fails to translate into impact.",
+    icon: <Zap className="text-red-600" size={24} /> 
+  },
+  { 
+    id: "IGF", 
+    label: "INSTITUTIONAL FIDELITY", 
+    description: "Hardening the safeguard loop. Ensuring logic explainability remains under leadership control.",
+    icon: <Target className="text-red-600" size={24} /> 
+  }
 ];
 
-export default function MethodologyPage() {
-  const router = useRouter();
-
+export default function Methodology() {
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col font-sans selection:bg-red-600/30 text-left">
+    <div className="min-h-screen bg-[#020617] text-white font-sans italic selection:bg-red-600/30">
       <Header />
-      <main className="flex-grow pt-48 pb-20 px-10">
-        <div className="max-w-7xl mx-auto space-y-32">
-          
-          <section id="forensic-integrity" className="space-y-8 border-l-4 border-red-600 pl-12 text-left">
-            <h1 className="text-[110px] font-black uppercase italic tracking-tighter leading-[0.8]">
-              The Key <br /> To Forensic <br /> <span className="text-red-600">Integrity.</span>
-            </h1>
-            <div className="text-slate-400 text-2xl italic max-w-3xl leading-relaxed font-medium space-y-6">
-              <p>BMR Solutions identifies the fractures where AI falls short of strategic goals.</p>
-              <p className="text-white">Every day you wait, these fractures grow. They turn small leaks into catastrophic failures.</p>
-            </div>
-          </section>
-
-          {/* TRIAD GRID SECTION */}
-          <section id="integrity-triad" className="py-20 border-y border-slate-900 text-left">
-            <h2 className="text-5xl font-black italic uppercase tracking-tighter mb-16">The <span className="text-red-600">Integrity Triad</span></h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-              {TRIAD_DATA.map((layer, i) => (
-                <div key={i} className="p-10 border border-slate-800 bg-slate-900/10 flex flex-col justify-between min-h-[450px]">
-                  <div>
-                    <h3 className="text-2xl font-black mb-4 italic uppercase text-white">{layer.title}</h3>
-                    <p className="text-base text-slate-400 mb-6 italic font-bold">{layer.q}</p>
-                    <div className="space-y-4 text-[11px] font-mono uppercase tracking-widest text-left">
-                      <p className="text-red-600 font-black">{layer.f}</p>
-                      <p className="text-slate-500">THE RISK: {layer.risk}</p>
-                      <p className="text-green-500">THE BMR FIX: {layer.fix}</p>
-                    </div>
-                  </div>
-                  <div className="text-[11px] text-slate-700 font-mono font-bold tracking-[0.4em] uppercase mt-8 border-t border-slate-800 pt-4">
-                    {layer.node} // SECURED
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* VAULT CTA: VERBIAGE RESTORED FROM MAIN */}
-          <section className="py-20 bg-red-600/5 border border-red-600/20 p-16 mb-20 text-left">
-            <div className="max-w-3xl space-y-8">
-              <h2 className="text-6xl font-black italic uppercase tracking-tighter text-red-600">The Evidence Vault</h2>
-              <p className="text-2xl text-slate-300 leading-relaxed italic font-medium">
-                Access the forensic analysis nodes to see exactly where logic shear occurs in modern enterprise AI.
-              </p>
-              <button 
-                onClick={() => router.push('/vault')}
-                className="inline-flex items-center gap-6 py-6 px-12 bg-red-600 hover:bg-white hover:text-black text-white font-black uppercase italic transition-all tracking-[0.3em] text-sm"
-              >
-                Access The Vault <ChevronRight size={20} />
-              </button>
-            </div>
-          </section>
+      
+      <main className="pt-44 pb-32 px-6 max-w-7xl mx-auto text-left">
+        <div className="mb-24 border-l-4 border-red-600 pl-12">
+          <div className="flex items-center gap-3 mb-6">
+            <ShieldAlert size={20} className="text-red-600" />
+            <span className="text-red-600 font-black uppercase tracking-[0.4em] text-[10px]">BMR_PROPRIETARY_FRAMEWORK</span>
+          </div>
+          <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-[0.85] mb-12">
+            SIGNAL <br /><span className="text-white">ARCHITECTURE.</span>
+          </h1>
+          <p className="max-w-2xl text-2xl text-slate-400 font-medium leading-relaxed">
+            Most organizations observe symptoms. BMR identifies the underlying logic fractures through a clinical diagnostic cadence.
+          </p>
         </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {METHODOLOGY_LENSES.map((lens) => (
+            <div key={lens.id} className="bg-slate-950/40 border border-slate-900 p-12 hover:border-red-600/50 transition-all flex flex-col justify-between min-h-[400px] shadow-2xl">
+              <div>
+                <div className="flex items-center justify-between mb-10">
+                  <div className="bg-slate-900 p-4 border border-slate-800">
+                    {lens.icon}
+                  </div>
+                  <span className="font-mono text-[11px] text-slate-700 font-black tracking-widest uppercase">LENS_{lens.id}</span>
+                </div>
+                <h3 className="text-4xl font-black uppercase italic tracking-tighter text-white mb-6 leading-none">
+                  {lens.label}
+                </h3>
+                <p className="text-lg text-slate-500 font-medium leading-relaxed border-l border-slate-800 pl-8">
+                  {lens.description}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <section className="mt-32 pt-20 border-t border-slate-900 flex flex-col md:flex-row gap-20 items-start">
+          <div className="md:w-1/2">
+            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white mb-8">THE INTERVENTION.</h2>
+            {/* 🛡️ NO DASH REWRITE: Using a colon and period for cleaner clinical structure */}
+            <p className="text-xl text-slate-500 leading-relaxed">
+              Once the signal is identified, we deploy the Hardening Protocol. This is not a project: it is a structural recovery of the logic chain. We ensure that every AI action is defensible, measurable, and strategically aligned.
+            </p>
+          </div>
+          <div className="md:w-1/2 bg-red-600 p-16 shadow-2xl">
+             <h3 className="text-white text-3xl font-black uppercase italic mb-6 tracking-tight">Ready to Audit?</h3>
+             <p className="text-red-100 text-lg mb-10 font-bold">Uncover the fractures in your environment before the rework tax hardens.</p>
+             <Link 
+              href="/pulse-check" 
+              className="inline-flex items-center gap-4 bg-white text-red-600 px-10 py-6 font-black uppercase italic text-sm tracking-widest hover:bg-slate-100 transition-all shadow-xl no-underline"
+            >
+              INITIALIZE_DIAGNOSTIC <ArrowRight size={20} />
+            </Link>
+          </div>
+        </section>
       </main>
+
       <Footer />
     </div>
   );

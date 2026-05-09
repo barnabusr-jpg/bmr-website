@@ -1,36 +1,62 @@
 "use client";
 import React from 'react';
-import { ShieldCheck, Activity, ZapOff, Database, Scaling, Binary } from "lucide-react";
+import { ShieldCheck, Activity, TrendingUp } from "lucide-react";
+import { motion } from "framer-motion";
 
-const forensicOutcomes = [
-  { icon: ZapOff, category: "OC-01", title: "Drift Containment", description: "Identifying and neutralizing the delta (Δ) between automated outputs and human operational reality before trust collapses." },
-  { icon: Activity, category: "OC-02", title: "Resonance Mapping", description: "Aligning system performance with human mental models to stop shadow labor and unlogged manual overrides." },
-  { icon: ShieldCheck, category: "OC-03", title: "Fidelity Assurance", description: "Establishing reconstructible logic chains that survive hostile regulatory review and internal accountability audits." },
-  { icon: Binary, category: "OC-04", title: "Structural Hardening", description: "Removing systemic fragility to ensure resilient performance in high-stakes, non-deterministic decision cycles." },
-  { icon: Scaling, category: "OC-05", title: "Governance Scaling", description: "Linking AI initiatives directly to core mission objectives, ensuring strategic intent is not lost in technical execution." },
-  { icon: Database, category: "OC-06", title: "Leakage Recovery", description: "Capturing leaked organizational value by reconciling technical precision with operational adoption rates." }
+const advisoryOutcomes = [
+  { 
+    icon: Activity, 
+    label: "EXECUTIVE NODE", 
+    title: "Fiduciary Assurance", 
+    description: "Neutralizing legal and regulatory exposure by establishing reconstructible logic chains that survive board-level scrutiny." 
+  },
+  { 
+    icon: TrendingUp, 
+    label: "MANAGERIAL NODE", 
+    title: "Capacity Recovery", 
+    description: "Reclaiming up to 30% of engineering bandwidth lost to 'Shadow Labor' and manual validation loops." 
+  },
+  { 
+    icon: ShieldCheck, 
+    label: "TECHNICAL NODE", 
+    title: "Structural Hardening", 
+    description: "Removing systemic fragility to ensure resilient model performance in non-deterministic decision cycles." 
+  }
 ];
 
 export default function OutcomesHome() {
   return (
-    <section style={{ borderTop: '1px solid #1e293b', paddingTop: '140px', paddingBottom: '140px', backgroundColor: '#020617' }}>
-      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 40px' }}>
-        <div style={{ textAlign: 'left', marginBottom: '80px', borderLeft: '6px solid #1e293b', paddingLeft: '40px' }}>
-          <span style={{ color: '#dc2626', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.4em', fontSize: '10px', fontStyle: 'italic' }}>VALIDATION_STANDARDS // SYSTEM_RECOVERY</span>
-          <h2 style={{ fontSize: 'clamp(3rem, 7vw, 6rem)', fontWeight: 900, color: 'white', fontStyle: 'italic', textTransform: 'uppercase', lineHeight: 1, marginTop: '20px' }}>
-            Hardened <span style={{ color: '#1e293b' }}>Outcomes</span>
+    <section className="bg-slate-950 py-32 border-y border-slate-900 px-6 md:px-10">
+      <div className="max-w-[1280px] mx-auto">
+        <div className="text-left mb-20 border-l-8 border-red-600 pl-10">
+          <span className="text-red-600 font-black uppercase tracking-[0.5em] text-[10px] italic">
+            CLINICAL_NODE_AUDIT // SYSTEM_STABILIZATION
+          </span>
+          <h2 className="text-5xl md:text-8xl font-black text-white italic uppercase tracking-tighter leading-[0.85] mt-4">
+            HARDENED <br /><span className="text-slate-800">OUTCOMES.</span>
           </h2>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '40px' }}>
-          {forensicOutcomes.map((outcome, index) => (
-            <div key={index} style={{ padding: '60px', border: '2px solid #0f172a', background: 'rgba(15, 23, 42, 0.2)', height: '100%' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '40px' }}>
-                <outcome.icon size={32} color="#dc2626" />
-                <span style={{ fontSize: '10px', fontWeight: 900, color: '#1e293b', letterSpacing: '0.3em' }}>{outcome.category}</span>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {advisoryOutcomes.map((outcome, index) => (
+            <motion.div 
+              key={index} 
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="bg-white p-12 shadow-2xl border-l-[12px] border-red-600 group hover:-translate-y-3 transition-all duration-500"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <outcome.icon size={48} className="text-red-600" />
+                <span className="text-[10px] font-mono font-black text-slate-300 uppercase tracking-widest italic">{outcome.label}</span>
               </div>
-              <h3 style={{ fontSize: '2.2rem', fontWeight: 900, color: 'white', fontStyle: 'italic', textTransform: 'uppercase', marginBottom: '20px' }}>{outcome.title}</h3>
-              <p style={{ fontSize: '1.4rem', color: '#64748b', lineHeight: 1.6, borderLeft: '2px solid #1e293b', paddingLeft: '24px' }}>{outcome.description}</p>
-            </div>
+              <h3 className="text-4xl font-black text-black italic uppercase tracking-tighter mb-6 leading-none">
+                {outcome.title}
+              </h3>
+              <p className="text-slate-600 font-bold uppercase text-xs leading-relaxed italic border-t border-slate-100 pt-6">
+                {outcome.description}
+              </p>
+            </motion.div>
           ))}
         </div>
       </div>

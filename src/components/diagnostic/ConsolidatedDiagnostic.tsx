@@ -60,8 +60,10 @@ export default function ConsolidatedDiagnostic() {
         rework_tax: parseFloat(finalMetrics.rework),
         raw_responses: answers,
         status: 'TRIANGULATION_ACTIVE' 
-      }]).select().single();
+      }]).select('id').single();
+
       if (auditError) throw auditError;
+
       await supabase.from('operators').upsert({ 
         email: email.toLowerCase(), 
         full_name: operatorName.toUpperCase(), 
@@ -78,52 +80,47 @@ export default function ConsolidatedDiagnostic() {
   if (!mounted) return null;
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left">
+    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left italic font-sans">
+      <AnimatePresence mode="wait">
+        {isLoading && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/98 z-[9999] flex flex-col items-center justify-center text-red-600">
+            <Activity className="animate-spin mb-4" size={64} />
+            <p className="font-black uppercase tracking-[0.5em] text-sm">SYNTHESIZING_VALUATION...</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence mode="wait">
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-16 text-center">
             <div className="space-y-4">
-              <h1 className="text-7xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">
-                AI <span className="text-red-600">EFFICIENCY</span> AUDIT
+              <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter text-white leading-none">
+                AI <span className="text-red-600 italic">EFFICIENCY</span> AUDIT
               </h1>
-              <p className="max-w-2xl mx-auto text-slate-400 text-lg font-medium italic leading-relaxed">
-                Most AI systems leak capital through manual rework. Identify your Operational Focus to begin.
+              <p className="max-w-2xl mx-auto text-slate-400 text-lg md:text-2xl font-bold italic leading-relaxed uppercase">
+                Most AI systems leak capital through manual rework. Identify operational focus to begin.
               </p>
             </div>
             
             <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
-              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-8 font-black italic underline decoration-2 underline-offset-8">Step 1: Select Your Perspective</p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {[
-                    { id: "EXECUTIVE", label: "EXECUTIVE", desc: "Fiduciary & Governance" },
-                    { id: "MANAGER", label: "MANAGERIAL", desc: "Operational Efficiency" },
-                    { id: "TECHNICAL", label: "TECHNICAL", desc: "Structural Execution" }
-                  ].map((node) => (
-                      <button 
-                        key={node.id} 
-                        onClick={() => setSelectedLens(node.id)} 
-                        className={`p-8 border-2 flex flex-col items-center gap-3 transition-all ${selectedLens === node.id ? 'bg-red-600 border-red-600 text-white shadow-[0_0_30px_rgba(220,38,38,0.4)] scale-105' : 'bg-slate-950 border-slate-900 text-slate-500 hover:border-slate-700'}`}
-                      >
-                        {selectedLens === node.id ? <Unlock size={20} /> : <Lock size={20} />}
-                        <span className="font-black italic text-md tracking-[0.1em] uppercase">{node.label}</span>
-                        <span className="text-[9px] font-mono uppercase opacity-60 font-bold">{node.desc}</span>
-                      </button>
-                  ))}
+              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black underline decoration-red-600/30 underline-offset-8">Step 1: Choose Operational Focus</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => (
+                  <button key={node} onClick={() => setSelectedLens(node)} className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node ? 'bg-red-600 border-red-600 text-white shadow-[0_0_50px_rgba(220,38,38,0.3)] scale-105' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}>
+                    {selectedLens === node ? <Unlock size={28} /> : <Lock size={28} className="opacity-20 transition-opacity" />}
+                    <span className="font-black text-xl tracking-[0.1em] uppercase italic">{node}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-10">
               {sectors.map((s) => (
-                <button 
-                  key={s.id} 
-                  disabled={!selectedLens}
-                  onClick={() => { setSector(s.id); setStep("intake"); }} 
-                  className="p-8 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-52 group disabled:opacity-20"
-                >
-                  <div className="text-red-600 transition-transform group-hover:scale-110">{s.icon}</div>
+                <button key={s.id} disabled={!selectedLens} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-56 group disabled:opacity-20 disabled:grayscale">
+                  <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
                   <div>
-                    <h3 className="text-2xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
-                    <p className="text-[10px] font-mono font-bold text-red-600 uppercase tracking-widest mt-1">{s.risk}</p>
+                    <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none italic">{s.label}</h3>
+                    <p className="text-[11px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2 italic">{s.risk}</p>
                   </div>
                 </button>
               ))}
@@ -132,31 +129,59 @@ export default function ConsolidatedDiagnostic() {
         )}
 
         {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-center">
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white italic">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950/30 border border-slate-900 p-12 max-w-4xl mx-auto space-y-8 text-left">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <input placeholder="FULL NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
-                <input placeholder="ORGANIZATION" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
-                <input placeholder="EMAIL ADDRESS" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
-                <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border border-slate-800 p-6 text-white w-full uppercase font-mono outline-none focus:border-red-600 transition-colors" />
+          <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12 text-center max-w-4xl mx-auto italic">
+            <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
+            <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                <div className="space-y-3">
+                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black">Full Name</label>
+                  <input placeholder="OPERATOR_ID" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black">Organization</label>
+                  <input placeholder="ENTITY_NAME" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black">Email Address</label>
+                  <input placeholder="INTEL_CHANNEL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                </div>
+                <div className="space-y-3">
+                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black">Confirm Email</label>
+                  <input placeholder="VERIFY_CHANNEL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                </div>
               </div>
-              <button disabled={!operatorName || email !== confirmEmail || !email} onClick={() => setStep("audit")} className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-2xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-4 shadow-lg shadow-red-600/10">Initialize Observation</button>
+              <button 
+                disabled={!operatorName || !entityName || email !== confirmEmail || !email} 
+                onClick={() => setStep("audit")} 
+                className="w-full py-10 font-black uppercase bg-red-600 text-white disabled:opacity-20 text-3xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)]"
+              >
+                Initialize Observation
+              </button>
             </div>
           </motion.div>
         )}
 
         {step === 'audit' && (
-          <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left">
-            <div className="flex items-center gap-4 text-red-600 font-black uppercase tracking-[0.5em] text-[11px] border-l-4 border-red-600 pl-4 leading-none">
-              <Activity size={18} className="animate-pulse" /> CASE_FILE: BMR-2026-SEG_0{currentDimension + 1}
+          <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left max-w-5xl mx-auto italic">
+            <div className="flex flex-col md:flex-row md:items-center gap-6 mb-16 border-b border-slate-900 pb-8">
+              <div className="bg-red-600 text-white px-4 py-1">
+                <p className="font-mono text-[10px] font-black tracking-[0.2em] uppercase">LIVE_SIGNAL_ACTIVE</p>
+              </div>
+              <div className="flex items-center gap-4 text-slate-500 font-mono text-[11px] font-bold tracking-[0.3em] uppercase">
+                <Activity size={16} className="text-red-600 animate-pulse" />
+                <span>CASE_FILE: BMR_2026_SEG_0{currentDimension + 1}</span>
+                <span className="text-slate-800">//</span>
+                <span className="text-red-600/50">TRNGL_REF: {sector.toUpperCase()}_{selectedLens}</span>
+              </div>
             </div>
-            <h2 className="text-4xl md:text-6xl font-black italic uppercase text-white leading-tight min-h-[180px] tracking-tighter">
+
+            <h2 className="text-4xl md:text-7xl font-black uppercase text-white leading-[0.9] tracking-tighter">
               {LOCAL_QUESTIONS[currentDimension]?.text}
             </h2>
-            <div className="grid grid-cols-1 gap-4 mt-16">
+
+            <div className="grid grid-cols-1 gap-4 mt-20">
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} className="py-10 px-12 border-2 border-slate-800 bg-slate-950/20 hover:border-red-600 transition-all text-left uppercase font-black text-slate-400 hover:text-white flex justify-between items-center group relative overflow-hidden" 
+                <button key={i} className="py-10 px-12 border-2 border-slate-900 bg-slate-950/40 hover:border-red-600 transition-all text-left uppercase font-black text-slate-500 hover:text-white flex justify-between items-center group relative overflow-hidden italic shadow-xl" 
                   onClick={async () => {
                     const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                     setAnswers(updatedAnswers);
@@ -168,8 +193,8 @@ export default function ConsolidatedDiagnostic() {
                       if (auditId) window.location.href = `/results/${auditId}`;
                     }
                   }}>
-                    <span className="text-xl md:text-2xl tracking-tight italic transition-transform group-hover:translate-x-2">{opt.label}</span>
-                    <ChevronRight size={32} className="opacity-0 group-hover:opacity-100 transition-all text-red-600 -translate-x-4 group-hover:translate-x-0" />
+                  <span className="text-2xl md:text-4xl tracking-tighter transition-transform group-hover:translate-x-4">{opt.label}</span>
+                  <ChevronRight size={40} className="opacity-0 group-hover:opacity-100 transition-all text-red-600 -translate-x-8 group-hover:translate-x-0" />
                 </button>
               ))}
             </div>
