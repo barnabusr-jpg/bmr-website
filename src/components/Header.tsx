@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ShieldAlert, ArrowRight } from 'lucide-react';
+import { ShieldAlert, Activity } from 'lucide-react';
 
 export default function Header() {
   const router = useRouter();
@@ -21,16 +21,16 @@ export default function Header() {
         </div>
       </Link>
 
-      <nav className="hidden md:flex items-center gap-10">
-        <Link href="/methodology" className="text-[10px] font-black tracking-[0.3em] text-slate-500 hover:text-white transition-colors no-underline uppercase italic">METHODOLOGY</Link>
-        <Link href="/briefings" className="text-[10px] font-black tracking-[0.3em] text-slate-500 hover:text-white transition-colors no-underline uppercase italic">BRIEFINGS</Link>
+      <nav className="hidden md:flex items-center gap-10 font-black italic">
+        <Link href="/methodology" className="text-[10px] font-black tracking-[0.3em] text-slate-500 hover:text-white transition-colors no-underline uppercase">METHODOLOGY</Link>
+        <Link href="/briefings" className="text-[10px] font-black tracking-[0.3em] text-slate-500 hover:text-white transition-colors no-underline uppercase">BRIEFINGS</Link>
       </nav>
 
       <button 
         onClick={() => router.push('/pulse-check')}
-        className="bg-red-600 text-white px-8 py-3 font-black uppercase tracking-[0.1em] text-[10px] hover:bg-white hover:text-red-600 transition-all italic flex items-center gap-3"
+        className="bg-red-600 text-white px-6 md:px-10 py-3 font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white hover:text-red-600 transition-all italic flex items-center gap-3 border-2 border-red-600"
       >
-        INITIATE_DIAGNOSTIC <ArrowRight size={14} />
+        START_PULSE_CHECK <Activity size={14} className="animate-pulse" />
       </button>
     </header>
   );
