@@ -1,88 +1,161 @@
 "use client";
-import React from 'react';
+import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Activity, ShieldAlert, ArrowRight, Zap, Target, Search } from "lucide-react";
-import Link from 'next/link';
-
-const METHODOLOGY_LENSES = [
-  { 
-    id: "HAI", 
-    label: "HUMAN-AI INTERFACE", 
-    description: "Detecting the Trust Gap. We measure where shadow labor replaces system efficiency.",
-    icon: <Search className="text-red-600" size={24} /> 
-  },
-  { 
-    id: "AVS", 
-    label: "ADOPTION VALUE SYSTEM", 
-    description: "Analyzing operational resonance. We identify activity that fails to translate into impact.",
-    icon: <Zap className="text-red-600" size={24} /> 
-  },
-  { 
-    id: "IGF", 
-    label: "INSTITUTIONAL FIDELITY", 
-    description: "Hardening the safeguard loop. Ensuring logic explainability remains under leadership control.",
-    icon: <Target className="text-red-600" size={24} /> 
-  }
-];
+import { Shield, Microscope, Activity, Award, Briefcase, Zap, Scale, Target, AlertCircle } from "lucide-react";
 
 export default function Methodology() {
+  const nodes = [
+    {
+      id: "NODE_01",
+      title: "EXECUTIVE NODE",
+      focus: "LEGAL LIABILITY",
+      lens: "PH.D. LEADERSHIP",
+      description: "We find the fault lines where AI logic breaks company policy. We map legal risks like the Air Canada case before they hit your balance sheet. If your board cannot control its AI, BMR gives them the kill switch.",
+      metrics: ["Board Risk Audit", "Policy Hardening", "Brand Protection"]
+    },
+    {
+      id: "NODE_02",
+      title: "TECHNICAL NODE",
+      focus: "LOGIC HARDENING",
+      lens: "FEDERAL ENGINEERING",
+      description: "We apply a government grade security mindset to your AI. We stop outside data from tricking the system into giving away company secrets. We do not just secure the server; we secure the decision making.",
+      metrics: ["Input Fracture Check", "Logic Air Gapping", "System Hardening"]
+    },
+    {
+      id: "NODE_03",
+      title: "MANAGERIAL NODE",
+      focus: "OVERSIGHT DECAY",
+      lens: "MA. LEADERSHIP & DESIGN",
+      description: "We prevent your AI from having unchecked power. If your AI has too much agency, a small error becomes a total portfolio collapse. We build human gates back into your automated systems.",
+      metrics: ["Agency Limits", "Staff Readiness", "Recovery Strategy"]
+    }
+  ];
+
+  const phases = [
+    { step: "01", title: "INTAKE", detail: "A twelve question diagnostic. Takes three minutes. We find your most obvious logic gaps." },
+    { step: "02", title: "TRIAGE", detail: "We map your gaps against historic audits and current legal reality to prioritize threats." },
+    { step: "03", title: "INDICTMENT", detail: "A clinical, no fluff report showing exactly where your organization is most at risk." },
+    { step: "04", title: "RECOVERY", detail: "Strategic advisory to build the armor, close the gaps, and stabilize your innovation." }
+  ];
+
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans italic selection:bg-red-600/30">
+    <div className="min-h-screen bg-[#020617] text-white font-sans italic selection:bg-red-600/30 overflow-x-hidden uppercase font-black">
       <Header />
       
-      <main className="pt-44 pb-32 px-6 max-w-7xl mx-auto text-left">
-        <div className="mb-24 border-l-4 border-red-600 pl-12">
-          <div className="flex items-center gap-3 mb-6">
-            <ShieldAlert size={20} className="text-red-600" />
-            <span className="text-red-600 font-black uppercase tracking-[0.4em] text-[10px]">BMR_PROPRIETARY_FRAMEWORK</span>
-          </div>
-          <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-[0.85] mb-12">
-            SIGNAL <br /><span className="text-white">ARCHITECTURE.</span>
-          </h1>
-          <p className="max-w-2xl text-2xl text-slate-400 font-medium leading-relaxed">
-            Most organizations observe symptoms. BMR identifies the underlying logic fractures through a clinical diagnostic cadence.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {METHODOLOGY_LENSES.map((lens) => (
-            <div key={lens.id} className="bg-slate-950/40 border border-slate-900 p-12 hover:border-red-600/50 transition-all flex flex-col justify-between min-h-[400px] shadow-2xl">
-              <div>
-                <div className="flex items-center justify-between mb-10">
-                  <div className="bg-slate-900 p-4 border border-slate-800">
-                    {lens.icon}
-                  </div>
-                  <span className="font-mono text-[11px] text-slate-700 font-black tracking-widest uppercase">LENS_{lens.id}</span>
-                </div>
-                <h3 className="text-4xl font-black uppercase italic tracking-tighter text-white mb-6 leading-none">
-                  {lens.label}
-                </h3>
-                <p className="text-lg text-slate-500 font-medium leading-relaxed border-l border-slate-800 pl-8">
-                  {lens.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <section className="mt-32 pt-20 border-t border-slate-900 flex flex-col md:flex-row gap-20 items-start">
-          <div className="md:w-1/2">
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter text-white mb-8">THE INTERVENTION.</h2>
-            {/* 🛡️ NO DASH REWRITE: Using a colon and period for cleaner clinical structure */}
-            <p className="text-xl text-slate-500 leading-relaxed">
-              Once the signal is identified, we deploy the Hardening Protocol. This is not a project: it is a structural recovery of the logic chain. We ensure that every AI action is defensible, measurable, and strategically aligned.
+      <main className="pt-44 pb-24 px-6 max-w-7xl mx-auto italic">
+        {/* --- SECTION I: THE WHY --- */}
+        <section className="mb-32 italic">
+          <div className="border-l-8 border-red-600 pl-10 mb-16 italic">
+            <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] italic">THE_BLUEPRINT // BMR_2.0</span>
+            <h1 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.85] mt-6 mb-10 italic">
+              FORENSIC <br /> <span className="text-red-600">PHILOSOPHY.</span>
+            </h1>
+            <p className="text-xl md:text-3xl text-white max-w-4xl leading-tight font-black italic">
+              AI risk is not a software bug. It is a failure of leadership and structure. We find the cracks in your business logic before they become legal disasters.
             </p>
           </div>
-          <div className="md:w-1/2 bg-red-600 p-16 shadow-2xl">
-             <h3 className="text-white text-3xl font-black uppercase italic mb-6 tracking-tight">Ready to Audit?</h3>
-             <p className="text-red-100 text-lg mb-10 font-bold">Uncover the fractures in your environment before the rework tax hardens.</p>
-             <Link 
-              href="/pulse-check" 
-              className="inline-flex items-center gap-4 bg-white text-red-600 px-10 py-6 font-black uppercase italic text-sm tracking-widest hover:bg-slate-100 transition-all shadow-xl no-underline"
+
+          <div className="grid md:grid-cols-2 gap-12 items-start italic">
+            <div className="bg-slate-900/30 border border-slate-800 p-10 shadow-2xl italic">
+              <h4 className="text-red-600 font-mono text-[10px] font-black mb-6 tracking-widest italic">THE_ORIGIN</h4>
+              <p className="text-slate-400 text-lg leading-relaxed normal-case font-medium italic">
+                BMR was built from two decades of high stakes leadership at Microsoft. I protected <span className="text-white font-black">United States Government Intelligence</span> in air gapped networks. After managing hundreds of system failures, I built this framework to find the weak points before they collapse your business.
+              </p>
+            </div>
+            <div className="space-y-6 italic">
+              <div className="flex gap-6 items-center border-b border-slate-900 pb-6 italic">
+                <Shield className="text-red-600 shrink-0 italic" size={32} />
+                <div>
+                  <div className="text-white font-black text-lg italic">GOVERNMENT GRADE SECURITY</div>
+                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic">SECURE CLOUD // AIR GAPPED SYSTEMS</p>
+                </div>
+              </div>
+              <div className="flex gap-6 items-center border-b border-slate-900 pb-6 italic">
+                <Briefcase className="text-red-600 shrink-0 italic" size={32} />
+                <div>
+                  <div className="text-white font-black text-lg italic uppercase">300 MILLION DOLLAR PORTFOLIO</div>
+                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic">600+ SYSTEM RECOVERIES</p>
+                </div>
+              </div>
+              <div className="flex gap-6 items-center border-b border-slate-900 pb-6 italic">
+                <Scale className="text-red-600 shrink-0 italic" size={32} />
+                <div>
+                  <div className="text-white font-black text-lg italic uppercase tracking-tighter">PH.D. LEADERSHIP & MA. DESIGN</div>
+                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic uppercase">SPECIALIST IN ORGANIZATIONAL DESIGN</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* --- SECTION II: THE NODES --- */}
+        <section className="mb-40 italic">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 italic">
+            {nodes.map((node) => (
+              <div key={node.id} className="bg-slate-950 border-2 border-slate-900 p-10 shadow-2xl relative group hover:border-red-600 transition-all italic">
+                <div className="text-red-600 font-mono text-[9px] font-black tracking-[0.3em] mb-6 italic">{node.id} // {node.lens}</div>
+                <h3 className="text-[clamp(1.5rem,3vw,2.2rem)] font-black mb-1 italic tracking-tighter text-white italic">{node.title}</h3>
+                <p className="text-red-600 text-[10px] font-black tracking-[0.2em] mb-8 italic">{node.focus}</p>
+                
+                <p className="text-slate-400 text-sm normal-case mb-12 leading-relaxed font-medium italic min-h-[100px]">
+                  {node.description}
+                </p>
+                
+                <div className="space-y-4 border-t border-slate-900 pt-8 italic">
+                  {node.metrics.map((m, j) => (
+                    <div key={j} className="flex items-center gap-3 text-[10px] font-black tracking-widest text-white italic">
+                      <Zap size={14} className="text-red-600 italic" /> {m}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* --- SECTION III: THE PROCESS (12 Qs / 3 Mins) --- */}
+        <section className="mb-40 bg-white text-slate-950 p-10 md:p-24 italic">
+          <div className="max-w-4xl italic">
+            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10 italic">THE 3 MINUTE <span className="text-red-600 italic font-black">PULSE CHECK.</span></h2>
+            <p className="text-lg md:text-xl font-bold text-slate-600 mb-20 normal-case italic leading-snug">
+              This is not a survey. It is a forensic test. We ask twelve targeted questions to find your high probability fractures. We deliver a clinical report of your vulnerability.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12 italic">
+            {phases.map((p) => (
+              <div key={p.step} className="border-l-4 border-slate-200 pl-8 space-y-4 italic">
+                <div className="text-red-600 font-black text-4xl italic">PHASE_{p.step}</div>
+                <div className="text-xl font-black italic tracking-tight italic italic">{p.title}</div>
+                <p className="text-slate-500 text-sm normal-case font-medium leading-relaxed italic">{p.detail}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* --- SECTION IV: CTA (RENAMED BUTTON) --- */}
+        <section className="max-w-5xl mx-auto text-center border border-slate-800 p-16 md:p-24 bg-slate-950/40 italic">
+          <AlertCircle className="text-red-600 mx-auto mb-8 italic" size={48} />
+          <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter mb-8 text-white leading-none italic">THE COST OF INACTION</h2>
+          <p className="text-xl md:text-2xl text-slate-400 leading-snug mb-12 normal-case italic font-medium italic">
+            For every one million dollars in AI spend, businesses lose four hundred thousand dollars per year to unaddressed errors. This is not optional. It is a fiduciary duty.
+          </p>
+          
+          <div className="flex flex-col items-center gap-6">
+            <button 
+              onClick={() => window.location.href='/pulse-check'} 
+              className="group relative bg-red-600 text-white px-12 md:px-24 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl italic uppercase"
             >
-              INITIALIZE_DIAGNOSTIC <ArrowRight size={20} />
-            </Link>
+              START PULSE CHECK
+              <Target className="absolute -top-4 -right-4 text-white group-hover:text-red-600 transition-all italic" size={32} />
+            </button>
+            
+            {/* 🛡️ COMPLETION CONFIRMATION */}
+            <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] tracking-[0.4em] font-black italic uppercase">
+              <Activity size={14} className="animate-pulse text-red-600" />
+              12 QUESTIONS // ~3 MINUTE COMPLETION TIME
+            </div>
           </div>
         </section>
       </main>
