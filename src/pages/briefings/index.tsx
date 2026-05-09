@@ -6,17 +6,16 @@ import { Lock, ShieldAlert, ChevronRight } from "lucide-react";
 import Link from 'next/link';
 
 export default function EvidenceVault() {
+  // Array ordered specifically to fill a 3-column grid by category (Stacked Vertically)
   const caseStudies = [
-    // Column 1: EXECUTIVE
+    // ROW 1: PRECEDENTS (Exec, Tech, Managerial)
     { id: "CASE_01", title: "EXECUTIVE VARIANCE", node: "EXECUTIVE", slug: "chatbot-liability", summary: "The Air Canada Precedent regarding autonomous agent liability." },
-    { id: "CASE_04", title: "FIDUCIARY SHEAR", node: "EXECUTIVE", slug: "fiduciary-gate-failure", summary: "UnitedHealth Fiduciary Failure and algorithmic supplantation." },
-    
-    // Column 2: TECHNICAL
     { id: "CASE_02", title: "FORCEDLEAK AGENT", node: "TECHNICAL", slug: "salesforce-failure", summary: "Investigating Agentforce exfiltration bypass vulnerabilities." },
-    { id: "CASE_05", title: "ZERO-CLICK DRIFT", node: "TECHNICAL", slug: "echoleak-vulnerability", summary: "Copilot M365 exfiltration via untrusted data ingestion." },
-    
-    // Column 3: MANAGERIAL
     { id: "CASE_03", title: "LOGIC SHEAR", node: "MANAGERIAL", slug: "lyft-logic-shear", summary: "Lyft $2B market volatility triggered by automated reporting error." },
+    
+    // ROW 2: 2025/2026 FRONTIER (Exec, Tech, Managerial)
+    { id: "CASE_04", title: "FIDUCIARY SHEAR", node: "EXECUTIVE", slug: "fiduciary-gate-failure", summary: "UnitedHealth Fiduciary Failure and algorithmic supplantation." },
+    { id: "CASE_05", title: "ZERO-CLICK DRIFT", node: "TECHNICAL", slug: "echoleak-vulnerability", summary: "Copilot M365 exfiltration via untrusted data ingestion." },
     { id: "CASE_06", title: "EXCESSIVE AGENCY", node: "MANAGERIAL", slug: "mexico-agency-breach", summary: "Mexico 150GB government breach via autonomous coding overreach." }
   ];
 
@@ -41,17 +40,21 @@ export default function EvidenceVault() {
             <Link key={item.slug} href={`/briefings/case-study/${item.slug}`} className="group no-underline">
               <div className="bg-slate-950 border-2 border-slate-900 p-8 lg:p-12 relative overflow-hidden group hover:border-red-600 transition-all shadow-2xl min-h-[550px] flex flex-col justify-between italic">
                 <ShieldAlert className="absolute top-10 right-10 text-red-600 opacity-5 group-hover:opacity-20 transition-opacity" size={140} />
+                
                 <div className="relative z-10 w-full">
                   <div className="font-mono text-[10px] text-red-600 font-black tracking-widest uppercase italic">
                     FILE_REF: {item.id} // <span className="text-slate-500">{item.node}_NODE</span>
                   </div>
+                  
                   <h2 className="text-4xl lg:text-[40px] xl:text-[48px] font-black uppercase tracking-tight text-white mt-10 mb-8 leading-[0.85] break-words italic">
                     {item.title}
                   </h2>
+
                   <p className="text-base lg:text-lg text-slate-500 font-medium leading-relaxed mb-12 border-l-2 border-slate-800 pl-6 italic uppercase">
                     "{item.summary}"
                   </p>
                 </div>
+
                 <div className="inline-flex items-center gap-4 text-red-600 font-black uppercase italic text-[11px] tracking-[0.3em] group-hover:text-white transition-all mt-auto italic">
                   ACCESS CASE AUTOPSY 
                   <ChevronRight size={18} className="group-hover:translate-x-2 transition-transform" />
