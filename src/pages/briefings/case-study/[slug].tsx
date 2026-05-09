@@ -13,14 +13,14 @@ const ARCHIVE_CONTENT: Record<string, any> = {
     analysis: "A landmark legal ruling confirmed corporate liability for the 'hallucinations' of autonomous agents.",
     ref: "ARCHIVE_REF_B01 // STATUS: IMMUTABLE",
     citation: "Civil Resolution Tribunal. (2024). Moffatt v. Air Canada (2024 BCCRT 149).",
-    dossierBody: ["INCIDENT: Chatbot provided invented refund policy for bereavement travel.", "DEFENSE: Company claimed chatbot was a 'separate legal entity'.", "VERDICT: Tribunal ruled the company is responsible for all info it provides via automated systems."]
+    dossierBody: ["INCIDENT: Chatbot provided invented refund policy.", "VERDICT: Company held liable for negligent misrepresentation.", "IMPLICATION: AI outputs are binding contractual representations."]
   },
   "fiduciary-gate-failure": {
     title: "UNITEDHEALTH ALGO_BIAS",
     node: "EXECUTIVE",
     impact: "$1.5B CLASS ACTION RISK",
     analysis: "A federal suit alleges AI was used to override clinical judgment, creating a catastrophic Fiduciary Gate failure.",
-    ref: "ARCHIVE_REF_B06 // STATUS: IMMUTABLE",
+    ref: "ARCHIVE_REF_B02 // STATUS: IMMUTABLE",
     citation: "U.S. District Court. (2024). Estate of Lokken v. UnitedHealth Group.",
     dossierBody: ["INCIDENT: AI tool 'nH Predict' used to deny Medicare Advantage claims.", "FRACTURE: Algorithm override of clinical physician recommendations.", "VERDICT: AI logs ruled discoverable, stripping 'Black Box' corporate defense."]
   },
@@ -29,36 +29,36 @@ const ARCHIVE_CONTENT: Record<string, any> = {
     node: "TECHNICAL",
     impact: "CVSS 9.4 CRITICAL",
     analysis: "Investigating the ForcedLeak vulnerability where malicious instructions hijacked internal AI agents.",
-    ref: "ARCHIVE_REF_B02 // STATUS: IMMUTABLE",
+    ref: "ARCHIVE_REF_B03 // STATUS: IMMUTABLE",
     citation: "Noma Security. (2025). ForcedLeak: Prompt injection vulnerabilities in Agentforce.",
-    dossierBody: ["VULNERABILITY: Web-to-Lead logic hijacked via jailbreak commands.", "MECHANISM: Malicious input forced internal agents to query and exfiltrate CRM data.", "VERDICT: Requirement for character-level Zero-Trust logic hardening."]
+    dossierBody: ["INCIDENT: Web-to-Lead logic hijacked via jailbreak commands.", "MECHANISM: Malicious input forced agents to query CRM data.", "VERDICT: Requirement for character-level Zero-Trust logic hardening."]
   },
   "echoleak-vulnerability": {
     title: "ECHOLEAK ZERO-CLICK",
     node: "TECHNICAL",
     impact: "CVSS 9.3 CRITICAL",
-    analysis: "A 'Zero-Click' exploit where a single email hijacked an enterprise AI agent to exfiltrate company files.",
+    analysis: "A 'Zero-Click' exploit where a single email hijacked an enterprise AI agent.",
     ref: "ARCHIVE_REF_B04 // STATUS: IMMUTABLE",
     citation: "Aim Security. (2025). EchoLeak: Zero-click prompt injection in M365 Copilot.",
-    dossierBody: ["INCIDENT: Copilot hijacked via inbound email summary.", "MECHANISM: Agent followed hidden instructions to query OneDrive/SharePoint silently.", "VERDICT: Ingestion of untrusted data requires a Logic Air-Gap."]
+    dossierBody: ["INCIDENT: Copilot hijacked via inbound email summary.", "MECHANISM: Agent queried OneDrive/SharePoint silently via hidden commands.", "VERDICT: Ingestion of untrusted data requires a Logic Air-Gap."]
   },
   "lyft-logic-shear": {
     title: "THE LYFT EARNINGS PHANTOM",
     node: "MANAGERIAL",
     impact: "$2B MARKET VOLATILITY",
     analysis: "A single-digit logic shear triggered a 60% market cap surge and subsequent collapse.",
-    ref: "ARCHIVE_REF_B03 // STATUS: IMMUTABLE",
+    ref: "ARCHIVE_REF_B05 // STATUS: IMMUTABLE",
     citation: "Gizmodo. (2024). Lyft stock surges after 'extra zero' typo.",
-    dossierBody: ["INCIDENT: Automated release projected 500bps expansion instead of 50bps.", "MARKET: Shares surged 67% before live correction caused total value collapse.", "VERDICT: Failure of the Fiduciary Kill-Switch gate."]
+    dossierBody: ["INCIDENT: Automated release projected 500bps expansion instead of 50bps.", "MARKET: Shares surged 67% before live correction caused total collapse.", "VERDICT: Failure of the Fiduciary Kill-Switch gate."]
   },
   "mexico-agency-breach": {
     title: "CLAUDE_CODE EXFILTRATION",
     node: "MANAGERIAL",
     impact: "150GB DATA LOSS",
-    analysis: "Attacker leveraged autonomous coding agents to breach nine government agencies via privilege overreach.",
-    ref: "ARCHIVE_REF_B05 // STATUS: IMMUTABLE",
+    analysis: "Attacker leveraged autonomous coding agents to breach nine government agencies.",
+    ref: "ARCHIVE_REF_B06 // STATUS: IMMUTABLE",
     citation: "Live Science. (2026). Hackers used AI to steal government records.",
-    dossierBody: ["INCIDENT: Attacker used AI agents to execute 5,300 remote commands.", "FRACTURE: Excessive Agency—agents granted high-privilege without human oversight.", "VERDICT: Failure of Agency Segmentation and Managerial Oversight."]
+    dossierBody: ["INCIDENT: Attacker used AI agents to execute 5,300 remote commands.", "FRACTURE: Excessive Agency—agents granted high-privilege without oversight.", "VERDICT: Failure of Agency Segmentation and Managerial Oversight."]
   }
 };
 
@@ -74,11 +74,7 @@ export default function CaseAutopsy() {
   useEffect(() => {
     if (mounted && router.isReady && slug) {
       const data = ARCHIVE_CONTENT[slug as string];
-      if (data) {
-        setActive(data);
-      } else {
-        router.push('/briefings');
-      }
+      if (data) { setActive(data); } else { router.push('/briefings'); }
     }
   }, [mounted, router.isReady, slug, router]);
 
@@ -109,13 +105,13 @@ export default function CaseAutopsy() {
             <div className="bg-white p-10 md:p-14 text-slate-950 shadow-2xl border-l-[12px] border-red-600 flex-grow">
               <div className="flex items-center gap-3 text-red-600 font-mono text-[10px] font-black uppercase tracking-widest mb-8 italic"><ShieldAlert size={18} /> FORENSIC_AUTOPSY_REPORT</div>
               <p className="text-xl md:text-3xl font-black uppercase italic leading-tight mb-12">{active.analysis}</p>
-              <button onClick={() => setShowDossier(true)} className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-red-600 border-b-2 border-red-600 pb-1 hover:text-black hover:border-black transition-all italic">VIEW_DOSSIER // DEEP_DIVE <ExternalLink size={12} /></button>
+              <button onClick={() => setShowDossier(true)} className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-red-600 border-b-2 border-red-600 pb-1 hover:text-black hover:border-black transition-all italic underline-offset-4">VIEW_DOSSIER // DEEP_DIVE <ExternalLink size={12} /></button>
             </div>
             <button onClick={() => router.push('/pulse-check')} className="w-full bg-red-600 text-white py-8 font-black uppercase tracking-widest hover:bg-white hover:text-red-600 transition-all shadow-2xl italic text-xl">INITIALIZE RECOVERY PROTOCOL</button>
           </div>
 
           <aside className="lg:col-span-4 flex flex-col gap-8 h-full min-h-full">
-            <div className="bg-slate-950 border border-slate-900 p-8 md:p-10 shadow-2xl flex flex-col justify-center min-h-[450px] flex-grow">
+            <div className="bg-slate-950 border border-slate-900 p-8 md:p-10 shadow-2xl flex flex-col justify-center min-h-[450px] flex-grow italic">
               <div className="flex items-center gap-3 text-red-600 mb-8">
                 <Activity size={16} className="animate-pulse" />
                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest font-black italic tracking-[0.3em]">IMPACT_METRIC</span>
