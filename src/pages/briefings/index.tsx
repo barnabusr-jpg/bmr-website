@@ -7,17 +7,17 @@ import Link from 'next/link';
 
 export default function EvidenceVault() {
   const caseStudies = [
-    // EXECUTIVE NODE
+    // COLUMN 1: EXECUTIVE (LEFT)
     { id: "CASE_01", title: "EXECUTIVE VARIANCE", node: "EXECUTIVE", slug: "chatbot-liability", summary: "The Air Canada Precedent regarding autonomous agent liability." },
-    { id: "CASE_06", title: "FIDUCIARY SHEAR", node: "EXECUTIVE", slug: "fiduciary-gate-failure", summary: "UnitedHealth Fiduciary Failure and algorithmic supplantation." },
+    { id: "CASE_02", title: "FIDUCIARY SHEAR", node: "EXECUTIVE", slug: "fiduciary-gate-failure", summary: "UnitedHealth Fiduciary Failure and algorithmic supplantation." },
     
-    // TECHNICAL NODE
-    { id: "CASE_02", title: "FORCEDLEAK AGENT", node: "TECHNICAL", slug: "salesforce-failure", summary: "Investigating Agentforce exfiltration bypass vulnerabilities." },
+    // COLUMN 2: TECHNICAL (MIDDLE)
+    { id: "CASE_03", title: "FORCEDLEAK AGENT", node: "TECHNICAL", slug: "salesforce-failure", summary: "Investigating Agentforce exfiltration bypass vulnerabilities." },
     { id: "CASE_04", title: "ZERO-CLICK DRIFT", node: "TECHNICAL", slug: "echoleak-vulnerability", summary: "Copilot M365 exfiltration via untrusted data ingestion." },
     
-    // MANAGERIAL NODE
-    { id: "CASE_03", title: "LOGIC SHEAR", node: "MANAGERIAL", slug: "lyft-logic-shear", summary: "Lyft $2B market volatility triggered by automated reporting error." },
-    { id: "CASE_05", title: "EXCESSIVE AGENCY", node: "MANAGERIAL", slug: "mexico-agency-breach", summary: "Mexico 150GB government breach via autonomous coding overreach." }
+    // COLUMN 3: MANAGERIAL (RIGHT)
+    { id: "CASE_05", title: "LOGIC SHEAR", node: "MANAGERIAL", slug: "lyft-logic-shear", summary: "Lyft $2B market volatility triggered by automated reporting error." },
+    { id: "CASE_06", title: "EXCESSIVE AGENCY", node: "MANAGERIAL", slug: "mexico-agency-breach", summary: "Mexico 150GB government breach via autonomous coding overreach." }
   ];
 
   return (
@@ -29,13 +29,14 @@ export default function EvidenceVault() {
             <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">
               EVIDENCE <br /><span className="text-red-600 italic">VAULT.</span>
             </h1>
-            <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.5em] mt-8 font-black italic">
+            <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.4em] mt-8 font-black italic">
               STATUS: PROTECTED_ACCESS // ARCHIVE_2026
             </p>
           </div>
           <Lock className="text-slate-900 opacity-20 hidden md:block mb-4" size={120} />
         </div>
 
+        {/* 🛡️ GRID CONFIGURATION: Stacks Node categories into columns */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {caseStudies.map((item) => (
             <Link key={item.id} href={`/briefings/case-study/${item.slug}`} className="group no-underline">
