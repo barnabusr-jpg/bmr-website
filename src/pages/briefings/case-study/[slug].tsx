@@ -13,7 +13,7 @@ const ARCHIVE_CONTENT: Record<string, any> = {
     analysis: "A landmark legal ruling confirmed corporate liability for the 'hallucinations' of autonomous agents.",
     ref: "ARCHIVE_REF_B01 // STATUS: IMMUTABLE",
     citation: "Civil Resolution Tribunal. (2024). Moffatt v. Air Canada (2024 BCCRT 149).",
-    dossierBody: ["INCIDENT: Chatbot provided invented refund policy.", "VERDICT: Company held liable for negligent misrepresentation.", "IMPLICATION: AI outputs are binding contractual representations."]
+    dossierBody: ["INCIDENT: Chatbot provided invented refund policy.", "VERDICT: Airline held liable for negligent misrepresentation.", "IMPLICATION: AI outputs are binding contractual representations."]
   },
   "fiduciary-gate-failure": {
     title: "UNITEDHEALTH ALGO_BIAS",
@@ -31,7 +31,7 @@ const ARCHIVE_CONTENT: Record<string, any> = {
     analysis: "Investigating the ForcedLeak vulnerability where malicious instructions hijacked internal AI agents.",
     ref: "ARCHIVE_REF_B03 // STATUS: IMMUTABLE",
     citation: "Noma Security. (2025). ForcedLeak: Prompt injection vulnerabilities in Agentforce.",
-    dossierBody: ["INCIDENT: Web-to-Lead logic hijacked via jailbreak commands.", "MECHANISM: Malicious input forced agents to query CRM data.", "VERDICT: Requirement for character-level Zero-Trust logic hardening."]
+    dossierBody: ["VULNERABILITY: Web-to-Lead logic hijacked via jailbreak commands.", "MECHANISM: Malicious input forced agents to query CRM data.", "VERDICT: Requirement for character-level Zero-Trust logic hardening."]
   },
   "echoleak-vulnerability": {
     title: "ECHOLEAK ZERO-CLICK",
