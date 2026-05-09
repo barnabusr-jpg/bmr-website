@@ -26,7 +26,7 @@ export default function Methodology() {
       id: "NODE_03",
       title: "MANAGERIAL NODE",
       focus: "OVERSIGHT DECAY",
-      lens: "P&L PORTFOLIO OVERSIGHT",
+      lens: "MA. LEADERSHIP & DESIGN",
       description: "We prevent your AI from having unchecked power. If your AI has too much agency, a small error becomes a total portfolio collapse. We build human gates back into your automated systems.",
       metrics: ["Agency Limits", "Staff Readiness", "Recovery Strategy"]
     }
@@ -44,8 +44,8 @@ export default function Methodology() {
       <Header />
       
       <main className="pt-44 pb-24 px-6 max-w-7xl mx-auto italic">
-        {/* --- SECTION I: THE WHY (10th Grade Readability) --- */}
-        <section className="mb-32">
+        {/* --- SECTION I: THE WHY --- */}
+        <section className="mb-32 italic">
           <div className="border-l-8 border-red-600 pl-10 mb-16 italic">
             <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] italic">THE_BLUEPRINT // BMR_2.0</span>
             <h1 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.85] mt-6 mb-10 italic">
@@ -81,25 +81,23 @@ export default function Methodology() {
               <div className="flex gap-6 items-center border-b border-slate-900 pb-6 italic">
                 <Scale className="text-red-600 shrink-0 italic" size={32} />
                 <div>
-                  <div className="text-white font-black text-lg italic">PH.D. LEADERSHIP</div>
-                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic">FIDUCIARY & GOVERNANCE EXPERT</p>
+                  <div className="text-white font-black text-lg italic uppercase">PH.D. LEADERSHIP & MA. DESIGN</div>
+                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic uppercase">SPECIALIST IN ORGANIZATIONAL DESIGN</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* --- SECTION II: THE NODES (Visual Legibility Fix) --- */}
+        {/* --- SECTION II: THE NODES --- */}
         <section className="mb-40 italic">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 italic">
             {nodes.map((node) => (
               <div key={node.id} className="bg-slate-950 border-2 border-slate-900 p-10 shadow-2xl relative group hover:border-red-600 transition-all italic">
                 <div className="text-red-600 font-mono text-[9px] font-black tracking-[0.3em] mb-6 italic">{node.id} // {node.lens}</div>
-                {/* 🛡️ CLAMPED TEXT: Ensures titles are bold and readable */}
-                <h3 className="text-[clamp(1.5rem,3vw,2.2rem)] font-black mb-1 italic tracking-tighter text-white">{node.title}</h3>
+                <h3 className="text-[clamp(1.5rem,3vw,2.2rem)] font-black mb-1 italic tracking-tighter text-white italic">{node.title}</h3>
                 <p className="text-red-600 text-[10px] font-black tracking-[0.2em] mb-8 italic">{node.focus}</p>
                 
-                {/* 🛡️ SIMPLIFIED DESCRIPTION: Short and punchy */}
                 <p className="text-slate-400 text-sm normal-case mb-12 leading-relaxed font-medium italic min-h-[100px]">
                   {node.description}
                 </p>
@@ -116,10 +114,10 @@ export default function Methodology() {
           </div>
         </section>
 
-        {/* --- SECTION III: THE PROCESS (12 Qs / 3 Mins) --- */}
+        {/* --- SECTION III: THE PROCESS --- */}
         <section className="mb-40 bg-white text-slate-950 p-10 md:p-24 italic">
           <div className="max-w-4xl italic">
-            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10">THE 3 MINUTE <span className="text-red-600 italic">PULSE CHECK</span></h2>
+            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10 italic">THE 3 MINUTE <span className="text-red-600 italic">PULSE CHECK</span></h2>
             <p className="text-lg md:text-xl font-bold text-slate-600 mb-20 normal-case italic">
               This is not a survey. It is a forensic test. We ask twelve targeted questions to find your high probability fractures. We deliver a clinical report of your vulnerability.
             </p>
@@ -129,7 +127,7 @@ export default function Methodology() {
             {phases.map((p) => (
               <div key={p.step} className="border-l-4 border-slate-200 pl-8 space-y-4 italic">
                 <div className="text-red-600 font-black text-4xl italic">PHASE_{p.step}</div>
-                <div className="text-xl font-black italic tracking-tight italic">{p.title}</div>
+                <div className="text-xl font-black italic tracking-tight italic italic">{p.title}</div>
                 <p className="text-slate-500 text-sm normal-case font-medium leading-relaxed italic">{p.detail}</p>
               </div>
             ))}
@@ -146,7 +144,7 @@ export default function Methodology() {
           
           <button 
             onClick={() => window.location.href='/pulse-check'} 
-            className="group relative bg-red-600 text-white px-12 md:px-24 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl"
+            className="group relative bg-red-600 text-white px-12 md:px-24 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl italic"
           >
             START PULSE CHECK
             <Target className="absolute -top-4 -right-4 text-white group-hover:text-red-600 transition-all italic" size={32} />
