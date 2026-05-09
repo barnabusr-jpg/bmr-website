@@ -15,33 +15,32 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] flex flex-col selection:bg-red-600/30 w-full font-sans overflow-x-hidden">
-      {/* 🏛️ GLOBAL HEADER (Handles the Diagnostic Modal Launch) */}
+    <div className="min-h-screen bg-[#020617] flex flex-col selection:bg-red-600/30 w-full font-sans overflow-x-hidden italic uppercase font-black">
       <Header />
       
       <main className="flex-grow w-full">
-        {/* 🚀 HERO SECTION */}
+        {/* 🚀 HERO SECTION (Update this component next) */}
         <HeroHome />
         
-        {/* 🛡️ EXECUTIVE SUMMARY: 2.0 ACCESSIBILITY ISLANDS */}
-        <section className="py-24 px-6 bg-slate-950/50 border-y border-slate-900">
-          <div className="container mx-auto max-w-[1280px]">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {/* 🛡️ EXECUTIVE SUMMARY: 10TH GRADE READABILITY */}
+        <section className="py-24 px-6 bg-slate-950/50 border-y border-slate-900 italic">
+          <div className="container mx-auto max-w-[1280px] italic">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 italic">
               {[
                 { 
                   icon: <Activity className="text-red-600" size={40} />, 
-                  title: "Systemic Decay", 
-                  desc: "Unmonitored AI drift creates a 'Hidden Rework Tax'—the manual effort hidden inside automated systems." 
+                  title: "SYSTEM DRIFT", 
+                  desc: "Unwatched AI makes mistakes that force humans to step back in. This creates a hidden tax on your time and money." 
                 },
                 { 
                   icon: <TrendingUp className="text-red-600" size={40} />, 
-                  title: "Capital Leakage", 
-                  desc: "Operational decoupling drains up to 40% of AI budgets into invisible manual validation loops." 
+                  title: "BUDGET LEAKAGE", 
+                  desc: "Without proper gates, up to forty percent of AI budgets are wasted on fixing automated errors manually." 
                 },
                 { 
                   icon: <ShieldCheck className="text-red-600" size={40} />, 
-                  title: "Fiduciary Shield", 
-                  desc: "Our forensic triangulation hardens your logic roadmap and secures board-level accountability." 
+                  title: "LEGAL ARMOR", 
+                  desc: "Our forensic check finds the logic gaps and builds the guardrails needed to keep your board safe and accountable." 
                 }
               ].map((card, i) => (
                 <motion.div 
@@ -50,15 +49,15 @@ export default function Home() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ delay: i * 0.1 }}
-                  className="bg-white p-12 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.6)] border-l-[12px] border-red-600 group hover:-translate-y-2 transition-all duration-500"
+                  className="bg-white p-12 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.6)] border-l-[12px] border-red-600 group hover:-translate-y-2 transition-all duration-500 italic"
                 >
-                  <div className="mb-8 transform group-hover:scale-110 transition-transform duration-500">
+                  <div className="mb-8 transform group-hover:scale-110 transition-transform duration-500 italic">
                     {card.icon}
                   </div>
                   <h3 className="text-black text-2xl font-black uppercase italic mb-4 tracking-tighter leading-none italic">
                     {card.title}
                   </h3>
-                  <p className="text-slate-600 font-bold uppercase text-[10px] leading-relaxed italic tracking-tight italic">
+                  <p className="text-slate-600 font-bold uppercase text-[10px] leading-relaxed italic tracking-tight normal-case italic">
                     {card.desc}
                   </p>
                 </motion.div>
@@ -67,14 +66,12 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 🔍 SECONDARY SECTIONS */}
         <InsightsHome />
         <OutcomesHome />
         <ComparisonGrid />
         <ServicesPreviewHome />
       </main>
 
-      {/* 🏛️ GLOBAL FOOTER */}
       <Footer />
 
       {/* 🛠️ ADMIN SHORTCUT */}
@@ -83,10 +80,10 @@ export default function Home() {
         animate={{ opacity: 1 }}
         transition={{ delay: 2 }}
         onClick={() => router.push('/admin/dashboard')} 
-        className="fixed bottom-10 right-10 z-[10000] cursor-crosshair w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-800 bg-slate-950 hover:border-red-600 transition-all group"
+        className="fixed bottom-10 right-10 z-[10000] cursor-crosshair w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-800 bg-slate-950 hover:border-red-600 transition-all group italic"
       >
-        <Shield size={16} className="text-slate-600 group-hover:text-red-600" />
-        <span className="absolute right-14 bg-slate-900 text-white text-[8px] font-mono py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap italic">
+        <Shield size={16} className="text-slate-600 group-hover:text-red-600 italic" />
+        <span className="absolute right-14 bg-slate-900 text-white text-[8px] font-mono py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap italic italic">
           [ AUTH_REQUIRED ]
         </span>
       </motion.div>
