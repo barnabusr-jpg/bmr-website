@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -49,10 +49,14 @@ export default function Methodology() {
           <div className="border-l-8 border-red-600 pl-10 mb-16 italic text-left">
             <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] italic">THE_BLUEPRINT // BMR_2.0</span>
             
-            {/* 🛡️ TYPOGRAPHY FIX: inline-block prevents the word from splitting across lines */}
-            <h1 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.85] mt-6 mb-10 italic">
-              FORENSIC <br /> 
-              <span className="text-red-600 inline-block italic">
+            {/* 🛡️ TYPOGRAPHY 2.0 FIX: 
+                - text-[clamp(...)] ensures the font is fluid but has a floor/ceiling.
+                - leading-none prevents extra vertical spacing on wrap.
+                - block w-full ensures PHILOSOPHY owns its own line for maximum width.
+            */}
+            <h1 className="font-black tracking-tighter leading-[0.85] mt-6 mb-10 italic">
+              <span className="text-6xl md:text-9xl block">FORENSIC</span>
+              <span className="text-red-600 text-[clamp(3.2rem,14.5vw,8rem)] md:text-9xl block leading-none">
                 PHILOSOPHY.
               </span>
             </h1>
@@ -66,7 +70,7 @@ export default function Methodology() {
             <div className="bg-slate-900/30 border border-slate-800 p-10 shadow-2xl italic">
               <h4 className="text-red-600 font-mono text-[10px] font-black mb-6 tracking-widest italic">THE_ORIGIN</h4>
               <p className="text-slate-400 text-lg leading-relaxed normal-case font-medium italic">
-                BMR was built from two decades of high stakes leadership at Microsoft. I protected <span className="text-white font-black">United States Government Intelligence</span> in air gapped networks. After managing hundreds of system failures, I built this framework to find the weak points before they collapse your business.
+                BMR was built from over twenty years of leadership including a decade at Microsoft. I protected <span className="text-white font-black">United States Government Intelligence</span> in air gapped networks. After managing hundreds of system failures, I built this framework to find the weak points before they collapse your business.
               </p>
             </div>
             <div className="space-y-6 italic">
@@ -133,7 +137,7 @@ export default function Methodology() {
             {phases.map((p) => (
               <div key={p.step} className="border-l-4 border-slate-200 pl-8 space-y-4 italic">
                 <div className="text-red-600 font-black text-4xl italic">PHASE_{p.step}</div>
-                <div className="text-xl font-black italic tracking-tight italic italic">{p.title}</div>
+                <div className="text-xl font-black italic tracking-tight italic">{p.title}</div>
                 <p className="text-slate-500 text-sm normal-case font-medium leading-relaxed italic">{p.detail}</p>
               </div>
             ))}
@@ -143,7 +147,7 @@ export default function Methodology() {
         {/* --- SECTION IV: CTA --- */}
         <section className="max-w-5xl mx-auto text-center border border-slate-800 p-16 md:p-24 bg-slate-950/40 italic">
           <AlertCircle className="text-red-600 mx-auto mb-8 italic" size={48} />
-          <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter mb-8 text-white leading-none italic text-center">THE COST OF INACTION</h2>
+          <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter mb-8 text-white leading-none italic text-center uppercase">THE COST OF INACTION</h2>
           <p className="text-xl md:text-2xl text-slate-400 leading-snug mb-12 normal-case italic font-medium italic">
             For every one million dollars in AI spend, businesses lose four hundred thousand dollars per year to unaddressed errors. This is not optional. It is a fiduciary duty.
           </p>
