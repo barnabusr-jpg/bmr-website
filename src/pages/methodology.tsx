@@ -46,11 +46,17 @@ export default function Methodology() {
       <main className="pt-44 pb-24 px-6 max-w-7xl mx-auto italic">
         {/* --- SECTION I: THE WHY --- */}
         <section className="mb-32 italic">
-          <div className="border-l-8 border-red-600 pl-10 mb-16 italic">
+          <div className="border-l-8 border-red-600 pl-10 mb-16 italic text-left">
             <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] italic">THE_BLUEPRINT // BMR_2.0</span>
+            
+            {/* 🛡️ TYPOGRAPHY FIX: inline-block prevents the word from splitting across lines */}
             <h1 className="text-6xl md:text-9xl font-black tracking-tighter leading-[0.85] mt-6 mb-10 italic">
-              FORENSIC <br /> <span className="text-red-600">PHILOSOPHY.</span>
+              FORENSIC <br /> 
+              <span className="text-red-600 inline-block italic">
+                PHILOSOPHY.
+              </span>
             </h1>
+            
             <p className="text-xl md:text-3xl text-white max-w-4xl leading-tight font-black italic">
               AI risk is not a software bug. It is a failure of leadership and structure. We find the cracks in your business logic before they become legal disasters.
             </p>
@@ -114,7 +120,7 @@ export default function Methodology() {
           </div>
         </section>
 
-        {/* --- SECTION III: THE PROCESS (12 Qs / 3 Mins) --- */}
+        {/* --- SECTION III: THE PROCESS --- */}
         <section className="mb-40 bg-white text-slate-950 p-10 md:p-24 italic">
           <div className="max-w-4xl italic">
             <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10 italic">THE 3 MINUTE <span className="text-red-600 italic font-black">PULSE CHECK.</span></h2>
@@ -134,10 +140,10 @@ export default function Methodology() {
           </div>
         </section>
 
-        {/* --- SECTION IV: CTA (RENAMED BUTTON) --- */}
+        {/* --- SECTION IV: CTA --- */}
         <section className="max-w-5xl mx-auto text-center border border-slate-800 p-16 md:p-24 bg-slate-950/40 italic">
           <AlertCircle className="text-red-600 mx-auto mb-8 italic" size={48} />
-          <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter mb-8 text-white leading-none italic">THE COST OF INACTION</h2>
+          <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter mb-8 text-white leading-none italic text-center">THE COST OF INACTION</h2>
           <p className="text-xl md:text-2xl text-slate-400 leading-snug mb-12 normal-case italic font-medium italic">
             For every one million dollars in AI spend, businesses lose four hundred thousand dollars per year to unaddressed errors. This is not optional. It is a fiduciary duty.
           </p>
@@ -151,7 +157,6 @@ export default function Methodology() {
               <Target className="absolute -top-4 -right-4 text-white group-hover:text-red-600 transition-all italic" size={32} />
             </button>
             
-            {/* 🛡️ COMPLETION CONFIRMATION */}
             <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] tracking-[0.4em] font-black italic uppercase">
               <Activity size={14} className="animate-pulse text-red-600" />
               12 QUESTIONS // ~3 MINUTE COMPLETION TIME
