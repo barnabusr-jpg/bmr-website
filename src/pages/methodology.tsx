@@ -1,4 +1,4 @@
- "use client";
+"use client";
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -47,18 +47,17 @@ export default function Methodology() {
         {/* --- SECTION I: THE WHY --- */}
         <section className="mb-32 italic">
           <div className="border-l-8 border-red-600 pl-10 mb-16 italic text-left">
-            <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] italic">THE_BLUEPRINT // BMR_2.0</span>
+            <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] italic uppercase">THE_BLUEPRINT // BMR_2.0</span>
             
-            <h1 className="font-black tracking-tighter leading-[0.85] mt-6 mb-10 italic uppercase">
-              {/* Forensic stays large but safe */}
+            <h1 className="font-black tracking-[0.02em] leading-[0.8] mt-6 mb-10 italic uppercase">
               <span className="text-6xl md:text-9xl block">FORENSIC</span>
               
-              {/* 🛡️ THE DEFINITIVE TYPOGRAPHY FIX:
-                  1. text-[12.5vw] scales the word based on the phone's width to prevent overflow.
-                  2. md:text-9xl returns it to standard massive size on desktop.
-                  3. break-keep prevents the browser from splitting the word.
+              {/* 🛡️ THE FINAL RESOLUTION:
+                  1. text-[11vw] - Reduced from 12.5 to 11 to give the 'Y' a safety margin.
+                  2. -ml-1 - A tiny negative margin to pull the word left.
+                  3. whitespace-nowrap - Strictly forbids the browser from wrapping the 'Y'.
               */}
-              <span className="text-red-600 text-[12.5vw] md:text-9xl block leading-none break-keep">
+              <span className="text-red-600 text-[11vw] md:text-9xl block leading-none whitespace-nowrap -ml-1">
                 PHILOSOPHY.
               </span>
             </h1>
@@ -80,14 +79,14 @@ export default function Methodology() {
                 <Shield className="text-red-600 shrink-0 italic" size={32} />
                 <div>
                   <div className="text-white font-black text-lg italic">GOVERNMENT GRADE SECURITY</div>
-                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic">SECURE CLOUD // AIR GAPPED SYSTEMS</p>
+                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic italic">SECURE CLOUD // AIR GAPPED SYSTEMS</p>
                 </div>
               </div>
               <div className="flex gap-6 items-center border-b border-slate-900 pb-6 italic">
                 <Briefcase className="text-red-600 shrink-0 italic" size={32} />
                 <div>
                   <div className="text-white font-black text-lg italic uppercase">300 MILLION DOLLAR PORTFOLIO</div>
-                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic">600+ SYSTEM RECOVERIES</p>
+                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic italic">SIX HUNDRED SYSTEM RECOVERIES</p>
                 </div>
               </div>
               <div className="flex gap-6 items-center border-b border-slate-900 pb-6 italic">
@@ -129,7 +128,7 @@ export default function Methodology() {
         {/* --- SECTION III: THE PROCESS --- */}
         <section className="mb-40 bg-white text-slate-950 p-10 md:p-24 italic">
           <div className="max-w-4xl italic">
-            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10 italic uppercase">THE 3 MINUTE <span className="text-red-600 italic font-black">PULSE CHECK.</span></h2>
+            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10 italic uppercase font-black">THE 3 MINUTE <span className="text-red-600 italic font-black">PULSE CHECK.</span></h2>
             <p className="text-lg md:text-xl font-bold text-slate-600 mb-20 normal-case italic leading-snug">
               This is not a survey. It is a forensic test. We ask twelve targeted questions to find your high probability fractures. We deliver a clinical report of your vulnerability.
             </p>
@@ -139,7 +138,7 @@ export default function Methodology() {
             {phases.map((p) => (
               <div key={p.step} className="border-l-4 border-slate-200 pl-8 space-y-4 italic">
                 <div className="text-red-600 font-black text-4xl italic">PHASE_{p.step}</div>
-                <div className="text-xl font-black italic tracking-tight italic italic uppercase">{p.title}</div>
+                <div className="text-xl font-black italic tracking-tight italic uppercase font-black">{p.title}</div>
                 <p className="text-slate-500 text-sm normal-case font-medium leading-relaxed italic">{p.detail}</p>
               </div>
             ))}
@@ -149,21 +148,21 @@ export default function Methodology() {
         {/* --- SECTION IV: CTA --- */}
         <section className="max-w-5xl mx-auto text-center border border-slate-800 p-16 md:p-24 bg-slate-950/40 italic">
           <AlertCircle className="text-red-600 mx-auto mb-8 italic" size={48} />
-          <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter mb-8 text-white leading-none italic text-center uppercase">THE COST OF INACTION</h2>
+          <h2 className="text-4xl md:text-6xl font-black italic tracking-tighter mb-8 text-white leading-none italic text-center uppercase font-black">THE COST OF INACTION</h2>
           <p className="text-xl md:text-2xl text-slate-400 leading-snug mb-12 normal-case italic font-medium italic">
             For every one million dollars in AI spend, businesses lose four hundred thousand dollars per year to unaddressed errors. This is not optional. It is a fiduciary duty.
           </p>
           
-          <div className="flex flex-col items-center gap-6">
+          <div className="flex flex-col items-center gap-6 italic">
             <button 
               onClick={() => window.location.href='/pulse-check'} 
-              className="group relative bg-red-600 text-white px-12 md:px-24 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl italic uppercase"
+              className="group relative bg-red-600 text-white px-12 md:px-24 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl italic uppercase font-black"
             >
               START PULSE CHECK
               <Target className="absolute -top-4 -right-4 text-white group-hover:text-red-600 transition-all italic" size={32} />
             </button>
             
-            <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] tracking-[0.4em] font-black italic uppercase">
+            <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] tracking-[0.4em] font-black italic uppercase font-black">
               <Activity size={14} className="animate-pulse text-red-600 italic" />
               12 QUESTIONS // ~3 MINUTE COMPLETION TIME
             </div>
