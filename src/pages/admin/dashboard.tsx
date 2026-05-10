@@ -7,29 +7,34 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
+// 🏛️ RESTORED INTERNAL IP: THE BMR FRAMEWORKS
 const BMR_IP_SUITE = {
   directives: [
     { 
       id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K",
-      description: "The engine identifies where capital is leaking right now. We analyze the alignment between organizational nodes.", color: "text-red-600" 
+      description: "The engine identifies where capital is leaking right now. We analyze the alignment between organizational nodes. This identifies systemic rot without compromising your security perimeter.", 
+      color: "text-red-600" 
     },
     { 
       id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K",
-      description: "The system rebuilds the logic that connects your operational layers.", color: "text-blue-500" 
+      description: "The system rebuilds the logic that connects your operational layers. We ensure that executive intent matches technical execution to stop capital leaks.", 
+      color: "text-blue-500" 
     },
     { 
       id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO",
-      description: "Developing new organizational rule sets to protect fiduciary leadership.", color: "text-purple-500" 
+      description: "Developing new organizational rule sets to protect fiduciary leadership and technical staff. This creates a state of financial and operational safety.", 
+      color: "text-purple-500" 
     },
     { 
       id: "DIR_04", label: "FORENSIC CONTINUITY", 
-      description: "Monitoring structural health through specialized reporting cadence.", color: "text-green-500" 
+      description: "Monitoring structural health through specialized reporting cadence. If a variance starts to grow, the system will detect it before the rework tax accrues.", 
+      color: "text-green-500" 
     }
   ],
   services: [
-    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments." },
-    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols." },
-    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse." }
+    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments. Locating 'Log Rot' before it hardens." },
+    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols. Building safeguards to prevent value leakage." },
+    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse. Stabilizing long-term defensibility." }
   ]
 };
 
@@ -137,14 +142,55 @@ export default function AdminDashboard() {
                           );
                         })}
                       </div>
+                      <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-t border-slate-900/50 pt-10 italic">
+                        <div className="flex gap-4 w-full md:w-auto italic">
+                           <button className="bg-red-600/80 text-white px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 flex items-center justify-center gap-3 italic"><Mail size={16} /> RE-DISPATCH</button>
+                           <button className="bg-[#b48c3b] text-black px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-yellow-500 flex items-center justify-center gap-3 italic"><Zap size={16} /> SYNTHESIS</button>
+                        </div>
+                        <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="w-full md:w-auto bg-white text-black px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic"><FileText size={18} /> GENERATE DOSSIER</button>
+                      </div>
                     </div>
                   )}
                 </div>
               ))}
             </motion.div>
           ) : (
-            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 italic">
-              {/* Framework content here */}
+            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public_Service_Mapping</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic">
+                  {BMR_IP_SUITE.services.map((s) => (
+                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
+                      <div className="text-red-600 mb-6 italic">{s.icon}</div>
+                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic">{s.tier}</span>
+                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 leading-none italic">{s.title}</h4>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case italic">{s.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary_Directives</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 italic">
+                  {BMR_IP_SUITE.directives.map((d) => (
+                    <div key={d.id} className="p-8 md:p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 italic"><Binary className={d.color} size={32} /></div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 gap-6 sm:gap-0 italic">
+                        <div className="space-y-2 italic">
+                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic`}>PROTOCOL // {d.id}</span>
+                          <h2 className="text-3xl md:text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
+                        </div>
+                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic">{d.price}</div>}
+                      </div>
+                      <p className="text-lg md:text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-6 md:pl-8 font-medium italic normal-case italic">{d.description}</p>
+                      <div className="pt-8 border-t border-slate-900 flex items-center gap-3 text-slate-600 font-mono text-[9px] uppercase tracking-widest italic">
+                        <Shield size={14} className="italic" /> Fiduciary_Encryption_Active
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </motion.div>
           )}
         </AnimatePresence>
