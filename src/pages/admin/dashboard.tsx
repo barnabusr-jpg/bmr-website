@@ -7,44 +7,44 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🏛️ RESTORED INTERNAL IP: THE BMR FRAMEWORKS
+// --- RESTORED IP DATA ---
 const BMR_IP_SUITE = {
   directives: [
-    { 
-      id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K",
-      description: "The engine identifies where capital is leaking right now. We analyze the alignment between organizational nodes. This identifies systemic rot without compromising your security perimeter.", 
-      color: "text-red-600" 
-    },
-    { 
-      id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K",
-      description: "The system rebuilds the logic that connects your operational layers. We ensure that executive intent matches technical execution to stop capital leaks.", 
-      color: "text-blue-500" 
-    },
-    { 
-      id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO",
-      description: "Developing new organizational rule sets to protect fiduciary leadership and technical staff. This creates a state of financial and operational safety.", 
-      color: "text-purple-500" 
-    },
-    { 
-      id: "DIR_04", label: "FORENSIC CONTINUITY", 
-      description: "Monitoring structural health through specialized reporting cadence. If a variance starts to grow, the system will detect it before the rework tax accrues.", 
-      color: "text-green-500" 
-    }
+    { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now.", color: "text-red-600" },
+    { id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K", description: "The system rebuilds the logic that connects your operational layers.", color: "text-blue-500" },
+    { id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO", description: "Developing new organizational rule sets to protect leadership.", color: "text-purple-500" },
+    { id: "DIR_04", label: "FORENSIC CONTINUITY", description: "Monitoring structural health through specialized reporting cadence.", color: "text-green-500" }
   ],
   services: [
-    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments. Locating 'Log Rot' before it hardens." },
-    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols. Building safeguards to prevent value leakage." },
-    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse. Stabilizing long-term defensibility." }
+    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments." },
+    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols." },
+    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse." }
   ]
 };
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'ledger' | 'frameworks'>('ledger');
   const [data, setData] = useState<any[]>([]);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
+
+  // 🛡️ AUTHENTICATION HANDSHAKE
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      alert("AUTHORIZATION_FAILED: UNRECOGNIZED_SIGNAL");
+      setLoading(false);
+    } else {
+      setIsAuthenticated(true);
+      setLoading(false);
+    }
+  };
 
   const fetchLedger = useCallback(async () => {
     const { data: audits } = await supabase.from('audits').select('*').order('created_at', { ascending: false });
@@ -76,11 +76,16 @@ export default function AdminDashboard() {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 italic">
-        <form onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center relative shadow-2xl">
+        <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center relative shadow-2xl">
           <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
           <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA-7_CLEARANCE_REQUIRED</p>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="MASTER_KEY" className="w-full bg-black border border-slate-800 p-6 text-center text-red-600 font-black outline-none tracking-[0.5em] text-2xl focus:border-red-600 italic" autoFocus />
-          <button type="submit" className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all leading-none italic">INITIALIZE_COMMAND</button>
+          <div className="space-y-4">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR_EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 placeholder:text-slate-900 italic" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE_PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600 placeholder:text-slate-900 italic" />
+          </div>
+          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all leading-none italic disabled:opacity-50">
+            {loading ? "VERIFYING..." : "INITIALIZE_COMMAND"}
+          </button>
         </form>
       </div>
     );
