@@ -49,14 +49,16 @@ export default function Methodology() {
           <div className="border-l-8 border-red-600 pl-10 mb-16 italic text-left">
             <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] italic">THE_BLUEPRINT // BMR_2.0</span>
             
-            {/* 🛡️ TYPOGRAPHY 2.0 FIX: 
-                - text-[clamp(...)] ensures the font is fluid but has a floor/ceiling.
-                - leading-none prevents extra vertical spacing on wrap.
-                - block w-full ensures PHILOSOPHY owns its own line for maximum width.
-            */}
-            <h1 className="font-black tracking-tighter leading-[0.85] mt-6 mb-10 italic">
+            <h1 className="font-black tracking-tighter leading-[0.85] mt-6 mb-10 italic uppercase">
+              {/* Forensic stays large but safe */}
               <span className="text-6xl md:text-9xl block">FORENSIC</span>
-              <span className="text-red-600 text-[clamp(3.2rem,14.5vw,8rem)] md:text-9xl block leading-none">
+              
+              {/* 🛡️ THE DEFINITIVE TYPOGRAPHY FIX:
+                  1. text-[12.5vw] scales the word based on the phone's width to prevent overflow.
+                  2. md:text-9xl returns it to standard massive size on desktop.
+                  3. break-keep prevents the browser from splitting the word.
+              */}
+              <span className="text-red-600 text-[12.5vw] md:text-9xl block leading-none break-keep">
                 PHILOSOPHY.
               </span>
             </h1>
@@ -127,7 +129,7 @@ export default function Methodology() {
         {/* --- SECTION III: THE PROCESS --- */}
         <section className="mb-40 bg-white text-slate-950 p-10 md:p-24 italic">
           <div className="max-w-4xl italic">
-            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10 italic">THE 3 MINUTE <span className="text-red-600 italic font-black">PULSE CHECK.</span></h2>
+            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10 italic uppercase">THE 3 MINUTE <span className="text-red-600 italic font-black">PULSE CHECK.</span></h2>
             <p className="text-lg md:text-xl font-bold text-slate-600 mb-20 normal-case italic leading-snug">
               This is not a survey. It is a forensic test. We ask twelve targeted questions to find your high probability fractures. We deliver a clinical report of your vulnerability.
             </p>
@@ -137,7 +139,7 @@ export default function Methodology() {
             {phases.map((p) => (
               <div key={p.step} className="border-l-4 border-slate-200 pl-8 space-y-4 italic">
                 <div className="text-red-600 font-black text-4xl italic">PHASE_{p.step}</div>
-                <div className="text-xl font-black italic tracking-tight italic">{p.title}</div>
+                <div className="text-xl font-black italic tracking-tight italic italic uppercase">{p.title}</div>
                 <p className="text-slate-500 text-sm normal-case font-medium leading-relaxed italic">{p.detail}</p>
               </div>
             ))}
@@ -162,7 +164,7 @@ export default function Methodology() {
             </button>
             
             <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] tracking-[0.4em] font-black italic uppercase">
-              <Activity size={14} className="animate-pulse text-red-600" />
+              <Activity size={14} className="animate-pulse text-red-600 italic" />
               12 QUESTIONS // ~3 MINUTE COMPLETION TIME
             </div>
           </div>
