@@ -7,7 +7,6 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// --- RESTORED IP DATA ---
 const BMR_IP_SUITE = {
   directives: [
     { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now.", color: "text-red-600" },
@@ -32,11 +31,11 @@ export default function AdminDashboard() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
 
-  // 🛡️ AUTHENTICATION HANDSHAKE
+  // 🛡️ SECURE AUTH HANDSHAKE
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       alert("AUTHORIZATION_FAILED: UNRECOGNIZED_SIGNAL");
       setLoading(false);
