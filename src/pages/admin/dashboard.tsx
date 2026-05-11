@@ -3,7 +3,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
-  Shield, Zap, Binary, ZoomIn, Hammer, Mail, FileText, Download 
+  Shield, Zap, Binary, ZoomIn, Hammer, Mail, FileText, 
+  Download, ArrowRight 
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { jsPDF } from "jspdf";
@@ -55,47 +56,52 @@ export default function AdminDashboard() {
     const element = document.getElementById(`audit-detail-${audit.id}`);
     if (!element) return;
 
-    const canvas = await html2canvas(element, {
-      backgroundColor: "#020617",
-      scale: 3,
-      useCORS: true,
-      allowTaint: true
-    });
+    try {
+      const canvas = await html2canvas(element, {
+        backgroundColor: "#020617",
+        scale: 3,
+        useCORS: true,
+        allowTaint: true
+      });
 
-    const imgData = canvas.toDataURL("image/png");
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    
-    // Header Bar
-    pdf.setFillColor(2, 6, 23);
-    pdf.rect(0, 0, pdfWidth, 45, "F");
-    
-    // Metallic Chevron Seal
-    pdf.addImage(CHEVRON_URL, "PNG", pdfWidth - 35, 10, 25, 25);
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      
+      // Header Bar
+      pdf.setFillColor(2, 6, 23);
+      pdf.rect(0, 0, pdfWidth, 45, "F");
+      
+      // Metallic Chevron Seal
+      pdf.addImage(CHEVRON_URL, "PNG", pdfWidth - 35, 10, 25, 25);
 
-    // Typography
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(20);
-    pdf.setTextColor(255, 255, 255);
-    pdf.text("BMR // FORENSIC_VERDICT", 15, 25);
-    
-    pdf.setFontSize(8);
-    pdf.setFont("courier", "bold");
-    pdf.setTextColor(220, 38, 38);
-    pdf.text(`SIGNAL_ID: ${audit.id.toUpperCase()}`, 15, 33);
-    pdf.setTextColor(100, 116, 139);
-    pdf.text(`VERIFIED: ${new Date().toLocaleString().toUpperCase()}`, 15, 38);
+      // Typography
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(20);
+      pdf.setTextColor(255, 255, 255);
+      pdf.text("BMR // FORENSIC_VERDICT", 15, 25);
+      
+      pdf.setFontSize(8);
+      pdf.setFont("courier", "bold");
+      pdf.setTextColor(220, 38, 38);
+      pdf.text(`SIGNAL_ID: ${audit.id.toUpperCase()}`, 15, 33);
+      pdf.setTextColor(100, 116, 139);
+      pdf.text(`VERIFIED: ${new Date().toLocaleString().toUpperCase()}`, 15, 38);
 
-    // Main Data Capture
-    const imgProps = pdf.getImageProperties(imgData);
-    const imgHeight = (imgProps.height * (pdfWidth - 20)) / imgProps.width;
-    pdf.addImage(imgData, "PNG", 10, 55, pdfWidth - 20, imgHeight);
+      // Main Data Capture
+      const imgProps = pdf.getImageProperties(imgData);
+      const imgHeight = (imgProps.height * (pdfWidth - 20)) / imgProps.width;
+      pdf.addImage(imgData, "PNG", 10, 55, pdfWidth - 20, imgHeight);
 
-    // Subtle Watermark
-    pdf.setGState(new pdf.GState({ opacity: 0.04 }));
-    pdf.addImage(CHEVRON_URL, "PNG", pdfWidth / 4, 110, 110, 110);
+      // Subtle Watermark
+      pdf.setGState(new pdf.GState({ opacity: 0.04 }));
+      pdf.addImage(CHEVRON_URL, "PNG", pdfWidth / 4, 110, 110, 110);
 
-    pdf.save(`BMR_DOSSIER_${audit.org_name || "EXPORT"}.pdf`);
+      pdf.save(`BMR_DOSSIER_${audit.org_name || "EXPORT"}.pdf`);
+    } catch (err) {
+      console.error("PDF_GEN_ERROR:", err);
+      alert("SYSTEM_ERROR: PDF_GENERATION_FAILED");
+    }
   };
 
   const fetchLedger = useCallback(async () => {
