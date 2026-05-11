@@ -3,9 +3,11 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
-  Shield, Zap, Binary, ZoomIn, Hammer, Mail, FileText, CheckCircle, Clock 
+  Shield, Zap, Binary, ZoomIn, Hammer, Mail, FileText, Download 
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 const BMR_IP_SUITE = {
   directives: [
@@ -31,6 +33,9 @@ export default function AdminDashboard() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
 
+  // 🏛️ OFFICIAL ASSET PATH
+  const CHEVRON_URL = "https://jxjoyuyonulthsypiami.supabase.co/storage/v1/object/public/Assets/Chevron%20Transperent.png";
+
   // 🛡️ SECURE AUTH HANDSHAKE
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,6 +48,54 @@ export default function AdminDashboard() {
       setIsAuthenticated(true);
       setLoading(false);
     }
+  };
+
+  // 📄 FORENSIC PDF EXPORT ENGINE
+  const generateForensicPDF = async (audit: any) => {
+    const element = document.getElementById(`audit-detail-${audit.id}`);
+    if (!element) return;
+
+    const canvas = await html2canvas(element, {
+      backgroundColor: "#020617",
+      scale: 3,
+      useCORS: true,
+      allowTaint: true
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    
+    // Header Bar
+    pdf.setFillColor(2, 6, 23);
+    pdf.rect(0, 0, pdfWidth, 45, "F");
+    
+    // Metallic Chevron Seal
+    pdf.addImage(CHEVRON_URL, "PNG", pdfWidth - 35, 10, 25, 25);
+
+    // Typography
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(20);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text("BMR // FORENSIC_VERDICT", 15, 25);
+    
+    pdf.setFontSize(8);
+    pdf.setFont("courier", "bold");
+    pdf.setTextColor(220, 38, 38);
+    pdf.text(`SIGNAL_ID: ${audit.id.toUpperCase()}`, 15, 33);
+    pdf.setTextColor(100, 116, 139);
+    pdf.text(`VERIFIED: ${new Date().toLocaleString().toUpperCase()}`, 15, 38);
+
+    // Main Data Capture
+    const imgProps = pdf.getImageProperties(imgData);
+    const imgHeight = (imgProps.height * (pdfWidth - 20)) / imgProps.width;
+    pdf.addImage(imgData, "PNG", 10, 55, pdfWidth - 20, imgHeight);
+
+    // Subtle Watermark
+    pdf.setGState(new pdf.GState({ opacity: 0.04 }));
+    pdf.addImage(CHEVRON_URL, "PNG", pdfWidth / 4, 110, 110, 110);
+
+    pdf.save(`BMR_DOSSIER_${audit.org_name || "EXPORT"}.pdf`);
   };
 
   const fetchLedger = useCallback(async () => {
@@ -133,7 +186,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   {expandedRow === audit.id && (
-                    <div className="p-6 md:p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic">
+                    <div id={`audit-detail-${audit.id}`} className="p-6 md:p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 pt-10 mb-10 italic">
                         {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((role) => {
                           const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role);
@@ -149,9 +202,9 @@ export default function AdminDashboard() {
                       <div className="flex flex-col md:flex-row gap-4 justify-between items-center border-t border-slate-900/50 pt-10 italic">
                         <div className="flex gap-4 w-full md:w-auto italic">
                            <button className="bg-red-600/80 text-white px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 flex items-center justify-center gap-3 italic"><Mail size={16} /> RE-DISPATCH</button>
-                           <button className="bg-[#b48c3b] text-black px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-yellow-500 flex items-center justify-center gap-3 italic"><Zap size={16} /> SYNTHESIS</button>
+                           <button onClick={() => generateForensicPDF(audit)} className="bg-white text-black px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic"><Download size={18} /> GENERATE_FORENSIC_DOSSIER</button>
                         </div>
-                        <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="w-full md:w-auto bg-white text-black px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic"><FileText size={18} /> GENERATE DOSSIER</button>
+                        <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="w-full md:w-auto text-slate-600 hover:text-red-600 transition-colors py-5 font-black uppercase italic text-[10px] tracking-widest italic flex items-center gap-2">VIEW_BRIEFING <ArrowRight size={14}/></button>
                       </div>
                     </div>
                   )}
