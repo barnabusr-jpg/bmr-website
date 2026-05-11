@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
 
+  // 🏛️ UPDATED ASSET URL
   const CHEVRON_URL = "https://jxjoyuyonulthsypiami.supabase.co/storage/v1/object/public/Assets/Design.png";
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -45,54 +46,55 @@ export default function AdminDashboard() {
     printArea.style.left = '-9999px';
     printArea.style.top = '0';
     
-    // 🛡️ RE-ENGINEERED: FULL PAGE BLEED (1200px x 1680px)
+    // 🛡️ PRECISION CALIBRATION: 800px Width avoids the "Too Wide" distortion
     printArea.innerHTML = `
-      <div style="width: 1200px; height: 1680px; background: #020617; padding: 0; margin: 0; font-family: 'Arial', sans-serif; color: white; display: flex; flex-direction: column;">
+      <div style="width: 800px; height: 1130px; background: #020617; padding: 0; margin: 0; font-family: 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
         
-        <div style="background: #01040a; width: 100%; padding: 100px 100px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; box-sizing: border-box;">
-            <div style="max-width: 800px;">
-                <h1 style="font-size: 56px; font-weight: 900; margin: 0; letter-spacing: 5px; font-style: italic; line-height: 1; text-transform: uppercase;">BMR // FORENSIC_VERDICT</h1>
-                <p style="color: #dc2626; font-family: monospace; font-size: 20px; margin-top: 20px; font-weight: 900; letter-spacing: 4px;">SECURE_SIGNAL_ID: ${audit.id.toUpperCase()}</p>
+        <div style="background: #01040a; width: 100%; padding: 40px 50px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; box-sizing: border-box;">
+            <div style="flex: 1;">
+                <h1 style="font-size: 26px; font-weight: 900; margin: 0; letter-spacing: 2px; font-style: italic; line-height: 1; text-transform: uppercase;">BMR // FORENSIC_VERDICT</h1>
+                <p style="color: #dc2626; font-family: monospace; font-size: 10px; margin-top: 8px; font-weight: 900; letter-spacing: 1px;">SECURE_SIGNAL_ID: ${audit.id.toUpperCase()}</p>
             </div>
-            <div style="width: 250px; height: 250px; display: flex; align-items: center; justify-content: flex-end;">
+            <div style="width: 140px; height: 100px; display: flex; align-items: center; justify-content: flex-end;">
                 <img src="${CHEVRON_URL}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
             </div>
         </div>
 
-        <div style="padding: 100px 100px; flex-grow: 1;">
-            <div style="background: white; color: black; padding: 100px 80px; border-left: 50px solid #dc2626; margin-bottom: 60px; width: 100%; box-sizing: border-box; box-shadow: 0 50px 100px rgba(0,0,0,0.5);">
-              <h1 style="font-size: 110px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -8px; line-height: 0.8;">Executive<br/>Briefing</h1>
+        <div style="padding: 50px; flex-grow: 1; box-sizing: border-box;">
+            <div style="background: white; color: black; padding: 40px; border-left: 20px solid #dc2626; margin-bottom: 30px; width: 100%; box-sizing: border-box;">
+              <h1 style="font-size: 52px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -3px; line-height: 0.85;">Executive Briefing</h1>
+              <p style="font-size: 12px; font-weight: 900; color: #666; letter-spacing: 5px; margin-top: 15px; font-family: monospace;">ENTITY // ${audit.org_name.toUpperCase()}</p>
               
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 100px; border-top: 4px solid #f0f0f0; padding-top: 60px;">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 40px; border-top: 1px solid #eee; padding-top: 30px;">
                 <div>
-                  <p style="font-size: 18px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 4px;">Capacity Loss</p>
-                  <p style="font-size: 46px; font-weight: 900; font-style: italic; margin-top: 15px; letter-spacing: -1px;">Wasting <span style="color: #dc2626;">${capacityLoss}</span></p>
+                  <p style="font-size: 10px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 1px;">Capacity Loss</p>
+                  <p style="font-size: 18px; font-weight: 900; font-style: italic; margin-top: 5px;">Wasting <span style="color: #dc2626;">${capacityLoss}</span></p>
                 </div>
                 <div>
-                  <p style="font-size: 18px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 4px;">Financial Leak</p>
-                  <p style="font-size: 46px; font-weight: 900; font-style: italic; margin-top: 15px; letter-spacing: -1px;">Leak: <span style="color: #dc2626;">${laborTax}</span></p>
+                  <p style="font-size: 10px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 1px;">Financial Leak</p>
+                  <p style="font-size: 18px; font-weight: 900; font-style: italic; margin-top: 5px;">Leak: <span style="color: #dc2626;">${laborTax}</span></p>
                 </div>
                 <div>
-                  <p style="font-size: 18px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 4px;">Exposure</p>
-                  <p style="font-size: 46px; font-weight: 900; font-style: italic; margin-top: 15px; letter-spacing: -1px;">Exposes: <span style="color: #dc2626;">${exposure}</span></p>
+                  <p style="font-size: 10px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 1px;">Exposure</p>
+                  <p style="font-size: 18px; font-weight: 900; font-style: italic; margin-top: 5px;">Exposes: <span style="color: #dc2626;">${exposure}</span></p>
                 </div>
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%;">
-              <div style="background: #050b1a; border: 4px solid #1e293b; padding: 180px 40px; text-align: center;">
-                <h2 style="font-size: 200px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -12px; line-height: 1;">${laborTax}</h2>
-                <p style="font-size: 24px; font-weight: 900; color: #475569; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Annual Labor Waste</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; box-sizing: border-box;">
+              <div style="background: #050b1a; border: 2px solid #1e293b; padding: 60px 20px; text-align: center;">
+                <h2 style="font-size: 80px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -4px; line-height: 1;">${laborTax}</h2>
+                <p style="font-size: 11px; font-weight: 900; color: #475569; letter-spacing: 6px; margin-top: 20px; text-transform: uppercase;">Annual Labor Waste</p>
               </div>
-              <div style="background: #050b1a; border: 18px solid #dc2626; padding: 180px 40px; text-align: center;">
-                <h2 style="font-size: 200px; font-weight: 900; font-style: italic; margin: 0; color: #dc2626; letter-spacing: -12px; line-height: 1;">${exposure}</h2>
-                <p style="font-size: 24px; font-weight: 900; color: #dc2626; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Total Capital Exposure</p>
+              <div style="background: #050b1a; border: 8px solid #dc2626; padding: 60px 20px; text-align: center;">
+                <h2 style="font-size: 80px; font-weight: 900; font-style: italic; margin: 0; color: #dc2626; letter-spacing: -4px; line-height: 1;">${exposure}</h2>
+                <p style="font-size: 11px; font-weight: 900; color: #dc2626; letter-spacing: 6px; margin-top: 20px; text-transform: uppercase;">Total Capital Exposure</p>
               </div>
             </div>
         </div>
 
-        <div style="width: 100%; display: flex; justify-content: center; padding-bottom: 150px; opacity: 0.03;">
-             <img src="${CHEVRON_URL}" style="width: 550px; height: auto;" />
+        <div style="width: 100%; display: flex; justify-content: center; padding-bottom: 60px; opacity: 0.03;">
+             <img src="${CHEVRON_URL}" style="width: 350px; height: auto;" />
         </div>
       </div>
     `;
@@ -101,10 +103,10 @@ export default function AdminDashboard() {
     try {
       const canvas = await html2canvas(printArea, { 
         backgroundColor: "#020617", 
-        scale: 1.5, 
+        scale: 3, // High density for sharpness
         useCORS: true,
-        width: 1200,
-        height: 1680
+        width: 800,
+        height: 1130
       });
       
       const imgData = canvas.toDataURL("image/png");
@@ -112,10 +114,10 @@ export default function AdminDashboard() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      // 🛡️ ZERO-MARGIN MAPPING
+      // Zero-margin edge-to-edge mapping
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
-      pdf.save(`BMR_DOSSIER_${audit.org_name || 'LEAD'}.pdf`);
+      pdf.save(`BMR_DOSSIER_${audit.org_name}.pdf`);
       document.body.removeChild(printArea);
     } catch (err) {
       console.error(err);
