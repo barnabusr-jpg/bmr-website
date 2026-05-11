@@ -34,7 +34,7 @@ export default function AdminDashboard() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
 
-  // 🏛️ UPDATED BRAND SEAL URL
+  // 🏛️ UPDATED ASSET (Design.png)
   const CHEVRON_URL = "https://jxjoyuyonulthsypiami.supabase.co/storage/v1/object/public/Assets/Design.png";
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -50,47 +50,47 @@ export default function AdminDashboard() {
     }
   };
 
-  // 📄 THE RE-ENGINEERED PDF DOSSIER GENERATOR
+  // 📄 RE-ENGINEERED FULL-WIDTH PDF ENGINE
   const generateForensicPDF = async (audit: any) => {
-    // 🛡️ INTERNAL MATH (Matches your Executive Briefing screenshots)
     const laborTax = "$83,200";
     const exposure = "$248,400";
     const capacityLoss = "8%";
 
-    // 1. CREATE VIRTUAL BRIEFING FOR PDF CAPTURE (Invisible to User)
     const printArea = document.createElement('div');
     printArea.style.position = 'absolute';
     printArea.style.left = '-9999px';
+    // Calibrated to 1100px for high-impact horizontal stretch
     printArea.innerHTML = `
-      <div style="width: 850px; background: #020617; padding: 80px; font-family: sans-serif; color: white;">
-        <div style="border-left: 12px solid #dc2626; padding: 50px; background: #ffffff; color: #000000;">
-          <h1 style="text-transform: uppercase; font-weight: 900; font-style: italic; margin: 0; font-size: 42px; letter-spacing: -2px;">Executive Briefing</h1>
-          <p style="font-family: monospace; font-size: 12px; color: #666; letter-spacing: 4px; margin-top: 10px; font-weight: 900;">ENTITY // ${audit.org_name.toUpperCase()}</p>
+      <div style="width: 1100px; background: #020617; padding: 60px; font-family: sans-serif; color: white;">
+        
+        <div style="border-left: 20px solid #dc2626; padding: 60px; background: #ffffff; color: #000000; width: 100%; box-sizing: border-box;">
+          <h1 style="text-transform: uppercase; font-weight: 900; font-style: italic; margin: 0; font-size: 64px; letter-spacing: -4px; line-height: 1;">Executive Briefing</h1>
+          <p style="font-family: monospace; font-size: 14px; color: #666; letter-spacing: 8px; margin-top: 20px; font-weight: 900;">ENTITY // ${audit.org_name.toUpperCase()}</p>
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 60px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 80px; width: 100%;">
             <div>
-              <p style="font-size: 10px; font-weight: 900; color: #999; margin: 0; letter-spacing: 2px;">CAPACITY LOSS</p>
-              <p style="font-weight: 900; margin-top: 8px; font-size: 16px; font-style: italic;">WASTING <span style="color: #dc2626;">${capacityLoss}</span> TOTAL CAPACITY</p>
+              <p style="font-size: 12px; font-weight: 900; color: #999; margin: 0; letter-spacing: 4px;">CAPACITY LOSS</p>
+              <p style="font-weight: 900; margin-top: 10px; font-size: 24px; font-style: italic;">WASTING <span style="color: #dc2626;">${capacityLoss}</span> CAPACITY</p>
             </div>
             <div>
-              <p style="font-size: 10px; font-weight: 900; color: #999; margin: 0; letter-spacing: 2px;">FINANCIAL LEAK</p>
-              <p style="font-weight: 900; margin-top: 8px; font-size: 16px; font-style: italic;">HIDDEN LABOR TAX: <span style="color: #dc2626;">${laborTax}</span></p>
+              <p style="font-size: 12px; font-weight: 900; color: #999; margin: 0; letter-spacing: 4px;">FINANCIAL LEAK</p>
+              <p style="font-weight: 900; margin-top: 10px; font-size: 24px; font-style: italic;">LABOR TAX: <span style="color: #dc2626;">${laborTax}</span></p>
             </div>
             <div>
-              <p style="font-size: 10px; font-weight: 900; color: #999; margin: 0; letter-spacing: 2px;">EXPOSURE</p>
-              <p style="font-weight: 900; margin-top: 8px; font-size: 16px; font-style: italic;">INACTION EXPOSES: <span style="color: #dc2626;">${exposure}</span></p>
+              <p style="font-size: 12px; font-weight: 900; color: #999; margin: 0; letter-spacing: 4px;">EXPOSURE</p>
+              <p style="font-weight: 900; margin-top: 10px; font-size: 24px; font-style: italic;">EXPOSES: <span style="color: #dc2626;">${exposure}</span></p>
             </div>
           </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 60px;">
-          <div style="border: 3px solid #1e293b; padding: 60px; text-align: center; background: #0f172a;">
-            <p style="font-size: 72px; font-weight: 900; margin: 0; font-style: italic; color: #ffffff;">${laborTax}</p>
-            <p style="font-size: 12px; font-weight: 900; color: #475569; margin-top: 15px; letter-spacing: 4px;">ANNUAL_LABOR_WASTE</p>
+        <div style="display: flex; gap: 30px; margin-top: 60px; width: 100%;">
+          <div style="flex: 1; border: 5px solid #1e293b; padding: 100px 40px; text-align: center; background: #0f172a;">
+            <p style="font-size: 110px; font-weight: 900; margin: 0; font-style: italic; color: #ffffff; letter-spacing: -6px;">${laborTax}</p>
+            <p style="font-size: 16px; font-weight: 900; color: #475569; margin-top: 30px; letter-spacing: 8px;">ANNUAL_LABOR_WASTE</p>
           </div>
-          <div style="border: 3px solid #dc2626; padding: 60px; text-align: center; background: #450a0a;">
-            <p style="font-size: 72px; font-weight: 900; margin: 0; font-style: italic; color: #dc2626;">${exposure}</p>
-            <p style="font-size: 12px; font-weight: 900; color: #dc2626; margin-top: 15px; letter-spacing: 4px;">TOTAL_CAPITAL_EXPOSURE</p>
+          <div style="flex: 1; border: 5px solid #dc2626; padding: 100px 40px; text-align: center; background: #450a0a;">
+            <p style="font-size: 110px; font-weight: 900; margin: 0; font-style: italic; color: #dc2626; letter-spacing: -6px;">${exposure}</p>
+            <p style="font-size: 16px; font-weight: 900; color: #dc2626; margin-top: 30px; letter-spacing: 8px;">TOTAL_CAPITAL_EXPOSURE</p>
           </div>
         </div>
       </div>
@@ -108,30 +108,34 @@ export default function AdminDashboard() {
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       
+      // Black Background Header
       pdf.setFillColor(2, 6, 23);
       pdf.rect(0, 0, pdfWidth, 50, "F");
       
-      // 🏛️ DESIGN.PNG SEAL
-      pdf.addImage(CHEVRON_URL, "PNG", pdfWidth - 40, 10, 30, 30);
+      // Brand Seal - Large Authorized Stamp
+      pdf.addImage(CHEVRON_URL, "PNG", pdfWidth - 50, 8, 40, 35);
 
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(22);
       pdf.setTextColor(255, 255, 255);
-      pdf.text("BMR // FORENSIC_VERDICT", 15, 25);
+      pdf.text("BMR // FORENSIC_VERDICT", 15, 22);
       
       pdf.setFontSize(8);
       pdf.setTextColor(220, 38, 38);
-      pdf.text(`SIGNAL_ID: ${audit.id.toUpperCase()}`, 15, 35);
+      pdf.text(`SIGNAL_ID: ${audit.id.toUpperCase()}`, 15, 30);
 
+      // MAP IMAGE TO FULL WIDTH (5mm margin)
       const imgProps = pdf.getImageProperties(imgData);
-      const imgHeight = (imgProps.height * (pdfWidth - 20)) / imgProps.width;
-      pdf.addImage(imgData, "PNG", 10, 55, pdfWidth - 20, imgHeight);
+      const pdfImageWidth = pdfWidth - 10; 
+      const imgHeight = (imgProps.height * pdfImageWidth) / imgProps.width;
+      
+      pdf.addImage(imgData, "PNG", 5, 50, pdfImageWidth, imgHeight);
 
-      // Security Watermark (Design.png)
-      pdf.setGState(new pdf.GState({ opacity: 0.04 }));
+      // Watermark
+      pdf.setGState(new pdf.GState({ opacity: 0.03 }));
       pdf.addImage(CHEVRON_URL, "PNG", pdfWidth / 4, 120, 100, 100);
 
-      pdf.save(`BMR_DOSSIER_${audit.org_name || "LEAD"}.pdf`);
+      pdf.save(`BMR_DOSSIER_${audit.org_name}.pdf`);
       document.body.removeChild(printArea);
     } catch (err) {
       console.error(err);
@@ -211,7 +215,7 @@ export default function AdminDashboard() {
 
               {data.map((audit) => (
                 <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic">
-                  <div onClick={() => toggleRow(audit.id)} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center p-6 md:p-8 cursor-pointer group gap-6 md:gap-0 italic">
+                  <div onClick={() => toggleRow(audit.id)} className="flex flex-col md:grid md:grid-cols-12 items-start md:items-center p-6 md:p-8 cursor-pointer group gap-6 md:gap-0 italic text-white">
                     <div className="w-full md:col-span-6 flex items-center gap-4 md:gap-6 min-w-0 italic">
                       <div className="bg-slate-900 p-3 md:p-4 border border-slate-800 shrink-0 italic"><Building2 size={24} className="text-red-600" /></div>
                       <div className="min-w-0 italic">
@@ -233,7 +237,7 @@ export default function AdminDashboard() {
                           const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role);
                           const isDone = node?.status?.toLowerCase() === 'completed';
                           return (
-                            <div key={role} className="border-2 border-slate-900 p-6 md:p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
+                            <div key={role} className="border-2 border-slate-900 p-6 md:p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic text-white">
                               <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic">{role}_NODE</span>
                               <div className={`text-3xl md:text-5xl font-black italic uppercase tracking-tighter italic ${isDone ? 'text-white' : 'text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
                             </div>
@@ -258,7 +262,7 @@ export default function AdminDashboard() {
                 <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public_Service_Mapping</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic">
                   {BMR_IP_SUITE.services.map((s) => (
-                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
+                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic text-white">
                       <div className="text-red-600 mb-6 italic">{s.icon}</div>
                       <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic">{s.tier}</span>
                       <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 leading-none italic">{s.title}</h4>
