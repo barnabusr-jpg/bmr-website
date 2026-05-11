@@ -45,55 +45,54 @@ export default function AdminDashboard() {
     printArea.style.left = '-9999px';
     printArea.style.top = '0';
     
-    // 🛡️ RE-ENGINEERED: EDGE-TO-EDGE TOP HEADER
+    // 🛡️ RE-ENGINEERED: FULL PAGE BLEED (1200px x 1680px)
     printArea.innerHTML = `
-      <div style="width: 1200px; min-height: 1600px; background: #020617; padding: 0; margin: 0; font-family: 'Arial', sans-serif; color: white; display: flex; flex-direction: column;">
+      <div style="width: 1200px; height: 1680px; background: #020617; padding: 0; margin: 0; font-family: 'Arial', sans-serif; color: white; display: flex; flex-direction: column;">
         
-        <div style="background: #01040a; width: 100%; padding: 80px 100px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; box-sizing: border-box;">
-            <div style="flex: 1;">
-                <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic;">BMR // FORENSIC_VERDICT</h1>
-                <p style="color: #dc2626; font-family: monospace; font-size: 16px; margin-top: 15px; font-weight: 900; letter-spacing: 2px;">SECURE_SIGNAL_ID: ${audit.id.toUpperCase()}</p>
+        <div style="background: #01040a; width: 100%; padding: 100px 100px; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #1e293b; box-sizing: border-box;">
+            <div style="max-width: 800px;">
+                <h1 style="font-size: 56px; font-weight: 900; margin: 0; letter-spacing: 5px; font-style: italic; line-height: 1; text-transform: uppercase;">BMR // FORENSIC_VERDICT</h1>
+                <p style="color: #dc2626; font-family: monospace; font-size: 20px; margin-top: 20px; font-weight: 900; letter-spacing: 4px;">SECURE_SIGNAL_ID: ${audit.id.toUpperCase()}</p>
             </div>
-            <div style="flex-shrink: 0;">
-                <img src="${CHEVRON_URL}" style="width: 220px; height: auto;" />
+            <div style="width: 250px; height: 250px; display: flex; align-items: center; justify-content: flex-end;">
+                <img src="${CHEVRON_URL}" style="max-width: 100%; max-height: 100%; object-fit: contain;" />
             </div>
         </div>
 
-        <div style="padding: 80px 100px; flex-grow: 1;">
-            <div style="background: white; color: black; padding: 80px; border-left: 40px solid #dc2626; margin-bottom: 60px; width: 100%; box-sizing: border-box; box-shadow: 0 40px 80px rgba(0,0,0,0.5);">
-              <h1 style="font-size: 92px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -6px; line-height: 0.85;">Executive Briefing</h1>
-              <p style="font-size: 20px; font-weight: 900; color: #444; letter-spacing: 10px; margin-top: 30px; font-family: monospace; border-top: 2px solid #eee; pt-10;">ENTITY // ${audit.org_name.toUpperCase()}</p>
+        <div style="padding: 100px 100px; flex-grow: 1;">
+            <div style="background: white; color: black; padding: 100px 80px; border-left: 50px solid #dc2626; margin-bottom: 60px; width: 100%; box-sizing: border-box; box-shadow: 0 50px 100px rgba(0,0,0,0.5);">
+              <h1 style="font-size: 110px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -8px; line-height: 0.8;">Executive<br/>Briefing</h1>
               
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 80px;">
-                <div style="border-right: 1px solid #ddd; padding-right: 20px;">
-                  <p style="font-size: 14px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 3px;">Capacity Loss</p>
-                  <p style="font-size: 34px; font-weight: 900; font-style: italic; margin-top: 12px;">Wasting <span style="color: #dc2626;">${capacityLoss}</span> Capacity</p>
-                </div>
-                <div style="border-right: 1px solid #ddd; padding-right: 20px;">
-                  <p style="font-size: 14px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 3px;">Financial Leak</p>
-                  <p style="font-size: 34px; font-weight: 900; font-style: italic; margin-top: 12px;">Labor Tax: <span style="color: #dc2626;">${laborTax}</span></p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 100px; border-top: 4px solid #f0f0f0; padding-top: 60px;">
+                <div>
+                  <p style="font-size: 18px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 4px;">Capacity Loss</p>
+                  <p style="font-size: 46px; font-weight: 900; font-style: italic; margin-top: 15px; letter-spacing: -1px;">Wasting <span style="color: #dc2626;">${capacityLoss}</span></p>
                 </div>
                 <div>
-                  <p style="font-size: 14px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 3px;">Exposure</p>
-                  <p style="font-size: 34px; font-weight: 900; font-style: italic; margin-top: 12px;">Exposes: <span style="color: #dc2626;">${exposure}</span></p>
+                  <p style="font-size: 18px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 4px;">Financial Leak</p>
+                  <p style="font-size: 46px; font-weight: 900; font-style: italic; margin-top: 15px; letter-spacing: -1px;">Leak: <span style="color: #dc2626;">${laborTax}</span></p>
+                </div>
+                <div>
+                  <p style="font-size: 18px; font-weight: 900; color: #dc2626; text-transform: uppercase; letter-spacing: 4px;">Exposure</p>
+                  <p style="font-size: 46px; font-weight: 900; font-style: italic; margin-top: 15px; letter-spacing: -1px;">Exposes: <span style="color: #dc2626;">${exposure}</span></p>
                 </div>
               </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%;">
-              <div style="background: #050b1a; border: 4px solid #1e293b; padding: 140px 40px; text-align: center;">
-                <h2 style="font-size: 160px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -10px; line-height: 1;">${laborTax}</h2>
-                <p style="font-size: 20px; font-weight: 900; color: #475569; letter-spacing: 12px; margin-top: 40px; text-transform: uppercase;">Annual Labor Waste</p>
+              <div style="background: #050b1a; border: 4px solid #1e293b; padding: 180px 40px; text-align: center;">
+                <h2 style="font-size: 200px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -12px; line-height: 1;">${laborTax}</h2>
+                <p style="font-size: 24px; font-weight: 900; color: #475569; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Annual Labor Waste</p>
               </div>
-              <div style="background: #050b1a; border: 12px solid #dc2626; padding: 140px 40px; text-align: center;">
-                <h2 style="font-size: 160px; font-weight: 900; font-style: italic; margin: 0; color: #dc2626; letter-spacing: -10px; line-height: 1;">${exposure}</h2>
-                <p style="font-size: 20px; font-weight: 900; color: #dc2626; letter-spacing: 12px; margin-top: 40px; text-transform: uppercase;">Total Capital Exposure</p>
+              <div style="background: #050b1a; border: 18px solid #dc2626; padding: 180px 40px; text-align: center;">
+                <h2 style="font-size: 200px; font-weight: 900; font-style: italic; margin: 0; color: #dc2626; letter-spacing: -12px; line-height: 1;">${exposure}</h2>
+                <p style="font-size: 24px; font-weight: 900; color: #dc2626; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Total Capital Exposure</p>
               </div>
             </div>
         </div>
 
-        <div style="width: 100%; display: flex; justify-content: center; padding-bottom: 100px; opacity: 0.04;">
-             <img src="${CHEVRON_URL}" style="width: 450px;" />
+        <div style="width: 100%; display: flex; justify-content: center; padding-bottom: 150px; opacity: 0.03;">
+             <img src="${CHEVRON_URL}" style="width: 550px; height: auto;" />
         </div>
       </div>
     `;
@@ -102,10 +101,10 @@ export default function AdminDashboard() {
     try {
       const canvas = await html2canvas(printArea, { 
         backgroundColor: "#020617", 
-        scale: 2, 
+        scale: 1.5, 
         useCORS: true,
         width: 1200,
-        height: 1600
+        height: 1680
       });
       
       const imgData = canvas.toDataURL("image/png");
@@ -113,7 +112,7 @@ export default function AdminDashboard() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      // Zero-margin mapping ensures the header hits the top edge
+      // 🛡️ ZERO-MARGIN MAPPING
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
 
       pdf.save(`BMR_DOSSIER_${audit.org_name || 'LEAD'}.pdf`);
@@ -153,7 +152,7 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 italic uppercase font-black">
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 italic uppercase font-black text-white">
         <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative">
           <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
           <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA-7_CLEARANCE_REQUIRED</p>
