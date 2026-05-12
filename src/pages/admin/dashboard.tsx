@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, FileText, 
-  Download, ArrowRight, Monitor, FileDown
+  Download, ArrowRight, Monitor, FileDown, Target
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { jsPDF } from "jspdf";
@@ -34,9 +34,14 @@ export default function AdminDashboard() {
   };
 
   const generateForensicPDF = async (audit: any) => {
-    const laborTax = "$83,200";
-    const exposure = "$248,400";
-    const capacityLoss = "8%";
+    // Dynamic values from audit record
+    const dbDecay = audit.decay_pct || 50;
+    const spend = parseFloat(audit.ai_spend) || 1.2;
+    const fte = Math.round((spend * 1000000) / 200000) || 5;
+
+    // Formulas matching site logic
+    const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
+    const exposure = (0.22 * (spend * 1000000)) * 1.15;
 
     const printArea = document.createElement('div');
     printArea.style.position = 'fixed';
@@ -44,10 +49,8 @@ export default function AdminDashboard() {
     printArea.style.top = '0';
     printArea.style.zIndex = '-1';
     
-    // 🛡️ SUPERSAMPLED CANVAS: 1400px width for 4K-level text clarity
     printArea.innerHTML = `
       <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box; -webkit-font-smoothing: antialiased;">
-        
         <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid #dc2626; box-sizing: border-box;">
             <div style="flex: 1;">
                 <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase;">BMR // FORENSIC_VERDICT</h1>
@@ -55,7 +58,7 @@ export default function AdminDashboard() {
             </div>
             <div style="text-align: right; border-left: 3px solid #1e293b; padding-left: 40px;">
                 <p style="font-size: 14px; font-weight: 900; color: #dc2626; margin: 0; letter-spacing: 3px;">AUTHORIZED_BY</p>
-                <p style="font-size: 18px; font-weight: 400; color: #fff; margin-top: 8px; font-family: monospace;">${email.toUpperCase()}</p>
+                <p style="font-size: 18px; font-weight: 400; color: #fff; margin-top: 8px; font-family: monospace;">BMR SOLUTIONS</p>
                 <p style="font-size: 12px; color: #444; margin-top: 5px; font-family: monospace;">VERIFIED: ${new Date().toLocaleDateString()}</p>
             </div>
         </div>
@@ -71,7 +74,7 @@ export default function AdminDashboard() {
             <div style="border-left: 8px solid #dc2626; padding: 50px 80px; background: rgba(220, 38, 38, 0.05); margin-bottom: 80px;">
                 <p style="font-size: 16px; font-weight: 900; color: #666; letter-spacing: 5px; margin-bottom: 25px; font-family: monospace;">DIAGNOSTIC_OBSERVATION // ALPHA_7_INTAKE</p>
                 <p style="font-size: 26px; font-style: italic; line-height: 1.6; color: #94a3b8; margin: 0;">
-                  These metrics serve as a forensic baseline for organizational health. Your responses identify specific logic fractures from your immediate perspective. The system projects the fiscal impact of these fractures, converting observations into high-probability drift currently occurring at your node.
+                  These metrics serve as a forensic baseline for organizational health. Your responses identify specific logic fractures. The system projects the fiscal impact of these fractures, converting observations into high-probability drift.
                 </p>
             </div>
 
@@ -80,44 +83,25 @@ export default function AdminDashboard() {
               <p style="font-size: 20px; font-weight: 900; color: #666; letter-spacing: 10px; margin-top: 35px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT_NODE'}</p>
               
               <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 100px; border-top: 3px solid #eee; padding-top: 60px;">
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Capacity Loss</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Wasting <span style="color: #dc2626;">${capacityLoss}</span></p></div>
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Financial Leak</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Tax: <span style="color: #dc2626;">${laborTax}</span></p></div>
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Exposure</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Risk: <span style="color: #dc2626;">${exposure}</span></p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Capacity Loss</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Wasting <span style="color: #dc2626;">${dbDecay}%</span></p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Financial Leak</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Tax: <span style="color: #dc2626;">$${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Exposure</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Risk: <span style="color: #dc2626;">$${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></p></div>
               </div>
             </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%;">
-              <div style="background: #050b1a; border: 4px solid #1e293b; padding: 80px 40px; text-align: center;">
-                <h2 style="font-size: 150px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -10px;">${laborTax}</h2>
-                <p style="font-size: 18px; font-weight: 900; color: #475569; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Annual Labor Waste</p>
-              </div>
-              <div style="background: #050b1a; border: 10px solid #dc2626; padding: 80px 40px; text-align: center;">
-                <h2 style="font-size: 150px; font-weight: 900; font-style: italic; margin: 0; color: #dc2626; letter-spacing: -10px;">${exposure}</h2>
-                <p style="font-size: 18px; font-weight: 900; color: #dc2626; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Total Capital Exposure</p>
-              </div>
-            </div>
-        </div>
-
-        <div style="background: #01040a; padding: 60px; text-align: center; border-top: 3px solid #1e293b; margin-top: auto;">
-            <p style="font-size: 14px; color: #334155; font-family: monospace; letter-spacing: 8px; font-weight: 900;">BMR FORENSIC UNIT // INTERNAL USE ONLY // CLASSIFIED_RESULT</p>
         </div>
       </div>
     `;
     document.body.appendChild(printArea);
 
     try {
-      // Allow fonts to settle
       await new Promise(r => setTimeout(r, 250));
-
       const canvas = await html2canvas(printArea, { 
         backgroundColor: "#020617", 
-        scale: 4, // 🛡️ HIGH-RE RESOLUTION
+        scale: 4, 
         useCORS: true, 
         logging: false, 
         width: 1400,
-        height: printArea.offsetHeight,
-        windowWidth: 1400,
-        windowHeight: printArea.offsetHeight
+        height: printArea.offsetHeight
       });
       
       const imgData = canvas.toDataURL("image/png", 1.0);
@@ -163,13 +147,13 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-        <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative italic">
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 italic">
+        <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative">
           <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
           <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black">ALPHA-7_CLEARANCE_REQUIRED</p>
           <div className="space-y-4">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR_EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE_PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600 italic" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR_EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic uppercase" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE_PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600" />
           </div>
           <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all leading-none italic">
             {loading ? "VERIFYING..." : "INITIALIZE_COMMAND"}
@@ -190,6 +174,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       </nav>
+
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32">
         <AnimatePresence mode="wait">
           {activeTab === 'ledger' && (
@@ -220,8 +205,8 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex justify-between items-center border-t border-slate-900/50 pt-10">
                         <div className="flex gap-4">
-                           <button className="bg-slate-900 text-slate-500 border border-slate-800 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:text-white transition-all flex items-center gap-3 italic"><Mail size={16} /> RE-DISPATCH</button>
-                           <button onClick={() => generateForensicPDF(audit)} className="bg-white text-black px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl italic font-black"><FileDown size={18} /> DOWNLOAD_DOSSIER_COPY</button>
+                            <button className="bg-slate-900 text-slate-500 border border-slate-800 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:text-white transition-all flex items-center gap-3 italic"><Mail size={16} /> RE-DISPATCH</button>
+                            <button onClick={() => generateForensicPDF(audit)} className="bg-white text-black px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl italic font-black"><FileDown size={18} /> DOWNLOAD_DOSSIER_COPY</button>
                         </div>
                         <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
                       </div>
@@ -229,6 +214,36 @@ export default function AdminDashboard() {
                   )}
                 </div>
               ))}
+            </motion.div>
+          )}
+
+          {/* 🛡️ IP_FRAMEWORK RENDERING LOGIC FIXED BELOW */}
+          {activeTab === 'frameworks' && (
+            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+              <div className="bg-slate-950 border border-slate-900 p-12">
+                <div className="flex items-center gap-4 mb-12">
+                  <Target className="text-red-600" size={32} />
+                  <h2 className="text-4xl font-black italic tracking-tighter">BMR IP Framework // Baseline Diagnostic</h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 italic">
+                  <div className="p-8 bg-black border border-slate-900 hover:border-red-600/50 transition-all">
+                    <span className="text-red-600 font-mono text-[10px] tracking-[0.4em] mb-4 block">FRACTURE_01 // CAPACITY_DECAY</span>
+                    <p className="text-slate-400 leading-relaxed text-sm">Quantifies the drift between engineering output and labor utilization. Measures the "Hidden Labor Tax" created by unoptimized tool integration.</p>
+                  </div>
+                  <div className="p-8 bg-black border border-slate-900 hover:border-red-600/50 transition-all">
+                    <span className="text-red-600 font-mono text-[10px] tracking-[0.4em] mb-4 block">FRACTURE_02 // CAPITAL_EXPOSURE</span>
+                    <p className="text-slate-400 leading-relaxed text-sm">Calculates fiscal risk based on AI spend against deployment maturity. Identifies high-probability rework costs (22% Baseline).</p>
+                  </div>
+                  <div className="p-8 bg-black border border-slate-900 hover:border-red-600/50 transition-all">
+                    <span className="text-red-600 font-mono text-[10px] tracking-[0.4em] mb-4 block">FRACTURE_03 // COGNITIVE_LOAD</span>
+                    <p className="text-slate-400 leading-relaxed text-sm">Measures managerial friction across three organizational nodes (Executive, Managerial, Technical).</p>
+                  </div>
+                  <div className="p-8 bg-black border border-slate-900 hover:border-red-600/50 transition-all">
+                    <span className="text-red-600 font-mono text-[10px] tracking-[0.4em] mb-4 block">FRACTURE_04 // SIGNAL_LATENCY</span>
+                    <p className="text-slate-400 leading-relaxed text-sm">The temporal gap between tool procurement and verifiable ROI realization.</p>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
