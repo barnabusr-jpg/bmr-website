@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { Sliders, Activity, ArrowRight, ShieldAlert, BarChart3 } from "lucide-react";
+import { Sliders, Activity, ArrowRight, ShieldAlert, BarChart3, Printer } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -58,6 +58,11 @@ export default function ForensicVerdict() {
     };
   }, [reportData, liveSpend, fteCount]);
 
+  // 🖨️ Handle Print Action
+  const handlePrint = () => {
+    window.print();
+  };
+
   if (loading || !activeMetrics || !reportData) {
     return (
       <div className="bg-[#020617] min-h-screen text-red-600 flex flex-col items-center justify-center font-mono italic animate-pulse uppercase tracking-[0.5em] text-2xl text-center">
@@ -68,35 +73,55 @@ export default function ForensicVerdict() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic text-left selection:bg-red-600/30">
-      <Header />
-      <div className="container mx-auto max-w-4xl mt-24">
+    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic text-left selection:bg-red-600/30 print:bg-white print:text-black">
+      {/* 🛡️ Print-Only CSS Styles */}
+      <style jsx global>{`
+        @media print {
+          .no-print { display: none !important; }
+          header, footer { display: none !important; }
+          body { background-color: white !important; color: black !important; }
+          .container { margin-top: 0 !important; max-width: 100% !important; }
+          .bg-slate-950 { background-color: #f1f5f9 !important; border: 1px solid #000 !important; }
+          .text-white { color: black !important; }
+        }
+      `}</style>
+
+      <div className="no-print">
+        <Header />
+      </div>
+
+      <div className="container mx-auto max-w-4xl mt-24 relative">
         
-        {/* --- HARDCODED HEADER: REPLACED OUTLOOK.COM WITH BMR SOLUTIONS --- */}
+        {/* 🖨️ Print Button (Floating Right) */}
+        <button 
+          onClick={handlePrint}
+          className="no-print absolute -top-12 right-0 flex items-center gap-2 bg-slate-800 hover:bg-red-600 text-white px-4 py-2 rounded font-mono text-[10px] uppercase tracking-widest transition-all shadow-xl"
+        >
+          <Printer size={16} /> Export Forensic PDF
+        </button>
+
         <header className="flex justify-between items-end mb-12 border-b-2 border-slate-900 pb-10">
           <div>
-            <h1 className="text-white text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none">
+            <h1 className="text-white text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none print:text-black">
               AI <span className="text-red-600 italic">EFFICIENCY</span> VERDICT
             </h1>
             <div className="space-y-1 mt-6 font-mono text-[11px] uppercase tracking-[0.4em] font-black italic">
               <p className="text-slate-500 leading-relaxed">
                 CASE_FILE: BMR-2026-{reportData.id.slice(0,4).toUpperCase()} // STATUS: {activeMetrics.riskStatus}
               </p>
-              {/* Force clean text here - removed all dynamic email logic */}
               <p className="text-red-600 leading-relaxed">
                 AUTHORIZED BY: BMR SOLUTIONS
               </p>
             </div>
           </div>
-          <BarChart3 size={64} className="text-slate-800" />
+          <BarChart3 size={64} className="text-slate-800 print:text-black" />
         </header>
 
-        {/* Diagnostic Note */}
         <div className="mb-12 border-l-4 border-red-600 pl-8 py-2">
           <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.4em] font-black italic mb-4">
             DIAGNOSTIC_OBSERVATION // ALPHA_7_INTAKE
           </p>
-          <p className="text-slate-400 text-lg md:text-xl leading-relaxed italic font-medium max-w-3xl">
+          <p className="text-slate-400 text-lg md:text-xl leading-relaxed italic font-medium max-w-3xl print:text-slate-700">
             These metrics serve as a forensic baseline for organizational health. 
             Your responses identify specific logic fractures from your immediate perspective. 
             The system projects the fiscal impact of these fractures, converting observations 
@@ -104,8 +129,7 @@ export default function ForensicVerdict() {
           </p>
         </div>
 
-        {/* Executive Briefing */}
-        <div className="bg-white p-12 mb-16 border-l-[16px] border-red-600 shadow-2xl">
+        <div className="bg-white p-12 mb-16 border-l-[16px] border-red-600 shadow-2xl print:border-l-[8px] print:shadow-none">
           <div className="flex justify-between items-center mb-10">
             <h2 className="text-black text-4xl font-black uppercase italic tracking-tighter underline decoration-red-600/30">Executive Briefing</h2>
             <span className="text-slate-400 font-mono text-[10px] font-black uppercase tracking-widest">ENTITY // {reportData.org_name}</span>
@@ -126,20 +150,19 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* Visual Blocks */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16">
-          <div className="bg-slate-950 border border-slate-900 p-12 flex flex-col justify-center">
-            <div className="text-6xl md:text-7xl font-black italic text-white leading-none tracking-tighter">${activeMetrics.totalTax.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
+          <div className="bg-slate-950 border border-slate-900 p-12 flex flex-col justify-center print:bg-slate-100">
+            <div className="text-6xl md:text-7xl font-black italic text-white leading-none tracking-tighter print:text-black">${activeMetrics.totalTax.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
             <div className="text-[11px] font-mono text-slate-500 uppercase tracking-widest mt-6 font-black italic">Annual Labor Waste</div>
           </div>
-          <div className="bg-red-950/20 border-2 border-red-600/50 p-12 flex flex-col justify-center border-l-8 border-red-600">
+          <div className="bg-red-950/20 border-2 border-red-600/50 p-12 flex flex-col justify-center border-l-8 border-red-600 print:bg-red-50">
             <div className="text-6xl md:text-7xl font-black text-red-500 leading-none italic tracking-tighter">${activeMetrics.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
             <div className="text-[11px] font-mono text-red-400 uppercase font-black tracking-widest mt-6 italic">Total Capital Exposure</div>
           </div>
         </div>
 
-        {/* Simulator */}
-        <div className="bg-slate-950/40 border border-slate-800 p-12 space-y-16 mb-16 rounded-xl">
+        {/* 🛡️ Simulator Section - Hidden on Print */}
+        <div className="bg-slate-950/40 border border-slate-800 p-12 space-y-16 mb-16 rounded-xl no-print">
           <div className="flex items-center gap-4 text-red-600"><Sliders size={24} /><h3 className="text-[12px] font-mono font-black uppercase tracking-[0.5em] italic">Forensic Exposure Simulator</h3></div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
             <div className="space-y-6">
@@ -153,8 +176,7 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="bg-white p-16 flex flex-col md:flex-row justify-between items-center gap-12 group cursor-pointer hover:bg-slate-100 transition-all border-l-[20px] border-red-600 shadow-2xl" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}>
+        <div className="bg-white p-16 flex flex-col md:flex-row justify-between items-center gap-12 group cursor-pointer hover:bg-slate-100 transition-all border-l-[20px] border-red-600 shadow-2xl print:border-l-[8px] print:shadow-none no-print" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}>
           <div className="text-left">
             <h4 className="text-black text-5xl font-black italic uppercase tracking-tighter leading-none">Eradicate the Tax</h4>
             <p className="text-slate-600 text-[13px] font-black uppercase tracking-widest mt-6 italic leading-relaxed max-w-md">Schedule your clinical briefing to recover lost engineering capacity.</p>
@@ -162,7 +184,10 @@ export default function ForensicVerdict() {
           <div className="bg-red-600 text-white p-8 group-hover:translate-x-4 transition-transform shadow-lg"><ArrowRight size={48} /></div>
         </div>
       </div>
-      <Footer />
+      
+      <div className="no-print">
+        <Footer />
+      </div>
     </div>
   );
 }
