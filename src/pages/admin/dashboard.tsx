@@ -4,11 +4,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, FileText, 
-  Download, ArrowRight, Monitor, FileDown
+  FileDown, Monitor, Target 
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+
+// 🛡️ RESTORED IP SUITE DATA
+const BMR_IP_SUITE = {
+  directives: [
+    { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now.", color: "text-red-600" },
+    { id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K", description: "The system rebuilds the logic that connects your operational layers.", color: "text-blue-500" },
+    { id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO", description: "Developing new organizational rule sets to protect leadership.", color: "text-purple-500" },
+    { id: "DIR_04", label: "FORENSIC CONTINUITY", description: "Monitoring structural health through specialized reporting cadence.", color: "text-green-500" }
+  ],
+  services: [
+    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments." },
+    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols." },
+    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse." }
+  ]
+};
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,7 +40,7 @@ export default function AdminDashboard() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      alert("AUTHORIZATION_FAILED");
+      alert("AUTHORIZATION_FAILED: UNRECOGNIZED_SIGNAL");
       setLoading(false);
     } else {
       setIsAuthenticated(true);
@@ -34,20 +49,19 @@ export default function AdminDashboard() {
   };
 
   const generateForensicPDF = async (audit: any) => {
-    const laborTax = "$83,200";
-    const exposure = "$248,400";
-    const capacityLoss = "8%";
+    const dbDecay = audit.decay_pct || 50;
+    const spend = parseFloat(audit.ai_spend) || 1.2;
+    const fte = Math.round((spend * 1000000) / 200000) || 5;
+    const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
+    const exposure = (0.22 * (spend * 1000000)) * 1.15;
 
     const printArea = document.createElement('div');
     printArea.style.position = 'fixed';
     printArea.style.left = '-9999px';
     printArea.style.top = '0';
-    printArea.style.zIndex = '-1';
     
-    // 🛡️ SUPERSAMPLED CANVAS: 1400px width for 4K-level text clarity
     printArea.innerHTML = `
       <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box; -webkit-font-smoothing: antialiased;">
-        
         <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid #dc2626; box-sizing: border-box;">
             <div style="flex: 1;">
                 <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase;">BMR // FORENSIC_VERDICT</h1>
@@ -55,84 +69,42 @@ export default function AdminDashboard() {
             </div>
             <div style="text-align: right; border-left: 3px solid #1e293b; padding-left: 40px;">
                 <p style="font-size: 14px; font-weight: 900; color: #dc2626; margin: 0; letter-spacing: 3px;">AUTHORIZED_BY</p>
-                <p style="font-size: 18px; font-weight: 400; color: #fff; margin-top: 8px; font-family: monospace;">${email.toUpperCase()}</p>
+                <p style="font-size: 18px; font-weight: 400; color: #fff; margin-top: 8px; font-family: monospace;">BMR SOLUTIONS</p>
                 <p style="font-size: 12px; color: #444; margin-top: 5px; font-family: monospace;">VERIFIED: ${new Date().toLocaleDateString()}</p>
             </div>
         </div>
 
         <div style="padding: 100px 100px 140px 100px; flex-grow: 1; box-sizing: border-box;">
             <div style="margin-bottom: 80px;">
-                <h2 style="font-size: 120px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -6px; line-height: 1;">
-                  AI <span style="color: #dc2626;">EFFICIENCY</span> VERDICT
-                </h2>
-                <p style="font-size: 14px; font-weight: 900; color: #475569; letter-spacing: 8px; margin-top: 30px; font-family: monospace;">CASE_FILE: BMR-2026 // STATUS: STABLE</p>
+                <h2 style="font-size: 120px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -6px; line-height: 1;">AI <span style="color: #dc2626;">EFFICIENCY</span> VERDICT</h2>
             </div>
-
-            <div style="border-left: 8px solid #dc2626; padding: 50px 80px; background: rgba(220, 38, 38, 0.05); margin-bottom: 80px;">
-                <p style="font-size: 16px; font-weight: 900; color: #666; letter-spacing: 5px; margin-bottom: 25px; font-family: monospace;">DIAGNOSTIC_OBSERVATION // ALPHA_7_INTAKE</p>
-                <p style="font-size: 26px; font-style: italic; line-height: 1.6; color: #94a3b8; margin: 0;">
-                  These metrics serve as a forensic baseline for organizational health. Your responses identify specific logic fractures from your immediate perspective. The system projects the fiscal impact of these fractures, converting observations into high-probability drift currently occurring at your node.
-                </p>
-            </div>
-
-            <div style="background: white; color: black; padding: 100px; border-left: 60px solid #dc2626; margin-bottom: 80px; width: 100%; box-sizing: border-box; box-shadow: 0 50px 100px rgba(0,0,0,0.5);">
+            <div style="background: white; color: black; padding: 100px; border-left: 60px solid #dc2626; margin-bottom: 80px; width: 100%; box-sizing: border-box;">
               <h1 style="font-size: 92px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -5px; line-height: 0.85;">Executive Briefing</h1>
               <p style="font-size: 20px; font-weight: 900; color: #666; letter-spacing: 10px; margin-top: 35px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT_NODE'}</p>
-              
               <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 100px; border-top: 3px solid #eee; padding-top: 60px;">
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Capacity Loss</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Wasting <span style="color: #dc2626;">${capacityLoss}</span></p></div>
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Financial Leak</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Tax: <span style="color: #dc2626;">${laborTax}</span></p></div>
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Exposure</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Risk: <span style="color: #dc2626;">${exposure}</span></p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Capacity Loss</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Wasting ${dbDecay}%</p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Financial Leak</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Tax: $${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Exposure</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Risk: $${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
               </div>
             </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%;">
-              <div style="background: #050b1a; border: 4px solid #1e293b; padding: 80px 40px; text-align: center;">
-                <h2 style="font-size: 150px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -10px;">${laborTax}</h2>
-                <p style="font-size: 18px; font-weight: 900; color: #475569; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Annual Labor Waste</p>
-              </div>
-              <div style="background: #050b1a; border: 10px solid #dc2626; padding: 80px 40px; text-align: center;">
-                <h2 style="font-size: 150px; font-weight: 900; font-style: italic; margin: 0; color: #dc2626; letter-spacing: -10px;">${exposure}</h2>
-                <p style="font-size: 18px; font-weight: 900; color: #dc2626; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Total Capital Exposure</p>
-              </div>
-            </div>
-        </div>
-
-        <div style="background: #01040a; padding: 60px; text-align: center; border-top: 3px solid #1e293b; margin-top: auto;">
-            <p style="font-size: 14px; color: #334155; font-family: monospace; letter-spacing: 8px; font-weight: 900;">BMR FORENSIC UNIT // INTERNAL USE ONLY // CLASSIFIED_RESULT</p>
         </div>
       </div>
     `;
     document.body.appendChild(printArea);
 
     try {
-      // Allow fonts to settle
       await new Promise(r => setTimeout(r, 250));
-
-      const canvas = await html2canvas(printArea, { 
-        backgroundColor: "#020617", 
-        scale: 4, // 🛡️ HIGH-RE RESOLUTION
-        useCORS: true, 
-        logging: false, 
-        width: 1400,
-        height: printArea.offsetHeight,
-        windowWidth: 1400,
-        windowHeight: printArea.offsetHeight
-      });
-      
+      const canvas = await html2canvas(printArea, { backgroundColor: "#020617", scale: 4, width: 1400, height: printArea.offsetHeight });
       const imgData = canvas.toDataURL("image/png", 1.0);
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      
       const imgProps = pdf.getImageProperties(imgData);
       const scaledHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, Math.min(pdfHeight, scaledHeight), undefined, 'FAST');
-      pdf.save(`BMR_VERDICT_${audit.org_name?.replace(/\s+/g, '_') || 'EXPORT'}.pdf`);
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, scaledHeight, undefined, 'FAST');
+      pdf.save(`BMR_VERDICT_${audit.org_name || 'EXPORT'}.pdf`);
       document.body.removeChild(printArea);
     } catch (err) {
-      console.error("FORENSIC_PDF_ERROR", err);
+      console.error("PDF_ERROR", err);
       if (document.body.contains(printArea)) document.body.removeChild(printArea);
     }
   };
@@ -156,7 +128,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchLedger();
-      const interval = setInterval(() => { fetchLedger(); if (expandedRow) refreshActiveNodes(expandedRow); }, 5000); 
+      const interval = setInterval(() => { 
+        fetchLedger(); 
+        if (expandedRow) refreshActiveNodes(expandedRow); 
+      }, 5000); 
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
@@ -166,12 +141,12 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
         <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative italic">
           <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
-          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black">ALPHA-7_CLEARANCE_REQUIRED</p>
+          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA-7_CLEARANCE_REQUIRED</p>
           <div className="space-y-4">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR_EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE_PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600 italic" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR_EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic uppercase" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE_PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600" />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all leading-none italic">
+          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all italic leading-none">
             {loading ? "VERIFYING..." : "INITIALIZE_COMMAND"}
           </button>
         </form>
@@ -190,45 +165,84 @@ export default function AdminDashboard() {
           </div>
         </div>
       </nav>
-      <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32">
+
+      <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
-          {activeTab === 'ledger' && (
+          {activeTab === 'ledger' ? (
             <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
               {data.map((audit) => (
                 <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
                   <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
                     <div className="col-span-6 flex items-center gap-6">
                       <div className="bg-slate-900 p-4 border border-slate-800 shrink-0 italic"><Building2 size={24} className="text-red-600" /></div>
-                      <div><div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING_SIGNAL"}</div><div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">{audit.lead_email}</div></div>
+                      <div>
+                        <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING_SIGNAL"}</div>
+                        <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all italic">{audit.lead_email}</div>
+                      </div>
                     </div>
                     <div className="col-span-4 text-center font-black text-white italic text-xs tracking-[0.2em] font-mono">{audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : 'TRIANGULATION_ACTIVE'}</div>
-                    <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
+                    <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
                   </div>
                   {expandedRow === audit.id && (
-                    <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20">
+                    <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic">
                       <div className="grid grid-cols-3 gap-6 pt-10 mb-10 italic">
                         {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((role) => {
                           const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role);
                           const isDone = node?.status?.toLowerCase() === 'completed';
                           return (
-                            <div key={role} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between">
-                              <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role}_NODE</span>
-                              <div className={`text-5xl font-black italic uppercase tracking-tighter ${isDone ? 'text-white' : 'text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
+                            <div key={role} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
+                              <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role}_NODE</span>
+                              <div className={`text-5xl font-black italic uppercase tracking-tighter italic ${isDone ? 'text-white' : 'text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
                             </div>
                           );
                         })}
                       </div>
-                      <div className="flex justify-between items-center border-t border-slate-900/50 pt-10">
-                        <div className="flex gap-4">
-                           <button className="bg-slate-900 text-slate-500 border border-slate-800 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:text-white transition-all flex items-center gap-3 italic"><Mail size={16} /> RE-DISPATCH</button>
-                           <button onClick={() => generateForensicPDF(audit)} className="bg-white text-black px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl italic font-black"><FileDown size={18} /> DOWNLOAD_DOSSIER_COPY</button>
+                      <div className="flex justify-between items-center border-t border-slate-900/50 pt-10 italic">
+                        <div className="flex gap-4 italic">
+                            <button className="bg-slate-900 text-slate-500 border border-slate-800 px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:text-white transition-all flex items-center gap-3 italic font-black"><Mail size={16} /> RE-DISPATCH</button>
+                            <button onClick={() => generateForensicPDF(audit)} className="bg-white text-black px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl italic font-black"><FileDown size={18} /> DOWNLOAD_DOSSIER_COPY</button>
                         </div>
-                        <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
+                        <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
                       </div>
                     </div>
                   )}
                 </div>
               ))}
+            </motion.div>
+          ) : (
+            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public_Service_Mapping</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic font-black">
+                  {BMR_IP_SUITE.services.map((s) => (
+                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
+                      <div className="text-red-600 mb-6 italic">{s.icon}</div>
+                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
+                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case italic">{s.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary_Directives</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
+                  {BMR_IP_SUITE.directives.map((d) => (
+                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 italic"><Binary className={d.color} size={32} /></div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 italic">
+                        <div className="space-y-2 italic">
+                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic font-black`}>PROTOCOL // {d.id}</span>
+                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
+                        </div>
+                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic font-black">{d.price}</div>}
+                      </div>
+                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium italic normal-case italic">{d.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
             </motion.div>
           )}
         </AnimatePresence>
