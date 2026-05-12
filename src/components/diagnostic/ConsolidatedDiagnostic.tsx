@@ -81,7 +81,7 @@ export default function ConsolidatedDiagnostic() {
         {isLoading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-[#020617] z-[9999] flex flex-col items-center justify-center text-red-600">
             <Activity className="animate-spin mb-4" size={64} />
-            <p className="font-black uppercase tracking-[0.5em] text-sm italic">SYNTHESIZING_VALUATION...</p>
+            <p className="font-black uppercase tracking-[0.5em] text-sm italic">VERIFYING_SIGNAL_STRENGTH...</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -96,7 +96,6 @@ export default function ConsolidatedDiagnostic() {
             </div>
             
             <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
-              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic underline decoration-red-600/30 underline-offset-8">Step 1: Choose Operational Focus</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => (
                   <button key={node} onClick={() => setSelectedLens(node)} className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node ? 'bg-red-600 border-red-600 text-white shadow-[0_0_50px_rgba(220,38,38,0.3)]' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}>
@@ -122,7 +121,7 @@ export default function ConsolidatedDiagnostic() {
         )}
 
         {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12 text-center max-w-4xl mx-auto italic font-bold uppercase italic font-sans italic">
+          <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12 text-center max-w-4xl mx-auto italic">
             <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
             <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
@@ -156,16 +155,6 @@ export default function ConsolidatedDiagnostic() {
 
         {step === 'audit' && (
           <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left max-w-5xl mx-auto italic">
-            <div className="flex flex-col md:flex-row md:items-center gap-6 mb-16 border-b border-slate-900 pb-8 italic font-sans italic">
-              <div className="bg-red-600 text-white px-4 py-1">
-                <p className="font-mono text-[10px] font-black tracking-[0.2em] uppercase italic">LIVE_SIGNAL_ACTIVE</p>
-              </div>
-              <div className="flex items-center gap-4 text-slate-500 font-mono text-[11px] font-bold tracking-[0.3em] uppercase italic">
-                <Activity size={16} className="text-red-600 animate-pulse italic" />
-                <span>CASE_FILE: BMR_2026_SEG_0{currentDimension + 1}</span>
-              </div>
-            </div>
-
             <h2 className="text-4xl md:text-7xl font-black uppercase text-white leading-[0.9] tracking-tighter italic">
               {LOCAL_QUESTIONS[currentDimension]?.text}
             </h2>
@@ -187,15 +176,15 @@ export default function ConsolidatedDiagnostic() {
                       try {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
                         if (auditId) {
-                          // 🛡️ VERIFICATION LOOP: Prove the data exists before leaving
-                          let verified = false;
-                          let attempts = 0;
-                          while (!verified && attempts < 8) {
-                            const { data } = await supabase.from('audits').select('id').eq('id', auditId).single();
+                          // 🛡️ VERIFICATION LOOP: Ensure public selectability
+                          let isPubliclyVisible = false;
+                          let checkAttempts = 0;
+                          while (!isPubliclyVisible && checkAttempts < 12) {
+                            const { data } = await supabase.from('audits').select('id').eq('id', auditId).maybeSingle();
                             if (data) {
-                              verified = true;
+                              isPubliclyVisible = true;
                             } else {
-                              attempts++;
+                              checkAttempts++;
                               await new Promise(r => setTimeout(r, 600));
                             }
                           }
