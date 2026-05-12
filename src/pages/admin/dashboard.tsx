@@ -43,7 +43,7 @@ export default function AdminDashboard() {
     printArea.style.left = '-9999px';
     printArea.style.top = '0';
     
-    // 🛡️ HIGH-DENSITY TEMPLATE: Designed at 1200px width for 300DPI clarity
+    // 🛡️ RE-ENGINEERED: 1200px CANVAS CAPTURED AT SCALE 3 FOR RAZOR SHARPNESS
     printArea.innerHTML = `
       <div style="width: 1200px; min-height: 1697px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
         
@@ -69,7 +69,7 @@ export default function AdminDashboard() {
 
             <div style="border-left: 6px solid #dc2626; padding: 40px 60px; background: rgba(220, 38, 38, 0.05); margin-bottom: 80px;">
                 <p style="font-size: 14px; font-weight: 900; color: #666; letter-spacing: 4px; margin-bottom: 20px; font-family: monospace;">DIAGNOSTIC_OBSERVATION // ALPHA_7_INTAKE</p>
-                <p style="font-size: 24px; font-style: italic; line-height: 1.6; color: #94a3b8; margin: 0;">
+                <p style="font-size: 22px; font-style: italic; line-height: 1.6; color: #94a3b8; margin: 0;">
                   These metrics serve as a forensic baseline for organizational health. Your responses identify specific logic fractures from your immediate perspective. The system projects the fiscal impact of these fractures, converting observations into high-probability drift currently occurring at your node.
                 </p>
             </div>
@@ -90,7 +90,7 @@ export default function AdminDashboard() {
                 <h2 style="font-size: 140px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -8px;">${laborTax}</h2>
                 <p style="font-size: 18px; font-weight: 900; color: #475569; letter-spacing: 12px; margin-top: 30px; text-transform: uppercase;">Annual Labor Waste</p>
               </div>
-              <div style="background: #050b1a; border: 12px solid #dc2626; padding: 80px 40px; text-align: center;">
+              <div style="background: #050b1a; border: 8px solid #dc2626; padding: 80px 40px; text-align: center;">
                 <h2 style="font-size: 140px; font-weight: 900; font-style: italic; margin: 0; color: #dc2626; letter-spacing: -8px;">${exposure}</h2>
                 <p style="font-size: 18px; font-weight: 900; color: #dc2626; letter-spacing: 12px; margin-top: 30px; text-transform: uppercase;">Total Capital Exposure</p>
               </div>
@@ -106,14 +106,8 @@ export default function AdminDashboard() {
 
     try {
       const canvas = await html2canvas(printArea, { 
-        backgroundColor: "#020617", 
-        scale: 3, // 🛡️ CRITICAL FIX: 3x resolution prevents blur
-        useCORS: true,
-        logging: false,
-        width: 1200,
-        height: 1697 // Exact A4 ratio for 1200 width
+        backgroundColor: "#020617", scale: 3, useCORS: true, logging: false, width: 1200, height: 1697 
       });
-      
       const imgData = canvas.toDataURL("image/png", 1.0);
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -157,10 +151,10 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-        <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative italic">
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4 italic uppercase font-black text-white">
+        <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative">
           <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
-          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black">ALPHA-7_CLEARANCE_REQUIRED</p>
+          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA-7_CLEARANCE_REQUIRED</p>
           <div className="space-y-4">
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR_EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic" />
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE_PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600 italic" />
