@@ -41,13 +41,11 @@ export default function ConsolidatedDiagnostic() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // 🛡️ ATOMIC DATABASE LOGGING
+  // 🛡️ RE-ENGINEERED DATABASE LOGGING (ACCEPTED PARAMETERS TO BYPASS STATE DELAY)
   const logToDatabase = async (finalMetrics: any, finalAnswers: any) => {
     try {
-      // Step 1: Upsert Entity
       const { data: ent } = await supabase.from('entities').upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' }).select().single();
       
-      // Step 2: Insert Audit with COMPLETE status to match Admin Dashboard
       const { data: auditData, error: auditError } = await supabase.from('audits').insert([{ 
         org_name: entityName.toUpperCase(),
         lead_email: email.toLowerCase(),
@@ -61,20 +59,19 @@ export default function ConsolidatedDiagnostic() {
 
       if (auditError) throw auditError;
 
-      // Step 3: Insert/Update Operator Node
       await supabase.from('operators').upsert({ 
         email: email.toLowerCase(), 
         full_name: operatorName.toUpperCase(), 
         entity_id: ent?.id,
         audit_id: auditData.id,
         persona_type: selectedLens,
-        status: 'completed',
+        status: 'COMPLETE',
         raw_responses: finalAnswers
       }, { onConflict: 'email,audit_id' });
 
       return auditData.id;
     } catch (e) { 
-      console.error("CRITICAL_DATABASE_ERROR", e);
+      console.error("DB_LOG_FAILURE:", e);
       return null; 
     }
   };
@@ -82,12 +79,12 @@ export default function ConsolidatedDiagnostic() {
   if (!mounted) return null;
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left italic font-sans overflow-x-hidden">
+    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left italic font-sans selection:bg-red-600/30">
       <AnimatePresence mode="wait">
         {isLoading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/98 z-[9999] flex flex-col items-center justify-center text-red-600">
             <Activity className="animate-spin mb-4" size={64} />
-            <p className="font-black uppercase tracking-[0.5em] text-sm">SYNTHESIZING_VALUATION...</p>
+            <p className="font-black uppercase tracking-[0.5em] text-sm">GENERATING_CASE_FILE...</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -100,16 +97,16 @@ export default function ConsolidatedDiagnostic() {
                 AI <span className="text-red-600 italic">EFFICIENCY</span> AUDIT
               </h1>
               <p className="max-w-2xl mx-auto text-slate-400 text-lg md:text-2xl font-bold italic leading-relaxed uppercase">
-                Most AI systems leak capital through manual rework. Identify operational focus to begin.
+                Identify operational focus to begin triangulation.
               </p>
             </div>
             
             <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
-              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black underline decoration-red-600/30 underline-offset-8">Step 1: Choose Operational Focus</p>
+              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black">Step 1: Choose Operational Focus</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => (
-                  <button key={node} onClick={() => setSelectedLens(node)} className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node ? 'bg-red-600 border-red-600 text-white shadow-[0_0_50px_rgba(220,38,38,0.3)] scale-105' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}>
-                    {selectedLens === node ? <Unlock size={28} /> : <Lock size={28} className="opacity-20 transition-opacity" />}
+                  <button key={node} onClick={() => setSelectedLens(node)} className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node ? 'bg-red-600 border-red-600 text-white' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}>
+                    {selectedLens === node ? <Unlock size={28} /> : <Lock size={28} className="opacity-20" />}
                     <span className="font-black text-xl tracking-[0.1em] uppercase italic">{node}</span>
                   </button>
                 ))}
@@ -185,7 +182,7 @@ export default function ConsolidatedDiagnostic() {
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
                 <button key={i} className="py-10 px-12 border-2 border-slate-900 bg-slate-950/40 hover:border-red-600 transition-all text-left uppercase font-black text-slate-500 hover:text-white flex justify-between items-center group relative overflow-hidden italic shadow-xl" 
                   onClick={async () => {
-                    // 🛡️ ATOMIC STATE CAPTURE
+                    // 🛡️ CAPTURE UPDATED STATE IN CONSTANT TO BYPASS REACT DELAY
                     const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                     setAnswers(updatedAnswers);
 
@@ -194,7 +191,7 @@ export default function ConsolidatedDiagnostic() {
                     } else {
                       setIsLoading(true);
                       
-                      // 🛡️ SYNCED METRIC CALCULATION
+                      // CALCULATE FINAL METRICS ATOMICALLY
                       const totalSum = Object.values(updatedAnswers).reduce((a, b) => a + parseInt(b || "0"), 0);
                       const scaledTotal = (totalSum * 0.04);
                       const decayRaw = Math.round((1 - (1 / (1 + (totalSum * 0.05) / 10))) * 100);
@@ -203,13 +200,11 @@ export default function ConsolidatedDiagnostic() {
                       const auditId = await logToDatabase(finalMetrics, updatedAnswers); 
                       
                       if (auditId) {
-                        // Small delay for DB stability before redirect
-                        setTimeout(() => {
-                           window.location.assign(`/results/${auditId}`);
-                        }, 800);
+                        // FORCE REDIRECT
+                        window.location.assign(`/results/${auditId}`);
                       } else {
                         setIsLoading(false);
-                        alert("SYNC_LOST: PLEASE RE-INITIATE SIGNAL");
+                        alert("SIGNAL_LOSS: DATABASE_SYNC_FAILED.");
                       }
                     }
                   }}>
