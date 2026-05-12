@@ -78,7 +78,7 @@ export default function ConsolidatedDiagnostic() {
   if (!mounted) return null;
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left italic font-sans">
+    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left italic font-sans overflow-x-hidden">
       <AnimatePresence mode="wait">
         {isLoading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-[#020617] z-[9999] flex flex-col items-center justify-center text-red-600">
@@ -101,7 +101,7 @@ export default function ConsolidatedDiagnostic() {
             </div>
             
             <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
-              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black underline decoration-red-600/30 underline-offset-8 italic">Step 1: Choose Operational Focus</p>
+              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic">Step 1: Choose Operational Focus</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => (
                   <button key={node} onClick={() => setSelectedLens(node)} className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node ? 'bg-red-600 border-red-600 text-white shadow-[0_0_50px_rgba(220,38,38,0.3)] scale-105' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}>
@@ -197,8 +197,10 @@ export default function ConsolidatedDiagnostic() {
                       try {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
                         if (auditId) {
-                          // 🛡️ ATOMIC REDIRECT
-                          window.location.replace(`/results/${auditId}`);
+                          // 🛡️ BUFFER DELAY: Give database a moment to commit before redirect
+                          setTimeout(() => {
+                            window.location.replace(`/results/${auditId}`);
+                          }, 600);
                         } else {
                           setIsLoading(false);
                           alert("SIGNAL_SYNC_FAILURE");
