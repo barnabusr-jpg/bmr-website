@@ -44,7 +44,6 @@ export default function ConsolidatedDiagnostic() {
   const logToDatabase = async (finalMetrics: any, finalAnswers: any) => {
     try {
       const { data: ent } = await supabase.from('entities').upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' }).select().single();
-      
       const { data: auditData, error: auditError } = await supabase.from('audits').insert([{ 
         org_name: entityName.toUpperCase(),
         lead_email: email.toLowerCase(),
@@ -95,17 +94,14 @@ export default function ConsolidatedDiagnostic() {
               <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter text-white leading-none">
                 AI <span className="text-red-600 italic">EFFICIENCY</span> AUDIT
               </h1>
-              <p className="max-w-2xl mx-auto text-slate-400 text-lg md:text-2xl font-bold italic leading-relaxed uppercase">
-                Most AI systems leak capital through manual rework. Identify operational focus to begin.
-              </p>
             </div>
             
             <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
-              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic">Step 1: Choose Operational Focus</p>
+              <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic underline decoration-red-600/30 underline-offset-8">Step 1: Choose Operational Focus</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => (
-                  <button key={node} onClick={() => setSelectedLens(node)} className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node ? 'bg-red-600 border-red-600 text-white shadow-[0_0_50px_rgba(220,38,38,0.3)] scale-105' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}>
-                    {selectedLens === node ? <Unlock size={28} /> : <Lock size={28} className="opacity-20 transition-opacity" />}
+                  <button key={node} onClick={() => setSelectedLens(node)} className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node ? 'bg-red-600 border-red-600 text-white shadow-[0_0_50px_rgba(220,38,38,0.3)]' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}>
+                    {selectedLens === node ? <Unlock size={28} /> : <Lock size={28} className="opacity-20" />}
                     <span className="font-black text-xl tracking-[0.1em] uppercase italic">{node}</span>
                   </button>
                 ))}
@@ -114,10 +110,10 @@ export default function ConsolidatedDiagnostic() {
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-10">
               {sectors.map((s) => (
-                <button key={s.id} disabled={!selectedLens} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-56 group disabled:opacity-20 disabled:grayscale">
+                <button key={s.id} disabled={!selectedLens} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-56 group disabled:opacity-20">
                   <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
                   <div>
-                    <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none italic">{s.label}</h3>
+                    <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter italic leading-none">{s.label}</h3>
                     <p className="text-[11px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2 italic">{s.risk}</p>
                   </div>
                 </button>
@@ -128,7 +124,7 @@ export default function ConsolidatedDiagnostic() {
 
         {step === 'intake' && (
           <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12 text-center max-w-4xl mx-auto italic">
-            <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
+            <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none italic">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
             <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 <div className="space-y-3">
@@ -168,8 +164,6 @@ export default function ConsolidatedDiagnostic() {
               <div className="flex items-center gap-4 text-slate-500 font-mono text-[11px] font-bold tracking-[0.3em] uppercase italic">
                 <Activity size={16} className="text-red-600 animate-pulse" />
                 <span>CASE_FILE: BMR_2026_SEG_0{currentDimension + 1}</span>
-                <span className="text-slate-800">//</span>
-                <span className="text-red-600/50">TRNGL_REF: {sector.toUpperCase()}_{selectedLens}</span>
               </div>
             </div>
 
@@ -188,19 +182,16 @@ export default function ConsolidatedDiagnostic() {
                       setCurrentDimension(currentDimension + 1);
                     } else {
                       setIsLoading(true);
-                      
                       const totalSum = Object.values(updatedAnswers).reduce((a, b) => a + parseInt(b || "0"), 0);
-                      const scaledTotal = (totalSum * 0.04);
-                      const decayRaw = Math.round((1 - (1 / (1 + (totalSum * 0.05) / 10))) * 100);
-                      const finalMetrics = { decay: Math.min(decayRaw, 98), rework: scaledTotal.toFixed(2) };
+                      const finalMetrics = { decay: Math.min(Math.round((1 - (1 / (1 + (totalSum * 0.05) / 10))) * 100), 98), rework: (totalSum * 0.04).toFixed(2) };
 
                       try {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
                         if (auditId) {
-                          // 🛡️ BUFFER DELAY: Give database a moment to commit before redirect
+                          // 🛡️ BUFFER DELAY
                           setTimeout(() => {
                             window.location.replace(`/results/${auditId}`);
-                          }, 600);
+                          }, 800);
                         } else {
                           setIsLoading(false);
                           alert("SIGNAL_SYNC_FAILURE");
