@@ -69,7 +69,6 @@ export default function ConsolidatedDiagnostic() {
 
       return auditData.id;
     } catch (e) { 
-      console.error("DB_LOG_FAILURE:", e);
       return null; 
     }
   };
@@ -82,7 +81,7 @@ export default function ConsolidatedDiagnostic() {
         {isLoading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-[#020617] z-[9999] flex flex-col items-center justify-center text-red-600">
             <Activity className="animate-spin mb-4" size={64} />
-            <p className="font-black uppercase tracking-[0.5em] text-sm italic">GENERATING_CASE_FILE...</p>
+            <p className="font-black uppercase tracking-[0.5em] text-sm italic">SYNTHESIZING_VALUATION...</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -113,7 +112,7 @@ export default function ConsolidatedDiagnostic() {
                 <button key={s.id} disabled={!selectedLens} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-56 group disabled:opacity-20">
                   <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
                   <div>
-                    <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter italic leading-none">{s.label}</h3>
+                    <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
                     <p className="text-[11px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2 italic">{s.risk}</p>
                   </div>
                 </button>
@@ -123,8 +122,8 @@ export default function ConsolidatedDiagnostic() {
         )}
 
         {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12 text-center max-w-4xl mx-auto italic">
-            <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none italic">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
+          <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12 text-center max-w-4xl mx-auto italic font-bold uppercase italic font-sans italic">
+            <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
             <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 <div className="space-y-3">
@@ -157,12 +156,12 @@ export default function ConsolidatedDiagnostic() {
 
         {step === 'audit' && (
           <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left max-w-5xl mx-auto italic">
-            <div className="flex flex-col md:flex-row md:items-center gap-6 mb-16 border-b border-slate-900 pb-8">
+            <div className="flex flex-col md:flex-row md:items-center gap-6 mb-16 border-b border-slate-900 pb-8 italic font-sans italic">
               <div className="bg-red-600 text-white px-4 py-1">
                 <p className="font-mono text-[10px] font-black tracking-[0.2em] uppercase italic">LIVE_SIGNAL_ACTIVE</p>
               </div>
               <div className="flex items-center gap-4 text-slate-500 font-mono text-[11px] font-bold tracking-[0.3em] uppercase italic">
-                <Activity size={16} className="text-red-600 animate-pulse" />
+                <Activity size={16} className="text-red-600 animate-pulse italic" />
                 <span>CASE_FILE: BMR_2026_SEG_0{currentDimension + 1}</span>
               </div>
             </div>
@@ -188,17 +187,26 @@ export default function ConsolidatedDiagnostic() {
                       try {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
                         if (auditId) {
-                          // 🛡️ BUFFER DELAY
-                          setTimeout(() => {
-                            window.location.replace(`/results/${auditId}`);
-                          }, 800);
+                          // 🛡️ VERIFICATION LOOP: Prove the data exists before leaving
+                          let verified = false;
+                          let attempts = 0;
+                          while (!verified && attempts < 8) {
+                            const { data } = await supabase.from('audits').select('id').eq('id', auditId).single();
+                            if (data) {
+                              verified = true;
+                            } else {
+                              attempts++;
+                              await new Promise(r => setTimeout(r, 600));
+                            }
+                          }
+                          window.location.replace(`/results/${auditId}`);
                         } else {
                           setIsLoading(false);
                           alert("SIGNAL_SYNC_FAILURE");
                         }
                       } catch (err) {
                         setIsLoading(false);
-                        alert("CRITICAL_NETWORK_ERROR");
+                        alert("NETWORK_STABILITY_ERROR");
                       }
                     }
                   }}>
