@@ -41,16 +41,13 @@ export default function ConsolidatedDiagnostic() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  const getLiveMetrics = () => {
-    const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
-    const scaledTotal = (totalSum * 0.04);
-    const decayRaw = Math.round((1 - (1 / (1 + (totalSum * 0.05) / 10))) * 100);
-    return { decay: Math.min(decayRaw, 98), rework: scaledTotal.toFixed(2) };
-  };
-
-  const logToDatabase = async (finalMetrics: any) => {
+  // 🛡️ ATOMIC DATABASE LOGGING
+  const logToDatabase = async (finalMetrics: any, finalAnswers: any) => {
     try {
+      // Step 1: Upsert Entity
       const { data: ent } = await supabase.from('entities').upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' }).select().single();
+      
+      // Step 2: Insert Audit with COMPLETE status to match Admin Dashboard
       const { data: auditData, error: auditError } = await supabase.from('audits').insert([{ 
         org_name: entityName.toUpperCase(),
         lead_email: email.toLowerCase(),
@@ -58,29 +55,34 @@ export default function ConsolidatedDiagnostic() {
         ai_spend: 1.2,
         decay_pct: finalMetrics.decay,
         rework_tax: parseFloat(finalMetrics.rework),
-        raw_responses: answers,
-        status: 'TRIANGULATION_ACTIVE' 
+        raw_responses: finalAnswers,
+        status: 'COMPLETE' 
       }]).select('id').single();
 
       if (auditError) throw auditError;
 
+      // Step 3: Insert/Update Operator Node
       await supabase.from('operators').upsert({ 
         email: email.toLowerCase(), 
         full_name: operatorName.toUpperCase(), 
         entity_id: ent?.id,
         audit_id: auditData.id,
         persona_type: selectedLens,
-        status: 'COMPLETED',
-        raw_responses: answers
+        status: 'completed',
+        raw_responses: finalAnswers
       }, { onConflict: 'email,audit_id' });
+
       return auditData.id;
-    } catch (e) { return null; }
+    } catch (e) { 
+      console.error("CRITICAL_DATABASE_ERROR", e);
+      return null; 
+    }
   };
 
   if (!mounted) return null;
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left italic font-sans">
+    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left italic font-sans overflow-x-hidden">
       <AnimatePresence mode="wait">
         {isLoading && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/98 z-[9999] flex flex-col items-center justify-center text-red-600">
@@ -183,14 +185,32 @@ export default function ConsolidatedDiagnostic() {
               {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
                 <button key={i} className="py-10 px-12 border-2 border-slate-900 bg-slate-950/40 hover:border-red-600 transition-all text-left uppercase font-black text-slate-500 hover:text-white flex justify-between items-center group relative overflow-hidden italic shadow-xl" 
                   onClick={async () => {
+                    // 🛡️ ATOMIC STATE CAPTURE
                     const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                     setAnswers(updatedAnswers);
+
                     if (currentDimension < LOCAL_QUESTIONS.length - 1) {
                       setCurrentDimension(currentDimension + 1);
                     } else {
                       setIsLoading(true);
-                      const auditId = await logToDatabase(getLiveMetrics()); 
-                      if (auditId) window.location.href = `/results/${auditId}`;
+                      
+                      // 🛡️ SYNCED METRIC CALCULATION
+                      const totalSum = Object.values(updatedAnswers).reduce((a, b) => a + parseInt(b || "0"), 0);
+                      const scaledTotal = (totalSum * 0.04);
+                      const decayRaw = Math.round((1 - (1 / (1 + (totalSum * 0.05) / 10))) * 100);
+                      const finalMetrics = { decay: Math.min(decayRaw, 98), rework: scaledTotal.toFixed(2) };
+
+                      const auditId = await logToDatabase(finalMetrics, updatedAnswers); 
+                      
+                      if (auditId) {
+                        // Small delay for DB stability before redirect
+                        setTimeout(() => {
+                           window.location.assign(`/results/${auditId}`);
+                        }, 800);
+                      } else {
+                        setIsLoading(false);
+                        alert("SYNC_LOST: PLEASE RE-INITIATE SIGNAL");
+                      }
                     }
                   }}>
                   <span className="text-2xl md:text-4xl tracking-tighter transition-transform group-hover:translate-x-4">{opt.label}</span>
