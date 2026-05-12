@@ -42,77 +42,82 @@ export default function AdminDashboard() {
     printArea.style.position = 'fixed';
     printArea.style.left = '-9999px';
     printArea.style.top = '0';
+    printArea.style.zIndex = '-1';
     
-    // 🛡️ RE-CALIBRATED CANVAS: Fixed Width, Auto-Height to prevent cutoff
+    // 🛡️ SUPERSAMPLED CANVAS: 1400px width for 4K-level text clarity
     printArea.innerHTML = `
-      <div id="capture-root" style="width: 1000px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
+      <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box; -webkit-font-smoothing: antialiased;">
         
-        <div style="background: #01040a; width: 100%; padding: 50px 70px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #dc2626; box-sizing: border-box;">
+        <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid #dc2626; box-sizing: border-box;">
             <div style="flex: 1;">
-                <h1 style="font-size: 36px; font-weight: 900; margin: 0; letter-spacing: 3px; font-style: italic; text-transform: uppercase;">BMR // FORENSIC_VERDICT</h1>
-                <p style="color: #666; font-family: monospace; font-size: 12px; margin-top: 12px; font-weight: 900; letter-spacing: 2px;">SIGNAL_ID: ${audit.id.toUpperCase()}</p>
+                <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase;">BMR // FORENSIC_VERDICT</h1>
+                <p style="color: #666; font-family: monospace; font-size: 16px; margin-top: 15px; font-weight: 900; letter-spacing: 3px;">SIGNAL_ID: ${audit.id.toUpperCase()}</p>
             </div>
-            <div style="text-align: right; border-left: 2px solid #1e293b; padding-left: 25px;">
-                <p style="font-size: 10px; font-weight: 900; color: #dc2626; margin: 0; letter-spacing: 2px;">AUTHORIZED_BY</p>
-                <p style="font-size: 14px; font-weight: 400; color: #fff; margin-top: 6px; font-family: monospace;">${email.toUpperCase()}</p>
-                <p style="font-size: 10px; color: #444; margin-top: 4px; font-family: monospace;">VERIFIED: ${new Date().toLocaleDateString()}</p>
+            <div style="text-align: right; border-left: 3px solid #1e293b; padding-left: 40px;">
+                <p style="font-size: 14px; font-weight: 900; color: #dc2626; margin: 0; letter-spacing: 3px;">AUTHORIZED_BY</p>
+                <p style="font-size: 18px; font-weight: 400; color: #fff; margin-top: 8px; font-family: monospace;">${email.toUpperCase()}</p>
+                <p style="font-size: 12px; color: #444; margin-top: 5px; font-family: monospace;">VERIFIED: ${new Date().toLocaleDateString()}</p>
             </div>
         </div>
 
-        <div style="padding: 70px 70px 100px 70px; flex-grow: 1; box-sizing: border-box;">
-            <div style="margin-bottom: 60px;">
-                <h2 style="font-size: 94px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -5px; line-height: 1;">
+        <div style="padding: 100px 100px 140px 100px; flex-grow: 1; box-sizing: border-box;">
+            <div style="margin-bottom: 80px;">
+                <h2 style="font-size: 120px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -6px; line-height: 1;">
                   AI <span style="color: #dc2626;">EFFICIENCY</span> VERDICT
                 </h2>
-                <p style="font-size: 12px; font-weight: 900; color: #475569; letter-spacing: 6px; margin-top: 20px; font-family: monospace;">CASE_FILE: BMR-2026 // STATUS: STABLE</p>
+                <p style="font-size: 14px; font-weight: 900; color: #475569; letter-spacing: 8px; margin-top: 30px; font-family: monospace;">CASE_FILE: BMR-2026 // STATUS: STABLE</p>
             </div>
 
-            <div style="border-left: 6px solid #dc2626; padding: 40px 50px; background: rgba(220, 38, 38, 0.05); margin-bottom: 60px;">
-                <p style="font-size: 12px; font-weight: 900; color: #666; letter-spacing: 4px; margin-bottom: 20px; font-family: monospace;">DIAGNOSTIC_OBSERVATION // ALPHA_7_INTAKE</p>
-                <p style="font-size: 20px; font-style: italic; line-height: 1.6; color: #94a3b8; margin: 0;">
+            <div style="border-left: 8px solid #dc2626; padding: 50px 80px; background: rgba(220, 38, 38, 0.05); margin-bottom: 80px;">
+                <p style="font-size: 16px; font-weight: 900; color: #666; letter-spacing: 5px; margin-bottom: 25px; font-family: monospace;">DIAGNOSTIC_OBSERVATION // ALPHA_7_INTAKE</p>
+                <p style="font-size: 26px; font-style: italic; line-height: 1.6; color: #94a3b8; margin: 0;">
                   These metrics serve as a forensic baseline for organizational health. Your responses identify specific logic fractures from your immediate perspective. The system projects the fiscal impact of these fractures, converting observations into high-probability drift currently occurring at your node.
                 </p>
             </div>
 
-            <div style="background: white; color: black; padding: 70px; border-left: 40px solid #dc2626; margin-bottom: 50px; width: 100%; box-sizing: border-box; box-shadow: 0 40px 80px rgba(0,0,0,0.5);">
-              <h1 style="font-size: 72px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -4px; line-height: 0.85;">Executive Briefing</h1>
-              <p style="font-size: 16px; font-weight: 900; color: #666; letter-spacing: 8px; margin-top: 25px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT_NODE'}</p>
+            <div style="background: white; color: black; padding: 100px; border-left: 60px solid #dc2626; margin-bottom: 80px; width: 100%; box-sizing: border-box; box-shadow: 0 50px 100px rgba(0,0,0,0.5);">
+              <h1 style="font-size: 92px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -5px; line-height: 0.85;">Executive Briefing</h1>
+              <p style="font-size: 20px; font-weight: 900; color: #666; letter-spacing: 10px; margin-top: 35px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT_NODE'}</p>
               
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; margin-top: 70px; border-top: 2px solid #eee; padding-top: 40px;">
-                <div><p style="font-size: 12px; font-weight: 900; color: #dc2626; letter-spacing: 2px;">Capacity Loss</p><p style="font-size: 28px; font-weight: 900; font-style: italic; margin-top: 10px;">Wasting <span style="color: #dc2626;">${capacityLoss}</span></p></div>
-                <div><p style="font-size: 12px; font-weight: 900; color: #dc2626; letter-spacing: 2px;">Financial Leak</p><p style="font-size: 28px; font-weight: 900; font-style: italic; margin-top: 10px;">Tax: <span style="color: #dc2626;">${laborTax}</span></p></div>
-                <div><p style="font-size: 12px; font-weight: 900; color: #dc2626; letter-spacing: 2px;">Exposure</p><p style="font-size: 28px; font-weight: 900; font-style: italic; margin-top: 10px;">Risk: <span style="color: #dc2626;">${exposure}</span></p></div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 100px; border-top: 3px solid #eee; padding-top: 60px;">
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Capacity Loss</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Wasting <span style="color: #dc2626;">${capacityLoss}</span></p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Financial Leak</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Tax: <span style="color: #dc2626;">${laborTax}</span></p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Exposure</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Risk: <span style="color: #dc2626;">${exposure}</span></p></div>
               </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; width: 100%;">
-              <div style="background: #050b1a; border: 3px solid #1e293b; padding: 60px 40px; text-align: center;">
-                <h2 style="font-size: 120px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -8px; line-height: 1;">${laborTax}</h2>
-                <p style="font-size: 14px; font-weight: 900; color: #475569; letter-spacing: 12px; margin-top: 30px; text-transform: uppercase;">Annual Labor Waste</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; width: 100%;">
+              <div style="background: #050b1a; border: 4px solid #1e293b; padding: 80px 40px; text-align: center;">
+                <h2 style="font-size: 150px; font-weight: 900; font-style: italic; margin: 0; letter-spacing: -10px;">${laborTax}</h2>
+                <p style="font-size: 18px; font-weight: 900; color: #475569; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Annual Labor Waste</p>
               </div>
-              <div style="background: #050b1a; border: 8px solid #dc2626; padding: 60px 40px; text-align: center;">
-                <h2 style="font-size: 120px; font-weight: 900; font-style: italic; margin: 0; color: #dc2626; letter-spacing: -8px; line-height: 1;">${exposure}</h2>
-                <p style="font-size: 14px; font-weight: 900; color: #dc2626; letter-spacing: 12px; margin-top: 30px; text-transform: uppercase;">Total Capital Exposure</p>
+              <div style="background: #050b1a; border: 10px solid #dc2626; padding: 80px 40px; text-align: center;">
+                <h2 style="font-size: 150px; font-weight: 900; font-style: italic; margin: 0; color: #dc2626; letter-spacing: -10px;">${exposure}</h2>
+                <p style="font-size: 18px; font-weight: 900; color: #dc2626; letter-spacing: 15px; margin-top: 40px; text-transform: uppercase;">Total Capital Exposure</p>
               </div>
             </div>
         </div>
 
-        <div style="background: #01040a; padding: 50px; text-align: center; border-top: 2px solid #1e293b; margin-top: auto;">
-            <p style="font-size: 12px; color: #334155; font-family: monospace; letter-spacing: 6px; font-weight: 900;">BMR FORENSIC UNIT // INTERNAL USE ONLY // CLASSIFIED_RESULT</p>
+        <div style="background: #01040a; padding: 60px; text-align: center; border-top: 3px solid #1e293b; margin-top: auto;">
+            <p style="font-size: 14px; color: #334155; font-family: monospace; letter-spacing: 8px; font-weight: 900;">BMR FORENSIC UNIT // INTERNAL USE ONLY // CLASSIFIED_RESULT</p>
         </div>
       </div>
     `;
     document.body.appendChild(printArea);
 
     try {
+      // Allow fonts to settle
+      await new Promise(r => setTimeout(r, 250));
+
       const canvas = await html2canvas(printArea, { 
         backgroundColor: "#020617", 
-        scale: 3, 
+        scale: 4, // 🛡️ HIGH-RE RESOLUTION
         useCORS: true, 
         logging: false, 
-        width: 1000,
-        // 📏 DYNAMIC HEIGHT CAPTURE
-        height: printArea.offsetHeight 
+        width: 1400,
+        height: printArea.offsetHeight,
+        windowWidth: 1400,
+        windowHeight: printArea.offsetHeight
       });
       
       const imgData = canvas.toDataURL("image/png", 1.0);
@@ -120,15 +125,14 @@ export default function AdminDashboard() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      // Calculate how to fit the long image onto the fixed A4 page height
       const imgProps = pdf.getImageProperties(imgData);
       const scaledHeight = (imgProps.height * pdfWidth) / imgProps.width;
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, Math.min(pdfHeight, scaledHeight));
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, Math.min(pdfHeight, scaledHeight), undefined, 'FAST');
       pdf.save(`BMR_VERDICT_${audit.org_name?.replace(/\s+/g, '_') || 'EXPORT'}.pdf`);
       document.body.removeChild(printArea);
     } catch (err) {
-      console.error(err);
+      console.error("FORENSIC_PDF_ERROR", err);
       if (document.body.contains(printArea)) document.body.removeChild(printArea);
     }
   };
@@ -167,7 +171,7 @@ export default function AdminDashboard() {
             <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR_EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic" />
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE_PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600 italic" />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase tracking-widest hover:bg-white hover:text-red-600 transition-all leading-none italic">
+          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all leading-none italic">
             {loading ? "VERIFYING..." : "INITIALIZE_COMMAND"}
           </button>
         </form>
