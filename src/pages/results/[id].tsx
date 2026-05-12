@@ -15,8 +15,10 @@ export default function ForensicVerdict() {
   const [fteCount, setFteCount] = useState<number>(5);
 
   useEffect(() => {
-    // 🛡️ WAIT FOR ROUTER TO HYDRATE ID
     if (!router.isReady || !id) return;
+
+    let retries = 0;
+    const maxRetries = 3;
 
     const fetchAuditData = async () => {
       const { data: audit, error } = await supabase
@@ -29,8 +31,14 @@ export default function ForensicVerdict() {
         setLiveSpend(parseFloat(audit.ai_spend) || 1.2);
         setFteCount(Math.round((parseFloat(audit.ai_spend) * 1000000) / 200000) || 5);
         setReportData(audit);
+        setLoading(false);
+      } else if (retries < maxRetries) {
+        // 🛡️ RE-TRIANGULATION: Wait and retry if data isn't found immediately
+        retries++;
+        setTimeout(fetchAuditData, 1000);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchAuditData();
@@ -78,7 +86,7 @@ export default function ForensicVerdict() {
       <div className="container mx-auto max-w-4xl mt-24">
         <header className="flex justify-between items-end mb-12 border-b-2 border-slate-900 pb-10">
           <div>
-            <h1 className="text-white text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none">
+            <h1 className="text-white text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none italic font-black">
               AI <span className="text-red-600 italic">EFFICIENCY</span> VERDICT
             </h1>
             <p className="text-slate-500 font-mono text-[11px] mt-6 uppercase tracking-[0.4em] font-black italic">
@@ -89,14 +97,14 @@ export default function ForensicVerdict() {
         </header>
 
         <div className="mb-12 border-l-4 border-red-600 pl-8 py-2">
-          <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.4em] font-black italic mb-4 italic">DIAGNOSTIC_OBSERVATION // ALPHA_7_INTAKE</p>
+          <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.4em] font-black italic mb-4">DIAGNOSTIC_OBSERVATION // ALPHA_7_INTAKE</p>
           <p className="text-slate-400 text-lg md:text-xl leading-relaxed italic font-medium max-w-3xl">
-            These metrics serve as a forensic baseline for organizational health. Your responses identify specific logic fractures from your immediate perspective. The system projects the fiscal impact of these fractures.
+            These metrics serve as a forensic baseline for organizational health. Your responses identify specific logic fractures from your immediate perspective.
           </p>
         </div>
 
         <div className="bg-white p-12 mb-16 border-l-[16px] border-red-600 shadow-2xl">
-          <h2 className="text-black text-4xl font-black uppercase italic tracking-tighter mb-10 underline decoration-red-600/30 italic">Executive Briefing</h2>
+          <h2 className="text-black text-4xl font-black uppercase italic tracking-tighter mb-10 underline decoration-red-600/30">Executive Briefing</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-800 italic">
             <div className="space-y-3">
               <span className="text-[11px] font-black uppercase text-red-600 tracking-widest font-mono">Capacity Loss</span>
@@ -115,11 +123,11 @@ export default function ForensicVerdict() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16 italic">
           <div className="bg-slate-950 border border-slate-900 p-12 flex flex-col justify-center">
-            <div className="text-6xl md:text-7xl font-black italic text-white leading-none tracking-tighter font-black">${activeMetrics?.totalTax.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
+            <div className="text-6xl md:text-7xl font-black italic text-white leading-none tracking-tighter">${activeMetrics?.totalTax.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
             <div className="text-[11px] font-mono text-slate-500 uppercase tracking-widest mt-6 font-black italic">Annual Labor Waste</div>
           </div>
           <div className="bg-red-950/20 border-2 border-red-600/50 p-12 flex flex-col justify-center border-l-8 border-red-600">
-            <div className="text-6xl md:text-7xl font-black text-red-500 leading-none italic tracking-tighter font-black">${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
+            <div className="text-6xl md:text-7xl font-black text-red-500 leading-none italic tracking-tighter">${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}</div>
             <div className="text-[11px] font-mono text-red-400 uppercase font-black tracking-widest mt-6 italic">Total Capital Exposure</div>
           </div>
         </div>
