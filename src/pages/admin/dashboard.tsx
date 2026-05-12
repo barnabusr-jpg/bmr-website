@@ -202,7 +202,13 @@ export default function AdminDashboard() {
                             <button className="bg-slate-900 text-slate-500 border border-slate-800 px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:text-white transition-all flex items-center gap-3 italic font-black"><Mail size={16} /> RE-DISPATCH</button>
                             <button onClick={() => generateForensicPDF(audit)} className="bg-white text-black px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl italic font-black"><FileDown size={18} /> DOWNLOAD_DOSSIER_COPY</button>
                         </div>
-                        <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
+                        {/* 🛡️ UNREDACTED ACCESS GRANTED VIA CLEARANCE PARAM */}
+                        <button 
+                          onClick={() => window.open(`/results/${audit.id}?clearance=alpha7`, '_blank')} 
+                          className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"
+                        >
+                          <Monitor size={18} /> OPEN_UNREDACTED_LEDGER
+                        </button>
                       </div>
                     </div>
                   )}
