@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { ArrowRight, BarChart3, ShieldCheck } from "lucide-react";
+import { ArrowRight, BarChart3, ShieldCheck, Printer } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -17,7 +17,7 @@ export default function ForensicVerdict() {
   const [liveBleed, setLiveBleed] = useState(0);
 
   useEffect(() => {
-    // 🛡️ SYNC ADMIN STATE
+    // 🛡️ SECURITY PROTOCOL
     const params = new URLSearchParams(window.location.search);
     const adminActive = params.get('admin') === 'true';
     setIsAdmin(adminActive);
@@ -46,11 +46,8 @@ export default function ForensicVerdict() {
   const activeMetrics = useMemo(() => {
     if (!reportData) return null;
     const dbDecay = parseInt(reportData.decay_pct) || 0;
-    
-    // Fixed Variable Naming (was causing the client-side crash)
     const reworkTaxCalculated = (fteCount * (dbDecay / 100) * 0.40) * (160000 * 1.3);
     const inactionPenaltyCalculated = ((dbDecay > 60 ? 0.30 : 0.18) * (liveSpend * 1000000)) * 1.15;
-    
     const bleedPerSecond = inactionPenaltyCalculated / 31536000;
     const createdAt = new Date(reportData.created_at || Date.now()).getTime();
     
@@ -73,9 +70,10 @@ export default function ForensicVerdict() {
     return () => clearInterval(ticker);
   }, [activeMetrics]);
 
-  // 🛡️ FAIL-SAFE BLUR LOGIC
-  // If we are admin, return empty string for class. Otherwise, apply blur.
+  // 🛡️ SECURE BY DEFAULT: If not admin, the class is "heavy-blur"
   const blurClass = (mounted && isAdmin) ? "" : "heavy-blur";
+
+  const handlePrint = () => { window.print(); };
 
   if (loading || !reportData) return (
     <div className="bg-[#020617] h-screen flex items-center justify-center font-mono italic text-red-600">
@@ -88,8 +86,16 @@ export default function ForensicVerdict() {
       <div className="no-print"><Header /></div>
 
       <div className="container mx-auto max-w-4xl mt-24 relative">
+        
+        {/* PDF EXPORT (no-print) */}
+        <div className="absolute -top-12 right-0 no-print">
+          <button onClick={handlePrint} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono">
+            <Printer size={14} /> GENERATE_PDF_REPORT
+          </button>
+        </div>
+
         {isAdmin && (
-          <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400">
+          <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print">
             <ShieldCheck size={16} /> ADMIN_DECRYPTION_ACTIVE
           </div>
         )}
@@ -108,15 +114,15 @@ export default function ForensicVerdict() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-800 font-black italic">
             <div className="space-y-3">
-              <span className="text-red-600">Capacity Loss</span>
+              <span className="text-red-600 text-[11px] font-mono tracking-widest">Capacity Loss</span>
               <p className="text-[15px] leading-tight">Wasting <span className={`text-red-600 text-xl font-black ${blurClass}`}>{(activeMetrics?.decay * 0.4).toFixed(0)}%</span> Total.</p>
             </div>
             <div className="space-y-3">
-              <span className="text-red-600">Annual Rework Tax</span>
+              <span className="text-red-600 text-[11px] font-mono tracking-widest">Annual Rework Tax</span>
               <p className="text-[15px] leading-tight">Cost: <span className={`text-red-600 text-xl font-black ${blurClass}`}>${activeMetrics?.reworkTax.toLocaleString()}</span>.</p>
             </div>
             <div className="space-y-3">
-              <span className="text-red-600">Inaction Penalty</span>
+              <span className="text-red-600 text-[11px] font-mono tracking-widest">Inaction Penalty</span>
               <p className="text-[15px] leading-tight">Risk: <span className={`text-red-600 text-xl font-black ${blurClass}`}>${activeMetrics?.inactionPenalty.toLocaleString()}</span>.</p>
             </div>
           </div>
@@ -134,7 +140,7 @@ export default function ForensicVerdict() {
         </div>
 
         {!isAdmin && (
-          <div className="bg-white p-16 flex justify-between items-center group cursor-pointer border-l-[20px] border-red-600 shadow-2xl" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}>
+          <div className="bg-white p-16 flex justify-between items-center group cursor-pointer border-l-[20px] border-red-600 shadow-2xl no-print" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}>
             <div className="text-left font-black italic uppercase">
               <h4 className="text-black text-6xl tracking-tighter leading-none mb-4">Eradicate the Tax</h4>
               <p className="text-slate-600 text-[14px] font-bold">Schedule your briefing to stop the bleed.</p>
