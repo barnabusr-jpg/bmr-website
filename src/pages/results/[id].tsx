@@ -15,14 +15,13 @@ export default function ForensicVerdict() {
   const [fteCount, setFteCount] = useState<number>(5);
   const [liveBleed, setLiveBleed] = useState(0);
 
-  // 🛡️ EFFECT 1: SYNC ROUTER & ADMIN STATUS
   useEffect(() => {
     if (!router.isReady) return;
     
+    // 🛡️ CHECK ADMIN STATUS
     const adminParam = router.query.admin === "true";
     setIsAdmin(adminParam);
     
-    // Auto-fetch if ID is in the query
     const pathId = router.query.id || window.location.pathname.split('/').pop();
     if (pathId && pathId !== '[id]' && pathId !== 'results') {
       fetchAuditData(pathId as string);
@@ -76,25 +75,29 @@ export default function ForensicVerdict() {
   if (loading || !reportData) return <div className="bg-[#020617] h-screen text-red-600 flex items-center justify-center font-mono animate-pulse italic uppercase">Authenticating_Session...</div>;
 
   return (
-    // 🛡️ THE KEY ATTRIBUTE FORCES RE-RENDER ONCE ADMIN IS DETECTED
-    <div key={isAdmin ? 'admin-mode' : 'user-mode'} className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30">
+    <div 
+      className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30"
+      data-admin-view={isAdmin} // 🛡️ DATA ATTRIBUTE FOR CSS
+    >
       
       <style jsx global>{`
+        /* DEFAULT BLUR FOR USERS */
         .heavy-blur {
-          /* Final override: if isAdmin, no blur. If user, 28px blackout. */
-          filter: ${isAdmin ? "none !important" : "blur(28px) !important"};
-          user-select: ${isAdmin ? "auto" : "none"};
-          pointer-events: ${isAdmin ? "auto" : "none"};
-          transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+          filter: blur(28px);
+          user-select: none;
+          pointer-events: none;
+          display: inline-block;
+          transition: filter 0.6s ease;
         }
-        @media print {
-          .no-print { display: none !important; }
-          .heavy-blur { 
-            filter: ${isAdmin ? "none !important" : "blur(40px) !important"};
-            color: ${isAdmin ? "inherit" : "transparent !important"};
-            background-color: ${isAdmin ? "transparent" : "#dc2626 !important"};
-          }
+
+        /* 🛡️ FORCE CLEAR FOR ADMIN */
+        [data-admin-view="true"] .heavy-blur {
+          filter: none !important;
+          user-select: auto !important;
+          pointer-events: auto !important;
         }
+
+        @media print { .no-print { display: none !important; } }
       `}</style>
 
       <div className="no-print"><Header /></div>
@@ -102,8 +105,8 @@ export default function ForensicVerdict() {
       <div className="container mx-auto max-w-4xl mt-24 relative italic font-black uppercase">
         
         {isAdmin && (
-          <div className="fixed bottom-8 left-8 z-50 bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-[0_0_30px_rgba(37,99,235,0.4)] border border-blue-400">
-            <ShieldCheck size={16} /> DATA_ENCRYPTION_BYPASS_ACTIVE
+          <div className="fixed bottom-8 left-8 z-50 bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400">
+            <ShieldCheck size={16} /> ADMIN_DECRYPTION_ACTIVE
           </div>
         )}
 
@@ -133,19 +136,19 @@ export default function ForensicVerdict() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-800 font-black">
-            <div className="space-y-3 font-black uppercase">
+            <div className="space-y-3">
               <span className="text-[11px] text-red-600 tracking-widest font-mono italic">Capacity Loss</span>
               <p className="text-[15px] leading-tight italic font-black">
                 Wasting <span className="text-red-600 text-xl font-black heavy-blur">{(activeMetrics?.decay * 0.4).toFixed(0)}%</span> Total.
               </p>
             </div>
-            <div className="space-y-3 font-black uppercase">
+            <div className="space-y-3">
               <span className="text-[11px] text-red-600 tracking-widest font-mono italic">Annual Rework Tax</span>
               <p className="text-[15px] leading-tight italic font-black">
                 Hidden Cost: <span className="text-red-600 text-xl font-black heavy-blur">${activeMetrics?.reworkTax.toLocaleString()}</span>.
               </p>
             </div>
-            <div className="space-y-3 font-black uppercase">
+            <div className="space-y-3">
               <span className="text-[11px] text-red-600 tracking-widest font-mono italic">Inaction Penalty</span>
               <p className="text-[15px] leading-tight italic font-black">
                 Risk: <span className="text-red-600 text-xl font-black heavy-blur">${activeMetrics?.inactionPenalty.toLocaleString()}</span>.
