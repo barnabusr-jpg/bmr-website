@@ -9,48 +9,29 @@ import Footer from "@/components/Footer";
 export default function ForensicVerdict() {
   const router = useRouter();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [liveSpend, setLiveSpend] = useState<number>(1.2);
   const [fteCount, setFteCount] = useState<number>(5);
   const [liveBleed, setLiveBleed] = useState(0);
 
-  // 🛡️ SURGICAL OVERRIDE (Suggestion #2)
   useEffect(() => {
+    // 🛡️ INITIALIZE SESSION
     const params = new URLSearchParams(window.location.search);
     const adminActive = params.get('admin') === 'true';
     
-    // 1. Verify detection in console
-    console.log("FORENSIC_AUTH_VERIFICATION:", { adminActive, timestamp: new Date().toISOString() });
+    console.log("FORENSIC_INIT:", { adminActive });
     setIsAdmin(adminActive);
+    setMounted(true);
 
-    // 2. Inject Style Override to defeat SSR/Static Blur
-    const style = document.createElement('style');
-    style.id = "admin-forensic-override";
-    style.innerHTML = `
-      .heavy-blur {
-        filter: ${adminActive ? "none !important" : "blur(32px) !important"};
-        user-select: ${adminActive ? "auto !important" : "none !important"};
-        pointer-events: ${adminActive ? "auto !important" : "none !important"};
-        opacity: ${adminActive ? "1 !important" : "0.7 !important"};
-        transition: filter 0.4s ease-in-out;
-      }
-    `;
-    document.head.appendChild(style);
-
-    // 3. Data Fetching
-    if (router.isReady) {
-      const pathId = router.query.id || window.location.pathname.split('/').pop();
-      if (pathId && pathId !== '[id]' && pathId !== 'results') {
-        fetchAuditData(pathId as string);
-      }
+    const pathId = params.get('id') || window.location.pathname.split('/').pop();
+    if (pathId && pathId !== '[id]' && pathId !== 'results') {
+      fetchAuditData(pathId);
+    } else {
+      setLoading(false);
     }
-
-    return () => {
-      const existingStyle = document.getElementById("admin-forensic-override");
-      if (existingStyle) document.head.removeChild(existingStyle);
-    };
-  }, [isAdmin, router.isReady]);
+  }, [router.isReady]);
 
   const fetchAuditData = async (pathId: string) => {
     const { data: audit } = await supabase.from('audits').select('*').eq('id', pathId).maybeSingle();
@@ -90,6 +71,24 @@ export default function ForensicVerdict() {
     }, 100);
     return () => clearInterval(ticker);
   }, [activeMetrics]);
+
+  // 🛡️ DYNAMIC INLINE STYLE (Suggestion #3 / Force Bypass)
+  // This is now the ONLY thing controlling the blur. 
+  // We removed the "heavy-blur" class from the spans below.
+  const blurStyle = (mounted && !isAdmin) ? {
+    filter: "blur(32px)",
+    opacity: 0.6,
+    pointerEvents: "none" as any,
+    userSelect: "none" as any,
+    transition: "filter 0.4s ease-in-out",
+    display: "inline-block"
+  } : {
+    filter: "none",
+    opacity: 1,
+    pointerEvents: "auto" as any,
+    userSelect: "auto" as any,
+    display: "inline-block"
+  };
 
   if (loading || !reportData) return (
     <div className="bg-[#020617] h-screen flex flex-col items-center justify-center space-y-4">
@@ -137,19 +136,19 @@ export default function ForensicVerdict() {
             <div className="space-y-3 font-black uppercase">
               <span className="text-[11px] text-red-600 tracking-widest font-mono italic">Capacity Loss</span>
               <p className="text-[15px] leading-tight italic font-black">
-                Wasting <span className="text-red-600 text-xl font-black heavy-blur">{(activeMetrics?.decay * 0.4).toFixed(0)}%</span> Total.
+                Wasting <span className="text-red-600 text-xl font-black" style={blurStyle}>{(activeMetrics?.decay * 0.4).toFixed(0)}%</span> Total.
               </p>
             </div>
             <div className="space-y-3 font-black uppercase">
               <span className="text-[11px] text-red-600 tracking-widest font-mono italic">Annual Rework Tax</span>
               <p className="text-[15px] leading-tight italic font-black">
-                Hidden Cost: <span className="text-red-600 text-xl font-black heavy-blur">${activeMetrics?.reworkTax.toLocaleString()}</span>.
+                Hidden Cost: <span className="text-red-600 text-xl font-black" style={blurStyle}>${activeMetrics?.reworkTax.toLocaleString()}</span>.
               </p>
             </div>
             <div className="space-y-3 font-black uppercase">
               <span className="text-[11px] text-red-600 tracking-widest font-mono italic">Inaction Penalty</span>
               <p className="text-[15px] leading-tight italic font-black">
-                Risk: <span className="text-red-600 text-xl font-black heavy-blur">${activeMetrics?.inactionPenalty.toLocaleString()}</span>.
+                Risk: <span className="text-red-600 text-xl font-black" style={blurStyle}>${activeMetrics?.inactionPenalty.toLocaleString()}</span>.
               </p>
             </div>
           </div>
@@ -157,13 +156,13 @@ export default function ForensicVerdict() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16 italic font-black uppercase">
           <div className="bg-slate-950 border border-slate-900 p-12 flex flex-col justify-center">
-            <div className="text-6xl md:text-7xl font-black italic text-white tracking-tighter heavy-blur">
+            <div className="text-6xl md:text-7xl font-black italic text-white tracking-tighter" style={blurStyle}>
               ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-slate-500 uppercase tracking-widest mt-6">Annual Hidden Labor Tax</div>
           </div>
           <div className="bg-red-950/20 border-2 border-red-600/50 p-12 flex flex-col justify-center border-l-8 border-red-600">
-            <div className="text-6xl md:text-7xl font-black text-red-500 tracking-tighter heavy-blur">
+            <div className="text-6xl md:text-7xl font-black text-red-500 tracking-tighter" style={blurStyle}>
               ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-red-400 uppercase font-black tracking-widest mt-6">Total Capital Exposure</div>
