@@ -8,37 +8,40 @@ import Footer from "@/components/Footer";
 
 export default function ForensicVerdict() {
   const router = useRouter();
-  const { id, admin } = router.query; // Capture 'admin' from URL params
+  const [isAdmin, setIsAdmin] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [liveSpend, setLiveSpend] = useState<number>(1.2);
   const [fteCount, setFteCount] = useState<number>(5);
   const [liveBleed, setLiveBleed] = useState(0);
 
-  // 🛡️ ADMIN AUTH CHECK
-  const isAdmin = admin === "true"; 
-
+  // 🛡️ EFFECT 1: SYNC ROUTER & ADMIN STATUS
   useEffect(() => {
-    const pathId = id || window.location.pathname.split('/').pop();
-    if (!pathId || pathId === '[id]' || pathId === 'results') return;
+    if (!router.isReady) return;
+    
+    const adminParam = router.query.admin === "true";
+    setIsAdmin(adminParam);
+    
+    // Auto-fetch if ID is in the query
+    const pathId = router.query.id || window.location.pathname.split('/').pop();
+    if (pathId && pathId !== '[id]' && pathId !== 'results') {
+      fetchAuditData(pathId as string);
+    }
+  }, [router.isReady, router.query]);
 
-    const fetchAuditData = async (retryCount = 0) => {
-      const cleanId = String(pathId).trim().toLowerCase();
-      const { data: audit } = await supabase.from('audits').select('*').eq('id', cleanId).maybeSingle();
+  const fetchAuditData = async (pathId: string) => {
+    const cleanId = String(pathId).trim().toLowerCase();
+    const { data: audit } = await supabase.from('audits').select('*').eq('id', cleanId).maybeSingle();
 
-      if (audit) {
-        setLiveSpend(parseFloat(audit.ai_spend) || 1.2);
-        setFteCount(Math.round((parseFloat(audit.ai_spend) * 1000000) / 200000) || 5);
-        setReportData(audit);
-        setLoading(false);
-      } else if (retryCount < 5) {
-        setTimeout(() => fetchAuditData(retryCount + 1), 1000);
-      } else {
-        setLoading(false);
-      }
-    };
-    fetchAuditData();
-  }, [id, router.isReady]);
+    if (audit) {
+      setLiveSpend(parseFloat(audit.ai_spend) || 1.2);
+      setFteCount(Math.round((parseFloat(audit.ai_spend) * 1000000) / 200000) || 5);
+      setReportData(audit);
+      setLoading(false);
+    } else {
+      setLoading(false);
+    }
+  };
 
   const activeMetrics = useMemo(() => {
     if (!reportData) return null;
@@ -70,24 +73,24 @@ export default function ForensicVerdict() {
     return () => clearInterval(ticker);
   }, [activeMetrics]);
 
-  if (loading || !reportData) return <div className="bg-[#020617] h-screen text-red-600 flex items-center justify-center font-mono animate-pulse italic uppercase tracking-widest">Initial_Security_Check...</div>;
+  if (loading || !reportData) return <div className="bg-[#020617] h-screen text-red-600 flex items-center justify-center font-mono animate-pulse italic uppercase">Authenticating_Session...</div>;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30">
+    // 🛡️ THE KEY ATTRIBUTE FORCES RE-RENDER ONCE ADMIN IS DETECTED
+    <div key={isAdmin ? 'admin-mode' : 'user-mode'} className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30">
       
-      {/* 🛡️ CONDITIONAL BLUR STYLING */}
       <style jsx global>{`
         .heavy-blur {
-          filter: ${isAdmin ? "none" : "blur(26px)"};
+          /* Final override: if isAdmin, no blur. If user, 28px blackout. */
+          filter: ${isAdmin ? "none !important" : "blur(28px) !important"};
           user-select: ${isAdmin ? "auto" : "none"};
           pointer-events: ${isAdmin ? "auto" : "none"};
-          display: inline-block;
-          transition: filter 0.5s ease;
+          transition: filter 0.6s cubic-bezier(0.4, 0, 0.2, 1);
         }
         @media print {
           .no-print { display: none !important; }
           .heavy-blur { 
-            filter: ${isAdmin ? "none" : "blur(35px) !important"}; 
+            filter: ${isAdmin ? "none !important" : "blur(40px) !important"};
             color: ${isAdmin ? "inherit" : "transparent !important"};
             background-color: ${isAdmin ? "transparent" : "#dc2626 !important"};
           }
@@ -98,19 +101,11 @@ export default function ForensicVerdict() {
 
       <div className="container mx-auto max-w-4xl mt-24 relative italic font-black uppercase">
         
-        {/* ADMIN OVERLAY INDICATOR */}
         {isAdmin && (
-          <div className="no-print absolute -top-16 left-0 flex items-center gap-2 bg-blue-600/20 border border-blue-500/50 text-blue-400 px-4 py-2 rounded-sm font-mono text-[10px] uppercase tracking-widest animate-pulse">
-            <ShieldCheck size={14} /> ADMIN_DECRYPTION_ACTIVE
+          <div className="fixed bottom-8 left-8 z-50 bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-[0_0_30px_rgba(37,99,235,0.4)] border border-blue-400">
+            <ShieldCheck size={16} /> DATA_ENCRYPTION_BYPASS_ACTIVE
           </div>
         )}
-
-        <button 
-          onClick={() => window.print()} 
-          className="no-print absolute -top-16 right-0 flex items-center gap-2 bg-slate-900 border border-slate-800 hover:bg-red-600 text-white px-6 py-2 rounded-sm font-mono text-[10px] uppercase tracking-[0.2em] transition-all"
-        >
-          <Printer size={14} /> {isAdmin ? "PRINT_FULL_REPORT" : "DOWNLOAD_LOCKED_SUMMARY"}
-        </button>
 
         <header className="flex justify-between items-end mb-12 border-b-2 border-slate-900 pb-10">
           <div>
@@ -177,10 +172,7 @@ export default function ForensicVerdict() {
 
         {/* CTA (Hidden for Admin) */}
         {!isAdmin && (
-          <div 
-            className="bg-white p-16 flex flex-col md:flex-row justify-between items-center gap-12 group cursor-pointer hover:bg-slate-100 transition-all border-l-[20px] border-red-600 shadow-2xl no-print" 
-            onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
-          >
+          <div className="bg-white p-16 flex flex-col md:flex-row justify-between items-center gap-12 group cursor-pointer hover:bg-slate-100 transition-all border-l-[20px] border-red-600 shadow-2xl no-print" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}>
             <div className="text-left font-black italic uppercase">
               <h4 className="text-black text-6xl tracking-tighter leading-none mb-4">Eradicate the Tax</h4>
               <p className="text-slate-600 text-[14px] tracking-[0.2em] max-w-md font-bold">Unlock the forensic file and stop the bleed.</p>
