@@ -56,30 +56,43 @@ export default function ForensicVerdict() {
       totalTax: annualReworkTax,
       inactionPenalty: inactionPenalty,
       wasteRatio: reworkPercent * 100,
-      riskStatus: dbDecay > 60 ? 'FRACTURED' : 'STABLE'
+      riskStatus: dbDecay > 60 ? 'FRACTURED' : 'STABLE',
+      // 🛡️ CALCULATION: How much is lost per second?
+      bleedPerSecond: inactionPenalty / (365 * 24 * 60 * 60)
     };
   }, [reportData, liveSpend, fteCount]);
 
-  // 🛡️ ANIMATION LOGIC: Counts up from 0 to current Exposure
+  // 🛡️ TICKER ENGINE: INITIAL COUNT-UP + REAL-TIME BLEED
   useEffect(() => {
-    if (activeMetrics?.inactionPenalty) {
-      let start = 0;
-      const end = activeMetrics.inactionPenalty;
-      const duration = 1500;
-      const increment = end / (duration / 16);
+    if (!activeMetrics?.inactionPenalty) return;
 
-      const timer = setInterval(() => {
-        start += increment;
-        if (start >= end) {
-          setDisplayPenalty(end);
-          clearInterval(timer);
-        } else {
-          setDisplayPenalty(start);
-        }
-      }, 16);
-      return () => clearInterval(timer);
-    }
-  }, [activeMetrics?.inactionPenalty]);
+    // 1. Initial Count-Up from $0
+    let currentVal = 0;
+    const target = activeMetrics.inactionPenalty;
+    const duration = 1000; // 1 second fast climb
+    const frameRate = 16; 
+    const totalFrames = duration / frameRate;
+    const increment = target / totalFrames;
+
+    const initialCounter = setInterval(() => {
+      currentVal += increment;
+      if (currentVal >= target) {
+        currentVal = target;
+        clearInterval(initialCounter);
+        
+        // 2. Continuous Bleed ($/sec) after initial climb
+        const bleedInterval = setInterval(() => {
+          currentVal += (activeMetrics.bleedPerSecond / 10); // Update every 100ms
+          setDisplayPenalty(currentVal);
+        }, 100);
+        
+        return () => clearInterval(bleedInterval);
+      }
+      setDisplayPenalty(currentVal);
+    }, frameRate);
+
+    return () => clearInterval(initialCounter);
+  }, [activeMetrics?.inactionPenalty, activeMetrics?.bleedPerSecond]);
 
   if (loading || !reportData) {
     return (
@@ -108,7 +121,7 @@ export default function ForensicVerdict() {
         <Header />
       </div>
 
-      <div className="container mx-auto max-w-4xl mt-24 relative italic">
+      <div className="container mx-auto max-w-4xl mt-24 relative italic font-black uppercase">
         
         <button 
           onClick={() => window.print()} 
@@ -139,19 +152,19 @@ export default function ForensicVerdict() {
             DIAGNOSTIC_OBSERVATION // ALPHA_7_INTAKE
           </p>
           <p className="text-slate-400 text-lg md:text-xl leading-relaxed italic font-medium max-w-3xl print:text-slate-800 font-black">
-            These metrics serve as a forensic baseline for organizational health. Your responses identify specific logic fractures from your immediate perspective. The system projects the fiscal impact of these fractures, converting observations into high-probability drift currently occurring at your node.
+            These metrics serve as a forensic baseline for organizational health. Your responses identify specific logic fractures from your immediate perspective. The system projects the fiscal impact of these fractures, converting observations into high-probability drift.
           </p>
         </div>
 
         {/* --- EXECUTIVE BRIEFING SECTION --- */}
         <div className="bg-white p-12 mb-16 border-l-[16px] border-red-600 shadow-2xl print:shadow-none italic text-black">
           
-          {/* 🛡️ THE DYNAMIC COUNTER (In-Box Placement) */}
+          {/* 🛡️ THE TICKER (Counts up from $0 then Bleeds $/sec) */}
           <div className="flex justify-end mb-4 no-print">
             <div className="bg-red-600 text-white px-6 py-4 border-l-4 border-slate-900 shadow-lg">
               <div className="flex flex-col items-end font-black italic leading-tight">
                 <span className="text-[9px] font-mono tracking-[0.3em] uppercase opacity-90 mb-1">
-                  TOTAL_CAPITAL_EXPOSURE
+                  CURRENT_INACTION_COST
                 </span>
                 <div className="text-3xl font-black tracking-tighter">
                   ${displayPenalty.toLocaleString(undefined, { 
@@ -165,18 +178,18 @@ export default function ForensicVerdict() {
 
           <div className="flex justify-between items-center mb-10 italic font-black">
             <h2 className="text-black text-4xl font-black uppercase italic tracking-tighter underline decoration-red-600/30">Executive Briefing</h2>
-            <span className="text-slate-400 font-mono text-[10px] font-black uppercase tracking-widest italic">ENTITY // {reportData.org_name}</span>
+            <span className="text-slate-400 font-mono text-[10px] font-black uppercase tracking-widest italic font-black">ENTITY // {reportData.org_name}</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-800 italic font-black">
-            <div className="space-y-3 font-black">
+            <div className="space-y-3 font-black uppercase">
               <span className="text-[11px] font-black uppercase text-red-600 tracking-widest font-mono italic">Capacity Loss</span>
               <p className="text-[15px] font-bold leading-relaxed uppercase italic font-black">Wasting <span className="text-red-600 text-xl font-black">{activeMetrics.wasteRatio.toFixed(0)}%</span> total capacity.</p>
             </div>
-            <div className="space-y-3 font-black">
+            <div className="space-y-3 font-black uppercase">
               <span className="text-[11px] font-black uppercase text-red-600 tracking-widest font-mono italic">Financial Leak</span>
               <p className="text-[15px] font-bold leading-relaxed uppercase italic font-black">Hidden labor tax of <span className="text-red-600 text-xl font-black">${activeMetrics.totalTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span>.</p>
             </div>
-            <div className="space-y-3 font-black">
+            <div className="space-y-3 font-black uppercase">
               <span className="text-[11px] font-black uppercase text-red-600 tracking-widest font-mono italic">Exposure</span>
               <p className="text-[15px] font-bold leading-relaxed uppercase italic font-black">Inaction exposes <span className="text-red-600 text-xl font-black">${activeMetrics.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}</span>.</p>
             </div>
@@ -184,7 +197,7 @@ export default function ForensicVerdict() {
         </div>
 
         {/* Impact Visual Blocks */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16 italic font-black">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16 italic font-black uppercase">
           <div className="bg-slate-950 border border-slate-900 p-12 flex flex-col justify-center print:bg-slate-100">
             <div className="text-6xl md:text-7xl font-black italic text-white leading-none tracking-tighter print:text-black">
               ${activeMetrics.totalTax.toLocaleString(undefined, {maximumFractionDigits:0})}
@@ -205,13 +218,13 @@ export default function ForensicVerdict() {
             <Sliders size={24} />
             <h3 className="text-[12px] font-mono font-black uppercase tracking-[0.5em] italic">Forensic Exposure Simulator</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 italic font-black">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 italic font-black uppercase">
             <div className="space-y-6 italic">
-              <div className="flex justify-between items-end italic"><span className="text-[11px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Spend</span><span className="text-2xl font-black italic text-white font-black">${liveSpend.toFixed(1)}M</span></div>
+              <div className="flex justify-between items-end italic font-black uppercase"><span className="text-[11px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Spend</span><span className="text-2xl font-black italic text-white font-black uppercase">${liveSpend.toFixed(1)}M</span></div>
               <input type="range" min="0.1" max="50" step="0.1" value={liveSpend} onChange={(e) => setLiveSpend(parseFloat(e.target.value))} className="w-full h-2 bg-slate-800 rounded-full appearance-none cursor-pointer accent-red-600" />
             </div>
-            <div className="space-y-6 italic font-black">
-              <div className="flex justify-between items-end italic"><span className="text-[11px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Headcount</span><span className="text-2xl font-black italic text-white font-black">{fteCount} FTEs</span></div>
+            <div className="space-y-6 italic font-black uppercase">
+              <div className="flex justify-between items-end italic font-black uppercase"><span className="text-[11px] font-mono text-slate-500 uppercase tracking-widest font-black italic">Headcount</span><span className="text-2xl font-black italic text-white font-black uppercase">{fteCount} FTEs</span></div>
               <input type="range" min="1" max="500" step="1" value={fteCount} onChange={(e) => setFteCount(parseInt(e.target.value))} className="w-full h-2 bg-slate-800 rounded-full appearance-none cursor-pointer accent-red-600" />
             </div>
           </div>
@@ -219,7 +232,7 @@ export default function ForensicVerdict() {
 
         {/* Calendly CTA */}
         <div 
-          className="bg-white p-16 flex flex-col md:flex-row justify-between items-center gap-12 group cursor-pointer hover:bg-slate-100 transition-all border-l-[20px] border-red-600 shadow-2xl no-print italic font-black" 
+          className="bg-white p-16 flex flex-col md:flex-row justify-between items-center gap-12 group cursor-pointer hover:bg-slate-100 transition-all border-l-[20px] border-red-600 shadow-2xl no-print italic font-black uppercase" 
           onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
         >
           <div className="text-left italic font-black">
