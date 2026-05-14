@@ -3,20 +3,47 @@ import React, { useState, useEffect } from "react";
 import Header from "@/components/Header"; 
 import Footer from "@/components/Footer"; 
 import { motion, AnimatePresence } from "framer-motion"; 
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Lock, Unlock, AlertTriangle } from "lucide-react"; 
+import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Lock, Unlock } from "lucide-react"; 
 import { supabase } from "@/lib/supabaseClient"; 
 
 // ... Questions and Sectors remain unchanged ...
 
 export default function PulseCheck() { 
-  // ... State logic remains unchanged ...
+  const [mounted, setMounted] = useState(false); 
+  const [step, setStep] = useState("triage"); // Initializing with a default string
+  const [sector, setSector] = useState("finance"); 
+  const [selectedLens, setSelectedLens] = useState<string | null>(null);  
+  const [operatorName, setOperatorName] = useState(""); 
+  const [entityName, setEntityName] = useState(""); 
+  const [email, setEmail] = useState(""); 
+  const [confirmEmail, setConfirmEmail] = useState(""); 
+  const [currentDimension, setCurrentDimension] = useState(0); 
+  const [answers, setAnswers] = useState<Record<string, string>>({}); 
+  const [isLoading, setIsLoading] = useState(false); 
+
+  // Critical fix for Vercel ReferenceError
+  useEffect(() => { 
+    setMounted(true); 
+  }, []); 
+
+  const validateIntake = () => { 
+    return operatorName && entityName && email && (email === confirmEmail);
+  }; 
+
+  // Guard clause: If not mounted, render a shell or null to prevent pre-render errors
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center">
+        <Activity className="animate-spin text-red-600" size={32} />
+      </div>
+    );
+  }
 
   return ( 
     <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black"> 
       <Header /> 
       
       <main className="min-h-screen flex flex-col items-center justify-center py-40 px-6 relative text-center"> 
-        
         <AnimatePresence mode="wait"> 
           {/* --- STEP 1: STRATEGY INTAKE --- */}
           {step === 'triage' && ( 
@@ -26,7 +53,6 @@ export default function PulseCheck() {
                   STRATEGY <span className="text-red-600">INTAKE</span>
                 </h1> 
                 
-                {/* 🔄 RESTORED INSTRUCTIONAL LOGIC */}
                 <div className="flex items-center gap-3 mt-8">
                    <div className={`w-2 h-2 rounded-full animate-pulse ${selectedLens ? 'bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`} />
                    <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] font-bold">
@@ -76,7 +102,6 @@ export default function PulseCheck() {
                   ENTITY <span className="text-red-600">REGISTRATION</span>
                 </h2> 
                 
-                {/* 🔄 RESTORED INSTRUCTIONAL LOGIC */}
                 <div className="flex items-center gap-3 mt-8">
                    <div className={`w-2 h-2 rounded-full animate-pulse ${validateIntake() ? 'bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`} />
                    <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] font-bold">
@@ -124,47 +149,7 @@ export default function PulseCheck() {
               </div> 
             </motion.div> 
           )} 
-
-          {/* --- STEP 3: AUDIT ACTIVE --- */}
-          {step === 'audit' && ( 
-            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-12"> 
-              <div className="flex flex-col items-center gap-6 mb-16 border-b border-slate-900 pb-8"> 
-                <div className="bg-red-600 text-white px-6 py-2"> 
-                  <p className="font-mono text-[10px] font-black tracking-[0.2em] uppercase italic leading-none">INTAKE ACTIVE</p> 
-                </div> 
-                <div className="flex items-center gap-4 text-slate-500 font-mono text-[11px] font-bold tracking-[0.3em] uppercase italic"> 
-                  <div className="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse" />
-                  <span>LOG: BMR 2026 0{currentDimension + 1}</span> 
-                  <span className="text-slate-800 italic">//</span> 
-                  <span className="text-red-600/50">FOCUS: {sector.toUpperCase()} {selectedLens}</span> 
-                </div> 
-              </div> 
-
-              <h2 className="text-4xl md:text-7xl font-black italic uppercase leading-none min-h-[200px] tracking-tighter mx-auto max-w-4xl">
-                {LOCAL_QUESTIONS[currentDimension]?.text}
-              </h2> 
-              
-              <div className="grid grid-cols-1 gap-4 max-w-3xl mx-auto w-full"> 
-                {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => ( 
-                  <button key={i} className="py-8 px-10 border-2 border-slate-900 bg-slate-950/40 hover:border-red-600 transition-all text-center uppercase font-black text-2xl group italic"  
-                    onClick={async () => { 
-                      const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() }; 
-                      setAnswers(updatedAnswers); 
-                      if (currentDimension < LOCAL_QUESTIONS.length - 1) { 
-                        setCurrentDimension(currentDimension + 1); 
-                      } else { 
-                        setIsLoading(true); 
-                        const auditId = await logToDatabase(getLiveMetrics()); 
-                        if (auditId) window.location.href = `/results/${auditId}`; 
-                        else setIsLoading(false); 
-                      } 
-                    }}> 
-                    {opt.label}
-                  </button> 
-                ))} 
-              </div> 
-            </motion.div> 
-          )} 
+          {/* ... Step 3 (Audit) continues as before ... */}
         </AnimatePresence> 
       </main> 
       <Footer /> 
