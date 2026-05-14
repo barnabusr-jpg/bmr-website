@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Lock, Unlock, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
+// 🛡️ NOMENCLATURE UPDATE: Focused on clinical, forensic inquiry
 const LOCAL_QUESTIONS = [
   { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
   { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
@@ -44,7 +45,6 @@ export default function PulseCheck() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // 🛡️ BUSINESS EMAIL VALIDATOR
   const isBusinessEmail = (val: string) => {
     const personalDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'aol.com', 'live.com', 'msn.com'];
     const domain = val.split('@')[1]?.toLowerCase();
@@ -114,6 +114,7 @@ export default function PulseCheck() {
         <AnimatePresence mode="wait">
           {step === 'triage' && (
             <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-16 text-center">
+              {/* NAMING_UPDATE: Pulse Check -> Exposure Audit */}
               <h1 className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">FORENSIC <span className="text-red-600">EXPOSURE</span> AUDIT</h1>
               
               <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
@@ -153,11 +154,12 @@ export default function PulseCheck() {
 
           {step === 'intake' && (
             <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 text-center max-w-4xl mx-auto italic">
+              {/* NAMING_UPDATE: Protocol Registration */}
               <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600 italic">REGISTRATION</span></h2>
               <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                   <div className="space-y-3">
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Operator ID</label>
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Operator Identification</label>
                     <input placeholder="FULL_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
                   <div className="space-y-3">
@@ -208,6 +210,7 @@ export default function PulseCheck() {
                 </div>
               </div>
 
+              {/* NAMING_UPDATE: Question text remains but headers are forensic */}
               <h2 className="text-4xl md:text-7xl font-black italic uppercase leading-none min-h-[200px] tracking-tighter">{LOCAL_QUESTIONS[currentDimension]?.text}</h2>
               <div className="grid grid-cols-1 gap-4">
                 {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
