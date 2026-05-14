@@ -8,17 +8,15 @@ export default function Header() {
   const router = useRouter(); 
   const [isMenuOpen, setIsMenuOpen] = useState(false); 
 
-  // Centralized links for mobile and desktop consistency 
   const navLinks = [ 
-    { name: 'METHODOLOGY', href: '/methodology' }, 
-    { name: 'DOSSIERS', href: '/briefings' }, // NAMING UPDATE
+    { name: 'THE_FRAMEWORK', href: '/methodology' }, 
+    { name: 'EVIDENCE_VAULT', href: '/briefings' },
   ]; 
 
   return ( 
     <> 
       <header className="fixed top-0 left-0 right-0 h-20 md:h-24 bg-[#020617]/95 backdrop-blur-xl border-b border-slate-900 z-[1000] flex items-center justify-between px-6 md:px-12"> 
         
-        {/* --- LOGO SECTION --- */} 
         <Link href="/" className="flex items-center gap-3 no-underline group shrink-0"> 
           <ShieldAlert size={24} className="text-red-600 group-hover:scale-110 transition-transform" /> 
           <div className="flex flex-col leading-[0.9]"> 
@@ -31,7 +29,6 @@ export default function Header() {
           </div> 
         </Link> 
 
-        {/* --- DESKTOP NAVIGATION (Hidden on Mobile) --- */} 
         <nav className="hidden md:flex items-center gap-10 font-black italic"> 
           {navLinks.map((link) => ( 
             <Link  
@@ -44,19 +41,16 @@ export default function Header() {
           ))} 
         </nav> 
 
-        {/* --- ACTION SECTION --- */} 
         <div className="flex items-center gap-2 md:gap-4"> 
           <button  
             onClick={() => router.push('/pulse-check')} 
             className="bg-red-600 text-white px-4 md:px-10 py-2.5 md:py-3 font-black uppercase tracking-[0.2em] text-[9px] md:text-[10px] hover:bg-white hover:text-red-600 transition-all italic flex items-center gap-2 border-2 border-red-600 shadow-lg" 
           > 
-            {/* NAMING UPDATES ONLY */} 
-            <span className="hidden sm:inline">INITIALIZE_AUDIT</span> 
-            <span className="sm:hidden">START_AUDIT</span> 
+            <span className="hidden sm:inline">EXECUTE_STRATEGY</span> 
+            <span className="sm:hidden">EXECUTE</span> 
             <Activity size={14} className="animate-pulse" /> 
           </button> 
 
-          {/* MOBILE MENU TOGGLE (Visible only on Mobile) */} 
           <button  
             onClick={() => setIsMenuOpen(!isMenuOpen)} 
             className="md:hidden text-white p-1 ml-1 hover:text-red-600 transition-colors focus:outline-none" 
@@ -67,7 +61,6 @@ export default function Header() {
         </div> 
       </header> 
 
-      {/* --- MOBILE NAV OVERLAY --- */} 
       <div  
         className={`fixed inset-0 bg-[#020617] z-[999] transition-transform duration-500 ease-in-out flex flex-col justify-center items-center gap-12 ${ 
           isMenuOpen ? 'translate-y-0' : '-translate-y-full' 
