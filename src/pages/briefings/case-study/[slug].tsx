@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ShieldAlert, Activity, ArrowLeft, X, ExternalLink, Scale } from "lucide-react";
 
-// 🛡️ DATA SOURCE: Ensure these keys match your URL slugs exactly
+// 🛡️ DATA SOURCE
 const ARCHIVE_CONTENT: Record<string, any> = {
   "chatbot-liability": {
     title: "THE AIR CANADA PRECEDENT",
@@ -103,9 +103,7 @@ export default function CaseAutopsy() {
       if (data) { 
         setActive(data); 
       } else { 
-        // 🕵️ DEBUG LOG: Find out why the navigation is failing
         console.error(`FORENSIC_DATA_MISSING: Could not find case data for slug: ${slug}`);
-        // Removed auto-redirect to stop the "Flash"
       }
     }
   }, [mounted, router.isReady, slug]);
@@ -140,15 +138,30 @@ export default function CaseAutopsy() {
               <button onClick={() => setShowDossier(true)} className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-red-600 border-b-2 border-red-600 pb-1 hover:text-black hover:border-black transition-all italic underline-offset-4 font-black">VIEW_DOSSIER // DEEP_DIVE <ExternalLink size={12} /></button>
             </div>
             
+            {/* 🛡️ HARDENED DYNAMIC METHODOLOGY SECTION */}
             <div className="bg-slate-900/50 border border-slate-800 p-10 md:p-14 shadow-2xl flex flex-col gap-8">
-              <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] font-black uppercase tracking-widest italic"><Scale size={18} /> THE_BMR_LOGIC_BASELINE</div>
+              <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] font-black uppercase tracking-widest italic">
+                <Scale size={18} /> THE_BMR_LOGIC_BASELINE
+              </div>
               <div className="space-y-6">
-                <h4 className="text-2xl font-black text-white italic tracking-tight">METHODOLOGY: FORENSIC DIVERGENCE</h4>
+                <h4 className="text-2xl font-black text-white italic tracking-tight uppercase">
+                  METHODOLOGY: {active.node === 'EXECUTIVE' ? 'FIDUCIARY_DIVERGENCE' : active.node === 'TECHNICAL' ? 'ARCHITECTURAL_DECAY' : 'MANAGERIAL_OVERSIGHT'}
+                </h4>
+                
                 <p className="text-slate-400 text-sm md:text-base leading-relaxed font-black normal-case italic">
-                  This autopsy is generated through the lens of the **BMR Forensic Framework**—a methodology forged in high-stakes environments where a 1% logic shear isn't a glitch, it's a catastrophic liability. 
+                  {active.node === 'EXECUTIVE' && (
+                    "This autopsy utilizes the BMR Forensic Framework to map the distance between board-level fiduciary obligations and autonomous agent output. A logic shear of one percent does not constitute a glitch. It constitutes a systemic liability."
+                  )}
+                  {active.node === 'TECHNICAL' && (
+                    "Analysis focuses on character-level technical hardening and the failure of zero-trust protocols within autonomous environments. We identify fractures where technical optimism overrides documented security baselines."
+                  )}
+                  {active.node === 'MANAGERIAL' && (
+                    "Evaluation identifies the collapse of human-in-the-loop safeguards. We isolate failure patterns within autonomous privilege segmentation to prevent market volatility before manifestation."
+                  )}
                 </p>
+                
                 <p className="text-slate-400 text-sm md:text-base leading-relaxed font-black normal-case italic">
-                  Traditional cybersecurity identifies bugs; BMR identifies <span className="text-red-600 font-black uppercase">Fractures</span>. By mapping the distance between executive fiduciary duty and autonomous privilege, we stop market volatility before it manifests.
+                  Standard cybersecurity identifies bugs. BMR identifies <span className="text-red-600 font-black uppercase">Fractures</span>. We execute deep-layer audits to verify alignment between operational reality and technical architecture.
                 </p>
               </div>
             </div>
