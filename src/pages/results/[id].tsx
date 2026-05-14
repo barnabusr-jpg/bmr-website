@@ -16,7 +16,6 @@ export default function ForensicVerdict() {
   const [liveBleed, setLiveBleed] = useState(0);
 
   useEffect(() => {
-    // 🛡️ SECURE_BY_DEFAULT: Raw URL check for decryption key
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'true') setIsAdmin(true);
 
@@ -67,7 +66,6 @@ export default function ForensicVerdict() {
     return () => clearInterval(ticker);
   }, [activeMetrics]);
 
-  // 🛡️ SECURITY FALLBACK: Inline filter ensures the blur holds across all browsers
   const blurStyle = {
     filter: isAdmin ? 'none' : 'blur(15px)',
     WebkitFilter: isAdmin ? 'none' : 'blur(15px)',
@@ -78,7 +76,7 @@ export default function ForensicVerdict() {
 
   if (loading || !reportData) return (
     <div className="bg-[#020617] h-screen flex items-center justify-center font-mono italic text-red-600 font-black uppercase">
-      AUTHENTICATING_VAULT...
+      AUTHENTICATING_AUDIT_VAULT...
     </div>
   );
 
@@ -91,29 +89,29 @@ export default function ForensicVerdict() {
         {/* PDF EXPORT */}
         <div className="absolute -top-12 right-0 no-print">
           <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono">
-            <Printer size={14} /> GENERATE_PDF_REPORT
+            <Printer size={14} /> GENERATE_FORENSIC_DOSSIER
           </button>
         </div>
 
         {isAdmin && (
           <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print">
-            <ShieldCheck size={16} /> ADMIN_DECRYPTION_ACTIVE
+            <ShieldCheck size={16} /> AUDIT_DECRYPTION_ACTIVE
           </div>
         )}
 
-        {/* 🎨 EXECUTIVE WHITE BOX: Integrated Lab Counter */}
+        {/* 🎨 EXECUTIVE WHITE BOX */}
         <div className="bg-white p-12 mb-20 border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none">
           <div className="flex justify-between items-center mb-12 border-b border-slate-100 pb-10">
             <div className="space-y-2 text-left">
+              {/* NOMENCLATURE UPDATE: Briefing -> Verdict */}
               <h2 className="text-black text-5xl font-black uppercase tracking-tighter underline decoration-red-600/20 italic leading-none">
-                Executive Briefing
+                Forensic Verdict
               </h2>
               <span className="text-slate-400 font-mono text-[10px] block font-black uppercase tracking-widest">
                 ENTITY // {reportData.org_name}
               </span>
             </div>
 
-            {/* 🧪 THE LAB-SPEC COUNTER */}
             <div className="text-right flex flex-col items-end self-center">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 bg-red-600 animate-pulse rounded-full shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
@@ -132,17 +130,17 @@ export default function ForensicVerdict() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-800 text-left font-black italic">
             <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">Capacity Loss</span>
+              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">Decay Magnitude</span>
               <p className="text-[15px] leading-tight font-black italic uppercase">
-                Wasting <span className="text-red-600 text-xl font-black" style={blurStyle}>
-                  {(activeMetrics?.decay * 0.4).toFixed(0)}%
-                </span> Total.
+                Detecting <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                  {(activeMetrics?.decay).toFixed(0)}%
+                </span> Divergence.
               </p>
             </div>
             <div className="space-y-3">
               <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">Annual Rework Tax</span>
               <p className="text-[15px] leading-tight font-black italic uppercase">
-                Cost: <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                Liability: <span className="text-red-600 text-xl font-black" style={blurStyle}>
                   ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
                 </span>.
               </p>
@@ -150,7 +148,7 @@ export default function ForensicVerdict() {
             <div className="space-y-3">
               <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">Inaction Penalty</span>
               <p className="text-[15px] leading-tight font-black italic uppercase">
-                Risk: <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                Exposure: <span className="text-red-600 text-xl font-black" style={blurStyle}>
                   ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
                 </span>.
               </p>
@@ -164,13 +162,13 @@ export default function ForensicVerdict() {
             <div className="text-6xl font-black text-white tracking-tighter italic" style={blurStyle}>
               ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
-            <div className="text-[11px] font-mono text-slate-500 mt-6 tracking-widest uppercase font-black italic">Annual Hidden Labor Tax</div>
+            <div className="text-[11px] font-mono text-slate-500 mt-6 tracking-widest uppercase font-black italic">Validated Rework Liability</div>
           </div>
           <div className="bg-red-950/20 border-2 border-red-600/50 p-12 border-l-8 border-red-600 shadow-2xl">
             <div className="text-6xl font-black text-red-500 tracking-tighter italic" style={blurStyle}>
               ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
-            <div className="text-[11px] font-mono text-red-400 mt-6 tracking-widest uppercase font-black italic">Total Capital Exposure</div>
+            <div className="text-[11px] font-mono text-red-400 mt-6 tracking-widest uppercase font-black italic">Total Forensic Exposure</div>
           </div>
         </div>
 
@@ -182,7 +180,7 @@ export default function ForensicVerdict() {
           >
             <div className="text-left font-black italic uppercase">
               <h4 className="text-black text-6xl tracking-tighter leading-none mb-4 italic">Eradicate the Tax</h4>
-              <p className="text-slate-600 text-[14px] font-bold italic">Schedule your briefing to stop the bleed.</p>
+              <p className="text-slate-600 text-[14px] font-bold italic">Initialize recovery to stop the forensic bleed.</p>
             </div>
             <div className="bg-red-600 text-white p-10 group-hover:translate-x-4 transition-transform shadow-lg">
               <ArrowRight size={64} />
