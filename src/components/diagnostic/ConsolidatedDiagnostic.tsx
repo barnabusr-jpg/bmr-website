@@ -90,8 +90,9 @@ export default function ConsolidatedDiagnostic() {
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-16 text-center">
             <div className="space-y-4">
+              {/* NOMENCLATURE UPDATE: EFFICIENCY -> EXPOSURE */}
               <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter text-white leading-none">
-                AI <span className="text-red-600 italic">EFFICIENCY</span> AUDIT
+                FORENSIC <span className="text-red-600 italic">EXPOSURE</span> AUDIT
               </h1>
             </div>
             
@@ -126,19 +127,19 @@ export default function ConsolidatedDiagnostic() {
             <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                 <div className="space-y-3">
-                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Full Name</label>
+                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Operator Name</label>
                   <input placeholder="OPERATOR_ID" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold italic" />
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Organization</label>
+                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Entity Identification</label>
                   <input placeholder="ENTITY_NAME" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold italic" />
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Email Address</label>
+                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Intelligence Channel</label>
                   <input placeholder="INTEL_CHANNEL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold italic" />
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Confirm Email</label>
+                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Verify Channel</label>
                   <input placeholder="VERIFY_CHANNEL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold italic" />
                 </div>
               </div>
@@ -147,7 +148,8 @@ export default function ConsolidatedDiagnostic() {
                 onClick={() => setStep("audit")} 
                 className="w-full py-10 font-black uppercase bg-red-600 text-white disabled:opacity-20 text-3xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)] italic"
               >
-                Initialize Observation
+                {/* NOMENCLATURE UPDATE: Initialize Observation -> INITIALIZE_AUDIT */}
+                INITIALIZE_FORENSIC_AUDIT
               </button>
             </div>
           </motion.div>
@@ -176,7 +178,6 @@ export default function ConsolidatedDiagnostic() {
                       try {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
                         if (auditId) {
-                          // 🛡️ VERIFICATION LOOP: Ensure public selectability
                           let isPubliclyVisible = false;
                           let checkAttempts = 0;
                           while (!isPubliclyVisible && checkAttempts < 12) {
