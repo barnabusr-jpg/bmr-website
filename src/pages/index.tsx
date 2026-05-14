@@ -1,93 +1,87 @@
 "use client";
-import React from "react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import HeroHome from "@/components/home/HeroHome";
-import InsightsHome from "@/components/home/InsightsHome";
-import OutcomesHome from "@/components/home/OutcomesHome";
-import ComparisonGrid from "@/components/home/ComparisonGrid";
-import ServicesPreviewHome from "@/components/home/ServicesPreviewHome";
-import { Shield, TrendingUp, Activity, ShieldCheck } from "lucide-react";
-import { useRouter } from "next/router";
-import { motion } from "framer-motion";
+import React from 'react';
+import { useRouter } from 'next/router';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import { Activity, Target, ShieldAlert } from 'lucide-react';
 
-export default function Home() {
+export default function LandingPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] flex flex-col selection:bg-red-600/30 w-full font-sans overflow-x-hidden italic uppercase font-black">
+    <div className="min-h-screen bg-[#020617] text-white font-sans italic selection:bg-red-600/30 overflow-x-hidden uppercase font-black">
       <Header />
       
-      <main className="flex-grow w-full">
-        {/* 🚀 HERO SECTION (Buttons and primary links are likely in this component) */}
-        <HeroHome />
-        
-        {/* 🛡️ EXECUTIVE SUMMARY: 10TH GRADE READABILITY */}
-        <section className="py-24 px-6 bg-slate-950/50 border-y border-slate-900 italic">
-          <div className="container mx-auto max-w-[1280px] italic">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 italic">
-              {[
-                { 
-                  icon: <Activity className="text-red-600" size={40} />, 
-                  title: "SYSTEM DRIFT", 
-                  desc: "Unwatched AI makes mistakes that force humans to step back in. This creates a hidden tax on your time and money." 
-                },
-                { 
-                  icon: <TrendingUp className="text-red-600" size={40} />, 
-                  title: "BUDGET LEAKAGE", 
-                  desc: "Without proper gates, up to forty percent of AI budgets are wasted on fixing automated errors manually." 
-                },
-                { 
-                  icon: <ShieldCheck className="text-red-600" size={40} />, 
-                  title: "LEGAL ARMOR", 
-                  // NAMING UPDATE: 'check' replaced with 'audit'
-                  desc: "Our forensic audit finds the logic gaps and builds the guardrails needed to keep your board safe and accountable." 
-                }
-              ].map((card, i) => (
-                <motion.div 
-                  key={i} 
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  className="bg-white p-12 shadow-[0_40px_80px_-15px_rgba(0,0,0,0.6)] border-l-[12px] border-red-600 group hover:-translate-y-2 transition-all duration-500 italic"
-                >
-                  <div className="mb-8 transform group-hover:scale-110 transition-transform duration-500 italic">
-                    {card.icon}
-                  </div>
-                  <h3 className="text-black text-2xl font-black uppercase italic mb-4 tracking-tighter leading-none italic text-left">
-                    {card.title}
-                  </h3>
-                  <p className="text-slate-600 font-bold uppercase text-[10px] leading-relaxed italic tracking-tight italic normal-case text-left">
-                    {card.desc}
-                  </p>
-                </motion.div>
-              ))}
+      <main className="pt-44 pb-24 px-6 max-w-7xl mx-auto relative">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+          
+          {/* --- LEFT COLUMN: THE HOOK --- */}
+          <div className="lg:col-span-7 space-y-12">
+            <div className="border-l-8 border-red-600 pl-10">
+              <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] uppercase">
+                NODE_ACCESS: BMR_SOLUTIONS_FORENSIC_UNIT
+              </span>
+              <h1 className="text-7xl md:text-[120px] font-black uppercase tracking-tighter leading-[0.8] mt-6 italic">
+                RECOVER<br />
+                <span className="text-red-600">WASTED</span><br />
+                AI CAPITAL<br />
+                AT SCALE.
+              </h1>
+            </div>
+
+            <p className="text-xl md:text-3xl text-white max-w-2xl leading-tight font-black italic normal-case">
+              We identify hidden risks in autonomous systems before they manifest as legal disasters. Built from over twenty years of leadership, including a decade at Microsoft protecting secure government networks.
+            </p>
+
+            <div className="flex flex-col md:flex-row items-center gap-8 pt-8">
+              <button 
+                onClick={() => router.push('/pulse-check')} 
+                className="group relative w-full md:w-auto bg-red-600 text-white px-16 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl border-2 border-red-600"
+              >
+                {/* 🛡️ FINAL STANDARDIZED COMMAND */}
+                EXECUTE_STRATEGY
+                <Target className="absolute -top-4 -right-4 text-white group-hover:text-red-600 transition-all" size={32} />
+              </button>
+
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] tracking-[0.4em] font-black italic uppercase">
+                  <Activity size={14} className="animate-pulse text-red-600" />
+                  12 QUERIES // ~3 MINUTE COMPLETION
+                </div>
+                <p className="text-red-600 font-mono text-[9px] tracking-[0.2em] font-black italic uppercase">
+                  IMMEDIATE_FORENSIC_VERDICT_PROVIDED
+                </p>
+              </div>
             </div>
           </div>
-        </section>
 
-        <InsightsHome />
-        <OutcomesHome />
-        <ComparisonGrid />
-        <ServicesPreviewHome />
+          {/* --- RIGHT COLUMN: THE REWORK TAX --- */}
+          <div className="lg:col-span-5">
+            <div className="bg-slate-950 border-2 border-slate-900 p-12 shadow-2xl relative group">
+              <div className="absolute -top-1 -right-1 w-24 h-24 border-t-4 border-r-4 border-red-600 opacity-20 group-hover:opacity-100 transition-all" />
+              
+              <h2 className="text-6xl font-black text-red-600 italic tracking-tighter leading-none mb-10">
+                THE<br />REWORK<br />TAX.
+              </h2>
+
+              <div className="space-y-8 border-l-2 border-red-600/30 pl-8">
+                <p className="text-slate-400 text-lg leading-relaxed font-black italic normal-case">
+                  BMR provides forensic tools to terminate "shadow labor." We isolate the manual effort hidden inside automated systems.
+                </p>
+                
+                <div className="pt-4">
+                  <span className="text-white font-black text-2xl italic uppercase tracking-tight">
+                    YOU HAVE <span className="text-red-600 underline decoration-4 underline-offset-8">HIDDEN CAPACITY.</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </main>
 
       <Footer />
-
-      {/* 🛠️ ADMIN SHORTCUT */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2 }}
-        onClick={() => router.push('/admin/dashboard')} 
-        className="fixed bottom-10 right-10 z-[10000] cursor-crosshair w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-800 bg-slate-950 hover:border-red-600 transition-all group italic"
-      >
-        <Shield size={16} className="text-slate-600 group-hover:text-red-600 italic" />
-        <span className="absolute right-14 bg-slate-900 text-white text-[8px] font-mono py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap italic">
-          [ AUTH_REQUIRED ]
-        </span>
-      </motion.div>
     </div>
   );
 }
