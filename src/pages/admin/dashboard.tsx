@@ -10,7 +10,6 @@ import { supabase } from "@/lib/supabaseClient";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 
-// 🛡️ RESTORED IP SUITE DATA
 const BMR_IP_SUITE = {
   directives: [
     { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now.", color: "text-red-600" },
@@ -53,38 +52,32 @@ export default function AdminDashboard() {
     const spend = parseFloat(audit.ai_spend) || 1.2;
     const fte = Math.round((spend * 1000000) / 200000) || 5;
     const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
-    const exposure = (0.22 * (spend * 1000000)) * 1.15;
+    const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
     const printArea = document.createElement('div');
     printArea.style.position = 'fixed';
     printArea.style.left = '-9999px';
     printArea.style.top = '0';
     
+    // Updated HTML to match the high-contrast [id] page layout
     printArea.innerHTML = `
-      <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box; -webkit-font-smoothing: antialiased;">
-        <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 4px solid #dc2626; box-sizing: border-box;">
-            <div style="flex: 1;">
-                <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase;">BMR // FORENSIC_VERDICT</h1>
+      <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
+        <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 8px solid #dc2626;">
+            <div>
+                <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase;">FORENSIC_VERDICT</h1>
                 <p style="color: #666; font-family: monospace; font-size: 16px; margin-top: 15px; font-weight: 900; letter-spacing: 3px;">SIGNAL_ID: ${audit.id.toUpperCase()}</p>
-            </div>
-            <div style="text-align: right; border-left: 3px solid #1e293b; padding-left: 40px;">
-                <p style="font-size: 14px; font-weight: 900; color: #dc2626; margin: 0; letter-spacing: 3px;">AUTHORIZED_BY</p>
-                <p style="font-size: 18px; font-weight: 400; color: #fff; margin-top: 8px; font-family: monospace;">BMR SOLUTIONS</p>
-                <p style="font-size: 12px; color: #444; margin-top: 5px; font-family: monospace;">VERIFIED: ${new Date().toLocaleDateString()}</p>
             </div>
         </div>
 
-        <div style="padding: 100px 100px 140px 100px; flex-grow: 1; box-sizing: border-box;">
-            <div style="margin-bottom: 80px;">
-                <h2 style="font-size: 120px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -6px; line-height: 1;">AI <span style="color: #dc2626;">EFFICIENCY</span> VERDICT</h2>
-            </div>
+        <div style="padding: 100px 100px 140px 100px; flex-grow: 1;">
             <div style="background: white; color: black; padding: 100px; border-left: 60px solid #dc2626; margin-bottom: 80px; width: 100%; box-sizing: border-box;">
               <h1 style="font-size: 92px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -5px; line-height: 0.85;">Executive Briefing</h1>
-              <p style="font-size: 20px; font-weight: 900; color: #666; letter-spacing: 10px; margin-top: 35px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT_NODE'}</p>
+              <p style="font-size: 20px; font-weight: 900; color: #666; letter-spacing: 5px; margin-top: 35px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT_NODE'}</p>
+              
               <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 100px; border-top: 3px solid #eee; padding-top: 60px;">
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Capacity Loss</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Wasting ${dbDecay}%</p></div>
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Financial Leak</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Tax: $${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; letter-spacing: 3px;">Exposure</p><p style="font-size: 38px; font-weight: 900; font-style: italic; margin-top: 15px;">Risk: $${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Capacity Loss</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">${(dbDecay * 0.4).toFixed(0)}% WASTED</p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Annual Rework Tax</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">$${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Inaction Penalty</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">$${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
               </div>
             </div>
         </div>
@@ -93,15 +86,14 @@ export default function AdminDashboard() {
     document.body.appendChild(printArea);
 
     try {
-      await new Promise(r => setTimeout(r, 250));
-      const canvas = await html2canvas(printArea, { backgroundColor: "#020617", scale: 4, width: 1400, height: printArea.offsetHeight });
+      await new Promise(r => setTimeout(r, 400));
+      const canvas = await html2canvas(printArea, { backgroundColor: "#020617", scale: 3, width: 1400 });
       const imgData = canvas.toDataURL("image/png", 1.0);
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
-      const imgProps = pdf.getImageProperties(imgData);
-      const scaledHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, scaledHeight, undefined, 'FAST');
-      pdf.save(`BMR_VERDICT_${audit.org_name || 'EXPORT'}.pdf`);
+      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, scaledHeight);
+      pdf.save(`BMR_DOSSIER_${audit.org_name || 'EXPORT'}.pdf`);
       document.body.removeChild(printArea);
     } catch (err) {
       console.error("PDF_ERROR", err);
@@ -202,7 +194,8 @@ export default function AdminDashboard() {
                             <button className="bg-slate-900 text-slate-500 border border-slate-800 px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:text-white transition-all flex items-center gap-3 italic font-black"><Mail size={16} /> RE-DISPATCH</button>
                             <button onClick={() => generateForensicPDF(audit)} className="bg-white text-black px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl italic font-black"><FileDown size={18} /> DOWNLOAD_DOSSIER_COPY</button>
                         </div>
-                        <button onClick={() => window.open(`/results/${audit.id}`, '_blank')} className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
+                        {/* 🛡️ MASTER KEY INJECTED BELOW */}
+                        <button onClick={() => window.open(`/results/${audit.id}?admin=true`, '_blank')} className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
                       </div>
                     </div>
                   )}
