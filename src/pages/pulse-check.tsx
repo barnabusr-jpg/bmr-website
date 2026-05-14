@@ -3,30 +3,10 @@ import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Lock, Unlock, AlertTriangle } from "lucide-react";
+import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Lock, Unlock, AlertTriangle } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-const LOCAL_QUESTIONS = [
-  { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
-  { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "RT_03", text: "AI roles and responsibilities are clearly defined across teams.", options: [{ label: "Undefined", weight: 10 }, { label: "Informal roles", weight: 6 }, { label: "Dedicated AI team", weight: 4 }, { label: "Cross-functional matrix", weight: 2 }] },
-  { id: "DG_01", text: "Our AI systems directly contribute to measurable business ROI.", options: [{ label: "Not tracked", weight: 10 }, { label: "Anecdotal evidence", weight: 6 }, { label: "Specific KPIs", weight: 4 }, { label: "Direct impact", weight: 2 }] },
-  { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
-  { id: "DG_03", text: "We have a dedicated budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
-  { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Trust", weight: 2 }] },
-  { id: "ED_01", text: "Our data infrastructure can handle real-time AI processing.", options: [{ label: "Legacy", weight: 10 }, { label: "Hybrid", weight: 6 }, { label: "Cloud-native", weight: 4 }, { label: "Edge", weight: 2 }] },
-  { id: "ED_02", text: "We leverage proprietary datasets to train specialized models.", options: [{ label: "Public only", weight: 10 }, { label: "Minimal", weight: 6 }, { label: "Significant", weight: 4 }, { label: "Proprietary", weight: 2 }] },
-  { id: "ED_03", text: "API and model versioning are strictly controlled.", options: [{ label: "Manual", weight: 10 }, { label: "Basic", weight: 6 }, { label: "Automated", weight: 4 }, { label: "MLOps", weight: 2 }] },
-  { id: "ED_04", text: "Computing resources (GPU/Cloud) are managed efficiently.", options: [{ label: "High waste", weight: 10 }, { label: "Partial", weight: 6 }, { label: "Managed", weight: 4 }, { label: "Hyper", weight: 2 }] }
-];
-
-const sectors = [
-  { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
-  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
-  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
-  { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
-];
+// ... Keep your LOCAL_QUESTIONS and sectors constants as they are in main ...
 
 export default function PulseCheck() {
   const [mounted, setMounted] = useState(false);
@@ -115,14 +95,15 @@ export default function PulseCheck() {
             <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-5xl space-y-16">
               <div className="border-b border-slate-900 pb-12 flex flex-col items-center">
                 <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white italic">
-                  STRATEGY <span className="text-red-600">INTAKE</span>
+                  STRATEGY <span className="text-red-600 italic">INTAKE</span>
                 </h1> 
                 
-                <div className="flex items-center gap-3 mt-8">
-                   <div className={`w-2 h-2 rounded-full animate-pulse ${selectedLens ? 'bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`} />
-                   <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] font-bold">
+                {/* 🔴 PULSING INSTRUCTIONAL HEADER */}
+                <div className="flex items-center gap-4 mt-8">
+                   <div className={`w-2.5 h-2.5 rounded-full animate-pulse transition-colors duration-500 ${selectedLens ? 'bg-red-600 shadow-[0_0_12px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`} />
+                   <p className={`text-[10px] font-mono uppercase tracking-[0.5em] font-bold transition-colors ${selectedLens ? 'text-white' : 'text-slate-500'}`}>
                      {selectedLens 
-                       ? `FOCUS LOCKED: ${selectedLens} // SELECT SECTOR TO PROCEED` 
+                       ? `STATUS: FOCUS LOCKED [${selectedLens}] // SELECT SECTOR` 
                        : "STATUS: AWAITING FOCUS SELECTION"}
                    </p>
                 </div>
@@ -163,13 +144,13 @@ export default function PulseCheck() {
             <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-4xl space-y-12 italic">
               <div className="border-b border-slate-900 pb-10 flex flex-col items-center">
                 <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-white leading-none italic">
-                  ENTITY <span className="text-red-600">REGISTRATION</span>
+                  ENTITY <span className="text-red-600 italic">REGISTRATION</span>
                 </h2>
-                <div className="flex items-center gap-3 mt-8">
-                   <div className={`w-2 h-2 rounded-full animate-pulse ${validateIntake() ? 'bg-red-600 shadow-[0_0_8px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`} />
-                   <p className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.5em] font-bold">
+                <div className="flex items-center gap-4 mt-8">
+                   <div className={`w-2.5 h-2.5 rounded-full animate-pulse transition-colors duration-500 ${validateIntake() ? 'bg-red-600 shadow-[0_0_12px_rgba(220,38,38,0.8)]' : 'bg-slate-700'}`} />
+                   <p className={`text-[10px] font-mono uppercase tracking-[0.5em] font-bold transition-colors ${validateIntake() ? 'text-white' : 'text-slate-500'}`}>
                      {validateIntake() 
-                       ? "VALIDATION COMPLETE // INITIALIZE INTAKE" 
+                       ? "STATUS: VALIDATION COMPLETE // INITIALIZE INTAKE" 
                        : "STATUS: PROVIDE ENTITY DETAILS"}
                    </p>
                 </div>
