@@ -16,7 +16,7 @@ export default function ForensicVerdict() {
   const [liveBleed, setLiveBleed] = useState(0);
 
   useEffect(() => {
-    // 🛡️ SECURITY PROTOCOL: Check URL immediately for admin decryption
+    // 🛡️ SECURE_BY_DEFAULT: Raw URL check for decryption key
     const params = new URLSearchParams(window.location.search);
     if (params.get('admin') === 'true') setIsAdmin(true);
 
@@ -67,19 +67,17 @@ export default function ForensicVerdict() {
     return () => clearInterval(ticker);
   }, [activeMetrics]);
 
-  // 🛡️ HARDENED BLUR STYLE: Inline fallback to bypass CSS synchronization issues
+  // 🛡️ SECURITY FALLBACK: Inline filter ensures the blur holds across all browsers
   const blurStyle = {
     filter: isAdmin ? 'none' : 'blur(15px)',
-    transition: 'filter 0.4s ease-in-out',
+    WebkitFilter: isAdmin ? 'none' : 'blur(15px)',
+    transition: 'filter 0.5s ease-in-out',
     userSelect: isAdmin ? 'auto' : 'none',
     pointerEvents: isAdmin ? 'auto' : 'none',
-    WebkitFilter: isAdmin ? 'none' : 'blur(15px)', // Safari Support
   } as React.CSSProperties;
 
-  const handlePrint = () => { window.print(); };
-
   if (loading || !reportData) return (
-    <div className="bg-[#020617] h-screen flex items-center justify-center font-mono italic text-red-600 font-black">
+    <div className="bg-[#020617] h-screen flex items-center justify-center font-mono italic text-red-600 font-black uppercase">
       AUTHENTICATING_VAULT...
     </div>
   );
@@ -90,9 +88,9 @@ export default function ForensicVerdict() {
 
       <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
         
-        {/* PDF EXPORT (no-print) */}
+        {/* PDF EXPORT */}
         <div className="absolute -top-12 right-0 no-print">
-          <button onClick={handlePrint} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono">
+          <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono">
             <Printer size={14} /> GENERATE_PDF_REPORT
           </button>
         </div>
@@ -103,67 +101,92 @@ export default function ForensicVerdict() {
           </div>
         )}
 
-        {/* 🎨 MAIN CARD: Lab Counter Integration */}
-        <div className="bg-white p-12 mb-16 border-l-[16px] border-red-600 shadow-2xl text-black print:shadow-none print:border-l-[10px]">
-          <div className="flex justify-between items-start mb-12 border-b border-slate-100 pb-8">
-            <div className="space-y-2">
-              <h2 className="text-black text-4xl font-black uppercase tracking-tighter underline decoration-red-600/20">Executive Briefing</h2>
-              <span className="text-slate-400 font-mono text-[10px] block uppercase font-black tracking-widest italic">ENTITY // {reportData.org_name}</span>
+        {/* 🎨 EXECUTIVE WHITE BOX: Integrated Lab Counter */}
+        <div className="bg-white p-12 mb-20 border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none">
+          <div className="flex justify-between items-center mb-12 border-b border-slate-100 pb-10">
+            <div className="space-y-2 text-left">
+              <h2 className="text-black text-5xl font-black uppercase tracking-tighter underline decoration-red-600/20 italic leading-none">
+                Executive Briefing
+              </h2>
+              <span className="text-slate-400 font-mono text-[10px] block font-black uppercase tracking-widest">
+                ENTITY // {reportData.org_name}
+              </span>
             </div>
-            
-            {/* LAB COUNTER REPLICA */}
-            <div className="text-right flex flex-col items-end">
+
+            {/* 🧪 THE LAB-SPEC COUNTER */}
+            <div className="text-right flex flex-col items-end self-center">
               <div className="flex items-center gap-2 mb-1">
-                <div className="w-1.5 h-1.5 bg-red-600 animate-pulse rounded-full" />
-                <span className="text-[9px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic">Live_Bleed_Exposure</span>
+                <div className="w-1.5 h-1.5 bg-red-600 animate-pulse rounded-full shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
+                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic leading-none">
+                  Live_Forensic_Bleed
+                </span>
               </div>
-              <div className="text-3xl font-black text-red-600 tabular-nums tracking-tighter">
+              <div className="text-4xl font-black text-red-600 tabular-nums tracking-tighter italic leading-none py-1">
                 ${liveBleed.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
               </div>
-              <div className="text-[8px] font-mono text-slate-400 uppercase tracking-widest mt-1 font-bold">USD_ACCUMULATED_IN_REAL_TIME</div>
+              <div className="text-[9px] font-mono text-slate-400 uppercase tracking-[0.3em] mt-1 font-black leading-none">
+                USD_ACCUMULATED_IN_REAL_TIME
+              </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-800 font-black italic">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-800 text-left font-black italic">
             <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black">Capacity Loss</span>
-              <p className="text-[15px] leading-tight">Wasting <span className="text-red-600 text-xl font-black" style={blurStyle}>{(activeMetrics?.decay * 0.4).toFixed(0)}%</span> Total.</p>
+              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">Capacity Loss</span>
+              <p className="text-[15px] leading-tight font-black italic uppercase">
+                Wasting <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                  {(activeMetrics?.decay * 0.4).toFixed(0)}%
+                </span> Total.
+              </p>
             </div>
             <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black">Annual Rework Tax</span>
-              <p className="text-[15px] leading-tight">Cost: <span className="text-red-600 text-xl font-black" style={blurStyle}>${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span>.</p>
+              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">Annual Rework Tax</span>
+              <p className="text-[15px] leading-tight font-black italic uppercase">
+                Cost: <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                  ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
+                </span>.
+              </p>
             </div>
             <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black">Inaction Penalty</span>
-              <p className="text-[15px] leading-tight">Risk: <span className="text-red-600 text-xl font-black" style={blurStyle}>${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}</span>.</p>
+              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">Inaction Penalty</span>
+              <p className="text-[15px] leading-tight font-black italic uppercase">
+                Risk: <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                  ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
+                </span>.
+              </p>
             </div>
           </div>
         </div>
 
         {/* DATA BLOCKS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-20 text-center">
-          <div className="bg-slate-950 border border-slate-900 p-12 shadow-xl">
-            <div className="text-6xl font-black text-white tracking-tighter" style={blurStyle}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-24 text-center">
+          <div className="bg-slate-950 border border-slate-900 p-12 shadow-2xl">
+            <div className="text-6xl font-black text-white tracking-tighter italic" style={blurStyle}>
               ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-slate-500 mt-6 tracking-widest uppercase font-black italic">Annual Hidden Labor Tax</div>
           </div>
-          <div className="bg-red-950/20 border-2 border-red-600/50 p-12 border-l-8 border-red-600 shadow-xl">
-            <div className="text-6xl font-black text-red-500 tracking-tighter" style={blurStyle}>
+          <div className="bg-red-950/20 border-2 border-red-600/50 p-12 border-l-8 border-red-600 shadow-2xl">
+            <div className="text-6xl font-black text-red-500 tracking-tighter italic" style={blurStyle}>
               ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-red-400 mt-6 tracking-widest uppercase font-black italic">Total Capital Exposure</div>
           </div>
         </div>
 
-        {/* CTA (Hidden on PDF) */}
+        {/* CTA */}
         {!isAdmin && (
-          <div className="bg-white p-16 flex justify-between items-center group cursor-pointer border-l-[20px] border-red-600 shadow-2xl no-print" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}>
+          <div 
+            className="bg-white p-16 flex justify-between items-center group cursor-pointer border-l-[20px] border-red-600 shadow-2xl no-print mb-20" 
+            onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
+          >
             <div className="text-left font-black italic uppercase">
               <h4 className="text-black text-6xl tracking-tighter leading-none mb-4 italic">Eradicate the Tax</h4>
               <p className="text-slate-600 text-[14px] font-bold italic">Schedule your briefing to stop the bleed.</p>
             </div>
-            <div className="bg-red-600 text-white p-10 group-hover:translate-x-4 transition-transform shadow-lg"><ArrowRight size={64} /></div>
+            <div className="bg-red-600 text-white p-10 group-hover:translate-x-4 transition-transform shadow-lg">
+              <ArrowRight size={64} />
+            </div>
           </div>
         )}
       </div>
