@@ -170,7 +170,7 @@ export default function CaseAutopsy() {
               onClick={() => router.push('/pulse-check')} 
               className="w-full bg-red-600 text-white py-8 font-black uppercase tracking-widest hover:bg-white hover:text-red-600 transition-all shadow-2xl italic text-xl border-2 border-red-600"
             >
-              INITIALIZE_RECOVERY_CONSULT
+              EXECUTE_STRATEGY
             </button>
           </div>
 
