@@ -16,8 +16,9 @@ export default function Footer() {
               BMR<span className="text-red-600">SOLUTIONS</span>
             </span>
           </div>
+          {/* NAMING UPDATE: Changed 'structural hardening' context slightly for better flow */}
           <p className="text-slate-500 font-mono text-[11px] uppercase tracking-[0.2em] leading-relaxed italic">
-            Structural hardening for AI logic systems. Eliminating systemic decay before operational failure.
+            Structural hardening for AI logic systems. Eliminating systemic decay through forensic auditing.
           </p>
         </div>
 
@@ -35,7 +36,8 @@ export default function Footer() {
           <div className="space-y-4 font-mono text-[11px] uppercase tracking-widest italic leading-loose">
             <div className="flex items-center gap-3">
               <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse" />
-              <span className="text-red-600 font-black">Probe Status: Active</span>
+              {/* NAMING UPDATE: Probe -> Audit */}
+              <span className="text-red-600 font-black">Audit Status: Active</span>
             </div>
             <p className="text-slate-700">
               Node Identifier: BMR_V3_NY<br />
