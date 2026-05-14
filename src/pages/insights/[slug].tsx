@@ -5,10 +5,9 @@ import { useRouter } from 'next/router';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { ArrowLeft, Activity } from "lucide-react"; 
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-// 🛡️ MOVED TO TOP LEVEL TO PREVENT REFERENCE ERROR
+// 🛡️ DATA OBJECTS REMAIN THE SAME FOR CONTINUITY
 const metadata: Record<string, any> = {
   "real-trust-gap": { title: "The Real Trust Gap | BMR Solutions", description: "A forensic look at LLM seat utilization." },
   "adoption-value-system": { title: "The Adoption Value System (AVS) | BMR Solutions", description: "Aligning technical tools with operational reality." },
@@ -47,36 +46,45 @@ export default function SignalEntry() {
   const router = useRouter();
   const { slug } = router.query;
   
-  // 🛡️ LOADING STATE: Prevents build-time crash
   if (router.isFallback || !slug) return <div className="bg-[#020617] min-h-screen" />;
 
   const article = articleData[slug as string];
-  if (!article) return <div className="bg-[#020617] min-h-screen flex items-center justify-center text-red-600 font-mono italic uppercase">404_SIGNAL_NOT_FOUND</div>;
+  
+  // 🛡️ NOMENCLATURE UPDATE: 404 -> FORENSIC_DATA_MISSING
+  if (!article) return (
+    <div className="bg-[#020617] min-h-screen flex flex-col items-center justify-center text-red-600 font-mono italic uppercase gap-4">
+      <div className="text-4xl font-black italic tracking-tighter">! 404_FORENSIC_SIGNAL_LOST</div>
+      <Link href="/briefings" className="text-[10px] tracking-widest border-b border-red-600 pb-1">RETURN_TO_VAULT</Link>
+    </div>
+  );
 
-  const pageSEO = metadata[slug as string] || { title: "Insight | BMR Solutions" };
+  const pageSEO = metadata[slug as string] || { title: "Forensic Insight | BMR Solutions" };
 
   return (
-    <div className="bg-[#020617] text-white min-h-screen flex flex-col font-sans italic">
+    <div className="bg-[#020617] text-white min-h-screen flex flex-col font-sans italic selection:bg-red-600/30">
       <Head><title>{pageSEO.title}</title></Head>
       <Header />
-      <main className="flex-grow pt-40 pb-24 px-6 text-left">
+      <main className="flex-grow pt-44 pb-24 px-6 text-left">
         <div className="max-w-3xl mx-auto">
-          <Link href="/briefings" className="text-[#14b8a6] text-[10px] font-black uppercase tracking-[0.2em] mb-12 inline-flex items-center gap-2 hover:opacity-70 italic border-b border-[#14b8a6]/20 pb-2">
-            <ArrowLeft className="h-4 w-4" /> RETURN TO EVIDENCE VAULT
+          {/* 🛡️ NOMENCLATURE UPDATE: RETURN_TO_THE_VAULT */}
+          <Link href="/briefings" className="text-[#14b8a6] text-[10px] font-black uppercase tracking-[0.4em] mb-12 inline-flex items-center gap-2 hover:opacity-70 italic border-b border-[#14b8a6]/20 pb-2">
+            <ArrowLeft className="h-4 w-4" /> RETURN_TO_THE_VAULT
           </Link>
+          
           <header className="mb-16 space-y-6">
             <div className="flex items-center gap-3 text-[#14b8a6]">
               <Activity className="h-5 w-5" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Lens: {article.category}</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Operational_Lens: {article.category}</span>
             </div>
             <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter leading-tight italic">{article.title}</h1>
           </header>
+
           <article className="space-y-12">
-            <div className="text-xl md:text-2xl text-slate-400 font-light leading-relaxed italic border-l border-slate-800 pl-8">{article.intro}</div>
+            <div className="text-xl md:text-2xl text-slate-400 font-black leading-relaxed italic border-l-4 border-red-600 pl-8 normal-case">{article.intro}</div>
             {article.sections.map((s: any, i: number) => (
               <div key={i} className="space-y-6">
-                <h2 className="text-xl font-bold text-white tracking-widest uppercase italic border-b border-slate-900 pb-2 inline-block">{s.heading}</h2>
-                <p className="opacity-90">{s.body}</p>
+                <h2 className="text-xl font-black text-white tracking-widest uppercase italic border-b-2 border-slate-900 pb-2 inline-block">{s.heading}</h2>
+                <p className="opacity-90 font-medium leading-relaxed normal-case">{s.body}</p>
               </div>
             ))}
           </article>
