@@ -4,9 +4,27 @@ import { ZoomIn, Shield, Hammer, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 const SERVICES = [
-  { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn className="h-10 w-10 text-red-600" />, href: "/methodology", description: "A high-fidelity forensic audit of existing AI deployments to identify where logic has diverged from intent." },
-  { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield className="h-10 w-10 text-red-600" />, href: "/methodology", description: "Re-engineering the human-in-the-loop protocols. We build the safeguards and oversight loops." },
-  { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer className="h-10 w-10 text-red-600" />, href: "/methodology", description: "For systems in active collapse. We perform a structural recovery of the AI strategy." }
+  { 
+    tier: "TIER_01", 
+    title: "DRIFT DIAGNOSTICS", 
+    icon: <ZoomIn className="h-10 w-10 text-red-600" />, 
+    href: "/methodology", 
+    description: "A high-fidelity forensic audit of existing AI deployments to identify where logic has diverged from intent." 
+  },
+  { 
+    tier: "TIER_02", 
+    title: "STRUCTURAL HARDENING", 
+    icon: <Shield className="h-10 w-10 text-red-600" />, 
+    href: "/methodology", 
+    description: "Re-engineering the human-in-the-loop protocols. We build the safeguards and oversight loops." 
+  },
+  { 
+    tier: "TIER_03", 
+    title: "LOGIC RECONSTRUCTION", 
+    icon: <Hammer className="h-10 w-10 text-red-600" />, 
+    href: "/methodology", 
+    description: "For systems in active collapse. We perform a structural recovery of the AI strategy." 
+  }
 ];
 
 export default function ServicesPreviewHome() {
@@ -19,13 +37,13 @@ export default function ServicesPreviewHome() {
           </h2>
         </div>
 
-        {/* 🛡️ FIX: gap-[2px] with bg-slate-900 ensures borders are consistent under all cards */}
+        {/* 🛡️ GAP-[2px] logic maintained for clean border lines */}
         <div className="grid md:grid-cols-3 gap-[2px] bg-slate-900 border-[2px] border-slate-900">
           {SERVICES.map((service, index) => (
             <Link key={index} href={service.href} className="group block no-underline bg-[#020617] h-full">
               <div className="p-12 md:p-16 hover:bg-red-600/[0.04] transition-all relative flex flex-col justify-between min-h-[600px] h-full">
                 <div className="absolute top-0 left-0 w-full h-1 bg-slate-900 group-hover:bg-red-600 transition-all duration-500" />
-                <div className="space-y-10 text-left">
+                <div className="space-y-10 text-left italic">
                   <div className="flex justify-between items-start">
                     <div className="p-5 bg-slate-900/30 w-fit group-hover:bg-red-600/10 border border-slate-800">
                       {service.icon}
@@ -35,11 +53,11 @@ export default function ServicesPreviewHome() {
                   <h3 className="text-4xl lg:text-5xl font-black text-white italic uppercase tracking-tighter group-hover:text-red-600 transition-colors leading-none">
                     {service.title}
                   </h3>
-                  <p className="text-2xl text-slate-500 font-medium italic border-l-2 border-slate-800 pl-8 leading-relaxed">
+                  <p className="text-2xl text-slate-500 font-bold italic border-l-2 border-slate-800 pl-8 leading-relaxed normal-case">
                     {service.description}
                   </p>
                 </div>
-                <div className="inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-700 group-hover:text-white transition-all mt-16">
+                <div className="inline-flex items-center gap-4 text-[10px] font-black uppercase tracking-[0.3em] text-slate-700 group-hover:text-white transition-all mt-16 italic">
                   VIEW PUBLIC CAPABILITIES <ArrowRight className="h-5 w-5 group-hover:translate-x-2 transition-transform" />
                 </div>
               </div>
