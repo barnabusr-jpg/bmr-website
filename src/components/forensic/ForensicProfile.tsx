@@ -27,17 +27,14 @@ export const ForensicProfile = ({ onComplete }: ForensicProfileProps) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Validate corporate email to maintain Institutional Authority
     if (!formData.email.includes('@')) return alert("Corporate Email Required");
     
-    // Store in local storage to persist through the 12 questions
     localStorage.setItem('bmr_triage_baseline', JSON.stringify(formData));
     onComplete(formData);
   };
 
   return (
     <div className="bg-[#0a0a0a] p-10 border border-red-600/20 text-slate-100 font-sans min-h-[11in] w-full max-w-[8.5in] mx-auto relative overflow-hidden shadow-2xl">
-      {/* Background Radar Detail for Brand Consistency */}
       <div className="absolute top-0 right-0 opacity-10 pointer-events-none">
         <Activity size={400} className="text-red-600" />
       </div>
@@ -48,18 +45,18 @@ export const ForensicProfile = ({ onComplete }: ForensicProfileProps) => {
           {"BMR-CF-2026-PROTOCOL-P-01 // INITIAL_TRIAGE"}
         </div>
         
+        {/* NOMENCLATURE UPDATE: Pre-Flight Triage -> Audit Initialization */}
         <h1 className="text-4xl font-bold tracking-tighter uppercase leading-none mb-2 italic">
-          Forensic <span className="text-red-600">Pre-Flight</span> Triage
+          Forensic <span className="text-red-600">Audit</span> Initialization
         </h1>
-        <p className="text-slate-400 text-xs uppercase tracking-[0.3em] mb-12">
+        <p className="text-slate-400 text-xs uppercase tracking-[0.3em] mb-12 italic font-black">
           Baseline Calibration Required
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-8 max-w-2xl">
-          {/* Identity Capture */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Full Name</label>
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Authorized Operator</label>
               <input 
                 required 
                 type="text" 
@@ -69,7 +66,7 @@ export const ForensicProfile = ({ onComplete }: ForensicProfileProps) => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Corporate Email</label>
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Intelligence Channel (Corporate Email)</label>
               <input 
                 required 
                 type="email" 
@@ -81,7 +78,7 @@ export const ForensicProfile = ({ onComplete }: ForensicProfileProps) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Organization Name</label>
+            <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Entity Identification (Organization)</label>
             <input 
               required 
               type="text" 
@@ -91,16 +88,15 @@ export const ForensicProfile = ({ onComplete }: ForensicProfileProps) => {
             />
           </div>
 
-          {/* Structural Calibration */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-900">
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <Users size={12} /> Authority
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2 italic">
+                <Users size={12} /> Operational Authority
               </label>
               <select 
                 value={formData.role} 
                 onChange={e => setFormData({...formData, role: e.target.value})} 
-                className="w-full bg-slate-900 border border-slate-800 p-3 text-white font-mono text-sm outline-none appearance-none"
+                className="w-full bg-slate-900 border border-slate-800 p-3 text-white font-mono text-sm outline-none appearance-none font-black italic"
               >
                 <option value="executive">EXECUTIVE</option>
                 <option value="managerial">MANAGERIAL</option>
@@ -108,7 +104,7 @@ export const ForensicProfile = ({ onComplete }: ForensicProfileProps) => {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Node Density (FTE)</label>
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Node Density (FTE)</label>
               <input 
                 required 
                 type="number" 
@@ -118,11 +114,11 @@ export const ForensicProfile = ({ onComplete }: ForensicProfileProps) => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Integrity</label>
+              <label className="text-[9px] font-black text-slate-500 uppercase tracking-widest italic">Infrastructure Integrity</label>
               <select 
                 value={formData.integrity} 
                 onChange={e => setFormData({...formData, integrity: e.target.value})} 
-                className="w-full bg-slate-900 border border-slate-800 p-3 text-white font-mono text-sm outline-none appearance-none"
+                className="w-full bg-slate-900 border border-slate-800 p-3 text-white font-mono text-sm outline-none appearance-none font-black italic"
               >
                 <option value="legacy">LEGACY</option>
                 <option value="hybrid">HYBRID</option>
@@ -133,14 +129,14 @@ export const ForensicProfile = ({ onComplete }: ForensicProfileProps) => {
 
           <button 
             type="submit" 
-            className="w-full bg-red-600 text-white py-5 font-black uppercase text-[12px] tracking-[0.4em] flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all shadow-[0_0_30px_rgba(220,38,38,0.2)] mt-8"
+            className="w-full bg-red-600 text-white py-5 font-black uppercase text-[12px] tracking-[0.4em] flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all shadow-[0_0_30px_rgba(220,38,38,0.2)] mt-8 italic"
           >
-            <Lock size={16} /> Initialize Diagnostic Protocol <ArrowRight size={16} />
+            <Lock size={16} /> INITIALIZE_AUDIT_PROTOCOL <ArrowRight size={16} />
           </button>
         </form>
       </div>
 
-      <div className="absolute bottom-10 left-10 right-10 border-t border-red-600/10 pt-4 flex justify-between items-center font-mono text-[8px] text-slate-600 tracking-[0.3em]">
+      <div className="absolute bottom-10 left-10 right-10 border-t border-red-600/10 pt-4 flex justify-between items-center font-mono text-[8px] text-slate-600 tracking-[0.3em] italic">
         <div>UNAUTHORIZED DISTRIBUTION PROHIBITED</div>
         <div>BASELINE VERIFICATION MANDATORY</div>
       </div>
