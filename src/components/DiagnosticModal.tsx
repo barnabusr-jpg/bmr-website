@@ -33,8 +33,11 @@ export default function DiagnosticModal({ isOpen, onClose }: DiagnosticModalProp
               {/* LEFT COLUMN: THE ACTION */}
               <div className="w-full lg:w-[55%] shrink-0">
                 <div className="border-l-[6px] border-red-600 pl-6 md:pl-10 mb-10">
-                  <h2 className="text-red-600 font-mono text-[10px] font-black tracking-[0.5em] uppercase italic mb-5 italic">BMR_SOLUTIONS // INTAKE_MODAL</h2>
-                  <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter text-white m-0">Initialize <br /><span className="text-red-600">Intake.</span></h1>
+                  <h2 className="text-red-600 font-mono text-[10px] font-black tracking-[0.5em] uppercase italic mb-5">BMR_SOLUTIONS // AUDIT_INTAKE</h2>
+                  {/* NOMENCLATURE UPDATE: Intake -> Audit */}
+                  <h1 className="text-5xl md:text-8xl font-black italic uppercase tracking-tighter text-white m-0">
+                    Initialize <br /><span className="text-red-600">Audit.</span>
+                  </h1>
                 </div>
 
                 <div className="border-t border-slate-900 pt-10 mb-12">
@@ -63,8 +66,9 @@ export default function DiagnosticModal({ isOpen, onClose }: DiagnosticModalProp
 
                 <div className="h-24">
                   {selectedNode && (
-                    <button className="bg-white text-black py-6 px-12 font-black uppercase tracking-[0.3em] text-[11px] hover:bg-red-600 hover:text-white transition-all flex items-center gap-4 italic italic">
-                      INITIATE_DIAGNOSTIC <ArrowRight size={20} />
+                    <button className="bg-white text-black py-6 px-12 font-black uppercase tracking-[0.3em] text-[11px] hover:bg-red-600 hover:text-white transition-all flex items-center gap-4 italic font-black">
+                      {/* NOMENCLATURE UPDATE: INITIATE_DIAGNOSTIC -> INITIALIZE_AUDIT */}
+                      INITIALIZE_AUDIT <ArrowRight size={20} />
                     </button>
                   )}
                 </div>
@@ -74,8 +78,8 @@ export default function DiagnosticModal({ isOpen, onClose }: DiagnosticModalProp
               <div className="w-full lg:w-[40%] mt-8 lg:mt-24 shrink-0">
                 <div className="bg-slate-950/50 border-2 border-slate-900 p-8 md:p-14 relative overflow-hidden shadow-2xl">
                   <div className="absolute top-0 right-0 w-10 h-10 border-t-2 border-r-2 border-red-600" />
-                  <p className="text-slate-400 text-xl md:text-3xl font-medium italic font-sans uppercase leading-tight italic">
-                    Most AI deployments leak capital through <span className="text-white">unmonitored systemic decay</span>. This decoupling of strategic intent creates invisible financial fractures.
+                  <p className="text-slate-400 text-xl md:text-3xl font-medium italic font-sans uppercase leading-tight">
+                    Most AI deployments leak capital through <span className="text-white">unmonitored systemic decay</span>. This forensic audit identifies the financial fractures.
                   </p>
                 </div>
               </div>
