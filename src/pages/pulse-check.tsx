@@ -22,10 +22,10 @@ const LOCAL_QUESTIONS = [
 ]; 
 
 const sectors = [ 
-  { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> }, 
-  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> }, 
-  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> }, 
-  { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> } 
+  { id: "finance", label: "FINANCE", risk: "COMPLIANCE_FRACTURE", icon: <Banknote size={24} /> }, 
+  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY_FRACTURE", icon: <Stethoscope size={24} /> }, 
+  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONAL_FRACTURE", icon: <Factory size={24} /> }, 
+  { id: "retail", label: "SERVICES", risk: "LABOR_FRACTURE", icon: <ShoppingCart size={24} /> } 
 ]; 
 
 export default function PulseCheck() { 
@@ -105,7 +105,7 @@ export default function PulseCheck() {
           {isLoading && ( 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/98 z-[9999] flex flex-col items-center justify-center text-red-600"> 
               <Activity className="animate-spin mb-4" size={64} /> 
-              <p className="font-black uppercase tracking-[0.5em] text-sm italic">SYNTHESIZING_FORENSIC_VALUATION...</p> 
+              <p className="font-black uppercase tracking-[0.5em] text-sm italic">SYNTHESIZING_FORENSIC_EXPOSURE_VALUATION...</p> 
             </motion.div> 
           )} 
         </AnimatePresence> 
@@ -113,11 +113,10 @@ export default function PulseCheck() {
         <AnimatePresence mode="wait"> 
           {step === 'triage' && ( 
             <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-16 text-center"> 
-              {/* NAMING UPDATE */}
-              <h1 className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">FORENSIC <span className="text-red-600">EXPOSURE</span> AUDIT</h1> 
-               
+              <h1 className="text-6xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">FORENSIC <span className="text-red-600">TRIAGE</span> UNIT</h1> 
+                
               <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900"> 
-                <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic underline decoration-red-600/30 underline-offset-8">Step 1: Choose Operational Focus</p> 
+                <p className="text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic underline decoration-red-600/30 underline-offset-8">PROTOCOL_01: NODE_FOCUS_SELECTION</p> 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6"> 
                   {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => ( 
                     <button  
@@ -153,20 +152,19 @@ export default function PulseCheck() {
 
           {step === 'intake' && ( 
             <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 text-center max-w-4xl mx-auto italic"> 
-              <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600 italic">REGISTRATION</span></h2> 
+              <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">OPERATOR <span className="text-red-600 italic">DEBRIEF</span></h2> 
               <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl"> 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10"> 
                   <div className="space-y-3"> 
-                    {/* NAMING UPDATE */}
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Operator Identification</label> 
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">OPERATOR_IDENTIFICATION</label> 
                     <input placeholder="FULL_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" /> 
                   </div> 
                   <div className="space-y-3"> 
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Entity Identification</label> 
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">ENTITY_IDENTIFICATION</label> 
                     <input placeholder="ORGANIZATION_NAME" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" /> 
                   </div> 
                   <div className="space-y-3 relative"> 
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Intelligence Channel (Business Email)</label> 
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">INTELLIGENCE_CHANNEL</label> 
                     <input  
                       placeholder="USER@COMPANY.COM"  
                       value={email}  
@@ -180,7 +178,7 @@ export default function PulseCheck() {
                     {emailError && <p className="text-red-600 font-mono text-[9px] mt-2 tracking-widest flex items-center gap-2"><AlertTriangle size={12}/> {emailError}</p>} 
                   </div> 
                   <div className="space-y-3"> 
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Confirm Channel</label> 
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">VERIFY_CHANNEL</label> 
                     <input placeholder="VERIFY_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" /> 
                   </div> 
                 </div> 
@@ -189,8 +187,7 @@ export default function PulseCheck() {
                   onClick={() => setStep("audit")}  
                   className="w-full py-10 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-3xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-[0_20px_50px_rgba(220,38,38,0.2)]" 
                 > 
-                  {/* NAMING UPDATE */}
-                  INITIALIZE_EXPOSURE_IDENTIFICATION 
+                  EXECUTE_EXPOSURE_IDENTIFICATION 
                 </button> 
               </div> 
             </motion.div> 
