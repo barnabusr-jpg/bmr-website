@@ -19,7 +19,7 @@ export default function Home() {
       <Header />
       
       <main className="flex-grow w-full">
-        {/* 🚀 HERO SECTION (Update this component next) */}
+        {/* 🚀 HERO SECTION (Buttons and primary links are likely in this component) */}
         <HeroHome />
         
         {/* 🛡️ EXECUTIVE SUMMARY: 10TH GRADE READABILITY */}
@@ -40,7 +40,8 @@ export default function Home() {
                 { 
                   icon: <ShieldCheck className="text-red-600" size={40} />, 
                   title: "LEGAL ARMOR", 
-                  desc: "Our forensic check finds the logic gaps and builds the guardrails needed to keep your board safe and accountable." 
+                  // NAMING UPDATE: 'check' replaced with 'audit'
+                  desc: "Our forensic audit finds the logic gaps and builds the guardrails needed to keep your board safe and accountable." 
                 }
               ].map((card, i) => (
                 <motion.div 
@@ -54,10 +55,10 @@ export default function Home() {
                   <div className="mb-8 transform group-hover:scale-110 transition-transform duration-500 italic">
                     {card.icon}
                   </div>
-                  <h3 className="text-black text-2xl font-black uppercase italic mb-4 tracking-tighter leading-none italic">
+                  <h3 className="text-black text-2xl font-black uppercase italic mb-4 tracking-tighter leading-none italic text-left">
                     {card.title}
                   </h3>
-                  <p className="text-slate-600 font-bold uppercase text-[10px] leading-relaxed italic tracking-tight normal-case italic">
+                  <p className="text-slate-600 font-bold uppercase text-[10px] leading-relaxed italic tracking-tight italic normal-case text-left">
                     {card.desc}
                   </p>
                 </motion.div>
@@ -83,7 +84,7 @@ export default function Home() {
         className="fixed bottom-10 right-10 z-[10000] cursor-crosshair w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-800 bg-slate-950 hover:border-red-600 transition-all group italic"
       >
         <Shield size={16} className="text-slate-600 group-hover:text-red-600 italic" />
-        <span className="absolute right-14 bg-slate-900 text-white text-[8px] font-mono py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap italic italic">
+        <span className="absolute right-14 bg-slate-900 text-white text-[8px] font-mono py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap italic">
           [ AUTH_REQUIRED ]
         </span>
       </motion.div>
