@@ -87,7 +87,6 @@ export default function ForensicVerdict() {
 
       <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
         
-        {/* 📑 PDF EXPORT */}
         <div className="absolute -top-12 right-0 no-print">
           <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono font-black italic">
             <Printer size={14} /> GENERATE_FORENSIC_DOSSIER
@@ -172,23 +171,23 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 🛡️ THE PLACARD: NO ARROW // CENTERED INTERACTION */}
+        {/* 🛡️ THE PLACARD: SYMMETRICAL FONT MATCH [text-5xl] */}
         {!isAdmin && (
           <div 
-            className="bg-white p-10 md:p-20 border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic cursor-pointer transition-all duration-300 hover:bg-slate-50 hover:scale-[1.01] active:scale-[0.99] group text-center" 
+            className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic transition-all duration-300 hover:bg-slate-50 text-center" 
             onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
           >
-            <div className="flex flex-col items-center justify-center space-y-8">
-              <h4 className="text-black text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600">
+            <div className="max-w-3xl w-full flex flex-col items-center space-y-6">
+              {/* MATCHED FONT: Mirroring EXPOSURE_VERDICT header [text-5xl] */}
+              <h4 className="text-black text-2xl md:text-5xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600 uppercase break-words w-full">
                 EXECUTE_RECONSTRUCTION_PLAN
               </h4>
               
-              <div className="flex flex-col items-center">
-                <p className="text-slate-500 text-[10px] md:text-[12px] font-black italic tracking-[0.3em] uppercase mb-4">
+              <div className="flex flex-col items-center pt-2">
+                <p className="text-slate-500 text-[10px] md:text-[11px] font-black italic tracking-[0.3em] uppercase mb-4">
                   [ CLICK_TO_INITIALIZE_RECOVERY_PROTOCOLS ]
                 </p>
-                {/* Visual feedback line */}
-                <div className="h-1 w-20 bg-red-600/20 group-hover:w-40 group-hover:bg-red-600 transition-all duration-500" />
+                <div className="h-1 w-12 bg-red-600/20 group-hover:w-24 group-hover:bg-red-600 transition-all duration-500" />
               </div>
             </div>
           </div>
