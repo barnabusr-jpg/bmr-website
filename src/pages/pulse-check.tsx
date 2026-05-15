@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Key } from "lucide-react";
+import Link from 'next/link';
 
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
@@ -30,31 +31,17 @@ export default function PulseCheck() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black relative">
-      
-      {/* 🛠️ FIXED ADMIN ACCESS // ABSOLUTE LEFT ANCHOR */}
-      <div className="fixed bottom-10 left-10 z-[9999]">
-        <a 
-          href="/admin" 
-          className="flex items-center gap-2 group no-underline pointer-events-auto"
-        >
-          <Key size={14} className="text-slate-800 group-hover:text-red-600 transition-colors" /> 
-          <span className="text-[9px] font-mono tracking-[0.4em] text-slate-800 group-hover:text-red-600 transition-colors italic">
-            ACCESS_DASHBOARD
-          </span>
-        </a>
-      </div>
-
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black relative flex flex-col">
       <Header />
       
-      <main className="min-h-screen flex flex-col items-center justify-center py-40 px-6 relative text-center">
+      <main className="flex-grow flex flex-col items-center justify-center py-40 px-6 relative text-center">
         <AnimatePresence mode="wait">
           
           {step === 'triage' && (
             <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-5xl space-y-16">
               <div className="border-b border-slate-900 pb-12 flex flex-col items-center">
                 <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white italic">
-                  STRATEGY <span className="text-red-600 italic">INTAKE</span>
+                  STRATEGY <span className="text-red-600">INTAKE</span>
                 </h1>
 
                 <motion.div 
@@ -130,7 +117,7 @@ export default function PulseCheck() {
                     <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
                 </div>
-                <div className="pt-6 text-center">
+                <div className="pt-6">
                   <button disabled={!validateIntake()} onClick={() => setStep("audit")}
                     className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-2xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all border-2 border-red-600 flex items-center justify-center">
                     INITIALIZE INTAKE
@@ -142,6 +129,17 @@ export default function PulseCheck() {
 
         </AnimatePresence>
       </main>
+
+      {/* 🛠️ THE HUD INJECTION // MOVED ABOVE FOOTER COMPONENT */}
+      <div className="max-w-[1280px] mx-auto w-full px-6 md:px-12 pb-4">
+        <Link 
+          href="/admin" 
+          className="text-[9px] text-slate-800 hover:text-red-600 transition-all font-mono tracking-widest italic flex items-center gap-2 group w-fit cursor-pointer no-underline"
+        >
+          <Key size={12} className="text-slate-900 group-hover:text-red-600 transition-colors" /> 
+          ACCESS_DASHBOARD
+        </Link>
+      </div>
 
       <Footer />
     </div>
