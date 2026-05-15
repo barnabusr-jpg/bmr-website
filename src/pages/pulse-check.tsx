@@ -3,10 +3,8 @@ import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Lock, Unlock, AlertTriangle, ChevronRight } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
+import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Lock, Unlock, Key, AlertTriangle } from "lucide-react";
 
-// Sector Data Constants
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
   { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
@@ -17,13 +15,11 @@ const sectors = [
 export default function PulseCheck() {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState("triage");
-  const [sector, setSector] = useState("finance");
   const [selectedLens, setSelectedLens] = useState<string | null>(null);
   const [operatorName, setOperatorName] = useState("");
   const [entityName, setEntityName] = useState("");
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -34,21 +30,33 @@ export default function PulseCheck() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black relative">
       <Header />
       
+      {/* 🛠️ FIXED ADMIN ACCESS // ABSOLUTE LEFT ANCHOR // BYPASSES ALL LAYOUT LOGIC */}
+      <div className="fixed bottom-10 left-10 z-[9999] pointer-events-auto">
+        <a 
+          href="/admin" 
+          className="flex items-center gap-2 group no-underline"
+        >
+          <Key size={14} className="text-slate-900 group-hover:text-red-600 transition-colors" /> 
+          <span className="text-[9px] font-mono tracking-[0.4em] text-slate-800 group-hover:text-red-600 transition-colors italic">
+            ACCESS_DASHBOARD
+          </span>
+        </a>
+      </div>
+
       <main className="min-h-screen flex flex-col items-center justify-center py-40 px-6 relative text-center">
         <AnimatePresence mode="wait">
           
-          {/* STEP 1: TRIAGE */}
           {step === 'triage' && (
             <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-5xl space-y-16">
               <div className="border-b border-slate-900 pb-12 flex flex-col items-center">
                 <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white italic">
-                  STRATEGY <span className="text-red-600">INTAKE</span>
+                  STRATEGY <span className="text-red-600 italic">INTAKE</span>
                 </h1>
 
-                {/* 🔴 FULL LINE RED PULSING STATUS */}
+                {/* 🔴 RED PULSING LINE PRESERVED */}
                 <motion.div 
                   animate={{ opacity: [1, 0.4, 1] }} 
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -72,7 +80,7 @@ export default function PulseCheck() {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full pt-10">
                 {sectors.map((s) => (
-                  <button key={s.id} disabled={!selectedLens} onClick={() => { setSector(s.id); setStep("intake"); }}
+                  <button key={s.id} disabled={!selectedLens} onClick={() => setStep("intake")}
                     className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-center flex flex-col items-center justify-between h-64 group disabled:opacity-20">
                     <div className="text-red-600 group-hover:scale-110 transition-transform mb-4">{s.icon}</div>
                     <div>
@@ -85,12 +93,11 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
-          {/* STEP 2: REGISTRATION */}
           {step === 'intake' && (
             <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-4xl space-y-12 italic text-center">
               <div className="border-b border-slate-900 pb-10 flex flex-col items-center">
                 <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-white leading-none italic">
-                  ENTITY <span className="text-red-600">REGISTRATION</span>
+                  ENTITY <span className="text-red-600 italic">REGISTRATION</span>
                 </h2>
                 <motion.div 
                   animate={{ opacity: [1, 0.4, 1] }} 
@@ -114,7 +121,7 @@ export default function PulseCheck() {
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Organization</label>
                     <input placeholder="ENTER COMPANY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
-                  <div className="space-y-3 relative">
+                  <div className="space-y-3">
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Business Email</label>
                     <input placeholder="USER@COMPANY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
@@ -133,27 +140,8 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
-          {step === 'audit' && (
-            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-white text-3xl font-black italic uppercase">
-                Protocol Initialized. Starting Diagnostic...
-            </motion.div>
-          )}
-
         </AnimatePresence>
       </main>
-
-      {/* 🛠️ ADMIN ACCESS: IMPLEMENTED FROM MAIN CODE // MOVED TO LEFT SIDE */}
-      <footer className="fixed bottom-0 left-0 w-full p-10 z-50 pointer-events-none">
-        <div className="pointer-events-auto">
-          <a 
-            href="/admin" 
-            className="text-[9px] text-slate-800 hover:text-red-600 transition-all font-mono tracking-widest italic flex items-center gap-2 group w-fit"
-          >
-            <div className="w-1 h-1 bg-slate-900 group-hover:bg-red-600 rounded-full transition-colors" /> 
-            ACCESS_DASHBOARD
-          </a>
-        </div>
-      </footer>
 
       <Footer />
     </div>
