@@ -3,10 +3,9 @@ import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Lock, Unlock, AlertTriangle } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
+import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Lock, Unlock, AlertTriangle, ChevronRight } from "lucide-react";
 
-// Sector Data Constants
+// Use Sector Data
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
   { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
@@ -22,21 +21,14 @@ export default function PulseCheck() {
   const [entityName, setEntityName] = useState("");
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => { setMounted(true); }, []);
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const validateIntake = () => {
-    return operatorName.length > 1 && entityName.length > 1 && email.includes('@') && email === confirmEmail;
-  };
-
-  const handleInitialization = () => {
-    setIsLoading(true);
-    // Adding a slight delay to ensure state settles before transition to avoid "Application Error"
-    setTimeout(() => {
-      setStep("audit");
-      setIsLoading(false);
-    }, 800);
+    return operatorName.length > 0 && entityName.length > 0 && email.includes('@') && email === confirmEmail;
   };
 
   if (!mounted) return null;
@@ -48,12 +40,12 @@ export default function PulseCheck() {
       <main className="min-h-screen flex flex-col items-center justify-center py-40 px-6 relative text-center">
         <AnimatePresence mode="wait">
           
-          {/* STEP 1: TRIAGE */}
+          {/* STEP 1: STRATEGY INTAKE */}
           {step === 'triage' && (
             <motion.div 
               key="triage" 
-              initial={{ opacity: 0, scale: 0.98 }} 
-              animate={{ opacity: 1, scale: 1 }} 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               className="w-full max-w-5xl space-y-16"
             >
@@ -62,10 +54,10 @@ export default function PulseCheck() {
                   STRATEGY <span className="text-red-600">INTAKE</span>
                 </h1>
 
-                {/* 🔴 FULL LINE RED PULSING STATUS */}
+                {/* 🔴 FULL LINE RED PULSE: Dot and Text move together */}
                 <motion.div 
                   animate={{ opacity: [1, 0.3, 1] }} 
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  transition={{ repeat: Infinity, duration: 2 }}
                   className="flex items-center gap-4 mt-8 text-red-600"
                 >
                    <div className="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,1)]" />
@@ -99,12 +91,12 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
-          {/* STEP 2: REGISTRATION */}
+          {/* STEP 2: ENTITY REGISTRATION */}
           {step === 'intake' && (
             <motion.div 
               key="intake" 
-              initial={{ opacity: 0, x: 20 }} 
-              animate={{ opacity: 1, x: 0 }} 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
               exit={{ opacity: 0 }} 
               className="w-full max-w-4xl space-y-12 italic"
             >
@@ -113,10 +105,9 @@ export default function PulseCheck() {
                   ENTITY <span className="text-red-600">REGISTRATION</span>
                 </h2>
                 
-                {/* 🔴 FULL LINE RED PULSING STATUS */}
                 <motion.div 
                   animate={{ opacity: [1, 0.3, 1] }} 
-                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  transition={{ repeat: Infinity, duration: 2 }}
                   className="flex items-center gap-4 mt-8 text-red-600"
                 >
                    <div className="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,1)]" />
@@ -136,7 +127,7 @@ export default function PulseCheck() {
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Organization</label>
                     <input placeholder="ENTER COMPANY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
-                  <div className="space-y-3 relative">
+                  <div className="space-y-3">
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Business Email</label>
                     <input placeholder="USER@COMPANY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
@@ -148,14 +139,24 @@ export default function PulseCheck() {
                 
                 <div className="pt-6">
                   <button 
-                    disabled={!validateIntake() || isLoading} 
-                    onClick={handleInitialization}
+                    disabled={!validateIntake()} 
+                    onClick={() => {
+                        // Use a direct state update to avoid the Application Error
+                        setStep("audit");
+                    }}
                     className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-2xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all border-2 border-red-600 flex items-center justify-center"
                   >
-                    {isLoading ? <Activity className="animate-spin" /> : "INITIALIZE INTAKE"}
+                    INITIALIZE INTAKE
                   </button>
                 </div>
               </div>
+            </motion.div>
+          )}
+
+          {/* STEP 3 Placeholder to prevent crash if step is set to audit */}
+          {step === 'audit' && (
+            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-white text-3xl font-black italic uppercase">
+                Protocol Initialized. Starting Diagnostic...
             </motion.div>
           )}
 
