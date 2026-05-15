@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { ArrowRight, ShieldCheck, Printer, Activity } from "lucide-react";
+import { ShieldCheck, Printer, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -82,12 +82,11 @@ export default function ForensicVerdict() {
   );
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black">
+    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black overflow-x-hidden">
       <div className="no-print"><Header /></div>
 
       <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
         
-        {/* 📑 PDF EXPORT */}
         <div className="absolute -top-12 right-0 no-print">
           <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono font-black italic">
             <Printer size={14} /> GENERATE_FORENSIC_DOSSIER
@@ -112,7 +111,7 @@ export default function ForensicVerdict() {
               </span>
             </div>
 
-            <div className="text-right flex flex-col items-end self-center">
+            <div className="text-right flex flex-col items-end self-center shrink-0">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 bg-red-600 animate-pulse rounded-full shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic leading-none">
@@ -159,31 +158,37 @@ export default function ForensicVerdict() {
         {/* 📊 DATA BLOCKS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-24 text-center">
           <div className="bg-slate-950 border border-slate-900 p-12 shadow-2xl italic">
-            <div className="text-6xl font-black text-white tracking-tighter italic" style={blurStyle}>
+            <div className="text-6xl font-black text-white tracking-tighter italic break-all" style={blurStyle}>
               ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-slate-500 mt-6 tracking-widest uppercase font-black italic">VALIDATED_REWORK_LIABILITY</div>
           </div>
           <div className="bg-red-950/20 border-2 border-red-600/50 p-12 border-l-8 border-red-600 shadow-2xl italic">
-            <div className="text-6xl font-black text-red-500 tracking-tighter italic" style={blurStyle}>
+            <div className="text-6xl font-black text-red-500 tracking-tighter italic break-all" style={blurStyle}>
               ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-red-400 mt-6 tracking-widest uppercase font-black italic">TOTAL_FORENSIC_EXPOSURE</div>
           </div>
         </div>
 
-        {/* 🛡️ RECONSTRUCTION CTA */}
+        {/* 🛡️ THE PLACARD: STYLIZED 4XL FONT */}
         {!isAdmin && (
           <div 
-            className="bg-white p-16 flex justify-between items-center group cursor-pointer border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic" 
+            className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic transition-all duration-300 hover:bg-slate-50 text-center" 
             onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
           >
-            <div className="text-left font-black italic uppercase">
-              <h4 className="text-black text-6xl tracking-tighter leading-[0.8] mb-4 italic">EXECUTE_RECONSTRUCTION_PLAN</h4>
-              <p className="text-slate-600 text-[14px] font-black italic mt-6">Initialize recovery protocols to stabilize operational capital.</p>
-            </div>
-            <div className="bg-red-600 text-white p-10 group-hover:translate-x-4 transition-transform shadow-lg">
-              <ArrowRight size={64} />
+            <div className="max-w-4xl w-full flex flex-col items-center space-y-6">
+              {/* REFINED FONT: Dropped to text-4xl (36px) for solid one-line containment */}
+              <h4 className="text-black text-2xl md:text-4xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600 uppercase break-words w-full">
+                EXECUTE_RECONSTRUCTION_PLAN
+              </h4>
+              
+              <div className="flex flex-col items-center pt-2">
+                <p className="text-slate-500 text-[10px] md:text-[11px] font-black italic tracking-[0.3em] uppercase mb-4">
+                  [ CLICK_TO_INITIALIZE_RECOVERY_PROTOCOLS ]
+                </p>
+                <div className="h-1 w-12 bg-red-600/20 group-hover:w-24 group-hover:bg-red-600 transition-all duration-500" />
+              </div>
             </div>
           </div>
         )}
