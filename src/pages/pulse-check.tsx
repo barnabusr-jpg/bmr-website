@@ -17,6 +17,7 @@ const sectors = [
 export default function PulseCheck() {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState("triage");
+  const [sector, setSector] = useState("finance");
   const [selectedLens, setSelectedLens] = useState<string | null>(null);
   const [operatorName, setOperatorName] = useState("");
   const [entityName, setEntityName] = useState("");
@@ -36,26 +37,12 @@ export default function PulseCheck() {
     <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black">
       <Header />
       
-      {/* 🛠️ ADMIN ACCESS BUTTON: Fixed to bottom left for discrete access */}
-      <div className="fixed bottom-6 left-6 z-[100] opacity-20 hover:opacity-100 transition-opacity">
-        <a href="/admin" className="flex items-center gap-2 text-[10px] font-mono tracking-[0.3em] text-slate-700 hover:text-red-600 transition-colors uppercase">
-          <div className="w-1.5 h-1.5 bg-current rounded-full" />
-          Access Dashboard
-        </a>
-      </div>
-
       <main className="min-h-screen flex flex-col items-center justify-center py-40 px-6 relative text-center">
         <AnimatePresence mode="wait">
           
           {/* STEP 1: TRIAGE */}
           {step === 'triage' && (
-            <motion.div 
-              key="triage" 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              className="w-full max-w-5xl space-y-16"
-            >
+            <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-5xl space-y-16">
               <div className="border-b border-slate-900 pb-12 flex flex-col items-center">
                 <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white italic">
                   STRATEGY <span className="text-red-600">INTAKE</span>
@@ -63,7 +50,7 @@ export default function PulseCheck() {
 
                 {/* 🔴 FULL LINE RED PULSING STATUS */}
                 <motion.div 
-                  animate={{ opacity: [1, 0.3, 1] }} 
+                  animate={{ opacity: [1, 0.4, 1] }} 
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
                   className="flex items-center gap-4 mt-8 text-red-600"
                 >
@@ -85,7 +72,7 @@ export default function PulseCheck() {
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full pt-10">
                 {sectors.map((s) => (
-                  <button key={s.id} disabled={!selectedLens} onClick={() => setStep("intake")}
+                  <button key={s.id} disabled={!selectedLens} onClick={() => { setSector(s.id); setStep("intake"); }}
                     className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-center flex flex-col items-center justify-between h-64 group disabled:opacity-20">
                     <div className="text-red-600 group-hover:scale-110 transition-transform mb-4">{s.icon}</div>
                     <div>
@@ -100,21 +87,13 @@ export default function PulseCheck() {
 
           {/* STEP 2: REGISTRATION */}
           {step === 'intake' && (
-            <motion.div 
-              key="intake" 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }} 
-              className="w-full max-w-4xl space-y-12 italic"
-            >
+            <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-4xl space-y-12 italic text-center">
               <div className="border-b border-slate-900 pb-10 flex flex-col items-center">
                 <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-white leading-none italic">
                   ENTITY <span className="text-red-600">REGISTRATION</span>
                 </h2>
-                
-                {/* 🔴 FULL LINE RED PULSING STATUS */}
                 <motion.div 
-                  animate={{ opacity: [1, 0.3, 1] }} 
+                  animate={{ opacity: [1, 0.4, 1] }} 
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
                   className="flex items-center gap-4 mt-8 text-red-600"
                 >
@@ -135,7 +114,7 @@ export default function PulseCheck() {
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Organization</label>
                     <input placeholder="ENTER COMPANY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-3 relative">
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Business Email</label>
                     <input placeholder="USER@COMPANY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
@@ -144,13 +123,9 @@ export default function PulseCheck() {
                     <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
                 </div>
-                
                 <div className="pt-6">
-                  <button 
-                    disabled={!validateIntake()} 
-                    onClick={() => setStep("audit")}
-                    className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-2xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all border-2 border-red-600 flex items-center justify-center"
-                  >
+                  <button disabled={!validateIntake()} onClick={() => setStep("audit")}
+                    className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-2xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all border-2 border-red-600 flex items-center justify-center">
                     INITIALIZE INTAKE
                   </button>
                 </div>
@@ -166,6 +141,19 @@ export default function PulseCheck() {
 
         </AnimatePresence>
       </main>
+
+      {/* 🛠️ ADMIN ACCESS: IMPLEMENTED FROM MAIN CODE // MOVED TO LEFT SIDE */}
+      <footer className="fixed bottom-0 left-0 w-full p-10 z-50 pointer-events-none">
+        <div className="pointer-events-auto">
+          <a 
+            href="/admin" 
+            className="text-[9px] text-slate-800 hover:text-red-600 transition-all font-mono tracking-widest italic flex items-center gap-2 group w-fit"
+          >
+            <div className="w-1 h-1 bg-slate-900 group-hover:bg-red-600 rounded-full transition-colors" /> 
+            ACCESS_DASHBOARD
+          </a>
+        </div>
+      </footer>
 
       <Footer />
     </div>
