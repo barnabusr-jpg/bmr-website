@@ -38,12 +38,11 @@ export default function ForensicVerdict() {
   const activeMetrics = useMemo(() => {
     if (!reportData) return null;
     
-    // STRIPPED: No longer chasing 'liveSpend' or 'fteCount' from Main.
-    // Using your branch's direct database fields.
+    // BACK TO BASICS: Using ONLY your branch's database fields.
     const dbDecay = parseInt(reportData.decay_pct) || 0;
     const reworkTax = parseFloat(reportData.rework_tax) || 0;
     
-    // Formula from your branch: 15% of rework tax distributed over a year
+    // Original branch ticker math: 15% of rework tax over a year.
     const bleedPerSecond = (reworkTax * 0.15) / 31536000;
     const createdAt = new Date(reportData.created_at || Date.now()).getTime();
     
@@ -69,8 +68,6 @@ export default function ForensicVerdict() {
     filter: isAdmin ? 'none' : 'blur(15px)',
     WebkitFilter: isAdmin ? 'none' : 'blur(15px)',
     transition: 'filter 0.5s ease-in-out',
-    userSelect: isAdmin ? 'auto' : 'none',
-    pointerEvents: isAdmin ? 'auto' : 'none',
   } as React.CSSProperties;
 
   if (loading || !reportData) return (
@@ -86,47 +83,48 @@ export default function ForensicVerdict() {
 
       <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
         
+        {/* PDF EXPORT */}
         <div className="absolute -top-12 right-0 no-print">
-          <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[9px] md:text-[10px] tracking-[0.2em] font-mono font-black italic">
+          <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.2em] font-mono font-black italic">
             <Printer size={14} /> GENERATE_FORENSIC_DOSSIER
           </button>
         </div>
 
-        {/* 🏢 EXECUTIVE VERDICT CARD - VISUALS FROM MAIN, LOGIC FROM BRANCH */}
-        <div className="bg-white p-6 md:p-12 mb-12 border-l-[10px] md:border-l-[16px] border-red-600 shadow-2xl text-black overflow-hidden relative">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 border-b border-slate-100 pb-8 gap-6">
-            <div className="space-y-2 text-left w-full md:w-auto min-w-0">
-              <h2 className="text-black text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter underline decoration-red-600/20 italic leading-none break-words">
+        {/* TOP VERDICT CARD */}
+        <div className="bg-white p-6 md:p-12 mb-12 border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl text-black overflow-hidden relative">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 border-b border-slate-100 pb-10 gap-6">
+            <div className="space-y-2 text-left flex-1 min-w-0">
+              <h2 className="text-black text-4xl md:text-6xl font-black uppercase tracking-tighter italic leading-none break-words">
                 EXPOSURE_VERDICT
               </h2>
-              <span className="text-slate-400 font-mono text-[9px] md:text-[10px] block font-black uppercase tracking-widest italic mt-2">
+              <span className="text-slate-400 font-mono text-[10px] block font-black uppercase tracking-widest italic mt-2">
                 ENTITY_REF // {reportData.org_name}
               </span>
             </div>
 
-            <div className="text-left md:text-right flex flex-col items-start md:items-end w-full md:w-auto">
-              <span className="text-[9px] md:text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic leading-none mb-1">
+            <div className="text-left md:text-right flex flex-col items-start md:items-end shrink-0">
+              <span className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic leading-none mb-1">
                 CAPITAL_EROSION_RATE
               </span>
-              <div className="text-3xl md:text-4xl font-black text-red-600 tabular-nums tracking-tighter italic leading-none">
+              <div className="text-4xl md:text-5xl font-black text-red-600 tabular-nums tracking-tighter italic leading-none">
                 ${liveBleed.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-800 text-left font-black italic">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-slate-800 text-left font-black italic">
             <div className="space-y-2">
-              <span className="text-red-600 text-[10px] md:text-[11px] font-mono tracking-widest font-black uppercase">LOGIC_DECAY_COEFFICIENT</span>
-              <p className="text-sm md:text-[15px] leading-tight font-black uppercase">
-                Detecting <span className="text-red-600 text-lg md:text-xl font-black" style={blurStyle}>
-                  {(activeMetrics?.decay).toFixed(0)}%
+              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">LOGIC_DECAY_COEFFICIENT</span>
+              <p className="text-lg md:text-xl leading-tight font-black uppercase">
+                Detecting <span className="text-red-600 text-2xl font-black" style={blurStyle}>
+                  {activeMetrics?.decay}%
                 </span> Divergence.
               </p>
             </div>
             <div className="space-y-2">
-              <span className="text-red-600 text-[10px] md:text-[11px] font-mono tracking-widest font-black uppercase">REWORK_LIABILITY</span>
-              <p className="text-sm md:text-[15px] leading-tight font-black uppercase">
-                Exposure: <span className="text-red-600 text-lg md:text-xl font-black" style={blurStyle}>
+              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">REWORK_LIABILITY</span>
+              <p className="text-lg md:text-xl leading-tight font-black uppercase">
+                Exposure: <span className="text-red-600 text-2xl font-black" style={blurStyle}>
                   ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
                 </span>.
               </p>
@@ -134,20 +132,20 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 🛡️ RECONSTRUCTION CTA - THE CORRECT SIZING FIX */}
+        {/* CTA BOX - THE CLIPPING FIX ONLY */}
         {!isAdmin && (
           <div 
-            className="bg-white p-6 md:p-16 flex flex-col md:flex-row justify-between items-start md:items-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic overflow-hidden gap-8" 
+            className="bg-white p-8 md:p-16 flex flex-col md:flex-row justify-between items-start md:items-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic overflow-hidden gap-8" 
             onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
           >
             <div className="text-left font-black italic uppercase flex-1 min-w-0">
-              <h4 className="text-black text-3xl sm:text-4xl md:text-6xl lg:text-7xl tracking-tighter leading-[0.9] mb-4 italic break-words overflow-wrap-anywhere">
+              <h4 className="text-black text-4xl md:text-7xl tracking-tighter leading-[0.9] mb-4 italic break-words">
                 EXECUTE_RECONSTRUCTION_PLAN
               </h4>
-              <p className="text-slate-600 text-xs md:text-[14px] font-black italic mt-4">Initialize recovery protocols to stabilize operational capital.</p>
+              <p className="text-slate-600 text-sm font-black italic mt-4">Initialize recovery protocols to stabilize operational capital.</p>
             </div>
-            <div className="bg-red-600 text-white p-6 md:p-10 group-hover:translate-x-4 transition-transform shadow-lg shrink-0">
-              <ArrowRight size={40} className="md:w-[64px] md:h-[64px]" />
+            <div className="bg-red-600 text-white p-8 md:p-12 group-hover:translate-x-4 transition-transform shadow-lg shrink-0">
+              <ArrowRight size={48} className="md:w-[64px] md:h-[64px]" />
             </div>
           </div>
         )}
