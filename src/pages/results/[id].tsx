@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { ArrowRight, ShieldCheck, Printer, Activity } from "lucide-react";
+import { ShieldCheck, Printer, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -172,24 +172,24 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 🛡️ RECONSTRUCTION CTA - REDUCED FONT SIZE // ARCHITECTURAL STACK */}
+        {/* 🛡️ THE PLACARD: NO ARROW // CENTERED INTERACTION */}
         {!isAdmin && (
           <div 
-            className="bg-white p-8 md:p-16 flex flex-col md:flex-row justify-between items-start md:items-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic gap-8" 
+            className="bg-white p-10 md:p-20 border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic cursor-pointer transition-all duration-300 hover:bg-slate-50 hover:scale-[1.01] active:scale-[0.99] group text-center" 
             onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
           >
-            <div className="text-left font-black italic uppercase flex-1 min-w-0">
-              {/* FIXED: Reduced to text-4xl on mobile and text-5xl on desktop to ensure perfect fit while maintaining the stack */}
-              <h4 className="text-black text-4xl md:text-5xl lg:text-6xl tracking-tighter leading-[0.9] mb-4 italic">
-                <span className="block md:inline">EXECUTE_</span>
-                <span className="block md:inline">RECONSTRUCTION_PLAN</span>
+            <div className="flex flex-col items-center justify-center space-y-8">
+              <h4 className="text-black text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600">
+                EXECUTE_RECONSTRUCTION_PLAN
               </h4>
-              <p className="text-slate-600 text-xs md:text-[14px] font-black italic mt-4 md:mt-6 leading-tight">
-                Initialize recovery protocols to stabilize operational capital.
-              </p>
-            </div>
-            <div className="bg-red-600 text-white p-6 md:p-10 group-hover:translate-x-4 transition-transform shadow-lg self-end md:self-center shrink-0">
-              <ArrowRight size={40} className="md:w-[64px] md:h-[64px]" />
+              
+              <div className="flex flex-col items-center">
+                <p className="text-slate-500 text-[10px] md:text-[12px] font-black italic tracking-[0.3em] uppercase mb-4">
+                  [ CLICK_TO_INITIALIZE_RECOVERY_PROTOCOLS ]
+                </p>
+                {/* Visual feedback line */}
+                <div className="h-1 w-20 bg-red-600/20 group-hover:w-40 group-hover:bg-red-600 transition-all duration-500" />
+              </div>
             </div>
           </div>
         )}
