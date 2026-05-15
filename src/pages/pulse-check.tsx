@@ -31,13 +31,25 @@ export default function PulseCheck() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black relative flex flex-col">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black relative">
+      
+      {/* 🛠️ BRUTE FORCE ADMIN ACCESS // TOP OF THE DOM // HIGHEST Z-INDEX POSSIBLE */}
+      <a 
+        href="/admin" 
+        style={{ zIndex: 999999, position: 'fixed', bottom: '40px', left: '40px' }}
+        className="flex items-center gap-2 group no-underline pointer-events-auto"
+      >
+        <Key size={14} className="text-slate-800 group-hover:text-red-600 transition-colors" /> 
+        <span className="text-[9px] font-mono tracking-[0.4em] text-slate-800 group-hover:text-red-600 transition-colors italic">
+          ACCESS_DASHBOARD
+        </span>
+      </a>
+
       <Header />
       
-      <main className="flex-grow flex flex-col items-center justify-center py-40 px-6 relative text-center">
+      <main className="min-h-screen flex flex-col items-center justify-center py-40 px-6 relative text-center">
         <AnimatePresence mode="wait">
           
-          {/* STEP 1: TRIAGE */}
           {step === 'triage' && (
             <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-5xl space-y-16">
               <div className="border-b border-slate-900 pb-12 flex flex-col items-center">
@@ -45,7 +57,6 @@ export default function PulseCheck() {
                   STRATEGY <span className="text-red-600 italic">INTAKE</span>
                 </h1>
 
-                {/* 🔴 PULSING RED LINE - PRESERVED */}
                 <motion.div 
                   animate={{ opacity: [1, 0.4, 1] }} 
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -82,7 +93,6 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
-          {/* STEP 2: REGISTRATION */}
           {step === 'intake' && (
             <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-4xl space-y-12 italic text-center">
               <div className="border-b border-slate-900 pb-10 flex flex-col items-center">
@@ -132,17 +142,6 @@ export default function PulseCheck() {
 
         </AnimatePresence>
       </main>
-
-      {/* 🛠️ ADMIN ACCESS: IMPLEMENTED DIRECTLY ABOVE FOOTER COMPONENT // LEFT ALIGNED */}
-      <div className="px-10 pb-2 flex justify-start">
-        <a 
-          href="/admin" 
-          className="text-[9px] text-slate-800 hover:text-red-600 transition-all font-mono tracking-widest italic flex items-center gap-2 group cursor-pointer"
-        >
-          <Key size={12} className="text-slate-900 group-hover:text-red-600 transition-colors" /> 
-          ACCESS_DASHBOARD
-        </a>
-      </div>
 
       <Footer />
     </div>
