@@ -10,10 +10,10 @@ export default function LandingPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans italic selection:bg-red-600/30 overflow-x-hidden uppercase font-black relative">
+    <div className="min-h-screen bg-[#020617] text-white font-sans italic selection:bg-red-600/30 overflow-x-hidden uppercase font-black relative flex flex-col">
       <Header />
       
-      <main className="pt-44 pb-24 px-6 max-w-7xl mx-auto relative">
+      <main className="flex-grow pt-44 pb-24 px-6 max-w-7xl mx-auto relative">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
           
           {/* --- LEFT COLUMN: THE HOOK --- */}
@@ -83,17 +83,17 @@ export default function LandingPage() {
 
       <Footer />
 
-      {/* 🛠️ ADMIN SHORTCUT: EXCLUSIVE TO LANDING PAGE // MOVED TO LEFT */}
+      {/* 🛠️ GHOST ADMIN SHORTCUT: INCONSPICUOUS ENTRY POINT */}
       <motion.div 
         initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 2 }}
+        animate={{ opacity: 0.15 }}
+        whileHover={{ opacity: 1, scale: 1.1 }}
         onClick={() => router.push('/admin/dashboard')} 
-        className="fixed bottom-10 left-10 z-[10000] cursor-crosshair w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-800 bg-slate-950 hover:border-red-600 transition-all group"
+        className="fixed bottom-10 left-10 z-[10000] cursor-crosshair p-3 group transition-all"
       >
-        <Shield size={16} className="text-slate-600 group-hover:text-red-600" />
-        <span className="absolute left-14 bg-slate-900 text-white text-[8px] font-mono py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-          [ AUTH_REQUIRED ]
+        <Shield size={18} className="text-slate-800 group-hover:text-red-600 transition-colors" />
+        <span className="absolute left-12 top-1/2 -translate-y-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[7px] font-mono py-1.5 px-3 opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap border-l-2 border-red-600 pointer-events-none">
+          SYSTEM_ACCESS_REQUIRED // AUTH_NODE_01
         </span>
       </motion.div>
     </div>
