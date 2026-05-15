@@ -31,7 +31,8 @@ export default function HeroHome() {
                 onClick={() => router.push('/pulse-check')} 
                 className="bg-red-600 text-white py-5 px-10 md:py-8 md:px-16 font-black uppercase tracking-[0.3em] text-[16px] hover:bg-white hover:text-red-600 transition-all flex items-center gap-4 shadow-2xl italic border-2 border-red-600"
               >
-                START_PULSE_CHECK <Target size={24} />
+                {/* NAMING UPDATE: PULSE_CHECK replaced with AUDIT */}
+                INITIALIZE_AUDIT <Target size={24} />
               </button>
 
               <div className="flex flex-col italic">
@@ -40,7 +41,7 @@ export default function HeroHome() {
                   12 QUESTIONS // ~3 MINUTE COMPLETION
                 </div>
                 <p className="text-slate-500 text-[9px] tracking-[0.3em] mt-2 font-black italic uppercase">
-                  IMMEDIATE FORENSIC INDICTMENT PROVIDED
+                  IMMEDIATE FORENSIC VERDICT PROVIDED
                 </p>
               </div>
             </div>
