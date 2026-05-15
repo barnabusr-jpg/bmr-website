@@ -82,7 +82,7 @@ export default function ForensicVerdict() {
   );
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black">
+    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black overflow-x-hidden">
       <div className="no-print"><Header /></div>
 
       <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
@@ -100,7 +100,7 @@ export default function ForensicVerdict() {
           </div>
         )}
 
-        {/* 🏢 EXECUTIVE VERDICT BOX - RESTORED TO BASELINE */}
+        {/* 🏢 EXECUTIVE VERDICT BOX */}
         <div className="bg-white p-12 mb-20 border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none">
           <div className="flex justify-between items-center mb-12 border-b border-slate-100 pb-10">
             <div className="space-y-2 text-left">
@@ -112,7 +112,7 @@ export default function ForensicVerdict() {
               </span>
             </div>
 
-            <div className="text-right flex flex-col items-end self-center">
+            <div className="text-right flex flex-col items-end self-center shrink-0">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 bg-red-600 animate-pulse rounded-full shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
                 <span className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic leading-none">
@@ -159,27 +159,28 @@ export default function ForensicVerdict() {
         {/* 📊 DATA BLOCKS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-24 text-center">
           <div className="bg-slate-950 border border-slate-900 p-12 shadow-2xl italic">
-            <div className="text-6xl font-black text-white tracking-tighter italic" style={blurStyle}>
+            <div className="text-6xl font-black text-white tracking-tighter italic break-all" style={blurStyle}>
               ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-slate-500 mt-6 tracking-widest uppercase font-black italic">VALIDATED_REWORK_LIABILITY</div>
           </div>
           <div className="bg-red-950/20 border-2 border-red-600/50 p-12 border-l-8 border-red-600 shadow-2xl italic">
-            <div className="text-6xl font-black text-red-500 tracking-tighter italic" style={blurStyle}>
+            <div className="text-6xl font-black text-red-500 tracking-tighter italic break-all" style={blurStyle}>
               ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-red-400 mt-6 tracking-widest uppercase font-black italic">TOTAL_FORENSIC_EXPOSURE</div>
           </div>
         </div>
 
-        {/* 🛡️ RECONSTRUCTION CTA - ARCHITECTURAL STACKING FIX */}
+        {/* 🛡️ RECONSTRUCTION CTA - REDUCED FONT SIZE // ARCHITECTURAL STACK */}
         {!isAdmin && (
           <div 
-            className="bg-white p-6 md:p-16 flex flex-col md:flex-row justify-between items-start md:items-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic overflow-hidden gap-8" 
+            className="bg-white p-8 md:p-16 flex flex-col md:flex-row justify-between items-start md:items-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic gap-8" 
             onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
           >
             <div className="text-left font-black italic uppercase flex-1 min-w-0">
-              <h4 className="text-black text-[11vw] md:text-6xl lg:text-7xl tracking-tighter leading-[0.85] mb-4 italic">
+              {/* FIXED: Reduced to text-4xl on mobile and text-5xl on desktop to ensure perfect fit while maintaining the stack */}
+              <h4 className="text-black text-4xl md:text-5xl lg:text-6xl tracking-tighter leading-[0.9] mb-4 italic">
                 <span className="block md:inline">EXECUTE_</span>
                 <span className="block md:inline">RECONSTRUCTION_PLAN</span>
               </h4>
