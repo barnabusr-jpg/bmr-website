@@ -87,9 +87,9 @@ export default function ForensicVerdict() {
 
       <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
         
-        {/* 📑 PDF EXPORT */}
+        {/* DOSSIER EXPORT */}
         <div className="absolute -top-12 right-0 no-print">
-          <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[9px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] font-mono font-black italic">
+          <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[9px] md:text-[10px] tracking-[0.2em] font-mono font-black italic">
             <Printer size={14} /> GENERATE_FORENSIC_DOSSIER
           </button>
         </div>
@@ -100,10 +100,10 @@ export default function ForensicVerdict() {
           </div>
         )}
 
-        {/* 🏢 EXECUTIVE VERDICT BOX - FIXED CLIPPING */}
-        <div className="bg-white p-6 md:p-12 mb-12 md:mb-20 border-l-[10px] md:border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none overflow-hidden">
+        {/* 🏢 EXECUTIVE VERDICT CARD - CLIPPING PROTECTED */}
+        <div className="bg-white p-6 md:p-12 mb-12 md:mb-20 border-l-[10px] md:border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none overflow-hidden relative">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12 border-b border-slate-100 pb-8 md:pb-10 gap-6">
-            <div className="space-y-2 text-left w-full md:w-auto">
+            <div className="space-y-2 text-left w-full md:w-auto min-w-0">
               <h2 className="text-black text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter underline decoration-red-600/20 italic leading-none break-words">
                 EXPOSURE_VERDICT
               </h2>
@@ -112,7 +112,7 @@ export default function ForensicVerdict() {
               </span>
             </div>
 
-            <div className="text-left md:text-right flex flex-col items-start md:items-end self-start md:self-center bg-slate-50 md:bg-transparent p-4 md:p-0 w-full md:w-auto">
+            <div className="text-left md:text-right flex flex-col items-start md:items-end w-full md:w-auto shrink-0">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 bg-red-600 animate-pulse rounded-full shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
                 <span className="text-[9px] md:text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic leading-none">
@@ -129,7 +129,7 @@ export default function ForensicVerdict() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-slate-800 text-left font-black italic">
-            <div className="space-y-2 md:space-y-3">
+            <div className="space-y-2">
               <span className="text-red-600 text-[10px] md:text-[11px] font-mono tracking-widest font-black uppercase">LOGIC_DECAY_COEFFICIENT</span>
               <p className="text-sm md:text-[15px] leading-tight font-black italic uppercase">
                 Detecting <span className="text-red-600 text-lg md:text-xl font-black" style={blurStyle}>
@@ -137,7 +137,7 @@ export default function ForensicVerdict() {
                 </span> Divergence.
               </p>
             </div>
-            <div className="space-y-2 md:space-y-3">
+            <div className="space-y-2">
               <span className="text-red-600 text-[10px] md:text-[11px] font-mono tracking-widest font-black uppercase">REWORK_LEVY</span>
               <p className="text-sm md:text-[15px] leading-tight font-black italic uppercase">
                 Liability: <span className="text-red-600 text-lg md:text-xl font-black" style={blurStyle}>
@@ -145,7 +145,7 @@ export default function ForensicVerdict() {
                 </span>.
               </p>
             </div>
-            <div className="space-y-2 md:space-y-3">
+            <div className="space-y-2">
               <span className="text-red-600 text-[10px] md:text-[11px] font-mono tracking-widest font-black uppercase">INACTION_PENALTY</span>
               <p className="text-sm md:text-[15px] leading-tight font-black italic uppercase">
                 Exposure: <span className="text-red-600 text-lg md:text-xl font-black" style={blurStyle}>
@@ -156,7 +156,7 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 📊 DATA BLOCKS - FIXED PADDING */}
+        {/* 📊 DATA BLOCKS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16 md:mb-24 text-center">
           <div className="bg-slate-950 border border-slate-900 p-8 md:p-12 shadow-2xl italic">
             <div className="text-4xl md:text-6xl font-black text-white tracking-tighter italic break-all" style={blurStyle}>
@@ -172,17 +172,19 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 🛡️ RECONSTRUCTION CTA - FIXED OVERFLOW */}
+        {/* 🛡️ RECONSTRUCTION CTA - HARNED AGAINST OVERFLOW */}
         {!isAdmin && (
           <div 
             className="bg-white p-6 md:p-16 flex flex-col md:flex-row justify-between items-start md:items-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic overflow-hidden gap-8" 
             onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
           >
-            <div className="text-left font-black italic uppercase flex-1">
-              <h4 className="text-black text-4xl md:text-6xl lg:text-7xl tracking-tighter leading-[0.9] mb-4 italic break-words">
+            <div className="text-left font-black italic uppercase flex-1 min-w-0">
+              <h4 className="text-black text-3xl sm:text-4xl md:text-6xl lg:text-7xl tracking-tighter leading-[0.9] mb-4 italic break-words overflow-wrap-anywhere">
                 EXECUTE_RECONSTRUCTION_PLAN
               </h4>
-              <p className="text-slate-600 text-xs md:text-[14px] font-black italic mt-4 md:mt-6">Initialize recovery protocols to stabilize operational capital.</p>
+              <p className="text-slate-600 text-xs md:text-[14px] font-black italic mt-4 md:mt-6 leading-tight">
+                Initialize recovery protocols to stabilize operational capital.
+              </p>
             </div>
             <div className="bg-red-600 text-white p-6 md:p-10 group-hover:translate-x-4 transition-transform shadow-lg self-end md:self-center shrink-0">
               <ArrowRight size={40} className="md:w-[64px] md:h-[64px]" />
