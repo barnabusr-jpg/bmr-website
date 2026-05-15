@@ -102,12 +102,11 @@ export default function PulseCheck() {
       <Header />
       <main className="flex-grow max-w-6xl mx-auto py-20 md:py-40 px-6 relative flex flex-col justify-center">
         
-        {/* SYNC OVERLAY */}
         <AnimatePresence mode="wait">
           {isLoading && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/98 z-[9999] flex flex-col items-center justify-center text-red-600">
               <Activity className="animate-spin mb-4" size={64} />
-              <p className="font-black uppercase tracking-[0.5em] text-sm italic">SYNTHESIZING_FORENSIC_VALUATION...</p>
+              <p className="font-black uppercase tracking-[0.5em] text-sm italic">SYNTHESIZING_STRATEGY_DATA...</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -116,7 +115,7 @@ export default function PulseCheck() {
           {/* STEP 1: TRIAGE */}
           {step === 'triage' && (
             <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-16 text-center">
-              <h1 className="text-5xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">FORENSIC <span className="text-red-600">EXPOSURE</span> AUDIT</h1>
+              <h1 className="text-5xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">STRATEGY <span className="text-red-600">INTAKE</span></h1>
               <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
                 <p className="text-[10px] md:text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic underline decoration-red-600/30 underline-offset-8">Step 1: Choose Operational Focus</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -148,7 +147,7 @@ export default function PulseCheck() {
           {/* STEP 2: INTAKE */}
           {step === 'intake' && (
             <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 text-center max-w-4xl mx-auto italic">
-              <h2 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600 italic">REGISTRATION</span></h2>
+              <h2 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none italic">ENTITY <span className="text-red-600">REGISTRATION</span></h2>
               <div className="bg-slate-950/40 border-2 border-slate-900 p-8 md:p-12 space-y-10 text-left shadow-2xl">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                   <div className="space-y-3">
