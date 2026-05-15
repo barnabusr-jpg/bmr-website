@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Lock, Terminal } from "lucide-react";
 
-// 🛠️ FIX: Explicitly define the props to satisfy TypeScript
 interface ActivationModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -33,10 +32,11 @@ export default function ActivationModal({ isOpen, onClose, protocolName }: Activ
     setStatus("scanning");
 
     try {
-      // Use encodeURIComponent for safe URL handling
+      // Logic remains 1:1 to maintain database connectivity
       const response = await fetch(`/api/validate-operator?email=${encodeURIComponent(email)}`);
       const data = await response.json();
 
+      // Check if audit (formerly pulseCheck) is complete
       if (data.authorized && data.pulseCheckComplete) {
         setProfile(data.profile);
         setStatus("authorized");
@@ -83,16 +83,16 @@ export default function ActivationModal({ isOpen, onClose, protocolName }: Activ
                 </p>
               </div>
             ) : status === "authorized" ? (
-              <div className="space-y-8 text-left">
+              <div className="space-y-8 text-left italic font-black">
                 <div className="border-l-2 border-green-600 pl-6 space-y-2 text-left">
-                  <span className="text-[9px] font-black text-green-600 uppercase tracking-[0.3em] italic">OPERATOR_RECOGNIZED</span>
-                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter">{profile?.archetype}</h3>
+                  <span className="text-[9px] font-black text-green-600 uppercase tracking-[0.3em]">OPERATOR_RECOGNIZED</span>
+                  <h3 className="text-3xl font-black text-white uppercase tracking-tighter italic">{profile?.archetype}</h3>
                 </div>
                 
                 <div className="bg-slate-900/50 p-6 border border-slate-900 text-left">
-                  <p className="text-slate-600 text-[9px] uppercase font-mono mb-2">REWORK_TAX_SNAPSHOT //</p>
+                  <p className="text-slate-600 text-[9px] uppercase font-mono mb-2">REWORK_EXPOSURE_SNAPSHOT //</p>
                   <div className="flex items-baseline gap-2 text-left">
-                    <span className="text-5xl font-black text-white">{profile?.reworkTax}%</span>
+                    <span className="text-5xl font-black text-white tabular-nums">{profile?.reworkTax}%</span>
                     <span className="text-red-600 text-[10px] font-black uppercase italic animate-pulse">! DRIFT_DETECTED</span>
                   </div>
                 </div>
@@ -102,43 +102,43 @@ export default function ActivationModal({ isOpen, onClose, protocolName }: Activ
                 </button>
               </div>
             ) : (
-              <div className="space-y-8 text-left">
+              <div className="space-y-8 text-left italic font-black">
                 <div className="space-y-2 text-left">
                   <div className="flex items-center gap-2 text-left">
                     <Terminal size={14} className="text-red-600" />
                     <span className="text-red-600 text-[10px] font-mono font-black uppercase tracking-[0.3em]">SECURE_GATEWAY_V4</span>
                   </div>
-                  <h2 className="text-3xl font-black italic text-white uppercase tracking-tighter leading-none text-left">IDENTIFY <br />OPERATOR.</h2>
+                  <h2 className="text-3xl font-black text-white uppercase tracking-tighter leading-none text-left italic">IDENTIFY <br />OPERATOR.</h2>
                 </div>
 
                 <form onSubmit={handleLookup} className="space-y-6">
                   <div className="space-y-2 text-left">
-                    <label className="text-[9px] font-mono text-slate-700 uppercase tracking-widest font-bold">CREDENTIAL_IDENTIFIER //</label>
+                    <label className="text-[9px] font-mono text-slate-700 uppercase tracking-widest font-black">CREDENTIAL_IDENTIFIER //</label>
                     <input 
                       required
                       type="email" 
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="EMAIL@SYSTEM.COM" 
-                      className="w-full bg-black border border-slate-900 p-4 text-white font-mono text-sm uppercase focus:outline-none focus:border-red-600 transition-all rounded-none"
+                      className="w-full bg-black border border-slate-900 p-4 text-white font-mono text-sm uppercase focus:outline-none focus:border-red-600 transition-all rounded-none font-bold italic"
                     />
                   </div>
 
                   {status === "unauthorized" && (
-                    <p className="text-red-600 text-[9px] font-black uppercase italic animate-bounce">! NO_DIAGNOSTIC_MATCH_FOUND. RE-SCAN_REQUIRED.</p>
+                    <p className="text-red-600 text-[9px] font-black uppercase italic animate-bounce">! NO_AUDIT_MATCH_FOUND. RE-SCAN_REQUIRED.</p>
                   )}
 
                   <button 
                     disabled={status === "scanning"} 
                     className="w-full py-5 bg-red-600 text-white font-black uppercase text-[11px] tracking-[0.4em] italic hover:bg-white hover:text-black transition-all disabled:opacity-50"
                   >
-                    {status === "scanning" ? "SCANNING_DATABASE..." : "VALIDATE_CLEARANCE"}
+                    {status === "scanning" ? "SCANNING_VAULT..." : "VALIDATE_CLEARANCE"}
                   </button>
                 </form>
 
-                <p className="text-[9px] text-slate-600 uppercase tracking-tight leading-relaxed text-left">
+                <p className="text-[9px] text-slate-600 uppercase tracking-tight leading-relaxed text-left normal-case italic font-black">
                   Attempt {attempts} of 3. Unauthorized access is a violation of BMR structural protocols. 
-                  Do not proceed if you have not finished the thirty question diagnostic.
+                  Do not proceed if you have not finished the forensic exposure audit.
                 </p>
               </div>
             )}
