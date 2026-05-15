@@ -3,8 +3,8 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Activity, Target, ShieldAlert, Shield } from 'lucide-react'; // Added Shield
-import { motion } from 'framer-motion'; // Added motion
+import { Activity, Target, Shield } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function LandingPage() {
   const router = useRouter();
@@ -77,12 +77,13 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+
         </div>
       </main>
 
       <Footer />
 
-      {/* 🛠️ ADMIN SHORTCUT: RESTRICTED TO LANDING PAGE // MOVED TO LEFT-10 */}
+      {/* 🛠️ ADMIN SHORTCUT: EXCLUSIVE TO LANDING PAGE // MOVED TO LEFT */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
