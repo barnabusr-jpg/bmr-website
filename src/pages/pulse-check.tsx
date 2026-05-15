@@ -115,7 +115,7 @@ export default function PulseCheck() {
           {/* STEP 1: TRIAGE */}
           {step === 'triage' && (
             <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="space-y-16 text-center">
-              <h1 className="text-5xl md:text-9xl font-black uppercase italic tracking-tighter leading-none">STRATEGY <span className="text-red-600">INTAKE</span></h1>
+              <h1 className="text-5xl md:text-9xl font-black uppercase italic tracking-tighter leading-none italic">STRATEGY <span className="text-red-600">INTAKE</span></h1>
               <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
                 <p className="text-[10px] md:text-[11px] font-mono text-red-500 uppercase tracking-[0.4em] mb-10 font-black italic underline decoration-red-600/30 underline-offset-8">Step 1: Choose Operational Focus</p>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -152,14 +152,14 @@ export default function PulseCheck() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
                   <div className="space-y-3">
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Operator ID</label>
-                    <input placeholder="FULL_NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none text-xl font-bold" />
+                    <input placeholder="ENTER NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none text-xl font-bold" />
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Entity Identification</label>
-                    <input placeholder="ORGANIZATION_NAME" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none text-xl font-bold" />
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Organization Identification</label>
+                    <input placeholder="ENTER COMPANY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none text-xl font-bold" />
                   </div>
                   <div className="space-y-3 relative">
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Intelligence Channel</label>
+                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Business Email Channel</label>
                     <input placeholder="USER@COMPANY.COM" value={email} onChange={(e) => {
                         setEmail(e.target.value);
                         if(e.target.value && !isBusinessEmail(e.target.value)) setEmailError("BUSINESS_DOMAIN_REQUIRED");
@@ -169,21 +169,22 @@ export default function PulseCheck() {
                   </div>
                   <div className="space-y-3">
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Confirm Channel</label>
-                    <input placeholder="VERIFY_EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none text-xl font-bold" />
+                    <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none text-xl font-bold" />
                   </div>
                 </div>
+                {/* REPAIRED BUTTON: Fixed the overflow clipping seen in your 1st screenshot */}
                 <button 
                   disabled={!validateIntake()} 
                   onClick={() => setStep("audit")} 
-                  className="w-full py-8 md:py-10 px-4 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-lg md:text-3xl tracking-[0.1em] md:tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-[0_20px_50px_rgba(220,38,38,0.2)] leading-tight whitespace-normal"
+                  className="w-full py-8 md:py-10 px-4 font-black uppercase italic bg-red-600 text-white disabled:opacity-20 text-xl md:text-3xl tracking-[0.1em] md:tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all shadow-[0_20px_50px_rgba(220,38,38,0.2)] leading-tight whitespace-normal"
                 >
-                  INITIALIZE_EXPOSURE_IDENTIFICATION
+                  INITIALIZE INTAKE
                 </button>
               </div>
             </motion.div>
           )}
 
-          {/* STEP 3: AUDIT */}
+          {/* STEP 3: AUDIT - This is where the 12 questions live */}
           {step === 'audit' && (
             <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 max-w-5xl mx-auto italic">
               <div className="flex flex-col md:flex-row md:items-center gap-6 mb-12 border-b border-slate-900 pb-8">
