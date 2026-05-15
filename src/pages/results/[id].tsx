@@ -100,7 +100,7 @@ export default function ForensicVerdict() {
           </div>
         )}
 
-        {/* 🏢 EXECUTIVE VERDICT BOX */}
+        {/* 🏢 EXECUTIVE VERDICT BOX - RESTORED TO BASELINE */}
         <div className="bg-white p-12 mb-20 border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none">
           <div className="flex justify-between items-center mb-12 border-b border-slate-100 pb-10">
             <div className="space-y-2 text-left">
@@ -172,18 +172,23 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 🛡️ RECONSTRUCTION CTA */}
+        {/* 🛡️ RECONSTRUCTION CTA - ARCHITECTURAL STACKING FIX */}
         {!isAdmin && (
           <div 
-            className="bg-white p-16 flex justify-between items-center group cursor-pointer border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic" 
+            className="bg-white p-6 md:p-16 flex flex-col md:flex-row justify-between items-start md:items-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic overflow-hidden gap-8" 
             onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
           >
-            <div className="text-left font-black italic uppercase">
-              <h4 className="text-black text-6xl tracking-tighter leading-[0.8] mb-4 italic">EXECUTE_RECONSTRUCTION_PLAN</h4>
-              <p className="text-slate-600 text-[14px] font-black italic mt-6">Initialize recovery protocols to stabilize operational capital.</p>
+            <div className="text-left font-black italic uppercase flex-1 min-w-0">
+              <h4 className="text-black text-[11vw] md:text-6xl lg:text-7xl tracking-tighter leading-[0.85] mb-4 italic">
+                <span className="block md:inline">EXECUTE_</span>
+                <span className="block md:inline">RECONSTRUCTION_PLAN</span>
+              </h4>
+              <p className="text-slate-600 text-xs md:text-[14px] font-black italic mt-4 md:mt-6 leading-tight">
+                Initialize recovery protocols to stabilize operational capital.
+              </p>
             </div>
-            <div className="bg-red-600 text-white p-10 group-hover:translate-x-4 transition-transform shadow-lg">
-              <ArrowRight size={64} />
+            <div className="bg-red-600 text-white p-6 md:p-10 group-hover:translate-x-4 transition-transform shadow-lg self-end md:self-center shrink-0">
+              <ArrowRight size={40} className="md:w-[64px] md:h-[64px]" />
             </div>
           </div>
         )}
