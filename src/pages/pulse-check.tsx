@@ -5,6 +5,7 @@ import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Lock, Unlock, Key, AlertTriangle } from "lucide-react";
 
+// Sector Data Constants
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
   { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
@@ -30,25 +31,13 @@ export default function PulseCheck() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black relative">
+    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black relative flex flex-col">
       <Header />
       
-      {/* 🛠️ FIXED ADMIN ACCESS // ABSOLUTE LEFT ANCHOR // BYPASSES ALL LAYOUT LOGIC */}
-      <div className="fixed bottom-10 left-10 z-[9999] pointer-events-auto">
-        <a 
-          href="/admin" 
-          className="flex items-center gap-2 group no-underline"
-        >
-          <Key size={14} className="text-slate-900 group-hover:text-red-600 transition-colors" /> 
-          <span className="text-[9px] font-mono tracking-[0.4em] text-slate-800 group-hover:text-red-600 transition-colors italic">
-            ACCESS_DASHBOARD
-          </span>
-        </a>
-      </div>
-
-      <main className="min-h-screen flex flex-col items-center justify-center py-40 px-6 relative text-center">
+      <main className="flex-grow flex flex-col items-center justify-center py-40 px-6 relative text-center">
         <AnimatePresence mode="wait">
           
+          {/* STEP 1: TRIAGE */}
           {step === 'triage' && (
             <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-5xl space-y-16">
               <div className="border-b border-slate-900 pb-12 flex flex-col items-center">
@@ -56,7 +45,7 @@ export default function PulseCheck() {
                   STRATEGY <span className="text-red-600 italic">INTAKE</span>
                 </h1>
 
-                {/* 🔴 RED PULSING LINE PRESERVED */}
+                {/* 🔴 PULSING RED LINE - PRESERVED */}
                 <motion.div 
                   animate={{ opacity: [1, 0.4, 1] }} 
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -93,6 +82,7 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
+          {/* STEP 2: REGISTRATION */}
           {step === 'intake' && (
             <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-4xl space-y-12 italic text-center">
               <div className="border-b border-slate-900 pb-10 flex flex-col items-center">
@@ -121,7 +111,7 @@ export default function PulseCheck() {
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Organization</label>
                     <input placeholder="ENTER COMPANY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-3 relative">
                     <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Business Email</label>
                     <input placeholder="USER@COMPANY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
@@ -142,6 +132,17 @@ export default function PulseCheck() {
 
         </AnimatePresence>
       </main>
+
+      {/* 🛠️ ADMIN ACCESS: IMPLEMENTED DIRECTLY ABOVE FOOTER COMPONENT // LEFT ALIGNED */}
+      <div className="px-10 pb-2 flex justify-start">
+        <a 
+          href="/admin" 
+          className="text-[9px] text-slate-800 hover:text-red-600 transition-all font-mono tracking-widest italic flex items-center gap-2 group cursor-pointer"
+        >
+          <Key size={12} className="text-slate-900 group-hover:text-red-600 transition-colors" /> 
+          ACCESS_DASHBOARD
+        </a>
+      </div>
 
       <Footer />
     </div>
