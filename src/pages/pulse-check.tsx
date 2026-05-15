@@ -4,8 +4,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Lock, Unlock, AlertTriangle, ChevronRight } from "lucide-react";
+import { supabase } from "@/lib/supabaseClient";
 
-// Use Sector Data
+// Sector Data Constants
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
   { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
@@ -21,14 +22,12 @@ export default function PulseCheck() {
   const [entityName, setEntityName] = useState("");
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Prevent hydration mismatch
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useEffect(() => { setMounted(true); }, []);
 
   const validateIntake = () => {
-    return operatorName.length > 0 && entityName.length > 0 && email.includes('@') && email === confirmEmail;
+    return operatorName.length > 1 && entityName.length > 1 && email.includes('@') && email === confirmEmail;
   };
 
   if (!mounted) return null;
@@ -37,10 +36,18 @@ export default function PulseCheck() {
     <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black">
       <Header />
       
+      {/* 🛠️ ADMIN ACCESS BUTTON: Fixed to bottom left for discrete access */}
+      <div className="fixed bottom-6 left-6 z-[100] opacity-20 hover:opacity-100 transition-opacity">
+        <a href="/admin" className="flex items-center gap-2 text-[10px] font-mono tracking-[0.3em] text-slate-700 hover:text-red-600 transition-colors uppercase">
+          <div className="w-1.5 h-1.5 bg-current rounded-full" />
+          Access Dashboard
+        </a>
+      </div>
+
       <main className="min-h-screen flex flex-col items-center justify-center py-40 px-6 relative text-center">
         <AnimatePresence mode="wait">
           
-          {/* STEP 1: STRATEGY INTAKE */}
+          {/* STEP 1: TRIAGE */}
           {step === 'triage' && (
             <motion.div 
               key="triage" 
@@ -54,10 +61,10 @@ export default function PulseCheck() {
                   STRATEGY <span className="text-red-600">INTAKE</span>
                 </h1>
 
-                {/* 🔴 FULL LINE RED PULSE: Dot and Text move together */}
+                {/* 🔴 FULL LINE RED PULSING STATUS */}
                 <motion.div 
                   animate={{ opacity: [1, 0.3, 1] }} 
-                  transition={{ repeat: Infinity, duration: 2 }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
                   className="flex items-center gap-4 mt-8 text-red-600"
                 >
                    <div className="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,1)]" />
@@ -91,7 +98,7 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
-          {/* STEP 2: ENTITY REGISTRATION */}
+          {/* STEP 2: REGISTRATION */}
           {step === 'intake' && (
             <motion.div 
               key="intake" 
@@ -105,9 +112,10 @@ export default function PulseCheck() {
                   ENTITY <span className="text-red-600">REGISTRATION</span>
                 </h2>
                 
+                {/* 🔴 FULL LINE RED PULSING STATUS */}
                 <motion.div 
                   animate={{ opacity: [1, 0.3, 1] }} 
-                  transition={{ repeat: Infinity, duration: 2 }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
                   className="flex items-center gap-4 mt-8 text-red-600"
                 >
                    <div className="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,1)]" />
@@ -140,10 +148,7 @@ export default function PulseCheck() {
                 <div className="pt-6">
                   <button 
                     disabled={!validateIntake()} 
-                    onClick={() => {
-                        // Use a direct state update to avoid the Application Error
-                        setStep("audit");
-                    }}
+                    onClick={() => setStep("audit")}
                     className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-2xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all border-2 border-red-600 flex items-center justify-center"
                   >
                     INITIALIZE INTAKE
@@ -153,7 +158,6 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
-          {/* STEP 3 Placeholder to prevent crash if step is set to audit */}
           {step === 'audit' && (
             <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-white text-3xl font-black italic uppercase">
                 Protocol Initialized. Starting Diagnostic...
@@ -163,15 +167,7 @@ export default function PulseCheck() {
         </AnimatePresence>
       </main>
 
-      <footer className="py-10 border-t border-slate-900 flex justify-between items-center px-10">
-        <div className="flex items-center gap-6">
-          <a href="/admin" className="text-[9px] text-slate-800 hover:text-red-600 transition-colors font-mono tracking-widest italic flex items-center gap-2">
-            <div className="w-1 h-1 bg-slate-800 rounded-full" /> ACCESS_DASHBOARD
-          </a>
-          <p className="text-[9px] text-slate-800 tracking-widest font-mono italic uppercase">Protocol V2.6</p>
-        </div>
-        <p className="text-[9px] text-slate-900 font-mono italic opacity-50 uppercase">BMR Solutions // Virginia</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
