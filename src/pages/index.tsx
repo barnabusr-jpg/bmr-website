@@ -3,13 +3,14 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Activity, Target, ShieldAlert } from 'lucide-react';
+import { Activity, Target, ShieldAlert, Shield } from 'lucide-react'; // Added Shield
+import { motion } from 'framer-motion'; // Added motion
 
 export default function LandingPage() {
   const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans italic selection:bg-red-600/30 overflow-x-hidden uppercase font-black">
+    <div className="min-h-screen bg-[#020617] text-white font-sans italic selection:bg-red-600/30 overflow-x-hidden uppercase font-black relative">
       <Header />
       
       <main className="pt-44 pb-24 px-6 max-w-7xl mx-auto relative">
@@ -38,7 +39,6 @@ export default function LandingPage() {
                 onClick={() => router.push('/pulse-check')} 
                 className="group relative w-full md:w-auto bg-red-600 text-white px-16 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl border-2 border-red-600"
               >
-                {/* 🛡️ FINAL STANDARDIZED COMMAND */}
                 EXECUTE_STRATEGY
                 <Target className="absolute -top-4 -right-4 text-white group-hover:text-red-600 transition-all" size={32} />
               </button>
@@ -77,11 +77,24 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-
         </div>
       </main>
 
       <Footer />
+
+      {/* 🛠️ ADMIN SHORTCUT: RESTRICTED TO LANDING PAGE // MOVED TO LEFT-10 */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 2 }}
+        onClick={() => router.push('/admin/dashboard')} 
+        className="fixed bottom-10 left-10 z-[10000] cursor-crosshair w-12 h-12 flex items-center justify-center rounded-full border-2 border-slate-800 bg-slate-950 hover:border-red-600 transition-all group"
+      >
+        <Shield size={16} className="text-slate-600 group-hover:text-red-600" />
+        <span className="absolute left-14 bg-slate-900 text-white text-[8px] font-mono py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          [ AUTH_REQUIRED ]
+        </span>
+      </motion.div>
     </div>
   );
 }
