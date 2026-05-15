@@ -3,9 +3,8 @@ import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Lock, Unlock, Key, AlertTriangle } from "lucide-react";
+import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Key } from "lucide-react";
 
-// Sector Data Constants
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
   { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
@@ -33,17 +32,18 @@ export default function PulseCheck() {
   return (
     <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black relative">
       
-      {/* 🛠️ BRUTE FORCE ADMIN ACCESS // TOP OF THE DOM // HIGHEST Z-INDEX POSSIBLE */}
-      <a 
-        href="/admin" 
-        style={{ zIndex: 999999, position: 'fixed', bottom: '40px', left: '40px' }}
-        className="flex items-center gap-2 group no-underline pointer-events-auto"
-      >
-        <Key size={14} className="text-slate-800 group-hover:text-red-600 transition-colors" /> 
-        <span className="text-[9px] font-mono tracking-[0.4em] text-slate-800 group-hover:text-red-600 transition-colors italic">
-          ACCESS_DASHBOARD
-        </span>
-      </a>
+      {/* 🛠️ FIXED ADMIN ACCESS // ABSOLUTE LEFT ANCHOR */}
+      <div className="fixed bottom-10 left-10 z-[9999]">
+        <a 
+          href="/admin" 
+          className="flex items-center gap-2 group no-underline pointer-events-auto"
+        >
+          <Key size={14} className="text-slate-800 group-hover:text-red-600 transition-colors" /> 
+          <span className="text-[9px] font-mono tracking-[0.4em] text-slate-800 group-hover:text-red-600 transition-colors italic">
+            ACCESS_DASHBOARD
+          </span>
+        </a>
+      </div>
 
       <Header />
       
@@ -130,7 +130,7 @@ export default function PulseCheck() {
                     <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
                   </div>
                 </div>
-                <div className="pt-6">
+                <div className="pt-6 text-center">
                   <button disabled={!validateIntake()} onClick={() => setStep("audit")}
                     className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-2xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all border-2 border-red-600 flex items-center justify-center">
                     INITIALIZE INTAKE
