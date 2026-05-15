@@ -82,14 +82,14 @@ export default function ForensicVerdict() {
   );
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black">
+    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-4 md:px-6 font-sans italic selection:bg-red-600/30 uppercase font-black overflow-x-hidden">
       <div className="no-print"><Header /></div>
 
       <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
         
         {/* 📑 PDF EXPORT */}
         <div className="absolute -top-12 right-0 no-print">
-          <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono font-black italic">
+          <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[9px] md:text-[10px] tracking-[0.2em] md:tracking-[0.3em] font-mono font-black italic">
             <Printer size={14} /> GENERATE_FORENSIC_DOSSIER
           </button>
         </div>
@@ -100,55 +100,55 @@ export default function ForensicVerdict() {
           </div>
         )}
 
-        {/* 🏢 EXECUTIVE VERDICT BOX */}
-        <div className="bg-white p-12 mb-20 border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none">
-          <div className="flex justify-between items-center mb-12 border-b border-slate-100 pb-10">
-            <div className="space-y-2 text-left">
-              <h2 className="text-black text-5xl font-black uppercase tracking-tighter underline decoration-red-600/20 italic leading-none">
+        {/* 🏢 EXECUTIVE VERDICT BOX - FIXED CLIPPING */}
+        <div className="bg-white p-6 md:p-12 mb-12 md:mb-20 border-l-[10px] md:border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none overflow-hidden">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 md:mb-12 border-b border-slate-100 pb-8 md:pb-10 gap-6">
+            <div className="space-y-2 text-left w-full md:w-auto">
+              <h2 className="text-black text-3xl md:text-5xl lg:text-6xl font-black uppercase tracking-tighter underline decoration-red-600/20 italic leading-none break-words">
                 EXPOSURE_VERDICT
               </h2>
-              <span className="text-slate-400 font-mono text-[10px] block font-black uppercase tracking-widest italic mt-4">
+              <span className="text-slate-400 font-mono text-[9px] md:text-[10px] block font-black uppercase tracking-widest italic mt-2 md:mt-4 truncate">
                 ENTITY_REF // {reportData.org_name}
               </span>
             </div>
 
-            <div className="text-right flex flex-col items-end self-center">
+            <div className="text-left md:text-right flex flex-col items-start md:items-end self-start md:self-center bg-slate-50 md:bg-transparent p-4 md:p-0 w-full md:w-auto">
               <div className="flex items-center gap-2 mb-1">
                 <div className="w-1.5 h-1.5 bg-red-600 animate-pulse rounded-full shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic leading-none">
+                <span className="text-[9px] md:text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic leading-none">
                   CAPITAL_EROSION_RATE
                 </span>
               </div>
-              <div className="text-4xl font-black text-red-600 tabular-nums tracking-tighter italic leading-none py-1">
+              <div className="text-3xl md:text-4xl font-black text-red-600 tabular-nums tracking-tighter italic leading-none py-1">
                 ${liveBleed.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
               </div>
-              <div className="text-[9px] font-mono text-slate-400 uppercase tracking-[0.3em] mt-1 font-black leading-none italic">
+              <div className="text-[8px] md:text-[9px] font-mono text-slate-400 uppercase tracking-[0.1em] md:tracking-[0.3em] mt-1 font-black leading-none italic">
                 USD_ACCUMULATED_IN_REAL_TIME
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-800 text-left font-black italic">
-            <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">LOGIC_DECAY_COEFFICIENT</span>
-              <p className="text-[15px] leading-tight font-black italic uppercase">
-                Detecting <span className="text-red-600 text-xl font-black" style={blurStyle}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12 text-slate-800 text-left font-black italic">
+            <div className="space-y-2 md:space-y-3">
+              <span className="text-red-600 text-[10px] md:text-[11px] font-mono tracking-widest font-black uppercase">LOGIC_DECAY_COEFFICIENT</span>
+              <p className="text-sm md:text-[15px] leading-tight font-black italic uppercase">
+                Detecting <span className="text-red-600 text-lg md:text-xl font-black" style={blurStyle}>
                   {(activeMetrics?.decay).toFixed(0)}%
                 </span> Divergence.
               </p>
             </div>
-            <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">REWORK_LEVY</span>
-              <p className="text-[15px] leading-tight font-black italic uppercase">
-                Liability: <span className="text-red-600 text-xl font-black" style={blurStyle}>
+            <div className="space-y-2 md:space-y-3">
+              <span className="text-red-600 text-[10px] md:text-[11px] font-mono tracking-widest font-black uppercase">REWORK_LEVY</span>
+              <p className="text-sm md:text-[15px] leading-tight font-black italic uppercase">
+                Liability: <span className="text-red-600 text-lg md:text-xl font-black" style={blurStyle}>
                   ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
                 </span>.
               </p>
             </div>
-            <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">INACTION_PENALTY</span>
-              <p className="text-[15px] leading-tight font-black italic uppercase">
-                Exposure: <span className="text-red-600 text-xl font-black" style={blurStyle}>
+            <div className="space-y-2 md:space-y-3">
+              <span className="text-red-600 text-[10px] md:text-[11px] font-mono tracking-widest font-black uppercase">INACTION_PENALTY</span>
+              <p className="text-sm md:text-[15px] leading-tight font-black italic uppercase">
+                Exposure: <span className="text-red-600 text-lg md:text-xl font-black" style={blurStyle}>
                   ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
                 </span>.
               </p>
@@ -156,34 +156,36 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 📊 DATA BLOCKS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-24 text-center">
-          <div className="bg-slate-950 border border-slate-900 p-12 shadow-2xl italic">
-            <div className="text-6xl font-black text-white tracking-tighter italic" style={blurStyle}>
+        {/* 📊 DATA BLOCKS - FIXED PADDING */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16 md:mb-24 text-center">
+          <div className="bg-slate-950 border border-slate-900 p-8 md:p-12 shadow-2xl italic">
+            <div className="text-4xl md:text-6xl font-black text-white tracking-tighter italic break-all" style={blurStyle}>
               ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
-            <div className="text-[11px] font-mono text-slate-500 mt-6 tracking-widest uppercase font-black italic">VALIDATED_REWORK_LIABILITY</div>
+            <div className="text-[10px] md:text-[11px] font-mono text-slate-500 mt-4 md:mt-6 tracking-widest uppercase font-black italic">VALIDATED_REWORK_LIABILITY</div>
           </div>
-          <div className="bg-red-950/20 border-2 border-red-600/50 p-12 border-l-8 border-red-600 shadow-2xl italic">
-            <div className="text-6xl font-black text-red-500 tracking-tighter italic" style={blurStyle}>
+          <div className="bg-red-950/20 border-2 border-red-600/50 p-8 md:p-12 border-l-8 border-red-600 shadow-2xl italic">
+            <div className="text-4xl md:text-6xl font-black text-red-500 tracking-tighter italic break-all" style={blurStyle}>
               ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
-            <div className="text-[11px] font-mono text-red-400 mt-6 tracking-widest uppercase font-black italic">TOTAL_FORENSIC_EXPOSURE</div>
+            <div className="text-[10px] md:text-[11px] font-mono text-red-400 mt-4 md:mt-6 tracking-widest uppercase font-black italic">TOTAL_FORENSIC_EXPOSURE</div>
           </div>
         </div>
 
-        {/* 🛡️ RECONSTRUCTION CTA */}
+        {/* 🛡️ RECONSTRUCTION CTA - FIXED OVERFLOW */}
         {!isAdmin && (
           <div 
-            className="bg-white p-16 flex justify-between items-center group cursor-pointer border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic" 
+            className="bg-white p-6 md:p-16 flex flex-col md:flex-row justify-between items-start md:items-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic overflow-hidden gap-8" 
             onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
           >
-            <div className="text-left font-black italic uppercase">
-              <h4 className="text-black text-6xl tracking-tighter leading-[0.8] mb-4 italic">EXECUTE_RECONSTRUCTION_PLAN</h4>
-              <p className="text-slate-600 text-[14px] font-black italic mt-6">Initialize recovery protocols to stabilize operational capital.</p>
+            <div className="text-left font-black italic uppercase flex-1">
+              <h4 className="text-black text-4xl md:text-6xl lg:text-7xl tracking-tighter leading-[0.9] mb-4 italic break-words">
+                EXECUTE_RECONSTRUCTION_PLAN
+              </h4>
+              <p className="text-slate-600 text-xs md:text-[14px] font-black italic mt-4 md:mt-6">Initialize recovery protocols to stabilize operational capital.</p>
             </div>
-            <div className="bg-red-600 text-white p-10 group-hover:translate-x-4 transition-transform shadow-lg">
-              <ArrowRight size={64} />
+            <div className="bg-red-600 text-white p-6 md:p-10 group-hover:translate-x-4 transition-transform shadow-lg self-end md:self-center shrink-0">
+              <ArrowRight size={40} className="md:w-[64px] md:h-[64px]" />
             </div>
           </div>
         )}
