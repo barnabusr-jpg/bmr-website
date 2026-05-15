@@ -3,8 +3,7 @@ import React, { useState, useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, Key } from "lucide-react";
-import Link from 'next/link';
+import { Banknote, Stethoscope, Factory, ShoppingCart } from "lucide-react";
 
 const sectors = [
   { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
@@ -129,17 +128,6 @@ export default function PulseCheck() {
 
         </AnimatePresence>
       </main>
-
-      {/* 🛠️ THE HUD INJECTION // MOVED ABOVE FOOTER COMPONENT */}
-      <div className="max-w-[1280px] mx-auto w-full px-6 md:px-12 pb-4">
-        <Link 
-          href="/admin" 
-          className="text-[9px] text-slate-800 hover:text-red-600 transition-all font-mono tracking-widest italic flex items-center gap-2 group w-fit cursor-pointer no-underline"
-        >
-          <Key size={12} className="text-slate-900 group-hover:text-red-600 transition-colors" /> 
-          ACCESS_DASHBOARD
-        </Link>
-      </div>
 
       <Footer />
     </div>
