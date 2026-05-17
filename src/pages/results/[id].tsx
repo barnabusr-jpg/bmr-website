@@ -171,14 +171,13 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 🛡️ THE PLACARD: STYLIZED 4XL FONT */}
+        {/* 🛡️ THE PLACARD: CONNECTED TO LIVE FORENSIC BRIEFING ROUTE */}
         {!isAdmin && (
           <div 
             className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic transition-all duration-300 hover:bg-slate-50 text-center" 
-            onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-review')}
+            onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')}
           >
             <div className="max-w-4xl w-full flex flex-col items-center space-y-6">
-              {/* REFINED FONT: Dropped to text-4xl (36px) for solid one-line containment */}
               <h4 className="text-black text-2xl md:text-4xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600 uppercase break-words w-full">
                 EXECUTE_RECONSTRUCTION_PLAN
               </h4>
