@@ -38,25 +38,22 @@ export default function ForensicVerdict() {
   const activeMetrics = useMemo(() => {
     if (!reportData) return null;
     
-    // Explicit mappings directly matching your Supabase table schema columns
+    // Core user metric extraction
     const dbDecay = parseInt(reportData.decay_pct) || 0;
-    const dbSpend = parseFloat(reportData.ai_spend);
-    const dbReworkTax = parseFloat(reportData.rework_tax);
-    
-    // Fallbacks scale dynamically relative to decay metrics if fields return NULL
-    const finalSpend = !isNaN(dbSpend) ? dbSpend : (0.5 + (dbDecay * 0.05)); 
-    const impliedFte = Math.round((finalSpend * 1000000) / 200000) || 3;
 
-    // Use existing DB value if present, otherwise evaluate baseline model
-    const reworkTaxCalculated = !isNaN(dbReworkTax) ? dbReworkTax : ((impliedFte * (dbDecay / 100) * 0.40) * (160000 * 1.3));
-    const inactionPenaltyCalculated = ((dbDecay > 60 ? 0.30 : 0.18) * (finalSpend * 1000000)) * 1.15;
+    // Direct calculation path to ensure data stability
+    const impliedSpend = 0.5 + (dbDecay * 0.05); 
+    const impliedFte = Math.round((impliedSpend * 1000000) / 200000) || 3;
+
+    const reworkTaxCalculated = (impliedFte * (dbDecay / 100) * 0.40) * (160000 * 1.3);
+    const inactionPenaltyCalculated = ((dbDecay > 60 ? 0.30 : 0.18) * (impliedSpend * 1000000)) * 1.15;
     
     const bleedPerSecond = inactionPenaltyCalculated / 31536000;
     const createdAt = new Date(reportData.created_at || Date.now()).getTime();
     
     return {
       decay: dbDecay,
-      spend: finalSpend,
+      spend: impliedSpend,
       fte: impliedFte,
       reworkTax: reworkTaxCalculated,
       inactionPenalty: inactionPenaltyCalculated,
@@ -142,7 +139,7 @@ export default function ForensicVerdict() {
               <p className="text-[15px] leading-tight font-black italic uppercase">
                 Detecting <span className="text-red-600 text-xl font-black" style={blurStyle}>
                   {(activeMetrics?.decay).toFixed(0)}%
-                </span> Divergence.
+                </span> Structural Divergence.
               </p>
             </div>
             <div className="space-y-3">
@@ -154,9 +151,9 @@ export default function ForensicVerdict() {
               </p>
             </div>
             <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">INACTION_PENALTY</span>
+              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">PROJECTED_ANNUAL_EXPOSURE</span>
               <p className="text-[15px] leading-tight font-black italic uppercase">
-                Exposure: <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                Capital Liability Baseline: <span className="text-red-600 text-xl font-black" style={blurStyle}>
                   ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
                 </span>.
               </p>
