@@ -183,7 +183,7 @@ export default function ForensicVerdict() {
               INITIAL_BENCHMARK_CONFIG // STANDARD_ESTIMATES
             </span>
             <p className="text-slate-400 font-sans text-[11px] leading-relaxed font-black italic uppercase tracking-tight">
-              FORENSIC EXPOSURE METRICS ARE CALCULATED USING INDUSTRY-STANDARD MODEL ASSUMPTIONS: AN IMPLIED INFRASTRUCTURE FOOTPRINT FOOTED AT ${(activeMetrics?.spend || 1.2).toFixed(2)}M USD ANNUAL SPEND AND {activeMetrics?.fte || 5} COGNITIVE MAINTENANCE FTES. 
+              FORENSIC EXPOSURE METRICS ARE GENERATED USING PROPORTIONAL INDUSTRY-STANDARD MODEL ASSUMPTIONS INDEXED DIRECTLY TO YOUR CAPTURED LOGIC DECAY COEFFICIENT OF {(activeMetrics?.decay || 0)}%.
             </p>
             <p className="text-slate-500 font-mono text-[9px] uppercase font-black tracking-wider border-t border-slate-900 pt-2">
               [ NOTE: UNIQUE ORG SPEND AND EXACT STAFF METRICS WILL BE ADJUSTED LIVE DURING YOUR BRIEFING ]
