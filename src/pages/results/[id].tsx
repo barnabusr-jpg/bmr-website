@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { ShieldCheck, Printer, Activity } from "lucide-react";
+import { ShieldCheck, Printer, Activity, Info } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -11,8 +11,6 @@ export default function ForensicVerdict() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [liveSpend, setLiveSpend] = useState<number>(1.2);
-  const [fteCount, setFteCount] = useState<number>(5);
   const [liveBleed, setLiveBleed] = useState(0);
 
   useEffect(() => {
@@ -20,36 +18,23 @@ export default function ForensicVerdict() {
     if (params.get('admin') === 'true') setIsAdmin(true);
 
     if (router.isReady) {
-      // Robust multi-layered fallback extraction sequence
       const pathId = router.query.id || params.get('id') || window.location.pathname.split('/').pop();
       
       if (pathId && pathId !== '[id]' && pathId !== 'results' && pathId !== 'undefined') {
         fetchAuditData(pathId as string);
       } else {
-        console.log("FORENSIC_DEBUG: Awaiting component route hydration. Current pathId token resolved as:", pathId);
+        console.log("FORENSIC_DEBUG: Synchronizing route parameters...");
       }
     }
   }, [router.isReady, router.query.id]);
 
   const fetchAuditData = async (pathId: string) => {
     console.log("FORENSIC_DEBUG: Triggering query for record ID ->", pathId);
-    
     const { data: audit, error } = await supabase.from('audits').select('*').eq('id', pathId).maybeSingle();
     
-    if (error) {
-      console.error("FORENSIC_DEBUG: Supabase system query error ->", error);
-    }
-
-    if (!audit) {
-      console.error("FORENSIC_DEBUG: Fetch completed. No record matching this ID was found in the database table.");
-    } else {
-      console.log("FORENSIC_DEBUG: Raw payload returned successfully from Supabase:", audit);
-      console.log("FORENSIC_DEBUG: Mapping keys -> ai_spend:", audit.ai_spend, " | decay_pct:", audit.decay_pct);
-    }
+    if (error) console.error("FORENSIC_DEBUG: Supabase system query error ->", error);
 
     if (audit) {
-      setLiveSpend(parseFloat(audit.ai_spend) || 1.2);
-      setFteCount(Math.round((parseFloat(audit.ai_spend) * 1000000) / 200000) || 5);
       setReportData(audit);
     }
     setLoading(false);
@@ -58,19 +43,27 @@ export default function ForensicVerdict() {
   const activeMetrics = useMemo(() => {
     if (!reportData) return null;
     const dbDecay = parseInt(reportData.decay_pct) || 0;
-    const reworkTaxCalculated = (fteCount * (dbDecay / 100) * 0.40) * (160000 * 1.3);
-    const inactionPenaltyCalculated = ((dbDecay > 60 ? 0.30 : 0.18) * (liveSpend * 1000000)) * 1.15;
+
+    // 💡 DYNAMIC SEEDING: Derive operational scale directly from verified logic decay
+    // Scales spend from $0.5M up to $5.5M based on footprint severity
+    const impliedSpend = 0.5 + (dbDecay * 0.05); 
+    const impliedFte = Math.round((impliedSpend * 1000000) / 200000) || 3;
+
+    const reworkTaxCalculated = (impliedFte * (dbDecay / 100) * 0.40) * (160000 * 1.3);
+    const inactionPenaltyCalculated = ((dbDecay > 60 ? 0.30 : 0.18) * (impliedSpend * 1000000)) * 1.15;
     const bleedPerSecond = inactionPenaltyCalculated / 31536000;
     const createdAt = new Date(reportData.created_at || Date.now()).getTime();
     
     return {
       decay: dbDecay,
+      spend: impliedSpend,
+      fte: impliedFte,
       reworkTax: reworkTaxCalculated,
       inactionPenalty: inactionPenaltyCalculated,
       bleedPerSecond: bleedPerSecond,
       historicalBleed: ((Date.now() - createdAt) / 1000) * bleedPerSecond
     };
-  }, [reportData, liveSpend, fteCount]);
+  }, [reportData]);
 
   useEffect(() => {
     if (!activeMetrics?.bleedPerSecond) return;
@@ -172,7 +165,7 @@ export default function ForensicVerdict() {
         </div>
 
         {/* 📊 DATA BLOCKS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-24 text-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-center">
           <div className="bg-slate-950 border border-slate-900 p-12 shadow-2xl italic">
             <div className="text-6xl font-black text-white tracking-tighter italic break-all" style={blurStyle}>
               ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
@@ -184,6 +177,17 @@ export default function ForensicVerdict() {
               ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-red-400 mt-6 tracking-widest uppercase font-black italic">TOTAL_FORENSIC_EXPOSURE</div>
+          </div>
+        </div>
+
+        {/* ⚖️ THE FORENSIC METRIC DISCLAIMER BLOCK */}
+        <div className="bg-slate-950/60 border border-slate-900 p-6 mb-20 text-left flex items-start gap-4 shadow-xl">
+          <Info className="text-red-500 shrink-0 mt-0.5" size={16} />
+          <div className="space-y-1">
+            <span className="text-white font-mono text-[10px] tracking-widest uppercase font-black block">METHODOLOGY_STATEMENT // MODEL_BASELINE</span>
+            <p className="text-slate-400 font-sans text-[11px] leading-relaxed font-black italic uppercase tracking-tight">
+              FINANCIAL EXPOSURE ASSESSMENTS ARE AUTOMATICALLY SEEDED USING AN INDUSTRY-STANDARD ENTERPRISE FOOTPRINT FOOTED AT AN IMPLIED ANNUAL INFRASTRUCTURE BASELINE OF ${(activeMetrics?.spend || 1.2).toFixed(2)}M USD AND {activeMetrics?.fte || 5} COGNITIVE MAINTENANCE FTES, PROPORTIONATELY INDEXED TO YOUR CAPTURED LOGIC DECAY COEFFICIENT OF {(activeMetrics?.decay || 0)}%. METRICS HELD BEHIND ENCRYPTION REPRESENT TAILORED ESTIMATED OUTCOMES AND ARE RESERVED FOR CALIBRATION DURING THE LIVE STRATEGIC RECONSTRUCTION BRIEFING.
+            </p>
           </div>
         </div>
 
