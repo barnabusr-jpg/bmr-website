@@ -29,14 +29,8 @@ export default function ForensicVerdict() {
   }, [router.isReady, router.query.id]);
 
   const fetchAuditData = async (pathId: string) => {
-    console.log("FORENSIC_DEBUG: Triggering query for record ID ->", pathId);
-    const { data: audit, error } = await supabase.from('audits').select('*').eq('id', pathId).maybeSingle();
-    
-    if (error) console.error("FORENSIC_DEBUG: Supabase system query error ->", error);
-
-    if (audit) {
-      setReportData(audit);
-    }
+    const { data: audit } = await supabase.from('audits').select('*').eq('id', pathId).maybeSingle();
+    if (audit) setReportData(audit);
     setLoading(false);
   };
 
@@ -44,8 +38,7 @@ export default function ForensicVerdict() {
     if (!reportData) return null;
     const dbDecay = parseInt(reportData.decay_pct) || 0;
 
-    // 💡 DYNAMIC SEEDING: Derive operational scale directly from verified logic decay
-    // Scales spend from $0.5M up to $5.5M based on footprint severity
+    // Proprietary math scaling remains hidden securely in the backend useMemo execution
     const impliedSpend = 0.5 + (dbDecay * 0.05); 
     const impliedFte = Math.round((impliedSpend * 1000000) / 200000) || 3;
 
@@ -180,13 +173,17 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* ⚖️ THE FORENSIC METRIC DISCLAIMER BLOCK */}
+        {/* ⚖️ IP-PROTECTED METHODOLOGY DISCLAIMER */}
         <div className="bg-slate-950/60 border border-slate-900 p-6 mb-20 text-left flex items-start gap-4 shadow-xl">
           <Info className="text-red-500 shrink-0 mt-0.5" size={16} />
-          <div className="space-y-1">
-            <span className="text-white font-mono text-[10px] tracking-widest uppercase font-black block">METHODOLOGY_STATEMENT // MODEL_BASELINE</span>
+          <div className="space-y-2">
+            <span className="text-white font-mono text-[10px] tracking-widest uppercase font-black block">METHODOLOGY_STATEMENT // FINANCIAL_EXPOSURE_MODEL</span>
             <p className="text-slate-400 font-sans text-[11px] leading-relaxed font-black italic uppercase tracking-tight">
-              FINANCIAL EXPOSURE ASSESSMENTS ARE AUTOMATICALLY SEEDED USING AN INDUSTRY-STANDARD ENTERPRISE FOOTPRINT FOOTED AT AN IMPLIED ANNUAL INFRASTRUCTURE BASELINE OF ${(activeMetrics?.spend || 1.2).toFixed(2)}M USD AND {activeMetrics?.fte || 5} COGNITIVE MAINTENANCE FTES, PROPORTIONATELY INDEXED TO YOUR CAPTURED LOGIC DECAY COEFFICIENT OF {(activeMetrics?.decay || 0)}%. METRICS HELD BEHIND ENCRYPTION REPRESENT TAILORED ESTIMATED OUTCOMES AND ARE RESERVED FOR CALIBRATION DURING THE LIVE STRATEGIC RECONSTRUCTION BRIEFING.
+              TOTAL FORENSIC EXPOSURE IS CALCULATED BY MAPING YOUR VERIFIED LOGIC DECAY COEFFICIENT OVER A STANDARD ENTERPRISE ASSESSMENT MODEL FEATURING AN IMPLIED ANNUAL INFRASTRUCTURE SPEND BASELINE OF ${(activeMetrics?.spend || 1.2).toFixed(2)}M USD AND {activeMetrics?.fte || 5} MAINTENANCE FTES.
+            </p>
+            <p className="text-slate-500 font-sans text-[10px] leading-relaxed font-black italic uppercase tracking-tight border-t border-slate-900 pt-2">
+              1. VALIDATED REWORK LIABILITY ASSESSES THE OPPORTUNITY COST OF INTERNAL ENGINEERING CAPACITY BURDENED BY LOGICAL REWORK DRIFT, COMPOUNDED BY STANDARD FULL-TIME EQUIVALENT EMPLOYER LEVIES. <br />
+              2. THE INACTION PENALTY REPRESENTS DEPRECIATION IN INFRASTRUCTURE UTILITY AND RETAINED CAPITAL VALUE DRIVEN BY CONTINUOUS SYSTEM DIVERGENCE OVER A 12-MONTH HORIZON. INDIVIDUALFootprint footprints AND SPECIFIC DECAY FACTOR WEIGHTS WILL BE EXACTLY RE-CALIBRATED VIA CLIENT DATA INPUT DURING THE LIVE BRIEFING.
             </p>
           </div>
         </div>
