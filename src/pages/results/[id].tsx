@@ -20,14 +20,17 @@ export default function ForensicVerdict() {
     if (params.get('admin') === 'true') setIsAdmin(true);
 
     if (router.isReady) {
-      const pathId = params.get('id') || window.location.pathname.split('/').pop();
-      if (pathId && pathId !== '[id]' && pathId !== 'results') {
+      // Hardened structural verification fallback sequence to handle hydration delays cleanly
+      const pathId = router.query.id || params.get('id') || window.location.pathname.split('/').pop();
+      
+      if (pathId && pathId !== '[id]' && pathId !== 'results' && pathId !== 'undefined') {
         fetchAuditData(pathId as string);
       } else {
-        setLoading(false);
+        // Prevent fallbacks from dropping out of the loading ring until dynamic metadata populates
+        console.log("Forensic Engine: Synchronizing route parameters...");
       }
     }
-  }, [router.isReady]);
+  }, [router.isReady, router.query.id]);
 
   const fetchAuditData = async (pathId: string) => {
     const { data: audit } = await supabase.from('audits').select('*').eq('id', pathId).maybeSingle();
