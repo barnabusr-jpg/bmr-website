@@ -37,21 +37,26 @@ export default function ForensicVerdict() {
 
   const activeMetrics = useMemo(() => {
     if (!reportData) return null;
+    
+    // Explicit mappings directly matching your Supabase table schema columns
     const dbDecay = parseInt(reportData.decay_pct) || 0;
+    const dbSpend = parseFloat(reportData.ai_spend);
+    const dbReworkTax = parseFloat(reportData.rework_tax);
+    
+    // Fallbacks scale dynamically relative to decay metrics if fields return NULL
+    const finalSpend = !isNaN(dbSpend) ? dbSpend : (0.5 + (dbDecay * 0.05)); 
+    const impliedFte = Math.round((finalSpend * 1000000) / 200000) || 3;
 
-    // 💡 DYNAMIC SEEDING: Derive operational scale directly from verified logic decay
-    // Scales spend from $0.5M up to $5.5M based on footprint severity to create distinct blur profiles
-    const impliedSpend = 0.5 + (dbDecay * 0.05); 
-    const impliedFte = Math.round((impliedSpend * 1000000) / 200000) || 3;
-
-    const reworkTaxCalculated = (impliedFte * (dbDecay / 100) * 0.40) * (160000 * 1.3);
-    const inactionPenaltyCalculated = ((dbDecay > 60 ? 0.30 : 0.18) * (impliedSpend * 1000000)) * 1.15;
+    // Use existing DB value if present, otherwise evaluate baseline model
+    const reworkTaxCalculated = !isNaN(dbReworkTax) ? dbReworkTax : ((impliedFte * (dbDecay / 100) * 0.40) * (160000 * 1.3));
+    const inactionPenaltyCalculated = ((dbDecay > 60 ? 0.30 : 0.18) * (finalSpend * 1000000)) * 1.15;
+    
     const bleedPerSecond = inactionPenaltyCalculated / 31536000;
     const createdAt = new Date(reportData.created_at || Date.now()).getTime();
     
     return {
       decay: dbDecay,
-      spend: impliedSpend,
+      spend: finalSpend,
       fte: impliedFte,
       reworkTax: reworkTaxCalculated,
       inactionPenalty: inactionPenaltyCalculated,
@@ -111,7 +116,7 @@ export default function ForensicVerdict() {
                 EXPOSURE_VERDICT
               </h2>
               <span className="text-slate-400 font-mono text-[10px] block font-black uppercase tracking-widest italic mt-4">
-                ENTITY_REF // {reportData.org_name}
+                ENTITY_REF // {reportData.org_name || "UNKNOWN_TARGET"}
               </span>
             </div>
 
