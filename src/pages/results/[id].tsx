@@ -20,20 +20,33 @@ export default function ForensicVerdict() {
     if (params.get('admin') === 'true') setIsAdmin(true);
 
     if (router.isReady) {
-      // Hardened structural verification fallback sequence to handle hydration delays cleanly
+      // Robust multi-layered fallback extraction sequence
       const pathId = router.query.id || params.get('id') || window.location.pathname.split('/').pop();
       
       if (pathId && pathId !== '[id]' && pathId !== 'results' && pathId !== 'undefined') {
         fetchAuditData(pathId as string);
       } else {
-        // Prevent fallbacks from dropping out of the loading ring until dynamic metadata populates
-        console.log("Forensic Engine: Synchronizing route parameters...");
+        console.log("FORENSIC_DEBUG: Awaiting component route hydration. Current pathId token resolved as:", pathId);
       }
     }
   }, [router.isReady, router.query.id]);
 
   const fetchAuditData = async (pathId: string) => {
-    const { data: audit } = await supabase.from('audits').select('*').eq('id', pathId).maybeSingle();
+    console.log("FORENSIC_DEBUG: Triggering query for record ID ->", pathId);
+    
+    const { data: audit, error } = await supabase.from('audits').select('*').eq('id', pathId).maybeSingle();
+    
+    if (error) {
+      console.error("FORENSIC_DEBUG: Supabase system query error ->", error);
+    }
+
+    if (!audit) {
+      console.error("FORENSIC_DEBUG: Fetch completed. No record matching this ID was found in the database table.");
+    } else {
+      console.log("FORENSIC_DEBUG: Raw payload returned successfully from Supabase:", audit);
+      console.log("FORENSIC_DEBUG: Mapping keys -> ai_spend:", audit.ai_spend, " | decay_pct:", audit.decay_pct);
+    }
+
     if (audit) {
       setLiveSpend(parseFloat(audit.ai_spend) || 1.2);
       setFteCount(Math.round((parseFloat(audit.ai_spend) * 1000000) / 200000) || 5);
@@ -174,7 +187,7 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 🛡️ THE PLACARD: CONNECTED TO LIVE FORENSIC BRIEFING ROUTE */}
+        {/* 🛡️ THE PLACARD */}
         {!isAdmin && (
           <div 
             className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic transition-all duration-300 hover:bg-slate-50 text-center" 
