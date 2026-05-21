@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from 'next/router';
-import { ShieldCheck, Printer, Activity, Info } from "lucide-react";
+import { ShieldCheck, Printer, Activity, Info, Lock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -72,12 +72,17 @@ export default function ForensicVerdict() {
     return () => clearInterval(ticker);
   }, [activeMetrics]);
 
+  // 🛡️ STRATEGY 1 SECURITY LOGIC MATRIX
+  // Determine if the client is blocked based on calculation state and admin override flags
+  const baseBlurRequired = reportData?.status !== 'COMPLETE' || reportData?.is_released !== true;
+  const shouldBlurScreen = baseBlurRequired && !isAdmin;
+
   const blurStyle = {
-    filter: isAdmin ? 'none' : 'blur(15px)',
-    WebkitFilter: isAdmin ? 'none' : 'blur(15px)',
+    filter: shouldBlurScreen ? 'blur(15px)' : 'none',
+    WebkitFilter: shouldBlurScreen ? 'blur(15px)' : 'none',
     transition: 'filter 0.5s ease-in-out',
-    userSelect: isAdmin ? 'auto' : 'none',
-    pointerEvents: isAdmin ? 'auto' : 'none',
+    userSelect: shouldBlurScreen ? 'none' : 'auto',
+    pointerEvents: shouldBlurScreen ? 'none' : 'auto',
   } as React.CSSProperties;
 
   if (loading || !reportData) return (
@@ -88,22 +93,17 @@ export default function ForensicVerdict() {
   );
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black overflow-x-hidden">
+    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black overflow-x-hidden relative">
       <div className="no-print"><Header /></div>
 
-      <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
+      {/* 🔮 THE LIVE FORENSIC CONTENT (BLURRED DYNAMICALLY UNTIL ADVISOR RELEASES ACCESS) */}
+      <div className={`container mx-auto max-w-4xl mt-24 relative print:mt-0 transition-all duration-700 ${shouldBlurScreen ? 'blur-3xl pointer-events-none select-none opacity-20' : 'blur-none opacity-100'}`}>
         
         <div className="absolute -top-12 right-0 no-print">
           <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono font-black italic">
             <Printer size={14} /> GENERATE_FORENSIC_DOSSIER
           </button>
         </div>
-
-        {isAdmin && (
-          <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print">
-            <ShieldCheck size={16} /> DECRYPTION_PROTOCOL_ACTIVE
-          </div>
-        )}
 
         {/* 🏢 EXECUTIVE VERDICT BOX */}
         <div className="bg-white p-12 mb-20 border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none">
@@ -124,7 +124,6 @@ export default function ForensicVerdict() {
                   CAPITAL_EROSION_RATE
                 </span>
               </div>
-              {/* FIXED: Formatted purely to 2 decimal places for clean, standard enterprise presentation */}
               <div className="text-4xl font-black text-red-600 tabular-nums tracking-tighter italic leading-none py-1">
                 ${liveBleed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
@@ -195,26 +194,47 @@ export default function ForensicVerdict() {
         </div>
 
         {/* 🛡️ THE PLACARD */}
-        {!isAdmin && (
-          <div 
-            className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic transition-all duration-300 hover:bg-slate-50 text-center" 
-            onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')}
-          >
-            <div className="max-w-4xl w-full flex flex-col items-center space-y-6">
-              <h4 className="text-black text-2xl md:text-4xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600 uppercase break-words w-full">
-                EXECUTE_RECONSTRUCTION_PLAN
-              </h4>
-              
-              <div className="flex flex-col items-center pt-2">
-                <p className="text-slate-500 text-[10px] md:text-[11px] font-black italic tracking-[0.3em] uppercase mb-4">
-                  [ CLICK_TO_INITIALIZE_RECOVERY_PROTOCOLS ]
-                </p>
-                <div className="h-1 w-12 bg-red-600/20 group-hover:w-24 group-hover:bg-red-600 transition-all duration-500" />
-              </div>
+        <div 
+          className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic transition-all duration-300 hover:bg-slate-50 text-center" 
+          onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')}
+        >
+          <div className="max-w-4xl w-full flex flex-col items-center space-y-6">
+            <h4 className="text-black text-2xl md:text-4xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600 uppercase break-words w-full">
+              EXECUTE_RECONSTRUCTION_PLAN
+            </h4>
+            <div className="flex flex-col items-center pt-2">
+              <p className="text-slate-500 text-[10px] md:text-[11px] font-black italic tracking-[0.3em] uppercase mb-4">
+                [ CLICK_TO_INITIALIZE_RECOVERY_PROTOCOLS ]
+              </p>
+              <div className="h-1 w-12 bg-red-600/20 group-hover:w-24 group-hover:bg-red-600 transition-all duration-500" />
             </div>
           </div>
-        )}
+        </div>
       </div>
+
+      {/* 🔒 THE BLOCKING CONSOLE SCREEN (REPLICATED ONLY TO STANDARD GUESTS PRE-RELEASE) */}
+      {shouldBlurScreen && (
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 bg-black/40 backdrop-blur-sm min-h-screen">
+          <div className="text-center p-16 bg-slate-950 border-2 border-red-600/20 max-w-lg w-full shadow-[0_0_100px_rgba(0,0,0,0.8)] italic">
+            <Lock className="text-red-600 mx-auto mb-6 animate-pulse" size={48} />
+            <h2 className="text-3xl font-black uppercase tracking-tighter text-white leading-none">DIAGNOSTIC_LOCKED</h2>
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-4 leading-relaxed font-black">
+              The mathematical synthesis for this enterprise node has compiled successfully. 
+            </p>
+            <p className="text-[10px] font-mono text-red-600/70 uppercase tracking-widest mt-2 leading-relaxed font-black">
+              Vault release is currently held awaiting live administrative briefing clearance.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 🛡️ ADMIN TOKEN FLOATER */}
+      {isAdmin && (
+        <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print">
+          <ShieldCheck size={16} /> DECRYPTION_PROTOCOL_ACTIVE_VIA_OVERRIDE
+        </div>
+      )}
+
       <div className="no-print mt-20"><Footer /></div>
     </div>
   );
