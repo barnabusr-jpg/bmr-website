@@ -3,8 +3,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
-  Shield, Zap, Binary, ZoomIn, Hammer, Mail, FileText, 
-  FileDown, Monitor, Target 
+  Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
+  FileDown, Monitor, Plus, Send
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { jsPDF } from "jspdf";
@@ -34,6 +34,12 @@ export default function AdminDashboard() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
 
+  // INTAKE PANEL STATE ENGINE
+  const [newOrgName, setNewOrgName] = useState("");
+  const [newLeadEmail, setNewLeadEmail] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -45,6 +51,44 @@ export default function AdminDashboard() {
       setIsAuthenticated(true);
       setLoading(false);
     }
+  };
+
+  const fetchLedger = useCallback(async () => {
+    const { data: audits } = await supabase.from('audits').select('*').order('created_at', { ascending: false });
+    setData(audits || []);
+  }, []);
+
+  // INTAKE HANDLER METHOD
+  const handleCreateAudit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOrgName || !newLeadEmail) return;
+    setIsGenerating(true);
+    setGeneratedLink(null);
+
+    const { data: newAudit, error } = await supabase
+      .from('audits')
+      .insert([
+        {
+          org_name: newOrgName,
+          lead_email: newLeadEmail,
+          status: 'PENDING',
+          decay_pct: 0
+        }
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("DIAGNOSTIC_CREATION_FAILED ->", error);
+      alert("CREATION_ERR: BACKEND_REJECTION");
+    } else if (newAudit) {
+      // Constructs the target dynamic quiz interface link based on current domain origin
+      setGeneratedLink(`${window.location.origin}/results/${newAudit.id}`);
+      setNewOrgName("");
+      setNewLeadEmail("");
+      fetchLedger();
+    }
+    setIsGenerating(false);
   };
 
   const generateForensicPDF = async (audit: any) => {
@@ -59,7 +103,6 @@ export default function AdminDashboard() {
     printArea.style.left = '-9999px';
     printArea.style.top = '0';
     
-    // Updated HTML to match the high-contrast [id] page layout
     printArea.innerHTML = `
       <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
         <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 8px solid #dc2626;">
@@ -100,11 +143,6 @@ export default function AdminDashboard() {
       if (document.body.contains(printArea)) document.body.removeChild(printArea);
     }
   };
-
-  const fetchLedger = useCallback(async () => {
-    const { data: audits } = await supabase.from('audits').select('*').order('created_at', { ascending: false });
-    setData(audits || []);
-  }, []);
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     const { data: nodes } = await supabase.from('operators').select('persona_type, status').eq('audit_id', auditId);
@@ -161,7 +199,39 @@ export default function AdminDashboard() {
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
           {activeTab === 'ledger' ? (
-            <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
+            <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
+              
+              {/* 🛠️ RESTORED INTAKE PANEL: GENERATES 30-QUESTION DIAGNOSTIC ENTRIES */}
+              <div className="border-2 border-slate-900 bg-slate-950 p-8 text-white mb-10">
+                <div className="flex items-center gap-3 mb-6">
+                  <Plus size={16} className="text-red-600" />
+                  <span className="text-[10px] font-mono text-slate-400 tracking-[0.3em] font-black uppercase">INITIALIZE_NEW_DIAGNOSTIC_FLOW</span>
+                </div>
+
+                <form onSubmit={handleCreateAudit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                  <div>
+                    <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-2 block font-black">Target_Entity_Name</label>
+                    <input type="text" required value={newOrgName} onChange={(e) => setNewOrgName(e.target.value)} placeholder="ENTER COMPANY NAME" className="bg-black border border-slate-800 p-4 text-xs uppercase text-white w-full outline-none focus:border-red-600 font-mono tracking-wide" />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-2 block font-black">Operator_Lead_Email</label>
+                    <input type="email" required value={newLeadEmail} onChange={(e) => setNewLeadEmail(e.target.value)} placeholder="ENTER TARGET EMAIL" className="bg-black border border-slate-800 p-4 text-xs uppercase text-white w-full outline-none focus:border-red-600 font-mono tracking-wide" />
+                  </div>
+                  <button type="submit" disabled={isGenerating} className="py-4 bg-red-600 text-white font-black uppercase italic text-xs tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all flex items-center justify-center gap-2">
+                    <Send size={14} /> {isGenerating ? "DISPATCHING..." : "DEPLOY_DIAGNOSTIC"}
+                  </button>
+                </form>
+
+                {/* GENERATED LINK OUTPUT CLI BOX */}
+                {generatedLink && (
+                  <div className="mt-6 p-4 bg-black border border-red-600/30 text-left">
+                    <span className="text-[8px] font-mono text-red-500 font-black block tracking-widest mb-1">DIAGNOSTIC_LINK_READY // COPY_TO_SEND:</span>
+                    <input type="text" readOnly value={generatedLink} onClick={(e) => (e.target as HTMLInputElement).select()} className="bg-transparent text-white font-mono text-[11px] w-full border-none outline-none select-all font-black" />
+                  </div>
+                )}
+              </div>
+
+              {/* LEDGER ENTRIES LIST VIEW */}
               {data.map((audit) => (
                 <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
                   <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
@@ -169,7 +239,7 @@ export default function AdminDashboard() {
                       <div className="bg-slate-900 p-4 border border-slate-800 shrink-0 italic"><Building2 size={24} className="text-red-600" /></div>
                       <div>
                         <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING_SIGNAL"}</div>
-                        <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all italic">{audit.lead_email}</div>
+                        <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">{audit.lead_email}</div>
                       </div>
                     </div>
                     <div className="col-span-4 text-center font-black text-white italic text-xs tracking-[0.2em] font-mono">{audit.status === 'COMPLETE' ? 'RESULT_PUBLISHED' : 'TRIANGULATION_ACTIVE'}</div>
@@ -184,18 +254,17 @@ export default function AdminDashboard() {
                           return (
                             <div key={role} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
                               <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role}_NODE</span>
-                              <div className={`text-5xl font-black italic uppercase tracking-tighter italic ${isDone ? 'text-white' : 'text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
+                              <div className={`text-5xl font-black italic uppercase tracking-tighter ${isDone ? 'text-white' : 'text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
                             </div>
                           );
                         })}
                       </div>
                       <div className="flex justify-between items-center border-t border-slate-900/50 pt-10 italic">
-                        <div className="flex gap-4 italic">
-                            <button className="bg-slate-900 text-slate-500 border border-slate-800 px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:text-white transition-all flex items-center gap-3 italic font-black"><Mail size={16} /> RE-DISPATCH</button>
-                            <button onClick={() => generateForensicPDF(audit)} className="bg-white text-black px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl italic font-black"><FileDown size={18} /> DOWNLOAD_DOSSIER_COPY</button>
+                        <div className="flex gap-4">
+                            <button className="bg-slate-900 text-slate-500 border border-slate-800 px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:text-white transition-all flex items-center gap-3 font-black"><Mail size={16} /> RE-DISPATCH</button>
+                            <button onClick={() => generateForensicPDF(audit)} className="bg-white text-black px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl font-black"><FileDown size={18} /> DOWNLOAD_DOSSIER_COPY</button>
                         </div>
-                        {/* 🛡️ MASTER KEY INJECTED BELOW */}
-                        <button onClick={() => window.open(`/results/${audit.id}?admin=true`, '_blank')} className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
+                        <button onClick={() => window.open(`/results/${audit.id}?admin=true`, '_blank')} className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl font-black"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
                       </div>
                     </div>
                   )}
@@ -204,34 +273,34 @@ export default function AdminDashboard() {
             </motion.div>
           ) : (
             <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
-              <section className="italic">
+              <section>
                 <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public_Service_Mapping</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic font-black">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 font-black">
                   {BMR_IP_SUITE.services.map((s) => (
                     <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
-                      <div className="text-red-600 mb-6 italic">{s.icon}</div>
-                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
-                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
-                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case italic">{s.description}</p>
+                      <div className="text-red-600 mb-6">{s.icon}</div>
+                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest font-black">{s.tier}</span>
+                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4">{s.title}</h4>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
                     </div>
                   ))}
                 </div>
               </section>
 
-              <section className="italic">
+              <section>
                 <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary_Directives</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 font-black">
                   {BMR_IP_SUITE.directives.map((d) => (
                     <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 italic"><Binary className={d.color} size={32} /></div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 italic">
-                        <div className="space-y-2 italic">
-                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic font-black`}>PROTOCOL // {d.id}</span>
-                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
+                      <div className="absolute top-0 right-0 p-4 opacity-10"><Binary className={d.color} size={32} /></div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10">
+                        <div className="space-y-2">
+                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} font-black`}>PROTOCOL // {d.id}</span>
+                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">{d.label}</h2>
                         </div>
-                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic font-black">{d.price}</div>}
+                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest font-black">{d.price}</div>}
                       </div>
-                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium italic normal-case italic">{d.description}</p>
+                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
                     </div>
                   ))}
                 </div>
