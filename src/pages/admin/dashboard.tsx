@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, Send, X, Zap, CheckCircle, 
   FileText, ChevronDown, ChevronUp, Clock, Mail, Shield, 
-  Hammer, ZoomIn, Binary, FileDown, Monitor 
+  Hammer, ZoomIn, Binary, FileDown, Monitor, Lock, ShieldAlert 
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { jsPDF } from "jspdf";
@@ -25,17 +25,32 @@ const BMR_IP_SUITE = {
 };
 
 export default function AdminDashboard() {
+  // RESTORED: Native Terminal Auth States
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [password, setPassword] = useState("");
+  const [authEmail, setAuthEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [authStep, setAuthStep] = useState("identify");
+
   const [activeTab, setActiveTab] = useState<'ledger' | 'frameworks'>('ledger');
   const [data, setData] = useState<any[]>([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
   
-  // 🛡️ RESTORED DYNAMIC MODAL CAPTURE STATES
+  // Triangulation states
   const [selectedAudit, setSelectedAudit] = useState<any>(null);
   const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
+
+  // RESTORED: Native Verification Logic
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (authStep === "identify") {
+      setAuthStep("verify");
+    } else {
+      sessionStorage.setItem("bmr_admin_verified", "true");
+      setIsAuthenticated(true);
+    }
+  };
 
   const fetchLedger = useCallback(async () => {
     const { data: audits } = await supabase
@@ -62,7 +77,6 @@ export default function AdminDashboard() {
     await refreshActiveNodes(auditId);
   };
 
-  // ⚙️ RESTORED API TRIANGULATION DISPATCH PIPELINE
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
@@ -166,14 +180,46 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
 
+  // RESTORED: Exact Admin Terminal Login Layout from index.tsx
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-        <motion.form initial={{ opacity: 0 }} animate={{ opacity: 1 }} onSubmit={(e) => { e.preventDefault(); if(password === "KIMMALASR_03") setIsAuthenticated(true); }} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center relative shadow-2xl font-sans italic">
-          <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="MASTER_KEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600 placeholder:text-slate-900 uppercase" autoFocus />
-          <button type="submit" className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all leading-none text-xs">INITIALIZE_COMMAND</button>
-        </motion.form>
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-6 text-white font-sans italic">
+        <div className="w-full max-w-md space-y-10 bg-slate-950 border border-slate-900 p-16 shadow-[0_0_100px_rgba(0,0,0,1)] relative">
+          <div className="text-center space-y-4">
+            <Lock size={40} className="mx-auto text-red-600 animate-pulse" />
+            <h1 className="text-4xl font-black uppercase italic tracking-tighter leading-none">
+              Admin <span className="text-red-600">Terminal</span>
+            </h1>
+            <p className="text-slate-600 font-mono text-[9px] uppercase tracking-[0.4em] font-black">
+              ALPHA-7_CLEARANCE_REQUIRED
+            </p>
+          </div>
+
+          <form onSubmit={handleAuthSubmit} className="space-y-6">
+            <AnimatePresence mode="wait">
+              {authStep === "identify" ? (
+                <motion.div key="id" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-2 block font-black">Operator_Signal</label>
+                  <input type="email" required value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="ADMIN_EMAIL" className="bg-black border border-slate-800 p-6 text-sm uppercase text-white w-full outline-none focus:border-red-600 font-mono italic" />
+                </motion.div>
+              ) : (
+                <motion.div key="ver" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-2 block font-black">Secure_Passkey</label>
+                  <input type="text" required maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="000000" className="bg-black border border-red-600/50 p-6 text-5xl text-center font-black text-white w-full outline-none focus:border-red-600 font-mono tracking-[0.4em]" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <button className="w-full py-6 bg-red-600 text-white font-black uppercase italic text-xs tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl">
+              {authStep === "identify" ? "GENERATE_KEY" : "AUTHORIZE_ACCESS"}
+            </button>
+          </form>
+          
+          <div className="pt-6 border-t border-slate-900 flex items-center justify-center gap-3 opacity-20">
+            <ShieldAlert size={12} />
+            <span className="text-[8px] font-mono uppercase tracking-widest">Fiduciary_Encryption_Active</span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -181,7 +227,6 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden">
       
-      {/* FIXED CORE HEADER NAVIGATION WITH SUB-TABS */}
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 backdrop-blur-md border-b border-slate-900 z-50 px-10 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3 shrink-0">
@@ -195,7 +240,7 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      {/* 🔮 FULL STAKEHOLDER TRIANGULATION OVERLAY PORTAL */}
+      {/* Triangulation Modal overlay portal */}
       <AnimatePresence>
         {selectedAudit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
@@ -255,7 +300,7 @@ export default function AdminDashboard() {
                               {isTriangulated ? 'RESULT_PUBLISHED' : audit.status === 'LEAD' ? 'LEAD_CAPTURED' : 'TRIANGULATION_ACTIVE'}
                             </span>
                           </td>
-                          <td className="p-10 text-right text-slate-800 group-hover:text-red-600 transition-colors">
+                          <td className="p-10 text-right text-slate-800">
                             {expandedRow === audit.id ? <ChevronUp size={24} /> : <ChevronDown size={24} />}
                           </td>
                         </tr>
