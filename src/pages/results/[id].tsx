@@ -14,34 +14,53 @@ export default function ForensicVerdict() {
   const [liveBleed, setLiveBleed] = useState(0);
 
   useEffect(() => {
+    // 🛡️ SECURITY PARSER: Extract params reliably even on cold direct page loads
     const params = new URLSearchParams(window.location.search);
-    if (params.get('admin') === 'true') setIsAdmin(true);
+    if (params.get('admin') === 'true') {
+      setIsAdmin(true);
+    }
 
-    if (router.isReady) {
-      const pathId = router.query.id || params.get('id') || window.location.pathname.split('/').pop();
-      
-      if (pathId && pathId !== '[id]' && pathId !== 'results' && pathId !== 'undefined') {
-        fetchAuditData(pathId as string);
-      } else {
-        console.log("FORENSIC_DEBUG: Synchronizing route parameters...");
-      }
+    // Extract raw path segment directly from window location to bypass Router state lag
+    const segments = window.location.pathname.split('/');
+    const directPathId = segments[segments.length - 1];
+    
+    // Fallbacks to determine factual query payload
+    const finalId = router.query.id || params.get('id') || directPathId;
+
+    if (finalId && finalId !== '[id]' && finalId !== 'results' && finalId !== 'undefined') {
+      fetchAuditData(finalId as string);
+    } else if (router.isReady) {
+      // If router is ready and still no ID found, break loading state to prevent infinite spinning
+      console.log("FORENSIC_DEBUG: No valid assessment ID target found in routing space.");
+      setLoading(false);
     }
   }, [router.isReady, router.query.id]);
 
   const fetchAuditData = async (pathId: string) => {
-    const { data: audit, error } = await supabase.from('audits').select('*').eq('id', pathId).maybeSingle();
-    if (error) console.error("FORENSIC_DEBUG: Fetch error ->", error);
-    if (audit) setReportData(audit);
-    setLoading(false);
+    try {
+      const { data: audit, error } = await supabase
+        .from('audits')
+        .select('*')
+        .eq('id', pathId)
+        .maybeSingle();
+        
+      if (error) throw error;
+      if (audit) {
+        setReportData(audit);
+      } else {
+        console.error("FORENSIC_DEBUG: No database entity matches token ->", pathId);
+      }
+    } catch (err) {
+      console.error("FORENSIC_DEBUG: Database fetch failure ->", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const activeMetrics = useMemo(() => {
     if (!reportData) return null;
     
-    // Core user metric extraction
     const dbDecay = parseInt(reportData.decay_pct) || 0;
-
-    // Direct calculation path to ensure data stability
     const impliedSpend = 0.5 + (dbDecay * 0.05); 
     const impliedFte = Math.round((impliedSpend * 1000000) / 200000) || 3;
 
@@ -72,8 +91,7 @@ export default function ForensicVerdict() {
     return () => clearInterval(ticker);
   }, [activeMetrics]);
 
-  // 🛡️ STRATEGY 1 SECURITY LOGIC MATRIX
-  // Determine if the client is blocked based on calculation state and admin override flags
+  // 🛡️ NARRATIVE OVERRIDE SECURITY LOGIC
   const baseBlurRequired = reportData?.status !== 'COMPLETE' || reportData?.is_released !== true;
   const shouldBlurScreen = baseBlurRequired && !isAdmin;
 
@@ -85,18 +103,30 @@ export default function ForensicVerdict() {
     pointerEvents: shouldBlurScreen ? 'none' : 'auto',
   } as React.CSSProperties;
 
-  if (loading || !reportData) return (
-    <div className="bg-[#020617] h-screen flex flex-col items-center justify-center gap-6 font-mono italic text-red-600 font-black uppercase">
-      <Activity className="animate-spin" size={48} />
-      AUTHENTICATING_VERDICT_VAULT...
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="bg-[#020617] h-screen flex flex-col items-center justify-center gap-6 font-mono italic text-red-600 font-black uppercase">
+        <Activity className="animate-spin" size={48} />
+        AUTHENTICATING_VERDICT_VAULT...
+      </div>
+    );
+  }
+
+  // Fallback state if record simply does not exist in your Supabase tables
+  if (!reportData) {
+    return (
+      <div className="bg-[#020617] h-screen flex flex-col items-center justify-center gap-4 font-mono text-slate-400 uppercase tracking-widest text-xs italic">
+        <span className="text-red-600 font-black text-xl">INVALID_METRIC_TARGET</span>
+        <span>The requested client workspace link has expired or does not exist.</span>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black overflow-x-hidden relative">
       <div className="no-print"><Header /></div>
 
-      {/* 🔮 THE LIVE FORENSIC CONTENT (BLURRED DYNAMICALLY UNTIL ADVISOR RELEASES ACCESS) */}
+      {/* DYNAMIC METRICS WRAPPER: VISUALLY BLURRED UNTIL RELEASE FLAGS ARE BROKEN */}
       <div className={`container mx-auto max-w-4xl mt-24 relative print:mt-0 transition-all duration-700 ${shouldBlurScreen ? 'blur-3xl pointer-events-none select-none opacity-20' : 'blur-none opacity-100'}`}>
         
         <div className="absolute -top-12 right-0 no-print">
@@ -105,7 +135,7 @@ export default function ForensicVerdict() {
           </button>
         </div>
 
-        {/* 🏢 EXECUTIVE VERDICT BOX */}
+        {/* 🏢 MASTER CAPACITY CONSOLE CARD */}
         <div className="bg-white p-12 mb-20 border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none">
           <div className="flex justify-between items-center mb-12 border-b border-slate-100 pb-10">
             <div className="space-y-2 text-left">
@@ -161,7 +191,7 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 📊 DATA BLOCKS */}
+        {/* 📊 ACCUMULATED DATA MATRICES */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-center">
           <div className="bg-slate-950 border border-slate-900 p-12 shadow-2xl italic">
             <div className="text-6xl font-black text-white tracking-tighter italic break-all" style={blurStyle}>
@@ -177,7 +207,7 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* ⚙️ SYSTEM ASSUMPTIONS BLOCK */}
+        {/* ⚙️ CALIBRATION SPECIFICATION PANELS */}
         <div className="bg-slate-950/60 border border-slate-900 p-6 mb-20 text-left flex items-start gap-4 shadow-xl">
           <Info className="text-red-500 shrink-0 mt-0.5" size={16} />
           <div className="space-y-2">
@@ -185,7 +215,7 @@ export default function ForensicVerdict() {
               INITIAL_BENCHMARK_CONFIG // STANDARD_ESTIMATES
             </span>
             <p className="text-slate-400 font-sans text-[11px] leading-relaxed font-black italic uppercase tracking-tight">
-              FORENSIC EXPOSURE METRICS ARE GENERATED USING PROPORTIONAL INDUSTRY-STANDARD MODEL ASSUMPTIONS INDEXED DIRECTLY TO YOUR CAPTURED LOGIC DECAY COEFFICIENT OF {(activeMetrics?.decay || 0)}%.
+              FORENSIC EXPOSURE METRICS ARE GENERATED USING PROPORTIONAL INDUSTRY-STANDARD MODEL ASSUMPTIONS INDEXED DIRECTLY TO YOUR SPECIFIC CAPACITY COEFFICIENT OF {(activeMetrics?.decay || 0)}%.
             </p>
             <p className="text-slate-500 font-mono text-[9px] uppercase font-black tracking-wider border-t border-slate-900 pt-2">
               [ NOTE: UNIQUE ORG SPEND AND EXACT STAFF METRICS WILL BE ADJUSTED LIVE DURING YOUR BRIEFING ]
@@ -193,7 +223,7 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 🛡️ THE PLACARD */}
+        {/* RECONSTRUCTION TRIGGER PANEL */}
         <div 
           className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic transition-all duration-300 hover:bg-slate-50 text-center" 
           onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')}
@@ -212,10 +242,10 @@ export default function ForensicVerdict() {
         </div>
       </div>
 
-      {/* 🔒 THE BLOCKING CONSOLE SCREEN (REPLICATED ONLY TO STANDARD GUESTS PRE-RELEASE) */}
+      {/* 🔒 FORENSIC LOCK WALL SHIELD: INTERCEPTS GUESTS PRE-RELEASE */}
       {shouldBlurScreen && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 bg-black/40 backdrop-blur-sm min-h-screen">
-          <div className="text-center p-16 bg-slate-950 border-2 border-red-600/20 max-w-lg w-full shadow-[0_0_100px_rgba(0,0,0,0.8)] italic">
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#020617]/80 backdrop-blur-md min-h-screen">
+          <div className="text-center p-16 bg-slate-950 border-2 border-red-600/20 max-w-lg w-full shadow-[0_0_100px_rgba(0,0,0,0.9)] italic">
             <Lock className="text-red-600 mx-auto mb-6 animate-pulse" size={48} />
             <h2 className="text-3xl font-black uppercase tracking-tighter text-white leading-none">DIAGNOSTIC_LOCKED</h2>
             <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-4 leading-relaxed font-black">
@@ -228,7 +258,7 @@ export default function ForensicVerdict() {
         </div>
       )}
 
-      {/* 🛡️ ADMIN TOKEN FLOATER */}
+      {/* 🛡️ SYSTEM ADMINISTRATIVE OVERRIDE DECAL */}
       {isAdmin && (
         <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print">
           <ShieldCheck size={16} /> DECRYPTION_PROTOCOL_ACTIVE_VIA_OVERRIDE
