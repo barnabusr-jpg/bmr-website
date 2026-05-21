@@ -124,8 +124,9 @@ export default function ForensicVerdict() {
                   CAPITAL_EROSION_RATE
                 </span>
               </div>
+              {/* FIXED: Formatted purely to 2 decimal places for clean, standard enterprise presentation */}
               <div className="text-4xl font-black text-red-600 tabular-nums tracking-tighter italic leading-none py-1">
-                ${liveBleed.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 })}
+                ${liveBleed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <div className="text-[9px] font-mono text-slate-400 uppercase tracking-[0.3em] mt-1 font-black leading-none italic">
                 USD_ACCUMULATED_IN_REAL_TIME
