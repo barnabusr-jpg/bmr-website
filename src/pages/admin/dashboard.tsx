@@ -122,7 +122,7 @@ export default function AdminDashboard() {
     await refreshActiveNodes(auditId);
   };
 
-  // ⚙️ RESTORED: MODAL TRIANGULATION INTERFACE LOGIC
+  // ⚙️ INTAKE LINKS DISPATCH ENGINE
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
@@ -148,6 +148,7 @@ export default function AdminDashboard() {
     }
   };
 
+  // ⚙️ BACKEND DATA CALCULATION ENGINE
   const runSynthesis = async (auditId: string) => {
     setIsUpdating(true);
     try {
@@ -161,6 +162,24 @@ export default function AdminDashboard() {
       console.error(err); 
     } finally { 
       setIsUpdating(false); 
+    }
+  };
+
+  // ⚙️ STRATEGY 1: NARRATIVE ACCESS TOGGLE PROTOCOL
+  const toggleClientAccess = async (auditId: string, currentReleaseStatus: boolean) => {
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('audits')
+        .update({ is_released: !currentReleaseStatus })
+        .eq('id', auditId);
+        
+      if (error) throw error;
+      await fetchLedger();
+    } catch (err) {
+      console.error("ACCESS_TOGGLE_ERR ->", err);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -196,7 +215,6 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden">
       
-      {/* HEADER NAV CONTAINER */}
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 backdrop-blur-md border-b border-slate-900 z-50 px-10 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3 shrink-0"><Activity className="text-red-600 animate-pulse" size={20} /><span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">FORENSIC_COMMAND</span></div>
@@ -207,20 +225,21 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      {/* 🔮 RESTORED: STAKEHOLDER TRIANGULATION PORTAL MODAL OVERLAY */}
+      {/* OVERLAY LINK ASSIGNMENT DRAWBOX */}
       <AnimatePresence>
         {selectedAudit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
-              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">INITIATE_TRIANGULATION</h2>
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN_STAKEHOLDER_EMAILS</h2>
+              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
               <div className="space-y-4 mt-10 text-left">
-                <input placeholder="EXECUTIVE_NODE_EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="MANAGERIAL_NODE_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="TECHNICAL_NODE_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-8 font-black uppercase italic text-xl tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
-                  {isUpdating ? <Activity className="animate-spin" /> : <Send size={24} />} 
-                  {isUpdating ? "DISPATCHING..." : "ACTIVATE_TRIANGULATION"}
+                <input placeholder="EXECUTIVE_STAKEHOLDER_EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="MANAGERIAL_STAKEHOLDER_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="TECHNICAL_STAKEHOLDER_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
+                  {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
+                  {isUpdating ? "DISPATCHING..." : "CONFIRM_AND_DISPATCH_LINKS"}
                 </button>
               </div>
             </motion.div>
@@ -235,6 +254,7 @@ export default function AdminDashboard() {
               {data.map((audit) => {
                 const isTriangulated = audit.status === 'COMPLETE';
                 const isLead = audit.status === 'LEAD';
+                const clientHasAccess = !!audit.is_released;
 
                 return (
                   <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
@@ -274,21 +294,38 @@ export default function AdminDashboard() {
                           })}
                         </div>
                         
-                        <div className="flex justify-between items-center border-t border-slate-900/50 pt-10 italic">
-                          <div className="flex gap-4 italic">
+                        {/* 🛠️ STREAMLINED TWO-COLUMN WORKFLOW MATRIX */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12 border-t border-slate-900 pt-8 italic text-left">
+                          
+                          {/* COLUMN 1: CLIENT ACCESS ENGINE */}
+                          <div className="space-y-4">
+                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">CLIENT_DATA_MANAGEMENT</span>
                             {isLead ? (
-                              <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-red-600 text-white px-8 py-4 font-black uppercase italic text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-3"><Mail size={16} /> START_TRIANGULATION</button>
+                              <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full md:w-auto bg-red-600 text-white px-8 py-4 font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3"><Mail size={16} /> DISPATCH_STAKEHOLDER_LINKS</button>
                             ) : (
-                              <>
-                                <button onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="bg-yellow-600 text-black px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-white transition-all flex items-center gap-2"><Zap size={14} /> Force_Synthesis</button>
-                                <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-slate-800 text-white px-6 py-4 font-black uppercase italic text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-2"><Send size={14} /> Re-Dispatch</button>
-                              </>
+                              <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1 space-y-3">
+                                  <button onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2"><Zap size={14} /> COMPILE_PARTIAL_ANSWERS</button>
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-slate-800 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2"><Send size={14} /> RESEND_REMINDERS</button>
+                                </div>
+                                
+                                <button onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit.id, clientHasAccess); }} className={`flex-1 px-6 py-4 font-black uppercase text-[10px] tracking-widest transition-all border flex flex-col items-center justify-center gap-2 ${clientHasAccess ? 'bg-green-600 text-white border-green-700 hover:bg-red-600' : 'bg-slate-950 text-red-500 border-red-600/30 hover:bg-white hover:text-black'}`}>
+                                  <Shield size={16} />
+                                  <span>{clientHasAccess ? "LOCK_CLIENT_ACCESS" : "RELEASE_CLIENT_ACCESS"}</span>
+                                </button>
+                              </div>
                             )}
-                            <button onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="bg-white text-black px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-3 shadow-xl italic font-black"><FileDown size={18} /> DOWNLOAD_DOSSIER_COPY</button>
                           </div>
                           
-                          {/* CLEAR BLUR: AUTOMATIC ACTION-LINK DECRYPTION KEY INJECTED PERFECTLY */}
-                          <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase italic text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
+                          {/* COLUMN 2: INTERNAL FORENSIC EXPORTS */}
+                          <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
+                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL_ASSET_EXPORTS</span>
+                            <div className="space-y-3">
+                              <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3"><Monitor size={16} /> PREVIEW_UNBLURRED_DASHBOARD</button>
+                              <button onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3"><FileDown size={16} /> EXPORT_COMPREHENSIVE_PDF</button>
+                            </div>
+                          </div>
+
                         </div>
                       </div>
                     )}
