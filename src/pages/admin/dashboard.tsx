@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  FileDown, Monitor, Plus, Send
+  FileDown, Monitor, Plus, Send, Users
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { jsPDF } from "jspdf";
@@ -34,11 +34,13 @@ export default function AdminDashboard() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
 
-  // INTAKE PANEL STATE ENGINE
+  // 🛡️ RE-ENGINEERED MULTI-NODE INTAKE STATE ENGINE
   const [newOrgName, setNewOrgName] = useState("");
-  const [newLeadEmail, setNewLeadEmail] = useState("");
+  const [execEmail, setExecEmail] = useState("");
+  const [mgrEmail, setMgrEmail] = useState("");
+  const [tecEmail, setTecEmail] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedLink, setGeneratedLink] = useState<string | null>(null);
+  const [generatedTokens, setGeneratedTokens] = useState<{role: string, url: string}[] | null>(null);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,19 +60,20 @@ export default function AdminDashboard() {
     setData(audits || []);
   }, []);
 
-  // INTAKE HANDLER METHOD
+  // ⚙️ RELATIONAL MULTI-NODE DISPATCH LOGIC
   const handleCreateAudit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newOrgName || !newLeadEmail) return;
+    if (!newOrgName || !execEmail || !mgrEmail || !tecEmail) return;
     setIsGenerating(true);
-    setGeneratedLink(null);
+    setGeneratedTokens(null);
 
-    const { data: newAudit, error } = await supabase
+    // 1. Create the Master Core Audit Shell
+    const { data: newAudit, error: auditError } = await supabase
       .from('audits')
       .insert([
         {
           org_name: newOrgName,
-          lead_email: newLeadEmail,
+          lead_email: execEmail, // Default fallback lead trace
           status: 'PENDING',
           decay_pct: 0
         }
@@ -78,14 +81,39 @@ export default function AdminDashboard() {
       .select()
       .single();
 
-    if (error) {
-      console.error("DIAGNOSTIC_CREATION_FAILED ->", error);
-      alert("CREATION_ERR: BACKEND_REJECTION");
-    } else if (newAudit) {
-      // Constructs the target dynamic quiz interface link based on current domain origin
-      setGeneratedLink(`${window.location.origin}/results/${newAudit.id}`);
+    if (auditError || !newAudit) {
+      console.error("MASTER_CREATION_FAILED ->", auditError);
+      alert("CREATION_ERR: MASTER NODE REJECTION");
+      setIsGenerating(false);
+      return;
+    }
+
+    // 2. Provision and Link the 3 Sub-Nodes (Executive, Managerial, Technical)
+    const operatorsPayload = [
+      { audit_id: newAudit.id, persona_type: 'executive', status: 'pending', email_address: execEmail },
+      { audit_id: newAudit.id, persona_type: 'managerial', status: 'pending', email_address: mgrEmail },
+      { audit_id: newAudit.id, persona_type: 'technical', status: 'pending', email_address: tecEmail }
+    ];
+
+    const { error: operatorsError } = await supabase
+      .from('operators')
+      .insert(operatorsPayload);
+
+    if (operatorsError) {
+      console.error("NODE_PROVISIONING_FAILED ->", operatorsError);
+      alert("WARNING: Master shell created but stakeholder nodes rejected.");
+    } else {
+      // 3. Output distinct entry links based on destination route conventions
+      setGeneratedTokens([
+        { role: "EXECUTIVE LENS", url: `${window.location.origin}/diagnostic/${newAudit.id}?role=executive` },
+        { role: "MANAGERIAL LENS", url: `${window.location.origin}/diagnostic/${newAudit.id}?role=managerial` },
+        { role: "TECHNICAL LENS", url: `${window.location.origin}/diagnostic/${newAudit.id}?role=technical` }
+      ]);
+      
       setNewOrgName("");
-      setNewLeadEmail("");
+      setExecEmail("");
+      setMgrEmail("");
+      setTecEmail("");
       fetchLedger();
     }
     setIsGenerating(false);
@@ -201,32 +229,51 @@ export default function AdminDashboard() {
           {activeTab === 'ledger' ? (
             <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
               
-              {/* 🛠️ RESTORED INTAKE PANEL: GENERATES 30-QUESTION DIAGNOSTIC ENTRIES */}
+              {/* 🛠️ COMPREHENSIVE TRIANGULATION INTAKE MATRIX PANEL */}
               <div className="border-2 border-slate-900 bg-slate-950 p-8 text-white mb-10">
                 <div className="flex items-center gap-3 mb-6">
-                  <Plus size={16} className="text-red-600" />
-                  <span className="text-[10px] font-mono text-slate-400 tracking-[0.3em] font-black uppercase">INITIALIZE_NEW_DIAGNOSTIC_FLOW</span>
+                  <Users size={16} className="text-red-600" />
+                  <span className="text-[10px] font-mono text-slate-400 tracking-[0.3em] font-black uppercase">INITIALIZE_TRIANGULATED_NODE_ROUTING</span>
                 </div>
 
-                <form onSubmit={handleCreateAudit} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-                  <div>
+                <form onSubmit={handleCreateAudit} className="space-y-6">
+                  <div className="w-full md:w-1/3">
                     <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-2 block font-black">Target_Entity_Name</label>
                     <input type="text" required value={newOrgName} onChange={(e) => setNewOrgName(e.target.value)} placeholder="ENTER COMPANY NAME" className="bg-black border border-slate-800 p-4 text-xs uppercase text-white w-full outline-none focus:border-red-600 font-mono tracking-wide" />
                   </div>
-                  <div>
-                    <label className="text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-2 block font-black">Operator_Lead_Email</label>
-                    <input type="email" required value={newLeadEmail} onChange={(e) => setNewLeadEmail(e.target.value)} placeholder="ENTER TARGET EMAIL" className="bg-black border border-slate-800 p-4 text-xs uppercase text-white w-full outline-none focus:border-red-600 font-mono tracking-wide" />
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                      <label className="text-[9px] font-mono text-red-500 uppercase tracking-widest mb-2 block font-black">Executive_Stakeholder_Email</label>
+                      <input type="email" required value={execEmail} onChange={(e) => setExecEmail(e.target.value)} placeholder="EXEC_EMAIL@TARGET.COM" className="bg-black border border-slate-800 p-4 text-xs uppercase text-white w-full outline-none focus:border-red-600 font-mono tracking-wide" />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-mono text-blue-500 uppercase tracking-widest mb-2 block font-black">Managerial_Stakeholder_Email</label>
+                      <input type="email" required value={mgrEmail} onChange={(e) => setMgrEmail(e.target.value)} placeholder="MGR_EMAIL@TARGET.COM" className="bg-black border border-slate-800 p-4 text-xs uppercase text-white w-full outline-none focus:border-red-600 font-mono tracking-wide" />
+                    </div>
+                    <div>
+                      <label className="text-[9px] font-mono text-purple-500 uppercase tracking-widest mb-2 block font-black">Technical_Stakeholder_Email</label>
+                      <input type="email" required value={tecEmail} onChange={(e) => setTecEmail(e.target.value)} placeholder="TEC_EMAIL@TARGET.COM" className="bg-black border border-slate-800 p-4 text-xs uppercase text-white w-full outline-none focus:border-red-600 font-mono tracking-wide" />
+                    </div>
                   </div>
-                  <button type="submit" disabled={isGenerating} className="py-4 bg-red-600 text-white font-black uppercase italic text-xs tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all flex items-center justify-center gap-2">
-                    <Send size={14} /> {isGenerating ? "DISPATCHING..." : "DEPLOY_DIAGNOSTIC"}
-                  </button>
+
+                  <div className="flex justify-end pt-2">
+                    <button type="submit" disabled={isGenerating} className="w-full md:w-auto px-12 py-5 bg-red-600 text-white font-black uppercase italic text-xs tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all flex items-center justify-center gap-2">
+                      <Send size={14} /> {isGenerating ? "DISPATCHING_NODES..." : "DEPLOY_TRIANGULATION_DIAGNOSTIC"}
+                    </button>
+                  </div>
                 </form>
 
-                {/* GENERATED LINK OUTPUT CLI BOX */}
-                {generatedLink && (
-                  <div className="mt-6 p-4 bg-black border border-red-600/30 text-left">
-                    <span className="text-[8px] font-mono text-red-500 font-black block tracking-widest mb-1">DIAGNOSTIC_LINK_READY // COPY_TO_SEND:</span>
-                    <input type="text" readOnly value={generatedLink} onClick={(e) => (e.target as HTMLInputElement).select()} className="bg-transparent text-white font-mono text-[11px] w-full border-none outline-none select-all font-black" />
+                {/* RELATIONAL VECTOR TOKEN READOUT BOXES */}
+                {generatedTokens && (
+                  <div className="mt-8 pt-6 border-t border-slate-900 space-y-3">
+                    <span className="text-[8px] font-mono text-red-500 font-black block tracking-widest mb-2">ROUTING_TOKENS_GENERATED // DISPATCH TO CORES:</span>
+                    {generatedTokens.map((token, idx) => (
+                      <div key={idx} className="p-4 bg-black border border-slate-900 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                        <span className="text-[10px] font-mono font-black tracking-wider text-slate-400 shrink-0 min-w-[150px]">{token.role}:</span>
+                        <input type="text" readOnly value={token.url} onClick={(e) => (e.target as HTMLInputElement).select()} className="bg-transparent text-white font-mono text-[11px] w-full border-none outline-none select-all font-black break-all" />
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
