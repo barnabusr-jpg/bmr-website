@@ -3,7 +3,6 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Lock, ShieldCheck, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import Footer from "@/components/layout/Footer";
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -171,7 +170,9 @@ export default function ResultsPage() {
         </div>
       )}
 
-      <div className="no-print mt-20"><Footer /></div>
+      <footer className="no-print mt-32 border-t border-slate-900 py-12 text-center text-[9px] font-mono text-slate-600 uppercase tracking-[0.4em] italic font-black">
+        BMR_ADVISORY_FORENSIC_SUITE // SYSTEM_END_OF_LEDGER_SIGNAL // © 2026
+      </footer>
     </div>
   );
 }
