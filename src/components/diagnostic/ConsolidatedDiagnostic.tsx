@@ -12,7 +12,7 @@ const LOCAL_QUESTIONS = [
   { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
   { id: "DG_03", text: "We have a dedicated budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
   { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Trust", weight: 2 }] },
+  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Zero Trust", weight: 2 }] },
   { id: "ED_01", text: "Our data infrastructure can handle real-time AI processing.", options: [{ label: "Legacy", weight: 10 }, { label: "Hybrid", weight: 6 }, { label: "Cloud-native", weight: 4 }, { label: "Edge", weight: 2 }] },
   { id: "ED_02", text: "We leverage proprietary datasets to train specialized models.", options: [{ label: "Public only", weight: 10 }, { label: "Minimal", weight: 6 }, { label: "Significant", weight: 4 }, { label: "Proprietary", weight: 2 }] },
   { id: "ED_03", text: "API and model versioning are strictly controlled.", options: [{ label: "Manual", weight: 10 }, { label: "Basic", weight: 6 }, { label: "Automated", weight: 4 }, { label: "MLOps", weight: 2 }] },
@@ -52,7 +52,8 @@ export default function ConsolidatedDiagnostic() {
         decay_pct: finalMetrics.decay,
         rework_tax: parseFloat(finalMetrics.rework),
         raw_responses: finalAnswers,
-        status: 'COMPLETE' 
+        status: 'LEAD', // 🛠️ Correctly flag entry as a fresh lead generation target
+        is_released: false // Hard lock client layout until manual advisor intervention
       }]).select('id').single();
 
       if (auditError) throw auditError;
@@ -90,7 +91,6 @@ export default function ConsolidatedDiagnostic() {
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-16 text-center">
             <div className="space-y-4">
-              {/* NOMENCLATURE UPDATE: EFFICIENCY -> EXPOSURE */}
               <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter text-white leading-none">
                 FORENSIC <span className="text-red-600 italic">EXPOSURE</span> AUDIT
               </h1>
@@ -148,7 +148,6 @@ export default function ConsolidatedDiagnostic() {
                 onClick={() => setStep("audit")} 
                 className="w-full py-10 font-black uppercase bg-red-600 text-white disabled:opacity-20 text-3xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)] italic"
               >
-                {/* NOMENCLATURE UPDATE: Initialize Observation -> INITIALIZE_AUDIT */}
                 INITIALIZE_FORENSIC_AUDIT
               </button>
             </div>
@@ -177,7 +176,25 @@ export default function ConsolidatedDiagnostic() {
 
                       try {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
+                        
                         if (auditId) {
+                          // 🔥 PHASE 1 AUTOMATED HOOK SYSTEM INTERACTION
+                          // Silently fire the email routing transaction right before screen bounce
+                          try {
+                            await fetch('/api/send-vault-link', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                email: email.toLowerCase().trim(),
+                                orgName: entityName.toUpperCase().trim(),
+                                auditId: auditId
+                              })
+                            });
+                          } catch (emailErr) {
+                            console.error("FORENSIC_DEBUG: Background notification email failure ->", emailErr);
+                          }
+
+                          // Supabase structural replication verification lookups
                           let isPubliclyVisible = false;
                           let checkAttempts = 0;
                           while (!isPubliclyVisible && checkAttempts < 12) {
@@ -189,6 +206,7 @@ export default function ConsolidatedDiagnostic() {
                               await new Promise(r => setTimeout(r, 600));
                             }
                           }
+                          
                           window.location.replace(`/results/${auditId}`);
                         } else {
                           setIsLoading(false);
