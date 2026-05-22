@@ -1,27 +1,33 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Resend } from 'resend';
 
-// Initialize tracking container with environment authorization variable
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Only accept standard incoming POST queries
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   }
 
+  // 🔍 TRACE CODE 1: Verify the API endpoint receives your form input data
+  console.log("FORENSIC_INBOUND_PAYLOAD:", req.body);
+
   const { email, orgName, auditId } = req.body;
 
-  // Validation interceptor block
+  // 🔍 TRACE CODE 2: Verify the security token exists in this runtime context
+  if (!process.env.RESEND_API_KEY) {
+    console.error("CRITICAL_EMAIL_ERROR: process.env.RESEND_API_KEY is completely UNDEFINED inside Vercel environment variables.");
+    return res.status(500).json({ error: 'SERVER_ENVIRONMENT_MISCONFIGURATION' });
+  }
+
   if (!email || !auditId) {
     return res.status(400).json({ error: 'MISSING_REQUIRED_PARAMETERS' });
   }
 
   try {
-    const secureUrl = `https://www.bmradvisory.co/results/${auditId}`;
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    const secureUrl = `https://www.bmradvisory.co/results/${auditId}`; // 🛠️ Fixed typo mapping (changed pathId -> auditId)
 
-    // Execute direct delivery loop using your verified domain setup address
-    await resend.emails.send({
+    console.log("ATTEMPTING_RESEND_DISPATCH_TO:", email);
+
+    const response = await resend.emails.send({
       from: 'BMR Advisory <hello@BMRadvisory.co>',
       to: email.toLowerCase().trim(),
       subject: `SECURE_SIGNAL: Forensic Assessment Anchored // ${orgName?.toUpperCase() || 'CLIENT_NODE'}`,
@@ -46,16 +52,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </div>
 
           <p style="font-size: 11px; color: #475569; line-height: 1.8; text-transform: uppercase; font-weight: bold; font-family: monospace; border-top: 1px solid #0f172a; padding-top: 20px;">
-            Your access key has been emailed to the email address provided. Use your portal link to coordinate your live briefing reservation.
+            Your permanent access key has been emailed to the email address provided. Use your portal link to coordinate your live briefing reservation.
           </p>
         </div>
       `
     });
 
-    return res.status(200).json({ success: true });
+    // 🔍 TRACE CODE 3: Output structural confirmation logs back from Resend servers
+    console.log("RESEND_API_RESPONSE_SUCCESS:", response);
+
+    return res.status(200).json({ success: true, data: response });
 
   } catch (err: any) {
-    console.error("SERVER_SIDE_API_ERROR_TRACE:", err);
+    // 🔍 TRACE CODE 4: Print validation errors or domain matching exceptions
+    console.error("CRITICAL_RESEND_TRANSMISSION_FAILED:", err);
     return res.status(500).json({ error: 'INTERNAL_TRANSMISSION_FAILURE', message: err.message });
   }
 }
