@@ -86,6 +86,7 @@ export default function ResultsPage() {
   return (
     <div className="min-h-screen bg-[#020617] text-white relative font-sans overflow-x-hidden">
       
+      {/* 🔮 STYLIZED VISUAL BLUR BACKDROP LAYER */}
       <div className={`transition-all duration-700 ease-in-out ${!clientHasAccess && !isAdmin ? "blur-xl saturate-[0.15] pointer-events-none select-none" : "blur-none"}`}>
         <main className="max-w-7xl mx-auto py-32 px-8 space-y-16 text-left italic">
           
@@ -131,34 +132,38 @@ export default function ResultsPage() {
         </main>
       </div>
 
+      {/* 🔒 THE OVERLAY GATED INTERCEPT INTERFACE */}
+      {/* 🛠️ MODIFICATION SUMMARY: Swapped items-center out for items-center justify-end pb-24 to pull it down, then compressed typography sizes */}
       {!clientHasAccess && !isAdmin && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#020617]/40 backdrop-blur-[2px]">
-          <div className="text-center p-12 md:p-16 bg-slate-950 border-2 border-red-600 max-w-xl w-full shadow-[0_0_100px_rgba(0,0,0,0.95)] italic space-y-10">
-            <div className="space-y-4">
-              <Lock className="text-red-600 mx-auto mb-2 animate-pulse" size={48} />
-              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white leading-none">DIAGNOSTIC_LOCKED</h2>
-              <p className="text-[11px] font-mono text-slate-400 uppercase tracking-widest leading-relaxed font-black max-w-sm mx-auto">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-end pb-24 p-6 bg-[#020617]/20 backdrop-blur-[1px]">
+          <div className="text-center p-8 md:p-10 bg-slate-950 border-2 border-red-600 max-w-md w-full shadow-[0_0_80px_rgba(0,0,0,0.95)] italic space-y-6">
+            
+            <div className="space-y-2">
+              <Lock className="text-red-600 mx-auto mb-1 animate-pulse" size={32} />
+              <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tighter text-white leading-none">DIAGNOSTIC_LOCKED</h2>
+              <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest leading-relaxed font-black max-w-xs mx-auto">
                 Your forensic report compiled successfully.
               </p>
-              <p className="text-[11px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-sm mx-auto">
+              <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-xs mx-auto">
                 Access is held awaiting your live administrative briefing session.
               </p>
             </div>
 
+            {/* HIGH-CONVERSION CALENDLY COMPACT TICKET */}
             <div 
-              className="bg-white p-8 border-l-[12px] border-red-600 shadow-2xl cursor-pointer transition-all duration-300 hover:bg-slate-100 text-center flex flex-col items-center justify-center space-y-3"
+              className="bg-white p-6 border-l-[8px] border-red-600 shadow-xl cursor-pointer transition-all duration-300 hover:bg-slate-100 text-center flex flex-col items-center justify-center space-y-2 group"
               onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing', '_blank')}
             >
-              <h4 className="text-black text-xl md:text-2xl font-black tracking-tighter leading-none uppercase">
+              <h4 className="text-black text-lg md:text-xl font-black tracking-tighter leading-none uppercase">
                 EXECUTE_RECONSTRUCTION_PLAN
               </h4>
-              <p className="text-slate-500 text-[9px] md:text-[10px] font-black tracking-[0.2em] uppercase leading-none">
+              <p className="text-slate-500 text-[8px] font-black tracking-[0.2em] uppercase leading-none">
                 [ CLICK_TO_CONFIRM_BRIEFING_RESERVATION ]
               </p>
             </div>
 
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-black pt-2 normal-case">
-              Your access key has been emailed to the email address provided.
+            <p className="text-[9px] font-mono text-slate-600 uppercase tracking-wider font-black pt-1 normal-case">
+              Your access key has been emailed to the address provided.
             </p>
           </div>
         </div>
