@@ -141,7 +141,7 @@ export default function ResultsPage() {
           <div className="bg-white text-black p-12 border-l-[16px] border-red-600 grid grid-cols-1 lg:grid-cols-12 gap-8 shadow-2xl relative">
             <div className="lg:col-span-7 flex flex-col justify-between space-y-12">
               <div>
-                <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none">
+                <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none text-black">
                   EXPOSURE_VERDICT
                 </h1>
                 <p className="text-[11px] font-mono text-slate-400 font-black uppercase tracking-widest mt-2">
@@ -152,15 +152,15 @@ export default function ResultsPage() {
               <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-100 text-left">
                 <div>
                   <span className="text-[10px] font-mono text-red-600 block uppercase font-black tracking-wider">CAPACITY LOSS</span>
-                  <p className="text-xl font-black italic mt-1 leading-tight">{(dbDecay * laborMultiplier).toFixed(0)}% WASTED</p>
+                  <p className="text-xl font-black italic mt-1 leading-tight text-black">{(dbDecay * laborMultiplier).toFixed(0)}% WASTED</p>
                 </div>
                 <div>
                   <span className="text-[10px] font-mono text-red-600 block uppercase font-black tracking-wider">ANNUAL REWORK TAX</span>
-                  <p className="text-xl font-black mt-1 leading-tight font-mono">${laborTax.toFixed(2)}</p>
+                  <p className="text-xl font-black mt-1 leading-tight font-mono text-black">${laborTax.toFixed(2)}</p>
                 </div>
                 <div>
                   <span className="text-[10px] font-mono text-red-600 block uppercase font-black tracking-wider">INACTION PENALTY</span>
-                  <p className="text-xl font-black mt-1 leading-tight font-mono">${exposure.toFixed(2)}</p>
+                  <p className="text-xl font-black mt-1 leading-tight font-mono text-black">${exposure.toFixed(2)}</p>
                 </div>
               </div>
             </div>
@@ -221,7 +221,7 @@ export default function ResultsPage() {
               <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest leading-relaxed font-black max-w-xs mx-auto">
                 Your forensic report compiled successfully.
               </p>
-              <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-xs mx-auto">
+              <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-sm mx-auto">
                 Access is held awaiting your live administrative briefing session.
               </p>
             </div>
