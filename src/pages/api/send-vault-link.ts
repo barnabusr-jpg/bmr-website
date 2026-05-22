@@ -1,33 +1,23 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Resend } from 'resend';
 
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   }
 
-  // 🔍 TRACE CODE 1: Verify the API endpoint receives your form input data
-  console.log("FORENSIC_INBOUND_PAYLOAD:", req.body);
-
   const { email, orgName, auditId } = req.body;
-
-  // 🔍 TRACE CODE 2: Verify the security token exists in this runtime context
-  if (!process.env.RESEND_API_KEY) {
-    console.error("CRITICAL_EMAIL_ERROR: process.env.RESEND_API_KEY is completely UNDEFINED inside Vercel environment variables.");
-    return res.status(500).json({ error: 'SERVER_ENVIRONMENT_MISCONFIGURATION' });
-  }
 
   if (!email || !auditId) {
     return res.status(400).json({ error: 'MISSING_REQUIRED_PARAMETERS' });
   }
 
   try {
-    const resend = new Resend(process.env.RESEND_API_KEY);
-    const secureUrl = `https://www.bmradvisory.co/results/${auditId}`; // 🛠️ Fixed typo mapping (changed pathId -> auditId)
+    const secureUrl = `https://www.bmradvisory.co/results/${auditId}`;
 
-    console.log("ATTEMPTING_RESEND_DISPATCH_TO:", email);
-
-    const response = await resend.emails.send({
+    await resend.emails.send({
       from: 'BMR Advisory <hello@BMRadvisory.co>',
       to: email.toLowerCase().trim(),
       subject: `SECURE_SIGNAL: Forensic Assessment Anchored // ${orgName?.toUpperCase() || 'CLIENT_NODE'}`,
@@ -58,14 +48,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       `
     });
 
-    // 🔍 TRACE CODE 3: Output structural confirmation logs back from Resend servers
-    console.log("RESEND_API_RESPONSE_SUCCESS:", response);
-
-    return res.status(200).json({ success: true, data: response });
+    return res.status(200).json({ success: true });
 
   } catch (err: any) {
-    // 🔍 TRACE CODE 4: Print validation errors or domain matching exceptions
-    console.error("CRITICAL_RESEND_TRANSMISSION_FAILED:", err);
+    console.error("SERVER_SIDE_API_ERROR_TRACE:", err);
     return res.status(500).json({ error: 'INTERNAL_TRANSMISSION_FAILURE', message: err.message });
   }
 }
