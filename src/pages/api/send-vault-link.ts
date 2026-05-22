@@ -1,15 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { Resend } from 'resend';
 
+// Initialize tracking container with environment authorization variable
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Only accept standard incoming POST queries
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   }
 
   const { email, orgName, auditId } = req.body;
 
+  // Validation interceptor block
   if (!email || !auditId) {
     return res.status(400).json({ error: 'MISSING_REQUIRED_PARAMETERS' });
   }
@@ -17,6 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const secureUrl = `https://www.bmradvisory.co/results/${auditId}`;
 
+    // Execute direct delivery loop using your verified domain setup address
     await resend.emails.send({
       from: 'BMR Advisory <hello@BMRadvisory.co>',
       to: email.toLowerCase().trim(),
