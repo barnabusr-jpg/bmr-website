@@ -11,7 +11,7 @@ const LOCAL_QUESTIONS = [
   { id: "RT_03", text: "AI roles and responsibilities are clearly defined across teams.", options: [{ label: "Undefined", weight: 10 }, { label: "Informal roles", weight: 6 }, { label: "Dedicated AI team", weight: 4 }, { label: "Cross-functional matrix", weight: 2 }] },
   { id: "DG_01", text: "Our AI systems directly contribute to measurable business ROI.", options: [{ label: "Not tracked", weight: 10 }, { label: "Anecdotal evidence", weight: 6 }, { label: "Specific KPIs", weight: 4 }, { label: "Direct impact", weight: 2 }] },
   { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
-  { id: "DG_03", text: "We have a dedicated budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { annual: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
+  { id: "DG_03", text: "We have a dedicated budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
   { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
   { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Trust", weight: 2 }] },
   { id: "ED_01", text: "Our data infrastructure can handle real-time AI processing.", options: [{ label: "Legacy", weight: 10 }, { label: "Hybrid", weight: 6 }, { label: "Cloud-native", weight: 4 }, { label: "Edge", weight: 2 }] },
@@ -180,20 +180,16 @@ export default function ConsolidatedDiagnostic() {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
                         
                         if (auditId) {
-                          // 🎯 CALL FIXED CLEAN ENDPOINT ROUTE (NO EXTENSION STRING VALUE)
-                          try {
-                            await fetch('/api/send-vault-link', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                email: email.toLowerCase().trim(),
-                                orgName: entityName.toUpperCase().trim(),
-                                auditId: auditId
-                              })
-                            });
-                          } catch (emailErr) {
-                            console.error("FORENSIC_DEBUG: Fetch error ->", emailErr);
-                          }
+                          // Force a synchronous completion checkpoint with the serverless API
+                          await fetch('/api/send-vault-link', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              email: email.toLowerCase().trim(),
+                              orgName: entityName.toUpperCase().trim(),
+                              auditId: auditId
+                            })
+                          });
 
                           router.push(`/results/${auditId}`);
                         } else {
