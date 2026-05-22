@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router"; // 🛡️ Import Next.js client router
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Lock, Unlock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
@@ -12,7 +13,7 @@ const LOCAL_QUESTIONS = [
   { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
   { id: "DG_03", text: "We have a dedicated budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
   { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Zero Trust", weight: 2 }] },
+  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Trust", weight: 2 }] },
   { id: "ED_01", text: "Our data infrastructure can handle real-time AI processing.", options: [{ label: "Legacy", weight: 10 }, { label: "Hybrid", weight: 6 }, { label: "Cloud-native", weight: 4 }, { label: "Edge", weight: 2 }] },
   { id: "ED_02", text: "We leverage proprietary datasets to train specialized models.", options: [{ label: "Public only", weight: 10 }, { label: "Minimal", weight: 6 }, { label: "Significant", weight: 4 }, { label: "Proprietary", weight: 2 }] },
   { id: "ED_03", text: "API and model versioning are strictly controlled.", options: [{ label: "Manual", weight: 10 }, { label: "Basic", weight: 6 }, { label: "Automated", weight: 4 }, { label: "MLOps", weight: 2 }] },
@@ -27,6 +28,7 @@ const sectors = [
 ];
 
 export default function ConsolidatedDiagnostic() {
+  const router = useRouter(); // Initialize router
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState("finance");
@@ -52,8 +54,8 @@ export default function ConsolidatedDiagnostic() {
         decay_pct: finalMetrics.decay,
         rework_tax: parseFloat(finalMetrics.rework),
         raw_responses: finalAnswers,
-        status: 'LEAD', // 🛠️ Correctly flag entry as a fresh lead generation target
-        is_released: false // Hard lock client layout until manual advisor intervention
+        status: 'LEAD',
+        is_released: false 
       }]).select('id').single();
 
       if (auditError) throw auditError;
@@ -178,8 +180,7 @@ export default function ConsolidatedDiagnostic() {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
                         
                         if (auditId) {
-                          // 🔥 PHASE 1 AUTOMATED HOOK SYSTEM INTERACTION
-                          // Silently fire the email routing transaction right before screen bounce
+                          // 🔥 Send Hook Notification
                           try {
                             await fetch('/api/send-vault-link', {
                               method: 'POST',
@@ -191,23 +192,11 @@ export default function ConsolidatedDiagnostic() {
                               })
                             });
                           } catch (emailErr) {
-                            console.error("FORENSIC_DEBUG: Background notification email failure ->", emailErr);
+                            console.error("FORENSIC_DEBUG: Hook email error ->", emailErr);
                           }
 
-                          // Supabase structural replication verification lookups
-                          let isPubliclyVisible = false;
-                          let checkAttempts = 0;
-                          while (!isPubliclyVisible && checkAttempts < 12) {
-                            const { data } = await supabase.from('audits').select('id').eq('id', auditId).maybeSingle();
-                            if (data) {
-                              isPubliclyVisible = true;
-                            } else {
-                              checkAttempts++;
-                              await new Promise(r => setTimeout(r, 600));
-                            }
-                          }
-                          
-                          window.location.replace(`/results/${auditId}`);
+                          // Use router client navigation to match warm parameters instantly
+                          router.push(`/results/${auditId}`);
                         } else {
                           setIsLoading(false);
                           alert("SIGNAL_SYNC_FAILURE");
