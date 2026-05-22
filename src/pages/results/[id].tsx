@@ -20,18 +20,21 @@ export default function ForensicVerdict() {
       setIsAdmin(true);
     }
 
-    // Extract raw path segment directly from window location to bypass Router state lag
-    const segments = window.location.pathname.split('/');
-    const directPathId = segments[segments.length - 1];
-    
-    // Fallbacks to determine factual query payload
-    const finalId = router.query.id || params.get('id') || directPathId;
+    // Direct string decomposition to catch real UUID components instantly
+    const pathSegments = typeof window !== "undefined" ? window.location.pathname.split('/') : [];
+    const executionId = pathSegments[pathSegments.length - 1];
 
-    if (finalId && finalId !== '[id]' && finalId !== 'results' && finalId !== 'undefined') {
-      fetchAuditData(finalId as string);
-    } else if (router.isReady) {
-      // If router is ready and still no ID found, break loading state to prevent infinite spinning
-      console.log("FORENSIC_DEBUG: No valid assessment ID target found in routing space.");
+    // Consolidated selector mapping
+    const rawTargetToken = router.query.id || params.get('id') || executionId;
+    const finalId = typeof rawTargetToken === 'string' ? rawTargetToken.trim() : '';
+
+    // Validate token is structured (Filters out placeholders like '[id]', 'undefined', 'results')
+    const isValidTokenPattern = /^[a-f0-9\-]{24,36}$/i.test(finalId);
+
+    if (isValidTokenPattern) {
+      fetchAuditData(finalId);
+    } else if (router.isReady && finalId !== '[id]' && finalId !== '') {
+      console.error("FORENSIC_DEBUG: Bad token pattern routing matrix block ->", finalId);
       setLoading(false);
     }
   }, [router.isReady, router.query.id]);
@@ -95,14 +98,6 @@ export default function ForensicVerdict() {
   const baseBlurRequired = reportData?.status !== 'COMPLETE' || reportData?.is_released !== true;
   const shouldBlurScreen = baseBlurRequired && !isAdmin;
 
-  const blurStyle = {
-    filter: shouldBlurScreen ? 'blur(15px)' : 'none',
-    WebkitFilter: shouldBlurScreen ? 'blur(15px)' : 'none',
-    transition: 'filter 0.5s ease-in-out',
-    userSelect: shouldBlurScreen ? 'none' : 'auto',
-    pointerEvents: shouldBlurScreen ? 'none' : 'auto',
-  } as React.CSSProperties;
-
   if (loading) {
     return (
       <div className="bg-[#020617] h-screen flex flex-col items-center justify-center gap-6 font-mono italic text-red-600 font-black uppercase">
@@ -112,7 +107,6 @@ export default function ForensicVerdict() {
     );
   }
 
-  // Fallback state if record simply does not exist in your Supabase tables
   if (!reportData) {
     return (
       <div className="bg-[#020617] h-screen flex flex-col items-center justify-center gap-4 font-mono text-slate-400 uppercase tracking-widest text-xs italic">
@@ -126,8 +120,8 @@ export default function ForensicVerdict() {
     <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black overflow-x-hidden relative">
       <div className="no-print"><Header /></div>
 
-      {/* DYNAMIC METRICS WRAPPER: VISUALLY BLURRED UNTIL RELEASE FLAGS ARE BROKEN */}
-      <div className={`container mx-auto max-w-4xl mt-24 relative print:mt-0 transition-all duration-700 ${shouldBlurScreen ? 'blur-3xl pointer-events-none select-none opacity-20' : 'blur-none opacity-100'}`}>
+      {/* 📊 CORE RESULTS PANEL (VISIBLE ONLY TO ADMIN ON PRESENTATIONS, HIDDEN UNDER ABSOLUTE MASK FOR GUESTS) */}
+      <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
         
         <div className="absolute -top-12 right-0 no-print">
           <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono font-black italic">
@@ -167,7 +161,7 @@ export default function ForensicVerdict() {
             <div className="space-y-3">
               <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">LOGIC_DECAY_COEFFICIENT</span>
               <p className="text-[15px] leading-tight font-black italic uppercase">
-                Detecting <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                Detecting <span className="text-red-600 text-xl font-black">
                   {(activeMetrics?.decay).toFixed(0)}%
                 </span> Structural Divergence.
               </p>
@@ -175,7 +169,7 @@ export default function ForensicVerdict() {
             <div className="space-y-3">
               <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">REWORK_LEVY</span>
               <p className="text-[15px] leading-tight font-black italic uppercase">
-                Liability: <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                Liability: <span className="text-red-600 text-xl font-black">
                   ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
                 </span>.
               </p>
@@ -183,7 +177,7 @@ export default function ForensicVerdict() {
             <div className="space-y-3">
               <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">PROJECTED_ANNUAL_EXPOSURE</span>
               <p className="text-[15px] leading-tight font-black italic uppercase">
-                Capital Liability Baseline: <span className="text-red-600 text-xl font-black" style={blurStyle}>
+                Capital Liability Baseline: <span className="text-red-600 text-xl font-black">
                   ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
                 </span>.
               </p>
@@ -194,13 +188,13 @@ export default function ForensicVerdict() {
         {/* 📊 ACCUMULATED DATA MATRICES */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-center">
           <div className="bg-slate-950 border border-slate-900 p-12 shadow-2xl italic">
-            <div className="text-6xl font-black text-white tracking-tighter italic break-all" style={blurStyle}>
+            <div className="text-6xl font-black text-white tracking-tighter italic break-all">
               ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-slate-500 mt-6 tracking-widest uppercase font-black italic">VALIDATED_REWORK_LIABILITY</div>
           </div>
           <div className="bg-red-950/20 border-2 border-red-600/50 p-12 border-l-8 border-red-600 shadow-2xl italic">
-            <div className="text-6xl font-black text-red-500 tracking-tighter italic break-all" style={blurStyle}>
+            <div className="text-6xl font-black text-red-500 tracking-tighter italic break-all">
               ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
             </div>
             <div className="text-[11px] font-mono text-red-400 mt-6 tracking-widest uppercase font-black italic">TOTAL_FORENSIC_EXPOSURE</div>
@@ -222,37 +216,39 @@ export default function ForensicVerdict() {
             </p>
           </div>
         </div>
-
-        {/* RECONSTRUCTION TRIGGER PANEL */}
-        <div 
-          className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic transition-all duration-300 hover:bg-slate-50 text-center" 
-          onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')}
-        >
-          <div className="max-w-4xl w-full flex flex-col items-center space-y-6">
-            <h4 className="text-black text-2xl md:text-4xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600 uppercase break-words w-full">
-              EXECUTE_RECONSTRUCTION_PLAN
-            </h4>
-            <div className="flex flex-col items-center pt-2">
-              <p className="text-slate-500 text-[10px] md:text-[11px] font-black italic tracking-[0.3em] uppercase mb-4">
-                [ CLICK_TO_INITIALIZE_RECOVERY_PROTOCOLS ]
-              </p>
-              <div className="h-1 w-12 bg-red-600/20 group-hover:w-24 group-hover:bg-red-600 transition-all duration-500" />
-            </div>
-          </div>
-        </div>
       </div>
 
-      {/* 🔒 FORENSIC LOCK WALL SHIELD: INTERCEPTS GUESTS PRE-RELEASE */}
+      {/* 🔒 PITCH-BLACK SECURITY GATEWAY CONTAINER */}
       {shouldBlurScreen && (
-        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#020617]/80 backdrop-blur-md min-h-screen">
-          <div className="text-center p-16 bg-slate-950 border-2 border-red-600/20 max-w-lg w-full shadow-[0_0_100px_rgba(0,0,0,0.9)] italic">
-            <Lock className="text-red-600 mx-auto mb-6 animate-pulse" size={48} />
-            <h2 className="text-3xl font-black uppercase tracking-tighter text-white leading-none">DIAGNOSTIC_LOCKED</h2>
-            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-4 leading-relaxed font-black">
-              The mathematical synthesis for this enterprise node has compiled successfully. 
-            </p>
-            <p className="text-[10px] font-mono text-red-600/70 uppercase tracking-widest mt-2 leading-relaxed font-black">
-              Vault release is currently held awaiting live administrative briefing clearance.
+        <div className="absolute inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#020617] min-h-screen">
+          <div className="text-center p-12 md:p-16 bg-slate-950 border-2 border-red-600 max-w-xl w-full shadow-[0_0_100px_rgba(0,0,0,0.95)] italic space-y-10">
+            
+            <div className="space-y-4">
+              <Lock className="text-red-600 mx-auto mb-2 animate-pulse" size={48} />
+              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white leading-none">DIAGNOSTIC_LOCKED</h2>
+              <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest leading-relaxed font-black max-w-sm mx-auto">
+                The mathematical synthesis for this enterprise node has compiled successfully. 
+              </p>
+              <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-sm mx-auto">
+                Vault release is currently held awaiting live administrative briefing clearance.
+              </p>
+            </div>
+
+            {/* 🗓️ HIGH-CONVERSION SCHEDULING UNIT: POSITIONED DIRECTLY INSIDE CENTER CONSOLE INTERFACE */}
+            <div 
+              className="bg-white p-8 border-l-[12px] border-red-600 shadow-2xl cursor-pointer transition-all duration-300 hover:bg-slate-100 text-center flex flex-col items-center justify-center space-y-3"
+              onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing', '_blank')}
+            >
+              <h4 className="text-black text-xl md:text-2xl font-black tracking-tighter leading-none uppercase">
+                EXECUTE_RECONSTRUCTION_PLAN
+              </h4>
+              <p className="text-slate-500 text-[9px] md:text-[10px] font-black tracking-[0.2em] uppercase leading-none">
+                [ CLICK_TO_CONFIRM_BRIEFING_RESERVATION ]
+              </p>
+            </div>
+
+            <p className="text-[9px] font-mono text-slate-600 uppercase tracking-widest font-black pt-2">
+              A permanent bookmark access key has been dispatched to your intel channel.
             </p>
           </div>
         </div>
