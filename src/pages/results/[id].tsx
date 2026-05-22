@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Lock, ShieldCheck, FileDown, Activity, Monitor } from "lucide-react";
+import { Lock, ShieldCheck, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import Footer from "@/components/layout/Footer";
 
@@ -13,13 +13,11 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<any>(null);
   
-  // 🔐 ACCESS MANAGEMENT STATES
   const [clientHasAccess, setClientHasAccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-    // Detect if administrative viewing override parameter is appended to the active window string
     if (typeof window !== "undefined") {
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("admin") === "true") {
@@ -53,9 +51,6 @@ export default function ResultsPage() {
 
     fetchInitialAuditState();
 
-    // 📡 LIVE TRANSACTIONAL OVERRIDE LISTENER:
-    // Establishes a real-time websocket thread monitoring the database row entry.
-    // Drops the blur layout mask the instant the admin toggle fires RELEASE_CLIENT_ACCESS.
     const auditSubscription = supabase
       .channel(`audit-realtime-${id}`)
       .on(
@@ -90,13 +85,11 @@ export default function ResultsPage() {
   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white relative font-sans overflow-x-hidden select-none">
+    <div className="min-h-screen bg-[#020617] text-white relative font-sans overflow-x-hidden">
       
-      {/* 🔮 THE VISUAL SHIELD LAYER CONTAINER */}
       <div className={`transition-all duration-700 ease-in-out ${!clientHasAccess && !isAdmin ? "blur-xl saturate-[0.15] pointer-events-none select-none" : "blur-none"}`}>
         <main className="max-w-7xl mx-auto py-32 px-8 space-y-16 text-left italic">
           
-          {/* BASE INFRASTRUCTURE HEADER LAYOUT */}
           <div className="border-b border-slate-900 pb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
             <div>
               <span className="text-[10px] font-mono text-red-600 uppercase font-black tracking-[0.3em]">FORENSIC_SIGNAL_VERDICT_LOG</span>
@@ -109,7 +102,6 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          {/* DYNAMIC REAL-TIME CORE METRIC GRID */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-slate-950 border border-slate-900 p-10 relative overflow-hidden group">
               <span className="text-[9px] font-mono text-slate-500 tracking-widest block uppercase font-black">AI_CAPACITY_DECAY</span>
@@ -130,7 +122,6 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          {/* CORE ASSESSMENT NARRATIVE SEGMENT PLACEHOLDER */}
           <div className="p-12 border-2 border-slate-900 bg-slate-950/20 text-left space-y-4">
             <h3 className="text-2xl font-black uppercase text-white tracking-tight">FORENSIC_SUMMARY_STATEMENT</h3>
             <p className="text-sm text-slate-400 font-medium font-mono leading-relaxed max-w-4xl normal-case">
@@ -141,11 +132,9 @@ export default function ResultsPage() {
         </main>
       </div>
 
-      {/* 🔒 THE OVERLAY GATED INTERCEPT INTERFACE */}
       {!clientHasAccess && !isAdmin && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#020617]/40 backdrop-blur-[2px]">
-          <div className="text-center p-12 md:p-16 bg-slate-950 border-2 border-red-600 max-w-xl w-full shadow-[0_0_100px_rgba(0,0,0,0.95)] italic space-y-10 animate-fade-in">
-            
+          <div className="text-center p-12 md:p-16 bg-slate-950 border-2 border-red-600 max-w-xl w-full shadow-[0_0_100px_rgba(0,0,0,0.95)] italic space-y-10">
             <div className="space-y-4">
               <Lock className="text-red-600 mx-auto mb-2 animate-pulse" size={48} />
               <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white leading-none">DIAGNOSTIC_LOCKED</h2>
@@ -157,12 +146,11 @@ export default function ResultsPage() {
               </p>
             </div>
 
-            {/* HIGH-CONVERSION CALENDLY TARGET PLACARD */}
             <div 
-              className="bg-white p-8 border-l-[12px] border-red-600 shadow-2xl cursor-pointer transition-all duration-300 hover:bg-slate-100 text-center flex flex-col items-center justify-center space-y-3 group"
+              className="bg-white p-8 border-l-[12px] border-red-600 shadow-2xl cursor-pointer transition-all duration-300 hover:bg-slate-100 text-center flex flex-col items-center justify-center space-y-3"
               onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing', '_blank')}
             >
-              <h4 className="text-black text-xl md:text-2xl font-black tracking-tighter leading-none uppercase transition-transform group-hover:scale-[1.01]">
+              <h4 className="text-black text-xl md:text-2xl font-black tracking-tighter leading-none uppercase">
                 EXECUTE_RECONSTRUCTION_PLAN
               </h4>
               <p className="text-slate-500 text-[9px] md:text-[10px] font-black tracking-[0.2em] uppercase leading-none">
@@ -177,9 +165,8 @@ export default function ResultsPage() {
         </div>
       )}
 
-      {/* 🛠️ ADMINISTRATIVE DECRYPTION CONTROL TOOL BANNER DISPLAY */}
       {isAdmin && (
-        <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print animate-bounce">
+        <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print">
           <ShieldCheck size={16} /> DECRYPTION_PROTOCOL_ACTIVE_VIA_OVERRIDE
         </div>
       )}
