@@ -1,220 +1,189 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
-import { useRouter } from 'next/router';
-import { ShieldCheck, Printer, Activity, Info } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { Lock, ShieldCheck, FileDown, Activity, Monitor } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import Footer from "@/components/layout/Footer";
 
-export default function ForensicVerdict() {
+export default function ResultsPage() {
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [reportData, setReportData] = useState<any>(null);
+  const { id } = router.query;
+
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [liveBleed, setLiveBleed] = useState(0);
+  const [audit, setAudit] = useState<any>(null);
+  
+  // 🔐 ACCESS MANAGEMENT STATES
+  const [clientHasAccess, setClientHasAccess] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('admin') === 'true') setIsAdmin(true);
-
-    if (router.isReady) {
-      const pathId = router.query.id || params.get('id') || window.location.pathname.split('/').pop();
-      
-      if (pathId && pathId !== '[id]' && pathId !== 'results' && pathId !== 'undefined') {
-        fetchAuditData(pathId as string);
-      } else {
-        console.log("FORENSIC_DEBUG: Synchronizing route parameters...");
+    setMounted(true);
+    // Detect if administrative viewing override parameter is appended to the active window string
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("admin") === "true") {
+        setIsAdmin(true);
       }
     }
-  }, [router.isReady, router.query.id]);
-
-  const fetchAuditData = async (pathId: string) => {
-    const { data: audit, error } = await supabase.from('audits').select('*').eq('id', pathId).maybeSingle();
-    if (error) console.error("FORENSIC_DEBUG: Fetch error ->", error);
-    if (audit) setReportData(audit);
-    setLoading(false);
-  };
-
-  const activeMetrics = useMemo(() => {
-    if (!reportData) return null;
-    
-    // Core user metric extraction
-    const dbDecay = parseInt(reportData.decay_pct) || 0;
-
-    // Direct calculation path to ensure data stability
-    const impliedSpend = 0.5 + (dbDecay * 0.05); 
-    const impliedFte = Math.round((impliedSpend * 1000000) / 200000) || 3;
-
-    const reworkTaxCalculated = (impliedFte * (dbDecay / 100) * 0.40) * (160000 * 1.3);
-    const inactionPenaltyCalculated = ((dbDecay > 60 ? 0.30 : 0.18) * (impliedSpend * 1000000)) * 1.15;
-    
-    const bleedPerSecond = inactionPenaltyCalculated / 31536000;
-    const createdAt = new Date(reportData.created_at || Date.now()).getTime();
-    
-    return {
-      decay: dbDecay,
-      spend: impliedSpend,
-      fte: impliedFte,
-      reworkTax: reworkTaxCalculated,
-      inactionPenalty: inactionPenaltyCalculated,
-      bleedPerSecond: bleedPerSecond,
-      historicalBleed: ((Date.now() - createdAt) / 1000) * bleedPerSecond
-    };
-  }, [reportData]);
+  }, []);
 
   useEffect(() => {
-    if (!activeMetrics?.bleedPerSecond) return;
-    let currentAccumulated = activeMetrics.historicalBleed;
-    const ticker = setInterval(() => {
-      currentAccumulated += (activeMetrics.bleedPerSecond / 10);
-      setLiveBleed(currentAccumulated);
-    }, 100);
-    return () => clearInterval(ticker);
-  }, [activeMetrics]);
+    if (!id || !mounted) return;
 
-  const blurStyle = {
-    filter: isAdmin ? 'none' : 'blur(15px)',
-    WebkitFilter: isAdmin ? 'none' : 'blur(15px)',
-    transition: 'filter 0.5s ease-in-out',
-    userSelect: isAdmin ? 'auto' : 'none',
-    pointerEvents: isAdmin ? 'auto' : 'none',
-  } as React.CSSProperties;
+    const fetchInitialAuditState = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("audits")
+          .select("*")
+          .eq("id", id)
+          .single();
 
-  if (loading || !reportData) return (
-    <div className="bg-[#020617] h-screen flex flex-col items-center justify-center gap-6 font-mono italic text-red-600 font-black uppercase">
-      <Activity className="animate-spin" size={48} />
-      AUTHENTICATING_VERDICT_VAULT...
-    </div>
-  );
+        if (error) throw error;
+        if (data) {
+          setAudit(data);
+          setClientHasAccess(!!data.is_released);
+        }
+      } catch (err) {
+        console.error("LEDGER_FETCH_ERROR:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchInitialAuditState();
+
+    // 📡 LIVE TRANSACTIONAL OVERRIDE LISTENER:
+    // Establishes a real-time websocket thread monitoring the database row entry.
+    // Drops the blur layout mask the instant the admin toggle fires RELEASE_CLIENT_ACCESS.
+    const auditSubscription = supabase
+      .channel(`audit-realtime-${id}`)
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` },
+        (payload) => {
+          if (payload.new) {
+            setAudit(payload.new);
+            setClientHasAccess(!!payload.new.is_released);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(auditSubscription);
+    };
+  }, [id, mounted]);
+
+  if (!mounted || loading) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-red-600 italic">
+        <Activity className="animate-spin mb-4" size={48} />
+        <p className="font-mono text-xs uppercase tracking-[0.4em] font-black">DECRYPTING_SECURE_VAULT_NODE...</p>
+      </div>
+    );
+  }
+
+  const dbDecay = audit?.decay_pct || 50;
+  const spend = parseFloat(audit?.ai_spend) || 1.2;
+  const laborTax = (dbDecay / 100) * 0.4 * (5 * 160000 * 1.3);
+  const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black overflow-x-hidden">
-      <div className="no-print"><Header /></div>
-
-      <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
-        
-        <div className="absolute -top-12 right-0 no-print">
-          <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono font-black italic">
-            <Printer size={14} /> GENERATE_FORENSIC_DOSSIER
-          </button>
-        </div>
-
-        {isAdmin && (
-          <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print">
-            <ShieldCheck size={16} /> DECRYPTION_PROTOCOL_ACTIVE
-          </div>
-        )}
-
-        {/* 🏢 EXECUTIVE VERDICT BOX */}
-        <div className="bg-white p-12 mb-20 border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none">
-          <div className="flex justify-between items-center mb-12 border-b border-slate-100 pb-10">
-            <div className="space-y-2 text-left">
-              <h2 className="text-black text-5xl font-black uppercase tracking-tighter underline decoration-red-600/20 italic leading-none">
-                EXPOSURE_VERDICT
-              </h2>
-              <span className="text-slate-400 font-mono text-[10px] block font-black uppercase tracking-widest italic mt-4">
-                ENTITY_REF // {reportData.org_name || "UNKNOWN_TARGET"}
-              </span>
+    <div className="min-h-screen bg-[#020617] text-white relative font-sans overflow-x-hidden select-none">
+      
+      {/* 🔮 THE VISUAL SHIELD LAYER CONTAINER */}
+      <div className={`transition-all duration-700 ease-in-out ${!clientHasAccess && !isAdmin ? "blur-xl saturate-[0.15] pointer-events-none select-none" : "blur-none"}`}>
+        <main className="max-w-7xl mx-auto py-32 px-8 space-y-16 text-left italic">
+          
+          {/* BASE INFRASTRUCTURE HEADER LAYOUT */}
+          <div className="border-b border-slate-900 pb-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+            <div>
+              <span className="text-[10px] font-mono text-red-600 uppercase font-black tracking-[0.3em]">FORENSIC_SIGNAL_VERDICT_LOG</span>
+              <h1 className="text-5xl md:text-8xl font-black uppercase italic tracking-tighter mt-2 text-white">
+                EXPOSURE <span className="text-slate-500">DOSSIER</span>
+              </h1>
             </div>
-
-            <div className="text-right flex flex-col items-end self-center shrink-0">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="w-1.5 h-1.5 bg-red-600 animate-pulse rounded-full shadow-[0_0_8px_rgba(220,38,38,0.8)]" />
-                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-[0.2em] font-black italic leading-none">
-                  CAPITAL_EROSION_RATE
-                </span>
-              </div>
-              {/* FIXED: Formatted purely to 2 decimal places for clean, standard enterprise presentation */}
-              <div className="text-4xl font-black text-red-600 tabular-nums tracking-tighter italic leading-none py-1">
-                ${liveBleed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </div>
-              <div className="text-[9px] font-mono text-slate-400 uppercase tracking-[0.3em] mt-1 font-black leading-none italic">
-                USD_ACCUMULATED_IN_REAL_TIME
-              </div>
+            <div className="font-mono text-xs text-slate-500 font-black uppercase tracking-widest bg-slate-950 p-4 border border-slate-900 break-all">
+              NODE_UUID // {id}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-slate-800 text-left font-black italic">
-            <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">LOGIC_DECAY_COEFFICIENT</span>
-              <p className="text-[15px] leading-tight font-black italic uppercase">
-                Detecting <span className="text-red-600 text-xl font-black" style={blurStyle}>
-                  {(activeMetrics?.decay).toFixed(0)}%
-                </span> Structural Divergence.
-              </p>
+          {/* DYNAMIC REAL-TIME CORE METRIC GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-slate-950 border border-slate-900 p-10 relative overflow-hidden group">
+              <span className="text-[9px] font-mono text-slate-500 tracking-widest block uppercase font-black">AI_CAPACITY_DECAY</span>
+              <div className="text-6xl font-black text-red-600 mt-6 md:text-7xl">{(dbDecay * 0.4).toFixed(0)}%</div>
+              <p className="text-xs text-slate-400 mt-4 font-black uppercase leading-relaxed font-mono">Structural efficiency lost through unmitigated technical drift parameters.</p>
             </div>
-            <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">REWORK_LEVY</span>
-              <p className="text-[15px] leading-tight font-black italic uppercase">
-                Liability: <span className="text-red-600 text-xl font-black" style={blurStyle}>
-                  ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
-                </span>.
-              </p>
-            </div>
-            <div className="space-y-3">
-              <span className="text-red-600 text-[11px] font-mono tracking-widest font-black uppercase">PROJECTED_ANNUAL_EXPOSURE</span>
-              <p className="text-[15px] leading-tight font-black italic uppercase">
-                Capital Liability Baseline: <span className="text-red-600 text-xl font-black" style={blurStyle}>
-                  ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
-                </span>.
-              </p>
-            </div>
-          </div>
-        </div>
 
-        {/* 📊 DATA BLOCKS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-center">
-          <div className="bg-slate-950 border border-slate-900 p-12 shadow-2xl italic">
-            <div className="text-6xl font-black text-white tracking-tighter italic break-all" style={blurStyle}>
-              ${activeMetrics?.reworkTax.toLocaleString(undefined, {maximumFractionDigits:0})}
+            <div className="bg-slate-950 border border-slate-900 p-10 relative overflow-hidden group">
+              <span className="text-[9px] font-mono text-slate-500 tracking-widest block uppercase font-black">ANNUAL_REWORK_TAX</span>
+              <div className="text-6xl font-black text-white mt-6 md:text-7xl">${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+              <p className="text-xs text-slate-400 mt-4 font-black uppercase leading-relaxed font-mono">Compounded operational budget overhead dedicated purely to recovery logic fixing.</p>
             </div>
-            <div className="text-[11px] font-mono text-slate-500 mt-6 tracking-widest uppercase font-black italic">VALIDATED_REWORK_LIABILITY</div>
-          </div>
-          <div className="bg-red-950/20 border-2 border-red-600/50 p-12 border-l-8 border-red-600 shadow-2xl italic">
-            <div className="text-6xl font-black text-red-500 tracking-tighter italic break-all" style={blurStyle}>
-              ${activeMetrics?.inactionPenalty.toLocaleString(undefined, {maximumFractionDigits:0})}
-            </div>
-            <div className="text-[11px] font-mono text-red-400 mt-6 tracking-widest uppercase font-black italic">TOTAL_FORENSIC_EXPOSURE</div>
-          </div>
-        </div>
 
-        {/* ⚙️ SYSTEM ASSUMPTIONS BLOCK */}
-        <div className="bg-slate-950/60 border border-slate-900 p-6 mb-20 text-left flex items-start gap-4 shadow-xl">
-          <Info className="text-red-500 shrink-0 mt-0.5" size={16} />
-          <div className="space-y-2">
-            <span className="text-white font-mono text-[10px] tracking-widest uppercase font-black block">
-              INITIAL_BENCHMARK_CONFIG // STANDARD_ESTIMATES
-            </span>
-            <p className="text-slate-400 font-sans text-[11px] leading-relaxed font-black italic uppercase tracking-tight">
-              FORENSIC EXPOSURE METRICS ARE GENERATED USING PROPORTIONAL INDUSTRY-STANDARD MODEL ASSUMPTIONS INDEXED DIRECTLY TO YOUR CAPTURED LOGIC DECAY COEFFICIENT OF {(activeMetrics?.decay || 0)}%.
-            </p>
-            <p className="text-slate-500 font-mono text-[9px] uppercase font-black tracking-wider border-t border-slate-900 pt-2">
-              [ NOTE: UNIQUE ORG SPEND AND EXACT STAFF METRICS WILL BE ADJUSTED LIVE DURING YOUR BRIEFING ]
+            <div className="bg-slate-950 border border-slate-900 p-10 relative overflow-hidden group">
+              <span className="text-[9px] font-mono text-slate-500 tracking-widest block uppercase font-black">FIDUCIARY_EXPOSURE_PENALTY</span>
+              <div className="text-6xl font-black text-white mt-6 md:text-7xl">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+              <p className="text-xs text-slate-400 mt-4 font-black uppercase leading-relaxed font-mono">Calculated regulatory liability and structural displacement value threshold.</p>
+            </div>
+          </div>
+
+          {/* CORE ASSESSMENT NARRATIVE SEGMENT PLACEHOLDER */}
+          <div className="p-12 border-2 border-slate-900 bg-slate-950/20 text-left space-y-4">
+            <h3 className="text-2xl font-black uppercase text-white tracking-tight">FORENSIC_SUMMARY_STATEMENT</h3>
+            <p className="text-sm text-slate-400 font-medium font-mono leading-relaxed max-w-4xl normal-case">
+              System analysis patterns indicate structural vulnerability clusters within your active engineering framework paths. High-frequency friction variables identified across internal validation dependencies require corrective blueprint mapping to insulate key operations layers from mounting operational decay taxes.
             </p>
           </div>
-        </div>
 
-        {/* 🛡️ THE PLACARD */}
-        {!isAdmin && (
-          <div 
-            className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print mb-20 italic transition-all duration-300 hover:bg-slate-50 text-center" 
-            onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')}
-          >
-            <div className="max-w-4xl w-full flex flex-col items-center space-y-6">
-              <h4 className="text-black text-2xl md:text-4xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600 uppercase break-words w-full">
+        </main>
+      </div>
+
+      {/* 🔒 THE OVERLAY GATED INTERCEPT INTERFACE */}
+      {!clientHasAccess && !isAdmin && (
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#020617]/40 backdrop-blur-[2px]">
+          <div className="text-center p-12 md:p-16 bg-slate-950 border-2 border-red-600 max-w-xl w-full shadow-[0_0_100px_rgba(0,0,0,0.95)] italic space-y-10 animate-fade-in">
+            
+            <div className="space-y-4">
+              <Lock className="text-red-600 mx-auto mb-2 animate-pulse" size={48} />
+              <h2 className="text-3xl md:text-4xl font-black uppercase tracking-tighter text-white leading-none">DIAGNOSTIC_LOCKED</h2>
+              <p className="text-[11px] font-mono text-slate-400 uppercase tracking-widest leading-relaxed font-black max-w-sm mx-auto">
+                Your forensic report compiled successfully.
+              </p>
+              <p className="text-[11px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-sm mx-auto">
+                Access is held awaiting your live administrative briefing session.
+              </p>
+            </div>
+
+            {/* HIGH-CONVERSION CALENDLY TARGET PLACARD */}
+            <div 
+              className="bg-white p-8 border-l-[12px] border-red-600 shadow-2xl cursor-pointer transition-all duration-300 hover:bg-slate-100 text-center flex flex-col items-center justify-center space-y-3 group"
+              onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing', '_blank')}
+            >
+              <h4 className="text-black text-xl md:text-2xl font-black tracking-tighter leading-none uppercase transition-transform group-hover:scale-[1.01]">
                 EXECUTE_RECONSTRUCTION_PLAN
               </h4>
-              
-              <div className="flex flex-col items-center pt-2">
-                <p className="text-slate-500 text-[10px] md:text-[11px] font-black italic tracking-[0.3em] uppercase mb-4">
-                  [ CLICK_TO_INITIALIZE_RECOVERY_PROTOCOLS ]
-                </p>
-                <div className="h-1 w-12 bg-red-600/20 group-hover:w-24 group-hover:bg-red-600 transition-all duration-500" />
-              </div>
+              <p className="text-slate-500 text-[9px] md:text-[10px] font-black tracking-[0.2em] uppercase leading-none">
+                [ CLICK_TO_CONFIRM_BRIEFING_RESERVATION ]
+              </p>
             </div>
+
+            <p className="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-black pt-2 normal-case">
+              Your access key has been emailed to the email address provided.
+            </p>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* 🛠️ ADMINISTRATIVE DECRYPTION CONTROL TOOL BANNER DISPLAY */}
+      {isAdmin && (
+        <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print animate-bounce">
+          <ShieldCheck size={16} /> DECRYPTION_PROTOCOL_ACTIVE_VIA_OVERRIDE
+        </div>
+      )}
+
       <div className="no-print mt-20"><Footer /></div>
     </div>
   );
