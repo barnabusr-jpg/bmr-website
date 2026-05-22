@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/router"; // 🛡️ Hook natively into the active project router
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Lock, Unlock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
@@ -27,6 +28,7 @@ const sectors = [
 ];
 
 export default function ConsolidatedDiagnostic() {
+  const router = useRouter(); // 🛠️ Activate your pre-imported router engine instantiation
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState("finance");
@@ -90,7 +92,6 @@ export default function ConsolidatedDiagnostic() {
         {step === 'triage' && (
           <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-16 text-center">
             <div className="space-y-4">
-              {/* NOMENCLATURE UPDATE: EFFICIENCY -> EXPOSURE */}
               <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter text-white leading-none">
                 FORENSIC <span className="text-red-600 italic">EXPOSURE</span> AUDIT
               </h1>
@@ -148,7 +149,6 @@ export default function ConsolidatedDiagnostic() {
                 onClick={() => setStep("audit")} 
                 className="w-full py-10 font-black uppercase bg-red-600 text-white disabled:opacity-20 text-3xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)] italic"
               >
-                {/* NOMENCLATURE UPDATE: Initialize Observation -> INITIALIZE_AUDIT */}
                 INITIALIZE_FORENSIC_AUDIT
               </button>
             </div>
@@ -178,18 +178,24 @@ export default function ConsolidatedDiagnostic() {
                       try {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
                         if (auditId) {
-                          let isPubliclyVisible = false;
-                          let checkAttempts = 0;
-                          while (!isPubliclyVisible && checkAttempts < 12) {
-                            const { data } = await supabase.from('audits').select('id').eq('id', auditId).maybeSingle();
-                            if (data) {
-                              isPubliclyVisible = true;
-                            } else {
-                              checkAttempts++;
-                              await new Promise(r => setTimeout(r, 600));
-                            }
+                          
+                          // 🎯 SECURE SYNCED EMAIL EMISSION PIPELINE
+                          try {
+                            await fetch('/api/send-vault-link', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                email: email.toLowerCase().trim(),
+                                orgName: entityName.toUpperCase().trim(),
+                                auditId: auditId
+                              })
+                            });
+                          } catch (emailErr) {
+                            console.error("FORENSIC_DEBUG: Silent boundary email bypass ->", emailErr);
                           }
-                          window.location.replace(`/results/${auditId}`);
+
+                          // ⚙️ WARM CLIENT-SIDE ROUTER ROUTING (Swapped out window.location.replace loop)
+                          router.push(`/results/${auditId}`);
                         } else {
                           setIsLoading(false);
                           alert("SIGNAL_SYNC_FAILURE");
