@@ -57,11 +57,29 @@ export default function ForensicVerdict() {
     if (!reportData) return null;
     
     const dbDecay = parseInt(reportData.decay_pct) || 0;
+    const clientSector = reportData.sector || 'finance'; // Safely capture triage selection
+    
+    // 🧮 INDUSTRY STANDARD SECTOR MULTIPLIER MATRIX
+    const sectorSpecifications: Record<string, { multiplier: number; friction: number }> = {
+      finance: { multiplier: 1.35, friction: 0.45 },
+      healthcare: { multiplier: 1.40, friction: 0.50 },
+      manufacturing: { multiplier: 1.25, friction: 0.35 },
+      retail: { multiplier: 1.15, friction: 0.30 }
+    };
+
+    // Fallback protection to finance defaults if parsing mismatch occurs
+    const activeConfig = sectorSpecifications[clientSector] || sectorSpecifications.finance;
+
+    // ─── RUN CORE FORENSIC ENGINE CALCULATIONS ───
     const impliedSpend = 0.5 + (dbDecay * 0.05); 
     const impliedFte = Math.round((impliedSpend * 1000000) / 200000) || 3;
 
-    const reworkTaxCalculated = (impliedFte * (dbDecay / 100) * 0.40) * (160000 * 1.3);
-    const inactionPenaltyCalculated = ((dbDecay > 60 ? 0.30 : 0.18) * (impliedSpend * 1000000)) * 1.15;
+    // Apply the specific sector's operational friction coefficient to the Rework Levy
+    const reworkTaxCalculated = (impliedFte * (dbDecay / 100) * activeConfig.friction) * (160000 * 1.3);
+    
+    // Apply the specific baseline liability multiplier to the Total Forensic Exposure
+    const decaySeverityTier = dbDecay > 60 ? 0.30 : 0.18;
+    const inactionPenaltyCalculated = (decaySeverityTier * (impliedSpend * 1000000)) * activeConfig.multiplier;
     
     const bleedPerSecond = inactionPenaltyCalculated / 31536000;
     const createdAt = new Date(reportData.created_at || Date.now()).getTime();
@@ -248,7 +266,7 @@ export default function ForensicVerdict() {
         </div>
       )}
 
-      {/* 🛡️ DECAL */}
+      {/* 🛡 *️ DECAL */}
       {isAdmin && (
         <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print">
           <ShieldCheck size={16} /> DECRYPTION_PROTOCOL_ACTIVE_VIA_OVERRIDE
