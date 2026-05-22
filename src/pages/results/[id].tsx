@@ -25,11 +25,9 @@ export default function ForensicVerdict() {
     const fallbackId = router.query.id || params.get('id') || directPathToken;
     const cleanId = typeof fallbackId === 'string' ? fallbackId.trim() : '';
 
-    // If we have a structured UUID signature, fetch immediately
     if (cleanId && cleanId !== '[id]' && cleanId !== 'undefined' && cleanId !== 'results') {
       fetchAuditData(cleanId);
     } else if (router.isReady) {
-      // Router stabilized but pathing tokens are completely missing
       setLoading(false);
     }
   }, [router.isReady, router.query.id]);
@@ -57,9 +55,8 @@ export default function ForensicVerdict() {
     if (!reportData) return null;
     
     const dbDecay = parseInt(reportData.decay_pct) || 0;
-    const clientSector = reportData.sector || 'finance'; // Safely capture triage selection
+    const clientSector = reportData.sector || 'finance';
     
-    // 🧮 INDUSTRY STANDARD SECTOR MULTIPLIER MATRIX
     const sectorSpecifications: Record<string, { multiplier: number; friction: number }> = {
       finance: { multiplier: 1.35, friction: 0.45 },
       healthcare: { multiplier: 1.40, friction: 0.50 },
@@ -67,17 +64,11 @@ export default function ForensicVerdict() {
       retail: { multiplier: 1.15, friction: 0.30 }
     };
 
-    // Fallback protection to finance defaults if parsing mismatch occurs
     const activeConfig = sectorSpecifications[clientSector] || sectorSpecifications.finance;
-
-    // ─── RUN CORE FORENSIC ENGINE CALCULATIONS ───
     const impliedSpend = 0.5 + (dbDecay * 0.05); 
     const impliedFte = Math.round((impliedSpend * 1000000) / 200000) || 3;
 
-    // Apply the specific sector's operational friction coefficient to the Rework Levy
     const reworkTaxCalculated = (impliedFte * (dbDecay / 100) * activeConfig.friction) * (160000 * 1.3);
-    
-    // Apply the specific baseline liability multiplier to the Total Forensic Exposure
     const decaySeverityTier = dbDecay > 60 ? 0.30 : 0.18;
     const inactionPenaltyCalculated = (decaySeverityTier * (impliedSpend * 1000000)) * activeConfig.multiplier;
     
@@ -138,7 +129,6 @@ export default function ForensicVerdict() {
     <div className="min-h-screen bg-[#020617] text-slate-200 py-16 px-6 font-sans italic selection:bg-red-600/30 uppercase font-black overflow-x-hidden relative">
       <div className="no-print"><Header /></div>
 
-      {/* 📊 BACKGROUND RESULTS PANEL (ALWAYS RENDERED) */}
       <div className="container mx-auto max-w-4xl mt-24 relative print:mt-0">
         <div className="absolute -top-12 right-0 no-print">
           <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-[10px] tracking-[0.3em] font-mono font-black italic">
@@ -146,7 +136,6 @@ export default function ForensicVerdict() {
           </button>
         </div>
 
-        {/* 🏢 CARD */}
         <div className="bg-white p-12 mb-20 border-l-[16px] border-red-600 shadow-2xl text-black print:border-l-[10px] print:shadow-none">
           <div className="flex justify-between items-center mb-12 border-b border-slate-100 pb-10">
             <div className="space-y-2 text-left">
@@ -202,7 +191,6 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* 📊 MATRICES */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10 text-center">
           <div className="bg-slate-950 border border-slate-900 p-12 shadow-2xl italic">
             <div className="text-6xl font-black text-white tracking-tighter italic break-all" style={blurStyle}>
@@ -218,7 +206,6 @@ export default function ForensicVerdict() {
           </div>
         </div>
 
-        {/* ⚙️ PANEL */}
         <div className="bg-slate-950/60 border border-slate-900 p-6 mb-20 text-left flex items-start gap-4 shadow-xl">
           <Info className="text-red-500 shrink-0 mt-0.5" size={16} />
           <div className="space-y-2">
@@ -232,7 +219,6 @@ export default function ForensicVerdict() {
         </div>
       </div>
 
-      {/* 🔒 TRANSLUCENT OVERLAY GATING BLOCK */}
       {shouldBlurScreen && (
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center p-6 bg-[#020617]/40 backdrop-blur-[2px]">
           <div className="text-center p-12 md:p-16 bg-slate-950 border-2 border-red-600 max-w-xl w-full shadow-[0_0_100px_rgba(0,0,0,0.95)] italic space-y-10">
@@ -266,7 +252,6 @@ export default function ForensicVerdict() {
         </div>
       )}
 
-      {/* 🛡 *️ DECAL */}
       {isAdmin && (
         <div className="fixed bottom-8 left-8 z-[9999] bg-blue-600 text-white px-6 py-3 rounded-full font-mono text-[10px] uppercase font-black flex items-center gap-3 shadow-2xl border border-blue-400 no-print">
           <ShieldCheck size={16} /> DECRYPTION_PROTOCOL_ACTIVE_VIA_OVERRIDE
