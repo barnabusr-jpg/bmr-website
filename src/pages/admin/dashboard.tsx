@@ -44,7 +44,7 @@ export default function AdminDashboard() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      alert("AUTHORIZATION_FAILED: UNRECOGNIZED_SIGNAL");
+      alert("AUTHORIZATION FAILED: UNRECOGNIZED SIGNAL");
       setLoading(false);
     } else {
       setIsAuthenticated(true);
@@ -68,14 +68,14 @@ export default function AdminDashboard() {
       <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
         <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 8px solid #dc2626;">
             <div>
-                <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase;">FORENSIC_VERDICT</h1>
-                <p style="color: #666; font-family: monospace; font-size: 16px; margin-top: 15px; font-weight: 900; letter-spacing: 3px;">SIGNAL_ID: ${audit.id.toUpperCase()}</p>
+                <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase;">FORENSIC VERDICT</h1>
+                <p style="color: #666; font-family: monospace; font-size: 16px; margin-top: 15px; font-weight: 900; letter-spacing: 3px;">SIGNAL ID: ${audit.id.toUpperCase()}</p>
             </div>
         </div>
         <div style="padding: 100px 100px 140px 100px; flex-grow: 1;">
             <div style="background: white; color: black; padding: 100px; border-left: 60px solid #dc2626; margin-bottom: 80px; width: 100%; box-sizing: border-box;">
               <h1 style="font-size: 92px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -5px; line-height: 0.85;">Executive Briefing</h1>
-              <p style="font-size: 20px; font-weight: 900; color: #666; letter-spacing: 5px; margin-top: 35px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT_NODE'}</p>
+              <p style="font-size: 20px; font-weight: 900; color: #666; letter-spacing: 5px; margin-top: 35px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT NODE'}</p>
               <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 100px; border-top: 3px solid #eee; padding-top: 60px;">
                 <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Capacity Loss</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">${(dbDecay * 0.4).toFixed(0)}% WASTED</p></div>
                 <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Annual Rework Tax</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">$${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
@@ -95,10 +95,10 @@ export default function AdminDashboard() {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, scaledHeight);
-      pdf.save(`BMR_DOSSIER_${audit.org_name || 'EXPORT'}.pdf`);
+      pdf.save(`BMR DOSSIER_${audit.org_name || 'EXPORT'}.pdf`);
       document.body.removeChild(printArea);
     } catch (err) {
-      console.error("PDF_ERROR", err);
+      console.error("PDF ERROR", err);
       if (document.body.contains(printArea)) document.body.removeChild(printArea);
     }
   };
@@ -160,7 +160,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // Safe UI switch: Only updates the is_released gate without launching pre-mature emails
   const toggleClientAccess = async (audit: any) => {
     setIsUpdating(true);
     const targetNewReleaseState = !audit.is_released;
@@ -173,7 +172,7 @@ export default function AdminDashboard() {
       if (error) throw error;
       await fetchLedger();
     } catch (err) {
-      console.error("ACCESS_TOGGLE_ERR ->", err);
+      console.error("ACCESS TOGGLE ERR ->", err);
     } finally {
       setIsUpdating(false);
     }
@@ -195,13 +194,13 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
         <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative italic">
           <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
-          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA-7_CLEARANCE_REQUIRED</p>
+          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA 7 CLEARANCE REQUIRED</p>
           <div className="space-y-4">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR_EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic uppercase" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE_PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic uppercase" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600" />
           </div>
           <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all italic leading-none">
-            {loading ? "VERIFYING..." : "INITIALIZE_COMMAND"}
+            {loading ? "VERIFYING..." : "INITIALIZE COMMAND"}
           </button>
         </form>
       </div>
@@ -212,10 +211,10 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden">
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 backdrop-blur-md border-b border-slate-900 z-50 px-10 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3 shrink-0"><Activity className="text-red-600 animate-pulse" size={20} /><span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">FORENSIC_COMMAND</span></div>
+          <div className="flex items-center gap-3 shrink-0"><Activity className="text-red-600 animate-pulse" size={20} /><span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">FORENSIC COMMAND</span></div>
           <div className="flex gap-1 bg-slate-900 p-1 shrink-0">
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
-            <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP_Framework</button>
+            <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
           </div>
         </div>
       </nav>
@@ -225,15 +224,19 @@ export default function AdminDashboard() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
-              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN_STAKEHOLDER_EMAILS</h2>
+              
+              {/* 🧼 Underscores removed from Assign Stakeholder Modal Header and Inputs */}
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
               <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
+              
               <div className="space-y-4 mt-10 text-left">
-                <input placeholder="EXECUTIVE_STAKEHOLDER_EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="MANAGERIAL_STAKEHOLDER_EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="TECHNICAL_STAKEHOLDER_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                
                 <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
-                  {isUpdating ? "GENERATING ACCESS KEYS..." : "GENERATE_ACCESS_KEYS_AND_EMAIL"}
+                  {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
                 </button>
               </div>
             </motion.div>
@@ -247,7 +250,6 @@ export default function AdminDashboard() {
             <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
               {data.map((audit) => {
                 const isTriangulated = audit.status === 'COMPLETE';
-                const isLead = audit.status === 'LEAD';
                 const clientHasAccess = !!audit.is_released;
 
                 return (
@@ -256,12 +258,12 @@ export default function AdminDashboard() {
                       <div className="col-span-6 flex items-center gap-6">
                         <div className="bg-slate-900 p-4 border border-slate-800 shrink-0 italic"><Building2 size={24} className={isTriangulated ? "text-green-500" : "text-red-600"} /></div>
                         <div>
-                          <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING_SIGNAL"}</div>
+                          <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
                           <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">{audit.lead_email}</div>
                         </div>
                       </div>
                       <div className="col-span-4 text-center font-black text-white italic text-xs tracking-[0.2em] font-mono">
-                        {isTriangulated ? 'RESULT_PUBLISHED' : isLead ? 'LEAD_CAPTURED' : 'TRIANGULATION_ACTIVE'}
+                        {audit.status === 'COMPLETE' ? 'RESULT PUBLISHED' : audit.status === 'LEAD' ? 'LEAD CAPTURED' : 'TRIANGULATION ACTIVE'}
                       </div>
                       <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
                     </div>
@@ -279,7 +281,7 @@ export default function AdminDashboard() {
                             return (
                               <div key={role.label} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
                                 <div className="flex justify-between items-start">
-                                  <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role.label}_NODE</span>
+                                  <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role.label} NODE</span>
                                   {isDone ? <CheckCircle className="text-green-500" size={16}/> : <Clock className="text-slate-800" size={16}/>}
                                 </div>
                                 <div className={`text-5xl font-black italic uppercase tracking-tighter italic ${isDone ? 'text-white' : 'text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
@@ -288,43 +290,45 @@ export default function AdminDashboard() {
                           })}
                         </div>
                         
-                        {/* 🛠️ OPERATIONS GATE CONTROLS FRAME */}
+                        {/* 🛠️ OPERATIONS GATE CONTROL MATRIX */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12 border-t border-slate-900 pt-8 italic text-left">
                           
-                          {/* COLUMN 1: STAGE-GATE CONTROL PANELS */}
                           <div className="space-y-4">
-                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE_GATEWAY_CONTROLS</span>
-                            {isLead ? (
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} 
-                                className="w-full md:w-auto bg-red-600 text-white px-8 py-5 font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"
-                              >
-                                <Mail size={16} /> LAUNCH_30Q_DEEP_DIVE
-                              </button>
-                            ) : (
-                              <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 space-y-3">
-                                  <button onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE_PARTIAL_ANSWERS</button>
-                                  <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-slate-900 border border-slate-800 text-slate-400 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:text-white transition-all flex items-center justify-center gap-2 italic font-black"><Send size={14} /> RE_LAUNCH_30Q_DEEP_DIVE</button>
-                                </div>
+                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
+                            <div className="flex flex-col sm:flex-row gap-4">
+                              
+                              {/* ⚡ COLUMN ORDER REALIGNMENT: Compile placed cleanly underneath the deep dive controller trigger */}
+                              <div className="flex-1 space-y-3">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} 
+                                  className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"
+                                >
+                                  <Mail size={14} /> Launch 360 Deep Dive
+                                </button>
                                 
                                 <button 
-                                  onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} 
-                                  className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}
+                                  onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} 
+                                  className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"
                                 >
-                                  <Shield size={18} />
-                                  <span>{clientHasAccess ? "HIDE_12Q_DOSSIER" : "UNBLUR_12Q_DOSSIER"}</span>
+                                  <Zap size={14} /> COMPILE PARTIAL ANSWERS
                                 </button>
                               </div>
-                            )}
+                              
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} 
+                                className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}
+                              >
+                                <Shield size={18} />
+                                <span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span>
+                              </button>
+                            </div>
                           </div>
                           
-                          {/* COLUMN 2: INTERNAL FORENSIC EXPORTS */}
                           <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
-                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL_ASSET_EXPORTS</span>
+                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
                             <div className="space-y-3">
-                              <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN_ONSCREEN_LEDGER</button>
-                              <button onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileDown size={16} /> DOWNLOAD_DOSSIER_COPY</button>
+                              <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
+                              <button onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileDown size={16} /> DOWNLOAD DOSSIER COPY</button>
                             </div>
                           </div>
                         </div>
@@ -338,7 +342,7 @@ export default function AdminDashboard() {
           ) : (
             <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
               <section className="italic">
-                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public_Service_Mapping</h3>
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public Service Mapping</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic font-black">
                   {BMR_IP_SUITE.services.map((s) => (
                     <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
@@ -352,7 +356,7 @@ export default function AdminDashboard() {
               </section>
 
               <section className="italic">
-                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary_Directives</h3>
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary Directives</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
                   {BMR_IP_SUITE.directives.map((d) => (
                     <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
