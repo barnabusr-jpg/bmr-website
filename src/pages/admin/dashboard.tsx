@@ -123,11 +123,12 @@ export default function AdminDashboard() {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
     try {
+      // Synchronized uppercase key configuration tracking mappings cleanly
       const res = await fetch('/api/dispatch-directives', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          groupId: selectedAudit.org_name, 
+          groupId: selectedAudit.id, 
           orgName: selectedAudit.org_name,
           parentAuditId: selectedAudit.id,
           emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
@@ -160,15 +161,37 @@ export default function AdminDashboard() {
     }
   };
 
-  const toggleClientAccess = async (auditId: string, currentReleaseStatus: boolean) => {
+  // ⚡ AUTOMATED COCKPIT RECONSTRUCTION: Toggle releases constraints AND triggers SendGrid live hooks simultaneously
+  const toggleClientAccess = async (audit: any) => {
     setIsUpdating(true);
+    const targetNewReleaseState = !audit.is_released;
     try {
       const { error } = await supabase
         .from('audits')
-        .update({ is_released: !currentReleaseStatus })
-        .eq('id', auditId);
+        .update({ 
+          is_released: targetNewReleaseState,
+          status: 'TRIANGULATING'
+        })
+        .eq('id', audit.id);
         
       if (error) throw error;
+
+      // If releasing access, forward structural payload directives downstream immediately to boot SendGrid
+      if (targetNewReleaseState) {
+        await fetch('/api/dispatch-directives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groupId: audit.id,
+            orgName: audit.org_name,
+            parentAuditId: audit.id,
+            emails: {
+              TECHNICAL: audit.lead_email?.trim() || "hello@bmradvisory.co"
+            }
+          })
+        });
+      }
+
       await fetchLedger();
     } catch (err) {
       console.error("ACCESS_TOGGLE_ERR ->", err);
@@ -301,7 +324,8 @@ export default function AdminDashboard() {
                                   <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-slate-900 border border-slate-800 text-slate-400 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:text-white transition-all flex items-center justify-center gap-2 italic font-black"><Send size={14} /> RE-DISPATCH</button>
                                 </div>
                                 
-                                <button onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit.id, clientHasAccess); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}>
+                                {/* 🎯 FIX: Quotation compilation alignment bug handled safely + native SendGrid webhook dispatch triggers cleanly */}
+                                <button onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}>
                                   <Shield size={18} />
                                   <span>{clientHasAccess ? "LOCK_CLIENT_ACCESS" : "RELEASE_CLIENT_ACCESS"}</span>
                                 </button>
