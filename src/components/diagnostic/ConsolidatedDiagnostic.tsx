@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/router"; // 🛡️ Hook natively into the active project router
+import { useRouter } from "next/router";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Lock, Unlock } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
@@ -28,7 +28,7 @@ const sectors = [
 ];
 
 export default function ConsolidatedDiagnostic() {
-  const router = useRouter(); // 🛠️ Activate your pre-imported router engine instantiation
+  const router = useRouter(); 
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState("triage");
   const [sector, setSector] = useState("finance");
@@ -179,7 +179,6 @@ export default function ConsolidatedDiagnostic() {
                         const auditId = await logToDatabase(finalMetrics, updatedAnswers);
                         if (auditId) {
                           
-                          // 🎯 SECURE SYNCED EMAIL EMISSION PIPELINE
                           try {
                             await fetch('/api/send-vault-link', {
                               method: 'POST',
@@ -194,7 +193,6 @@ export default function ConsolidatedDiagnostic() {
                             console.error("FORENSIC_DEBUG: Silent boundary email bypass ->", emailErr);
                           }
 
-                          // ⚙️ WARM CLIENT-SIDE ROUTER ROUTING (Swapped out window.location.replace loop)
                           router.push(`/results/${auditId}`);
                         } else {
                           setIsLoading(false);
