@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import { Lock, ShieldCheck, Activity } from "lucide-react";
+import { Lock, ShieldCheck, Activity, Info } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
 export default function ResultsPage() {
@@ -78,8 +78,8 @@ export default function ResultsPage() {
     );
   }
 
-  // 🧮 SYSTEM DATA PARSING & SECTOR-SPECIFIC RISK MULTIPLIERS
-  const dbDecay = audit?.decay_pct || 50;
+  // 🧮 SYSTEM DATA PARSING & VALIDATED MULTIPLIERS
+  const dbDecay = audit?.decay_pct || 24;
   const spend = parseFloat(audit?.ai_spend) || 1.2;
   const sectorType = audit?.sector || "finance";
   
@@ -105,6 +105,8 @@ export default function ResultsPage() {
   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
   const selectedExposureRate = dbDecay > 60 ? highExposureRate : baseExposureRate;
   const exposure = (selectedExposureRate * (spend * 1000000)) * 1.15;
+  
+  // 🎯 STRICT REQUIREMENT: Only the top-right Erosion metric utilizes 2 decimals 
   const totalErosion = laborTax + exposure;
 
   return (
@@ -130,7 +132,7 @@ export default function ResultsPage() {
           </button>
         </nav>
 
-        <main className="max-w-7xl mx-auto pt-16 px-12 pb-32 space-y-12">
+        <main className="max-w-7xl mx-auto pt-16 px-12 pb-8 space-y-12">
           
           {/* ACTION BUTTON UTILITY LINE */}
           <div className="flex justify-end text-[9px] font-mono text-slate-500 tracking-widest uppercase font-black italic gap-2 items-center cursor-pointer hover:text-white transition-colors no-print">
@@ -145,22 +147,28 @@ export default function ResultsPage() {
                   EXPOSURE_VERDICT
                 </h1>
                 <p className="text-[11px] font-mono text-slate-400 font-black uppercase tracking-widest mt-2">
-                  ENTITY_REF // {audit?.org_name || "BMR"}
+                  ENTITY_REF // {audit?.org_name || "DOUBLE"}
                 </p>
               </div>
               
               <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-100 text-left">
                 <div>
-                  <span className="text-[10px] font-mono text-red-600 block uppercase font-black tracking-wider">CAPACITY LOSS</span>
-                  <p className="text-xl font-black italic mt-1 leading-tight text-black">{(dbDecay * laborMultiplier).toFixed(0)}% WASTED</p>
+                  <span className="text-[9px] font-mono text-red-600 block uppercase font-black tracking-wider">LOGIC_DECAY_COEFFICIENT</span>
+                  <p className="text-sm font-black uppercase mt-2 leading-tight text-slate-900">
+                    DETECTING <span className="text-red-600 text-lg">{dbDecay}%</span> STRUCTURAL DIVERGENCE.
+                  </p>
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono text-red-600 block uppercase font-black tracking-wider">ANNUAL REWORK TAX</span>
-                  <p className="text-xl font-black mt-1 leading-tight font-mono text-black">${laborTax.toFixed(2)}</p>
+                  <span className="text-[9px] font-mono text-red-600 block uppercase font-black tracking-wider">REWORK_LEVY</span>
+                  <p className="text-sm font-black uppercase mt-2 leading-tight text-slate-900">
+                    LIABILITY: <span className="text-red-600 font-mono">${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  </p>
                 </div>
                 <div>
-                  <span className="text-[10px] font-mono text-red-600 block uppercase font-black tracking-wider">INACTION PENALTY</span>
-                  <p className="text-xl font-black mt-1 leading-tight font-mono text-black">${exposure.toFixed(2)}</p>
+                  <span className="text-[9px] font-mono text-red-600 block uppercase font-black tracking-wider">PROJECTED_ANNUAL_EXPOSURE</span>
+                  <p className="text-sm font-black uppercase mt-2 leading-tight text-slate-900">
+                    CAPITAL LIABILITY BASELINE: <span className="text-red-600 font-mono">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  </p>
                 </div>
               </div>
             </div>
@@ -181,7 +189,7 @@ export default function ResultsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-[#050b18] border border-slate-900 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
               <div className="text-6xl md:text-7xl font-black text-white tracking-tighter italic">
-                ${laborTax.toFixed(2)}
+                ${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
               <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] uppercase font-black block">
                 VALIDATED_REWORK_LIABILITY
@@ -189,7 +197,7 @@ export default function ResultsPage() {
             </div>
             <div className="bg-[#050b18] border border-red-900/30 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
               <div className="text-6xl md:text-7xl font-black text-red-600 tracking-tighter italic">
-                ${exposure.toFixed(2)}
+                ${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
               <span className="text-[10px] font-mono text-red-600 tracking-[0.25em] uppercase font-black block">
                 TOTAL_FORENSIC_EXPOSURE
@@ -197,7 +205,44 @@ export default function ResultsPage() {
             </div>
           </div>
 
-          {/* FOOTER CORE CAP-TIERS INFO READOUTS */}
+          {/* ⚙️ SYSTEM ASSUMPTIONS BLOCK */}
+          <div className="bg-slate-950/60 border border-slate-900 p-6 text-left flex items-start gap-4 shadow-xl">
+            <Info className="text-red-500 shrink-0 mt-0.5" size={16} />
+            <div className="space-y-2">
+              <span className="text-white font-mono text-[10px] tracking-widest uppercase font-black block">
+                INITIAL_BENCHMARK_CONFIG // STANDARD_ESTIMATES
+              </span>
+              <p className="text-slate-400 font-sans text-[11px] leading-relaxed font-black italic uppercase tracking-tight">
+                FORENSIC EXPOSURE METRICS ARE GENERATED USING PROPORTIONAL INDUSTRY-STANDARD MODEL ASSUMPTIONS INDEXED DIRECTLY TO YOUR CAPTURED LOGIC DECAY COEFFICIENT OF {dbDecay}%.
+              </p>
+              <p className="text-slate-500 font-mono text-[9px] uppercase font-black tracking-wider border-t border-slate-900 pt-2">
+                [ NOTE: UNIQUE ORG SPEND AND EXACT STAFF METRICS WILL BE ADJUSTED LIVE DURING YOUR BRIEFING ]
+              </p>
+            </div>
+          </div>
+
+          {/* 🛡️ HIGH-CONVERSION CALENDLY ACTION PLACARD */}
+          {!isAdmin && (
+            <div 
+              className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print italic transition-all duration-300 hover:bg-slate-50 text-center" 
+              onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')}
+            >
+              <div className="max-w-4xl w-full flex flex-col items-center space-y-6">
+                <h4 className="text-black text-2xl md:text-4xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600 uppercase break-words w-full">
+                  EXECUTE_RECONSTRUCTION_PLAN
+                </h4>
+                
+                <div className="flex flex-col items-center pt-2">
+                  <p className="text-slate-500 text-[10px] md:text-[11px] font-black italic tracking-[0.3em] uppercase mb-4">
+                    [ CLICK_TO_INITIALIZE_RECOVERY_PROTOCOLS ]
+                  </p>
+                  <div className="h-1 w-12 bg-red-600/20 group-hover:w-24 group-hover:bg-red-600 transition-all duration-500" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* FOOTER METADATA DESCRIPTOR ROWS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 border-t border-slate-900/80 text-[10px] font-mono text-slate-500 tracking-widest font-black uppercase italic no-print">
             <div>FORENSIC_VERTICLES</div>
             <div className="text-left md:text-center">DRIFT_DIAGNOSTICS</div>
@@ -221,12 +266,11 @@ export default function ResultsPage() {
               <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest leading-relaxed font-black max-w-xs mx-auto">
                 Your forensic report compiled successfully.
               </p>
-              <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-sm mx-auto">
+              <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-xs mx-auto">
                 Access is held awaiting your live administrative briefing session.
               </p>
             </div>
 
-            {/* HIGH-CONVERSION CALENDLY COMPACT COMPONENT */}
             <div 
               className="bg-white p-6 border-l-[8px] border-red-600 shadow-xl cursor-pointer transition-all duration-300 hover:bg-slate-100 text-center flex flex-col items-center justify-center space-y-2 group"
               onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing', '_blank')}
