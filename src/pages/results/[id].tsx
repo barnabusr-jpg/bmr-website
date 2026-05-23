@@ -15,6 +15,9 @@ export default function ResultsPage() {
   const [clientHasAccess, setClientHasAccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // 📈 LIVE REAL-TIME COUNTER STATE
+  const [liveErosion, setLiveErosion] = useState<number>(0);
+
   useEffect(() => {
     setMounted(true);
     if (typeof window !== "undefined") {
@@ -69,15 +72,6 @@ export default function ResultsPage() {
     };
   }, [id, mounted]);
 
-  if (!mounted || loading) {
-    return (
-      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-red-600 italic">
-        <Activity className="animate-spin mb-4" size={48} />
-        <p className="font-mono text-xs uppercase tracking-[0.4em] font-black">DECRYPTING_SECURE_VAULT_NODE...</p>
-      </div>
-    );
-  }
-
   // 🧮 SYSTEM DATA PARSING & VALIDATED MULTIPLIERS
   const dbDecay = audit?.decay_pct || 24;
   const spend = parseFloat(audit?.ai_spend) || 1.2;
@@ -105,9 +99,29 @@ export default function ResultsPage() {
   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
   const selectedExposureRate = dbDecay > 60 ? highExposureRate : baseExposureRate;
   const exposure = (selectedExposureRate * (spend * 1000000)) * 1.15;
-  
-  // 🎯 STRICT REQUIREMENT: Only the top-right Erosion metric utilizes 2 decimals 
-  const totalErosion = laborTax + exposure;
+  const baselineTotalErosion = laborTax + exposure;
+
+  // ⏳ REAL-TIME HIGH-FIDELITY MICRO-INCREMENT ENGINE
+  useEffect(() => {
+    if (loading || !baselineTotalErosion) return;
+
+    setLiveErosion(baselineTotalErosion);
+
+    const counterInterval = setInterval(() => {
+      setLiveErosion((prev) => prev + 0.03);
+    }, 120);
+
+    return () => clearInterval(counterInterval);
+  }, [loading, baselineTotalErosion]);
+
+  if (!mounted || loading) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-red-600 italic">
+        <Activity className="animate-spin mb-4" size={48} />
+        <p className="font-mono text-xs uppercase tracking-[0.4em] font-black">DECRYPTING_SECURE_VAULT_NODE...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#020617] text-white relative font-sans overflow-x-hidden select-none">
@@ -178,8 +192,10 @@ export default function ResultsPage() {
                 <span className="w-1.5 h-1.5 rounded-full bg-red-600 inline-block mr-2 animate-ping absolute -left-4 top-1" />
                 CAPITAL_EROSION_RATE
               </span>
-              <div className="text-5xl md:text-6xl font-black text-red-600 mt-2 tracking-tighter italic font-black leading-none">
-                ${totalErosion.toFixed(2)}
+              
+              {/* 🎯 THE TWO-DECIMAL LIVE COUNTER ELEMENT */}
+              <div className="text-5xl md:text-6xl font-black text-red-600 mt-2 tracking-tighter italic font-black leading-none tabular-nums">
+                ${liveErosion.toFixed(2)}
               </div>
               <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1">USD_ACCUMULATED_IN_REAL_TIME</span>
             </div>
@@ -266,7 +282,7 @@ export default function ResultsPage() {
               <p className="text-[10px] font-mono text-slate-400 uppercase tracking-widest leading-relaxed font-black max-w-xs mx-auto">
                 Your forensic report compiled successfully.
               </p>
-              <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-xs mx-auto">
+              <p className="text-[10px] font-mono text-red-500 uppercase tracking-widest leading-relaxed font-black max-w-sm mx-auto">
                 Access is held awaiting your live administrative briefing session.
               </p>
             </div>
