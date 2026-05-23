@@ -123,7 +123,6 @@ export default function AdminDashboard() {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
     try {
-      // Synchronized uppercase key configuration tracking mappings cleanly
       const res = await fetch('/api/dispatch-directives', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -161,37 +160,17 @@ export default function AdminDashboard() {
     }
   };
 
-  // ⚡ AUTOMATED COCKPIT RECONSTRUCTION: Toggle releases constraints AND triggers SendGrid live hooks simultaneously
+  // Safe UI switch: Only updates the is_released gate without launching pre-mature emails
   const toggleClientAccess = async (audit: any) => {
     setIsUpdating(true);
     const targetNewReleaseState = !audit.is_released;
     try {
       const { error } = await supabase
         .from('audits')
-        .update({ 
-          is_released: targetNewReleaseState,
-          status: 'TRIANGULATING'
-        })
+        .update({ is_released: targetNewReleaseState })
         .eq('id', audit.id);
         
       if (error) throw error;
-
-      // If releasing access, forward structural payload directives downstream immediately to boot SendGrid
-      if (targetNewReleaseState) {
-        await fetch('/api/dispatch-directives', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            groupId: audit.id,
-            orgName: audit.org_name,
-            parentAuditId: audit.id,
-            emails: {
-              TECHNICAL: audit.lead_email?.trim() || "hello@bmradvisory.co"
-            }
-          })
-        });
-      }
-
       await fetchLedger();
     } catch (err) {
       console.error("ACCESS_TOGGLE_ERR ->", err);
@@ -254,7 +233,7 @@ export default function AdminDashboard() {
                 <input placeholder="TECHNICAL_STAKEHOLDER_EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
                 <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
-                  {isUpdating ? "DISPATCHING..." : "CONFIRM_AND_DISPATCH_LINKS"}
+                  {isUpdating ? "GENERATING ACCESS KEYS..." : "GENERATE_ACCESS_KEYS_AND_EMAIL"}
                 </button>
               </div>
             </motion.div>
@@ -309,25 +288,32 @@ export default function AdminDashboard() {
                           })}
                         </div>
                         
-                        {/* 🛠️ REVAMPED COCKPIT COMMAND MATRIX */}
+                        {/* 🛠️ OPERATIONS GATE CONTROLS FRAME */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12 border-t border-slate-900 pt-8 italic text-left">
                           
-                          {/* COLUMN 1: CLIENT ACCESS ENGINE */}
+                          {/* COLUMN 1: STAGE-GATE CONTROL PANELS */}
                           <div className="space-y-4">
-                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">CLIENT_DATA_MANAGEMENT</span>
+                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE_GATEWAY_CONTROLS</span>
                             {isLead ? (
-                              <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full md:w-auto bg-red-600 text-white px-8 py-5 font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Mail size={16} /> DISPATCH_STAKEHOLDER_LINKS</button>
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} 
+                                className="w-full md:w-auto bg-red-600 text-white px-8 py-5 font-black uppercase text-xs tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"
+                              >
+                                <Mail size={16} /> LAUNCH_30Q_DEEP_DIVE
+                              </button>
                             ) : (
                               <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1 space-y-3">
                                   <button onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE_PARTIAL_ANSWERS</button>
-                                  <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-slate-900 border border-slate-800 text-slate-400 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:text-white transition-all flex items-center justify-center gap-2 italic font-black"><Send size={14} /> RE-DISPATCH</button>
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-slate-900 border border-slate-800 text-slate-400 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:text-white transition-all flex items-center justify-center gap-2 italic font-black"><Send size={14} /> RE_LAUNCH_30Q_DEEP_DIVE</button>
                                 </div>
                                 
-                                {/* 🎯 FIX: Quotation compilation alignment bug handled safely + native SendGrid webhook dispatch triggers cleanly */}
-                                <button onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} 
+                                  className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}
+                                >
                                   <Shield size={18} />
-                                  <span>{clientHasAccess ? "LOCK_CLIENT_ACCESS" : "RELEASE_CLIENT_ACCESS"}</span>
+                                  <span>{clientHasAccess ? "HIDE_12Q_DOSSIER" : "UNBLUR_12Q_DOSSIER"}</span>
                                 </button>
                               </div>
                             )}
