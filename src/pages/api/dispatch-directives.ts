@@ -2,7 +2,6 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 import { supabase } from '@/lib/supabaseClient';
 
-// Safeguard API Key resolution by backing up your custom token string configuration
 const SENDGRID_KEY = process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KEY;
 sgMail.setApiKey(SENDGRID_KEY as string);
 
@@ -31,24 +30,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const normalizedKey = rawRole.toLowerCase().trim();
       const standardizedRole = ROLE_MAP[normalizedKey] || rawRole.toUpperCase().substring(0, 3);
-      
-      // Generate a clean secure access code string
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // 🔍 STEP 1: Query to see if this user is already mapped to this specific audit row
+      // 🔍 FIX: Query solely on the single 'email' key to honor the active database constraint restriction
       const { data: existingOperator } = await supabase
         .from('operators')
         .select('id')
         .eq('email', targetEmail)
-        .eq('audit_id', parentAuditId)
         .maybeSingle();
 
       if (existingOperator) {
-        // Update the entry matching this specific audit assignment
+        // Safe Update block targeting the explicit unique ID row to prevent duplicate violations
         const { error: updateError } = await supabase
           .from('operators')
           .update({
             group_id: groupId,
+            audit_id: parentAuditId, // Updates it dynamically to your current tracking run!
             persona_type: standardizedRole,
             access_code: code,
             is_authorized: true,
@@ -58,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
         if (updateError) throw new Error(`Database Update Error: ${updateError.message}`);
       } else {
-        // Insert a clean new row if no matching entry exists
+        // Safe Clean Insert block when no existing records conflict
         const { error: insertError } = await supabase
           .from('operators')
           .insert({
@@ -76,7 +73,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
-      // 📧 STEP 2: Queue the delivery engine
       emailPromises.push(sgMail.send({
         to: targetEmail,
         from: FROM_EMAIL,
@@ -119,7 +115,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    // Update status ledger and deploy metrics execution concurrently
     await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', parentAuditId);
     await Promise.all(emailPromises);
     
