@@ -2,7 +2,9 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 import { supabase } from '@/lib/supabaseClient';
 
-sgMail.setApiKey(process.env.BMR_SENDGRID_KEY as string);
+// Safeguard API Key resolution by backing up your custom token string configuration
+const SENDGRID_KEY = process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KEY;
+sgMail.setApiKey(SENDGRID_KEY as string);
 
 const ROLE_MAP: Record<string, string> = {
   'managerial': 'MGR', 'technical': 'TEC', 'executive': 'EXE',
@@ -29,24 +31,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const normalizedKey = rawRole.toLowerCase().trim();
       const standardizedRole = ROLE_MAP[normalizedKey] || rawRole.toUpperCase().substring(0, 3);
+      
+      // Generate a clean secure access code string
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // 🛠️ FIX: Enforced isolated multi-column indexing parameters to stop historical records from being squashed
-      const { error: dbError } = await supabase.from('operators').upsert({
-        email: targetEmail,
-        group_id: groupId,      
-        audit_id: parentAuditId,  
-        persona_type: standardizedRole, 
-        access_code: code,
-        is_authorized: true,
-        status: 'pending'        
-      }, { onConflict: 'email,audit_id' });
+      // 🔍 STEP 1: Query to see if this user is already mapped to this specific audit row
+      const { data: existingOperator } = await supabase
+        .from('operators')
+        .select('id')
+        .eq('email', targetEmail)
+        .eq('audit_id', parentAuditId)
+        .maybeSingle();
 
-      if (dbError) throw new Error(`Database Error: ${dbError.message}`);
+      if (existingOperator) {
+        // Update the entry matching this specific audit assignment
+        const { error: updateError } = await supabase
+          .from('operators')
+          .update({
+            group_id: groupId,
+            persona_type: standardizedRole,
+            access_code: code,
+            is_authorized: true,
+            status: 'pending'
+          })
+          .eq('id', existingOperator.id);
+
+        if (updateError) throw new Error(`Database Update Error: ${updateError.message}`);
+      } else {
+        // Insert a clean new row if no matching entry exists
+        const { error: insertError } = await supabase
+          .from('operators')
+          .insert({
+            email: targetEmail,
+            group_id: groupId,      
+            audit_id: parentAuditId,  
+            persona_type: standardizedRole, 
+            access_code: code,
+            is_authorized: true,
+            status: 'pending'
+          });
+
+        if (insertError) throw new Error(`Database Insert Error: ${insertError.message}`);
+      }
 
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
-      // 📧 FIX: Injected table formatting matrices to block text-alignment collapses across email apps
+      // 📧 STEP 2: Queue the delivery engine
       emailPromises.push(sgMail.send({
         to: targetEmail,
         from: FROM_EMAIL,
@@ -89,6 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
+    // Update status ledger and deploy metrics execution concurrently
     await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', parentAuditId);
     await Promise.all(emailPromises);
     
