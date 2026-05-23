@@ -15,7 +15,7 @@ export default function ResultsPage() {
   const [clientHasAccess, setClientHasAccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // 📈 LIVE REAL-TIME COUNTER STATE
+  // 📈 LIVE MICRO-INCREMENT TICKER STATE
   const [liveErosion, setLiveErosion] = useState<number>(0);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ export default function ResultsPage() {
     };
   }, [id, mounted]);
 
-  // 🧮 SYSTEM DATA PARSING & VALIDATED MULTIPLIERS
+  // 🧮 SYSTEM DATA PARSING & DYNAMIC SECTOR INTEGRATION
   const dbDecay = audit?.decay_pct || 24;
   const spend = parseFloat(audit?.ai_spend) || 1.2;
   const sectorType = audit?.sector || "finance";
@@ -99,20 +99,30 @@ export default function ResultsPage() {
   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
   const selectedExposureRate = dbDecay > 60 ? highExposureRate : baseExposureRate;
   const exposure = (selectedExposureRate * (spend * 1000000)) * 1.15;
-  const baselineTotalErosion = laborTax + exposure;
 
-  // ⏳ REAL-TIME HIGH-FIDELITY MICRO-INCREMENT ENGINE
+  // ⏳ RESTORED TICKER DECK: Syncs with the micro-scale baseline from your original main build
   useEffect(() => {
-    if (loading || !baselineTotalErosion) return;
+    if (loading) return;
 
-    setLiveErosion(baselineTotalErosion);
+    // Set starting position based on target baseline coefficient ratios
+    const startingPoint = dbDecay * 20.1216; 
+    setLiveErosion(startingPoint);
 
     const counterInterval = setInterval(() => {
-      setLiveErosion((prev) => prev + 0.03);
-    }, 120);
+      setLiveErosion((prev) => prev + 0.01);
+    }, 150);
 
     return () => clearInterval(counterInterval);
-  }, [loading, baselineTotalErosion]);
+  }, [loading, dbDecay]);
+
+  // ✨ REFORMATTING HELPER UTILITY: Adds structural commas to whole numbers and locks 2 decimals
+  const formatLiveCurrency = (value: number) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "decimal",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
 
   if (!mounted || loading) {
     return (
@@ -193,9 +203,9 @@ export default function ResultsPage() {
                 CAPITAL_EROSION_RATE
               </span>
               
-              {/* 🎯 THE TWO-DECIMAL LIVE COUNTER ELEMENT */}
+              {/* 🎯 CORRECT SCALE ELEMENT: Real-time counter tracks the precise whole number with commas and 2 decimals */}
               <div className="text-5xl md:text-6xl font-black text-red-600 mt-2 tracking-tighter italic font-black leading-none tabular-nums">
-                ${liveErosion.toFixed(2)}
+                ${formatLiveCurrency(liveErosion)}
               </div>
               <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1">USD_ACCUMULATED_IN_REAL_TIME</span>
             </div>
