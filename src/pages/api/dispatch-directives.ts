@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmradvisory.co';
   const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co'; 
 
-  if (!parentAuditId) return res.status(400).json({ error: 'MISSING_PARENT_AUDIT_ID' });
+  if (!parentAuditId) return res.status(400).json({ error: 'MISSING PARENT AUDIT ID' });
 
   try {
     const roles = Object.entries(emails);
@@ -32,7 +32,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const standardizedRole = ROLE_MAP[normalizedKey] || rawRole.toUpperCase().substring(0, 3);
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // Check exclusively for the email address row to respect unique constraints
       const { data: existingOperator } = await supabase
         .from('operators')
         .select('id')
@@ -85,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     BMR Advisory // Systems Audit Engine
                   </h2>
                   <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase; text-align: left;">
-                    Company Name: ${orgName} | Role Assignment: ${standardizedRole}_NODE
+                    Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
                   </p>
                   
                   <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;"/>
@@ -129,9 +128,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).json({ status: 'SUCCESS' });
 
   } catch (error: any) {
-    console.error("DISPATCH_CRITICAL_FAILURE:", error.response?.body || error.message);
+    console.error("DISPATCH CRITICAL FAILURE:", error.response?.body || error.message);
     return res.status(500).json({ 
-        error: 'DISPATCH_FAILURE', 
+        error: 'DISPATCH FAILURE', 
         message: error.message 
     });
   }
