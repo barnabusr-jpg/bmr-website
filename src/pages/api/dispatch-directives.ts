@@ -6,71 +6,61 @@ const SENDGRID_KEY = process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KE
 sgMail.setApiKey(SENDGRID_KEY as string);
 
 const ROLE_MAP: Record<string, string> = {
-  'managerial': 'MGR', 'technical': 'TEC', 'executive': 'EXE',
-  'manager': 'MGR', 'tech': 'TEC', 'exec': 'EXE', 'man': 'MGR',
-  'executivenode': 'EXE', 'technicalnode': 'TEC', 'managerialnode': 'MGR'
+  'managerial': 'MANAGERIAL', 'technical': 'TECHNICAL', 'executive': 'EXECUTIVE',
+  'manager': 'MANAGERIAL', 'tech': 'TECHNICAL', 'exec': 'EXECUTIVE', 'man': 'MANAGERIAL',
+  'executivenode': 'EXECUTIVE', 'technicalnode': 'TECHNICAL', 'managerialnode': 'MANAGERIAL'
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method Not Allowed' });
+  }
   
   const { groupId, orgName, emails, parentAuditId } = req.body;
-  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmradvisory.co';
-  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co'; 
+  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmrsolutions.co';
+  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmrsolutions.co'; 
 
-  if (!parentAuditId) return res.status(400).json({ error: 'MISSING PARENT AUDIT ID' });
+  if (!parentAuditId) {
+    return res.status(400).json({ error: 'MISSING PARENT AUDIT ID' });
+  }
 
   try {
     const roles = Object.entries(emails);
     const emailPromises = [];
+    const intakeRecords = [];
 
+    // 1. Structural Normalization and Token Preparation Loop
     for (const [rawRole, email] of roles) {
       const targetEmail = (email as string).trim().toLowerCase();
       if (!targetEmail) continue;
 
       const normalizedKey = rawRole.toLowerCase().trim();
-      const standardizedRole = ROLE_MAP[normalizedKey] || rawRole.toUpperCase().substring(0, 3);
+      const standardizedRole = ROLE_MAP[normalizedKey];
+
+      // Enforce strict runtime route filtering to protect email copy alignment
+      if (!standardizedRole) {
+        return res.status(400).json({ 
+          error: 'INVALID NODE ASSIGNMENT', 
+          message: `The provided role identifier "${rawRole}" is incompatible with the system engine.` 
+        });
+      }
+
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      const { data: existingOperator } = await supabase
-        .from('operators')
-        .select('id')
-        .eq('email', targetEmail)
-        .maybeSingle();
-
-      if (existingOperator) {
-        const { error: updateError } = await supabase
-          .from('operators')
-          .update({
-            group_id: groupId,
-            audit_id: parentAuditId,
-            persona_type: standardizedRole,
-            access_code: code,
-            is_authorized: true,
-            status: 'pending'
-          })
-          .eq('id', existingOperator.id);
-
-        if (updateError) throw new Error(`Database Update Error: ${updateError.message}`);
-      } else {
-        const { error: insertError } = await supabase
-          .from('operators')
-          .insert({
-            email: targetEmail,
-            group_id: groupId,      
-            audit_id: parentAuditId,  
-            persona_type: standardizedRole, 
-            access_code: code,
-            is_authorized: true,
-            status: 'pending'
-          });
-
-        if (insertError) throw new Error(`Database Insert Error: ${insertError.message}`);
-      }
+      intakeRecords.push({
+        audit_id: parentAuditId,
+        group_id: groupId,
+        email: targetEmail,
+        persona_type: standardizedRole,
+        access_code: code,
+        is_authorized: true,
+        status: 'pending',
+        survey_completed: false
+      });
 
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
-      // ⚡ RE-ALIGNED COMMUNICATIONS CORE: 100% contraction free, 0 underscores, dynamic department variable resolution
+      // Queue up 10th-grade calibrated transactional communications safely
       emailPromises.push(sgMail.send({
         to: targetEmail,
         from: FROM_EMAIL,
@@ -123,16 +113,105 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', parentAuditId);
+    // 2. Perform Safe Database Upsert using the Composite Unique Constraint Keys
+    if (intakeRecords.length > 0) {
+      const { error: upsertError } = await supabase
+        .from('operators')
+        .upsert(intakeRecords, { onConflict: 'audit_id,email' });
+
+      if (upsertError) {
+        throw new Error(`Database Upsert Mapping Failure: ${upsertError.message}`);
+      }
+    }
+
+    // 3. Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
+    const { data: allOperators, error: queryError } = await supabase
+      .from('operators')
+      .select('survey_completed')
+      .eq('audit_id', parentAuditId);
+
+    if (queryError || !allOperators) {
+      throw new Error('Failed to aggregate active stakeholder paths.');
+    }
+
+    const totalPaths = allOperators.length;
+    const unsubmittedPaths = allOperators.filter((o) => !o.survey_completed).length;
+    const logicDecayCoefficient = totalPaths > 0 ? unsubmittedPaths / totalPaths : 0.00;
+
+    // 4. Retrieve Current Raw Diagnostic Metrics from the Primary Table Row
+    const { data: activeAudit, error: auditFetchError } = await supabase
+      .from('audits')
+      .select('hai_raw_score, avs_raw_score, igf_raw_score, status')
+      .eq('id', parentAuditId)
+      .single();
+
+    if (auditFetchError || !activeAudit) {
+      throw new Error('Failed to retrieve primary core diagnostic metrics.');
+    }
+
+    // 5. Multi-Pillar Core Vector Assessment Engine Execution
+    const adjustedHAI = Number(activeAudit.hai_raw_score || 0) * (1 - logicDecayCoefficient);
+    const adjustedAVS = Number(activeAudit.avs_raw_score || 0) * (1 - logicDecayCoefficient);
+    const adjustedIGF = Number(activeAudit.igf_raw_score || 0) * (1 - logicDecayCoefficient);
+
+    let recommendedService = 'GOVERNANCE ADVISORY';
+    let targetNode = 'EXECUTIVE';
+    let speciesIdentifier = 'Continuous Monitoring / Fiduciary Layer';
+
+    if (adjustedHAI < adjustedAVS && adjustedHAI < adjustedIGF && adjustedHAI < 55.00) {
+      recommendedService = 'Cognitive Fidelity Audit';
+      targetNode = 'MANAGERIAL';
+      speciesIdentifier = 'Privilege Decay / Agency Overreach';
+    } else if (adjustedAVS < adjustedHAI && adjustedAVS < adjustedIGF && adjustedAVS < 55.00) {
+      recommendedService = 'Value Leakage Diagnostic';
+      targetNode = 'TECHNICAL';
+      speciesIdentifier = 'Input Technical Decay';
+    } else if (adjustedIGF < 55.00) {
+      recommendedService = 'Decision-Chain Reconstruction';
+      targetNode = 'EXECUTIVE';
+      speciesIdentifier = 'Expectation Continuity Fracture';
+    }
+
+    // 6. Persist Compiled State Metrics directly back to the main Ledger Audit row
+    const { error: updateError } = await supabase
+      .from('audits')
+      .update({ 
+        status: 'TRIANGULATING',
+        decay_pct: Number((logicDecayCoefficient * 100).toFixed(0)),
+        compiled_at: new Date().toISOString()
+      })
+      .eq('id', parentAuditId);
+
+    if (updateError) {
+      throw new Error(`Primary Ledger State Compilation Error: ${updateError.message}`);
+    }
+
+    // Execute email transmission processes in parallel to database confirmation
     await Promise.all(emailPromises);
     
-    return res.status(200).json({ status: 'SUCCESS' });
+    // 7. Output Cockpit Control Matrix Payloads cleanly back to the Admin Panel Console
+    return res.status(200).json({ 
+      status: 'SUCCESS',
+      compilationMode: logicDecayCoefficient > 0 ? 'PARTIAL DECAY APPLIED' : 'COMPLETE TRIANGULATION',
+      metrics: {
+        logicDecayCoefficient: Number(logicDecayCoefficient.toFixed(2)),
+        adjustedHAI: Number(adjustedHAI.toFixed(2)),
+        adjustedAVS: Number(adjustedAVS.toFixed(2)),
+        adjustedIGF: Number(adjustedIGF.toFixed(2))
+      },
+      referralPayload: {
+        recommendedService,
+        targetNode,
+        speciesIdentifier,
+        confirmationLabel: 'Generate Access Keys'
+      }
+    });
 
   } catch (error: any) {
-    console.error("DISPATCH CRITICAL FAILURE:", error.response?.body || error.message);
+    console.error("DISPATCH CRITICAL BREAKDOWN EXCEPTION:", error.message);
     return res.status(500).json({ 
-        error: 'DISPATCH FAILURE', 
-        message: error.message 
+      error: 'DISPATCH METRIC FAILURE', 
+      message: error.message 
     });
   }
 }
