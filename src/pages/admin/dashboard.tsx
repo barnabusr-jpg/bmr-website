@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  FileDown, Monitor, X, Send, CheckCircle, Clock 
+  FileDown, Monitor, X, Send, CheckCircle, Clock, Search 
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { jsPDF } from "jspdf";
@@ -38,6 +38,13 @@ export default function AdminDashboard() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedAudit, setSelectedAudit] = useState<any>(null);
   const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
+
+  // 🛠️ HIGH VOLUME RECORD FILTERING STATES
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "LEAD" | "TRIANGULATING" | "COMPLETE">("ALL");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const ROWS_PER_PAGE = 10;
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -103,10 +110,32 @@ export default function AdminDashboard() {
     }
   };
 
+  // 🛠️ PERFORMANCE DRIVEN SERVER SIDE BOUNDARY SELECTION ENGINE
   const fetchLedger = useCallback(async () => {
-    const { data: audits } = await supabase.from('audits').select('*').order('created_at', { ascending: false });
-    setData(audits || []);
-  }, []);
+    let query = supabase
+      .from('audits')
+      .select('*', { count: 'exact' });
+
+    if (statusFilter !== "ALL") {
+      query = query.eq('status', statusFilter);
+    }
+
+    if (searchTerm.trim() !== "") {
+      query = query.or(`org_name.ilike.%${searchTerm}%,lead_email.ilike.%${searchTerm}%`);
+    }
+
+    const startRange = currentPage * ROWS_PER_PAGE;
+    const endRange = startRange + ROWS_PER_PAGE - 1;
+
+    const { data: audits, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(startRange, endRange);
+
+    if (!error && audits) {
+      setData(audits);
+      setTotalCount(count || 0);
+    }
+  }, [statusFilter, searchTerm, currentPage]);
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     const { data: nodes } = await supabase.from('operators').select('persona_type, status').eq('audit_id', auditId);
@@ -179,6 +208,10 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
+    setCurrentPage(0);
+  }, [searchTerm, statusFilter]);
+
+  useEffect(() => {
     if (isAuthenticated) {
       fetchLedger();
       const interval = setInterval(() => { 
@@ -246,97 +279,141 @@ export default function AdminDashboard() {
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
           {activeTab === 'ledger' ? (
-            <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-4">
-              {data.map((audit) => {
-                const isTriangulated = audit.status === 'COMPLETE';
-                const clientHasAccess = !!audit.is_released;
+            <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
+              
+              {/* 🛠️ INTEGRATED HIGH VOLUME CONTROLS TOOLBAR */}
+              <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between bg-slate-950 p-4 border border-slate-900">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <input 
+                    type="text" 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                    placeholder="PARSE BY COMPANY IDENTITY OR LEAD SIGNAL EMAIL..." 
+                    className="w-full bg-black border border-slate-800 pl-12 pr-4 py-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic placeholder:text-slate-600"
+                  />
+                </div>
+                
+                <div className="flex bg-black border border-slate-800 p-1 gap-1 overflow-x-auto shrink-0">
+                  {([
+                    { label: "All Assets", value: "ALL" },
+                    { label: "Initial Leads", value: "LEAD" },
+                    { label: "Triangulating", value: "TRIANGULATING" },
+                    { label: "Calculated Dossiers", value: "COMPLETE" }
+                  ] as const).map((tab) => (
+                    <button 
+                      key={tab.value} 
+                      onClick={() => setStatusFilter(tab.value)}
+                      className={`px-4 py-2 font-mono text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === tab.value ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-                return (
-                  <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
-                    <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
-                      <div className="col-span-6 flex items-center gap-6">
-                        <div className="bg-slate-900 p-4 border border-slate-800 shrink-0 italic"><Building2 size={24} className={isTriangulated ? "text-green-500" : "text-red-600"} /></div>
-                        <div>
-                          <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
-                          <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">{audit.lead_email}</div>
-                        </div>
-                      </div>
-                      <div className="col-span-4 text-center font-black text-white italic text-xs tracking-[0.2em] font-mono">
-                        {audit.status === 'COMPLETE' ? 'RESULT PUBLISHED' : audit.status === 'LEAD' ? 'LEAD CAPTURED' : 'TRIANGULATION ACTIVE'}
-                      </div>
-                      <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
-                    </div>
-                    
-                    {expandedRow === audit.id && (
-                      <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic">
-                        <div className="grid grid-cols-3 gap-6 pt-10 mb-10 italic">
-                          {[
-                            { label: 'EXECUTIVE', key: 'EXE' },
-                            { label: 'MANAGERIAL', key: 'MGR' },
-                            { label: 'TECHNICAL', key: 'TEC' }
-                          ].map((role) => {
-                            const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
-                            const isDone = node?.status?.toLowerCase() === 'completed';
-                            return (
-                              <div key={role.label} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
-                                <div className="flex justify-between items-start">
-                                  <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role.label} NODE</span>
-                                  {isDone ? <CheckCircle className="text-green-500" size={16}/> : <Clock className="text-slate-800" size={16}/>}
-                                </div>
-                                {/* 🛠️ FIX: Font drops down from text-5xl to text-3xl dynamically when long metrics render to prevent grid overflow clipping */}
-                                <div className={`font-black italic uppercase tracking-tighter italic ${isDone ? 'text-3xl text-white' : 'text-5xl text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
-                              </div>
-                            );
-                          })}
+              {/* 📊 DYNAMIC RECORDS OUTPUT ROW GENERATION */}
+              {data.length === 0 ? (
+                <div className="text-center p-20 border border-dashed border-slate-900 font-mono text-xs text-slate-600 uppercase tracking-widest">
+                  No corresponding forensic ledger entries located inside this category index.
+                </div>
+              ) : (
+                data.map((audit) => {
+                  const clientHasAccess = !!audit.is_released;
+
+                  return (
+                    <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
+                      <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
+                        <div className="col-span-6 flex items-center gap-6">
+                          <div className="bg-slate-900 p-4 border border-slate-800 shrink-0 italic">
+                            <Building2 size={24} className={audit.status === 'COMPLETE' ? "text-green-500" : "text-red-600"} />
+                          </div>
+                          <div>
+                            <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
+                            <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">{audit.lead_email}</div>
+                          </div>
                         </div>
                         
-                        {/* 🛠️ OPERATIONS GATE CONTROL MATRIX */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12 border-t border-slate-900 pt-8 italic text-left">
-                          
-                          <div className="space-y-4">
-                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
-                            <div className="flex flex-col sm:flex-row gap-4">
-                              
-                              <div className="flex-1 space-y-3">
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} 
-                                  className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"
-                                >
-                                  <Mail size={14} /> Launch 360 Deep Dive
-                                </button>
-                                
-                                <button 
-                                  onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} 
-                                  className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"
-                                >
-                                  <Zap size={14} /> COMPILE PARTIAL ANSWERS
-                                </button>
-                              </div>
-                              
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} 
-                                className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}
-                              >
-                                <Shield size={18} />
-                                <span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span>
-                              </button>
-                            </div>
+                        {/* 🚀 FIXED: Highly accurate, synchronized tracking tokens mapping */}
+                        <div className="col-span-4 text-center font-black text-white italic text-xs tracking-[0.2em] font-mono">
+                          {audit.status === 'COMPLETE' && 'RESULT PUBLISHED'}
+                          {audit.status === 'LEAD' && 'LEAD CAPTURED'}
+                          {audit.status === 'TRIANGULATING' && 'TRIANGULATION ACTIVE'}
+                        </div>
+                        
+                        <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
+                      </div>
+                      
+                      {expandedRow === audit.id && (
+                        <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic">
+                          <div className="grid grid-cols-3 gap-6 pt-10 mb-10 italic">
+                            {[
+                              { label: 'EXECUTIVE', key: 'EXE' },
+                              { label: 'MANAGERIAL', key: 'MGR' },
+                              { label: 'TECHNICAL', key: 'TEC' }
+                            ].map((role) => {
+                              const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
+                              const isDone = node?.status?.toLowerCase() === 'completed';
+                              return (
+                                <div key={role.label} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
+                                  <div className="flex justify-between items-start">
+                                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role.label} NODE</span>
+                                    {isDone ? <CheckCircle className="text-green-500" size={16}/> : <Clock className="text-slate-800" size={16}/>}
+                                  </div>
+                                  <div className={`font-black italic uppercase tracking-tighter italic ${isDone ? 'text-3xl text-white' : 'text-5xl text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
+                                </div>
+                              );
+                            })}
                           </div>
                           
-                          <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
-                            <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
-                            <div className="space-y-3">
-                              <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
-                              <button onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileDown size={16} /> DOWNLOAD DOSSIER COPY</button>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12 border-t border-slate-900 pt-8 italic text-left">
+                            <div className="space-y-4">
+                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
+                              <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1 space-y-3">
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
+                                  <button onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
+                                </div>
+                                <button onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
+                              </div>
+                            </div>
+                            <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
+                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
+                              <div className="space-y-3">
+                                <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
+                                <button onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileDown size={16} /> DOWNLOAD DOSSIER COPY</button>
+                              </div>
                             </div>
                           </div>
                         </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
 
-                      </div>
-                    )}
+              {/* 🛠️ SERVER-SIDE PAGINATION FOOTER */}
+              {totalCount > ROWS_PER_PAGE && (
+                <div className="flex items-center justify-between bg-slate-950 p-6 border border-slate-900 text-slate-500 font-mono text-[10px] uppercase tracking-wider mt-4">
+                  <div>SHOWING {currentPage * ROWS_PER_PAGE + 1} - {Math.min((currentPage + 1) * ROWS_PER_PAGE, totalCount)} OF {totalCount} ACTIVE RECORDS</div>
+                  <div className="flex gap-2">
+                    <button 
+                      disabled={currentPage === 0}
+                      onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                      className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black"
+                    >
+                      PREV
+                    </button>
+                    <button 
+                      disabled={(currentPage + 1) * ROWS_PER_PAGE >= totalCount}
+                      onClick={() => setCurrentPage(p => p + 1)}
+                      className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black"
+                    >
+                      NEXT
+                    </button>
                   </div>
-                );
-              })}
+                </div>
+              )}
             </motion.div>
           ) : (
             <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
