@@ -1,0 +1,19 @@
+name: Execute E2E Endpoint Validation
+
+on:
+  workflow_dispatch: # Allows manual execution from the Actions web dashboard
+
+jobs:
+  run-validation-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository Assets
+        uses: actions/checkout@v4
+
+      - name: Initialize Node.js Environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Execute System Validation Script
+        run: node src/pages/api/test-dispatch.js
