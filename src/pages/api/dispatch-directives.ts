@@ -70,6 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
+      // ⚡ RE-ALIGNED COMMUNICATIONS CORE: 100% contraction free, 0 underscores, dynamic department variable resolution
       emailPromises.push(sgMail.send({
         to: targetEmail,
         from: FROM_EMAIL,
@@ -81,7 +82,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-align: left;">
                   
                   <h2 style="color: #dc2626; font-family: monospace; font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 1px; text-align: left;">
-                    BMR Advisory // Systems Audit Engine
+                    BMR Solutions // Systems Audit Engine
                   </h2>
                   <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase; text-align: left;">
                     Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
@@ -90,11 +91,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;"/>
                   
                   <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0; text-align: left;">
-                    Your company leadership recently started a diagnostic project with BMR Advisory. This project is designed to evaluate your technology investments. The goal is to find operational waste, look for structural errors, and discover hidden costs inside your software systems.
+                    Your company leadership recently started a diagnostic project with BMR Solutions. This project is designed to evaluate your technology investments. The goal is to identify operational waste, uncover structural errors, and discover hidden costs within your AI systems.
                   </p>
                   
                   <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0; text-align: left;">
-                    To finish this system review, we require independent feedback from different departments. You are designated as the representative for the <strong>${standardizedRole} Node</strong>. When you select the verification link below, the system will open your specific questionnaire module.
+                    To complete this system review, we require independent feedback from different departments. You are designated as the representative for the <strong>${standardizedRole} Node</strong>. When you select the verification link below, the system will open your specific questionnaire module. Thank you for your attention and support in this matter.
                   </p>
                   
                   <p style="font-family: monospace; line-height: 1.6; font-size: 14px; color: #ffffff; margin: 0 0 30px 0; text-align: left;">
@@ -112,7 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   </table>
                   
                   <p style="font-family: monospace; font-size: 10px; color: #475569; margin: 40px 0 0 0; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: uppercase; text-align: left;">
-                    Confidential // BMR Advisory Stakeholder Secure Connection
+                    Confidential // BMR Solutions Stakeholder Secure Connection
                   </p>
                 </div>
               </td>
