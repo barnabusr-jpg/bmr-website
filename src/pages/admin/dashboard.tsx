@@ -225,7 +225,6 @@ export default function AdminDashboard() {
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
               
-              {/* 🧼 Underscores removed from Assign Stakeholder Modal Header and Inputs */}
               <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
               <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
               
@@ -284,7 +283,8 @@ export default function AdminDashboard() {
                                   <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role.label} NODE</span>
                                   {isDone ? <CheckCircle className="text-green-500" size={16}/> : <Clock className="text-slate-800" size={16}/>}
                                 </div>
-                                <div className={`text-5xl font-black italic uppercase tracking-tighter italic ${isDone ? 'text-white' : 'text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
+                                {/* 🛠️ FIX: Font drops down from text-5xl to text-3xl dynamically when long metrics render to prevent grid overflow clipping */}
+                                <div className={`font-black italic uppercase tracking-tighter italic ${isDone ? 'text-3xl text-white' : 'text-5xl text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
                               </div>
                             );
                           })}
@@ -297,7 +297,6 @@ export default function AdminDashboard() {
                             <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
                             <div className="flex flex-col sm:flex-row gap-4">
                               
-                              {/* ⚡ COLUMN ORDER REALIGNMENT: Compile placed cleanly underneath the deep dive controller trigger */}
                               <div className="flex-1 space-y-3">
                                 <button 
                                   onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} 
