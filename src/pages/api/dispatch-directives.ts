@@ -173,12 +173,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 6. Persist Compiled State Metrics directly back to the main Ledger Audit row
+    // Format timestamp directly to a clean database-native string format (YYYY-MM-DD HH:MM:SS)
+    const dbTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
     const { error: updateError } = await supabase
       .from('audits')
       .update({ 
         status: 'TRIANGULATING',
         decay_pct: Number((logicDecayCoefficient * 100).toFixed(0)),
-        compiled_at: new Date().toISOString()
+        compiled_at: dbTimestamp
       })
       .eq('id', parentAuditId);
 
