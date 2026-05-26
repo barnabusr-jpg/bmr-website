@@ -1,9 +1,16 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
 const SENDGRID_KEY = process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KEY;
 sgMail.setApiKey(SENDGRID_KEY as string);
+
+// 🚀 PRIVILEGED MASTER ADMIN ACCESS INITIALIZATION
+// This client bypasses RLS policies securely by using the hidden service role key
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 const ROLE_MAP: Record<string, string> = {
   'executive': 'EXECUTIVE', 'managerial': 'MANAGERIAL', 'technical': 'TECHNICAL',
@@ -37,7 +44,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const normalizedKey = rawRole.toLowerCase().trim();
       const standardizedRole = ROLE_MAP[normalizedKey];
 
-      // Enforce strict runtime route filtering to protect email copy alignment
       if (!standardizedRole) {
         return res.status(400).json({ 
           error: 'INVALID NODE ASSIGNMENT', 
@@ -60,7 +66,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
-      // Queue up 10th-grade calibrated transactional communications safely
       emailPromises.push(sgMail.send({
         to: targetEmail,
         from: FROM_EMAIL,
@@ -70,28 +75,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             <tr>
               <td align="center" style="padding: 40px 20px;">
                 <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-align: left;">
-                  
                   <h2 style="color: #dc2626; font-family: monospace; font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 1px; text-align: left;">
                     BMR Solutions // Systems Audit Engine
                   </h2>
                   <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase; text-align: left;">
                     Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
                   </p>
-                  
                   <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;"/>
-                  
                   <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0; text-align: left;">
                     Your company leadership recently started a diagnostic project with BMR Solutions. This project is designed to evaluate your technology investments. The goal is to identify operational waste, uncover structural errors, and discover hidden costs within your AI systems.
                   </p>
-                  
                   <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0; text-align: left;">
                     To complete this system review, we require independent feedback from different departments. You are designated as the representative for the <strong>${standardizedRole} Node</strong>. When you select the verification link below, the system will open your specific questionnaire module. Thank you for your attention and support in this matter.
                   </p>
-                  
                   <p style="font-family: monospace; line-height: 1.6; font-size: 14px; color: #ffffff; margin: 0 0 30px 0; text-align: left;">
                     Your personal access code is: <span style="color: #dc2626; font-weight: bold; font-family: monospace;">${code}</span>
                   </p>
-                  
                   <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 30px; margin-bottom: 40px; text-align: left;">
                     <tr>
                       <td align="left">
@@ -101,7 +100,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       </td>
                     </tr>
                   </table>
-                  
                   <p style="font-family: monospace; font-size: 10px; color: #475569; margin: 40px 0 0 0; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: uppercase; text-align: left;">
                     Confidential // BMR Solutions Stakeholder Secure Connection
                   </p>
@@ -113,9 +111,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    // 2. Perform Safe Database Upsert using the Composite Unique Constraint Keys
+    // 2. Perform Safe Database Upsert using the Privileged Admin Client
     if (intakeRecords.length > 0) {
-      const { error: upsertError } = await supabase
+      const { error: upsertError } = await supabaseAdmin
         .from('operators')
         .upsert(intakeRecords, { onConflict: 'audit_id,email' });
 
@@ -125,7 +123,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 3. Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
-    const { data: allOperators, error: queryError } = await supabase
+    const { data: allOperators, error: queryError } = await supabaseAdmin
       .from('operators')
       .select('survey_completed')
       .eq('audit_id', parentAuditId);
@@ -138,8 +136,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const unsubmittedPaths = allOperators.filter((o) => !o.survey_completed).length;
     const logicDecayCoefficient = totalPaths > 0 ? unsubmittedPaths / totalPaths : 0.00;
 
-    // 4. Retrieve Current Raw Diagnostic Metrics from the Primary Table Row
-    const { data: activeAudit, error: auditFetchError } = await supabase
+    // 4. Retrieve Current Raw Diagnostic Metrics via Admin Bypass
+    const { data: activeAudit, error: auditFetchError } = await supabaseAdmin
       .from('audits')
       .select('hai_raw_score, avs_raw_score, igf_raw_score, status, compiled_at')
       .eq('id', parentAuditId)
@@ -173,15 +171,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // 6. Persist Compiled State Metrics directly back to the main Ledger Audit row
-    // Format timestamp directly to a clean database-native string format (YYYY-MM-DD HH:MM:SS)
-    const dbTimestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const cleanSystemTimestamp = new Date().toISOString();
+    const calculatedDecayPercent = Number((logicDecayCoefficient * 100).toFixed(0));
 
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('audits')
       .update({ 
         status: 'TRIANGULATING',
-        decay_pct: Number((logicDecayCoefficient * 100).toFixed(0)),
-        compiled_at: dbTimestamp
+        decay_pct: calculatedDecayPercent,
+        compiled_at: cleanSystemTimestamp
       })
       .eq('id', parentAuditId);
 
@@ -189,10 +187,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(`Primary Ledger State Compilation Error: ${updateError.message}`);
     }
 
-    // Execute email transmission processes in parallel to database confirmation
     await Promise.all(emailPromises);
     
-    // 7. Output Cockpit Control Matrix Payloads cleanly back to the Admin Panel Console
     return res.status(200).json({ 
       status: 'SUCCESS',
       compilationMode: logicDecayCoefficient > 0 ? 'PARTIAL DECAY APPLIED' : 'COMPLETE TRIANGULATION',
