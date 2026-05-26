@@ -6,8 +6,8 @@ const SENDGRID_KEY = process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KE
 sgMail.setApiKey(SENDGRID_KEY as string);
 
 const ROLE_MAP: Record<string, string> = {
-  'managerial': 'MANAGERIAL', 'technical': 'TECHNICAL', 'executive': 'EXECUTIVE',
-  'manager': 'MANAGERIAL', 'tech': 'TECHNICAL', 'exec': 'EXECUTIVE', 'man': 'MANAGERIAL',
+  'executive': 'EXECUTIVE', 'managerial': 'MANAGERIAL', 'technical': 'TECHNICAL',
+  'exec': 'EXECUTIVE', 'manager': 'MANAGERIAL', 'tech': 'TECHNICAL', 'man': 'MANAGERIAL',
   'executivenode': 'EXECUTIVE', 'technicalnode': 'TECHNICAL', 'managerialnode': 'MANAGERIAL'
 };
 
@@ -141,7 +141,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 4. Retrieve Current Raw Diagnostic Metrics from the Primary Table Row
     const { data: activeAudit, error: auditFetchError } = await supabase
       .from('audits')
-      .select('hai_raw_score, avs_raw_score, igf_raw_score, status')
+      .select('hai_raw_score, avs_raw_score, igf_raw_score, status, compiled_at')
       .eq('id', parentAuditId)
       .single();
 
