@@ -104,7 +104,6 @@ export default function ResultsPage() {
   useEffect(() => {
     if (loading) return;
 
-    // Set starting position based on target baseline coefficient ratios
     const startingPoint = dbDecay * 20.1216; 
     setLiveErosion(startingPoint);
 
@@ -115,7 +114,6 @@ export default function ResultsPage() {
     return () => clearInterval(counterInterval);
   }, [loading, dbDecay]);
 
-  // ✨ REFORMATTING HELPER UTILITY: Adds structural commas to whole numbers and locks 2 decimals
   const formatLiveCurrency = (value: number) => {
     return new Intl.NumberFormat("en-US", {
       style: "decimal",
@@ -134,7 +132,7 @@ export default function ResultsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white relative font-sans overflow-x-hidden select-none">
+    <div className="min-h-screen bg-[#020617] text-white relative font-sans overflow-x-hidden select-none italic font-black text-left uppercase">
       
       {/* 🔮 THE AUTHENTIC PLATFORM LAYOUT CONTAINER */}
       <div className={`transition-all duration-700 ease-in-out ${!clientHasAccess && !isAdmin ? "blur-xl saturate-[0.15] pointer-events-none select-none" : "blur-none"}`}>
@@ -164,57 +162,64 @@ export default function ResultsPage() {
           </div>
 
           {/* 2. THE MAIN EXPOSURE VERDICT PLACARD CARD */}
-          <div className="bg-white text-black p-12 border-l-[16px] border-red-600 grid grid-cols-1 lg:grid-cols-12 gap-8 shadow-2xl relative">
-            <div className="lg:col-span-7 flex flex-col justify-between space-y-12">
+          {/* 🚀 FIXED: Enforced a 12-column template layout grid with native middle divider split */}
+          <div className="bg-white text-black p-10 md:p-14 border-l-[16px] border-red-600 grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative">
+            
+            {/* LEFT FRAME SECTION: TEXT BLOCK & SUB-METRIC ROWS */}
+            <div className="md:col-span-7 flex flex-col justify-between space-y-10">
               <div>
                 <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none text-black">
                   EXPOSURE_VERDICT
                 </h1>
                 <p className="text-[11px] font-mono text-slate-400 font-black uppercase tracking-widest mt-2">
-                  ENTITY_REF // {audit?.org_name || "DOUBLE"}
+                  ENTITY_REF // {audit?.org_name || "CLIENT SYSTEM"}
                 </p>
               </div>
               
-              <div className="grid grid-cols-3 gap-6 pt-8 border-t border-slate-100 text-left">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-slate-100 text-left">
                 <div>
                   <span className="text-[9px] font-mono text-red-600 block uppercase font-black tracking-wider">LOGIC_DECAY_COEFFICIENT</span>
-                  <p className="text-sm font-black uppercase mt-2 leading-tight text-slate-900">
-                    DETECTING <span className="text-red-600 text-lg">{dbDecay}%</span> STRUCTURAL DIVERGENCE.
+                  <p className="text-xs font-black uppercase mt-2 leading-tight text-slate-900">
+                    DETECTING <span className="text-red-600 text-base">{dbDecay}%</span> STRUCTURAL DIVERGENCE.
                   </p>
                 </div>
                 <div>
                   <span className="text-[9px] font-mono text-red-600 block uppercase font-black tracking-wider">REWORK_LEVY</span>
-                  <p className="text-sm font-black uppercase mt-2 leading-tight text-slate-900">
-                    LIABILITY: <span className="text-red-600 font-mono">${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  <p className="text-xs font-black uppercase mt-2 leading-tight text-slate-900">
+                    LIABILITY: <span className="text-red-600 font-mono text-sm">${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                   </p>
                 </div>
                 <div>
                   <span className="text-[9px] font-mono text-red-600 block uppercase font-black tracking-wider">PROJECTED_ANNUAL_EXPOSURE</span>
-                  <p className="text-sm font-black uppercase mt-2 leading-tight text-slate-900">
-                    CAPITAL LIABILITY BASELINE: <span className="text-red-600 font-mono">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  <p className="text-xs font-black uppercase mt-2 leading-tight text-slate-900">
+                    CAPITAL EXPENSE BASELINE: <span className="text-red-600 font-mono text-sm">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                   </p>
                 </div>
               </div>
             </div>
             
-            <div className="lg:col-span-5 flex flex-col justify-center items-center lg:items-end text-center lg:text-right border-t lg:border-t-0 lg:border-l border-slate-100 pt-8 lg:pt-0 lg:pl-8">
+            {/* CENTRAL GRID DIVIDER MATRIX */}
+            <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-200/80" />
+            
+            {/* RIGHT FRAME SECTION: FLOATING COUNTER DATA */}
+            <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-6 md:pt-0">
               <span className="text-[10px] font-mono text-slate-400 font-black tracking-widest uppercase block relative">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-600 inline-block mr-2 animate-ping absolute -left-4 top-1" />
+                <span className="w-1.5 h-1.5 rounded-full bg-red-600 inline-block mr-2 animate-ping absolute -left-4 top-1 hidden md:block" />
                 CAPITAL_EROSION_RATE
               </span>
               
-              {/* 🎯 CORRECT SCALE ELEMENT: Real-time counter tracks the precise whole number with commas and 2 decimals */}
-              <div className="text-5xl md:text-6xl font-black text-red-600 mt-2 tracking-tighter italic font-black leading-none tabular-nums">
+              <div className="text-4xl md:text-5xl font-mono font-black text-red-600 mt-2 tracking-tight italic leading-none tabular-nums">
                 ${formatLiveCurrency(liveErosion)}
               </div>
               <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1">USD_ACCUMULATED_IN_REAL_TIME</span>
             </div>
+
           </div>
 
           {/* 3. MASONRY METRIC BOTTOM GRID BLOCKS */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="bg-[#050b18] border border-slate-900 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-              <div className="text-6xl md:text-7xl font-black text-white tracking-tighter italic">
+              <div className="text-6xl md:text-7xl font-black text-white tracking-tighter italic font-mono">
                 ${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
               <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] uppercase font-black block">
@@ -222,7 +227,7 @@ export default function ResultsPage() {
               </span>
             </div>
             <div className="bg-[#050b18] border border-red-900/30 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-              <div className="text-6xl md:text-7xl font-black text-red-600 tracking-tighter italic">
+              <div className="text-6xl md:text-7xl font-black text-red-600 tracking-tighter italic font-mono">
                 ${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
               <span className="text-[10px] font-mono text-red-600 tracking-[0.25em] uppercase font-black block">
