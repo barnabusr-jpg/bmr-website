@@ -9,7 +9,7 @@ jobs:
     steps:
       - name: Trigger Live Production API Endpoint
         run: |
-          curl -X POST https://lab.bmradvisory.co/api/dispatch-directives \
+          curl -X POST https://www.bmradvisory.co/api/dispatch-directives \
             -H "Content-Type: application/json" \
             -d '{
               "groupId": "8e75a768-027e-4aa0-ab1b-6c574ccbd38c",
