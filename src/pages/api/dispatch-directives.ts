@@ -19,15 +19,20 @@ const ROLE_MAP: Record<string, string> = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // 1. Force a raw runtime print line to completely break through Vercel's log view caching
+  console.log("🚀 ENGINE ACTIVATED - INCOMING BODY:", JSON.stringify(req.body));
+
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
   
   const { groupId, orgName, emails, parentAuditId } = req.body;
-  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmrsolutions.co';
-  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmrsolutions.co'; 
+  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmradvisory.co';
+  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co'; 
 
+  // 2. Explicit error print line if the payload properties look empty
   if (!parentAuditId) {
+    console.error("❌ ENGINE CRASH: Payload is missing parentAuditId. Received:", req.body);
     return res.status(400).json({ error: 'MISSING PARENT AUDIT ID' });
   }
 
@@ -36,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const emailPromises = [];
     const intakeRecords = [];
 
-    // 1. Structural Normalization and Token Preparation Loop
+    // 3. Structural Normalization and Token Preparation Loop
     for (const [rawRole, email] of roles) {
       const targetEmail = (email as string).trim().toLowerCase();
       if (!targetEmail) continue;
@@ -111,7 +116,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    // 2. Perform Safe Database Upsert using the Privileged Admin Client
+    // 4. Perform Safe Database Upsert using the Privileged Admin Client
     if (intakeRecords.length > 0) {
       const { error: upsertError } = await supabaseAdmin
         .from('operators')
@@ -122,7 +127,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // 3. Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
+    // 5. Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
     const { data: allOperators, error: queryError } = await supabaseAdmin
       .from('operators')
       .select('survey_completed')
@@ -136,7 +141,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const unsubmittedPaths = allOperators.filter((o) => !o.survey_completed).length;
     const logicDecayCoefficient = totalPaths > 0 ? unsubmittedPaths / totalPaths : 0.00;
 
-    // 4. Retrieve Current Raw Diagnostic Metrics via Admin Bypass
+    // 6. Retrieve Current Raw Diagnostic Metrics via Admin Bypass
     const { data: activeAudit, error: auditFetchError } = await supabaseAdmin
       .from('audits')
       .select('hai_raw_score, avs_raw_score, igf_raw_score, status, compiled_at')
@@ -147,7 +152,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error('Failed to retrieve primary core diagnostic metrics.');
     }
 
-    // 5. Multi-Pillar Core Vector Assessment Engine Execution
+    // 7. Multi-Pillar Core Vector Assessment Engine Execution
     const adjustedHAI = Number(activeAudit.hai_raw_score || 0) * (1 - logicDecayCoefficient);
     const adjustedAVS = Number(activeAudit.avs_raw_score || 0) * (1 - logicDecayCoefficient);
     const adjustedIGF = Number(activeAudit.igf_raw_score || 0) * (1 - logicDecayCoefficient);
@@ -170,7 +175,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       speciesIdentifier = 'Expectation Continuity Fracture';
     }
 
-    // 6. Persist Compiled State Metrics directly back to the main Ledger Audit row
+    // 8. Persist Compiled State Metrics directly back to the main Ledger Audit row
     const cleanSystemTimestamp = new Date().toISOString();
     const calculatedDecayPercent = Number((logicDecayCoefficient * 100).toFixed(0));
 
