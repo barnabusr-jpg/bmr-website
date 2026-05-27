@@ -75,20 +75,34 @@ export default function ResultsPage() {
   // 🧮 SYSTEM DATA PARSING & DYNAMIC SECTOR INTEGRATION
   const dbDecay = audit?.decay_pct || 24;
   const spend = parseFloat(audit?.ai_spend) || 1.2;
-  const sectorType = audit?.sector || "finance";
+  const sectorType = (audit?.sector || "general").toLowerCase().trim();
   
   let laborMultiplier = 0.4;
   let baseExposureRate = 0.18;
   let highExposureRate = 0.30;
 
-  if (sectorType === "finance") {
+  // 🎨 AUTOMATED THEME SECTOR CONFIGURATOR
+  let accentColorClass = "text-red-600";
+  let borderAccentClass = "border-red-600";
+  let bgAccentBtnClass = "bg-red-600 border-red-500";
+  let fallbackDirectiveColor = "text-red-500";
+
+  if (sectorType === "finance" || sectorType === "banking") {
     laborMultiplier = 0.5;
     baseExposureRate = 0.22;
     highExposureRate = 0.35;
-  } else if (sectorType === "healthcare") {
+    accentColorClass = "text-green-500";
+    borderAccentClass = "border-green-600";
+    bgAccentBtnClass = "bg-green-600 border-green-500 hover:bg-white hover:text-black";
+    fallbackDirectiveColor = "text-green-500";
+  } else if (sectorType === "healthcare" || sectorType === "medical") {
     laborMultiplier = 0.45;
     baseExposureRate = 0.20;
     highExposureRate = 0.32;
+    accentColorClass = "text-blue-500";
+    borderAccentClass = "border-blue-600";
+    bgAccentBtnClass = "bg-blue-600 border-blue-500 hover:bg-white hover:text-black";
+    fallbackDirectiveColor = "text-blue-500";
   } else if (sectorType === "retail") {
     laborMultiplier = 0.35;
     baseExposureRate = 0.15;
@@ -100,7 +114,7 @@ export default function ResultsPage() {
   const selectedExposureRate = dbDecay > 60 ? highExposureRate : baseExposureRate;
   const exposure = (selectedExposureRate * (spend * 1000000)) * 1.15;
 
-  // ⏳ RESTORED TICKER DECK: Syncs with the micro-scale baseline from your original main build
+  // ⏳ RESTORED TICKER DECK
   useEffect(() => {
     if (loading) return;
 
@@ -141,20 +155,20 @@ export default function ResultsPage() {
         <nav className="h-28 bg-black/40 backdrop-blur-md border-b border-slate-900/60 px-12 flex items-center justify-between no-print">
           <div className="flex flex-col items-start space-y-0.5">
             <div className="text-white font-black uppercase text-xl tracking-tighter leading-none italic">
-              BMR<span className="text-red-600">SOLUTIONS</span>
+              BMR<span className={accentColorClass}>SOLUTIONS</span>
             </div>
-            <span className="text-[8px] font-mono text-red-600 uppercase tracking-[0.3em] font-black italic">FORENSIC_UNIT_2026</span>
+            <span className={`text-[8px] font-mono uppercase tracking-[0.3em] font-black italic ${accentColorClass}`}>FORENSIC_UNIT_2026</span>
           </div>
           <div className="hidden md:flex items-center gap-12 text-[10px] font-mono text-slate-400 font-black tracking-widest uppercase italic">
             <span className="hover:text-white cursor-pointer transition-colors">THE_FRAMEWORK</span>
             <span className="hover:text-white cursor-pointer transition-colors">EVIDENCE_VAULT</span>
           </div>
-          <button className="bg-red-600 text-white font-black uppercase italic tracking-widest text-[10px] px-6 py-3.5 border border-red-500 hover:bg-white hover:text-black transition-all flex items-center gap-2">
+          <button className={`text-white font-black uppercase italic tracking-widest text-[10px] px-6 py-3.5 border transition-all flex items-center gap-2 ${bgAccentBtnClass}`}>
             EXECUTE_STRATEGY <Activity size={12} className="animate-pulse" />
           </button>
         </nav>
 
-        <main className="max-w-7xl mx-auto pt-16 px-12 pb-8 space-y-12">
+        <main className="max-w-7xl mx-auto pt-16 px-12 pb-32 space-y-12">
           
           {/* ACTION BUTTON UTILITY LINE */}
           <div className="flex justify-end text-[9px] font-mono text-slate-500 tracking-widest uppercase font-black italic gap-2 items-center cursor-pointer hover:text-white transition-colors no-print">
@@ -162,10 +176,9 @@ export default function ResultsPage() {
           </div>
 
           {/* 2. THE MAIN EXPOSURE VERDICT PLACARD CARD */}
-          {/* 🚀 FIXED: Enforced a 12-column template layout grid with native middle divider split */}
-          <div className="bg-white text-black p-10 md:p-14 border-l-[16px] border-red-600 grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative">
+          <div className={`bg-white text-black p-10 md:p-14 border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
             
-            {/* LEFT FRAME SECTION: TEXT BLOCK & SUB-METRIC ROWS */}
+            {/* LEFT FRAME SECTION */}
             <div className="md:col-span-7 flex flex-col justify-between space-y-10">
               <div>
                 <h1 className="text-5xl md:text-7xl font-black uppercase italic tracking-tighter leading-none text-black">
@@ -178,37 +191,36 @@ export default function ResultsPage() {
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-slate-100 text-left">
                 <div>
-                  <span className="text-[9px] font-mono text-red-600 block uppercase font-black tracking-wider">LOGIC_DECAY_COEFFICIENT</span>
+                  <span className={`text-[9px] font-mono block uppercase font-black tracking-wider ${accentColorClass}`}>LOGIC_DECAY_COEFFICIENT</span>
                   <p className="text-xs font-black uppercase mt-2 leading-tight text-slate-900">
-                    DETECTING <span className="text-red-600 text-base">{dbDecay}%</span> STRUCTURAL DIVERGENCE.
+                    DETECTING <span className={`${accentColorClass} text-base`}>{dbDecay}%</span> STRUCTURAL DIVERGENCE.
                   </p>
                 </div>
                 <div>
-                  <span className="text-[9px] font-mono text-red-600 block uppercase font-black tracking-wider">REWORK_LEVY</span>
+                  <span className={`text-[9px] font-mono block uppercase font-black tracking-wider ${accentColorClass}`}>REWORK_LIABILITY_TAX</span>
                   <p className="text-xs font-black uppercase mt-2 leading-tight text-slate-900">
-                    LIABILITY: <span className="text-red-600 font-mono text-sm">${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                    TAX: <span className={`${accentColorClass} font-mono text-sm`}>${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                   </p>
                 </div>
                 <div>
-                  <span className="text-[9px] font-mono text-red-600 block uppercase font-black tracking-wider">PROJECTED_ANNUAL_EXPOSURE</span>
+                  <span className={`text-[9px] font-mono block uppercase font-black tracking-wider ${accentColorClass}`}>PROJECTED_ANNUAL_RISK</span>
                   <p className="text-xs font-black uppercase mt-2 leading-tight text-slate-900">
-                    CAPITAL EXPENSE BASELINE: <span className="text-red-600 font-mono text-sm">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                    EXPOSURE BASELINE: <span className={`${accentColorClass} font-mono text-sm`}>${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                   </p>
                 </div>
               </div>
             </div>
             
-            {/* CENTRAL GRID DIVIDER MATRIX */}
+            {/* CENTRAL GRID DIVIDER */}
             <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-200/80" />
             
-            {/* RIGHT FRAME SECTION: FLOATING COUNTER DATA */}
+            {/* RIGHT FRAME SECTION */}
             <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-6 md:pt-0">
               <span className="text-[10px] font-mono text-slate-400 font-black tracking-widest uppercase block relative">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-600 inline-block mr-2 animate-ping absolute -left-4 top-1 hidden md:block" />
                 CAPITAL_EROSION_RATE
               </span>
               
-              <div className="text-4xl md:text-5xl font-mono font-black text-red-600 mt-2 tracking-tight italic leading-none tabular-nums">
+              <div className={`text-4xl md:text-5xl font-mono font-black mt-2 tracking-tight italic leading-none tabular-nums ${accentColorClass}`}>
                 ${formatLiveCurrency(liveErosion)}
               </div>
               <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1">USD_ACCUMULATED_IN_REAL_TIME</span>
@@ -226,11 +238,11 @@ export default function ResultsPage() {
                 VALIDATED_REWORK_LIABILITY
               </span>
             </div>
-            <div className="bg-[#050b18] border border-red-900/30 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-              <div className="text-6xl md:text-7xl font-black text-red-600 tracking-tighter italic font-mono">
+            <div className="bg-[#050b18] border border-slate-900 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
+              <div className={`text-6xl md:text-7xl font-black tracking-tighter italic font-mono ${accentColorClass}`}>
                 ${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
               </div>
-              <span className="text-[10px] font-mono text-red-600 tracking-[0.25em] uppercase font-black block">
+              <span className={`text-[10px] font-mono tracking-[0.25em] uppercase font-black block ${accentColorClass}`}>
                 TOTAL_FORENSIC_EXPOSURE
               </span>
             </div>
@@ -238,7 +250,7 @@ export default function ResultsPage() {
 
           {/* ⚙️ SYSTEM ASSUMPTIONS BLOCK */}
           <div className="bg-slate-950/60 border border-slate-900 p-6 text-left flex items-start gap-4 shadow-xl">
-            <Info className="text-red-500 shrink-0 mt-0.5" size={16} />
+            <Info className={`${accentColorClass} shrink-0 mt-0.5`} size={16} />
             <div className="space-y-2">
               <span className="text-white font-mono text-[10px] tracking-widest uppercase font-black block">
                 INITIAL_BENCHMARK_CONFIG // STANDARD_ESTIMATES
@@ -252,11 +264,79 @@ export default function ResultsPage() {
             </div>
           </div>
 
+          {/* 📊 AIRTIGHT FIXED FRACTURES INVENTORY SECTION */}
+          <div className="pt-8 text-left">
+            <div className="border-b border-slate-900 pb-4 mb-8">
+              <span className="text-[10px] font-mono text-slate-500 tracking-widest font-black uppercase">// DETECTED_LOGIC_FRACTURES_MATRIX</span>
+              <h3 className="text-3xl font-black uppercase italic tracking-tighter mt-1 text-white">IDENTIFIED ANOMALIES INVENTORY</h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {audit?.fractures && audit.fractures.length > 0 ? (
+                audit.fractures.map((frac: any, index: number) => {
+                  const isCritical = frac.severity === 'CRITICAL';
+                  const currentThemeDirectiveColor = isCritical ? 'text-red-500' : fallbackDirectiveColor;
+
+                  return (
+                    <div 
+                      key={frac.id || index} 
+                      className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative transition-all duration-300 min-h-[300px] ${
+                        isCritical 
+                          ? 'border-red-600/40 hover:border-red-600 bg-red-950/5' 
+                          : `border-slate-900 hover:${borderAccentClass}/30`
+                      }`}
+                    >
+                      <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
+                        <span className="text-[10px] text-slate-500 tracking-widest font-black">
+                          // INDEX NODE FR-0{index + 1}
+                        </span>
+                        <span className={`text-[10px] tracking-widest px-3 py-1 font-black ${
+                          isCritical 
+                            ? 'bg-red-600/20 text-red-500 border border-red-600/30' 
+                            : 'bg-amber-600/20 text-amber-500 border border-amber-600/30'
+                        }`}>
+                          {frac.severity || 'HIGH'} RISK
+                        </span>
+                      </div>
+
+                      <div className="my-6 space-y-2">
+                        <h4 className="text-xl font-black italic tracking-tight text-white uppercase font-mono">
+                          {String(frac.id || 'ANOMALY_DETECTED').replace(/_/g, " ")}
+                        </h4>
+                        <p className="text-xs font-sans normal-case text-slate-300 font-normal leading-relaxed">
+                          {frac.description || 'Cross-functional validation parameters confirm structural variance within core deployment pipelines.'}
+                        </p>
+                      </div>
+
+                      <div className="border-t border-slate-900 pt-4 font-mono">
+                        <div className="text-[9px] text-slate-600 tracking-widest font-black mb-1">
+                          REQUIRED TARGETED DIRECTIVE:
+                        </div>
+                        <div className={`text-xs font-black uppercase italic tracking-tight ${currentThemeDirectiveColor}`}>
+                          {frac.directive || 'IMPLEMENT PROTOCOL DIR_02 // SYSTEMIC ALIGNMENT'}
+                        </div>
+                      </div>
+                      
+                      <div className="absolute bottom-2 right-4 text-4xl font-mono font-black text-slate-900/20 select-none pointer-events-none">
+                        0{index + 1}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="col-span-2 text-center p-20 border border-dashed border-slate-900 font-mono text-xs text-slate-600 uppercase tracking-widest">
+                  No severe operational fractures located. System parameters are matching organizational intent.
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* 🛡️ HIGH-CONVERSION CALENDLY ACTION PLACARD */}
           {!isAdmin && (
             <div 
-              className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] border-red-600 shadow-2xl no-print italic transition-all duration-300 hover:bg-slate-50 text-center" 
+              className="bg-white p-10 md:p-16 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] md:border-l-[20px] shadow-2xl no-print italic transition-all duration-300 hover:bg-slate-50 text-center mt-12" 
               onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')}
+              style={{ borderColor: sectorType === "finance" ? "#16a34a" : sectorType === "healthcare" ? "#2563eb" : "#dc2626" }}
             >
               <div className="max-w-4xl w-full flex flex-col items-center space-y-6">
                 <h4 className="text-black text-2xl md:text-4xl font-black tracking-tighter leading-none italic transition-colors duration-300 group-hover:text-red-600 uppercase break-words w-full">
