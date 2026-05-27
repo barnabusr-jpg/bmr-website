@@ -45,7 +45,6 @@ export default function AdminCoreDashboard() {
   const handleAuditSelection = (audit: any) => {
     setSelectedAudit(audit as AuditRecord);
     setSliderSpend(parseFloat(audit?.ai_spend) || 1.2);
-    // 🏷️ Destructures the database column 'roi_pct' natively into local workforce state context
     setSliderWorkforce(audit?.roi_pct ? parseInt(audit.roi_pct) : Math.round(((parseFloat(audit?.ai_spend) || 1.2) * 1000000) / 200000) || 5);
   };
 
@@ -189,7 +188,6 @@ export default function AdminCoreDashboard() {
 
                 <div className="space-y-3">
                   <div className="flex justify-between font-black tracking-tight text-white items-end">
-                    {/* 🏷️ UI Label notes that we are editing corporate staff scale while updating the roi_pct column under the hood */}
                     <span className="flex items-center gap-2 text-slate-400"><Users size={14} className="text-blue-500" /> IMPACTED WORKFORCE SCALE (FTES) [MAPPED TO ROI_PCT]:</span>
                     <span className="text-blue-500 text-sm font-bold">{sliderWorkforce} PEOPLE</span>
                   </div>
@@ -199,7 +197,7 @@ export default function AdminCoreDashboard() {
                     onChange={(e) => {
                       const val = parseInt(e.target.value);
                       setSliderWorkforce(val);
-                      pushSliderUpdate("roi_pct", val); // Writes natively to roi_pct column block
+                      pushSliderUpdate("roi_pct", val);
                     }}
                     className="w-full accent-blue-500 bg-slate-900 h-2 cursor-pointer transition-all"
                   />
