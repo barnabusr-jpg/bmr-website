@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  FileDown, Monitor, X, Send, CheckCircle, Clock, Search 
+  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { jsPDF } from "jspdf";
@@ -45,6 +45,9 @@ export default function AdminDashboard() {
   const [totalCount, setTotalCount] = useState(0);
   const ROWS_PER_PAGE = 10;
 
+  // 📝 NEW STATE: HOUSES DYNAMIC ADVISOR NOTES PER AUDIT ROW
+  const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -64,6 +67,14 @@ export default function AdminDashboard() {
     const fte = Math.round((spend * 1000000) / 200000) || 5;
     const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
     const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+
+    // Retrieve advisor customized comments for this specific audit
+    const addedNote = dossierNotes[audit.id]?.trim() || "";
+    const noteHTML = addedNote 
+      ? `<div style="margin-top: 60px; padding-top: 40px; border-top: 2px dashed #dc2626; font-family: monospace; font-size: 14px; line-height: 1.6; color: #334155; text-transform: uppercase;">
+           <strong style="color: #dc2626; block; margin-bottom: 5px;">// ADVISOR ANALYSIS NOTE:</strong> ${addedNote}
+         </div>`
+      : "";
 
     const printArea = document.createElement('div');
     printArea.style.position = 'fixed';
@@ -87,6 +98,7 @@ export default function AdminDashboard() {
                 <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Annual Rework Tax</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">$${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
                 <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Inaction Penalty</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">$${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
               </div>
+              ${noteHTML}
             </div>
         </div>
       </div>
@@ -136,7 +148,8 @@ export default function AdminDashboard() {
   }, [statusFilter, searchTerm, currentPage]);
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
-    const { data: nodes } = await supabase.from('operators').select('persona_type, status').eq('audit_id', auditId);
+    // Select the critical database tracking properties to power reminders natively
+    const { data: nodes } = await supabase.from('operators').select('persona_type, status, email').eq('audit_id', auditId);
     if (nodes) setNodeDetails(nodes);
   }, []);
 
@@ -168,6 +181,39 @@ export default function AdminDashboard() {
       alert(err.message); 
     } finally { 
       setIsUpdating(false); 
+    }
+  };
+
+  // 📬 NEW: TRIGGER INDIVIDUAL NUDGE HANDLER ROUTE
+  const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
+    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey);
+    if (!matchingNode || !matchingNode.email) {
+      alert("NUDGE ERROR: RECIPIENT NODE ROUTE NOT IDENTIFIED.");
+      return;
+    }
+    
+    setIsUpdating(true);
+    try {
+      const formattedPayload: Record<string, string> = {};
+      formattedPayload[targetRoleKey] = matchingNode.email;
+
+      const res = await fetch('/api/dispatch-directives', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          groupId: auditRecord.id,
+          orgName: auditRecord.org_name,
+          parentAuditId: auditRecord.id,
+          emails: formattedPayload
+        })
+      });
+      
+      if (res.ok) alert(`NUDGE SUCCESS: ACCESS REMINDER LINK FIRED TO ${matchingNode.email}`);
+      else throw new Error("Gateway Timeout");
+    } catch (err) {
+      alert("NUDGE LOGISTICS FAILURE.");
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -279,6 +325,39 @@ export default function AdminDashboard() {
           {activeTab === 'ledger' ? (
             <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
               
+              {/* 🚀 TRANSACTION VELOCITY PIPELINE METRICS FUNNEL */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 italic">
+                {[
+                  { 
+                    label: "TOTAL ASSETS INGESTED", 
+                    value: totalCount, 
+                    color: "border-slate-800 text-white" 
+                  },
+                  { 
+                    label: "ACTIVE TRIANGULATIONS", 
+                    value: data.filter(d => d.status === "TRIANGULATING" || d.status === "TRIANGULATION_ACTIVE").length, 
+                    color: "border-yellow-600/30 text-yellow-500" 
+                  },
+                  { 
+                    label: "PROPOSED SOW DOSSIERS SENT", 
+                    value: data.filter(d => d.sow_sent === true).length, 
+                    color: "border-blue-600/30 text-blue-400" 
+                  },
+                  { 
+                    label: "CLOSED/REVENUE REALIZED", 
+                    value: data.filter(d => d.is_paid === true).length, 
+                    color: "border-emerald-600/30 text-emerald-500" 
+                  }
+                ].map((stat) => (
+                  <div key={stat.label} className={`bg-slate-950/60 border p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950 ${stat.color.split(" ")[0]}`}>
+                    <span className="text-[9px] font-mono text-slate-500 font-black tracking-widest uppercase block">// {stat.label}</span>
+                    <div className={`text-4xl font-black italic tracking-tighter mt-4 leading-none ${stat.color.split(" ")[1]}`}>
+                      {stat.value.toString().padStart(2, '0')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* 🛠️ INTEGRATED HIGH VOLUME CONTROLS TOOLBAR */}
               <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between bg-slate-950 p-4 border border-slate-900">
                 <div className="relative flex-1">
@@ -371,7 +450,7 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
-                          {/* 📋 ROW 1: LIVE STAKEHOLDER NODE STATE TILES (CENTERED FIX) */}
+                          {/* 📋 ROW 1: LIVE STAKEHOLDER NODE STATE TILES (WITH DYNAMIC REMINDER NUDGES) */}
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
                               { label: 'EXECUTIVE TRACK', key: 'EXE' },
@@ -381,10 +460,26 @@ export default function AdminDashboard() {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
                               const isDone = node?.status?.toLowerCase() === 'completed';
                               return (
-                                <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
+                                <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
                                   <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
                                     <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
-                                    {isDone ? <CheckCircle className="text-green-500" size={14}/> : <Clock className="text-slate-700" size={14}/>}
+                                    
+                                    {/* Reactive Reminder Icon Anchor */}
+                                    {isDone ? (
+                                      <CheckCircle className="text-green-500" size={14}/>
+                                    ) : (
+                                      <div className="flex items-center gap-2">
+                                        <button 
+                                          title="Fire Email Reminder Nudge" 
+                                          disabled={isUpdating}
+                                          onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
+                                          className="text-red-500 hover:text-white transition-all cursor-pointer opacity-40 group-hover/node:opacity-100"
+                                        >
+                                          <BellRing size={12} className="animate-bounce" />
+                                        </button>
+                                        <Clock className="text-slate-700" size={14}/>
+                                      </div>
+                                    )}
                                   </div>
                                   
                                   <div className="flex-1 flex flex-col justify-center items-center text-center py-4">
@@ -492,6 +587,34 @@ export default function AdminDashboard() {
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-900 pt-8 italic text-left">
                             <div className="space-y-4">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
+                              
+                              {/* 🎛️ DYNAMIC DEAL STATUS SWITCHBOARD GATEWAY */}
+                              <div className="flex gap-3 mb-2 p-2 bg-black/40 border border-slate-900 font-mono text-[9px] font-black uppercase tracking-wider w-full">
+                                <button 
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const updatedState = !audit.sow_sent;
+                                    await supabase.from('audits').update({ sow_sent: updatedState }).eq('id', audit.id);
+                                    fetchLedger();
+                                  }}
+                                  className={`flex-1 py-2 border transition-all ${audit.sow_sent ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                >
+                                  MARK SOW SENT: {audit.sow_sent ? "✔ TRUE" : "✘ FALSE"}
+                                </button>
+                                
+                                <button 
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const updatedState = !audit.is_paid;
+                                    await supabase.from('audits').update({ is_paid: updatedState }).eq('id', audit.id);
+                                    fetchLedger();
+                                  }}
+                                  className={`flex-1 py-2 border transition-all ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                >
+                                  MARK PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}
+                                </button>
+                              </div>
+
                               <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1 space-y-3">
                                   <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
@@ -500,8 +623,21 @@ export default function AdminDashboard() {
                                 <button onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
                               </div>
                             </div>
+
                             <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
+                              
+                              {/* 📝 NEW: ADVISOR NOTE INJECTION PORTAL */}
+                              <div className="w-full space-y-1 mb-2">
+                                <input 
+                                  type="text"
+                                  value={dossierNotes[audit.id] || ""}
+                                  onChange={(e) => setDossierNotes({ ...dossierNotes, [audit.id]: e.target.value })}
+                                  placeholder="APPEND CUSTOM DOSSIER ANNOTATION NOTE..."
+                                  className="w-full bg-black border border-slate-900 p-3 text-[10px] font-mono font-black italic uppercase text-slate-300 focus:border-red-600 outline-none placeholder:text-slate-700 tracking-wider"
+                                />
+                              </div>
+
                               <div className="space-y-3">
                                 <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
                                 <button onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileDown size={16} /> DOWNLOAD DOSSIER COPY</button>
