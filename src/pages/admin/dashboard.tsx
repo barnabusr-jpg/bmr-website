@@ -371,7 +371,7 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
-                          {/* 📋 ROW 1: LIVE STAKEHOLDER NODE STATE TILES */}
+                          {/* 📋 ROW 1: LIVE STAKEHOLDER NODE STATE TILES (CENTERED FIX) */}
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
                               { label: 'EXECUTIVE TRACK', key: 'EXE' },
@@ -381,12 +381,17 @@ export default function AdminDashboard() {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
                               const isDone = node?.status?.toLowerCase() === 'completed';
                               return (
-                                <div key={role.label} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
-                                  <div className="flex justify-between items-start">
-                                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role.label} NODE</span>
-                                    {isDone ? <CheckCircle className="text-green-500" size={16}/> : <Clock className="text-slate-800" size={16}/>}
+                                <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
+                                  <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
+                                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
+                                    {isDone ? <CheckCircle className="text-green-500" size={14}/> : <Clock className="text-slate-700" size={14}/>}
                                   </div>
-                                  <div className={`font-black italic uppercase tracking-tighter italic ${isDone ? 'text-2xl text-white' : 'text-3xl text-slate-900'}`}>{isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}</div>
+                                  
+                                  <div className="flex-1 flex flex-col justify-center items-center text-center py-4">
+                                    <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-white' : 'text-2xl text-slate-800 animate-pulse'}`}>
+                                      {isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}
+                                    </div>
+                                  </div>
                                 </div>
                               );
                             })}
