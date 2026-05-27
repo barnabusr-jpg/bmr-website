@@ -45,7 +45,6 @@ export default function AdminDashboard() {
   const [totalCount, setTotalCount] = useState(0);
   const ROWS_PER_PAGE = 10;
 
-  // 📝 NEW STATE: HOUSES DYNAMIC ADVISOR NOTES PER AUDIT ROW
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -62,17 +61,24 @@ export default function AdminDashboard() {
   };
 
   const generateForensicPDF = async (audit: any) => {
-    const dbDecay = audit.decay_pct || 50;
+    const sfi = audit.sfi_score || 0;
+    const dbDecay = audit.decay_pct || 24;
     const spend = parseFloat(audit.ai_spend) || 1.2;
     const fte = Math.round((spend * 1000000) / 200000) || 5;
-    const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
+    const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
+    const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
     const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+    const totalLeakage = laborTax + exposure;
 
-    // Retrieve advisor customized comments for this specific audit
+    let playbookHeadline = "BALANCED INFRASTRUCTURE STATE";
+    if (sfi >= 45) playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
+    else if (sfi > 0) playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
+
     const addedNote = dossierNotes[audit.id]?.trim() || "";
     const noteHTML = addedNote 
-      ? `<div style="margin-top: 60px; padding-top: 40px; border-top: 2px dashed #dc2626; font-family: monospace; font-size: 14px; line-height: 1.6; color: #334155; text-transform: uppercase;">
-           <strong style="color: #dc2626; block; margin-bottom: 5px;">// ADVISOR ANALYSIS NOTE:</strong> ${addedNote}
+      ? `<div style="margin-top: 45px; padding: 40px; border: 2px solid #dc2626; background: #fff5f5; font-family: monospace; font-size: 15px; line-height: 1.6; color: #000; text-transform: uppercase; box-sizing: border-box;">
+           <strong style="color: #dc2626; display: block; margin-bottom: 8px; font-weight: 900; letter-spacing: 2px;">// ADVISOR EXECUTIVE ANNOTATION:</strong>
+           ${addedNote}
          </div>`
       : "";
 
@@ -83,21 +89,47 @@ export default function AdminDashboard() {
     
     printArea.innerHTML = `
       <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
-        <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 8px solid #dc2626;">
+        <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 8px solid #dc2626; box-sizing: border-box;">
             <div>
-                <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase;">FORENSIC VERDICT</h1>
-                <p style="color: #666; font-family: monospace; font-size: 16px; margin-top: 15px; font-weight: 900; letter-spacing: 3px;">SIGNAL ID: ${audit.id.toUpperCase()}</p>
+                <h1 style="font-size: 44px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase; color: #fff;">FORENSIC ANALYSIS DOSSIER</h1>
+                <p style="color: #64748b; font-family: monospace; font-size: 15px; margin-top: 15px; font-weight: 900; letter-spacing: 3px;">SIGNAL UUID: ${audit.id.toUpperCase()}</p>
+            </div>
+            <div style="text-align: right;">
+                <p style="color: #dc2626; font-family: monospace; font-size: 18px; margin: 0; font-weight: 900; letter-spacing: 2px;">STATUS // CONFIDENTIAL</p>
             </div>
         </div>
-        <div style="padding: 100px 100px 140px 100px; flex-grow: 1;">
-            <div style="background: white; color: black; padding: 100px; border-left: 60px solid #dc2626; margin-bottom: 80px; width: 100%; box-sizing: border-box;">
-              <h1 style="font-size: 92px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -5px; line-height: 0.85;">Executive Briefing</h1>
-              <p style="font-size: 20px; font-weight: 900; color: #666; letter-spacing: 5px; margin-top: 35px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT NODE'}</p>
-              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 100px; border-top: 3px solid #eee; padding-top: 60px;">
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Capacity Loss</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">${(dbDecay * 0.4).toFixed(0)}% WASTED</p></div>
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Annual Rework Tax</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">$${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
-                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Inaction Penalty</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">$${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
+        <div style="padding: 80px 100px 100px 100px; flex-grow: 1; box-sizing: border-box;">
+            <div style="background: white; color: black; padding: 80px; border-left: 60px solid #dc2626; width: 100%; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+              <span style="font-size: 14px; font-weight: 900; color: #dc2626; font-family: monospace; tracking: 3px; text-transform: uppercase;">// STRATEGIC DIAGNOSTIC SUMMARY</span>
+              <h1 style="font-size: 68px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; text-transform: uppercase; letter-spacing: -3px; line-height: 0.9; color: #0f172a;">${audit.org_name?.toUpperCase() || 'CLIENT NODE'}</h1>
+              
+              <div style="margin-top: 40px; padding: 25px; background: #f8fafc; border-left: 4px solid #475569;">
+                <p style="font-size: 13px; font-weight: 900; color: #64748b; font-family: monospace; margin: 0; tracking: 2px;">DIAGNOSTIC VERDICT</p>
+                <p style="font-size: 24px; font-weight: 900; font-style: italic; color: #0f172a; margin: 5px 0 0 0; text-transform: uppercase;">${playbookHeadline}</p>
               </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; border-top: 2px solid #e2e8f0; padding-top: 40px;">
+                <div>
+                  <p style="font-size: 13px; font-weight: 900; color: #64748b; text-transform: uppercase; font-family: monospace; margin: 0;">SYSTEMIC FRICTION RATING</p>
+                  <p style="font-size: 48px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; color: #dc2626;">${sfi} / 100 SFI</p>
+                </div>
+                <div>
+                  <p style="font-size: 13px; font-weight: 900; color: #64748b; text-transform: uppercase; font-family: monospace; margin: 0;">TOTAL ANNUAL LOSS REALITY</p>
+                  <p style="font-size: 48px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; color: #0f172a;">$${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; border-top: 1px dashed #e2e8f0; padding-top: 30px;">
+                <div>
+                  <p style="font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; font-family: monospace; margin: 0;">ANNUAL REWORK TAX</p>
+                  <p style="font-size: 28px; font-weight: 900; font-style: italic; margin: 5px 0 0 0; color: #334155;">$${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
+                </div>
+                <div>
+                  <p style="font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; font-family: monospace; margin: 0;">INACTION PENALTY RISK</p>
+                  <p style="font-size: 28px; font-weight: 900; font-style: italic; margin: 5px 0 0 0; color: #334155;">$${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
+                </div>
+              </div>
+
               ${noteHTML}
             </div>
         </div>
@@ -107,21 +139,23 @@ export default function AdminDashboard() {
 
     try {
       await new Promise(r => setTimeout(r, 400));
-      const canvas = await html2canvas(printArea, { backgroundColor: "#020617", scale: 3, width: 1400 });
+      const canvas = await html2canvas(printArea, { backgroundColor: "#020617", scale: 2, width: 1400 });
       const imgData = canvas.toDataURL("image/png", 1.0);
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, scaledHeight);
-      pdf.save(`BMR DOSSIER_${audit.org_name || 'EXPORT'}.pdf`);
+      pdf.save(`BMR_STRATEGIC_DOSSIER_${audit.org_name || 'EXPORT'}.pdf`);
       document.body.removeChild(printArea);
     } catch (err) {
-      console.error("PDF ERROR", err);
+      console.error("PDF GENERATION EXCEPTION:", err);
       if (document.body.contains(printArea)) document.body.removeChild(printArea);
     }
   };
 
   const fetchLedger = useCallback(async () => {
+    if (isUpdating) return;
+
     let query = supabase
       .from('audits')
       .select('*', { count: 'exact' });
@@ -145,13 +179,13 @@ export default function AdminDashboard() {
       setData(audits);
       setTotalCount(count || 0);
     }
-  }, [statusFilter, searchTerm, currentPage]);
+  }, [statusFilter, searchTerm, currentPage, isUpdating]);
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
-    // Select the critical database tracking properties to power reminders natively
+    if (isUpdating) return;
     const { data: nodes } = await supabase.from('operators').select('persona_type, status, email').eq('audit_id', auditId);
     if (nodes) setNodeDetails(nodes);
-  }, []);
+  }, [isUpdating]);
 
   const toggleRow = async (auditId: string) => {
     if (expandedRow === auditId) { setExpandedRow(null); return; }
@@ -184,7 +218,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // 📬 NEW: TRIGGER INDIVIDUAL NUDGE HANDLER ROUTE
   const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
     const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey);
     if (!matchingNode || !matchingNode.email) {
@@ -225,7 +258,20 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auditId })
       });
-      if (res.ok) await fetchLedger();
+      
+      const serverResponse = await res.json();
+      
+      if (res.ok) {
+        setIsUpdating(false);
+        let query = supabase.from('audits').select('*').eq('id', auditId).single();
+        const { data: cleanAudit } = await query;
+        if (cleanAudit) {
+          setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
+        }
+        alert("SYNTHESIS ROOT LOGIC ENGINE RE-CALCULATED SUCCESSFULLY.");
+      } else {
+        alert(`SERVER REJECTION: ${serverResponse.error || 'UNEXPECTED SIGNAL OUTAGE'}`);
+      }
     } catch (err) { 
       console.error(err); 
     } finally { 
@@ -328,26 +374,10 @@ export default function AdminDashboard() {
               {/* 🚀 TRANSACTION VELOCITY PIPELINE METRICS FUNNEL */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 italic">
                 {[
-                  { 
-                    label: "TOTAL ASSETS INGESTED", 
-                    value: totalCount, 
-                    color: "border-slate-800 text-white" 
-                  },
-                  { 
-                    label: "ACTIVE TRIANGULATIONS", 
-                    value: data.filter(d => d.status === "TRIANGULATING" || d.status === "TRIANGULATION_ACTIVE").length, 
-                    color: "border-yellow-600/30 text-yellow-500" 
-                  },
-                  { 
-                    label: "PROPOSED SOW DOSSIERS SENT", 
-                    value: data.filter(d => d.sow_sent === true).length, 
-                    color: "border-blue-600/30 text-blue-400" 
-                  },
-                  { 
-                    label: "CLOSED/REVENUE REALIZED", 
-                    value: data.filter(d => d.is_paid === true).length, 
-                    color: "border-emerald-600/30 text-emerald-500" 
-                  }
+                  { label: "TOTAL ASSETS INGESTED", value: totalCount, color: "border-slate-800 text-white" },
+                  { label: "ACTIVE TRIANGULATIONS", value: data.filter(d => d.status?.toUpperCase().includes("TRIANGULATION") || d.status?.toUpperCase().includes("TRIANGULATING")).length, color: "border-yellow-600/30 text-yellow-500" },
+                  { label: "PROPOSED SOW DOSSIERS SENT", value: data.filter(d => d.sow_sent === true).length, color: "border-blue-600/30 text-blue-400" },
+                  { label: "CLOSED/REVENUE REALIZED", value: data.filter(d => d.is_paid === true).length, color: "border-emerald-600/30 text-emerald-500" }
                 ].map((stat) => (
                   <div key={stat.label} className={`bg-slate-950/60 border p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950 ${stat.color.split(" ")[0]}`}>
                     <span className="text-[9px] font-mono text-slate-500 font-black tracking-widest uppercase block">// {stat.label}</span>
@@ -398,7 +428,6 @@ export default function AdminDashboard() {
                 data.map((audit) => {
                   const clientHasAccess = !!audit.is_released;
 
-                  // 🧮 PRE-CALCULATE CLOSING REALITIES FOR THE ADVISOR PANEL HOOKS
                   const sfi = audit.sfi_score || 0;
                   const realFractures = audit.fractures || [];
                   const dbDecay = audit.decay_pct || 24;
@@ -413,7 +442,12 @@ export default function AdminDashboard() {
                   let playbookPitch = "Deploy routine baseline optimization filters to preserve ongoing alignment tracks.";
                   let targetTier = "TIER_01 // DRIFT DIAGNOSTICS";
 
-                  if (sfi >= 45) {
+                  const cleanStatus = (audit.status || "").toUpperCase();
+                  if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING") || sfi === 0) {
+                    playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
+                    playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
+                    playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
+                  } else if (sfi >= 45) {
                     playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
                     playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
                     playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance, removing the manual tax on your staff.";
@@ -430,7 +464,7 @@ export default function AdminDashboard() {
                       <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
                         <div className="col-span-6 flex items-center gap-6">
                           <div className="bg-slate-900 p-4 border border-slate-800 shrink-0 italic">
-                            <Building2 size={24} className={audit.status === 'COMPLETE' ? "text-green-500" : "text-red-600"} />
+                            <Building2 size={24} className={cleanStatus.includes("COMPLETE") ? "text-green-500" : "text-red-600"} />
                           </div>
                           <div>
                             <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
@@ -439,9 +473,9 @@ export default function AdminDashboard() {
                         </div>
                         
                         <div className="col-span-4 text-center font-black text-white italic text-xs tracking-[0.2em] font-mono">
-                          {audit.status === 'COMPLETE' && 'RESULT PUBLISHED'}
-                          {audit.status === 'LEAD' && 'LEAD CAPTURED'}
-                          {(audit.status === 'TRIANGULATING' || audit.status === 'TRIANGULATION_ACTIVE') && 'TRIANGULATION ACTIVE'}
+                          {cleanStatus.includes("COMPLETE") && 'RESULT PUBLISHED'}
+                          {cleanStatus === 'LEAD' && 'LEAD CAPTURED'}
+                          {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'TRIANGULATION ACTIVE'}
                         </div>
                         
                         <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
@@ -450,7 +484,6 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
-                          {/* 📋 ROW 1: LIVE STAKEHOLDER NODE STATE TILES (WITH DYNAMIC REMINDER NUDGES) */}
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
                               { label: 'EXECUTIVE TRACK', key: 'EXE' },
@@ -464,12 +497,12 @@ export default function AdminDashboard() {
                                   <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
                                     <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
                                     
-                                    {/* Reactive Reminder Icon Anchor */}
                                     {isDone ? (
                                       <CheckCircle className="text-green-500" size={14}/>
                                     ) : (
                                       <div className="flex items-center gap-2">
                                         <button 
+                                          type="button"
                                           title="Fire Email Reminder Nudge" 
                                           disabled={isUpdating}
                                           onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
@@ -492,10 +525,8 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* 🧮 ROW 2: STRATEGIC INSIGHT VS ADVISORY PITCH PLAYBOOK SCRIPT */}
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
                             
-                            {/* Real Financial Allocation Tax Display */}
                             <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
                               <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
                               <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
@@ -507,7 +538,6 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            {/* Private Advisor Script Prompt Box */}
                             <div className="lg:col-span-7 border-2 border-red-900/60 bg-red-950/5 p-6 flex flex-col justify-between space-y-4">
                               <div className="space-y-2">
                                 <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block">// SECURE_BRIEFING_ALIGNMENT_SCRIPT</span>
@@ -523,7 +553,6 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
-                          {/* 📋 ROW 3: DETAILED FRACTURE INVENTORY SYSTEM TABLE */}
                           {realFractures.length > 0 && (
                             <div className="border border-slate-900 bg-slate-950 p-6 space-y-4 mb-8">
                               <div className="text-[10px] font-mono text-red-500 font-black tracking-widest uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
@@ -552,7 +581,6 @@ export default function AdminDashboard() {
                             </div>
                           )}
 
-                          {/* 💼 ROW 4: RECOMMENDATION BLUEPRINT DELIVERABLES BLOCK */}
                           <div className="bg-white text-black p-8 border-l-[16px] border-slate-900 shadow-2xl space-y-6 mb-10 font-sans">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
                               <div>
@@ -583,14 +611,13 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           
-                          {/* ⚙️ ROW 5: OPERATIONAL ACTION CONTROLS */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-900 pt-8 italic text-left">
                             <div className="space-y-4">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
                               
-                              {/* 🎛️ DYNAMIC DEAL STATUS SWITCHBOARD GATEWAY */}
                               <div className="flex gap-3 mb-2 p-2 bg-black/40 border border-slate-900 font-mono text-[9px] font-black uppercase tracking-wider w-full">
                                 <button 
+                                  type="button"
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     const updatedState = !audit.sow_sent;
@@ -603,6 +630,7 @@ export default function AdminDashboard() {
                                 </button>
                                 
                                 <button 
+                                  type="button"
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     const updatedState = !audit.is_paid;
@@ -617,17 +645,15 @@ export default function AdminDashboard() {
 
                               <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1 space-y-3">
-                                  <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
-                                  <button onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
                                 </div>
-                                <button onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
                               </div>
                             </div>
-
                             <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
                               
-                              {/* 📝 NEW: ADVISOR NOTE INJECTION PORTAL */}
                               <div className="w-full space-y-1 mb-2">
                                 <input 
                                   type="text"
@@ -639,8 +665,8 @@ export default function AdminDashboard() {
                               </div>
 
                               <div className="space-y-3">
-                                <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
-                                <button onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileDown size={16} /> DOWNLOAD DOSSIER COPY</button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileDown size={16} /> DOWNLOAD DOSSIER COPY</button>
                               </div>
                             </div>
                           </div>
@@ -658,6 +684,7 @@ export default function AdminDashboard() {
                   <div>SHOWING {currentPage * ROWS_PER_PAGE + 1} - {Math.min((currentPage + 1) * ROWS_PER_PAGE, totalCount)} OF {totalCount} ACTIVE RECORDS</div>
                   <div className="flex gap-2">
                     <button 
+                      type="button"
                       disabled={currentPage === 0}
                       onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
                       className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black"
@@ -665,6 +692,7 @@ export default function AdminDashboard() {
                       PREV
                     </button>
                     <button 
+                      type="button"
                       disabled={(currentPage + 1) * ROWS_PER_PAGE >= totalCount}
                       onClick={() => setCurrentPage(p => p + 1)}
                       className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black"
