@@ -111,7 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { error: finalUpdateError } = await supabase
       .from('audits')
       .update({ 
-        fractures: fractures, // Ensure this column is jsonb in Supabase
+        fractures: fractures,
         sfi_score: Math.min(frictionScore, 100),
         status: 'COMPLETE',
         last_synthesized: new Date().toISOString()
