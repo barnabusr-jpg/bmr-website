@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 1. Fetch all completed tracking responses for this audit UUID
+    // 1. Fetch completed tracking responses
     const { data: nodes, error: nodeError } = await supabase
       .from('operators')
       .select('raw_responses, persona_type, status')
@@ -28,7 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 2. Fetch the parent metric metadata row
     const { data: parentAudit, error: auditError } = await supabase
       .from('audits')
-      .select('rework_tax, id, org_name')
+      .select('rework_tax, id, org_name, lead_email, sector, ai_spend, decay_pct')
       .eq('id', auditId)
       .single();
 
@@ -37,10 +37,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     const parentReworkTax = parseFloat(parentAudit.rework_tax || "0");
-
-    // 3. Normalize strings and populate a clean evaluation dictionary object
-    const results: Record<string, string> = {};
+    const dbDecay = parentAudit.decay_pct || 24;
+    const spend = parseFloat(parentAudit.ai_spend) || 1.2;
+    const fte = Math.round((spend * 1000000) / 200000) || 5;
+    const laborMultiplier = parentAudit.sector === 'finance' ? 0.5 : parentAudit.sector === 'healthcare' ? 0.45 : 0.4;
     
+    const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
+    const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+    const totalLeakage = laborTax + exposure;
+
+    // 3. Normalize strings and populate lookup dictionary
+    const results: Record<string, string> = {};
     nodes.forEach(node => {
       if (node.raw_responses) {
         let persona = (node.persona_type || "").toUpperCase().trim();
@@ -51,18 +58,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Object.entries(node.raw_responses).forEach(([qId, data]: any) => {
           let rawAnswer = typeof data === 'object' ? data.answer : data;
           
-          // Format booleans to standard text strings smoothly
           if (rawAnswer === true || rawAnswer === "true") rawAnswer = "Yes";
           if (rawAnswer === false || rawAnswer === "false") rawAnswer = "No";
           
           const normalizedStr = String(rawAnswer || "").trim().toLowerCase();
           const cleanAnswer = normalizedStr === "yes" ? "Yes" : normalizedStr === "no" ? "No" : rawAnswer;
 
-          // Convert all incoming question keys to clean uppercase references
           const upperQId = qId.toUpperCase().trim();
           results[upperQId] = cleanAnswer;
 
-          // Universal Normalizer Mapping Logic Block
           if (!upperQId.includes('_')) {
             const reconstructedKey = `${persona}_${upperQId.padStart(2, '0')}`;
             results[reconstructedKey] = cleanAnswer;
@@ -75,15 +79,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    console.log("[SYNTHESIS_MAP] Normalized Telemetry Evaluation State:", JSON.stringify(results));
-
     const fractures = [];
     let frictionScore = 0;
+    let containsCriticalAlert = false;
 
-    // --- HIGH-FIDELITY CONTRADICTION EVALUATION CORES ---
+    // --- CONTRADICTION EVALUATION & RISK ANCHOR ROUTINES ---
 
-    // T1: INDEMNITY
+    // T1: INDEMNITY VOID
     if (results.EXE_01 === "Yes" && results.TEC_01 === "No") {
+      containsCriticalAlert = true;
       fractures.push({ 
         id: "INDEMNITY_VOID", 
         severity: "CRITICAL", 
@@ -94,7 +98,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 15;
     }
 
-    // T2: REWORK TAX
+    // T2: REWORK LEAK
     if (results.MGR_02 === "Yes" && results.TEC_02 === "No") {
       const recoveryEst = (parentReworkTax * 0.4).toFixed(1);
       fractures.push({ 
@@ -109,6 +113,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // T3: SHADOW AI
     if (results.EXE_03 === "Yes" && results.TEC_03 === "No") {
+      containsCriticalAlert = true;
       fractures.push({ 
         id: "SHADOW_EXFIL", 
         severity: "CRITICAL", 
@@ -131,8 +136,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 10;
     }
 
-    // T5: PII MASKING
+    // T5: PII MASKING EXPOSURE
     if (results.EXE_05 === "Yes" && results.TEC_05 === "No") {
+      containsCriticalAlert = true;
       fractures.push({ 
         id: "PII_EXPOSURE", 
         severity: "CRITICAL", 
@@ -167,22 +173,29 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 10;
     }
 
-    // Baseline Fallback: Ensure any populated survey sets return a valid baseline metric score
     if (frictionScore === 0) {
       frictionScore = 20;
     }
 
-    console.log(`[SYNTHESIS_COMPLETE] SFI Total: ${frictionScore} | Active Gaps Discovered: ${fractures.length}`);
+    const finalizedSFI = Math.min(frictionScore, 100);
+    const triggerAutomatedUpsell = finalizedSFI >= 45 || containsCriticalAlert;
 
-    // 4. Update core ledger metrics inside Supabase
+    // 4. Atomic Commit with Adaptive Pipeline State Overrides
+    const updatePayload: Record<string, any> = {
+      fractures: fractures,
+      sfi_score: finalizedSFI,
+      status: 'COMPLETE'
+    };
+
+    // 💰 IF RISK MATCHES UPSELL CRITERIA: Auto-unlock dashboard and flag SOW as sent
+    if (triggerAutomatedUpsell) {
+      updatePayload.is_released = true;
+      updatePayload.sow_sent = true;
+    }
+
     const { error: finalUpdateError } = await supabase
       .from('audits')
-      .update({ 
-        fractures: fractures,
-        sfi_score: Math.min(frictionScore, 100),
-        status: 'COMPLETE'
-        // ✅ CRITICAL FIX: Removed the non-existent last_synthesized parameter completely
-      })
+      .update(updatePayload)
       .eq('id', auditId);
 
     if (finalUpdateError) {
@@ -190,10 +203,75 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'DATABASE_UPDATE_FAILED', details: finalUpdateError.message });
     }
 
+    // 📬 5. REAL-TIME EXTERNAL DISPATCH DISPATCH CONTROLLER (OBJECTIVE B)
+    if (triggerAutomatedUpsell) {
+      const criticalIds = fractures.filter(f => f.severity === 'CRITICAL').map(f => f.id);
+      
+      const internalAlertPayload = {
+        event: "CRITICAL_RISK_SURFACE_DETECTED",
+        client: parentAudit.org_name,
+        sfi_score: finalizedSFI,
+        capital_at_risk: `$${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}/YR`,
+        critical_vulnerabilities: criticalIds,
+        action_taken: "AUTO_RELEASE_DOSSIER & INBOUND DISPATCH QUEUED",
+        secure_portal_link: `https://bmr-dashboard.com/results/${auditId}?admin=true`
+      };
+
+      console.log("[AUTOMATED ALERT DISPATCH SENDING] ->", JSON.stringify(internalAlertPayload));
+
+      // --- DISPATCH HOOK INTEGRATION FOR SLACK / DISCORD / WEBHOOK OUTBOUND ---
+      if (process.env.INTERNAL_ALERTS_WEBHOOK_URL) {
+        try {
+          await fetch(process.env.INTERNAL_ALERTS_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              text: `🚨 *CRITICAL FRACTURE DETECTED* for *${parentAudit.org_name}*\n• *SFI Score:* ${finalizedSFI}/100\n• *Financial Loss Leakage:* ${internalAlertPayload.capital_at_risk}\n• *Vulnerabilities:* ${criticalIds.join(', ')}\n• *Action:* Tier 3 SOW Pre-Engineered. <${internalAlertPayload.secure_portal_link}|Open Command Terminal>`
+            })
+          });
+        } catch (webhookErr) {
+          console.error("[WEBHOOK_OUTBOUND_FAILED]", webhookErr);
+        }
+      }
+
+      // --- AUTOMATED DISPATCH EMAIL DISPATCH ROUTER OUTBOUND ---
+      if (process.env.RESEND_API_KEY && parentAudit.lead_email) {
+        try {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: 'BMR Forensic Desk <forensics@bmradvisory.co>',
+              to: parentAudit.lead_email,
+              subject: `URGENT SECURITY REMEDIATION REQUIRED: ${parentAudit.org_name.toUpperCase()}`,
+              html: `
+                <div style="font-family: monospace; padding: 30px; background: #020617; color: #fff;">
+                  <h2 style="color: #dc2626;">// SYSTEMIC FRICTION DETECTED</h2>
+                  <p>Our cross-functional triangulation diagnostic engine has compiled your telemetry. A critical mismatch gap has been flagged across your technical and corporate policy configurations.</p>
+                  <p><strong>Entity Tracked:</strong> ${parentAudit.org_name}</p>
+                  <p><strong>Identified Capital Leakage Exposure:</strong> ${internalAlertPayload.capital_at_risk}</p>
+                  <p>Your Forensic Summary Dossier has been securely unblurred. You can view the live mitigation roadmap metrics immediately at your client node terminal endpoint below.</p>
+                  <br />
+                  <a href="https://bmr-dashboard.com/results/${auditId}" style="background: #dc2626; color: white; padding: 15px 25px; text-decoration: none; font-weight: bold; display: inline-block;">ACCESS TARGETED DIRECTIVE</a>
+                </div>
+              `
+            })
+          });
+          console.log(`[EMAIL_AUTOMATION_SUCCESS] High-priority upsell directive dispatched cleanly to ${parentAudit.lead_email}`);
+        } catch (emailErr) {
+          console.error("[EMAIL_DISPATCH_FAILED]", emailErr);
+        }
+      }
+    }
+
     return res.status(200).json({ 
       status: 'SYNTHESIS_COMPLETE', 
-      sfi: frictionScore,
+      sfi: finalizedSFI,
       gaps: fractures.length,
+      automated_upsell_triggered: triggerAutomatedUpsell,
       org: parentAudit.org_name 
     });
 
