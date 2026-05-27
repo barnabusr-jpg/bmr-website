@@ -61,24 +61,22 @@ export default function AdminDashboard() {
   };
 
   const generateForensicPDF = async (audit: any) => {
-    // 🧮 GATHER LIVE CALCULATED REALITIES
     const sfi = audit.sfi_score || 0;
     const dbDecay = audit.decay_pct || 24;
     const spend = parseFloat(audit.ai_spend) || 1.2;
     const fte = Math.round((spend * 1000000) / 200000) || 5;
     
-    // 🎨 SECTOR-SPECIFIC BRANDING COLOR CONFIGURATOR
     const sectorNorm = (audit.sector || "").toLowerCase().trim();
-    let themeColor = "#dc2626"; // Default Crimson Red
-    let themeBg = "#fff5f5";    // Accent tint light fill
+    let themeColor = "#dc2626"; 
+    let themeBg = "#fff5f5";    
     let sectorBadgeLabel = "GENERAL COMMERCIAL OPERATIONS";
 
     if (sectorNorm === 'finance' || sectorNorm === 'banking') {
-      themeColor = "#16a34a"; // Secure Treasury Green
+      themeColor = "#16a34a"; 
       themeBg = "#f0fdf4";
       sectorBadgeLabel = "FINANCIAL INFRASTRUCTURE CAPITAL LEDGER";
     } else if (sectorNorm === 'healthcare' || sectorNorm === 'medical') {
-      themeColor = "#2563eb"; // Clinical Shield Blue
+      themeColor = "#2563eb"; 
       themeBg = "#eff6ff";
       sectorBadgeLabel = "REGULATED HEALTHCARE DATA PROTECTORATE";
     }
@@ -88,28 +86,24 @@ export default function AdminDashboard() {
     const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
     const totalLeakage = laborTax + exposure;
 
-    // 🗺️ RESOLVE EXACT TEXT MATCH PLAYBOOK VALUES
     let playbookHeadline = "BALANCED INFRASTRUCTURE STATE";
     if (sfi >= 45) playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
     else if (sfi > 0) playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
 
-    // 🚨 DYNAMIC SEVERITY HIGHLIGHTING HEADER BANNER
     const riskBannerHTML = sfi >= 45
       ? `<div style="background: #dc2626; color: white; padding: 20px 80px; font-family: monospace; font-size: 14px; font-weight: 900; letter-spacing: 4px; text-align: center; text-transform: uppercase;">
            ⚠️ CRITICAL SYSTEM EXPOSURE DETECTED — AGGRESSIVE REMEDIATION TIMELINE REQUIRED
          </div>`
       : "";
 
-    // 📝 EXTRACT DYNAMIC CUSTOM ADVISOR NOTE WITH DYNAMIC COLOR SCHEMING
     const addedNote = dossierNotes[audit.id]?.trim() || "";
     const noteHTML = addedNote 
-      ? `<div style="margin-top: 40px; padding: 40px; border: 2px dashed ${themeColor}; background: ${themeBg}; font-family: monospace; font-size: 15px; line-height: 1.6; color: #0f172a; text-transform: uppercase; box-sizing: border-box;">
+      ? `<div style="margin-top: 40px; padding: 40px; border: 2px solid ${themeColor}; background: ${themeBg}; font-family: monospace; font-size: 15px; line-height: 1.6; color: #0f172a; text-transform: uppercase; box-sizing: border-box;">
            <strong style="color: ${themeColor}; display: block; margin-bottom: 10px; font-weight: 900; letter-spacing: 2px;">// ADVISOR ARCHITECTURE SPECIFICATION:</strong>
            ${addedNote}
          </div>`
       : "";
 
-    // 📋 BUILD DYNAMIC FRACTURES DETAIL ITEMS FOR EXECUTIVE SUMMARY VIEW
     const realFractures = audit.fractures || [];
     let fracturesListHTML = `<p style="font-size: 14px; color: #64748b; font-style: italic; font-family: sans-serif; margin: 0;">No severe architectural logic anomalies detected over active triangulation tracks.</p>`;
     
@@ -137,9 +131,7 @@ export default function AdminDashboard() {
     
     printArea.innerHTML = `
       <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
-        
         ${riskBannerHTML}
-
         <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 8px solid ${themeColor}; box-sizing: border-box;">
             <div style="text-align: left;">
                 <h1 style="font-size: 44px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase; color: #fff;">FORENSIC RECONNAISSANCE VERDICT</h1>
@@ -149,18 +141,14 @@ export default function AdminDashboard() {
                 <p style="color: ${themeColor}; font-family: monospace; font-size: 15px; margin: 0; font-weight: 900; letter-spacing: 2px;">MARKET TIERS // ${sectorBadgeLabel}</p>
             </div>
         </div>
-
         <div style="padding: 80px 100px 100px 100px; flex-grow: 1; box-sizing: border-box; display: flex; flex-direction: column; gap: 60px;">
-            
             <div style="background: white; color: black; padding: 80px; border-left: 60px solid ${themeColor}; width: 100%; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: left;">
               <span style="font-size: 14px; font-weight: 900; color: ${themeColor}; font-family: monospace; letter-spacing: 3px; text-transform: uppercase;">// STRATEGIC RECONNAISSANCE INSIGHTS</span>
               <h1 style="font-size: 72px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; text-transform: uppercase; letter-spacing: -4px; line-height: 0.85; color: #0f172a;">${audit.org_name?.toUpperCase() || 'CLIENT NODE'}</h1>
-              
               <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-left: 5px solid #475569;">
                 <p style="font-size: 13px; font-weight: 900; color: #64748b; font-family: monospace; margin: 0; letter-spacing: 2px;">STRUCTURAL DIAGNOSTIC FORENSIC VERDICT</p>
                 <p style="font-size: 26px; font-weight: 900; font-style: italic; color: #0f172a; margin: 8px 0 0 0; text-transform: uppercase;">${playbookHeadline}</p>
               </div>
-
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; border-top: 2px solid #e2e8f0; padding-top: 40px;">
                 <div>
                   <p style="font-size: 13px; font-weight: 900; color: #64748b; text-transform: uppercase; font-family: monospace; margin: 0;">SYSTEMIC FRICTION RATING</p>
@@ -171,7 +159,6 @@ export default function AdminDashboard() {
                   <p style="font-size: 54px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; color: #0f172a;">$${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
                 </div>
               </div>
-
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; border-top: 1px dashed #e2e8f0; padding-top: 30px;">
                 <div>
                   <p style="font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; font-family: monospace; margin: 0;">ANNUAL AUTOMATION REWORK TAX</p>
@@ -182,22 +169,17 @@ export default function AdminDashboard() {
                   <p style="font-size: 32px; font-weight: 900; font-style: italic; margin: 5px 0 0 0; color: #334155;">$${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
                 </div>
               </div>
-
               ${noteHTML}
             </div>
-
             <div style="background: #ffffff; color: black; padding: 70px 80px; border-top: 12px solid #0f172a; width: 100%; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
               <span style="font-size: 13px; font-weight: 900; color: #64748b; font-family: monospace; letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 15px; text-align: left;">// IDENTIFIED SYSTEM LOGIC FRACTURES MATRIX</span>
-              
               <div style="display: flex; flex-direction: column;">
                 ${fracturesListHTML}
               </div>
-              
               <div style="margin-top: 40px; text-align: center; padding-top: 20px; border-top: 1px solid #e2e8f0;">
                 <p style="font-size: 11px; font-family: monospace; color: #94a3b8; margin: 0; text-transform: uppercase; font-weight: 900; tracking: 1px;">BLACK MOUNTAIN FORENSICS — SECURE CLASSIFIED SYSTEM DATA STREAM</p>
               </div>
             </div>
-
         </div>
       </div>
     `;
@@ -221,7 +203,6 @@ export default function AdminDashboard() {
   };
 
   const fetchLedger = useCallback(async () => {
-    // 🛡️ POLLING INTERVAL PROTECTION GUARD
     if (isUpdating) return;
 
     let query = supabase
@@ -537,10 +518,9 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         
-                        {/* ⚠️ OBJECTIVE B INTERACTION BADGE SLOT */}
                         <div className="col-span-4 text-center font-black italic text-xs tracking-[0.2em] font-mono flex items-center justify-center gap-3">
                           {audit.sfi_score >= 45 && (
-                            <span className="bg-red-600/10 text-red-500 border border-red-600/30 px-3 py-1 text-[9px] font-mono tracking-widest uppercase tracking-wider block font-black animate-pulse shrink-0">
+                            <span className="bg-red-600/10 text-red-500 border border-red-600/30 px-3 py-1 text-[9px] font-mono tracking-widest uppercase block font-black animate-pulse shrink-0">
                               ⚠️ CRITICAL EXPOSURE ALERT
                             </span>
                           )}
