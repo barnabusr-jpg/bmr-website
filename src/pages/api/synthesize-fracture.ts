@@ -1,295 +1,228 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabaseClient';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { supabase } from "@/lib/supabaseClient";
+import puppeteer from "puppeteer";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ message: 'Method Not Allowed' });
+  const { id } = req.query;
 
-  const { auditId } = req.body;
-
-  if (!auditId) {
-    return res.status(400).json({ error: 'MISSING_AUDIT_ID' });
+  if (!id || typeof id !== "string") {
+    return res.status(400).json({ error: "BAD_REQUEST // MISSING_TARGET_RECORD_ID" });
   }
 
   try {
-    // 1. Fetch completed tracking responses for this audit
-    const { data: nodes, error: nodeError } = await supabase
-      .from('operators')
-      .select('raw_responses, persona_type, status')
-      .eq('audit_id', auditId);
-
-    console.log(`[SYNTHESIS] Processing Engine Run: ${auditId} | Ingesting Node Arrays: ${nodes?.length || 0}`);
-
-    if (nodeError) throw nodeError;
-
-    if (!nodes || nodes.length === 0) {
-      return res.status(400).json({ error: 'TRIANGULATION_VOID', message: 'No operational records found matching this tracking ID.' });
-    }
-
-    // 2. Fetch parent financial metrics metadata
-    const { data: parentAudit, error: auditError } = await supabase
-      .from('audits')
-      .select('rework_tax, id, org_name, lead_email, sector, ai_spend, decay_pct')
-      .eq('id', auditId)
+    // 1. Fetch exact real-time state from database
+    const { data: audit, error } = await supabase
+      .from("audits")
+      .select("*")
+      .eq("id", id)
       .single();
 
-    if (auditError || !parentAudit) {
-      return res.status(404).json({ error: 'PARENT_AUDIT_NOT_FOUND' });
+    if (error || !audit) {
+      return res.status(44).json({ error: "NOT_FOUND // SPECIFIED_RECORD_MISSING" });
     }
 
-    const parentReworkTax = parseFloat(parentAudit.rework_tax || "0");
-    const dbDecay = parentAudit.decay_pct || 24;
-    const spend = parseFloat(parentAudit.ai_spend) || 1.2;
-    const fte = Math.round((spend * 1000000) / 200000) || 5;
-    const sectorNorm = (parentAudit.sector || "").toLowerCase().trim();
-    const laborMultiplier = sectorNorm === 'finance' ? 0.5 : sectorNorm === 'healthcare' ? 0.45 : 0.4;
-    
-    const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
-    const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
-    const totalLeakage = laborTax + exposure;
+    // 🔒 Security Guard Gate: Never compile or deliver the physical PDF copy if the deal is not in Phase 2
+    if (!audit.is_released) {
+      return res.status(403).json({ error: "ACCESS_RESTRICTED // TARGET_RECORD_NOT_IN_PHASE_TWO_RELEASE" });
+    }
 
-    // 3. Normalize array properties and map target answers smoothly
-    const answers: Record<string, { label: string; weight: number; insight: string; tag: string }> = {};
-    let totalScoreWeight = 0;
-    let questionsAnsweredCount = 0;
+    // 🧮 Exact Math Sync Layer: Reading sliders and aliasing the schema mapping
+    const dbDecay = audit.decay_pct || 24;
+    const spend = parseFloat(audit.ai_spend) || 1.2;
+    // 🏷️ Destructures the repurposed database column natively to prevent code confusion
+    const fteCount = audit.roi_pct ? parseInt(audit.roi_pct) : Math.round((spend * 1000000) / 200000) || 5;
+    const sectorType = (audit.sector || "general").toLowerCase().trim();
 
-    nodes.forEach(node => {
-      if (node.raw_responses) {
-        Object.entries(node.raw_responses).forEach(([qId, data]: any) => {
-          const upperKey = qId.toUpperCase().trim();
-          
-          if (data && typeof data === 'object') {
-            answers[upperKey] = {
-              label: String(data.label || ""),
-              weight: parseInt(data.weight ?? "0"),
-              insight: String(data.forensicInsight || ""),
-              tag: String(data.internalTag || "")
-            };
-            totalScoreWeight += answers[upperKey].weight;
-            questionsAnsweredCount++;
+    let laborMultiplier = 0.4;
+    let baseExposureRate = 0.18;
+    let highExposureRate = 0.30;
+    let brandHexAccent = "#dc2626"; // Default standard Red
+
+    if (sectorType === "finance" || sectorType === "banking") {
+      laborMultiplier = 0.5;
+      baseExposureRate = 0.22;
+      highExposureRate = 0.35;
+      brandHexAccent = "#16a34a"; // Finance Green
+    } else if (sectorType === "healthcare" || sectorType === "medical") {
+      laborMultiplier = 0.45;
+      baseExposureRate = 0.20;
+      highExposureRate = 0.32;
+      brandHexAccent = "#2563eb"; // Healthcare Blue
+    }
+
+    const laborTax = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
+    const selectedExposureRate = dbDecay > 60 ? highExposureRate : baseExposureRate;
+    const exposure = (selectedExposureRate * (spend * 1000000)) * 1.15;
+
+    // 🎨 HTML Generation Block: Styled as a premium, technical enterprise command document
+    const htmlReportContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <style>
+          body {
+            background-color: #020617;
+            color: #ffffff;
+            font-family: monospace;
+            padding: 50px;
+            margin: 0;
+            text-transform: uppercase;
           }
-        });
-      }
+          .header-box {
+            border-bottom: 2px solid ${brandHexAccent};
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+          }
+          .title-brand {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            font-style: italic;
+          }
+          .title-brand span { color: ${brandHexAccent}; }
+          .subtitle {
+            font-size: 10px;
+            color: #64748b;
+            letter-spacing: 3px;
+            margin-top: 5px;
+          }
+          .placard {
+            background-color: #ffffff;
+            color: #000000;
+            padding: 35px;
+            border-left: 12px solid ${brandHexAccent};
+            margin-bottom: 40px;
+          }
+          .placard h2 {
+            margin: 0 0 15px 0;
+            font-size: 32px;
+            font-style: italic;
+            font-weight: 900;
+            letter-spacing: -1px;
+          }
+          .metrics-grid {
+            display: table;
+            width: 100%;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
+          }
+          .metric-cell {
+            display: table-cell;
+            width: 33.33%;
+          }
+          .cell-label { font-size: 9px; color: #64748b; font-weight: bold; }
+          .cell-value { font-size: 14px; font-weight: 900; color: #000000; margin-top: 4px; }
+          .cell-value span { color: ${brandHexAccent}; }
+          .section-title {
+            font-size: 14px;
+            color: #64748b;
+            border-b: 1px solid #1e293b;
+            padding-bottom: 8px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+          }
+          .node-card {
+            border: 1px solid #1e293b;
+            background-color: rgba(5, 11, 24, 0.6);
+            padding: 20px;
+            margin-bottom: 20px;
+          }
+          .node-top {
+            border-bottom: 1px solid #1e293b;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            font-size: 10px;
+            color: #475569;
+          }
+          .node-top span {
+            float: right;
+            background-color: rgba(220, 38, 38, 0.1);
+            color: #ef4444;
+            padding: 1px 6px;
+            font-size: 9px;
+          }
+          .node-title { font-size: 16px; font-weight: 900; color: #ffffff; margin-bottom: 8px; font-style: italic; }
+          .node-desc { font-family: sans-serif; font-size: 11px; color: #94a3b8; text-transform: none; line-height: 1.5; margin-bottom: 15px; }
+          .directive-label { font-size: 8px; color: #475569; margin-bottom: 2px; }
+          .directive-val { font-size: 11px; font-weight: 900; color: ${brandHexAccent}; font-style: italic; }
+          .footer-text {
+            font-size: 9px;
+            color: #334155;
+            text-align: center;
+            margin-top: 60px;
+            letter-spacing: 2px;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header-box">
+          <div class="title-brand">BMR<span>SOLUTIONS</span></div>
+          <div class="subtitle">FORENSIC_SYSTEM_DECAY_LEDGER // PHASE_2_VERIFIED</div>
+        </div>
+
+        <div class="placard">
+          <h2>SYSTEM_REALITY_AUDIT</h2>
+          <div style="font-size: 10px; color: #94a3b8; margin-bottom: 20px; font-weight: bold;">ORGANIZATION BASELINE: ${audit.org_name}</div>
+          
+          <div class="metrics-grid">
+            <div class="metric-cell">
+              <div class="cell-label">LOGIC_DECAY_COEFFICIENT</div>
+              <div class="cell-value"><span>${dbDecay}%</span> DECAY RATE</div>
+            </div>
+            <div class="metric-cell">
+              <div class="cell-label">PROCESS_WASTE_TAX</div>
+              <div class="cell-value"><span>$${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> LIAB</div>
+            </div>
+            <div class="metric-cell">
+              <div class="cell-label">PROJECTED_ANNUAL_EXPOSURE</div>
+              <div class="cell-value"><span>$${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> RISK</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">// IDENTIFIED_SYSTEMIC_ANOMALIES_BLUEPRINT</div>
+        
+        ${audit.fractures && audit.fractures.length > 0 ? audit.fractures.map((frac: any, i: number) => `
+          <div class="node-card" style="${frac.severity === 'CRITICAL' ? 'border-color: rgba(220,38,38,0.4);' : ''}">
+            <div class="node-top">
+              // INDEX NODE FR-0${i + 1}
+              <span style="${frac.severity !== 'CRITICAL' ? 'color: #f59e0b; background: rgba(245,158,11,0.1);' : ''}">${frac.severity || 'HIGH'}_RISK</span>
+            </div>
+            <div class="node-title">${String(frac.id || 'ANOMALY_NODE').replace(/_/g, " ")}</div>
+            <div class="node-desc">${frac.description}</div>
+            <div class="directive-label">REQUIRED REMEDIATION DIRECTIVE:</div>
+            <div class="node-val columns directive-val">${frac.directive}</div>
+          </div>
+        `).join('') : '<p style="color:#475569;">NO_ANOMALY_DATA_POPULATED</p>'}
+
+        <div class="footer-text">
+          SECURE TECHNICAL ARTIFACT // DATA GENERATED DIRECTLY UNDER ADVISORY MASTER FRAMEWORK // v2.6
+        </div>
+      </body>
+      </html>
+    `;
+
+    // 2. Launch headless chromium sequence via Puppeteer to stamp PDF asset binary
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.setContent(htmlReportContent, { waitUntil: "networkidle0" });
+    
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "20mm", bottom: "20mm", left: "15mm", right: "15mm" }
     });
 
-    console.log("[SYNTHESIS_MAP] Active Multi-Choice Answers Ingested:", JSON.stringify(answers));
+    await browser.close();
 
-    const fractures = [];
-    let frictionScore = 0;
-    let containsCriticalAlert = false;
+    // 3. Stream compiled data buffer directly to client terminal download thread
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename=BMR-Forensic-Ledger-${id}.pdf`);
+    return res.status(200).send(pdfBuffer);
 
-    // --- TRUE 30-QUESTION CONTRADICTION EVALUATION ENGINE ---
-
-    // RT_01: LOGIC FRAGMENTATION
-    if (answers.RT_01 && answers.RT_01.weight >= 6) {
-      fractures.push({
-        id: "LOGIC_FRAGMENTATION",
-        severity: "HIGH",
-        description: `Operational workflows run on undocumented tribal processes. Vulnerability vector: ${answers.RT_01.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_02 // STRUCTURAL ALIGNMENT",
-        recovery: "SOP Process Standardizations"
-      });
-      frictionScore += 15;
-    }
-
-    // RT_02: GOVERNANCE VOID 
-    if (answers.RT_02 && answers.RT_02.weight >= 6) {
-      containsCriticalAlert = true;
-      fractures.push({
-        id: "GOVERNANCE_VOID",
-        severity: "CRITICAL",
-        description: `Entity possesses zero codified rule-sets tracking model risks. Fine parameters: ${answers.RT_02.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_01 // IMMEDIATE HARDENING",
-        recovery: "Corporate Compliance Protection Frameworks"
-      });
-      frictionScore += 20;
-    }
-
-    // RT_03: ROLE DRIFT LABOR DEBT
-    if (answers.RT_03 && answers.RT_03.weight >= 6) {
-      fractures.push({
-        id: "ROLE_DEBT",
-        severity: "HIGH",
-        description: `Undefined cross-team responsibilities leak productive capacity. Impact: ${answers.RT_03.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_02 // STRUCTURAL ALIGNMENT",
-        recovery: "Cross-Functional Responsibility Matrix Routing"
-      });
-      frictionScore += 10;
-    }
-
-    // DG_01: PERFORMANCE DRIFT LEAK
-    if (answers.DG_01 && answers.DG_01.weight >= 6) {
-      fractures.push({
-        id: "PERFORMANCE_DRIFT",
-        severity: "HIGH",
-        description: `Unmonitored runtime assets show no clear business ROI linkages. Leak tracking: ${answers.DG_01.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_04 // FORENSIC CONTINUITY",
-        recovery: "Automated Metric Telemetry Instrumentation"
-      });
-      frictionScore += 10;
-    }
-
-    // DG_02: STRATEGIC DEBT MISALIGNMENT
-    if (answers.DG_02 && answers.DG_02.weight >= 6) {
-      fractures.push({
-        id: "STRATEGIC_DEBT",
-        severity: "HIGH",
-        description: `AI scaling tracks run loosely decoupled from core vision targets. Waste ratio: ${answers.DG_02.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_02 // STRUCTURAL ALIGNMENT",
-        recovery: "Operational Intent Alignment Overlays"
-      });
-      frictionScore += 15;
-    }
-
-    // DG_03: BUDGET VOID FRICTION
-    if (answers.DG_03 && answers.DG_03.weight >= 6) {
-      fractures.push({
-        id: "BUDGET_VOID",
-        severity: "HIGH",
-        description: `Piecemeal project-based funding introduces scaling friction. Penalty marker: ${answers.DG_03.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_03 // GOVERNANCE OVERLAY",
-        recovery: "Capital Pool Allocation Optimization"
-      });
-      frictionScore += 10;
-    }
-
-    // SA_01: SHADOW VENDOR INSULATION
-    if (answers.SA_01 && answers.SA_01.weight >= 6) {
-      containsCriticalAlert = true;
-      fractures.push({
-        id: "SHADOW_VENDORS",
-        severity: "CRITICAL",
-        description: `AI provider software integrations leak system access with zero vetting. Threat track: ${answers.SA_01.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_01 // IMMEDIATE HARDENING",
-        recovery: "Continuous Third-Party Perimeter Auditing"
-      });
-      frictionScore += 20;
-    }
-
-    // SA_02: UNSANCTIONED IP LEAKAGE
-    if (answers.SA_02 && answers.SA_02.weight >= 6) {
-      fractures.push({
-        id: "IP_LEAKAGE",
-        severity: "HIGH",
-        description: `Latent data routing trends expose proprietary assets to fine-tuning pipelines. Leak: ${answers.SA_02.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_03 // GOVERNANCE OVERLAY",
-        recovery: "Zero-Trust Architecture Asset Shields"
-      });
-      frictionScore += 15;
-    }
-
-    // ED_01: TECHNICAL STACK DECAY
-    if (answers.ED_01 && answers.ED_01.weight >= 6) {
-      fractures.push({
-        id: "TECH_DECAY",
-        severity: "HIGH",
-        description: `Siloed databasing architectures delay system execution cycles. Penalty: ${answers.ED_01.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_04 // FORENSIC CONTINUITY",
-        recovery: "Real-Time Pipeline Infrastructure Upgrades"
-      });
-      frictionScore += 10;
-    }
-
-    // ED_02: COMMODITY DATA MOAT EXPLOSION
-    if (answers.ED_02 && answers.ED_02.weight >= 6) {
-      fractures.push({
-        id: "DATA_VOID",
-        severity: "HIGH",
-        description: `Reliance on generic public training pipelines erodes unique competitive market defensibility. Risk: ${answers.ED_02.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_02 // STRUCTURAL ALIGNMENT",
-        recovery: "Proprietary Data Moat Training Protocols"
-      });
-      frictionScore += 10;
-    }
-
-    // ED_03: VERSION CONTROL DEBT
-    if (answers.ED_03 && answers.ED_03.weight >= 6) {
-      fractures.push({
-        id: "VERSION_DEBT",
-        severity: "HIGH",
-        description: `Manual or inconsistent runtime code versioning diminishes development team velocity. Indicator: ${answers.ED_03.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_03 // GOVERNANCE OVERLAY",
-        recovery: "Automated MLOps Delivery Pipelines"
-      });
-      frictionScore += 5;
-    }
-
-    // ED_04: GPU HEAVY COST HEMORRHAGE
-    if (answers.ED_04 && answers.ED_04.weight >= 6) {
-      fractures.push({
-        id: "COST_HEMORRHAGE",
-        severity: "HIGH",
-        description: `Variable computing scaling waste reduces gross margins. Hemorrhage tracker: ${answers.ED_04.insight.replace(/_/g, " ")}`,
-        directive: "Implement Protocol DIR_04 // FORENSIC CONTINUITY",
-        recovery: "Resource Compute Allocation Optimization"
-      });
-      frictionScore += 10;
-    }
-
-    // Compute scoring averages if answers exist
-    if (frictionScore === 0 && questionsAnsweredCount > 0) {
-      frictionScore = Math.round((totalScoreWeight / (questionsAnsweredCount * 10)) * 100);
-    }
-
-    const finalizedSFI = Math.min(frictionScore, 100);
-    const triggerAutomatedUpsell = finalizedSFI >= 40 || containsCriticalAlert;
-
-    // 4. Update core ledger metrics
-    const updatePayload: Record<string, any> = {
-      fractures: fractures,
-      sfi_score: finalizedSFI,
-      status: 'COMPLETE'
-    };
-
-    if (triggerAutomatedUpsell) {
-      updatePayload.is_released = true;
-      updatePayload.sow_sent = true;
-    }
-
-    const { error: finalUpdateError } = await supabase
-      .from('audits')
-      .update(updatePayload)
-      .eq('id', auditId);
-
-    if (finalUpdateError) {
-      console.error("[DATABASE_WRITE_ERROR]:", finalUpdateError.message);
-      return res.status(500).json({ error: 'DATABASE_UPDATE_FAILED', details: finalUpdateError.message });
-    }
-
-    // 📬 5. REAL-TIME ALERTS EXPORT OUTBOUND HOOK
-    if (triggerAutomatedUpsell) {
-      const internalAlertPayload = {
-        event: "CRITICAL_RISK_SURFACE_DETECTED",
-        client: parentAudit.org_name,
-        sfi_score: finalizedSFI,
-        capital_at_risk: `$${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}/YR`,
-        secure_portal_link: `https://bmr-dashboard.com/results/${auditId}?admin=true`
-      };
-
-      if (process.env.INTERNAL_ALERTS_WEBHOOK_URL) {
-        try {
-          await fetch(process.env.INTERNAL_ALERTS_WEBHOOK_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              text: `🚨 *CRITICAL RECONNAISSANCE ALERT* for *${parentAudit.org_name}*\n• *SFI Rating:* ${finalizedSFI}/100\n• *Budget Leakage:* ${internalAlertPayload.capital_at_risk}\n• <${internalAlertPayload.secure_portal_link}|Open Command Terminal>`
-            })
-          });
-        } catch (webhookErr) {
-          console.error("[WEBHOOK_OUTBOUND_FAILED]", webhookErr);
-        }
-      }
-    }
-
-    return res.status(200).json({ 
-      status: 'SYNTHESIS_COMPLETE', 
-      sfi: finalizedSFI,
-      gaps: fractures.length,
-      automated_upsell_triggered: triggerAutomatedUpsell,
-      org: parentAudit.org_name 
-    });
-
-  } catch (error: any) {
-    console.error("[CRITICAL_API_EXCEPTION]:", error);
-    return res.status(500).json({ error: 'INTERNAL_SERVER_ERROR', details: error.message });
+  } catch (err: any) {
+    console.error("CRITICAL_PDF_GENERATION_EXCEPTION:", err);
+    return res.status(500).json({ error: "INTERNAL_PDF_COMPILE_CRASH", details: err?.message || err });
   }
 }
