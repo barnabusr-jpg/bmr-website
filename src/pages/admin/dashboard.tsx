@@ -61,26 +61,74 @@ export default function AdminDashboard() {
   };
 
   const generateForensicPDF = async (audit: any) => {
+    // 🧮 GATHER LIVE CALCULATED REALITIES
     const sfi = audit.sfi_score || 0;
     const dbDecay = audit.decay_pct || 24;
     const spend = parseFloat(audit.ai_spend) || 1.2;
     const fte = Math.round((spend * 1000000) / 200000) || 5;
-    const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
+    
+    // 🎨 SECTOR-SPECIFIC BRANDING COLOR CONFIGURATOR
+    const sectorNorm = (audit.sector || "").toLowerCase().trim();
+    let themeColor = "#dc2626"; // Default Crimson Red
+    let themeBg = "#fff5f5";    // Accent tint light fill
+    let sectorBadgeLabel = "GENERAL COMMERCIAL OPERATIONS";
+
+    if (sectorNorm === 'finance' || sectorNorm === 'banking') {
+      themeColor = "#16a34a"; // Secure Treasury Green
+      themeBg = "#f0fdf4";
+      sectorBadgeLabel = "FINANCIAL INFRASTRUCTURE CAPITAL LEDGER";
+    } else if (sectorNorm === 'healthcare' || sectorNorm === 'medical') {
+      themeColor = "#2563eb"; // Clinical Shield Blue
+      themeBg = "#eff6ff";
+      sectorBadgeLabel = "REGULATED HEALTHCARE DATA PROTECTORATE";
+    }
+
+    const laborMultiplier = sectorNorm === 'finance' ? 0.5 : sectorNorm === 'healthcare' ? 0.45 : 0.4;
     const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
     const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
     const totalLeakage = laborTax + exposure;
 
+    // 🗺️ RESOLVE EXACT TEXT MATCH PLAYBOOK VALUES
     let playbookHeadline = "BALANCED INFRASTRUCTURE STATE";
     if (sfi >= 45) playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
     else if (sfi > 0) playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
 
+    // 🚨 DYNAMIC SEVERITY HIGHLIGHTING HEADER BANNER
+    const riskBannerHTML = sfi >= 45
+      ? `<div style="background: #dc2626; color: white; padding: 20px 80px; font-family: monospace; font-size: 14px; font-weight: 900; letter-spacing: 4px; text-align: center; text-transform: uppercase;">
+           ⚠️ CRITICAL SYSTEM EXPOSURE DETECTED — AGGRESSIVE REMEDIATION TIMELINE REQUIRED
+         </div>`
+      : "";
+
+    // 📝 EXTRACT DYNAMIC CUSTOM ADVISOR NOTE WITH DYNAMIC COLOR SCHEMING
     const addedNote = dossierNotes[audit.id]?.trim() || "";
     const noteHTML = addedNote 
-      ? `<div style="margin-top: 45px; padding: 40px; border: 2px solid #dc2626; background: #fff5f5; font-family: monospace; font-size: 15px; line-height: 1.6; color: #000; text-transform: uppercase; box-sizing: border-box;">
-           <strong style="color: #dc2626; display: block; margin-bottom: 8px; font-weight: 900; letter-spacing: 2px;">// ADVISOR EXECUTIVE ANNOTATION:</strong>
+      ? `<div style="margin-top: 40px; padding: 40px; border: 2px dashed ${themeColor}; background: ${themeBg}; font-family: monospace; font-size: 15px; line-height: 1.6; color: #0f172a; text-transform: uppercase; box-sizing: border-box;">
+           <strong style="color: ${themeColor}; display: block; margin-bottom: 10px; font-weight: 900; letter-spacing: 2px;">// ADVISOR ARCHITECTURE SPECIFICATION:</strong>
            ${addedNote}
          </div>`
       : "";
+
+    // 📋 BUILD DYNAMIC FRACTURES DETAIL ITEMS FOR EXECUTIVE SUMMARY VIEW
+    const realFractures = audit.fractures || [];
+    let fracturesListHTML = `<p style="font-size: 14px; color: #64748b; font-style: italic; font-family: sans-serif; margin: 0;">No severe architectural logic anomalies detected over active triangulation tracks.</p>`;
+    
+    if (realFractures.length > 0) {
+      fracturesListHTML = realFractures.map((frac: any) => `
+        <div style="padding: 20px 0; border-bottom: 1px dashed #e2e8f0; display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; text-align: left;">
+          <div style="flex: 1;">
+            <strong style="font-size: 15px; color: #0f172a; text-transform: uppercase; font-family: monospace; display: block;">
+              ${frac.id === "PII_EXPOSURE" || frac.id === "INDEMNITY_VOID" ? `<span style="color:#dc2626;">🔥 ${frac.id}</span>` : frac.id}
+            </strong>
+            <span style="font-size: 13px; color: #475569; display: block; margin-top: 5px; font-family: sans-serif; text-transform: none; font-weight: normal; line-height: 1.5;">${frac.description}</span>
+          </div>
+          <div style="text-align: right; shrink-0;">
+            <span style="font-size: 11px; font-family: monospace; font-weight: 900; color: #fff; background: ${frac.severity === 'CRITICAL' ? '#dc2626' : '#d97706'}; padding: 4px 8px; tracking: 1px; display: inline-block;">${frac.severity}</span>
+            <span style="font-size: 12px; font-family: monospace; font-weight: 900; color: ${themeColor}; display: block; margin-top: 8px;">${frac.directive.split(' // ')[0]}</span>
+          </div>
+        </div>
+      `).join('');
+    }
 
     const printArea = document.createElement('div');
     printArea.style.position = 'fixed';
@@ -89,63 +137,82 @@ export default function AdminDashboard() {
     
     printArea.innerHTML = `
       <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
-        <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 8px solid #dc2626; box-sizing: border-box;">
-            <div>
-                <h1 style="font-size: 44px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase; color: #fff;">FORENSIC ANALYSIS DOSSIER</h1>
-                <p style="color: #64748b; font-family: monospace; font-size: 15px; margin-top: 15px; font-weight: 900; letter-spacing: 3px;">SIGNAL UUID: ${audit.id.toUpperCase()}</p>
+        
+        ${riskBannerHTML}
+
+        <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 8px solid ${themeColor}; box-sizing: border-box;">
+            <div style="text-align: left;">
+                <h1 style="font-size: 44px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase; color: #fff;">FORENSIC RECONNAISSANCE VERDICT</h1>
+                <p style="color: #64748b; font-family: monospace; font-size: 14px; margin-top: 15px; font-weight: 900; letter-spacing: 3px;">TRACKING ID: ${audit.id.toUpperCase()}</p>
             </div>
             <div style="text-align: right;">
-                <p style="color: #dc2626; font-family: monospace; font-size: 18px; margin: 0; font-weight: 900; letter-spacing: 2px;">STATUS // CONFIDENTIAL</p>
+                <p style="color: ${themeColor}; font-family: monospace; font-size: 15px; margin: 0; font-weight: 900; letter-spacing: 2px;">MARKET TIERS // ${sectorBadgeLabel}</p>
             </div>
         </div>
-        <div style="padding: 80px 100px 100px 100px; flex-grow: 1; box-sizing: border-box;">
-            <div style="background: white; color: black; padding: 80px; border-left: 60px solid #dc2626; width: 100%; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
-              <span style="font-size: 14px; font-weight: 900; color: #dc2626; font-family: monospace; tracking: 3px; text-transform: uppercase;">// STRATEGIC DIAGNOSTIC SUMMARY</span>
-              <h1 style="font-size: 68px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; text-transform: uppercase; letter-spacing: -3px; line-height: 0.9; color: #0f172a;">${audit.org_name?.toUpperCase() || 'CLIENT NODE'}</h1>
+
+        <div style="padding: 80px 100px 100px 100px; flex-grow: 1; box-sizing: border-box; display: flex; flex-direction: column; gap: 60px;">
+            
+            <div style="background: white; color: black; padding: 80px; border-left: 60px solid ${themeColor}; width: 100%; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: left;">
+              <span style="font-size: 14px; font-weight: 900; color: ${themeColor}; font-family: monospace; letter-spacing: 3px; text-transform: uppercase;">// STRATEGIC RECONNAISSANCE INSIGHTS</span>
+              <h1 style="font-size: 72px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; text-transform: uppercase; letter-spacing: -4px; line-height: 0.85; color: #0f172a;">${audit.org_name?.toUpperCase() || 'CLIENT NODE'}</h1>
               
-              <div style="margin-top: 40px; padding: 25px; background: #f8fafc; border-left: 4px solid #475569;">
-                <p style="font-size: 13px; font-weight: 900; color: #64748b; font-family: monospace; margin: 0; tracking: 2px;">DIAGNOSTIC VERDICT</p>
-                <p style="font-size: 24px; font-weight: 900; font-style: italic; color: #0f172a; margin: 5px 0 0 0; text-transform: uppercase;">${playbookHeadline}</p>
+              <div style="margin-top: 40px; padding: 30px; background: #f8fafc; border-left: 5px solid #475569;">
+                <p style="font-size: 13px; font-weight: 900; color: #64748b; font-family: monospace; margin: 0; letter-spacing: 2px;">STRUCTURAL DIAGNOSTIC FORENSIC VERDICT</p>
+                <p style="font-size: 26px; font-weight: 900; font-style: italic; color: #0f172a; margin: 8px 0 0 0; text-transform: uppercase;">${playbookHeadline}</p>
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 50px; border-top: 2px solid #e2e8f0; padding-top: 40px;">
                 <div>
                   <p style="font-size: 13px; font-weight: 900; color: #64748b; text-transform: uppercase; font-family: monospace; margin: 0;">SYSTEMIC FRICTION RATING</p>
-                  <p style="font-size: 48px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; color: #dc2626;">${sfi} / 100 SFI</p>
+                  <p style="font-size: 54px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; color: ${themeColor};">${sfi} / 100 SFI</p>
                 </div>
                 <div>
-                  <p style="font-size: 13px; font-weight: 900; color: #64748b; text-transform: uppercase; font-family: monospace; margin: 0;">TOTAL ANNUAL LOSS REALITY</p>
-                  <p style="font-size: 48px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; color: #0f172a;">$${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
+                  <p style="font-size: 13px; font-weight: 900; color: #64748b; text-transform: uppercase; font-family: monospace; margin: 0;">COMBINED BUDGETARY LEAKAGE / YR</p>
+                  <p style="font-size: 54px; font-weight: 900; font-style: italic; margin: 10px 0 0 0; color: #0f172a;">$${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
                 </div>
               </div>
 
               <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 30px; border-top: 1px dashed #e2e8f0; padding-top: 30px;">
                 <div>
-                  <p style="font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; font-family: monospace; margin: 0;">ANNUAL REWORK TAX</p>
-                  <p style="font-size: 28px; font-weight: 900; font-style: italic; margin: 5px 0 0 0; color: #334155;">$${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
+                  <p style="font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; font-family: monospace; margin: 0;">ANNUAL AUTOMATION REWORK TAX</p>
+                  <p style="font-size: 32px; font-weight: 900; font-style: italic; margin: 5px 0 0 0; color: #334155;">$${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
                 </div>
                 <div>
-                  <p style="font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; font-family: monospace; margin: 0;">INACTION PENALTY RISK</p>
-                  <p style="font-size: 28px; font-weight: 900; font-style: italic; margin: 5px 0 0 0; color: #334155;">$${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
+                  <p style="font-size: 12px; font-weight: 900; color: #94a3b8; text-transform: uppercase; font-family: monospace; margin: 0;">STRATEGIC INACTION RISK PENALTY</p>
+                  <p style="font-size: 32px; font-weight: 900; font-style: italic; margin: 5px 0 0 0; color: #334155;">$${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p>
                 </div>
               </div>
 
               ${noteHTML}
             </div>
+
+            <div style="background: #ffffff; color: black; padding: 70px 80px; border-top: 12px solid #0f172a; width: 100%; box-sizing: border-box; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);">
+              <span style="font-size: 13px; font-weight: 900; color: #64748b; font-family: monospace; letter-spacing: 2px; text-transform: uppercase; display: block; margin-bottom: 15px; text-align: left;">// IDENTIFIED SYSTEM LOGIC FRACTURES MATRIX</span>
+              
+              <div style="display: flex; flex-direction: column;">
+                ${fracturesListHTML}
+              </div>
+              
+              <div style="margin-top: 40px; text-align: center; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+                <p style="font-size: 11px; font-family: monospace; color: #94a3b8; margin: 0; text-transform: uppercase; font-weight: 900; tracking: 1px;">BLACK MOUNTAIN FORENSICS — SECURE CLASSIFIED SYSTEM DATA STREAM</p>
+              </div>
+            </div>
+
         </div>
       </div>
     `;
     document.body.appendChild(printArea);
 
     try {
-      await new Promise(r => setTimeout(r, 400));
+      await new Promise(r => setTimeout(r, 500));
       const canvas = await html2canvas(printArea, { backgroundColor: "#020617", scale: 2, width: 1400 });
       const imgData = canvas.toDataURL("image/png", 1.0);
       const pdf = new jsPDF("p", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
+      
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, scaledHeight);
-      pdf.save(`BMR_STRATEGIC_DOSSIER_${audit.org_name || 'EXPORT'}.pdf`);
+      pdf.save(`BMR_PREMIUM_DOSSIER_${audit.org_name || 'EXPORT'}.pdf`);
       document.body.removeChild(printArea);
     } catch (err) {
       console.error("PDF GENERATION EXCEPTION:", err);
@@ -154,7 +221,7 @@ export default function AdminDashboard() {
   };
 
   const fetchLedger = useCallback(async () => {
-    // 🛡️ POLLING PROTECTION GUARD: Stop active data overwrites during a calculation transaction
+    // 🛡️ POLLING INTERVAL PROTECTION GUARD
     if (isUpdating) return;
 
     let query = supabase
@@ -372,7 +439,6 @@ export default function AdminDashboard() {
           {activeTab === 'ledger' ? (
             <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
               
-              {/* 🚀 TRANSACTION VELOCITY PIPELINE METRICS FUNNEL */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 italic">
                 {[
                   { label: "TOTAL ASSETS INGESTED", value: totalCount, color: "border-slate-800 text-white" },
@@ -389,5 +455,364 @@ export default function AdminDashboard() {
                 ))}
               </div>
 
-              {/* 🛠️ INTEGRATED HIGH VOLUME CONTROLS TOOLBAR */}
-              <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between bg-slate-950
+              <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between bg-slate-950 p-4 border border-slate-900">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <input 
+                    type="text" 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                    placeholder="PARSE BY COMPANY IDENTITY OR LEAD SIGNAL EMAIL..." 
+                    className="w-full bg-black border border-slate-800 pl-12 pr-4 py-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic placeholder:text-slate-600"
+                  />
+                </div>
+                
+                <div className="flex bg-black border border-slate-800 p-1 gap-1 overflow-x-auto shrink-0">
+                  {([
+                    { label: "All Assets", value: "ALL" },
+                    { label: "Initial Leads", value: "LEAD" },
+                    { label: "Triangulating", value: "TRIANGULATING" },
+                    { label: "Calculated Dossiers", value: "COMPLETE" }
+                  ] as const).map((tab) => (
+                    <button 
+                      key={tab.value} 
+                      onClick={() => setStatusFilter(tab.value)}
+                      className={`px-4 py-2 font-mono text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === tab.value ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {data.length === 0 ? (
+                <div className="text-center p-20 border border-dashed border-slate-900 font-mono text-xs text-slate-600 uppercase tracking-widest">
+                  No corresponding forensic ledger entries located inside this category index.
+                </div>
+              ) : (
+                data.map((audit) => {
+                  const clientHasAccess = !!audit.is_released;
+
+                  const sfi = audit.sfi_score || 0;
+                  const realFractures = audit.fractures || [];
+                  const dbDecay = audit.decay_pct || 24;
+                  const spend = parseFloat(audit.ai_spend) || 1.2;
+                  const fte = Math.round((spend * 1000000) / 200000) || 5;
+                  const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
+                  const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
+                  const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+
+                  let playbookHeadline = "BALANCED INFRASTRUCTURE STATE";
+                  let playbookNarrative = "Operational alignment metrics indicate standard operational velocity. Cross-functional communication tracks are solid, and system parameters are matching organizational intent.";
+                  let playbookPitch = "Deploy routine baseline optimization filters to preserve ongoing alignment tracks.";
+                  let targetTier = "TIER_01 // DRIFT DIAGNOSTICS";
+
+                  const cleanStatus = (audit.status || "").toUpperCase();
+                  if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING") || sfi === 0) {
+                    playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
+                    playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
+                    playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
+                  } else if (sfi >= 45) {
+                    playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
+                    playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
+                    playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance, removing the manual tax on your staff.";
+                    targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
+                  } else if (sfi > 0) {
+                    playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
+                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrating inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
+                    playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
+                    targetTier = "TIER_02 // STRUCTURAL HARDENING";
+                  }
+
+                  return (
+                    <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
+                      <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
+                        <div className="col-span-6 flex items-center gap-6">
+                          <div className="bg-slate-900 p-4 border border-slate-800 shrink-0 italic">
+                            <Building2 size={24} className={cleanStatus.includes("COMPLETE") ? "text-green-500" : "text-red-600"} />
+                          </div>
+                          <div>
+                            <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
+                            <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">{audit.lead_email}</div>
+                          </div>
+                        </div>
+                        
+                        {/* ⚠️ OBJECTIVE B INTERACTION BADGE SLOT */}
+                        <div className="col-span-4 text-center font-black italic text-xs tracking-[0.2em] font-mono flex items-center justify-center gap-3">
+                          {audit.sfi_score >= 45 && (
+                            <span className="bg-red-600/10 text-red-500 border border-red-600/30 px-3 py-1 text-[9px] font-mono tracking-widest uppercase tracking-wider block font-black animate-pulse shrink-0">
+                              ⚠️ CRITICAL EXPOSURE ALERT
+                            </span>
+                          )}
+                          <span className="text-white">
+                            {cleanStatus.includes("COMPLETE") && 'RESULT PUBLISHED'}
+                            {cleanStatus === 'LEAD' && 'LEAD CAPTURED'}
+                            {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'TRIANGULATION ACTIVE'}
+                          </span>
+                        </div>
+                        
+                        <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
+                      </div>
+                      
+                      {expandedRow === audit.id && (
+                        <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
+                          
+                          <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
+                            {[
+                              { label: 'EXECUTIVE TRACK', key: 'EXE' },
+                              { label: 'MANAGERIAL TRACK', key: 'MGR' },
+                              { label: 'TECHNICAL TRACK', key: 'TEC' }
+                            ].map((role) => {
+                              const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
+                              const isDone = node?.status?.toLowerCase() === 'completed';
+                              return (
+                                <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
+                                  <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
+                                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
+                                    
+                                    {isDone ? (
+                                      <CheckCircle className="text-green-500" size={14}/>
+                                    ) : (
+                                      <div className="flex items-center gap-2">
+                                        <button 
+                                          type="button"
+                                          title="Fire Email Reminder Nudge" 
+                                          disabled={isUpdating}
+                                          onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
+                                          className="text-red-500 hover:text-white transition-all cursor-pointer opacity-40 group-hover/node:opacity-100"
+                                        >
+                                          <BellRing size={12} className="animate-bounce" />
+                                        </button>
+                                        <Clock className="text-slate-700" size={14}/>
+                                      </div>
+                                    )}
+                                  </div>
+                                  
+                                  <div className="flex-1 flex flex-col justify-center items-center text-center py-4">
+                                    <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-white' : 'text-2xl text-slate-800 animate-pulse'}`}>
+                                      {isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+                            
+                            <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
+                              <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
+                              <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
+                                <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                              </div>
+                            </div>
+
+                            <div className="lg:col-span-7 border-2 border-red-900/60 bg-red-950/5 p-6 flex flex-col justify-between space-y-4">
+                              <div className="space-y-2">
+                                <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block">// SECURE_BRIEFING_ALIGNMENT_SCRIPT</span>
+                                <div className="text-2xl font-black italic tracking-tighter text-white uppercase">{playbookHeadline}</div>
+                                <p className="text-xs leading-relaxed font-sans text-slate-300 normal-case font-normal border-l-2 border-red-600 pl-4 py-1">
+                                  {playbookNarrative}
+                                </p>
+                              </div>
+                              <div className="bg-black/40 border border-slate-900 p-4 font-sans normal-case text-xs text-slate-400 font-medium">
+                                <strong className="text-white uppercase tracking-wider block text-[10px] font-mono font-black text-red-500 mb-1">// COLLABORATIVE_CLOSING_ANCHOR:</strong>
+                                "{playbookPitch}"
+                              </div>
+                            </div>
+                          </div>
+
+                          {realFractures.length > 0 && (
+                            <div className="border border-slate-900 bg-slate-950 p-6 space-y-4 mb-8">
+                              <div className="text-[10px] font-mono text-red-500 font-black tracking-widest uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left font-mono text-[11px] border-collapse">
+                                  <thead>
+                                    <tr className="border-b border-slate-900 text-slate-500 font-black">
+                                      <th className="pb-2 w-1/6">FRACTURE_ID</th>
+                                      <th className="pb-2 w-1/12">SEVERITY</th>
+                                      <th className="pb-2 w-1/2">TRIANGULATED_REALITY_DESCRIPTION</th>
+                                      <th className="pb-2 w-1/4">REQUIRED_IP_DIRECTIVE</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-900/50 text-white font-medium">
+                                    {realFractures.map((frac: any) => (
+                                      <tr key={frac.id} className="hover:bg-white/5 transition-all">
+                                        <td className="py-3 text-slate-400 font-black">{frac.id}</td>
+                                        <td className={`py-3 font-black ${frac.severity === 'CRITICAL' ? 'text-red-500' : 'text-yellow-600'}`}>{frac.severity}</td>
+                                        <td className="py-3 pr-4 normal-case font-sans text-slate-300 font-normal leading-relaxed">{frac.description}</td>
+                                        <td className="py-3 text-red-400 font-black uppercase italic">{frac.directive}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="bg-white text-black p-8 border-l-[16px] border-slate-900 shadow-2xl space-y-6 mb-10 font-sans">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
+                              <div>
+                                <span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// ENGAGEMENT_ROADMAP_CONFIGURATION</span>
+                                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-black leading-none mt-1">RECOMMENDED STATEMENT OF WORK</h3>
+                              </div>
+                              <span className="text-[10px] font-mono text-slate-400 font-black tracking-wider uppercase">{targetTier}</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                              {realFractures.length === 0 ? (
+                                <div className="col-span-3 text-center py-6 font-mono text-xs text-slate-400 uppercase tracking-widest">No active structural fractures found. Standard baseline optimizations apply.</div>
+                              ) : (
+                                realFractures.slice(0, 3).map((frac: any, index: number) => (
+                                  <div key={frac.id} className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
+                                    <div className="space-y-1">
+                                      <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase">
+                                        <span>PHASE 0{index + 1}</span>
+                                        <span className="text-red-600 font-black uppercase">{frac.severity} RISK</span>
+                                      </div>
+                                      <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">{frac.directive.replace("Implement ", "")} Integration</h5>
+                                      <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Targeting system recovery through deployment of core blueprint protocols: {frac.recovery}.</p>
+                                    </div>
+                                    <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">0{index + 1}</div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-900 pt-8 italic text-left">
+                            <div className="space-y-4">
+                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
+                              
+                              <div className="flex gap-3 mb-2 p-2 bg-black/40 border border-slate-900 font-mono text-[9px] font-black uppercase tracking-wider w-full">
+                                <button 
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const updatedState = !audit.sow_sent;
+                                    await supabase.from('audits').update({ sow_sent: updatedState }).eq('id', audit.id);
+                                    fetchLedger();
+                                  }}
+                                  className={`flex-1 py-2 border transition-all ${audit.sow_sent ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                >
+                                  MARK SOW SENT: {audit.sow_sent ? "✔ TRUE" : "✘ FALSE"}
+                                </button>
+                                
+                                <button 
+                                  type="button"
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const updatedState = !audit.is_paid;
+                                    await supabase.from('audits').update({ is_paid: updatedState }).eq('id', audit.id);
+                                    fetchLedger();
+                                  }}
+                                  className={`flex-1 py-2 border transition-all ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                >
+                                  MARK PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}
+                                </button>
+                              </div>
+
+                              <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1 space-y-3">
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
+                                </div>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
+                              </div>
+                            </div>
+                            <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
+                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
+                              
+                              <div className="w-full space-y-1 mb-2">
+                                <input 
+                                  type="text"
+                                  value={dossierNotes[audit.id] || ""}
+                                  onChange={(e) => setDossierNotes({ ...dossierNotes, [audit.id]: e.target.value })}
+                                  placeholder="APPEND CUSTOM DOSSIER ANNOTATION NOTE..."
+                                  className="w-full bg-black border border-slate-900 p-3 text-[10px] font-mono font-black italic uppercase text-slate-300 focus:border-red-600 outline-none placeholder:text-slate-700 tracking-wider"
+                                />
+                              </div>
+
+                              <div className="space-y-3">
+                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileDown size={16} /> DOWNLOAD DOSSIER COPY</button>
+                              </div>
+                            </div>
+                          </div>
+
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+
+              {totalCount > ROWS_PER_PAGE && (
+                <div className="flex items-center justify-between bg-slate-950 p-6 border border-slate-900 text-slate-500 font-mono text-[10px] uppercase tracking-wider mt-4">
+                  <div>SHOWING {currentPage * ROWS_PER_PAGE + 1} - {Math.min((currentPage + 1) * ROWS_PER_PAGE, totalCount)} OF {totalCount} ACTIVE RECORDS</div>
+                  <div className="flex gap-2">
+                    <button 
+                      type="button"
+                      disabled={currentPage === 0}
+                      onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                      className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black"
+                    >
+                      PREV
+                    </button>
+                    <button 
+                      type="button"
+                      disabled={(currentPage + 1) * ROWS_PER_PAGE >= totalCount}
+                      onClick={() => setCurrentPage(p => p + 1)}
+                      className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black"
+                    >
+                      NEXT
+                    </button>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public Service Mapping</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic font-black">
+                  {BMR_IP_SUITE.services.map((s) => (
+                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
+                      <div className="text-red-600 mb-6 italic">{s.icon}</div>
+                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
+                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary Directives</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
+                  {BMR_IP_SUITE.directives.map((d) => (
+                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 italic"><Binary className={d.color} size={32} /></div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 italic">
+                        <div className="space-y-2 italic">
+                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic font-black`}>PROTOCOL // {d.id}</span>
+                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
+                        </div>
+                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic font-black">{d.price}</div>}
+                      </div>
+                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+    </div>
+  );
+}
