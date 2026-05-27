@@ -75,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    console.log("[SYNTHESIS_MAP] Normalized Evaluation Matrix Parameters:", JSON.stringify(results));
+    console.log("[SYNTHESIS_MAP] Normalized Telemetry Evaluation State:", JSON.stringify(results));
 
     const fractures = [];
     let frictionScore = 0;
@@ -180,8 +180,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .update({ 
         fractures: fractures,
         sfi_score: Math.min(frictionScore, 100),
-        status: 'COMPLETE',
-        last_synthesized: new Date().toISOString()
+        status: 'COMPLETE'
+        // ✅ CRITICAL FIX: Removed the non-existent last_synthesized parameter completely
       })
       .eq('id', auditId);
 
