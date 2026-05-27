@@ -1,217 +1,445 @@
 "use client";
-import React, { useState, useEffect } from "react";
-import { useRouter } from "next/router";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Banknote, Stethoscope, Factory, ShoppingCart, ChevronRight, Lock, Unlock } from "lucide-react";
+import { 
+  Key, Activity, Building2, ChevronUp, ChevronDown, 
+  Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
+  FileDown, Monitor, X, Send, CheckCircle, Clock, Search 
+} from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
-const LOCAL_QUESTIONS = [
-  { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
-  { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "RT_03", text: "AI roles and responsibilities are clearly defined across teams.", options: [{ label: "Undefined", weight: 10 }, { label: "Informal roles", weight: 6 }, { label: "Dedicated AI team", weight: 4 }, { label: "Cross-functional matrix", weight: 2 }] },
-  { id: "DG_01", text: "Our AI systems directly contribute to measurable business ROI.", options: [{ label: "Not tracked", weight: 10 }, { label: "Anecdotal evidence", weight: 6 }, { label: "Specific KPIs", weight: 4 }, { label: "Direct impact", weight: 2 }] },
-  { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
-  { id: "DG_03", text: "We have a dedicated budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
-  { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Trust", weight: 2 }] },
-  { id: "ED_01", text: "Our data infrastructure can handle real-time AI processing.", options: [{ label: "Legacy", weight: 10 }, { label: "Hybrid", weight: 6 }, { label: "Cloud-native", weight: 4 }, { label: "Edge", weight: 2 }] },
-  { id: "ED_02", text: "We leverage proprietary datasets to train specialized models.", options: [{ label: "Public only", weight: 10 }, { label: "Minimal", weight: 6 }, { label: "Significant", weight: 4 }, { label: "Proprietary", weight: 2 }] },
-  { id: "ED_03", text: "API and model versioning are strictly controlled.", options: [{ label: "Manual", weight: 10 }, { label: "Basic", weight: 6 }, { label: "Automated", weight: 4 }, { label: "MLOps", weight: 2 }] },
-  { id: "ED_04", text: "Computing resources (GPU/Cloud) are managed efficiently.", options: [{ label: "High waste", weight: 10 }, { label: "Partial", weight: 6 }, { label: "Managed", weight: 4 }, { label: "Hyper", weight: 2 }] }
-];
+interface Directive {
+  id: string;
+  label: string;
+  price?: string;
+  description: string;
+  color: string;
+}
 
-const sectors = [
-  { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
-  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
-  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
-  { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
-];
+interface Service {
+  tier: string;
+  title: string;
+  icon: React.ReactNode;
+  description: string;
+}
 
-export default function ConsolidatedDiagnostic() {
-  const router = useRouter(); 
-  const [mounted, setMounted] = useState(false);
-  const [step, setStep] = useState("triage");
-  const [sector, setSector] = useState("finance");
-  const [selectedLens, setSelectedLens] = useState<string | null>(null); 
-  const [operatorName, setOperatorName] = useState("");
-  const [entityName, setEntityName] = useState("");
+const BMR_IP_SUITE: { directives: Directive[]; services: Service[] } = {
+  directives: [
+    { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now.", color: "text-red-600" },
+    { id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K", description: "The system rebuilds the logic that connects your operational layers.", color: "text-blue-500" },
+    { id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO", description: "Developing new organizational rule sets to protect leadership.", color: "text-purple-500" },
+    { id: "DIR_04", label: "FORENSIC CONTINUITY", description: "Monitoring structural health through specialized reporting cadence.", color: "text-green-500" }
+  ],
+  services: [
+    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments." },
+    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols." },
+    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse." }
+  ]
+};
+
+export default function AdminDashboard() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState("");
-  const [confirmEmail, setConfirmEmail] = useState("");
-  const [currentDimension, setCurrentDimension] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  const [activeTab, setActiveTab] = useState<'ledger' | 'frameworks'>('ledger');
+  const [data, setData] = useState<any[]>([]);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
+  const [nodeDetails, setNodeDetails] = useState<any[]>([]);
+  
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [selectedAudit, setSelectedAudit] = useState<any>(null);
+  const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
 
-  useEffect(() => { setMounted(true); }, []);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "LEAD" | "TRIANGULATING" | "COMPLETE">("ALL");
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const ROWS_PER_PAGE = 10;
 
-  const logToDatabase = async (finalMetrics: any, finalAnswers: any) => {
-    try {
-      const { data: ent } = await supabase.from('entities').upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' }).select().single();
-      const { data: auditData, error: auditError } = await supabase.from('audits').insert([{ 
-        org_name: entityName.toUpperCase(),
-        lead_email: email.toLowerCase(),
-        sector: sector,
-        ai_spend: 1.2,
-        decay_pct: finalMetrics.decay,
-        rework_tax: parseFloat(finalMetrics.rework),
-        raw_responses: finalAnswers,
-        status: 'COMPLETE' 
-      }]).select('id').single();
-
-      if (auditError) throw auditError;
-
-      await supabase.from('operators').upsert({ 
-        email: email.toLowerCase(), 
-        full_name: operatorName.toUpperCase(), 
-        entity_id: ent?.id,
-        audit_id: auditData.id,
-        persona_type: selectedLens,
-        status: 'COMPLETE',
-        raw_responses: finalAnswers
-      }, { onConflict: 'email,audit_id' });
-
-      return auditData.id;
-    } catch (e) { 
-      return null; 
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      alert("AUTHORIZATION FAILED: UNRECOGNIZED SIGNAL");
+      setLoading(false);
+    } else {
+      setIsAuthenticated(true);
+      setLoading(false);
     }
   };
 
-  if (!mounted) return null;
+  const generateForensicPDF = async (audit: any) => {
+    const dbDecay = audit.decay_pct || 50;
+    const spend = parseFloat(audit.ai_spend) || 1.2;
+    const fte = Math.round((spend * 1000000) / 200000) || 5;
+    const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
+    const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+
+    const printArea = document.createElement('div');
+    printArea.style.position = 'fixed';
+    printArea.style.left = '-9999px';
+    printArea.style.top = '0';
+    
+    printArea.innerHTML = `
+      <div id="capture-root" style="width: 1400px; background: #020617; padding: 0; margin: 0; font-family: 'Helvetica', 'Arial', sans-serif; color: white; display: flex; flex-direction: column; box-sizing: border-box;">
+        <div style="background: #01040a; width: 100%; padding: 60px 100px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 8px solid #dc2626;">
+            <div>
+                <h1 style="font-size: 48px; font-weight: 900; margin: 0; letter-spacing: 4px; font-style: italic; text-transform: uppercase;">FORENSIC VERDICT</h1>
+                <p style="color: #666; font-family: monospace; font-size: 16px; margin-top: 15px; font-weight: 900; letter-spacing: 3px;">SIGNAL ID: ${audit.id.toUpperCase()}</p>
+            </div>
+        </div>
+        <div style="padding: 100px 100px 140px 100px; flex-grow: 1;">
+            <div style="background: white; color: black; padding: 100px; border-left: 60px solid #dc2626; margin-bottom: 80px; width: 100%; box-sizing: border-box;">
+              <h1 style="font-size: 92px; font-weight: 900; font-style: italic; margin: 0; text-transform: uppercase; letter-spacing: -5px; line-height: 0.85;">Executive Briefing</h1>
+              <p style="font-size: 20px; font-weight: 900; color: #666; letter-spacing: 5px; margin-top: 35px; font-family: monospace;">ENTITY // ${audit.org_name?.toUpperCase() || 'CLIENT NODE'}</p>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 100px; border-top: 3px solid #eee; padding-top: 60px;">
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Capacity Loss</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">${(dbDecay * 0.4).toFixed(0)}% WASTED</p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Annual Rework Tax</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">$${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
+                <div><p style="font-size: 16px; font-weight: 900; color: #dc2626; text-transform: uppercase;">Inaction Penalty</p><p style="font-size: 42px; font-weight: 900; font-style: italic; margin-top: 15px;">$${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</p></div>
+              </div>
+            </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(printArea);
+
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      const canvas = await html2canvas(printArea, { backgroundColor: "#020617", scale: 3, width: 1400 });
+      const imgData = canvas.toDataURL("image/png", 1.0);
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const scaledHeight = (canvas.height * pdfWidth) / canvas.width;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, scaledHeight);
+      pdf.save(`BMR DOSSIER_${audit.org_name || 'EXPORT'}.pdf`);
+      document.body.removeChild(printArea);
+    } catch (err) {
+      console.error("PDF ERROR", err);
+      if (document.body.contains(printArea)) document.body.removeChild(printArea);
+    }
+  };
+
+  const fetchLedger = useCallback(async () => {
+    let query = supabase
+      .from('audits')
+      .select('*', { count: 'exact' });
+
+    if (statusFilter !== "ALL") {
+      query = query.eq('status', statusFilter);
+    }
+
+    if (searchTerm.trim() !== "") {
+      query = query.or(`org_name.ilike.%${searchTerm}%,lead_email.ilike.%${searchTerm}%`);
+    }
+
+    const startRange = currentPage * ROWS_PER_PAGE;
+    const endRange = startRange + ROWS_PER_PAGE - 1;
+
+    const { data: audits, count, error } = await query
+      .order('created_at', { ascending: false })
+      .range(startRange, endRange);
+
+    if (!error && audits) {
+      setData(audits);
+      setTotalCount(count || 0);
+    }
+  }, [statusFilter, searchTerm, currentPage]);
+
+  const refreshActiveNodes = useCallback(async (auditId: string) => {
+    const { data: nodes } = await supabase.from('operators').select('persona_type, status').eq('audit_id', auditId);
+    if (nodes) setNodeDetails(nodes);
+  }, []);
+
+  const toggleRow = async (auditId: string) => {
+    if (expandedRow === auditId) { setExpandedRow(null); return; }
+    setExpandedRow(auditId);
+    await refreshActiveNodes(auditId);
+  };
+
+  const triggerActivation = async () => {
+    if (!selectedAudit || isUpdating) return;
+    setIsUpdating(true);
+    try {
+      const res = await fetch('/api/dispatch-directives', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          groupId: selectedAudit.id, 
+          orgName: selectedAudit.org_name,
+          parentAuditId: selectedAudit.id,
+          emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
+        })
+      });
+      if (!res.ok) throw new Error("Dispatch Failed");
+      setSelectedAudit(null);
+      setEmails({ exec: "", mgr: "", tech: "" });
+      fetchLedger();
+    } catch (err: any) { 
+      alert(err.message); 
+    } finally { 
+      setIsUpdating(false); 
+    }
+  };
+
+  const runSynthesis = async (auditId: string) => {
+    setIsUpdating(true);
+    try {
+      const res = await fetch('/api/synthesize-fracture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auditId })
+      });
+      if (res.ok) await fetchLedger();
+    } catch (err) { 
+      console.error(err); 
+    } finally { 
+      setIsUpdating(false); 
+    }
+  };
+
+  const toggleClientAccess = async (audit: any) => {
+    setIsUpdating(true);
+    const targetNewReleaseState = !audit.is_released;
+    try {
+      const { error } = await supabase
+        .from('audits')
+        .update({ is_released: targetNewReleaseState })
+        .eq('id', audit.id);
+        
+      if (error) throw error;
+      await fetchLedger();
+    } catch (err) {
+      console.error("ACCESS TOGGLE ERR ->", err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchTerm, statusFilter]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchLedger();
+      const interval = setInterval(() => { 
+        fetchLedger(); 
+        if (expandedRow) refreshActiveNodes(expandedRow); 
+      }, 5000); 
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+        <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative italic">
+          <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
+          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA 7 CLEARANCE REQUIRED</p>
+          <div className="space-y-4">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic uppercase" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600" />
+          </div>
+          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all italic leading-none">
+            {loading ? "VERIFYING..." : "INITIALIZE COMMAND"}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto py-20 px-4 relative min-h-[850px] text-left italic font-sans overflow-x-hidden">
-      <AnimatePresence mode="wait">
-        {isLoading && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-[#020617] z-[9999] flex flex-col items-center justify-center text-red-600">
-            <Activity className="animate-spin mb-4" size={64} />
-            <p className="font-black uppercase tracking-[0.5em] text-sm italic">VERIFYING_SIGNAL_STRENGTH...</p>
-          </motion.div>
+    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden">
+      <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 backdrop-blur-md border-b border-slate-900 z-50 px-10 flex items-center justify-between">
+        <div className="flex items-center gap-8">
+          <div className="flex items-center gap-3 shrink-0"><Activity className="text-red-600 animate-pulse" size={20} /><span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">FORENSIC COMMAND</span></div>
+          <div className="flex gap-1 bg-slate-900 p-1 shrink-0">
+            <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
+            <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
+          </div>
+        </div>
+      </nav>
+
+      <AnimatePresence>
+        {selectedAudit && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
+              <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
+              
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
+              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
+              
+              <div className="space-y-4 mt-10 text-left">
+                <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                
+                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
+                  {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
+                  {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
-      <AnimatePresence mode="wait">
-        {step === 'triage' && (
-          <motion.div key="triage" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-16 text-center">
-            <div className="space-y-4">
-              <h1 className="text-7xl md:text-9xl font-black uppercase italic tracking-tighter text-white leading-none">
-                FORENSIC <span className="text-red-600 italic">EXPOSURE</span> AUDIT
-              </h1>
-            </div>
-            
-            <div className="max-w-3xl mx-auto pt-8 border-t border-slate-900">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => (
-                  <button key={node} onClick={() => setSelectedLens(node)} className={`p-10 border-2 flex flex-col items-center gap-4 transition-all min-h-[180px] group ${selectedLens === node ? 'bg-red-600 border-red-600 text-white shadow-[0_0_50px_rgba(220,38,38,0.3)]' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-700'}`}>
-                    {selectedLens === node ? <Unlock size={28} /> : <Lock size={28} className="opacity-20" />}
-                    <span className="font-black text-xl tracking-[0.1em] uppercase italic">{node}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-10">
-              {sectors.map((s) => (
-                <button key={s.id} disabled={!selectedLens} onClick={() => { setSector(s.id); setStep("intake"); }} className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-left flex flex-col justify-between h-56 group disabled:opacity-20">
-                  <div className="text-red-600 group-hover:scale-110 transition-transform">{s.icon}</div>
-                  <div>
-                    <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
-                    <p className="text-[11px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2 italic">{s.risk}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-
-        {step === 'intake' && (
-          <motion.div key="intake" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="space-y-12 text-center max-w-4xl mx-auto italic">
-            <h2 className="text-6xl md:text-8xl font-black uppercase italic tracking-tighter text-white leading-none">PROTOCOL <span className="text-red-600">REGISTRATION</span></h2>
-            <div className="bg-slate-950/40 border-2 border-slate-900 p-12 space-y-10 text-left shadow-2xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-                <div className="space-y-3">
-                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Operator Name</label>
-                  <input placeholder="OPERATOR_ID" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold italic" />
+      <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
+        <AnimatePresence mode="wait">
+          {activeTab === 'ledger' ? (
+            <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
+              
+              <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between bg-slate-950 p-4 border border-slate-900">
+                <div className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <input 
+                    type="text" 
+                    value={searchTerm} 
+                    onChange={(e) => setSearchTerm(e.target.value)} 
+                    placeholder="PARSE BY COMPANY IDENTITY OR LEAD SIGNAL EMAIL..." 
+                    className="w-full bg-black border border-slate-800 pl-12 pr-4 py-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic placeholder:text-slate-600"
+                  />
                 </div>
-                <div className="space-y-3">
-                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Entity Identification</label>
-                  <input placeholder="ENTITY_NAME" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold italic" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Intelligence Channel</label>
-                  <input placeholder="INTEL_CHANNEL" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold italic" />
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Verify Channel</label>
-                  <input placeholder="VERIFY_CHANNEL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold italic" />
+                
+                <div className="flex bg-black border border-slate-800 p-1 gap-1 overflow-x-auto shrink-0">
+                  {([
+                    { label: "All Assets", value: "ALL" },
+                    { label: "Initial Leads", value: "LEAD" },
+                    { label: "Triangulating", value: "TRIANGULATING" },
+                    { label: "Calculated Dossiers", value: "COMPLETE" }
+                  ] as const).map((tab) => (
+                    <button 
+                      key={tab.value} 
+                      onClick={() => setStatusFilter(tab.value)}
+                      className={`px-4 py-2 font-mono text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === tab.value ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
                 </div>
               </div>
-              <button 
-                disabled={!operatorName || !entityName || email !== confirmEmail || !email} 
-                onClick={() => setStep("audit")} 
-                className="w-full py-10 font-black uppercase bg-red-600 text-white disabled:opacity-20 text-3xl tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none mt-6 shadow-[0_20px_50px_rgba(220,38,38,0.2)] italic"
-              >
-                INITIALIZE_FORENSIC_AUDIT
-              </button>
-            </div>
-          </motion.div>
-        )}
 
-        {step === 'audit' && (
-          <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-12 text-left max-w-5xl mx-auto italic">
-            <h2 className="text-4xl md:text-7xl font-black uppercase text-white leading-[0.9] tracking-tighter italic">
-              {LOCAL_QUESTIONS[currentDimension]?.text}
-            </h2>
+              {data.length === 0 ? (
+                <div className="text-center p-20 border border-dashed border-slate-900 font-mono text-xs text-slate-600 uppercase tracking-widest">
+                  No corresponding forensic ledger entries located inside this category index.
+                </div>
+              ) : (
+                data.map((audit) => {
+                  const clientHasAccess = !!audit.is_released;
 
-            <div className="grid grid-cols-1 gap-4 mt-20">
-              {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
-                <button key={i} className="py-10 px-12 border-2 border-slate-900 bg-slate-950/40 hover:border-red-600 transition-all text-left uppercase font-black text-slate-500 hover:text-white flex justify-between items-center group relative overflow-hidden italic shadow-xl" 
-                  onClick={async () => {
-                    const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
-                    
-                    if (currentDimension < LOCAL_QUESTIONS.length - 1) {
-                      setAnswers(updatedAnswers);
-                      setCurrentDimension(currentDimension + 1);
-                    } else {
-                      setIsLoading(true);
-                      const totalSum = Object.values(updatedAnswers).reduce((a, b) => a + parseInt(b || "0"), 0);
-                      const finalMetrics = { decay: Math.min(Math.round((1 - (1 / (1 + (totalSum * 0.05) / 10))) * 100), 98), rework: (totalSum * 0.04).toFixed(2) };
-
-                      try {
-                        const auditId = await logToDatabase(finalMetrics, updatedAnswers);
-                        if (auditId) {
+                  return (
+                    <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
+                      <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
+                        <div className="col-span-6 flex items-center gap-6">
+                          <div className="bg-slate-900 p-4 border border-slate-800 shrink-0 italic">
+                            <Building2 size={24} className={audit.status === 'COMPLETE' ? "text-green-500" : "text-red-600"} />
+                          </div>
+                          <div>
+                            <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
+                            <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">{audit.lead_email}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="col-span-4 text-center font-black text-white italic text-xs tracking-[0.2em] font-mono">
+                          {audit.status === 'COMPLETE' && 'RESULT PUBLISHED'}
+                          {audit.status === 'LEAD' && 'LEAD CAPTURED'}
+                          {audit.status === 'TRIANGULATING' && 'TRIANGULATION ACTIVE'}
+                        </div>
+                        
+                        <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
+                      </div>
+                      
+                      {expandedRow === audit.id && (
+                        <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic">
+                          <div className="grid grid-cols-3 gap-6 pt-10 mb-10 italic">
+                            {[
+                              { label: 'EXECUTIVE', key: 'EXE' },
+                              { label: 'MANAGERIAL', key: 'MGR' },
+                              { key: 'TEC', label: 'TECHNICAL' }
+                            ].map((role) => {
+                              const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
+                              const isDone = node?.status?.toLowerCase() === 'completed';
+                              return (
+                                <div key={role.label} className="border-2 border-slate-900 p-8 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic">
+                                  <div className="flex justify-between items-start">
+                                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role.label} NODE</span>
+                                    {isDone ? <CheckCircle className="text-green-500" size={16}/> : <Clock className="text-slate-800" size={16}/>}
+                                  </div>
+                                  <div className={`font-black italic uppercase tracking-tighter italic ${isDone ? 'text-3xl text-white' : 'text-5xl text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
+                                </div>
+                              );
+                            })}
+                          </div>
                           
-                          try {
-                            await fetch('/api/send-vault-link', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                email: email.toLowerCase().trim(),
-                                orgName: entityName.toUpperCase().trim(),
-                                auditId: auditId
-                              })
-                            });
-                          } catch (emailErr) {
-                            console.error("FORENSIC_DEBUG: Silent boundary email bypass ->", emailErr);
-                          }
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12 border-t border-slate-900 pt-8 italic text-left">
+                            <div className="space-y-4">
+                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
+                              <div className="flex flex-col sm:flex-row gap-4">
+                                <div className="flex-1 space-y-3">
+                                  <button onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
+                                  <button onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
+                                </div>
+                                <button onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
+                              </div>
+                            </div>
+                            <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
+                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
+                              <div className="space-y-3">
+                                <button onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?admin=true`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
+                                <button onClick={(e) => { e.stopPropagation(); generateForensicPDF(audit); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileDown size={16} /> DOWNLOAD DOSSIER COPY</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </motion.div>
+          ) : (
+            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public Service Mapping</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic font-black">
+                  {BMR_IP_SUITE.services.map((s) => (
+                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
+                      <div className="text-red-600 mb-6 italic">{s.icon}</div>
+                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
+                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
 
-                          router.push(`/results/${auditId}`);
-                        } else {
-                          setIsLoading(false);
-                          alert("SIGNAL_SYNC_FAILURE");
-                        }
-                      } catch (err) {
-                        setIsLoading(false);
-                        alert("NETWORK_STABILITY_ERROR");
-                      }
-                    }
-                  }}>
-                  <span className="text-2xl md:text-4xl tracking-tighter transition-transform group-hover:translate-x-4 italic">{opt.label}</span>
-                  <ChevronRight size={40} className="opacity-0 group-hover:opacity-100 transition-all text-red-600 -translate-x-8 group-hover:translate-x-0" />
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary Directives</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
+                  {BMR_IP_SUITE.directives.map((d) => (
+                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 italic"><Binary className={d.color} size={32} /></div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 italic">
+                        <div className="space-y-2 italic">
+                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic font-black`}>PROTOCOL // {d.id}</span>
+                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
+                        </div>
+                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic font-black">{d.price}</div>}
+                      </div>
+                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
     </div>
   );
 }
