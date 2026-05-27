@@ -56,12 +56,10 @@ export default function UnifiedResultsPortal() {
     };
   }, [id, mounted]);
 
-  // 🧮 SYSTEM MATHEMATICS LAYER WITH ALIASED DESERIALIZATION
   const dbDecay = audit?.decay_pct || 24;
   const isPhaseTwoActive = !!audit?.is_released;
   const spend = audit?.ai_spend || 1.2;
   
-  // 🏷️ Explicit structural alias mapping 'roi_pct' straight to fteCount context
   const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
   const sectorType = (audit?.sector || "general").toLowerCase().trim();
   
@@ -123,7 +121,6 @@ export default function UnifiedResultsPortal() {
           </span>
         </div>
         
-        {/* REPORT DOWNLOAD BUTTON (Only available when deal transitions to Phase 2) */}
         {isPhaseTwoActive && (
           <button
             onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")}
