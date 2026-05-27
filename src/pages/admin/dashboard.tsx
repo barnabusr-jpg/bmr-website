@@ -39,7 +39,6 @@ export default function AdminDashboard() {
   const [selectedAudit, setSelectedAudit] = useState<any>(null);
   const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
 
-  // 🛠️ HIGH VOLUME RECORD FILTERING STATES
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "LEAD" | "TRIANGULATING" | "COMPLETE">("ALL");
   const [currentPage, setCurrentPage] = useState(0);
@@ -110,7 +109,6 @@ export default function AdminDashboard() {
     }
   };
 
-  // 🛠️ PERFORMANCE DRIVEN SERVER SIDE BOUNDARY SELECTION ENGINE
   const fetchLedger = useCallback(async () => {
     let query = supabase
       .from('audits')
@@ -321,6 +319,33 @@ export default function AdminDashboard() {
                 data.map((audit) => {
                   const clientHasAccess = !!audit.is_released;
 
+                  // 🧮 PRE-CALCULATE CLOSING REALITIES FOR THE ADVISOR PANEL HOOKS
+                  const sfi = audit.sfi_score || 0;
+                  const realFractures = audit.fractures || [];
+                  const dbDecay = audit.decay_pct || 24;
+                  const spend = parseFloat(audit.ai_spend) || 1.2;
+                  const fte = Math.round((spend * 1000000) / 200000) || 5;
+                  const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
+                  const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
+                  const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+
+                  let playbookHeadline = "BALANCED INFRASTRUCTURE STATE";
+                  let playbookNarrative = "Operational alignment metrics indicate standard operational velocity. Cross-functional communication tracks are solid, and system parameters are matching organizational intent.";
+                  let playbookPitch = "Deploy routine baseline optimization filters to preserve ongoing alignment tracks.";
+                  let targetTier = "TIER_01 // DRIFT DIAGNOSTICS";
+
+                  if (sfi >= 45) {
+                    playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
+                    playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
+                    playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance, removing the manual tax on your staff.";
+                    targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
+                  } else if (sfi > 0) {
+                    playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
+                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrating inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
+                    playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
+                    targetTier = "TIER_02 // STRUCTURAL HARDENING";
+                  }
+
                   return (
                     <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
                       <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
@@ -334,23 +359,24 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         
-                        {/* 🚀 FIXED: Highly accurate, synchronized tracking tokens mapping */}
                         <div className="col-span-4 text-center font-black text-white italic text-xs tracking-[0.2em] font-mono">
                           {audit.status === 'COMPLETE' && 'RESULT PUBLISHED'}
                           {audit.status === 'LEAD' && 'LEAD CAPTURED'}
-                          {audit.status === 'TRIANGULATING' && 'TRIANGULATION ACTIVE'}
+                          {(audit.status === 'TRIANGULATING' || audit.status === 'TRIANGULATION_ACTIVE') && 'TRIANGULATION ACTIVE'}
                         </div>
                         
                         <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
                       </div>
                       
                       {expandedRow === audit.id && (
-                        <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic">
-                          <div className="grid grid-cols-3 gap-6 pt-10 mb-10 italic">
+                        <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
+                          
+                          {/* 📋 ROW 1: LIVE STAKEHOLDER NODE STATE TILES */}
+                          <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
-                              { label: 'EXECUTIVE', key: 'EXE' },
-                              { label: 'MANAGERIAL', key: 'MGR' },
-                              { label: 'TECHNICAL', key: 'TEC' }
+                              { label: 'EXECUTIVE TRACK', key: 'EXE' },
+                              { label: 'MANAGERIAL TRACK', key: 'MGR' },
+                              { label: 'TECHNICAL TRACK', key: 'TEC' }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
                               const isDone = node?.status?.toLowerCase() === 'completed';
@@ -360,13 +386,105 @@ export default function AdminDashboard() {
                                     <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest italic uppercase">{role.label} NODE</span>
                                     {isDone ? <CheckCircle className="text-green-500" size={16}/> : <Clock className="text-slate-800" size={16}/>}
                                   </div>
-                                  <div className={`font-black italic uppercase tracking-tighter italic ${isDone ? 'text-3xl text-white' : 'text-5xl text-slate-900'}`}>{isDone ? 'CALCULATED' : 'WAITING'}</div>
+                                  <div className={`font-black italic uppercase tracking-tighter italic ${isDone ? 'text-2xl text-white' : 'text-3xl text-slate-900'}`}>{isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}</div>
                                 </div>
                               );
                             })}
                           </div>
+
+                          {/* 🧮 ROW 2: STRATEGIC INSIGHT VS ADVISORY PITCH PLAYBOOK SCRIPT */}
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
+                            
+                            {/* Real Financial Allocation Tax Display */}
+                            <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
+                              <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
+                              <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
+                                <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                              </div>
+                            </div>
+
+                            {/* Private Advisor Script Prompt Box */}
+                            <div className="lg:col-span-7 border-2 border-red-900/60 bg-red-950/5 p-6 flex flex-col justify-between space-y-4">
+                              <div className="space-y-2">
+                                <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block">// SECURE_BRIEFING_ALIGNMENT_SCRIPT</span>
+                                <div className="text-2xl font-black italic tracking-tighter text-white uppercase">{playbookHeadline}</div>
+                                <p className="text-xs leading-relaxed font-sans text-slate-300 normal-case font-normal border-l-2 border-red-600 pl-4 py-1">
+                                  {playbookNarrative}
+                                </p>
+                              </div>
+                              <div className="bg-black/40 border border-slate-900 p-4 font-sans normal-case text-xs text-slate-400 font-medium">
+                                <strong className="text-white uppercase tracking-wider block text-[10px] font-mono font-black text-red-500 mb-1">// COLLABORATIVE_CLOSING_ANCHOR:</strong>
+                                "{playbookPitch}"
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* 📋 ROW 3: DETAILED FRACTURE INVENTORY SYSTEM TABLE */}
+                          {realFractures.length > 0 && (
+                            <div className="border border-slate-900 bg-slate-950 p-6 space-y-4 mb-8">
+                              <div className="text-[10px] font-mono text-red-500 font-black tracking-widest uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-left font-mono text-[11px] border-collapse">
+                                  <thead>
+                                    <tr className="border-b border-slate-900 text-slate-500 font-black">
+                                      <th className="pb-2 w-1/6">FRACTURE_ID</th>
+                                      <th className="pb-2 w-1/12">SEVERITY</th>
+                                      <th className="pb-2 w-1/2">TRIANGULATED_REALITY_DESCRIPTION</th>
+                                      <th className="pb-2 w-1/4">REQUIRED_IP_DIRECTIVE</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody className="divide-y divide-slate-900/50 text-white font-medium">
+                                    {realFractures.map((frac: any) => (
+                                      <tr key={frac.id} className="hover:bg-white/5 transition-all">
+                                        <td className="py-3 text-slate-400 font-black">{frac.id}</td>
+                                        <td className={`py-3 font-black ${frac.severity === 'CRITICAL' ? 'text-red-500' : 'text-yellow-600'}`}>{frac.severity}</td>
+                                        <td className="py-3 pr-4 normal-case font-sans text-slate-300 font-normal leading-relaxed">{frac.description}</td>
+                                        <td className="py-3 text-red-400 font-black uppercase italic">{frac.directive}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 💼 ROW 4: RECOMMENDATION BLUEPRINT DELIVERABLES BLOCK */}
+                          <div className="bg-white text-black p-8 border-l-[16px] border-slate-900 shadow-2xl space-y-6 mb-10 font-sans">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
+                              <div>
+                                <span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// ENGAGEMENT_ROADMAP_CONFIGURATION</span>
+                                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-black leading-none mt-1">RECOMMENDED STATEMENT OF WORK</h3>
+                              </div>
+                              <span className="text-[10px] font-mono text-slate-400 font-black tracking-wider uppercase">{targetTier}</span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                              {realFractures.length === 0 ? (
+                                <div className="col-span-3 text-center py-6 font-mono text-xs text-slate-400 uppercase tracking-widest">No active structural fractures found. Standard baseline optimizations apply.</div>
+                              ) : (
+                                realFractures.slice(0, 3).map((frac: any, index: number) => (
+                                  <div key={frac.id} className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
+                                    <div className="space-y-1">
+                                      <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase">
+                                        <span>PHASE 0{index + 1}</span>
+                                        <span className="text-red-600 font-black uppercase">{frac.severity} RISK</span>
+                                      </div>
+                                      <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">{frac.directive.replace("Implement ", "")} Integration</h5>
+                                      <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Targeting system recovery through deployment of core blueprint protocols: {frac.recovery}.</p>
+                                    </div>
+                                    <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">0{index + 1}</div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+                          </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mt-12 border-t border-slate-900 pt-8 italic text-left">
+                          {/* ⚙️ ROW 5: OPERATIONAL ACTION CONTROLS */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-900 pt-8 italic text-left">
                             <div className="space-y-4">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
                               <div className="flex flex-col sm:flex-row gap-4">
@@ -385,6 +503,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           </div>
+
                         </div>
                       )}
                     </div>
@@ -425,7 +544,7 @@ export default function AdminDashboard() {
                       <div className="text-red-600 mb-6 italic">{s.icon}</div>
                       <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
                       <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
-                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case italic">{s.description}</p>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
                     </div>
                   ))}
                 </div>
@@ -444,7 +563,7 @@ export default function AdminDashboard() {
                         </div>
                         {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic font-black">{d.price}</div>}
                       </div>
-                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium italic normal-case italic">{d.description}</p>
+                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
                     </div>
                   ))}
                 </div>
