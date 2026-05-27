@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Lock, Unlock, Activity, Info, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { AuditRecord } from "@/types/database.types";
+import { AuditRecord, AnomalyNode } from "@/types/database.types";
 
 export default function UnifiedResultsPortal() {
   const router = useRouter();
@@ -46,6 +46,7 @@ export default function UnifiedResultsPortal() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` },
         (payload) => {
+          // ✅ Strict assignment assertion satisfies cloud build check guards
           if (payload.new) setAudit(payload.new as AuditRecord);
         }
       )
@@ -222,7 +223,8 @@ export default function UnifiedResultsPortal() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {isPhaseTwoActive && audit?.fractures && audit.fractures.length > 0 ? (
-              audit.fractures.map((frac: any, index: number) => {
+              // ✅ Enforcing clean, explicitly mapped interface definitions drops warnings
+              audit.fractures.map((frac: AnomalyNode, index: number) => {
                 const isCritical = frac.severity === 'CRITICAL';
                 const directiveTextColor = isCritical ? 'text-red-500' : fallbackDirectiveColor;
 
