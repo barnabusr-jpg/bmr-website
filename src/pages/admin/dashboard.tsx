@@ -25,14 +25,15 @@ export default function AdminCoreDashboard() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setAudits((data as AuditRecord[]) || []);
+      const typedData = (data as AuditRecord[]) || [];
+      setAudits(typedData);
       
-      if (data && data.length > 0) {
+      if (typedData.length > 0) {
         if (selectedAudit) {
-          const updated = data.find(a => a.id === selectedAudit.id);
-          handleAuditSelection(updated || data[0]);
+          const updated = typedData.find(a => a.id === selectedAudit.id);
+          handleAuditSelection(updated || typedData[0]);
         } else {
-          handleAuditSelection(data[0]);
+          handleAuditSelection(typedData[0]);
         }
       }
     } catch (err) {
@@ -42,10 +43,10 @@ export default function AdminCoreDashboard() {
     }
   };
 
-  const handleAuditSelection = (audit: any) => {
-    setSelectedAudit(audit as AuditRecord);
-    setSliderSpend(parseFloat(audit?.ai_spend) || 1.2);
-    setSliderWorkforce(audit?.roi_pct ? parseInt(audit.roi_pct) : Math.round(((parseFloat(audit?.ai_spend) || 1.2) * 1000000) / 200000) || 5);
+  const handleAuditSelection = (audit: AuditRecord) => {
+    setSelectedAudit(audit);
+    setSliderSpend(parseFloat(String(audit?.ai_spend)) || 1.2);
+    setSliderWorkforce(audit?.roi_pct ? parseInt(String(audit.roi_pct)) : Math.round(((parseFloat(String(audit?.ai_spend)) || 1.2) * 1000000) / 200000) || 5);
   };
 
   const pushSliderUpdate = async (field: "ai_spend" | "roi_pct", value: number) => {
@@ -57,7 +58,9 @@ export default function AdminCoreDashboard() {
         .eq("id", selectedAudit.id);
       
       if (error) throw error;
-      setSelectedAudit((prev: any) => prev ? ({ ...prev, [field]: value }) : null);
+      
+      // ✅ Typed update loop preserves explicit object constraints cleanly
+      setSelectedAudit((prev) => prev ? ({ ...prev, [field]: value }) : null);
     } catch (err) {
       console.error("REALTIME_DB_PUSH_FAILURE:", err);
     }
@@ -73,7 +76,9 @@ export default function AdminCoreDashboard() {
         .eq("id", selectedAudit.id);
 
       if (error) throw error;
-      setSelectedAudit((prev: any) => prev ? ({ ...prev, is_released: targetState }) : null);
+      
+      // ✅ Typed update loop clears strict implicit parameter checks
+      setSelectedAudit((prev) => prev ? ({ ...prev, is_released: targetState }) : null);
       fetchAuditsLedger();
     } catch (err) {
       console.error("GATE_TOGGLE_FAILURE:", err);
