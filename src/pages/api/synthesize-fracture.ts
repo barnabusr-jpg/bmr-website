@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .select('raw_responses, persona_type, status')
       .eq('audit_id', auditId);
 
-    console.log(`[SYNTHESIS] Processing Audit: ${auditId} | Target Records Ingested: ${nodes?.length || 0}`);
+    console.log(`[SYNTHESIS] Processing Engine Run: ${auditId} | Ingesting Node Arrays: ${nodes?.length || 0}`);
 
     if (nodeError) throw nodeError;
 
@@ -40,7 +40,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const dbDecay = parentAudit.decay_pct || 24;
     const spend = parseFloat(parentAudit.ai_spend) || 1.2;
     const fte = Math.round((spend * 1000000) / 200000) || 5;
-    const laborMultiplier = parentAudit.sector === 'finance' ? 0.5 : parentAudit.sector === 'healthcare' ? 0.45 : 0.4;
+    const sectorNorm = (parentAudit.sector || "").toLowerCase().trim();
+    const laborMultiplier = sectorNorm === 'finance' ? 0.5 : sectorNorm === 'healthcare' ? 0.45 : 0.4;
     
     const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
     const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
@@ -83,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let frictionScore = 0;
     let containsCriticalAlert = false;
 
-    // --- CONTRADICTION EVALUATION & RISK ANCHOR ROUTINES ---
+    // --- CONTRADICTION EVALUATION CORE MATRIX ---
 
     // T1: INDEMNITY VOID
     if (results.EXE_01 === "Yes" && results.TEC_01 === "No") {
@@ -149,6 +150,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 15;
     }
 
+    // 🧠 NEW T6: ADVANCED GOVERNANCE DISCONNECT 
+    if (results.EXE_06 === "Yes" && results.TEC_06 === "No") {
+      fractures.push({
+        id: "GOVERNANCE_GAP",
+        severity: "HIGH",
+        description: "Corporate steering committees assume active monitoring controls validate automated model behaviors; Systems integration tracking tracks confirm zero programmatic evaluation frameworks exist.",
+        directive: "Implement Protocol DIR_03 // GOVERNANCE OVERLAY",
+        recovery: "Programmatic Policy Alignment (Reference Case Study: BMR-2025-V2)"
+      });
+      frictionScore += 15;
+    }
+
     // T7: HALLUCINATION CONTROL
     if (results.MGR_07 === "Yes" && results.TEC_07 === "No") {
       fractures.push({ 
@@ -157,6 +170,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         description: "Managerial lines assume fallback safeguards prevent drift outputs; Technical data notes verify zero contextual grounding (RAG) vector engines are active.", 
         directive: "Implement Protocol DIR_02 // STRUCTURAL ALIGNMENT", 
         recovery: "Systemic Liability Mitigation Shields" 
+      });
+      frictionScore += 10;
+    }
+
+    // 🧠 NEW T8: VENDOR DEPENDENCY LOCK CONCENTRATION
+    if (results.EXE_08 === "Yes" && results.TEC_08 === "No") {
+      fractures.push({
+        id: "VENDOR_CONCENTRATION",
+        severity: "HIGH",
+        description: "Strategic roadmaps indicate model-agnostic risk diversification; Engineering topology documents reveal complete reliance on a single runtime API provider with zero tested failovers.",
+        directive: "Implement Protocol DIR_04 // FORENSIC CONTINUITY",
+        recovery: "Multi-Model Broker Abstracted Routing"
       });
       frictionScore += 10;
     }
@@ -180,14 +205,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const finalizedSFI = Math.min(frictionScore, 100);
     const triggerAutomatedUpsell = finalizedSFI >= 45 || containsCriticalAlert;
 
-    // 4. Atomic Commit with Adaptive Pipeline State Overrides
+    // 4. Update core records in database
     const updatePayload: Record<string, any> = {
       fractures: fractures,
       sfi_score: finalizedSFI,
       status: 'COMPLETE'
     };
 
-    // 💰 IF RISK MATCHES UPSELL CRITERIA: Auto-unlock dashboard and flag SOW as sent
     if (triggerAutomatedUpsell) {
       updatePayload.is_released = true;
       updatePayload.sow_sent = true;
@@ -203,66 +227,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'DATABASE_UPDATE_FAILED', details: finalUpdateError.message });
     }
 
-    // 📬 5. REAL-TIME EXTERNAL DISPATCH DISPATCH CONTROLLER (OBJECTIVE B)
+    // 📬 5. REAL-TIME EXTERNAL DISPATCH CONTROLLER
     if (triggerAutomatedUpsell) {
       const criticalIds = fractures.filter(f => f.severity === 'CRITICAL').map(f => f.id);
-      
       const internalAlertPayload = {
         event: "CRITICAL_RISK_SURFACE_DETECTED",
         client: parentAudit.org_name,
         sfi_score: finalizedSFI,
         capital_at_risk: `$${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}/YR`,
         critical_vulnerabilities: criticalIds,
-        action_taken: "AUTO_RELEASE_DOSSIER & INBOUND DISPATCH QUEUED",
         secure_portal_link: `https://bmr-dashboard.com/results/${auditId}?admin=true`
       };
 
-      console.log("[AUTOMATED ALERT DISPATCH SENDING] ->", JSON.stringify(internalAlertPayload));
+      console.log("[AUTOMATED DISPATCH] ->", JSON.stringify(internalAlertPayload));
 
-      // --- DISPATCH HOOK INTEGRATION FOR SLACK / DISCORD / WEBHOOK OUTBOUND ---
       if (process.env.INTERNAL_ALERTS_WEBHOOK_URL) {
         try {
           await fetch(process.env.INTERNAL_ALERTS_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              text: `🚨 *CRITICAL FRACTURE DETECTED* for *${parentAudit.org_name}*\n• *SFI Score:* ${finalizedSFI}/100\n• *Financial Loss Leakage:* ${internalAlertPayload.capital_at_risk}\n• *Vulnerabilities:* ${criticalIds.join(', ')}\n• *Action:* Tier 3 SOW Pre-Engineered. <${internalAlertPayload.secure_portal_link}|Open Command Terminal>`
+              text: `🚨 *CRITICAL FRACTURE DETECTED* for *${parentAudit.org_name}*\n• *SFI Score:* ${finalizedSFI}/100\n• *Financial Exposure:* ${internalAlertPayload.capital_at_risk}\n• *Vulnerabilities:* ${criticalIds.join(', ')}\n• <${internalAlertPayload.secure_portal_link}|Open Command Terminal>`
             })
           });
         } catch (webhookErr) {
           console.error("[WEBHOOK_OUTBOUND_FAILED]", webhookErr);
-        }
-      }
-
-      // --- AUTOMATED DISPATCH EMAIL DISPATCH ROUTER OUTBOUND ---
-      if (process.env.RESEND_API_KEY && parentAudit.lead_email) {
-        try {
-          await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              from: 'BMR Forensic Desk <forensics@bmradvisory.co>',
-              to: parentAudit.lead_email,
-              subject: `URGENT SECURITY REMEDIATION REQUIRED: ${parentAudit.org_name.toUpperCase()}`,
-              html: `
-                <div style="font-family: monospace; padding: 30px; background: #020617; color: #fff;">
-                  <h2 style="color: #dc2626;">// SYSTEMIC FRICTION DETECTED</h2>
-                  <p>Our cross-functional triangulation diagnostic engine has compiled your telemetry. A critical mismatch gap has been flagged across your technical and corporate policy configurations.</p>
-                  <p><strong>Entity Tracked:</strong> ${parentAudit.org_name}</p>
-                  <p><strong>Identified Capital Leakage Exposure:</strong> ${internalAlertPayload.capital_at_risk}</p>
-                  <p>Your Forensic Summary Dossier has been securely unblurred. You can view the live mitigation roadmap metrics immediately at your client node terminal endpoint below.</p>
-                  <br />
-                  <a href="https://bmr-dashboard.com/results/${auditId}" style="background: #dc2626; color: white; padding: 15px 25px; text-decoration: none; font-weight: bold; display: inline-block;">ACCESS TARGETED DIRECTIVE</a>
-                </div>
-              `
-            })
-          });
-          console.log(`[EMAIL_AUTOMATION_SUCCESS] High-priority upsell directive dispatched cleanly to ${parentAudit.lead_email}`);
-        } catch (emailErr) {
-          console.error("[EMAIL_DISPATCH_FAILED]", emailErr);
         }
       }
     }
