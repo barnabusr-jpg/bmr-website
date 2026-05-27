@@ -84,7 +84,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     let frictionScore = 0;
     let containsCriticalAlert = false;
 
-    // --- CONTRADICTION EVALUATION CORE MATRIX ---
+    // --- CONTRADICTION EVALUATION CORE MATRIX (OBJECTIVE C INFUSED) ---
 
     // T1: INDEMNITY VOID
     if (results.EXE_01 === "Yes" && results.TEC_01 === "No") {
@@ -150,14 +150,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 15;
     }
 
-    // 🧠 NEW T6: ADVANCED GOVERNANCE DISCONNECT 
+    // 🧠 T6: ADVANCED GOVERNANCE DISCONNECT (NEW CONTRA-DETECTION ENGINE)
     if (results.EXE_06 === "Yes" && results.TEC_06 === "No") {
       fractures.push({
         id: "GOVERNANCE_GAP",
         severity: "HIGH",
         description: "Corporate steering committees assume active monitoring controls validate automated model behaviors; Systems integration tracking tracks confirm zero programmatic evaluation frameworks exist.",
         directive: "Implement Protocol DIR_03 // GOVERNANCE OVERLAY",
-        recovery: "Programmatic Policy Alignment (Reference Case Study: BMR-2025-V2)"
+        recovery: "Programmatic Policy Alignment (Reference Case Study: BMR-2026-V2)"
       });
       frictionScore += 15;
     }
@@ -174,16 +174,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       frictionScore += 10;
     }
 
-    // 🧠 NEW T8: VENDOR DEPENDENCY LOCK CONCENTRATION
+    // 🧠 T8: MODEL DRIFT & VENDOR DEPENDENCY LOCK
     if (results.EXE_08 === "Yes" && results.TEC_08 === "No") {
       fractures.push({
         id: "VENDOR_CONCENTRATION",
         severity: "HIGH",
-        description: "Strategic roadmaps indicate model-agnostic risk diversification; Engineering topology documents reveal complete reliance on a single runtime API provider with zero tested failovers.",
+        description: "Strategic roadmaps indicate model-agnostic risk diversification; Engineering topology documents reveal complete reliance on a single runtime API provider with zero tested failovers or automated drift tracking telemetry.",
         directive: "Implement Protocol DIR_04 // FORENSIC CONTINUITY",
-        recovery: "Multi-Model Broker Abstracted Routing"
+        recovery: "Multi-Model Broker Abstracted Routing Layer"
       });
-      frictionScore += 10;
+      frictionScore += 15;
     }
 
     // T10: VENDOR RESILIENCE
@@ -227,7 +227,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'DATABASE_UPDATE_FAILED', details: finalUpdateError.message });
     }
 
-    // 📬 5. REAL-TIME EXTERNAL DISPATCH CONTROLLER
+    // 📬 5. REAL-TIME OUTBOUND ALERTS DISPATCH HOOK
     if (triggerAutomatedUpsell) {
       const criticalIds = fractures.filter(f => f.severity === 'CRITICAL').map(f => f.id);
       const internalAlertPayload = {
@@ -239,15 +239,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         secure_portal_link: `https://bmr-dashboard.com/results/${auditId}?admin=true`
       };
 
-      console.log("[AUTOMATED DISPATCH] ->", JSON.stringify(internalAlertPayload));
-
       if (process.env.INTERNAL_ALERTS_WEBHOOK_URL) {
         try {
           await fetch(process.env.INTERNAL_ALERTS_WEBHOOK_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              text: `🚨 *CRITICAL FRACTURE DETECTED* for *${parentAudit.org_name}*\n• *SFI Score:* ${finalizedSFI}/100\n• *Financial Exposure:* ${internalAlertPayload.capital_at_risk}\n• *Vulnerabilities:* ${criticalIds.join(', ')}\n• <${internalAlertPayload.secure_portal_link}|Open Command Terminal>`
+              text: `🚨 *CRITICAL FRACTURE DETECTED* for *${parentAudit.org_name}*\n• *SFI Score:* ${finalizedSFI}/100\n• *Financial Loss Leakage:* ${internalAlertPayload.capital_at_risk}\n• <${internalAlertPayload.secure_portal_link}|Open Command Terminal>`
             })
           });
         } catch (webhookErr) {
