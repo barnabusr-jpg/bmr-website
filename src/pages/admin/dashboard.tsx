@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
@@ -45,6 +45,9 @@ export default function AdminDashboard() {
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
 
+  // 🛡️ High-speed references to catch layout execution background timers
+  const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -81,7 +84,22 @@ export default function AdminDashboard() {
       .range(startRange, endRange);
 
     if (!error && audits) {
-      setData(audits);
+      // ⚠️ Prevent background poll cycles from snatching values out of the user's hand while dragging
+      setData(prev => {
+        return audits.map(newAudit => {
+          const spendTimerKey = `${newAudit.id}-ai_spend`;
+          const fteTimerKey = `${newAudit.id}-roi_pct`;
+          const isUserActivelySliding = debounceTimersRef.current[spendTimerKey] || debounceTimersRef.current[fteTimerKey];
+          
+          if (isUserActivelySliding) {
+            const currentMatch = prev.find(p => p.id === newAudit.id);
+            if (currentMatch) {
+              return { ...newAudit, ai_spend: currentMatch.ai_spend, roi_pct: currentMatch.roi_pct };
+            }
+          }
+          return newAudit;
+        });
+      });
       setTotalCount(count || 0);
     }
   }, [statusFilter, searchTerm, currentPage, isUpdating]);
@@ -202,16 +220,31 @@ export default function AdminDashboard() {
     }
   };
 
+  // 🚀 HIGH-SPEED DEBOUNCED SLIDER TRANSMISSION PROTOCOL
   const handleLiveSliderChange = async (auditId: string, field: "ai_spend" | "roi_pct", value: number) => {
+    // 1. Instantly update UI locally to match knob tracking values at a flat 60fps
     setData(prev => prev.map(item => item.id === auditId ? { ...item, [field]: value } : item));
-    try {
-      await supabase
-        .from('audits')
-        .update({ [field]: value })
-        .eq('id', auditId);
-    } catch (err) {
-      console.error("LIVE_SLIDER_SYNC_ERROR:", err);
+
+    // 2. Kill any stale updates queued inside the execution pipe
+    const targetTimerKey = `${auditId}-${field}`;
+    if (debounceTimersRef.current[targetTimerKey]) {
+      clearTimeout(debounceTimersRef.current[targetTimerKey]);
     }
+
+    // 3. Throttle the network hit so Supabase never chokes on the traffic loop
+    debounceTimersRef.current[targetTimerKey] = setTimeout(async () => {
+      try {
+        await supabase
+          .from('audits')
+          .update({ [field]: value })
+          .eq('id', auditId);
+        
+        // Remove tracking lock once write completes cleanly
+        delete debounceTimersRef.current[targetTimerKey];
+      } catch (err) {
+        console.error("LIVE_SLIDER_SYNC_ERROR:", err);
+      }
+    }, 120); // 120ms balances real-time delivery with absolute database safety
   };
 
   useEffect(() => {
@@ -228,6 +261,13 @@ export default function AdminDashboard() {
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
+
+  // Clean up timers on component termination
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimersRef.current).forEach(clearTimeout);
+    };
+  }, []);
 
   if (!isAuthenticated) {
     return (
@@ -446,7 +486,6 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* 🛠️ REAL-TIME WORKSHOP SLIDER COMPONENT BLOCK */}
                           <div className="border border-slate-900 bg-slate-950 p-6 mb-8 space-y-6">
                             <span className="text-[10px] text-slate-500 font-black tracking-widest uppercase block">// REAL-TIME PRESENTATION CALIBRATION STRIPS</span>
                             
@@ -616,7 +655,6 @@ export default function AdminDashboard() {
                                 />
                               </div>
 
-                              {/* ⚡ SERVERLESS CHROMIUM DETACHED PDF PRINT ACTION ROUTER */}
                               <div className="space-y-3">
                                 <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
                                 <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
