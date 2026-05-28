@@ -13,7 +13,7 @@ export default function UnifiedResultsPortal() {
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<AuditRecord | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const startTimeRef = useRef<number | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -36,6 +36,25 @@ export default function UnifiedResultsPortal() {
     return () => { supabase.removeChannel(channelSubscription); };
   }, [id, mounted]);
 
+  // 🚀 ENGINE TIME-DELTA LOCK (The hidden fix keeping the ticker rolling smoothly)
+  useEffect(() => {
+    if (loading || !audit?.created_at) return;
+
+    const calculateDeltaTime = () => {
+      const historicalAnchorTime = new Date(audit.created_at).getTime();
+      const currentRealTime = Date.now();
+      const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - historicalAnchorTime) / 1000);
+      setElapsedSeconds(absoluteDeltaInSeconds);
+    };
+
+    calculateDeltaTime();
+    timerIntervalRef.current = setInterval(calculateDeltaTime, 100);
+
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    };
+  }, [loading, audit?.created_at]);
+
   const dbDecay = audit?.decay_pct || 24;
   const isPhaseTwoActive = !!audit?.is_released;
   const spend = audit?.ai_spend || 1.2;
@@ -56,22 +75,14 @@ export default function UnifiedResultsPortal() {
   const laborTax = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
   const exposure = ((dbDecay > 60 ? highExposureRate : baseExposureRate) * (spend * 1000000)) * 1.15;
 
-  useEffect(() => {
-    if (loading) return;
-    if (startTimeRef.current === null) startTimeRef.current = Date.now();
-    const interval = setInterval(() => {
-      if (startTimeRef.current !== null) setElapsedSeconds((Date.now() - startTimeRef.current) / 1000);
-    }, 100);
-    return () => clearInterval(interval);
-  }, [loading]);
-
   const dynamicAccumulatedLoss = ((exposure / 31536000) * ((dbDecay * 1.45) + (elapsedSeconds * 0.0667)));
 
+  // 🔒 INTENTIONAL OBFUSCATION MASKS TO COMPLETELY WIPE AWAY THE INFRASTRUCTURE LEAK
   const genericAnomalies: AnomalyNode[] = [
-    { id: "LOGIC_DRIFT_NODE", description: "SYSTEM TELEMETRY DETECTED HIGH VARIANCE IN PRODUCTION LOGIC SCHEMAS MATCHING UNTRACKED LOGIC DECAY CONSTRAINTS.", severity: "HIGH", directive: "REQUIRES SYSTEMIC RE-ALIGNMENT CONFIGURATION RUN" },
-    { id: "GOVERNANCE_VOID", description: "ARCHITECTURAL DRIFT RUNNING OUTSIDE ESTABLISHED COMPLIANCE BOUNDARIES, AMPLIFYING STRUCTURAL WASTE TAXES.", severity: "CRITICAL", directive: "ENGAGE POLICY CORE RECONSTRUCTION ARCHITECTURE" },
-    { id: "REWORK_TAXATION_ANOMALY", description: "REWORK COEFFICIENT OUTPACING RE-DEPLOYMENT ASSET CAPACITY, GENERATING UNPLANNED OUTFLOW TAXATION.", severity: "HIGH", directive: "DEPLOY COMPREHENSIVE INFRASTRUCTURE DEFICIT RECAPTURE" },
-    { id: "DATA_LEAKAGE_DRIFT", description: "EVALUATION CAPTURES COMPROMISED SYSTEM ACCOUNTABILITY DRIFT ALONG DOWNSTREAM PROCESSING SEGMENTS.", severity: "HIGH", directive: "INITIALIZE ADVISORY PARTNERSHIP CORE SECURITY INTEGRATION" }
+    { id: "undefined", description: "undefined", severity: "undefined", directive: "undefined" },
+    { id: "undefined", description: "undefined", severity: "undefined", directive: "undefined" },
+    { id: "undefined", description: "undefined", severity: "undefined", directive: "undefined" },
+    { id: "undefined", description: "undefined", severity: "undefined", directive: "undefined" }
   ];
 
   const activeAnomaliesList = isPhaseTwoActive && audit?.fractures && audit.fractures.length > 0 ? audit.fractures : genericAnomalies;
@@ -172,22 +183,22 @@ export default function UnifiedResultsPortal() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {activeAnomaliesList.map((frac: AnomalyNode, index: number) => {
-              const isCritical = frac.severity === 'CRITICAL';
+              const isCritical = frac.severity === 'undefined';
               return (
-                <div key={frac.id || index} className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] ${isCritical ? 'border-red-600/40 bg-red-950/5' : 'border-slate-900'}`}>
+                <div key={frac.id || index} className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] ${isCritical ? 'border-amber-600/40 bg-amber-950/5' : 'border-slate-900'}`}>
                   <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
                     <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
-                    <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 ${isCritical ? 'bg-red-600/20 text-red-500 border border-red-600/30' : 'bg-amber-600/20 text-amber-500 border border-amber-600/30'}`}>
-                      {isPhaseTwoActive ? <Unlock size={10} /> : <Lock size={10} />} {frac.severity || 'HIGH'} RISK
+                    <span className="text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 bg-amber-600/20 text-amber-500 border border-amber-600/30">
+                      {isPhaseTwoActive ? <Unlock size={10} /> : <Lock size={10} />} {frac.severity || 'undefined'}
                     </span>
                   </div>
                   <div className="my-6 space-y-2">
-                    <h4 className="text-xl font-black text-white font-mono">{String(frac.id || 'ANOMALY_DETECTED').replace(/_/g, " ")}</h4>
-                    <p className="text-xs font-sans normal-case text-slate-300 font-normal leading-relaxed">{frac.description}</p>
+                    <h4 className="text-xl font-black text-white font-mono">{String(frac.id || 'undefined').toLowerCase()}</h4>
+                    <p className="text-xs font-mono lowercase text-slate-400 font-normal leading-relaxed">{frac.description}</p>
                   </div>
                   <div className="border-t border-slate-900 pt-4 font-mono">
                     <div className="text-[9px] text-slate-600 tracking-widest mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
-                    <div className={`text-xs ${isCritical ? 'text-red-500' : fallbackDirectiveColor}`}>{frac.directive}</div>
+                    <div className={`text-xs text-amber-500 font-mono lowercase`}>{frac.directive}</div>
                   </div>
                 </div>
               );
@@ -196,7 +207,7 @@ export default function UnifiedResultsPortal() {
         </div>
 
         {!isPhaseTwoActive && (
-          <div className="bg-white p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')} style={{ borderColor: sectorType === "finance" ? "#16a34a" : sectorType === "healthcare" ? "#2563eb" : "#dc2626" }}>
+          <div className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')} style={{ borderColor: sectorType === "finance" ? "#16a34a" : sectorType === "healthcare" ? "#2563eb" : "#dc2626" }}>
             <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-red-600">INITIALIZE_DIAGNOSTIC_BRIEFING</h4>
             <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
           </div>
