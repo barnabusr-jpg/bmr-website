@@ -9,7 +9,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 1. Fetch data directly from the verified ledger table
     const { data: audit, error } = await supabase
       .from("audits")
       .select("*")
@@ -20,44 +19,30 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: "NOT_FOUND // SPECIFIED_RECORD_MISSING" });
     }
 
-    // 2. Parse database values with precise fallback logic matching your intake metrics
+    // 🎨 GLOBAL PERMANENT GREEN PROFILE HARDCODED
     const orgName = audit.org_name || "EVALUATION CLIENT SYSTEM";
     const dbDecay = audit.decay_pct || 24;
     const spend = parseFloat(audit.ai_spend) || 1.2;
     const fteCount = audit.roi_pct ? parseInt(audit.roi_pct) : Math.round((spend * 1000000) / 200000) || 5;
-    const sectorType = (audit.sector || "general").toLowerCase().trim();
 
-    let laborMultiplier = 0.4;
-    let baseExposureRate = 0.18;
-    let highExposureRate = 0.30;
-    let brandHexAccent = "#dc2626"; 
-
-    if (sectorType === "finance" || sectorType === "banking") {
-      laborMultiplier = 0.5;
-      baseExposureRate = 0.22;
-      highExposureRate = 0.35;
-      brandHexAccent = "#16a34a"; 
-    } else if (sectorType === "healthcare" || sectorType === "medical") {
-      laborMultiplier = 0.45;
-      baseExposureRate = 0.20;
-      highExposureRate = 0.32;
-      brandHexAccent = "#2563eb"; 
-    }
+    const laborMultiplier = 0.5;
+    const baseExposureRate = 0.22;
+    const highExposureRate = 0.35;
+    const brandHexAccent = "#16a34a"; // Pure premium green design line
 
     const laborTax = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
     const selectedExposureRate = dbDecay > 60 ? highExposureRate : baseExposureRate;
     const exposure = (selectedExposureRate * (spend * 1000000)) * 1.15;
     const totalErosion = laborTax + exposure;
 
-    // 🔒 OBFUSCATION MASKING: Matches your updated web layout precisely to safe-keep intellectual property
+    // 🔒 THE EXACT SAME SYSTEM OBFUSCATION MATRIX PIPED INTO THE DOCUMENT
     const secureAnomalies = [
-      { id: "LOGIC_INDEX_FRACTIONED", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" },
-      { id: "GOVERNANCE_DRIFT_DETECTED", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" },
-      { id: "STRUCTURAL_TAXATION_ANOMALY", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" },
-      { id: "DOWNSTREAM_LEAKAGE_RISK", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" }
+      { id: "FRACTURE_NODE_STACK_ALPHA", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" },
+      { id: "FRACTURE_NODE_STACK_BETA", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" },
+      { id: "FRACTURE_NODE_STACK_GAMMA", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" },
+      { id: "FRACTURE_NODE_STACK_DELTA", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" }
     ];
 
-    // 3. Construct raw document frame matching your original styling, colors, and dashboard specs
     const htmlCanvasContent = `
       <!DOCTYPE html>
       <html>
@@ -108,11 +93,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .anomaly-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
           .node-card { border: 1px solid #1e293b; background-color: rgba(5, 11, 24, 0.6); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; min-height: 240px; }
           .node-top { border-bottom: 1px solid #1e293b; padding-bottom: 10px; margin-bottom: 12px; font-size: 10px; color: #475569; text-align: left; }
-          .node-top span { float: right; background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 1px 6px; font-size: 9px; border: 1px solid rgba(245, 158, 11, 0.2); }
+          .node-top span { float: right; background-color: rgba(22, 163, 74, 0.1); color: ${brandHexAccent}; padding: 1px 6px; font-size: 9px; border: 1px solid rgba(22, 163, 74, 0.2); }
           .node-title { font-size: 16px; font-weight: 900; color: #ffffff; margin-bottom: 8px; text-align: left; }
           .node-desc { font-family: monospace; font-size: 11px; color: #94a3b8; text-transform: uppercase; line-height: 1.5; margin-bottom: 15px; text-align: left; }
           .directive-label { font-size: 8px; color: #475569; margin-bottom: 2px; text-align: left; }
-          .directive-val { font-size: 11px; font-weight: 900; color: #f59e0b; text-align: left; }
+          .directive-val { font-size: 11px; font-weight: 900; color: ${brandHexAccent}; text-align: left; }
           .footer-text { font-size: 9px; color: #334155; text-align: center; margin-top: 60px; letter-spacing: 2px; }
           
           @media print {
@@ -191,7 +176,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       </html>
     `;
 
-    // 4. Return the standalone document stream to fire the system print viewport
     res.setHeader("Content-Type", "text/html");
     return res.status(200).send(htmlCanvasContent);
 
