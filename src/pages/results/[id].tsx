@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { Lock, Unlock, Activity, Info, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { AuditRecord, AnomalyNode } from "@/types/database.types";
+import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
 export default function UnifiedResultsPortal() {
   const router = useRouter();
@@ -36,7 +36,7 @@ export default function UnifiedResultsPortal() {
     return () => { supabase.removeChannel(channelSubscription); };
   }, [id, mounted]);
 
-  // 🚀 ENGINE TIME-DELTA LOCK (The hidden fix keeping the ticker rolling smoothly)
+  // 🚀 ENGINE TIME-DELTA LOCK (Keeps ticker rolling seamlessly between background polls)
   useEffect(() => {
     if (loading || !audit?.created_at) return;
 
@@ -77,12 +77,32 @@ export default function UnifiedResultsPortal() {
 
   const dynamicAccumulatedLoss = ((exposure / 31536000) * ((dbDecay * 1.45) + (elapsedSeconds * 0.0667)));
 
-  // 🔒 INTENTIONAL OBFUSCATION MASKS TO COMPLETELY WIPE AWAY THE INFRASTRUCTURE LEAK
+  // 🔒 INTENTIONAL OBFUSCATION MASKS TO COMPLETELY MATCH SEVERE SYSTEM TERMINAL LOOK
   const genericAnomalies: AnomalyNode[] = [
-    { id: "undefined", description: "undefined", severity: "undefined", directive: "undefined" },
-    { id: "undefined", description: "undefined", severity: "undefined", directive: "undefined" },
-    { id: "undefined", description: "undefined", severity: "undefined", directive: "undefined" },
-    { id: "undefined", description: "undefined", severity: "undefined", directive: "undefined" }
+    { 
+      id: "LOGIC_INDEX_FRACTIONED", 
+      description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]", 
+      severity: "SECURE_GATE", 
+      directive: "Requires advisor authorization node clearance." 
+    },
+    { 
+      id: "GOVERNANCE_DRIFT_DETECTED", 
+      description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]", 
+      severity: "SECURE_GATE", 
+      directive: "Requires advisor authorization node clearance." 
+    },
+    { 
+      id: "STRUCTURAL_TAXATION_ANOMALY", 
+      description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]", 
+      severity: "SECURE_GATE", 
+      directive: "Requires advisor authorization node clearance." 
+    },
+    { 
+      id: "DOWNSTREAM_LEAKAGE_RISK", 
+      description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]", 
+      severity: "SECURE_GATE", 
+      directive: "Requires advisor authorization node clearance." 
+    }
   ];
 
   const activeAnomaliesList = isPhaseTwoActive && audit?.fractures && audit.fractures.length > 0 ? audit.fractures : genericAnomalies;
@@ -142,12 +162,13 @@ export default function UnifiedResultsPortal() {
           
           <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-200/80" />
           
-          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-6 md:pt-0">
-            <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block">CAPITAL_EROSION_VELOCITY</span>
-            <div className={`text-4xl md:text-5xl font-mono font-black mt-2 tracking-tight tabular-nums ${accentColorClass}`}>
+          {/* 🛠️ COUPLING WRAPPER STRUCTURAL LOCK: Solves the text clipping anomaly entirely */}
+          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-6 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 pr-4">
+            <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL_EROSION_VELOCITY</span>
+            <div className={`text-4xl md:text-5xl font-mono font-black mt-2 tracking-tighter tabular-nums ${accentColorClass} leading-none block break-keep`}>
               ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1">REAL-TIME_ACCUMULATED_DRIFT_LOSS</span>
+            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">// REAL-TIME_ACCUMULATED_DRIFT_LOSS</span>
           </div>
         </div>
 
@@ -183,22 +204,22 @@ export default function UnifiedResultsPortal() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {activeAnomaliesList.map((frac: AnomalyNode, index: number) => {
-              const isCritical = frac.severity === 'undefined';
+              const isSecureGate = frac.severity === 'SECURE_GATE';
               return (
-                <div key={frac.id || index} className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] ${isCritical ? 'border-amber-600/40 bg-amber-950/5' : 'border-slate-900'}`}>
+                <div key={frac.id || index} className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] ${isSecureGate ? 'border-amber-500/40 bg-amber-950/5' : 'border-slate-900'}`}>
                   <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
                     <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
-                    <span className="text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 bg-amber-600/20 text-amber-500 border border-amber-600/30">
-                      {isPhaseTwoActive ? <Unlock size={10} /> : <Lock size={10} />} {frac.severity || 'undefined'}
+                    <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 ${isSecureGate ? 'bg-amber-600/20 text-amber-500 border border-amber-600/30' : 'bg-red-600/20 text-red-500 border border-red-600/30'}`}>
+                      {isPhaseTwoActive ? <Unlock size={10} /> : <Lock size={10} />} {frac.severity}
                     </span>
                   </div>
                   <div className="my-6 space-y-2">
-                    <h4 className="text-xl font-black text-white font-mono">{String(frac.id || 'undefined').toLowerCase()}</h4>
-                    <p className="text-xs font-mono lowercase text-slate-400 font-normal leading-relaxed">{frac.description}</p>
+                    <h4 className="text-xl font-black text-white font-mono">{String(frac.id || 'ANOMALY_DETECTED').replace(/_/g, " ")}</h4>
+                    <p className="text-xs font-mono text-slate-300 font-normal leading-relaxed">{frac.description}</p>
                   </div>
                   <div className="border-t border-slate-900 pt-4 font-mono">
                     <div className="text-[9px] text-slate-600 tracking-widest mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
-                    <div className={`text-xs text-amber-500 font-mono lowercase`}>{frac.directive}</div>
+                    <div className={`text-xs ${isSecureGate ? 'text-amber-500 font-sans tracking-wide font-medium normal-case' : fallbackDirectiveColor}`}>{frac.directive}</div>
                   </div>
                 </div>
               );
