@@ -5,7 +5,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { id } = req.query;
 
   if (!id || typeof id !== "string") {
-    return res.status(400).json({ error: "BAD_REQUEST // MISSING_TARGET_RECORD_ID" });
+    return res.status(400).json({ error: "BAD REQUEST // MISSING TARGET RECORD ID" });
   }
 
   try {
@@ -16,31 +16,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (error || !audit) {
-      return res.status(404).json({ error: "NOT_FOUND // SPECIFIED_RECORD_MISSING" });
+      return res.status(404).json({ error: "NOT FOUND // SPECIFIED RECORD MISSING" });
     }
 
-    // 🎨 GLOBAL PERMANENT GREEN PROFILE HARDCODED
+    // 🎨 GLOBAL PERMANENT GREEN PROFILE DEFINITIONS
     const orgName = audit.org_name || "EVALUATION CLIENT SYSTEM";
     const dbDecay = audit.decay_pct || 24;
     const spend = parseFloat(audit.ai_spend) || 1.2;
     const fteCount = audit.roi_pct ? parseInt(audit.roi_pct) : Math.round((spend * 1000000) / 200000) || 5;
 
+    // ⏳ CUSTOMER LIFECYCLE ACCUMULATION TRACKING AT PRINT TIME
+    const historicalAnchorTime = new Date(audit.created_at).getTime();
+    const currentRealTime = Date.now();
+    const elapsedSeconds = Math.max(0, (currentRealTime - historicalAnchorTime) / 1000);
+
     const laborMultiplier = 0.5;
-    const baseExposureRate = 0.22;
-    const highExposureRate = 0.35;
     const brandHexAccent = "#16a34a"; // Pure premium green design line
 
-    const laborTax = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
-    const selectedExposureRate = dbDecay > 60 ? highExposureRate : baseExposureRate;
-    const exposure = (selectedExposureRate * (spend * 1000000)) * 1.15;
-    const totalErosion = laborTax + exposure;
+    // Macro parent pool calculation
+    const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
 
-    // 🔒 THE EXACT SAME SYSTEM OBFUSCATION MATRIX PIPED INTO THE DOCUMENT
+    // FIX: Continuous linear exposure calculation replaces the old binary threshold block bug
+    const dynamicExposureRate = 0.22 * (dbDecay / 25); 
+    const exposure = (dynamicExposureRate * (spend * 1000000)) * 1.15;
+
+    // Computes the exact absolute lifecycle loss dropped between first submit and this PDF click
+    const totalErosion = (exposure / 31536000) * elapsedSeconds;
+
+    // 🔒 RE-ENGINEERED ANOMALY BLUEPRINT MATCHING EXPLICIT FINANCIAL LINEAGE
     const secureAnomalies = [
-      { id: "FRACTURE_NODE_STACK_ALPHA", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" },
-      { id: "FRACTURE_NODE_STACK_BETA", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" },
-      { id: "FRACTURE_NODE_STACK_GAMMA", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" },
-      { id: "FRACTURE_NODE_STACK_DELTA", description: "[ RESTRICTED ENCRYPTED STREAM // DATA WITHHELD IN DIAGNOSTIC PHASE 1 ]" }
+      { 
+        id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols." 
+      },
+      { 
+        id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${(totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols." 
+      },
+      { 
+        id: `ANOMALY SEGMENT GAMMA // LOSS BASELINE $${(totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols." 
+      },
+      { 
+        id: `ANOMALY SEGMENT DELTA // LOSS BASELINE $${(totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols." 
+      }
     ];
 
     const htmlCanvasContent = `
@@ -48,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       <html>
       <head>
         <meta charset="utf-8">
-        <title>BMR_FORENSIC_LEDGER_${id}</title>
+        <title>BMR FORENSIC LEDGER ${id}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { 
@@ -110,53 +130,53 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <div class="container">
           <div class="header-box">
             <div class="title-brand">BMR<span>SOLUTIONS</span></div>
-            <div class="subtitle">FORENSIC_SYSTEM_DECAY_LEDGER // DIAGNOSTIC_PHASE_1</div>
+            <div class="subtitle">FORENSIC SYSTEM DECAY LEDGER // DIAGNOSTIC PHASE 1</div>
           </div>
 
           <div class="placard">
             <div class="placard-left">
-              <h2>EFFICIENCY_VERDICT</h2>
+              <h2>EFFICIENCY VERDICT</h2>
               <div style="font-size: 10px; color: #94a3b8; margin-bottom: 20px; font-weight: bold;">ORGANIZATION BASELINE: ${orgName}</div>
               <div class="metrics-grid">
                 <div class="metric-cell">
-                  <div class="cell-label">LOGIC_DECAY_COEFFICIENT</div>
+                  <div class="cell-label">LOGIC DECAY COEFFICIENT</div>
                   <div class="cell-value"><span>${dbDecay}%</span> DECAY RATE</div>
                 </div>
                 <div class="metric-cell">
                   <div class="metric-cell-pad" style="width: 20px; display: inline-block;" />
-                  <div class="cell-label">PROCESS_WASTE_TAX</div>
-                  <div class="cell-value"><span>$${laborTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> LIAB</div>
+                  <div class="cell-label">PROCESS WASTE TAX</div>
+                  <div class="cell-value"><span>$${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> LIAB</div>
                 </div>
                 <div class="metric-cell">
                   <div class="metric-cell-pad" style="width: 20px; display: inline-block;" />
-                  <div class="cell-label">PROJECTED_ANNUAL_EXPOSURE</div>
+                  <div class="cell-label">PROJECTED ANNUAL EXPOSURE</div>
                   <div class="cell-value"><span>$${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> RISK</div>
                 </div>
               </div>
             </div>
             <div class="placard-right">
-              <span class="erosion-label">CAPITAL_EROSION_VELOCITY</span>
+              <span class="erosion-label">CAPITAL EROSION VELOCITY</span>
               <div class="erosion-val">$${totalErosion.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
-              <span class="cell-label" style="display:block; margin-top:4px;">REAL-TIME_LOSS_INDEX</span>
+              <span class="cell-label" style="display:block; margin-top:4px;">TOTAL LOSS SINCE FIRST CONTACT</span>
             </div>
           </div>
 
-          <div class="section-title">// IDENTIFIED_SYSTEMIC_ANOMALIES_BLUEPRINT</div>
+          <div class="section-title">// IDENTIFIED SYSTEMIC ANOMALIES BLUEPRINT</div>
           
           <div class="anomaly-grid">
             ${secureAnomalies.map((frac, i) => `
               <div class="node-card">
                 <div class="node-top">
                   // INDEX NODE FR-0${i + 1}
-                  <span>SECURE_GATE</span>
+                  <span>SECURE GATE</span>
                 </div>
                 <div>
-                  <div class="node-title">${frac.id.replace(/_/g, " ")}</div>
+                  <div class="node-title">${frac.id}</div>
                   <div class="node-desc">${frac.description}</div>
                 </div>
                 <div>
                   <div class="directive-label">REQUIRED REMEDIATION DIRECTIVE:</div>
-                  <div class="directive-val">Requires advisor authorization node clearance.</div>
+                  <div class="directive-val">Requires active 30 question operational diagnostic to unmask root cause paths.</div>
                 </div>
               </div>
             `).join('')}
@@ -180,7 +200,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(200).send(htmlCanvasContent);
 
   } catch (err: any) {
-    console.error("SERVERLESS_PRINT_GENERATION_EXCEPTION:", err);
-    return res.status(500).json({ error: "INTERNAL_SERVERLESS_COMPILE_CRASH", details: err?.message || err });
+    console.error("SERVERLESS PRINT GENERATION EXCEPTION:", err);
+    return res.status(500).json({ error: "INTERNAL SERVERLESS COMPILE CRASH", details: err?.message || err });
   }
 }
