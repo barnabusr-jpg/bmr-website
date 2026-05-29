@@ -36,13 +36,14 @@ export default function UnifiedResultsPortal() {
     return () => { supabase.removeChannel(channelSubscription); };
   }, [id, mounted]);
 
-  // 🚀 ENGINE TIME-DELTA LOCK
+  // 🚀 CUSTOMER LIFECYCLE TIME COUNTER
   useEffect(() => {
     if (loading || !audit?.created_at) return;
 
     const calculateDeltaTime = () => {
       const historicalAnchorTime = new Date(audit.created_at).getTime();
       const currentRealTime = Date.now();
+      // Tracks pure chronological seconds since their very first contact timestamp in the system database
       const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - historicalAnchorTime) / 1000);
       setElapsedSeconds(absoluteDeltaInSeconds);
     };
@@ -55,15 +56,13 @@ export default function UnifiedResultsPortal() {
     };
   }, [loading, audit?.created_at]);
 
-  // 🎨 GLOBAL PERMANENT GREEN PROFILE WITH BALANCED SUB-ALLOCATIONS
+  // 🎨 GLOBAL FIXED BRAND GREEN LOOK
   const dbDecay = audit?.decay_pct || 24;
   const isPhaseTwoActive = !!audit?.is_released;
   const spend = audit?.ai_spend || 1.2;
   const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
   
   const laborMultiplier = 0.5; 
-  const baseExposureRate = 0.22; 
-  const highExposureRate = 0.35;
   const accentColorClass = "text-green-500"; 
   const borderAccentClass = "border-green-600"; 
   const fallbackDirectiveColor = "text-green-500";
@@ -71,14 +70,18 @@ export default function UnifiedResultsPortal() {
   // Macro parent pool calculation (e.g., $156,000)
   const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
   
-  // The Clean Math Splits for the Bottom Large Metrics Cards
-  const internalReworkTax = totalLaborTaxPool * 0.60;   // 60% Labor Friction Split
-  const operationalDragTax = totalLaborTaxPool * 0.40;  // 40% Velocity Friction Split
+  // Clean 60/40 Labor Friction Splits
+  const internalReworkTax = totalLaborTaxPool * 0.60;   
+  const operationalDragTax = totalLaborTaxPool * 0.40;  
 
-  const exposure = ((dbDecay > 60 ? highExposureRate : baseExposureRate) * (spend * 1000000)) * 1.15;
-  const dynamicAccumulatedLoss = ((exposure / 31536000) * ((dbDecay * 1.45) + (elapsedSeconds * 0.0667)));
+  // Continuous linear exposure rate calculation (replaces the binary >60 threshold bug)
+  const dynamicExposureRate = 0.22 * (dbDecay / 25); 
+  const exposure = (dynamicExposureRate * (spend * 1000000)) * 1.15;
+  
+  // Calculates pure cumulative capital drop since their first contact point up to this exact millisecond
+  const dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
-  // 🔒 FINANCIAL CONTINUITY HOOK MAPPING (Proves computation link down from the 10 survey answers)
+  // 🔒 FINANCIAL CONTINUITY MAPPING FOR LOCKED SYSTEMIC ANOMALIES
   const genericAnomalies: AnomalyNode[] = [
     { 
       id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
@@ -168,7 +171,7 @@ export default function UnifiedResultsPortal() {
             <div className={`text-4xl md:text-5xl font-mono font-black mt-2 tracking-tighter tabular-nums ${accentColorClass} leading-none block break-keep`}>
               ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">// REAL TIME ACCUMULATED DRIFT LOSS</span>
+            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">// REAL TIME LOSS SINCE FIRST CONTACT</span>
           </div>
         </div>
 
