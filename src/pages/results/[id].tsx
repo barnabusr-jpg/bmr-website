@@ -148,18 +148,39 @@ export default function UnifiedResultsPortal() {
               </p>
             </div>
             
+            {/* ⚖️ ALIGNED PLACARD SUB-METRICS GRID CONTAINER */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-slate-100 text-left">
-              <div>
-                <span className={`text-[9px] font-mono block tracking-wider ${accentColorClass}`}>LOGIC DECAY COEFFICIENT</span>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900">DECAY INDEX: <span className={`${accentColorClass} text-base`}>{dbDecay}%</span></p>
+              <div className="flex flex-col justify-between">
+                <div className="min-h-[36px] flex items-end">
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>
+                    LOGIC DECAY COEFFICIENT
+                  </span>
+                </div>
+                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
+                  DECAY INDEX: <span className={`${accentColorClass} text-base`}>{dbDecay}%</span>
+                </p>
               </div>
-              <div>
-                <span className={`text-[9px] font-mono block tracking-wider ${accentColorClass}`}>PROCESS WASTE TAX</span>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900">LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-sm`}>${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p>
+
+              <div className="flex flex-col justify-between">
+                <div className="min-h-[36px] flex items-end">
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>
+                    PROCESS WASTE TAX
+                  </span>
+                </div>
+                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
+                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-sm`}>${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                </p>
               </div>
-              <div>
-                <span className={`text-[9px] font-mono block tracking-wider ${accentColorClass}`}>PROJECTED ANNUAL EXPOSURE</span>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900">TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p>
+
+              <div className="flex flex-col justify-between">
+                <div className="min-h-[36px] flex items-end">
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>
+                    PROJECTED ANNUAL EXPOSURE
+                  </span>
+                </div>
+                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
+                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                </p>
               </div>
             </div>
           </div>
@@ -168,7 +189,6 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-6 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
-            {/* 👇 PROTECTIVE WRAP SAFEGUARD INTEGRATED HERE */}
             <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums ${accentColorClass} leading-none block break-keep ${
               dynamicAccumulatedLoss > 9999 ? "text-3xl lg:text-4xl" : "text-4xl md:text-5xl"
             }`}>
@@ -178,7 +198,7 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* 👇 THE BALANCED FINANCIAL WORKFORCE DECOMPOSITION GRID */}
+        {/* THE BALANCED FINANCIAL WORKFORCE DECOMPOSITION GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
             <div className="text-6xl md:text-7xl font-black text-white tracking-tighter font-mono">${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
