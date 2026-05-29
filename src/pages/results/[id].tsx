@@ -168,7 +168,10 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-6 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
-            <div className={`text-4xl md:text-5xl font-mono font-black mt-2 tracking-tighter tabular-nums ${accentColorClass} leading-none block break-keep`}>
+            {/* 👇 PROTECTIVE WRAP SAFEGUARD INTEGRATED HERE */}
+            <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums ${accentColorClass} leading-none block break-keep ${
+              dynamicAccumulatedLoss > 9999 ? "text-3xl lg:text-4xl" : "text-4xl md:text-5xl"
+            }`}>
               ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">// REAL TIME LOSS SINCE FIRST CONTACT</span>
@@ -182,7 +185,7 @@ export default function UnifiedResultsPortal() {
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-6xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className={`text-6xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>{`$${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}</div>
             <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
