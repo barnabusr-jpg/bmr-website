@@ -43,7 +43,6 @@ export default function UnifiedResultsPortal() {
     const calculateDeltaTime = () => {
       const historicalAnchorTime = new Date(audit.created_at).getTime();
       const currentRealTime = Date.now();
-      // Tracks pure chronological seconds since their very first contact timestamp in the system database
       const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - historicalAnchorTime) / 1000);
       setElapsedSeconds(absoluteDeltaInSeconds);
     };
@@ -67,18 +66,18 @@ export default function UnifiedResultsPortal() {
   const borderAccentClass = "border-green-600"; 
   const fallbackDirectiveColor = "text-green-500";
 
-  // Macro parent pool calculation (e.g., $156,000)
+  // Macro parent pool calculation
   const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
   
   // Clean 60/40 Labor Friction Splits
   const internalReworkTax = totalLaborTaxPool * 0.60;   
   const operationalDragTax = totalLaborTaxPool * 0.40;  
 
-  // Continuous linear exposure rate calculation (replaces the binary >60 threshold bug)
+  // Continuous linear exposure rate calculation
   const dynamicExposureRate = 0.22 * (dbDecay / 25); 
   const exposure = (dynamicExposureRate * (spend * 1000000)) * 1.15;
   
-  // Calculates pure cumulative capital drop since their first contact point up to this exact millisecond
+  // Calculates pure cumulative capital drop since first contact point
   const dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
   // 🔒 FINANCIAL CONTINUITY MAPPING FOR LOCKED SYSTEMIC ANOMALIES
@@ -122,7 +121,7 @@ export default function UnifiedResultsPortal() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden text-left uppercase italic font-black">
-      <nav className="h-28 bg-black/40 backdrop-blur-md border-b border-slate-900/60 px-12 flex items-center justify-between">
+      <nav className="h-28 bg-black/40 backdrop-blur-md border-b border-slate-900/60 px-6 md:px-12 flex items-center justify-between">
         <div>
           <div className="text-white text-xl tracking-tighter italic">BMR<span className={accentColorClass}>SOLUTIONS</span></div>
           <span className={`text-[8px] font-mono uppercase tracking-[0.3em] italic block mt-0.5 ${accentColorClass}`}>
@@ -136,22 +135,23 @@ export default function UnifiedResultsPortal() {
         )}
       </nav>
 
-      <main className="max-w-7xl mx-auto pt-16 px-12 pb-32 space-y-12">
-        <div className={`bg-white text-black p-10 md:p-14 border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
-          <div className="md:col-span-7 flex flex-col justify-between space-y-10">
+      <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
+        <div className={`bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
+          <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
             <div>
-              <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none text-black">
+              {/* 📱 FIX: RESPONSIVE TYPOGRAPHY MATRIX ELIMINATES MOBILE TEXT CRASH */}
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none md:leading-none text-black break-words">
                 {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
               </h1>
-              <p className="text-[11px] font-mono text-slate-400 tracking-widest mt-2">
+              <p className="text-[10px] md:text-[11px] font-mono text-slate-400 tracking-widest mt-2.5">
                 TARGET IDENTIFIER // {audit?.org_name || "EVALUATION CLIENT SYSTEM"}
               </p>
             </div>
             
-            {/* ⚖️ ALIGNED PLACARD SUB-METRICS GRID CONTAINER */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-8 border-t border-slate-100 text-left">
+            {/* ⚖️ FIXED BASLINED ZONE MARKUP */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
-                <div className="min-h-[36px] flex items-end">
+                <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
                   <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>
                     LOGIC DECAY COEFFICIENT
                   </span>
@@ -162,7 +162,7 @@ export default function UnifiedResultsPortal() {
               </div>
 
               <div className="flex flex-col justify-between">
-                <div className="min-h-[36px] flex items-end">
+                <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
                   <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>
                     PROCESS WASTE TAX
                   </span>
@@ -173,7 +173,7 @@ export default function UnifiedResultsPortal() {
               </div>
 
               <div className="flex flex-col justify-between">
-                <div className="min-h-[36px] flex items-end">
+                <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
                   <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>
                     PROJECTED ANNUAL EXPOSURE
                   </span>
@@ -187,7 +187,7 @@ export default function UnifiedResultsPortal() {
           
           <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-200/80" />
           
-          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-6 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 pr-4">
+          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums ${accentColorClass} leading-none block break-keep ${
               dynamicAccumulatedLoss > 9999 ? "text-3xl lg:text-4xl" : "text-4xl md:text-5xl"
@@ -200,12 +200,12 @@ export default function UnifiedResultsPortal() {
 
         {/* THE BALANCED FINANCIAL WORKFORCE DECOMPOSITION GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-[#050b18] border border-slate-900 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className="text-6xl md:text-7xl font-black text-white tracking-tighter font-mono">${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+          <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
+            <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
-          <div className="bg-[#050b18] border border-slate-900 p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-6xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>{`$${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}</div>
+          <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
+            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>{`$${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}</div>
             <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
