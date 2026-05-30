@@ -17,6 +17,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   // Telemetry objects to pipe server errors directly to your web inspector
   let immediateEmailErrorLog: string | null = null;
   let scheduledEmailErrorLog: string | null = null;
+  let rawResendResponse1: any = null;
+  let rawResendResponse2: any = null;
 
   try {
     const secureUrl = `https://www.bmradvisory.co/results/${auditId}`;
@@ -27,9 +29,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // ─── TRANSACTION 01: IMMEDIATE DELIVERY (INSULATED) ───
     try {
-      await resend.emails.send({
-        // TIP: Change to 'onboarding@resend.dev' if testing on an unverified domain sandbox
-        from: 'BMR Advisory <hello@BMRadvisory.co>',
+      // 🛠️ SWITCHED TO ONBOARDING SENDER TO BYPASS DNS DOMAIN PAYWALL RESTRICTIONS IN TEST ENVIRONMENTS
+      const firstEmail = await resend.emails.send({
+        from: 'BMR Advisory <onboarding@resend.dev>',
         to: targetEmail,
         subject: `SECURE_SIGNAL: Forensic Assessment Anchored // ${formattedOrg}`,
         html: `
@@ -52,6 +54,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </div>
         `
       });
+      rawResendResponse1 = firstEmail;
     } catch (e1: any) {
       console.warn("Immediate email delivery catch:", e1);
       immediateEmailErrorLog = e1.message || JSON.stringify(e1);
@@ -62,8 +65,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const fortyEightHoursInMs = 48 * 60 * 60 * 1000;
       const futureDeliveryTarget = new Date(Date.now() + fortyEightHoursInMs);
 
-      await resend.emails.send({
-        from: 'BMR Advisory <hello@BMRadvisory.co>',
+      const secondEmail = await resend.emails.send({
+        from: 'BMR Advisory <onboarding@resend.dev>',
         to: targetEmail,
         subject: `REMINDER_SIGNAL: Action Required for Assessment // ${formattedOrg}`,
         scheduledAt: futureDeliveryTarget.toISOString(),
@@ -80,6 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </div>
         `
       });
+      rawResendResponse2 = secondEmail;
     } catch (e2: any) {
       console.warn("Secondary email scheduling catch:", e2);
       scheduledEmailErrorLog = e2.message || JSON.stringify(e2);
@@ -91,6 +95,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       diagnostics: {
         immediateEmailError: immediateEmailErrorLog,
         scheduledEmailError: scheduledEmailErrorLog,
+        rawResponse1: rawResendResponse1,
+        rawResponse2: rawResendResponse2,
         advice: immediateEmailErrorLog ? "Check if your Resend token is valid and domain DNS parameters match the email sender string." : "All systems operational."
       }
     });
