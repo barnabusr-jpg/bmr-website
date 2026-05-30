@@ -130,7 +130,7 @@ export default function UnifiedResultsPortal() {
         </div>
         {isPhaseTwoActive && (
           <button onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono">
-             DOWNLOAD FORENSIC LEDGER PDF
+              DOWNLOAD FORENSIC LEDGER PDF
           </button>
         )}
       </nav>
@@ -139,7 +139,6 @@ export default function UnifiedResultsPortal() {
         <div className={`bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
             <div>
-              {/* 📱 FIX: RESPONSIVE TYPOGRAPHY MATRIX ELIMINATES MOBILE TEXT CRASH */}
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none md:leading-none text-black break-words">
                 {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
               </h1>
@@ -148,7 +147,6 @@ export default function UnifiedResultsPortal() {
               </p>
             </div>
             
-            {/* ⚖️ FIXED BASLINED ZONE MARKUP */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
@@ -198,7 +196,6 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* THE BALANCED FINANCIAL WORKFORCE DECOMPOSITION GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
             <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
@@ -254,13 +251,27 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
+        {/* ⚡ UPGRADED SCHEDULING ACTION LAYER (AUTO-INTERCEPTS THE 48-HOUR NAGGING REMINDER VIA INTERNAL API) */}
         {!isPhaseTwoActive && (
-          <div className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" onClick={() => window.open('https://calendly.com/hello-bmradvisory/forensic-briefing')}>
+          <div 
+            className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
+            onClick={async () => {
+              // 1. Instantly trigger our local API endpoint to purge the 48-hour trailing message
+              if (audit?.id) {
+                fetch('/api/cancel-reminder', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ auditId: audit.id }),
+                }).catch((err) => console.error('Silent reminder cancellation skipped:', err));
+              }
+
+              // 2. Open Calendly window with the user's email address fully pre-filled
+              const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
+              const baseCalendlyUrl = "https://calendly.com/hello-bmradvisory/forensic-briefing";
+              const specializedUrl = clientEmail ? `${baseCalendlyUrl}?email=${clientEmail}` : baseCalendlyUrl;
+              
+              window.open(specializedUrl, "_blank");
+            }}
+          >
             <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
-            <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
-          </div>
-        )}
-      </main>
-    </div>
-  );
-}
+            <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</
