@@ -251,12 +251,10 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* ⚡ UPGRADED SCHEDULING ACTION LAYER (AUTO-INTERCEPTS THE 48-HOUR NAGGING REMINDER VIA INTERNAL API) */}
         {!isPhaseTwoActive && (
           <div 
             className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
             onClick={async () => {
-              // 1. Instantly trigger our local API endpoint to purge the 48-hour trailing message
               if (audit?.id) {
                 fetch('/api/cancel-reminder', {
                   method: 'POST',
@@ -265,7 +263,6 @@ export default function UnifiedResultsPortal() {
                 }).catch((err) => console.error('Silent reminder cancellation skipped:', err));
               }
 
-              // 2. Open Calendly window with the user's email address fully pre-filled
               const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
               const baseCalendlyUrl = "https://calendly.com/hello-bmradvisory/forensic-briefing";
               const specializedUrl = clientEmail ? `${baseCalendlyUrl}?email=${clientEmail}` : baseCalendlyUrl;
@@ -274,4 +271,10 @@ export default function UnifiedResultsPortal() {
             }}
           >
             <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
-            <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</
+            <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
