@@ -14,6 +14,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: 'MISSING_REQUIRED_PARAMETERS' });
   }
 
+  // Telemetry objects to pipe server errors directly to your web inspector
+  let immediateEmailErrorLog: string | null = null;
+  let scheduledEmailErrorLog: string | null = null;
+
   try {
     const secureUrl = `https://www.bmradvisory.co/results/${auditId}`;
     const encodedEmail = encodeURIComponent(email.trim().toLowerCase());
@@ -24,6 +28,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // ─── TRANSACTION 01: IMMEDIATE DELIVERY (INSULATED) ───
     try {
       await resend.emails.send({
+        // TIP: Change to 'onboarding@resend.dev' if testing on an unverified domain sandbox
         from: 'BMR Advisory <hello@BMRadvisory.co>',
         to: targetEmail,
         subject: `SECURE_SIGNAL: Forensic Assessment Anchored // ${formattedOrg}`,
@@ -47,8 +52,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </div>
         `
       });
-    } catch (e1) {
-      console.warn("Resend bypassed on primary link delivery (likely sandbox/domain restriction):", e1);
+    } catch (e1: any) {
+      console.warn("Immediate email delivery catch:", e1);
+      immediateEmailErrorLog = e1.message || JSON.stringify(e1);
     }
 
     // ─── TRANSACTION 02: AUTOMATED REMINDER (INSULATED) ───
@@ -74,15 +80,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </div>
         `
       });
-    } catch (e2) {
-      console.warn("Resend bypassed on secondary reminder scheduling:", e2);
+    } catch (e2: any) {
+      console.warn("Secondary email scheduling catch:", e2);
+      scheduledEmailErrorLog = e2.message || JSON.stringify(e2);
     }
 
-    // 🎯 ALWAYS return 200 OK so your frontend form layout un-hangs immediately!
-    return res.status(200).json({ success: true });
+    // Return status along with structural diagnostic summaries to trace out server faults inside browser inspect windows
+    return res.status(200).json({ 
+      success: true,
+      diagnostics: {
+        immediateEmailError: immediateEmailErrorLog,
+        scheduledEmailError: scheduledEmailErrorLog,
+        advice: immediateEmailErrorLog ? "Check if your Resend token is valid and domain DNS parameters match the email sender string." : "All systems operational."
+      }
+    });
 
   } catch (err: any) {
     console.error("Global boundary fallback caught:", err);
-    return res.status(200).json({ success: true, bypassed: true });
+    return res.status(200).json({ 
+      success: true, 
+      bypassed: true,
+      critical_error: err.message || err 
+    });
   }
 }
