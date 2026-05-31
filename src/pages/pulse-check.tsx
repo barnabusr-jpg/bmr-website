@@ -215,27 +215,26 @@ export default function PulseCheck() {
                       } else {
                         setIsLoading(true);
                         
-                        // 1. Calculate operational decay layout values and log out to Supabase
                         const metrics = getLiveMetrics();
                         const auditId = await logToDatabase(metrics);
                         
                         if (auditId) {
                           try {
-                            // 2. CRITICAL WAITING BALANCER: Force context pipeline to process with SendGrid completely before redirect
+                            // 🚀 FORWARDING NAME DATA OVER TO SENDGRID API
                             await fetch('/api/send-vault-link', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
                                 email: email.toLowerCase().trim(),
                                 orgName: entityName.toUpperCase().trim(),
-                                auditId: auditId
+                                auditId: auditId,
+                                userName: operatorName.trim()
                               })
                             });
                           } catch (emailErr) {
                             console.error("Transactional background pipeline email error:", emailErr);
                           }
 
-                          // 3. Complete context loop safely to load results screen
                           window.location.href = `/results/${auditId}`;
                         } else {
                           setIsLoading(false);
