@@ -4,9 +4,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText
+  Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+import CentralCommandCockpit from "@/components/CentralCommandCockpit";
 
 const BMR_IP_SUITE = {
   directives: [
@@ -34,9 +35,6 @@ export default function AdminDashboard() {
   const [nodeDetails, setNodeDetails] = useState<any[]>([]);
   
   const [isUpdating, setIsUpdating] = useState(false);
-  const [selectedAudit, setSelectedAudit] = useState<any>(null);
-  const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
-
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "LEAD" | "TRIANGULATING" | "COMPLETE">("ALL");
   const [currentPage, setCurrentPage] = useState(0);
@@ -44,8 +42,6 @@ export default function AdminDashboard() {
   const ROWS_PER_PAGE = 10;
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
-
-  // 🛡️ High-speed references to catch layout execution background timers
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -84,7 +80,6 @@ export default function AdminDashboard() {
       .range(startRange, endRange);
 
     if (!error && audits) {
-      // ⚠️ Prevent background poll cycles from snatching values out of the user's hand while dragging
       setData(prev => {
         return audits.map(newAudit => {
           const spendTimerKey = `${newAudit.id}-ai_spend`;
@@ -114,31 +109,6 @@ export default function AdminDashboard() {
     if (expandedRow === auditId) { setExpandedRow(null); return; }
     setExpandedRow(auditId);
     await refreshActiveNodes(auditId);
-  };
-
-  const triggerActivation = async () => {
-    if (!selectedAudit || isUpdating) return;
-    setIsUpdating(true);
-    try {
-      const res = await fetch('/api/dispatch-directives', { 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId: selectedAudit.id, 
-          orgName: selectedAudit.org_name,
-          parentAuditId: selectedAudit.id,
-          emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
-        })
-      });
-      if (!res.ok) throw new Error("Dispatch Failed");
-      setSelectedAudit(null);
-      setEmails({ exec: "", mgr: "", tech: "" });
-      fetchLedger();
-    } catch (err: any) { 
-      alert(err.message); 
-    } finally { 
-      setIsUpdating(false); 
-    }
   };
 
   const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
@@ -220,18 +190,14 @@ export default function AdminDashboard() {
     }
   };
 
-  // 🚀 HIGH-SPEED DEBOUNCED SLIDER TRANSMISSION PROTOCOL
   const handleLiveSliderChange = async (auditId: string, field: "ai_spend" | "roi_pct", value: number) => {
-    // 1. Instantly update UI locally to match knob tracking values at a flat 60fps
     setData(prev => prev.map(item => item.id === auditId ? { ...item, [field]: value } : item));
 
-    // 2. Kill any stale updates queued inside the execution pipe
     const targetTimerKey = `${auditId}-${field}`;
     if (debounceTimersRef.current[targetTimerKey]) {
       clearTimeout(debounceTimersRef.current[targetTimerKey]);
     }
 
-    // 3. Throttle the network hit so Supabase never chokes on the traffic loop
     debounceTimersRef.current[targetTimerKey] = setTimeout(async () => {
       try {
         await supabase
@@ -239,12 +205,11 @@ export default function AdminDashboard() {
           .update({ [field]: value })
           .eq('id', auditId);
         
-        // Remove tracking lock once write completes cleanly
         delete debounceTimersRef.current[targetTimerKey];
       } catch (err) {
         console.error("LIVE_SLIDER_SYNC_ERROR:", err);
       }
-    }, 120); // 120ms balances real-time delivery with absolute database safety
+    }, 120);
   };
 
   useEffect(() => {
@@ -262,7 +227,6 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
 
-  // Clean up timers on component termination
   useEffect(() => {
     return () => {
       Object.values(debounceTimersRef.current).forEach(clearTimeout);
@@ -298,30 +262,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </nav>
-
-      <AnimatePresence>
-        {selectedAudit && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
-              <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
-              
-              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
-              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
-              
-              <div className="space-y-4 mt-10 text-left">
-                <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                
-                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
-                  {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
-                  {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
@@ -381,7 +321,6 @@ export default function AdminDashboard() {
               ) : (
                 data.map((audit) => {
                   const clientHasAccess = !!audit.is_released;
-
                   const sfi = audit.sfi_score || 0;
                   const realFractures = audit.fractures || [];
                   const dbDecay = audit.decay_pct || 24;
@@ -399,7 +338,7 @@ export default function AdminDashboard() {
                   const cleanStatus = (audit.status || "").toUpperCase();
                   if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING") || sfi === 0) {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
-                    playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
+                    playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Execute integrated audit directives inside the control panel matrix below.";
                     playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
                   } else if (sfi >= 45) {
                     playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
@@ -486,6 +425,19 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
+                          {/* 🎯 CENTRAL COMMAND COCKPIT SYSTEM ENGINE INTEGRATION */}
+                          <div className="my-8">
+                            <CentralCommandCockpit 
+                              initialAuditId={audit.id}
+                              initialGroupId={audit.id}
+                              initialOrgName={audit.org_name}
+                              onSuccess={() => {
+                                fetchLedger();
+                                refreshActiveNodes(audit.id);
+                              }}
+                            />
+                          </div>
+
                           <div className="border border-slate-900 bg-slate-950 p-6 mb-8 space-y-6">
                             <span className="text-[10px] text-slate-500 font-black tracking-widest uppercase block">// REAL-TIME PRESENTATION CALIBRATION STRIPS</span>
                             
@@ -517,7 +469,6 @@ export default function AdminDashboard() {
                           </div>
 
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                            
                             <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
                               <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
                               <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
@@ -635,11 +586,7 @@ export default function AdminDashboard() {
                               </div>
 
                               <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 space-y-3">
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
-                                </div>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`w-full py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
                               </div>
                             </div>
                             <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
