@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Banknote, Stethoscope, Factory, ShoppingCart, Activity, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 1. THE DATA ENGINE
+// 1. THE DATA ENGINE (RE-INSTATED)
 const LOCAL_QUESTIONS = [
   { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
   { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
@@ -39,6 +39,7 @@ export default function PulseCheck() {
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
   
+  // 2. STATE FOR QUESTIONS (RE-INSTATED)
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -110,6 +111,7 @@ export default function PulseCheck() {
                 <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white italic">
                   STRATEGY <span className="text-red-600">INTAKE</span>
                 </h1>
+
                 <motion.div 
                   animate={{ opacity: [1, 0.4, 1] }} 
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -193,6 +195,7 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
+          {/* 3. THE AUDIT STEP RENDER (RE-INSTATED) */}
           {step === 'audit' && (
             <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-12 text-center italic">
               <div className="flex flex-col items-center border-b border-slate-900 pb-10 mb-12">
@@ -220,7 +223,7 @@ export default function PulseCheck() {
                         
                         if (auditId) {
                           try {
-                            // 🚀 FORWARDING NAME DATA OVER TO SENDGRID API
+                            // 🚀 FORWARDING THE OPERATOR NAME LINK TO BACKEND PAYLOAD POOL
                             await fetch('/api/send-vault-link', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
