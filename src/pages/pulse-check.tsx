@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Banknote, Stethoscope, Factory, ShoppingCart, Activity, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 1. THE DATA ENGINE (RE-INSTATED)
+// 1. THE DATA ENGINE
 const LOCAL_QUESTIONS = [
   { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
   { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
@@ -15,7 +15,7 @@ const LOCAL_QUESTIONS = [
   { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
   { id: "DG_03", text: "We have a budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
   { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Trust", weight: 2 }] },
+  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Zero Token", weight: 2 }] },
   { id: "ED_01", text: "Our data infrastructure can handle real-time AI processing.", options: [{ label: "Legacy", weight: 10 }, { label: "Hybrid", weight: 6 }, { label: "Cloud-native", weight: 4 }, { label: "Edge", weight: 2 }] },
   { id: "ED_02", text: "We leverage proprietary datasets to train specialized models.", options: [{ label: "Public only", weight: 10 }, { label: "Minimal", weight: 6 }, { label: "Significant", weight: 4 }, { label: "Proprietary", weight: 2 }] },
   { id: "ED_03", text: "API and model versioning are strictly controlled.", options: [{ label: "Manual", weight: 10 }, { label: "Basic", weight: 6 }, { label: "Automated", weight: 4 }, { label: "MLOps", weight: 2 }] },
@@ -39,7 +39,6 @@ export default function PulseCheck() {
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
   
-  // 2. STATE FOR QUESTIONS (RE-INSTATED)
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -111,7 +110,6 @@ export default function PulseCheck() {
                 <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white italic">
                   STRATEGY <span className="text-red-600">INTAKE</span>
                 </h1>
-
                 <motion.div 
                   animate={{ opacity: [1, 0.4, 1] }} 
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
@@ -195,7 +193,6 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
-          {/* 3. THE AUDIT STEP RENDER (RE-INSTATED) */}
           {step === 'audit' && (
             <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-12 text-center italic">
               <div className="flex flex-col items-center border-b border-slate-900 pb-10 mb-12">
@@ -217,9 +214,32 @@ export default function PulseCheck() {
                         setCurrentDimension(currentDimension + 1);
                       } else {
                         setIsLoading(true);
-                        const auditId = await logToDatabase(getLiveMetrics());
-                        if (auditId) window.location.href = `/results/${auditId}`;
-                        else setIsLoading(false);
+                        
+                        // 1. Calculate operational decay layout values and log out to Supabase
+                        const metrics = getLiveMetrics();
+                        const auditId = await logToDatabase(metrics);
+                        
+                        if (auditId) {
+                          try {
+                            // 2. CRITICAL WAITING BALANCER: Force context pipeline to process with SendGrid completely before redirect
+                            await fetch('/api/send-vault-link', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                email: email.toLowerCase().trim(),
+                                orgName: entityName.toUpperCase().trim(),
+                                auditId: auditId
+                              })
+                            });
+                          } catch (emailErr) {
+                            console.error("Transactional background pipeline email error:", emailErr);
+                          }
+
+                          // 3. Complete context loop safely to load results screen
+                          window.location.href = `/results/${auditId}`;
+                        } else {
+                          setIsLoading(false);
+                        }
                       }
                     }}
                   >
