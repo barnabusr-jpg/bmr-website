@@ -1,108 +1,113 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
+import sgMail from '@sendgrid/mail';
+import { createClient } from '@supabase/supabase-js';
+
+const SENDGRID_KEY = process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KEY;
+sgMail.setApiKey(SENDGRID_KEY as string);
+
+// 🚀 PRIVILEGED MASTER ADMIN ACCESS INITIALIZATION
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  console.log("🔓 VAULT ACTIVATION ATTEMPT - INCOMING BODY:", JSON.stringify(req.body));
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
+    return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { email, orgName, auditId, userName } = req.body;
+  const { auditId, orgName, email, userName } = req.body;
 
-  if (!email || !auditId) {
-    return res.status(400).json({ error: 'MISSING_REQUIRED_PARAMETERS' });
+  // 🌍 DYNAMIC SYSTEM SUBDOMAIN OVERLAY RESOLUTION
+  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL 
+    ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '') 
+    : req.headers.host 
+      ? `https://${req.headers.host}` 
+      : 'https://www.bmradvisory.co';
+
+  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co';
+
+  if (!auditId || !email) {
+    console.error("❌ VAULT CRASH: Payload is missing key identification requirements.");
+    return res.status(400).json({ error: 'MISSING ROUTING PARAMETERS' });
   }
-
-  const apiKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
 
   try {
-    const secureUrl = `https://www.bmradvisory.co/results/${auditId}`;
-    const targetEmail = email.toLowerCase().trim();
-    const formattedOrg = orgName?.toUpperCase() || 'CLIENT NODE';
-    const namePrefix = userName ? `${userName}: ` : '';
+    const secureVaultLink = `${BASE_URL}/vault/secure-drop?id=${auditId}`;
 
-    const sendgridPayload = {
-      personalizations: [
-        {
-          to: [{ email: targetEmail }],
-          subject: `${namePrefix}Forensic Assessment Complete // ${formattedOrg}`
-        }
-      ],
-      from: {
-        email: 'hello@bmradvisory.co',
-        name: 'BMR Advisory'
-      },
-      content: [
-        {
-          type: 'text/html',
-          value: `
-            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-              <tr>
-                <td align="center" style="padding: 40px 20px;">
-                  <div style="max-width: 600px; width: 100%; background: #020617; color: #cbd5e1; padding: 40px; border: 1px solid #1e293b; box-sizing: border-box; text-align: left;">
-                    
-                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                      <tr>
-                        <td align="left" style="text-align: left;">
-                          
-                          <div style="margin-bottom: 40px; border-left: 4px solid #dc2626; padding-left: 16px;">
-                            <h2 style="color: #ffffff; font-weight: 900; font-style: italic; text-transform: uppercase; margin: 0; letter-spacing: 2px; font-size: 22px; line-height: 1.3;">
-                              ${namePrefix}Forensic Assessment Complete
-                            </h2>
-                            <p style="color: #64748b; font-family: monospace; font-size: 11px; margin: 6px 0 0 0; letter-spacing: 0.1em; font-weight: bold;">
-                              ENTITY REF // ${formattedOrg}
-                            </p>
-                          </div>
-                          
-                          <h3 style="color: #ffffff; font-weight: 800; text-transform: uppercase; font-size: 16px; letter-spacing: 1px; margin-bottom: 16px;">
-                            Forensic Verdict
-                          </h3>
+    // 1. Persist Vault Activation Tracking flags back into the core database row safely bypassing RLS
+    const { error: updateError } = await supabaseAdmin
+      .from('audits')
+      .update({
+        vault_activated: true,
+        vault_released_at: new Date().toISOString()
+      })
+      .eq('id', auditId);
 
-                          <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
-                            Your completed forensic signals are saved to your secure profile ledger and can be accessed below:
-                          </p>
-                          
-                          <div style="background: #090d16; border: 1px solid #1e293b; padding: 32px; margin: 40px 0; text-align: center;">
-                            <p style="font-size: 10px; font-family: monospace; color: #475569; margin-bottom: 20px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">
-                              SECURE WORKSPACE TOKEN // ${auditId}
-                            </p>
-                            <a href="${secureUrl}" style="background: #dc2626; color: #ffffff; padding: 16px 32px; font-weight: 900; text-decoration: none; display: inline-block; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; font-style: italic;">
-                              Access Your Forensic Vault
-                            </a>
-                          </div>
-
-                          <p style="font-size: 11px; color: #475569; line-height: 1.8; text-transform: uppercase; font-weight: bold; font-family: monospace; border-top: 1px solid #0f172a; padding-top: 20px; margin: 40px 0 0 0;">
-                            Your permanent access key corresponds directly to this baseline instance. Use your live dashboard console to coordinate your strategic briefing registration.
-                          </p>
-
-                        </td>
-                      </tr>
-                    </table>
-
-                  </div>
-                </td>
-              </tr>
-            </table>
-          `
-        }
-      ]
-    };
-
-    const response = await fetch('https://api.sendgrid.com/v3/mail/send', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(sendgridPayload)
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      return res.status(500).json({ error: 'SENDGRID_ERROR', details: errorText });
+    if (updateError) {
+      throw new Error(`Primary Ledger Vault Activation Flags Failure: ${updateError.message}`);
     }
 
-    return res.status(200).json({ success: true });
+    // 2. Deliver pristine structural email drop alerts via SendGrid
+    await sgMail.send({
+      to: email.trim().toLowerCase(),
+      from: FROM_EMAIL,
+      subject: `SECURE DOCUMENT VAULT ACTIVATED // ${orgName.toUpperCase()}`,
+      html: `
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
+          <tr>
+            <td align="center" style="padding: 40px 20px;">
+              <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #ffffff; box-sizing: border-box;">
+                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                  <tr>
+                    <td align="left" style="text-align: left;">
+                      <h2 style="color: #ffffff; font-family: monospace; font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 1px;">
+                        BMR Solutions // Secure Data Escrow
+                      </h2>
+                      <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase;">
+                        Organization: ${orgName} | Access: Designated Custodian Token
+                      </p>
+                      <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;"/>
+                      <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0;">
+                        Greetings ${userName || 'Node Custodian'}, your private framework file storage drop room has been securely configured. 
+                      </p>
+                      <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0;">
+                        Please utilize the access verification link below to enter your secure container drop. Inside the workspace, you can safely drop system dependency configuration scripts, financial cloud expense sheets, and AI operational telemetry architecture trees.
+                      </p>
+                      <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 30px; margin-bottom: 40px;">
+                        <tr>
+                          <td align="left">
+                            <a href="${secureVaultLink}" target="_blank" style="background: #ffffff; color: #020617; padding: 18px 30px; text-decoration: none; font-weight: bold; display: inline-block; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; border: 1px solid #ffffff;">
+                              Access Secure Vault Drop Room →
+                            </a>
+                          </td>
+                        </tr>
+                      </table>
+                      <p style="font-family: monospace; font-size: 10px; color: #475569; margin: 40px 0 0 0; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: uppercase;">
+                        Encrypted Connection // BMR Solutions Storage Infrastructure Layer
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
+        </table>
+      `
+    });
 
-  } catch (err: any) {
-    return res.status(500).json({ error: 'SERVER_EXCEPTION', message: err.message });
+    return res.status(200).json({
+      status: 'SUCCESS',
+      message: 'Vault storage allocation corridors initialized cleanly.'
+    });
+
+  } catch (error: any) {
+    console.error("VAULT SEVERE GATEWAY EXCEPTION BREAKDOWN:", error.message);
+    return res.status(500).json({
+      error: 'VAULT INFRASTRUCTURE REJECTION',
+      message: error.message
+    });
   }
 }
