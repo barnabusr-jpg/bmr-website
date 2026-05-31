@@ -5,7 +5,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   }
 
-  // 🚀 DESTUCTURING USERNAME VARIABLE SAFELY FROM FORMS
+  // Extract variables safely from the incoming client fetch request
   const { email, orgName, auditId, userName } = req.body;
 
   if (!email || !auditId) {
@@ -19,14 +19,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const targetEmail = email.toLowerCase().trim();
     const formattedOrg = orgName?.toUpperCase() || 'CLIENT NODE';
     
-    // Parse name configuration line to match requirements
+    // Prepend the user's name cleanly if it was passed through from intake
     const namePrefix = userName ? `${userName}: ` : '';
 
     const sendgridPayload = {
       personalizations: [
         {
           to: [{ email: targetEmail }],
-          // Clean subject line without technical underscores
+          // Clean subject line without underscores
           subject: `${namePrefix}Forensic Assessment Complete // ${formattedOrg}`
         }
       ],
