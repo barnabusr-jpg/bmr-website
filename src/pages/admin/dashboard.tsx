@@ -7,6 +7,8 @@ import {
   Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+
+// Import your central command engine component
 import CentralCommandCockpit from "@/components/CentralCommandCockpit";
 
 const BMR_IP_SUITE = {
@@ -140,35 +142,6 @@ export default function AdminDashboard() {
       alert("NUDGE LOGISTICS FAILURE.");
     } finally {
       setIsUpdating(false);
-    }
-  };
-
-  const runSynthesis = async (auditId: string) => {
-    setIsUpdating(true);
-    try {
-      const res = await fetch('/api/synthesize-fracture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ auditId })
-      });
-      
-      const serverResponse = await res.json();
-      
-      if (res.ok) {
-        setIsUpdating(false);
-        let query = supabase.from('audits').select('*').eq('id', auditId).single();
-        const { data: cleanAudit } = await query;
-        if (cleanAudit) {
-          setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
-        }
-        alert("SYNTHESIS ROOT LOGIC ENGINE RE-CALCULATED SUCCESSFULLY.");
-      } else {
-        alert(`SERVER REJECTION: ${serverResponse.error || 'UNEXPECTED SIGNAL OUTAGE'}`);
-      }
-    } catch (err) { 
-      console.error(err); 
-    } finally { 
-      setIsUpdating(false); 
     }
   };
 
@@ -384,11 +357,12 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
+                          {/* 🎯 BALANCED STAKEHOLDER TRACKS WITH EXPLICIT STRINGS */}
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
-                              { label: 'EXECUTIVE TRACK', key: 'EXE' },
-                              { label: 'MANAGERIAL TRACK', key: 'MGR' },
-                              { label: 'TECHNICAL TRACK', key: 'TEC' }
+                              { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
+                              { label: 'MANAGERIAL TRACK', key: 'MANAGERIAL' },
+                              { label: 'TECHNICAL TRACK', key: 'TECHNICAL' }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
                               const isDone = node?.status?.toLowerCase() === 'completed';
@@ -425,7 +399,7 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* 🎯 CENTRAL COMMAND COCKPIT SYSTEM ENGINE INTEGRATION */}
+                          {/* CENTRAL COMMAND COCKPIT SYSTEM ENGINE INTEGRATION */}
                           <div className="my-8">
                             <CentralCommandCockpit 
                               initialAuditId={audit.id}
@@ -495,6 +469,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
+                          {/* 🛡️ OPTIMIZED TABLE EMPTY-STATE RENDERING CELLS */}
                           {realFractures.length > 0 && (
                             <div className="border border-slate-900 bg-slate-950 p-6 space-y-4 mb-8">
                               <div className="text-[10px] font-mono text-red-500 font-black tracking-widest uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
@@ -534,7 +509,9 @@ export default function AdminDashboard() {
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
                               {realFractures.length === 0 ? (
-                                <div className="col-span-3 text-center py-6 font-mono text-xs text-slate-400 uppercase tracking-widest">No active structural fractures found. Standard baseline optimizations apply.</div>
+                                <div className="col-span-3 text-center py-12 font-mono text-xs text-slate-400 uppercase tracking-widest bg-slate-50/50 border border-slate-100">
+                                  No active structural fractures found. Standard baseline optimizations apply.
+                                </div>
                               ) : (
                                 realFractures.slice(0, 3).map((frac: any, index: number) => (
                                   <div key={frac.id} className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
