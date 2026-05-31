@@ -27,8 +27,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   
   const { groupId, orgName, emails, parentAuditId } = req.body;
-  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmradvisory.co';
-  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmrsolutions.co'; 
+
+  // 🌍 DYNAMIC SYSTEM SUBDOMAIN OVERLAY RESOLUTION
+  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL 
+    ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '') 
+    : req.headers.host 
+      ? `https://${req.headers.host}` 
+      : 'https://www.bmradvisory.co';
+
+  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co'; 
 
   // 2. Explicit error print line if the payload properties look empty
   if (!parentAuditId) {
