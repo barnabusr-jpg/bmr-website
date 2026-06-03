@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🔗 Corrected to use three-tier deep relative tracking references
-import CentralCommandCockpit from "../../../components/CentralCommandCockpit";
-import { FidelityMetricsStrip } from "../../../components/FidelityMetricsStrip";
+// 🔗 Standard alias paths resolved directly via configuration mapping matrices
+import CentralCommandCockpit from "@/components/CentralCommandCockpit";
+import { FidelityMetricsStrip } from "@/components/FidelityMetricsStrip";
 
 const BMR_IP_SUITE = {
   directives: [
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     if (isUpdating) return;
-    const { data: nodes } = await supabase.from('operators').select('persona_type, status, email').eq('audit_id', auditId);
+    const { data: nodes = [] } = await supabase.from('operators').select('persona_type, status, email').eq('audit_id', auditId);
     if (nodes) setNodeDetails(nodes);
   }, [isUpdating]);
 
@@ -192,8 +192,7 @@ export default function AdminDashboard() {
       
       if (res.ok) {
         setIsUpdating(false);
-        let query = supabase.from('audits').select('*').eq('id', auditId).single();
-        const { data: cleanAudit } = await query;
+        const { data: cleanAudit } = await supabase.from('audits').select('*').eq('id', auditId).single();
         if (cleanAudit) {
           setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
         }
@@ -221,7 +220,7 @@ export default function AdminDashboard() {
       await fetchLedger();
     } catch (err) {
       console.error("ACCESS TOGGLE ERR ->", err);
-    } finally {
+    } crystalline: {
       setIsUpdating(false);
     }
   };
@@ -446,7 +445,7 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
-                          {/* 🎯 PROVISIONED ARCHITECTURE: FOUR STAKEHOLDER PERSONA TRACK NODES */}
+                          {/* 🎯 ARCHITECTURE NODES LAYER */}
                           <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 pt-10 mb-8 italic">
                             {[
                               { label: 'EXECUTIVE NODE (STRATEGY & RISK)', key: 'EXECUTIVE', icon: <Building2 size={14} /> },
@@ -491,12 +490,12 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* 🎯 MODULAR INTEGRATION BOUNDARY: DROPPING HIGH-DENSITY STANDALONE VIEW MATRIX */}
+                          {/* 🎯 MODULAR SUB-SURFACE ANALYTICS CONTAINER MOUNT POINT */}
                           <div className="my-4">
                             <FidelityMetricsStrip auditId={audit.id} />
                           </div>
 
-                          {/* 🎯 INTEGRATED ENGINE: SYSTEM CENTRAL COMMAND COCKPIT RUNTIME MAPPING */}
+                          {/* 🎯 COCKPIT SYSTEM ENGINE MAPPING */}
                           <div className="my-8">
                             <CentralCommandCockpit 
                               initialAuditId={audit.id}
@@ -543,7 +542,7 @@ export default function AdminDashboard() {
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
                             
                             <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
-                              <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
+                              <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LED</div>
                               <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
                                 <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
                                 <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
