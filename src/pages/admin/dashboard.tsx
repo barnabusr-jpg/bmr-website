@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🔗 Corrected relative imports mapping directly from src/pages/admin/ into src/components/
+// 🔗 Strict relative routing back from src/pages/admin/ into global src/components/
 import CentralCommandCockpit from "../../components/CentralCommandCockpit";
 import { FidelityMetricsStrip } from "../../components/FidelityMetricsStrip";
 
@@ -304,18 +304,30 @@ export default function AdminDashboard() {
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
               
-              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
-              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">LAUNCH 3-NODE 360 COGNITIVE DIVE</h2>
+              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">ASSIGNING PRIMARY ONBOARDING ROUTES FOR: {selectedAudit.org_name}</p>
               
               <div className="space-y-4 mt-10 text-left">
-                <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="USER STAKEHOLDER EMAIL" value={emails.user} onChange={(e) => setEmails({...emails, user: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <div>
+                  <label className="text-[9px] text-slate-500 font-mono tracking-wider block mb-1">NODE 01 // EXECUTIVE TRACK (10-DIAGNOSTIC CRITERIA)</label>
+                  <input placeholder="EXECUTIVE LEADERSHIP EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                </div>
+                <div>
+                  <label className="text-[9px] text-slate-500 font-mono tracking-wider block mb-1">NODE 02 // MANAGERIAL TRACK (10-DIAGNOSTIC CRITERIA)</label>
+                  <input placeholder="MANAGERIAL WORKFLOW LEAD EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                </div>
+                <div>
+                  <label className="text-[9px] text-slate-500 font-mono tracking-wider block mb-1">NODE 03 // TECHNICAL TRACK (10-DIAGNOSTIC CRITERIA)</label>
+                  <input placeholder="TECHNICAL SYSTEMS ENGINEER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                </div>
+                <div className="opacity-30 border-t border-slate-900 pt-4">
+                  <label className="text-[9px] text-slate-600 font-mono tracking-wider block mb-1">NODE 04 // OPTIONAL END-USER TELEMETRY (STAGE 2 OVERLAY ONLY)</label>
+                  <input placeholder="USER STAKEHOLDER EMAIL (OPTIONAL)" value={emails.user} onChange={(e) => setEmails({...emails, user: e.target.value})} className="w-full bg-slate-950 border border-slate-900 p-4 text-slate-600 uppercase font-mono text-xs outline-none italic cursor-not-allowed" disabled />
+                </div>
                 
                 <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
-                  {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
+                  {isUpdating ? "DISPATCHING INTAKE BLUEPRINTS..." : "PROVISION LINKS & DISPATCH COGNITIVE DIVE"}
                 </button>
               </div>
             </motion.div>
@@ -434,7 +446,7 @@ export default function AdminDashboard() {
                           )}
                           <span className="text-white">
                             {cleanStatus.includes("COMPLETE") && 'RESULT PUBLISHED'}
-                            {cleanStatus === 'LEAD' && 'LEAD CAPTURED'}
+                            {cleanStatus === 'LEAD' && 'INTAKE DISCOVERY'}
                             {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'TRIANGULATION ACTIVE'}
                           </span>
                         </div>
@@ -445,245 +457,250 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
-                          {/* 🎯 FOUR STAKEHOLDER PERSONA TRACK NODES */}
-                          <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 pt-10 mb-8 italic">
-                            {[
-                              { label: 'EXECUTIVE NODE (STRATEGY & RISK)', key: 'EXECUTIVE', icon: <Building2 size={14} /> },
-                              { label: 'MANAGERIAL NODE (LOGIC TRANSLATION)', key: 'MANAGERIAL', icon: <FileText size={14} /> },
-                              { label: 'TECHNICAL NODE (CORE EXECUTION)', key: 'TECHNICAL', icon: <Binary size={14} /> },
-                              { label: 'USER NODE (SYSTEM OPERATIONS)', key: 'USER', icon: <Users size={14} /> }
-                            ].map((role) => {
-                              const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
-                              const isDone = node?.status?.toLowerCase() === 'completed';
-                              return (
-                                <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
-                                  <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
-                                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase flex items-center gap-1.5">
-                                      {role.icon} {role.label}
-                                    </span>
-                                    
-                                    {isDone ? (
-                                      <CheckCircle className="text-green-500" size={14}/>
-                                    ) : (
-                                      <div className="flex items-center gap-2">
-                                        <button 
-                                          type="button"
-                                          title="Fire Email Reminder Nudge" 
-                                          disabled={isUpdating}
-                                          onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
-                                          className="text-red-500 hover:text-white transition-all cursor-pointer opacity-40 group-hover/node:opacity-100"
-                                        >
-                                          <BellRing size={12} className="animate-bounce" />
-                                        </button>
-                                        <Clock className="text-slate-700" size={14}/>
+                          {/* ========================================================================= */}
+                          {/* 🟩 STAGE 1: INTAKE & 3-NODE 360 COGNITIVE DIVE DISCOVERY                  */}
+                          {/* ========================================================================= */}
+                          <div className="pt-10 mb-8 border-b border-slate-900 pb-8">
+                            <span className="text-[10px] text-red-500 font-mono font-black tracking-[0.2em] block mb-4">
+                              // STAGE 01 // INITIAL ACCOUNT INTAKE & 3-NODE CORE TRIANGULATION
+                            </span>
+                            
+                            {/* Presentation Calibration Sliders */}
+                            <div className="border border-slate-900 bg-slate-950 p-6 mb-6 space-y-6">
+                              <span className="text-[10px] text-slate-500 font-black tracking-widest uppercase block">// INITIAL PRESENTATION ECONOMIC FOOTPRINT CALIBRATION</span>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-2">
+                                  <div className="flex justify-between text-xs font-mono">
+                                    <span className="text-slate-500">ANNUAL SYSTEM SOFTWARE SPEND:</span>
+                                    <span className="text-red-500 font-black">${spend.toFixed(1)}M</span>
+                                  </div>
+                                  <input 
+                                    type="range" min="0.1" max="25.0" step="0.1" value={spend}
+                                    onChange={(e) => handleLiveSliderChange(audit.id, "ai_spend", parseFloat(e.target.value))}
+                                    className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer"
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <div className="flex justify-between text-xs font-mono">
+                                    <span className="text-slate-500">IMPACTED WORKFORCE SCALE (FTES):</span>
+                                    <span className="text-red-500 font-black">{fte} PEOPLE</span>
+                                  </div>
+                                  <input 
+                                    type="range" min="1" max="250" step="1" value={fte}
+                                    onChange={(e) => handleLiveSliderChange(audit.id, "roi_pct", parseInt(e.target.value))}
+                                    className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Execution Launch Vectors */}
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                              <div className="flex gap-4">
+                                <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black">
+                                  <Mail size={14} /> Initialize & Launch 3-Node 360 Dive
+                                </button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="bg-slate-950 border border-slate-800 text-slate-400 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:border-red-600 hover:text-white transition-all flex items-center justify-center gap-3 italic">
+                                  <Monitor size={14} /> Open Onscreen Discovery Ledger
+                                </button>
+                              </div>
+                              
+                              <div className="text-[10px] font-mono bg-slate-900 text-slate-500 px-3 py-2 border border-slate-800">
+                                PIPELINE STATUS: <span className="text-white font-bold">{cleanStatus === "LEAD" ? "DISCOVERY LOCK" : cleanStatus}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* ========================================================================= */}
+                          {/* 🟨 STAGE 2: 30-QUESTION REAL-TIME TELEMETRY MATRIX SENSORS                */}
+                          {/* ========================================================================= */}
+                          {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING") || cleanStatus.includes("COMPLETE")) ? (
+                            <div className="my-8 border-b border-slate-900 pb-8 animate-fadeIn">
+                              <span className="text-[10px] text-yellow-500 font-mono font-black tracking-[0.2em] block mb-4">
+                                // STAGE 02 // REAL-TIME 3-NODE SURVEY SENSORS (30 CORE DIAGNOSTIC SECTIONS)
+                              </span>
+
+                              {/* Explanatory, human-readable monitoring dashboard cards layout */}
+                              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 italic">
+                                {[
+                                  { 
+                                    label: 'NODE 01 // STRATEGY & GOVERNANCE', 
+                                    key: 'EXECUTIVE', 
+                                    icon: <Building2 size={14} />,
+                                    inspects: 'Corporate Objectives & AI Risk Safeguards',
+                                    criteria: '10 Core Strategy Constraints'
+                                  },
+                                  { 
+                                    label: 'NODE 02 // LOGIC & TRANSLATION', 
+                                    key: 'MANAGERIAL', 
+                                    icon: <FileText size={14} />,
+                                    inspects: 'Operational Hand-offs & Data Pipelines',
+                                    criteria: '10 Core Process Constraints'
+                                  },
+                                  { 
+                                    label: 'NODE 03 // SYSTEMS & EXECUTION', 
+                                    key: 'TECHNICAL', 
+                                    icon: <Binary size={14} />,
+                                    inspects: 'Software Infrastructure & Code Implementations',
+                                    criteria: '10 Core Engineering Constraints'
+                                  }
+                                ].map((role) => {
+                                  const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
+                                  const isDone = node?.status?.toLowerCase() === 'completed';
+                                  return (
+                                    <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[160px] flex flex-col justify-between italic group/node">
+                                      <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
+                                        <span className="text-[9px] font-mono text-slate-500 font-black tracking-widest uppercase flex items-center gap-1.5">
+                                          {role.icon} {role.label}
+                                        </span>
+                                        {!isDone && (
+                                          <button 
+                                            type="button" disabled={isUpdating}
+                                            onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
+                                            className="text-red-500 hover:text-white transition-all cursor-pointer block"
+                                            title="Resend Access Passkey Nudge"
+                                          >
+                                            <BellRing size={12} className="animate-bounce" />
+                                          </button>
+                                        )}
                                       </div>
-                                    )}
-                                  </div>
-                                  
-                                  <div className="flex-1 flex flex-col justify-center items-center text-center py-4">
-                                    <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-white' : 'text-2xl text-slate-800 animate-pulse'}`}>
-                                      {isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}
+                                      
+                                      {/* Explanatory Context Copy Blocks */}
+                                      <div className="my-2 py-1">
+                                        <div className="text-[10px] text-slate-400 font-sans tracking-wide normal-case font-medium mb-1">
+                                          <strong>Targeting:</strong> {role.inspects}
+                                        </div>
+                                        <div className="text-[9px] font-mono text-slate-600 tracking-wider">
+                                          {role.criteria}
+                                        </div>
+                                      </div>
+
+                                      <div className="border-t border-slate-900/60 pt-3 flex justify-between items-center w-full">
+                                        <span className="text-[9px] font-mono text-slate-600">// STATE:</span>
+                                        <div className={`font-mono text-xs uppercase tracking-wider font-black ${isDone ? 'text-green-500' : 'text-amber-500 animate-pulse'}`}>
+                                          {isDone ? '✔ TELEMETRY_LOCKED' : '⏳ AWAITING_OPERATOR_INPUT'}
+                                        </div>
+                                      </div>
                                     </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-
-                          {/* 🎯 MODULAR CONTAINER: DECOUPLED TELEMETRY STRIP ACCORDION VIEW */}
-                          <div className="my-4">
-                            <FidelityMetricsStrip auditId={audit.id} />
-                          </div>
-
-                          {/* 🎯 SYSTEM CONSOLE ENGINE: CONTROL PLANE COCKPIT OVERRIDE PANEL */}
-                          <div className="my-8">
-                            <CentralCommandCockpit 
-                              initialAuditId={audit.id}
-                              initialGroupId={audit.id}
-                              initialOrgName={audit.org_name}
-                              onSuccess={() => {
-                                fetchLedger();
-                                refreshActiveNodes(audit.id);
-                                window.location.replace('/admin/dashboard');
-                              }}
-                            />
-                          </div>
-
-                          <div className="border border-slate-900 bg-slate-950 p-6 mb-8 space-y-6">
-                            <span className="text-[10px] text-slate-500 font-black tracking-widest uppercase block">// REAL-TIME PRESENTATION CALIBRATION STRIPS</span>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                              <div className="space-y-2">
-                                <div className="flex justify-between text-xs font-mono">
-                                  <span className="text-slate-500">ANNUAL SYSTEM SOFTWARE SPEND:</span>
-                                  <span className="text-red-500 font-black">${spend.toFixed(1)}M</span>
-                                </div>
-                                <input 
-                                  type="range" min="0.1" max="25.0" step="0.1" value={spend}
-                                  onChange={(e) => handleLiveSliderChange(audit.id, "ai_spend", parseFloat(e.target.value))}
-                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer"
-                                />
+                                  );
+                                })}
                               </div>
 
-                              <div className="space-y-2">
-                                <div className="flex justify-between text-xs font-mono">
-                                  <span className="text-slate-500">IMPACTED WORKFORCE SCALE (FTES):</span>
-                                  <span className="text-red-500 font-black">{fte} PEOPLE</span>
-                                </div>
-                                <input 
-                                  type="range" min="1" max="250" step="1" value={fte}
-                                  onChange={(e) => handleLiveSliderChange(audit.id, "roi_pct", parseInt(e.target.value))}
-                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer"
+                              {/* High-density sub-surface tracking data strip wrapper (90 questions diagnostic metrics) */}
+                              <div className="my-4">
+                                <FidelityMetricsStrip auditId={audit.id} />
+                              </div>
+
+                              {/* Manual Override Engine Panel Controls */}
+                              <div className="my-4">
+                                <CentralCommandCockpit 
+                                  initialAuditId={audit.id}
+                                  initialGroupId={audit.id}
+                                  initialOrgName={audit.org_name}
+                                  onSuccess={() => {
+                                    fetchLedger();
+                                    refreshActiveNodes(audit.id);
+                                  }}
                                 />
                               </div>
                             </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                            
-                            <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
-                              <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
-                              <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
-                                <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                              </div>
-                            </div>
-
-                            <div className="lg:col-span-7 border-2 border-red-900/60 bg-red-950/5 p-6 flex flex-col justify-between space-y-4">
-                              <div className="space-y-2">
-                                <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block">// SECURE_BRIEFING_ALIGNMENT_SCRIPT</span>
-                                <div className="text-2xl font-black italic tracking-tighter text-white uppercase">{playbookHeadline}</div>
-                                <p className="text-xs leading-relaxed font-sans text-slate-300 normal-case font-normal border-l-2 border-red-600 pl-4 py-1">
-                                  {playbookNarrative}
-                                </p>
-                              </div>
-                              <div className="bg-black/40 border border-slate-900 p-4 font-sans normal-case text-xs text-slate-400 font-medium">
-                                <strong className="text-white uppercase tracking-wider block text-[10px] font-mono font-black text-red-500 mb-1">// COLLABORATIVE_CLOSING_ANCHOR:</strong>
-                                "{playbookPitch}"
-                              </div>
-                            </div>
-                          </div>
-
-                          {realFractures.length > 0 && (
-                            <div className="border border-slate-900 bg-slate-950 p-6 space-y-4 mb-8">
-                              <div className="text-[10px] font-mono text-red-500 font-black tracking-widest uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-left font-mono text-[11px] border-collapse">
-                                  <thead>
-                                    <tr className="border-b border-slate-900 text-slate-500 font-black">
-                                      <th className="pb-2 w-1/6">FRACTURE_ID</th>
-                                      <th className="pb-2 w-1/12">SEVERITY</th>
-                                      <th className="pb-2 w-1/2">TRIANGULATED_REALITY_DESCRIPTION</th>
-                                      <th className="pb-2 w-1/4">REQUIRED_IP_DIRECTIVE</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody className="divide-y divide-slate-900/50 text-white font-medium">
-                                    {realFractures.map((frac: any) => (
-                                      <tr key={frac.id} className="hover:bg-white/5 transition-all">
-                                        <td className="py-3 text-slate-400 font-black">{frac.id}</td>
-                                        <td className={`py-3 font-black ${frac.severity === 'CRITICAL' ? 'text-red-500' : 'text-yellow-600'}`}>{frac.severity}</td>
-                                        <td className="py-3 pr-4 normal-case font-sans text-slate-300 font-normal leading-relaxed">{frac.description}</td>
-                                        <td className="py-3 text-red-400 font-black uppercase italic">{frac.directive}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
+                          ) : (
+                            <div className="my-8 bg-zinc-950/40 border border-dashed border-zinc-900 p-6 text-center font-mono text-[11px] text-zinc-600">
+                              // STAGE 02 ACCESS LOCK: DEPLOY AND PROVISION THE 3 CORE TRIANGULATION NODES ABOVE TO UNLOCK LISTENING POSTS
                             </div>
                           )}
 
-                          <div className="bg-white text-black p-8 border-l-[16px] border-slate-900 shadow-2xl space-y-6 mb-10 font-sans">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
-                              <div>
-                                <span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// ENGAGEMENT_ROADMAP_CONFIGURATION</span>
-                                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-black leading-none mt-1">RECOMMENDED STATEMENT OF WORK</h3>
-                              </div>
-                              <span className="text-[10px] font-mono text-slate-400 font-black tracking-wider uppercase">{targetTier}</span>
-                            </div>
+                          {/* ========================================================================= */}
+                          {/* 🟦 STAGE 3: CLOSING INTEL DOSSIER & GENERATED RECOMMENDATIONS             */}
+                          {/* ========================================================================= */}
+                          {cleanStatus.includes("COMPLETE") ? (
+                            <div className="mt-8 space-y-6 animate-fadeIn">
+                              <span className="text-[10px] text-blue-500 font-mono font-black tracking-[0.2em] block mb-4">
+                                // STAGE 03 // BOARDROOM PRESENTATION & REVENUE REALIZATION
+                              </span>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                              {realFractures.length === 0 ? (
-                                <div className="col-span-3 text-center py-6 font-mono text-xs text-slate-400 uppercase tracking-widest">No active structural fractures found. Standard baseline optimizations apply.</div>
-                              ) : (
-                                realFractures.slice(0, 3).map((frac: any, index: number) => (
-                                  <div key={frac.id} className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
-                                    <div className="space-y-1">
-                                      <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase">
-                                        <span>PHASE 0{index + 1}</span>
-                                        <span className="text-red-600 font-black uppercase">{frac.severity} RISK</span>
-                                      </div>
-                                      <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">{frac.directive.replace("Implement ", "")} Integration</h5>
-                                      <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Targeting system recovery through deployment of core blueprint protocols: {frac.recovery}.</p>
-                                    </div>
-                                    <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">0{index + 1}</div>
+                              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-6">
+                                <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
+                                  <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// FIXED_ECONOMIC_LEAKAGE_LEDGER</div>
+                                  <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
+                                    <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                    <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                                   </div>
-                                ))
-                              )}
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-900 pt-8 italic text-left">
-                            <div className="space-y-4">
-                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
-                              
-                              <div className="flex gap-3 mb-2 p-2 bg-black/40 border border-slate-900 font-mono text-[9px] font-black uppercase tracking-wider w-full">
-                                <button 
-                                  type="button"
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    const updatedState = !audit.sow_sent;
-                                    await supabase.from('audits').update({ sow_sent: updatedState }).eq('id', audit.id);
-                                    fetchLedger();
-                                  }}
-                                  className={`flex-1 py-2 border transition-all ${audit.sow_sent ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
-                                >
-                                  MARK SOW SENT: {audit.sow_sent ? "✔ TRUE" : "✘ FALSE"}
-                                </button>
-                                
-                                <button 
-                                  type="button"
-                                  onClick={async (e) => {
-                                    e.stopPropagation();
-                                    const updatedState = !audit.is_paid;
-                                    await supabase.from('audits').update({ is_paid: updatedState }).eq('id', audit.id);
-                                    fetchLedger();
-                                  }}
-                                  className={`flex-1 py-2 border transition-all ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
-                                >
-                                  MARK PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}
-                                </button>
-                              </div>
-
-                              <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 space-y-3">
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
                                 </div>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
-                              </div>
-                            </div>
-                            <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
-                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
-                              
-                              <div className="w-full space-y-1 mb-2">
-                                <input 
-                                  type="text"
-                                  value={dossierNotes[audit.id] || ""}
-                                  onChange={(e) => setDossierNotes({ ...dossierNotes, [audit.id]: e.target.value })}
-                                  placeholder="APPEND CUSTOM DOSSIER ANNOTATION NOTE..."
-                                  className="w-full bg-black border border-slate-900 p-3 text-[10px] font-mono font-black italic uppercase text-slate-300 focus:border-red-600 outline-none placeholder:text-slate-700 tracking-wider"
-                                />
+
+                                <div className="lg:col-span-7 border border-slate-900 bg-slate-950 p-6 flex flex-col justify-between">
+                                  <div className="space-y-2">
+                                    <span className="text-[10px] font-mono font-black text-slate-500 tracking-widest block">// STRATEGIC_BOARDROOM_DELIVERY_SCRIPT</span>
+                                    <div className="text-xl font-black text-white uppercase">{playbookHeadline}</div>
+                                    <p className="text-xs leading-relaxed font-sans text-slate-400 normal-case">{playbookNarrative}</p>
+                                  </div>
+                                  <div className="bg-black/40 border border-slate-900 p-3 font-mono text-[11px] text-yellow-600 mt-4">
+                                    "{playbookPitch}"
+                                  </div>
+                                </div>
                               </div>
 
-                              <div className="space-y-3">
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
+                              {/* Dynamic Statement of Work Previews Generated by Fracture Telemetry */}
+                              <div className="bg-white text-black p-8 border-l-[16px] border-slate-900 shadow-2xl space-y-6 font-sans">
+                                <div className="flex justify-between items-end border-b border-slate-100 pb-4">
+                                  <div>
+                                    <span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// DEPLOYABLE_PROPOSAL_MAPPING</span>
+                                    <h3 className="text-2xl font-black uppercase italic tracking-tighter text-black mt-1">RECOMMENDED STATEMENT OF WORK</h3>
+                                  </div>
+                                  <span className="text-[10px] font-mono text-slate-400 font-black uppercase">{targetTier}</span>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                                  {realFractures.length === 0 ? (
+                                    <div className="col-span-3 text-center py-6 font-mono text-xs text-slate-400 uppercase tracking-widest">No active structural fractures found. Standard baseline optimizations apply.</div>
+                                  ) : (
+                                    realFractures.slice(0, 3).map((frac: any, index: number) => (
+                                      <div key={frac.id} className="border border-slate-100 bg-slate-50/60 p-5 space-y-2 relative">
+                                        <span className="text-[9px] font-mono text-slate-400 block uppercase font-bold">PHASE 0{index + 1} // {frac.severity} RISK</span>
+                                        <h5 className="text-sm font-black italic text-slate-900 uppercase">{frac.directive.replace("Implement ", "")}</h5>
+                                        <p className="text-[11px] font-sans text-slate-500 normal-case leading-relaxed">System recovery initialized via blueprint protocols: {frac.recovery}.</p>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Closing Gateway Controls & Document Generation Exports */}
+                              <div className="flex flex-wrap items-center justify-between pt-6 border-t border-slate-900/60 gap-4 font-mono">
+                                <div className="flex gap-4 p-2 bg-black/40 border border-slate-900 text-[10px] font-black uppercase tracking-wider">
+                                  <button 
+                                    type="button"
+                                    onClick={async (e) => { e.stopPropagation(); const updated = !audit.sow_sent; await supabase.from('audits').update({ sow_sent: updated }).eq('id', audit.id); fetchLedger(); }}
+                                    className={`px-4 py-2 border transition-all ${audit.sow_sent ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                  >
+                                    MARK SOW SENT: {audit.sow_sent ? "✔ TRUE" : "✘ FALSE"}
+                                  </button>
+                                  <button 
+                                    type="button"
+                                    onClick={async (e) => { e.stopPropagation(); const updated = !audit.is_paid; await supabase.from('audits').update({ is_paid: updated }).eq('id', audit.id); fetchLedger(); }}
+                                    className={`px-4 py-2 border transition-all ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                  >
+                                    MARK REVENUE PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}
+                                  </button>
+                                </div>
+                                
+                                <div className="flex gap-4">
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`px-6 py-4 text-[10px] tracking-widest font-black uppercase transition-all border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-black'}`}>
+                                    {clientHasAccess ? "✔ BLUR DOSSIER" : "✘ UNBLUR DOSSIER ACCESS"}
+                                  </button>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="bg-white text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-2">
+                                    <FileText size={14} /> EXPORT BOARD-READY PITCH (PDF)
+                                  </button>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          ) : (
+                            <div className="mt-8 bg-zinc-950/40 border border-dashed border-zinc-900 p-6 text-center font-mono text-[11px] text-zinc-600">
+                              // STAGE 03 ACCESS LOCK: FETCH AND PROCESS TELEMETRY MATRICES TO PREVIEW DOSSIER SOW SPECIFICATIONS
+                            </div>
+                          )}
 
                         </div>
                       )}
