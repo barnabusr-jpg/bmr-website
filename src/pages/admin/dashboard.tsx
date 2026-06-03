@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🔗 Restructured to use explicit relative paths to bypass Webpack alias resolution drops
-import CentralCommandCockpit from "../../components/CentralCommandCockpit";
-import { FidelityMetricsStrip } from "../../components/FidelityMetricsStrip";
+// 🔗 Corrected to use three-tier deep relative tracking references
+import CentralCommandCockpit from "../../../components/CentralCommandCockpit";
+import { FidelityMetricsStrip } from "../../../components/FidelityMetricsStrip";
 
 const BMR_IP_SUITE = {
   directives: [
