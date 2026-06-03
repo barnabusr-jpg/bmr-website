@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🔗 Definitive relative imports mapping directly back from src/pages/admin/ into src/components/
-import CentralCommandCockpit from "../../../components/CentralCommandCockpit";
-import { FidelityMetricsStrip } from "../../../components/FidelityMetricsStrip";
+// 🔗 Corrected relative imports mapping directly from src/pages/admin/ into src/components/
+import CentralCommandCockpit from "../../components/CentralCommandCockpit";
+import { FidelityMetricsStrip } from "../../components/FidelityMetricsStrip";
 
 const BMR_IP_SUITE = {
   directives: [
@@ -445,7 +445,7 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
-                          {/* 🎯 PROVISIONED ARCHITECTURE: FOUR STAKEHOLDER PERSONA TRACK NODES */}
+                          {/* 🎯 FOUR STAKEHOLDER PERSONA TRACK NODES */}
                           <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 pt-10 mb-8 italic">
                             {[
                               { label: 'EXECUTIVE NODE (STRATEGY & RISK)', key: 'EXECUTIVE', icon: <Building2 size={14} /> },
@@ -490,12 +490,12 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* 🎯 MODULAR INTEGRATION BOUNDARY: DROPPING HIGH-DENSITY STANDALONE VIEW MATRIX */}
+                          {/* 🎯 MODULAR CONTAINER: DECOUPLED TELEMETRY STRIP ACCORDION VIEW */}
                           <div className="my-4">
                             <FidelityMetricsStrip auditId={audit.id} />
                           </div>
 
-                          {/* 🎯 INTEGRATED ENGINE: SYSTEM CENTRAL COMMAND COCKPIT RUNTIME MAPPING */}
+                          {/* 🎯 SYSTEM CONSOLE ENGINE: CONTROL PLANE COCKPIT OVERRIDE PANEL */}
                           <div className="my-8">
                             <CentralCommandCockpit 
                               initialAuditId={audit.id}
