@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🔗 Standard alias paths resolved directly via configuration mapping matrices
-import CentralCommandCockpit from "@/components/CentralCommandCockpit";
-import { FidelityMetricsStrip } from "@/components/FidelityMetricsStrip";
+// 🔗 Root-explicit paths to force Webpack to map sibling files without path alias ambiguity
+import CentralCommandCockpit from "src/components/CentralCommandCockpit";
+import { FidelityMetricsStrip } from "src/components/FidelityMetricsStrip";
 
 const BMR_IP_SUITE = {
   directives: [
@@ -107,7 +107,7 @@ export default function AdminDashboard() {
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     if (isUpdating) return;
-    const { data: nodes = [] } = await supabase.from('operators').select('persona_type, status, email').eq('audit_id', auditId);
+    const { data: nodes } = await supabase.from('operators').select('persona_type, status, email').eq('audit_id', auditId);
     if (nodes) setNodeDetails(nodes);
   }, [isUpdating]);
 
@@ -220,7 +220,7 @@ export default function AdminDashboard() {
       await fetchLedger();
     } catch (err) {
       console.error("ACCESS TOGGLE ERR ->", err);
-    } crystalline: {
+    } finally {
       setIsUpdating(false);
     }
   };
@@ -408,7 +408,7 @@ export default function AdminDashboard() {
                     targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
                   } else if (sfi > 0) {
                     playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
-                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrating inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
+                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrations inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
                     playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
                     targetTier = "TIER_02 // STRUCTURAL HARDENING";
                   }
@@ -445,7 +445,7 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
-                          {/* 🎯 ARCHITECTURE NODES LAYER */}
+                          {/* 🎯 PROVISIONED ARCHITECTURE: FOUR STAKEHOLDER PERSONA TRACK NODES */}
                           <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 pt-10 mb-8 italic">
                             {[
                               { label: 'EXECUTIVE NODE (STRATEGY & RISK)', key: 'EXECUTIVE', icon: <Building2 size={14} /> },
@@ -490,12 +490,12 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* 🎯 MODULAR SUB-SURFACE ANALYTICS CONTAINER MOUNT POINT */}
+                          {/* 🎯 MODULAR INTEGRATION BOUNDARY: DROPPING HIGH-DENSITY STANDALONE VIEW MATRIX */}
                           <div className="my-4">
                             <FidelityMetricsStrip auditId={audit.id} />
                           </div>
 
-                          {/* 🎯 COCKPIT SYSTEM ENGINE MAPPING */}
+                          {/* 🎯 INTEGRATED ENGINE: SYSTEM CENTRAL COMMAND COCKPIT RUNTIME MAPPING */}
                           <div className="my-8">
                             <CentralCommandCockpit 
                               initialAuditId={audit.id}
@@ -542,7 +542,7 @@ export default function AdminDashboard() {
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
                             
                             <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
-                              <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LED</div>
+                              <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
                               <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
                                 <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
                                 <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
