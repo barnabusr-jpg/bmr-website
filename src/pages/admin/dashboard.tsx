@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🔗 Root-explicit paths to force Webpack to map sibling files without path alias ambiguity
-import CentralCommandCockpit from "src/components/CentralCommandCockpit";
-import { FidelityMetricsStrip } from "src/components/FidelityMetricsStrip";
+// 🔗 Definitive relative imports mapping directly back from src/pages/admin/ into src/components/
+import CentralCommandCockpit from "../../../components/CentralCommandCockpit";
+import { FidelityMetricsStrip } from "../../../components/FidelityMetricsStrip";
 
 const BMR_IP_SUITE = {
   directives: [
