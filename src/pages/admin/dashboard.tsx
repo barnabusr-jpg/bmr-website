@@ -4,13 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText, Users
+  Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText, Users
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// Import decoupled architectural telemetry components safely
-import CentralCommandCockpit from "@/components/CentralCommandCockpit";
-import { FidelityMetricsStrip } from "@/components/FidelityMetricsStrip";
+// 🔗 Restructured to use explicit relative paths to bypass Webpack alias resolution drops
+import CentralCommandCockpit from "../../components/CentralCommandCockpit";
+import { FidelityMetricsStrip } from "../../components/FidelityMetricsStrip";
 
 const BMR_IP_SUITE = {
   directives: [
@@ -48,8 +48,6 @@ export default function AdminDashboard() {
   const ROWS_PER_PAGE = 10;
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
-
-  // 🛡️ High-speed references to catch layout execution background timers
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -88,7 +86,6 @@ export default function AdminDashboard() {
       .range(startRange, endRange);
 
     if (!error && audits) {
-      // ⚠️ Prevent background poll cycles from snatching values out of the user's hand while dragging
       setData(prev => {
         return audits.map(newAudit => {
           const spendTimerKey = `${newAudit.id}-ai_spend`;
@@ -229,18 +226,14 @@ export default function AdminDashboard() {
     }
   };
 
-  // 🚀 HIGH-SPEED DEBOUNCED SLIDER TRANSMISSION PROTOCOL
   const handleLiveSliderChange = async (auditId: string, field: "ai_spend" | "roi_pct", value: number) => {
-    // 1. Instantly update UI locally to match knob tracking values at a flat 60fps
     setData(prev => prev.map(item => item.id === auditId ? { ...item, [field]: value } : item));
 
-    // 2. Kill any stale updates queued inside the execution pipe
     const targetTimerKey = `${auditId}-${field}`;
     if (debounceTimersRef.current[targetTimerKey]) {
       clearTimeout(debounceTimersRef.current[targetTimerKey]);
     }
 
-    // 3. Throttle the network hit so Supabase never chokes on the traffic loop
     debounceTimersRef.current[targetTimerKey] = setTimeout(async () => {
       try {
         await supabase
@@ -248,12 +241,11 @@ export default function AdminDashboard() {
           .update({ [field]: value })
           .eq('id', auditId);
         
-        // Remove tracking lock once write completes cleanly
         delete debounceTimersRef.current[targetTimerKey];
       } catch (err) {
         console.error("LIVE_SLIDER_SYNC_ERROR:", err);
       }
-    }, 120); // 120ms balances real-time delivery with absolute database safety
+    }, 120);
   };
 
   useEffect(() => {
@@ -271,7 +263,6 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
 
-  // Clean up timers on component termination
   useEffect(() => {
     return () => {
       Object.values(debounceTimersRef.current).forEach(clearTimeout);
