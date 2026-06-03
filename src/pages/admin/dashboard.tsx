@@ -4,9 +4,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText
+  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText, Users
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
+
+// Import decoupled architectural telemetry components safely
+import CentralCommandCockpit from "@/components/CentralCommandCockpit";
+import { FidelityMetricsStrip } from "@/components/FidelityMetricsStrip";
 
 const BMR_IP_SUITE = {
   directives: [
@@ -35,7 +39,7 @@ export default function AdminDashboard() {
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedAudit, setSelectedAudit] = useState<any>(null);
-  const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
+  const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "", user: "" });
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "LEAD" | "TRIANGULATING" | "COMPLETE">("ALL");
@@ -127,12 +131,17 @@ export default function AdminDashboard() {
           groupId: selectedAudit.id, 
           orgName: selectedAudit.org_name,
           parentAuditId: selectedAudit.id,
-          emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
+          emails: { 
+            EXECUTIVE: emails.exec.trim(), 
+            MANAGERIAL: emails.mgr.trim(), 
+            TECHNICAL: emails.tech.trim(),
+            USER: emails.user.trim()
+          }
         })
       });
       if (!res.ok) throw new Error("Dispatch Failed");
       setSelectedAudit(null);
-      setEmails({ exec: "", mgr: "", tech: "" });
+      setEmails({ exec: "", mgr: "", tech: "", user: "" });
       fetchLedger();
     } catch (err: any) { 
       alert(err.message); 
@@ -288,7 +297,7 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden">
+    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden select-none">
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 backdrop-blur-md border-b border-slate-900 z-50 px-10 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-3 shrink-0"><Activity className="text-red-600 animate-pulse" size={20} /><span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">FORENSIC COMMAND</span></div>
@@ -312,6 +321,7 @@ export default function AdminDashboard() {
                 <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
                 <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
                 <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="USER STAKEHOLDER EMAIL" value={emails.user} onChange={(e) => setEmails({...emails, user: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
                 
                 <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
@@ -445,18 +455,22 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
-                          <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
+                          {/* 🎯 PROVISIONED ARCHITECTURE: FOUR STAKEHOLDER PERSONA TRACK NODES */}
+                          <div className="grid grid-cols-2 xl:grid-cols-4 gap-6 pt-10 mb-8 italic">
                             {[
-                              { label: 'EXECUTIVE TRACK', key: 'EXE' },
-                              { label: 'MANAGERIAL TRACK', key: 'MGR' },
-                              { label: 'TECHNICAL TRACK', key: 'TEC' }
+                              { label: 'EXECUTIVE NODE (STRATEGY & RISK)', key: 'EXECUTIVE', icon: <Building2 size={14} /> },
+                              { label: 'MANAGERIAL NODE (LOGIC TRANSLATION)', key: 'MANAGERIAL', icon: <FileText size={14} /> },
+                              { label: 'TECHNICAL NODE (CORE EXECUTION)', key: 'TECHNICAL', icon: <Binary size={14} /> },
+                              { label: 'USER NODE (SYSTEM OPERATIONS)', key: 'USER', icon: <Users size={14} /> }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
                               const isDone = node?.status?.toLowerCase() === 'completed';
                               return (
                                 <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
                                   <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
-                                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
+                                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase flex items-center gap-1.5">
+                                      {role.icon} {role.label}
+                                    </span>
                                     
                                     {isDone ? (
                                       <CheckCircle className="text-green-500" size={14}/>
@@ -484,6 +498,25 @@ export default function AdminDashboard() {
                                 </div>
                               );
                             })}
+                          </div>
+
+                          {/* 🎯 MODULAR INTEGRATION BOUNDARY: DROPPING HIGH-DENSITY STANDALONE VIEW MATRIX */}
+                          <div className="my-4">
+                            <FidelityMetricsStrip auditId={audit.id} />
+                          </div>
+
+                          {/* 🎯 INTEGRATED ENGINE: SYSTEM CENTRAL COMMAND COCKPIT RUNTIME MAPPING */}
+                          <div className="my-8">
+                            <CentralCommandCockpit 
+                              initialAuditId={audit.id}
+                              initialGroupId={audit.id}
+                              initialOrgName={audit.org_name}
+                              onSuccess={() => {
+                                fetchLedger();
+                                refreshActiveNodes(audit.id);
+                                window.location.replace('/admin/dashboard');
+                              }}
+                            />
                           </div>
 
                           <div className="border border-slate-900 bg-slate-950 p-6 mb-8 space-y-6">
