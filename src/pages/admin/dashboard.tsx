@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
-// 🔗 Restored precision relative paths to cleanly bridge sibling component imports
+// 🔗 High-fidelity component tracking channels
 import CentralCommandCockpit from "../../components/CentralCommandCockpit";
 import { FidelityMetricsStrip } from "../../components/FidelityMetricsStrip";
 
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ groupId: auditRecord.id, orgName: auditRecord.org_name, parentAuditId: auditRecord.id, emails: { [targetRoleKey]: node.email } })
       });
-      if (res.ok) alert(`NUDGE SUCCESS: ACCESS PASSKEY DISPATCHED TO ${node.email}`);
+      if (res.ok) alert(`NUDGE SUCCESS: REMINDER DISPATCHED TO ${node.email}`);
     } catch (err) {
       alert("NUDGE LOGISTICS FAILURE.");
     } finally {
@@ -160,9 +160,10 @@ export default function AdminDashboard() {
         body: JSON.stringify({ auditId })
       });
       if (res.ok) {
-        const { data: cleanAudit } = await supabase.from('audits').select('*').eq('id', auditId).single();
-        if (cleanAudit) setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
-        alert("SYNTHESIS COMPLETE: STRUCTURAL ANALYSIS FINALIZED.");
+        await supabase.from('audits').update({ status: 'COMPLETE' }).eq('id', auditId);
+        setExpandedRow(null);
+        await fetchLedger();
+        alert("SYNTHESIS COMPLETE: STRUCTURAL ANALYSIS RE-CALCULATED.");
       }
     } catch (err) { 
       console.error(err); 
@@ -191,6 +192,22 @@ export default function AdminDashboard() {
       await supabase.from('audits').update({ [field]: value }).eq('id', auditId);
       delete debounceTimersRef.current[key];
     }, 120);
+  };
+
+  const advanceToStageThreeBridge = async (auditId: string) => {
+    setIsUpdating(true);
+    try {
+      await supabase.from('audits').update({ status: 'BRIDGE_ACTIVE' }).eq('id', auditId);
+      await fetchLedger();
+    } catch (err) { console.error(err); } finally { setIsUpdating(false); }
+  };
+
+  const advanceToStageFourCapstone = async (auditId: string) => {
+    setIsUpdating(true);
+    try {
+      await supabase.from('audits').update({ status: 'DIAGNOSTIC_ACTIVE' }).eq('id', auditId);
+      await fetchLedger();
+    } catch (err) { console.error(err); } finally { setIsUpdating(false); }
   };
 
   useEffect(() => { setCurrentPage(0); }, [searchTerm, statusFilter]);
@@ -268,9 +285,9 @@ export default function AdminDashboard() {
                 <div className="flex bg-black border border-slate-800 p-1 gap-1 overflow-x-auto shrink-0">
                   {([
                     { label: "All Assets", value: "ALL" },
-                    { label: "Initial Leads", value: "LEAD" },
-                    { label: "Triangulating", value: "TRIANGULATING" },
-                    { label: "Calculated Dossiers", value: "COMPLETE" }
+                    { label: "Stage 01 Intake", value: "LEAD" },
+                    { label: "Stage 02 Triangulation", value: "TRIANGULATING" },
+                    { label: "Stage 04 Closing", value: "COMPLETE" }
                   ] as const).map((tab) => (
                     <button 
                       key={tab.value} 
@@ -296,7 +313,6 @@ export default function AdminDashboard() {
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
                   
-                  // 🛡️ Anchored Math Fallbacks to eradicate runtime UI reference exceptions
                   const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
@@ -317,22 +333,14 @@ export default function AdminDashboard() {
                     targetTier = "TIER_02 // STRUCTURAL HARDENING";
                   }
 
-                  const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
-                  const mgrNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
-                  const techNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
-                  
-                  const hasLaunchedSensors = !!(execNode || mgrNode || techNode);
-                  const allNodesFinished = hasLaunchedSensors && 
-                                           execNode?.status?.toLowerCase() === 'completed' && 
-                                           mgrNode?.status?.toLowerCase() === 'completed' && 
-                                           techNode?.status?.toLowerCase() === 'completed';
+                  const cleanStatus = (audit.status || "").toUpperCase();
 
                   return (
                     <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
                       <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
                         <div className="col-span-6 flex items-center gap-6">
                           <div className="bg-slate-900 p-4 border border-slate-800 shrink-0">
-                            <Building2 size={24} className={allNodesFinished ? "text-green-500" : "text-red-600"} />
+                            <Building2 size={24} className={cleanStatus === "COMPLETE" ? "text-green-500" : "text-red-600"} />
                           </div>
                           <div>
                             <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
@@ -340,7 +348,13 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="col-span-4 text-center font-black text-xs tracking-[0.2em] font-mono">
-                          ACTIVE STAGE: <span className="text-red-500">{allNodesFinished ? "03 // BOARDROOM PRESENTATION" : hasLaunchedSensors ? "02 // LIVE TRIANGULATION" : "01 // DISCOVERY INTAKE"}</span>
+                          ACTIVE STAGE: <span className="text-red-500">
+                            {cleanStatus === "COMPLETE" && "04 // BOARDROOM CLOSING"}
+                            {cleanStatus === "DIAGNOSTIC_ACTIVE" && "03 // 90-QUESTION DIAGNOSTIC"}
+                            {cleanStatus === "BRIDGE_ACTIVE" && "02.5 // SOW FUNDING BRIDGE"}
+                            {cleanStatus === "TRIANGULATING" && "02 // 30-QUESTION TRIANGULATION"}
+                            {(cleanStatus === "LEAD" || cleanStatus === "") && "01 // CUSTOMER DISCOVERY INTAKE"}
+                          </span>
                         </div>
                         <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
                       </div>
@@ -350,11 +364,11 @@ export default function AdminDashboard() {
                           <AnimatePresence mode="wait">
                             
                             {/* ========================================================================= */}
-                            {/* 🟩 STAGE 01: INITIAL DISCOVERY INTAKE ECOSYSTEM                           */}
+                            {/* 🟩 STAGE 01: INITIAL CUSTOMER DISCOVERY INTAKE (12-QUESTIONS)             */}
                             {/* ========================================================================= */}
-                            {!hasLaunchedSensors && (
+                            {(cleanStatus === "LEAD" || cleanStatus === "") && (
                               <motion.div key="stage-01" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4">
-                                <span className="text-[10px] text-red-500 font-mono font-black tracking-[0.2em] block mb-4">// STAGE 01 // INITIAL ACCOUNT INTAKE & DISCOVERY ECOSYSTEM</span>
+                                <span className="text-[10px] text-red-500 font-mono font-black tracking-[0.2em] block mb-4">// STAGE 01 // INITIAL ACCOUNT INTAKE & 12-QUESTION HOOK</span>
                                 
                                 <div className="border border-slate-900 bg-slate-950 p-6 mb-4 space-y-6">
                                   <span className="text-[10px] text-slate-500 font-black tracking-widest uppercase block">// PRESENTATION ECONOMIC FOOTPRINT CALIBRATION</span>
@@ -377,6 +391,16 @@ export default function AdminDashboard() {
                                   <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL ESTIMATED RUN-RATE TAX LEAKAGE:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})} / YR</span></div>
                                 </div>
 
+                                <div className="flex flex-wrap items-center justify-between bg-slate-950/60 border border-slate-900 p-6 mb-6 gap-4">
+                                  <div>
+                                    <span className="text-[10px] text-slate-500 font-mono tracking-wider block">// CLIENT PRIVILEGE ACCESS PROTOCOL</span>
+                                    <h4 className="text-xs font-black text-white mt-1 uppercase">Dossier Presentation Visibility Shield</h4>
+                                  </div>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`px-8 py-4 text-[10px] tracking-widest font-black uppercase transition-all border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-black'}`}>
+                                    {clientHasAccess ? "✔ CLIENT DOSSIER VIEWABLE" : "✘ Shield Dossier (Blur Portal Access)"}
+                                  </button>
+                                </div>
+
                                 <div className="flex gap-4">
                                   <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-2"><Mail size={14} /> Initialize & Launch 3-Node 360 Dive</button>
                                   <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="bg-slate-950 border border-slate-800 text-slate-400 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:border-white transition-all"><Monitor size={14} /> Open Discovery Screen Ledger</button>
@@ -385,11 +409,11 @@ export default function AdminDashboard() {
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟨 STAGE 02: TRIANGULATION MONITORING (Locks out Stage 1 and Stage 3)     */}
+                            {/* 🟨 STAGE 02: 30-QUESTION CORE TRIANGULATION DIAGNOSTIC WEDGE (PAID GATE 1) */}
                             {/* ========================================================================= */}
-                            {hasLaunchedSensors && !allNodesFinished && (
+                            {cleanStatus === "TRIANGULATING" && (
                               <motion.div key="stage-02" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4">
-                                <span className="text-[10px] text-yellow-500 font-mono font-black tracking-[0.2em] block mb-4">// STAGE 02 // REAL-TIME 3-NODE SURVEY SENSORS (ACTIVE WORKFLOW CHANNELS)</span>
+                                <span className="text-[10px] text-yellow-500 font-mono font-black tracking-[0.2em] block mb-4">// STAGE 02 // 30-QUESTION TARGETED DIAGNOSTIC WEDGE (MANAGEMENT TRIANGULATION)</span>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                                   {[
@@ -412,32 +436,35 @@ export default function AdminDashboard() {
                                   })}
                                 </div>
                                 
-                                <div className="my-4"><FidelityMetricsStrip auditId={audit.id} /></div>
-                                <div className="my-4">
-                                  <CentralCommandCockpit initialAuditId={audit.id} initialGroupId={audit.id} initialOrgName={audit.org_name} onSuccess={() => { runSynthesis(audit.id); }} />
+                                <div className="bg-slate-950 border border-slate-900 p-6 flex justify-between items-center">
+                                  <div>
+                                    <span className="text-[10px] font-mono block text-slate-500">// ALIGNMENT COMMITTAL EDGE</span>
+                                    <h4 className="text-sm font-black text-white mt-1 uppercase">Compile Management Gaps & Unlock Boardroom Proposal Bridge</h4>
+                                  </div>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); advanceToStageThreeBridge(audit.id); }} className="bg-yellow-600 hover:bg-white text-black font-black font-mono text-[10px] tracking-widest px-6 py-4 uppercase border border-yellow-600">
+                                    Advance to Boardroom Proposal Bridge
+                                  </button>
                                 </div>
                               </motion.div>
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟦 STAGE 03: BOARDROOM PROPOSAL PANEL (Locks out Stage 1 and Stage 2)     */}
+                            {/* 🟦 STAGE 03: BOARDROOM PROPOSAL PRESENTATION & SOW CLOSING BRIDGE          */}
                             {/* ========================================================================= */}
-                            {allNodesFinished && (
+                            {cleanStatus === "BRIDGE_ACTIVE" && (
                               <motion.div key="stage-03" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
-                                <span className="text-[10px] text-blue-500 font-mono font-black tracking-[0.2em] block">// STAGE 03 // BOARDROOM PRESENTATION & PROPOSAL ENGAGEMENT COCKPIT</span>
+                                <span className="text-[10px] text-blue-500 font-mono font-black tracking-[0.2em] block">// STAGE 03 // BOARDROOM PRESENTATION & SOW FUNDING CLOSING BRIDGE</span>
                                 
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                   <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 font-mono text-xs space-y-3">
-                                    <div className="text-[10px] text-slate-500 font-black tracking-widest block mb-2">// FINAL_VERIFIED_ECONOMIC_LEAKAGE</div>
-                                    <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-600">VERIFIED LOGIC FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                    <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE RECOVERED:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                    <div className="text-[10px] text-slate-500 font-black tracking-widest block mb-2">// INITIAL_FRICTION_MARKERS_LEDGER</div>
+                                    <div className="flex justify-between"><span className="text-slate-600">MANAGEMENT FRICTION INDEX:</span><span className="text-red-500 font-black">CALCULATING GAP VARIANCE</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-600">ESTIMATED RUN-RATE TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-600">INACTION RISK EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                                   </div>
                                   <div className="lg:col-span-7 border border-slate-900 bg-slate-950 p-6 flex flex-col justify-between">
                                     <div>
-                                      <span className="text-[10px] font-mono font-black text-slate-500 tracking-widest block mb-1">// STRATEGIC_BOARDROOM_DELIVERY_SCRIPT</span>
+                                      <span className="text-[10px] font-mono font-black text-slate-500 tracking-widest block mb-1">// CIO_BOARDROOM_DELIVERY_SCRIPT</span>
                                       <div className="text-xl font-black text-white uppercase">{playbookHeadline}</div>
                                       <p className="text-xs leading-relaxed font-sans text-slate-400 normal-case mt-2">{playbookNarrative}</p>
                                     </div>
@@ -446,35 +473,80 @@ export default function AdminDashboard() {
                                 </div>
 
                                 <div className="bg-white text-black p-8 border-l-[16px] border-slate-900 shadow-2xl space-y-6 font-sans">
-                                  <div className="flex justify-between items-end border-b border-slate-100 pb-4">
-                                    <div><span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// DEPLOYABLE_PROPOSAL_MAPPING</span><h3 className="text-2xl font-black tracking-tighter text-black mt-1">RECOMMENDED STATEMENT OF WORK</h3></div>
+                                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
+                                    <div><span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// SECURED_FUNDING_PROPOSAL_MAPPING</span><h3 className="text-2xl font-black tracking-tighter text-black mt-1">RECOMMENDED STATEMENT OF WORK</h3></div>
                                     <span className="text-[10px] font-mono text-slate-400 font-black uppercase">{targetTier}</span>
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {realFractures.length === 0 ? (
-                                      <div className="col-span-3 text-center py-6 font-mono text-xs text-slate-400 uppercase tracking-widest">No active structural fractures found. Standard baseline optimizations apply.</div>
-                                    ) : (
-                                      realFractures.slice(0, 3).map((frac: any, index: number) => (
-                                        <div key={frac.id} className="border border-slate-100 bg-slate-50/60 p-5 space-y-2">
-                                          <span className="text-[9px] font-mono text-slate-400 block font-bold uppercase">PHASE 0{index + 1} // {frac.severity} RISK</span>
-                                          <h5 className="text-sm font-black text-slate-900 uppercase">{frac.directive.replace("Implement ", "")}</h5>
-                                          <p className="text-[11px] font-sans text-slate-500 normal-case leading-relaxed">System recovery initialized via blueprint protocols: {frac.recovery}.</p>
-                                        </div>
-                                      ))
-                                    )}
+                                    {realFractures.slice(0, 3).map((frac: any, index: number) => (
+                                      <div key={frac.id} className="border border-slate-100 bg-slate-50/60 p-5 space-y-2">
+                                        <span className="text-[9px] font-mono text-slate-400 block font-bold uppercase">PHASE 0{index + 1} // {frac.severity} RISK</span>
+                                        <h5 className="text-sm font-black text-slate-900 uppercase">{frac.directive.replace("Implement ", "")}</h5>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
 
                                 <div className="flex flex-wrap items-center justify-between pt-6 border-t border-slate-900/60 gap-4 font-mono">
                                   <div className="flex gap-4 p-2 bg-black/40 border border-slate-900 text-[10px] font-black uppercase tracking-wider">
-                                    <button type="button" onClick={async (e) => { e.stopPropagation(); await supabase.from('audits').update({ sow_sent: !audit.sow_sent }).eq('id', audit.id); fetchLedger(); }} className={`px-4 py-2 border transition-all ${audit.sow_sent ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}>MARK SOW SENT: {audit.sow_sent ? "✔ TRUE" : "✘ FALSE"}</button>
-                                    <button type="button" onClick={async (e) => { e.stopPropagation(); await supabase.from('audits').update({ is_paid: !audit.is_paid }).eq('id', audit.id); fetchLedger(); }} className={`px-4 py-2 border transition-all ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}>MARK REVENUE PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}
-                                    </button>
+                                    <button type="button" onClick={async (e) => { e.stopPropagation(); await supabase.from('audits').update({ sow_sent: !audit.sow_sent }).eq('id', audit.id); fetchLedger(); }} className={`px-4 py-2 border transition-all ${audit.sow_sent ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}>MARK PROPOSAL SENT: {audit.sow_sent ? "✔ TRUE" : "✘ FALSE"}</button>
                                   </div>
                                   <div className="flex gap-4">
-                                    <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`px-6 py-4 text-[10px] font-black uppercase tracking-widest border transition-all ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-black'}`}>{clientHasAccess ? "✔ BLUR DOSSIER" : "✘ UNBLUR DOSSIER ACCESS"}</button>
-                                    <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="bg-white text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center gap-2"><FileText size={14} /> EXPORT BOARD-READY PITCH (PDF)</button>
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="bg-slate-950 border border-slate-800 text-slate-400 px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:border-white transition-all"><FileText size={14} /> Export Board Pitch (PDF)</button>
+                                    <button type="button" onClick={(e) => { e.stopPropagation(); advanceToStageFourCapstone(audit.id); }} className="bg-blue-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center gap-2">
+                                      <Zap size={14} /> Unlock Stage 04 Forensic Capstone
+                                    </button>
                                   </div>
+                                </div>
+                              </motion.div>
+                            )}
+
+                            {/* ========================================================================= */}
+                            {/* 🟪 STAGE 04: THE 90-QUESTION FORENSIC CAPSTONE EVENT (PAID GATE 2)        */}
+                            {/* ========================================================================= */}
+                            {cleanStatus === "DIAGNOSTIC_ACTIVE" && (
+                              <motion.div key="stage-04" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
+                                <span className="text-[10px] text-purple-500 font-mono font-black tracking-[0.2em] block">// STAGE 04 // 90-QUESTION CAPSTONE DIAGNOSTIC ENGINE (4-WAY VARIANCE MAPPING)</span>
+                                
+                                <div className="my-4">
+                                  <FidelityMetricsStrip auditId={audit.id} />
+                                </div>
+
+                                <div className="my-4">
+                                  <CentralCommandCockpit initialAuditId={audit.id} initialGroupId={audit.id} initialOrgName={audit.org_name} onSuccess={() => { runSynthesis(audit.id); }} />
+                                </div>
+                              </motion.div>
+                            )}
+
+                            {/* ========================================================================= */}
+                            {/* 🟦 STAGE 04.5: FINALIZED CLEAN-ROOM ARCHITECTURE CONTAINER DELIVERABLES    */}
+                            {/* ========================================================================= */}
+                            {cleanStatus === "COMPLETE" && (
+                              <motion.div key="stage-04-complete" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
+                                <span className="text-[10px] text-emerald-500 font-mono font-black tracking-[0.2em] block">// FINAL DELIVERABLE // CLEAN-ROOM REFERENCE ARCHITECTURE CONTAINER SPEC</span>
+                                
+                                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                                  <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 font-mono text-xs space-y-3">
+                                    <div className="text-[10px] text-slate-500 font-black tracking-widest block mb-2">// FINALIZED_VERIFIED_ECONOMIC_LEAKAGE</div>
+                                    <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-600">VERIFIED LOGIC FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                    <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                    <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE RECOVERED:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                  </div>
+                                  <div className="lg:col-span-7 border border-slate-900 bg-slate-950 p-6 flex flex-col justify-between">
+                                    <div>
+                                      <span className="text-[10px] font-mono font-black text-slate-500 tracking-widest block mb-1">// PROVEN_GROUND_TRUTH_USER_WORKAROUNDS</span>
+                                      <div className="text-xl font-black text-white uppercase">4-WAY VARIANCE TELEMETRY SYNTHESIZED</div>
+                                      <p className="text-xs leading-relaxed font-sans text-slate-400 normal-case mt-2">Shadow infrastructure, manual spreadsheets, and governance logic fractures have been mapped cleanly into an isolated enterprise reference container.</p>
+                                    </div>
+                                    <div className="bg-black/40 border border-slate-900 p-3 font-mono text-[11px] text-emerald-500 mt-4">// DELIVERY SPECIFICATION: NOMINAL ISOLATED NETWORK CONTAINER PROVISIONED.</div>
+                                  </div>
+                                </div>
+
+                                <div className="flex flex-wrap items-center justify-between pt-6 border-t border-slate-900/60 gap-4 font-mono">
+                                  <button type="button" onClick={async (e) => { e.stopPropagation(); await supabase.from('audits').update({ is_paid: !audit.is_paid }).eq('id', audit.id); fetchLedger(); }} className={`px-6 py-4 border text-[10px] tracking-widest transition-all ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}>MARK CONTRACT REVENUE PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}</button>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="bg-white text-black px-8 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2"><FileText size={14} /> EXPORT CLEAN-ROOM REFERENCE BLUEPRINT (PDF)</button>
                                 </div>
                               </motion.div>
                             )}
