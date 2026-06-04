@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { supabase } from "../../lib/supabaseClient";
 
-// 🔗 High-fidelity component tracking channels
+// 🔗 High-fidelity component relative paths verified from your file structure
 import CentralCommandCockpit from "../../components/CentralCommandCockpit";
 import { FidelityMetricsStrip } from "../../components/FidelityMetricsStrip";
 
@@ -47,7 +47,6 @@ export default function AdminDashboard() {
   const [totalCount, setTotalCount] = useState(0);
   const ROWS_PER_PAGE = 10;
 
-  const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -163,7 +162,7 @@ export default function AdminDashboard() {
         await supabase.from('audits').update({ status: 'COMPLETE' }).eq('id', auditId);
         setExpandedRow(null);
         await fetchLedger();
-        alert("SYNTHESIS COMPLETE: STRUCTURAL ANALYSIS RE-CALCULATED.");
+        alert("SYNTHESIS RUN SUCCESSFUL: PIPELINE GRADUATED TO FINAL DELIVERY BLUEPRINTS.");
       }
     } catch (err) { 
       console.error(err); 
@@ -219,24 +218,6 @@ export default function AdminDashboard() {
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
-
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-        <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative italic">
-          <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
-          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA 7 CLEARANCE REQUIRED</p>
-          <div className="space-y-4">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic uppercase" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600" />
-          </div>
-          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all italic leading-none">
-            {loading ? "VERIFYING..." : "INITIALIZE COMMAND"}
-          </button>
-        </form>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden select-none">
@@ -313,6 +294,7 @@ export default function AdminDashboard() {
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
                   
+                  // 🛡️ Safe Local Anchoring to encapsulate derived arithmetic properties
                   const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
@@ -333,7 +315,19 @@ export default function AdminDashboard() {
                     targetTier = "TIER_02 // STRUCTURAL HARDENING";
                   }
 
-                  const cleanStatus = (audit.status || "").toUpperCase();
+                  // 🛡️ TOPO NORMALIZATION ENGINE: Catch legacy markers ('COMPLETED', 'PUBLISHED') or blank entries cleanly
+                  let rawStatus = (audit.status || "").toUpperCase().trim();
+                  let cleanStatus = "LEAD"; 
+                  
+                  if (rawStatus === "TRIANGULATING" || rawStatus === "TRIANGULATION") {
+                    cleanStatus = "TRIANGULATING";
+                  } else if (rawStatus === "BRIDGE_ACTIVE") {
+                    cleanStatus = "BRIDGE_ACTIVE";
+                  } else if (rawStatus === "DIAGNOSTIC_ACTIVE") {
+                    cleanStatus = "DIAGNOSTIC_ACTIVE";
+                  } else if (rawStatus === "COMPLETE" || rawStatus === "COMPLETED" || rawStatus === "PUBLISHED") {
+                    cleanStatus = "COMPLETE";
+                  }
 
                   return (
                     <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
@@ -348,12 +342,12 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <div className="col-span-4 text-center font-black text-xs tracking-[0.2em] font-mono">
-                          ACTIVE STAGE: <span className="text-red-500">
-                            {cleanStatus === "COMPLETE" && "04 // BOARDROOM CLOSING"}
-                            {cleanStatus === "DIAGNOSTIC_ACTIVE" && "03 // 90-QUESTION DIAGNOSTIC"}
+                          ACTIVE LIFECYCLE STAGE: <span className="text-red-500">
+                            {cleanStatus === "COMPLETE" && "04 // BOARDROOM CLOSING HUB"}
+                            {cleanStatus === "DIAGNOSTIC_ACTIVE" && "03 // 90-QUESTION FORENSIC CAPSTONE"}
                             {cleanStatus === "BRIDGE_ACTIVE" && "02.5 // SOW FUNDING BRIDGE"}
-                            {cleanStatus === "TRIANGULATING" && "02 // 30-QUESTION TRIANGULATION"}
-                            {(cleanStatus === "LEAD" || cleanStatus === "") && "01 // CUSTOMER DISCOVERY INTAKE"}
+                            {cleanStatus === "TRIANGULATING" && "02 // 30-QUESTION DIAGNOSTIC WEDGE"}
+                            {cleanStatus === "LEAD" && "01 // CUSTOMER DISCOVERY INTAKE"}
                           </span>
                         </div>
                         <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
@@ -366,7 +360,7 @@ export default function AdminDashboard() {
                             {/* ========================================================================= */}
                             {/* 🟩 STAGE 01: INITIAL CUSTOMER DISCOVERY INTAKE (12-QUESTIONS)             */}
                             {/* ========================================================================= */}
-                            {(cleanStatus === "LEAD" || cleanStatus === "") && (
+                            {cleanStatus === "LEAD" && (
                               <motion.div key="stage-01" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4">
                                 <span className="text-[10px] text-red-500 font-mono font-black tracking-[0.2em] block mb-4">// STAGE 01 // INITIAL ACCOUNT INTAKE & 12-QUESTION HOOK</span>
                                 
@@ -409,7 +403,7 @@ export default function AdminDashboard() {
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟨 STAGE 02: 30-QUESTION CORE TRIANGULATION DIAGNOSTIC WEDGE (PAID GATE 1) */}
+                            {/* 🟨 STAGE 02: 30-QUESTION CORE TRIANGULATION DIAGNOSTIC WEDGE              */}
                             {/* ========================================================================= */}
                             {cleanStatus === "TRIANGULATING" && (
                               <motion.div key="stage-02" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4">
@@ -519,7 +513,7 @@ export default function AdminDashboard() {
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟦 STAGE 04.5: FINALIZED CLEAN-ROOM ARCHITECTURE CONTAINER DELIVERABLES    */}
+                            {/* 🟦 STAGE 4.5: FINALIZED CLEAN-ROOM ARCHITECTURE CONTAINER BLUEPRINTS      */}
                             {/* ========================================================================= */}
                             {cleanStatus === "COMPLETE" && (
                               <motion.div key="stage-04-complete" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
