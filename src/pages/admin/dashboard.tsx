@@ -4,9 +4,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText, Users
+  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText
 } from "lucide-react";
-import { supabase } from "../../lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 // 🔗 High-fidelity component relative paths verified from your file structure
 import CentralCommandCockpit from "../../components/CentralCommandCockpit";
@@ -39,14 +39,18 @@ export default function AdminDashboard() {
   
   const [isUpdating, setIsUpdating] = useState(false);
   const [selectedAudit, setSelectedAudit] = useState<any>(null);
-  const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "", user: "" });
+  const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
 
   const [searchTerm, setSearchTerm] = useState("");
+  // 🛡️ RECONCILED FILTER MATRIX: Aligned with the exact database hooks to prevent empty state filters
   const [statusFilter, setStatusFilter] = useState<"ALL" | "LEAD" | "TRIANGULATING" | "BRIDGE_ACTIVE" | "DIAGNOSTIC_ACTIVE" | "COMPLETE">("ALL");
   const [currentPage, setCurrentPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const ROWS_PER_PAGE = 10;
 
+  const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
+
+  // 🛡️ High-speed references to catch layout execution background timers
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -54,7 +58,7 @@ export default function AdminDashboard() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      alert("AUTHORIZATION FAILED");
+      alert("AUTHORIZATION FAILED: UNRECOGNIZED SIGNAL");
       setLoading(false);
     } else {
       setIsAuthenticated(true);
@@ -65,18 +69,20 @@ export default function AdminDashboard() {
   const fetchLedger = useCallback(async () => {
     if (isUpdating) return;
 
-    let query = supabase.from('audits').select('*', { count: 'exact' });
-    
-    // 🛡️ Safe multidimensional database map array matrix to keep queries from dropping
+    let query = supabase
+      .from('audits')
+      .select('*', { count: 'exact' });
+
+    // Forgiving translation map query layout configuration
     if (statusFilter !== "ALL") {
       if (statusFilter === "LEAD") {
         query = query.in('status', ['LEAD', 'lead', 'Stage 1', 'STAGE_1', 'INTAKE', '']);
       } else if (statusFilter === "TRIANGULATING") {
-        query = query.in('status', ['TRIANGULATING', 'triangulating', 'Stage 2', 'STAGE_2', 'ACTIVE_TESTING']);
+        query = query.in('status', ['TRIANGULATING', 'triangulating', 'Stage 2', 'STAGE_2', 'ACTIVE_TESTING', 'AWAITING_INPUT']);
       } else if (statusFilter === "BRIDGE_ACTIVE") {
-        query = query.in('status', ['BRIDGE_ACTIVE', 'bridge_active', 'Stage 3', 'STAGE_3', 'PROPOSAL_SENT']);
+        query = query.in('status', ['BRIDGE_ACTIVE', 'bridge_active', 'Stage 3', 'STAGE_3', 'PROPOSAL_SENT', 'PROPOSAL']);
       } else if (statusFilter === "DIAGNOSTIC_ACTIVE") {
-        query = query.in('status', ['DIAGNOSTIC_ACTIVE', 'diagnostic_active', 'Stage 4', 'STAGE_4', 'DEEP_DIVE']);
+        query = query.in('status', ['DIAGNOSTIC_ACTIVE', 'diagnostic_active', 'Stage 4', 'STAGE_4', 'DEEP_DIVE', 'DIAGNOSTIC']);
       } else if (statusFilter === "COMPLETE") {
         query = query.in('status', ['COMPLETE', 'COMPLETED', 'completed', 'PUBLISHED', 'RESULT PUBLISHED']);
       }
@@ -94,15 +100,21 @@ export default function AdminDashboard() {
       .range(startRange, endRange);
 
     if (!error && audits) {
-      setData(prev => audits.map(newAudit => {
-        const spendTimerKey = `${newAudit.id}-ai_spend`;
-        const fteTimerKey = `${newAudit.id}-roi_pct`;
-        if (debounceTimersRef.current[spendTimerKey] || debounceTimersRef.current[fteTimerKey]) {
-          const match = prev.find(p => p.id === newAudit.id);
-          if (match) return { ...newAudit, ai_spend: match.ai_spend, roi_pct: match.roi_pct };
-        }
-        return newAudit;
-      }));
+      setData(prev => {
+        return audits.map(newAudit => {
+          const spendTimerKey = `${newAudit.id}-ai_spend`;
+          const fteTimerKey = `${newAudit.id}-roi_pct`;
+          const isUserActivelySliding = debounceTimersRef.current[spendTimerKey] || debounceTimersRef.current[fteTimerKey];
+          
+          if (isUserActivelySliding) {
+            const currentMatch = prev.find(p => p.id === newAudit.id);
+            if (currentMatch) {
+              return { ...newAudit, ai_spend: currentMatch.ai_spend, roi_pct: currentMatch.roi_pct };
+            }
+          }
+          return newAudit;
+        });
+      });
       setTotalCount(count || 0);
     }
   }, [statusFilter, searchTerm, currentPage, isUpdating]);
@@ -135,10 +147,11 @@ export default function AdminDashboard() {
       });
       if (!res.ok) throw new Error("Dispatch Failed");
       
+      // Dynamic inline stage layout escalation
       await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', selectedAudit.id);
       
       setSelectedAudit(null);
-      setEmails({ exec: "", mgr: "", tech: "", user: "" });
+      setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
     } catch (err: any) { 
       alert(err.message); 
@@ -148,18 +161,32 @@ export default function AdminDashboard() {
   };
 
   const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
-    const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey);
-    if (!node || !node.email) return alert("NUDGE ERROR: RECIPIENT ROUTE NOT IDENTIFIED.");
+    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey);
+    if (!matchingNode || !matchingNode.email) {
+      alert("NUDGE ERROR: RECIPIENT NODE ROUTE NOT IDENTIFIED.");
+      return;
+    }
+    
     setIsUpdating(true);
     try {
+      const formattedPayload: Record<string, string> = {};
+      formattedPayload[targetRoleKey] = matchingNode.email;
+
       const res = await fetch('/api/dispatch-directives', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId: auditRecord.id, orgName: auditRecord.org_name, parentAuditId: auditRecord.id, emails: { [targetRoleKey]: node.email } })
+        body: JSON.stringify({
+          groupId: auditRecord.id,
+          orgName: auditRecord.org_name,
+          parentAuditId: auditRecord.id,
+          emails: formattedPayload
+        })
       });
-      if (res.ok) alert(`REMINDER DISPATCHED TO ${node.email}`);
+      
+      if (res.ok) alert(`NUDGE SUCCESS: ACCESS REMINDER LINK FIRED TO ${matchingNode.email}`);
+      else throw new Error("Gateway Timeout");
     } catch (err) {
-      console.error(err);
+      alert("NUDGE LOGISTICS FAILURE.");
     } finally {
       setIsUpdating(false);
     }
@@ -173,11 +200,16 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auditId })
       });
+      
+      const serverResponse = await res.json();
+      
       if (res.ok) {
         await supabase.from('audits').update({ status: 'COMPLETE' }).eq('id', auditId);
         setExpandedRow(null);
         await fetchLedger();
-        alert("SYNTHESIS RUN SUCCESSFUL: LIFECYCLE DISPATCH GRADUATED.");
+        alert("SYNTHESIS ROOT LOGIC ENGINE RE-CALCULATED SUCCESSFULLY.");
+      } else {
+        alert(`SERVER REJECTION: ${serverResponse.error || 'UNEXPECTED SIGNAL OUTAGE'}`);
       }
     } catch (err) { 
       console.error(err); 
@@ -188,11 +220,17 @@ export default function AdminDashboard() {
 
   const toggleClientAccess = async (audit: any) => {
     setIsUpdating(true);
+    const targetNewReleaseState = !audit.is_released;
     try {
-      await supabase.from('audits').update({ is_released: !audit.is_released }).eq('id', audit.id);
+      const { error } = await supabase
+        .from('audits')
+        .update({ is_released: targetNewReleaseState })
+        .eq('id', audit.id);
+        
+      if (error) throw error;
       await fetchLedger();
     } catch (err) {
-      console.error(err);
+      console.error("ACCESS TOGGLE ERR ->", err);
     } finally {
       setIsUpdating(false);
     }
@@ -200,14 +238,27 @@ export default function AdminDashboard() {
 
   const handleLiveSliderChange = async (auditId: string, field: "ai_spend" | "roi_pct", value: number) => {
     setData(prev => prev.map(item => item.id === auditId ? { ...item, [field]: value } : item));
-    const key = `${auditId}-${field}`;
-    if (debounceTimersRef.current[key]) clearTimeout(debounceTimersRef.current[key]);
-    debounceTimersRef.current[key] = setTimeout(async () => {
-      await supabase.from('audits').update({ [field]: value }).eq('id', auditId);
-      delete debounceTimersRef.current[key];
+
+    const targetTimerKey = `${auditId}-${field}`;
+    if (debounceTimersRef.current[targetTimerKey]) {
+      clearTimeout(debounceTimersRef.current[targetTimerKey]);
+    }
+
+    debounceTimersRef.current[targetTimerKey] = setTimeout(async () => {
+      try {
+        await supabase
+          .from('audits')
+          .update({ [field]: value })
+          .eq('id', auditId);
+        
+        delete debounceTimersRef.current[targetTimerKey];
+      } catch (err) {
+        console.error("LIVE_SLIDER_SYNC_ERROR:", err);
+      }
     }, 120);
   };
 
+  // Inline business step promotion bridges
   const advanceToStageThreeBridge = async (auditId: string) => {
     setIsUpdating(true);
     try {
@@ -224,15 +275,44 @@ export default function AdminDashboard() {
     } catch (err) { console.error(err); } finally { setIsUpdating(false); }
   };
 
-  useEffect(() => { setCurrentPage(0); }, [searchTerm, statusFilter]);
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchTerm, statusFilter]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchLedger();
-      const interval = setInterval(() => { fetchLedger(); if (expandedRow) refreshActiveNodes(expandedRow); }, 5000); 
+      const interval = setInterval(() => { 
+        fetchLedger(); 
+        if (expandedRow) refreshActiveNodes(expandedRow); 
+      }, 5000); 
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(debounceTimersRef.current).forEach(clearTimeout);
+    };
+  }, []);
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
+        <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative italic">
+          <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
+          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA 7 CLEARANCE REQUIRED</p>
+          <div className="space-y-4">
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic uppercase" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600" />
+          </div>
+          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all italic leading-none">
+            {loading ? "VERIFYING..." : "INITIALIZE COMMAND"}
+          </button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden select-none">
@@ -251,22 +331,18 @@ export default function AdminDashboard() {
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
-              <h2 className="text-4xl font-black uppercase tracking-tighter text-left leading-none mb-6">LAUNCH 3-NODE COGNITIVE DIVE</h2>
-              <div className="space-y-4 text-left">
-                <div>
-                  <label className="text-[9px] text-slate-500 font-mono tracking-wider block mb-1">NODE 01 // EXECUTIVE TRACK EMAIL</label>
-                  <input placeholder="EXECUTIVE STRATEGY LEAD" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                </div>
-                <div>
-                  <label className="text-[9px] text-slate-500 font-mono tracking-wider block mb-1">NODE 02 // MANAGERIAL TRACK EMAIL</label>
-                  <input placeholder="MANAGERIAL TRANSLATION LEAD" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                </div>
-                <div>
-                  <label className="text-[9px] text-slate-500 font-mono tracking-wider block mb-1">NODE 03 // TECHNICAL TRACK EMAIL</label>
-                  <input placeholder="SYSTEMS ENGINEER" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                </div>
-                <button onClick={triggerActivation} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest hover:bg-white hover:text-black transition-all">
-                  PROVISION LINKS & DISPATCH COGNITIVE DIVE
+              
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
+              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
+              
+              <div className="space-y-4 mt-10 text-left">
+                <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                
+                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
+                  {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
+                  {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
                 </button>
               </div>
             </motion.div>
@@ -276,10 +352,10 @@ export default function AdminDashboard() {
 
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
-          {activeTab === 'ledger' && (
-            <div className="space-y-6">
+          {activeTab === 'ledger' ? (
+            <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
               
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 italic">
                 {[
                   { label: "TOTAL ASSETS INGESTED", value: totalCount, color: "border-slate-800 text-white" },
                   { label: "ACTIVE TRIANGULATIONS", value: data.filter(d => d.status?.toUpperCase().includes("TRIANGULATION") || d.status?.toUpperCase().includes("TRIANGULATING")).length, color: "border-yellow-600/30 text-yellow-500" },
@@ -303,7 +379,7 @@ export default function AdminDashboard() {
                     value={searchTerm} 
                     onChange={(e) => setSearchTerm(e.target.value)} 
                     placeholder="PARSE BY COMPANY IDENTITY OR LEAD SIGNAL EMAIL..." 
-                    className="w-full bg-black border border-slate-800 pl-12 pr-4 py-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic placeholder:text-slate-700"
+                    className="w-full bg-black border border-slate-800 pl-12 pr-4 py-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic placeholder:text-slate-600"
                   />
                 </div>
                 
@@ -339,18 +415,18 @@ export default function AdminDashboard() {
                   const dbDecay = audit.decay_pct || 24;
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
-                  
-                  const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
+                  const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
+                  const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
-                  let playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
-                  let playbookNarrative = "Multi-node operational telemetry parameters require response aggregation.";
+                  let playbookHeadline = "OPERATIONAL ASYMMETRIC FRICTION DETECTED";
+                  let playbookNarrative = "Multi-node operational telemetry indicates systemic variance challenges structural communication lines across layers.";
                   let playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
                   let targetTier = "TIER_02 // STRUCTURAL HARDENING";
 
                   if (sfi >= 45) {
                     playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
-                    playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap.`;
+                    playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Strategic leaders remain completely disconnected from operational engineering layers.`;
                     playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance.";
                     targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
                   } else if (sfi > 0) {
@@ -360,6 +436,7 @@ export default function AdminDashboard() {
                     targetTier = "TIER_02 // STRUCTURAL HARDENING";
                   }
 
+                  // 🛡️ TOPO NORMALIZATION ENGINE: Catch legacy string variations seamlessly without table writes
                   let rawStatus = (audit.status || "").toUpperCase().trim();
                   let cleanStatus = "LEAD"; 
                   
@@ -387,9 +464,9 @@ export default function AdminDashboard() {
                         </div>
                         <div className="col-span-4 text-center font-black text-xs tracking-[0.2em] font-mono">
                           ACTIVE LIFECYCLE STAGE: <span className="text-red-500">
-                            {cleanStatus === "COMPLETE" && "04 // BOARDROOM CLOSING HUB"}
-                            {cleanStatus === "DIAGNOSTIC_ACTIVE" && "03 // 90-QUESTION FORENSIC CAPSTONE"}
-                            {cleanStatus === "BRIDGE_ACTIVE" && "02.5 // SOW FUNDING BRIDGE"}
+                            {cleanStatus === "COMPLETE" && "04.5 // ARCHITECTURE DELIVERED"}
+                            {cleanStatus === "DIAGNOSTIC_ACTIVE" && "04 // 90-QUESTION CAPSTONE AUDIT"}
+                            {cleanStatus === "BRIDGE_ACTIVE" && "03 // BOARDROOM PROPOSAL BRIDGE"}
                             {cleanStatus === "TRIANGULATING" && "02 // 30-QUESTION DIAGNOSTIC WEDGE"}
                             {cleanStatus === "LEAD" && "01 // CUSTOMER DISCOVERY INTAKE"}
                           </span>
@@ -402,7 +479,7 @@ export default function AdminDashboard() {
                           <AnimatePresence mode="wait">
                             
                             {/* ========================================================================= */}
-                            {/* 🟩 STAGE 01: INITIAL CUSTOMER DISCOVERY INTAKE (12-QUESTIONS)             */}
+                            {/* 🟩 STAGE 01: CUSTOMER DISCOVERY INTAKE GATING (Sliders & Leakage Ledger) */}
                             {/* ========================================================================= */}
                             {cleanStatus === "LEAD" && (
                               <motion.div key="stage-01" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4">
@@ -447,7 +524,7 @@ export default function AdminDashboard() {
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟨 STAGE 02: 30-QUESTION CORE TRIANGULATION DIAGNOSTIC WEDGE              */}
+                            {/* 🟨 STAGE 02: 30-QUESTION DIAGNOSTIC WEDGE MANAGEMENT TRIANGULATION       */}
                             {/* ========================================================================= */}
                             {cleanStatus === "TRIANGULATING" && (
                               <motion.div key="stage-02" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4">
@@ -487,7 +564,7 @@ export default function AdminDashboard() {
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟦 STAGE 03: BOARDROOM PROPOSAL PRESENTATION & SOW CLOSING BRIDGE          */}
+                            {/* 🟦 STAGE 03: THE BOARDROOM PRESENTATION & PROPOSAL CLOSING FUNDING BRIDGE */}
                             {/* ========================================================================= */}
                             {cleanStatus === "BRIDGE_ACTIVE" && (
                               <motion.div key="stage-03" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
@@ -544,33 +621,24 @@ export default function AdminDashboard() {
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟪 STAGE 04: THE 90-QUESTION FORENSIC CAPSTONE EVENT (HAI // AVS // IGF)   */}
+                            {/* 🟪 STAGE 04: THE 4-NODE 90-QUESTION FORENSIC CAPSTONE EVENT                */}
                             {/* ========================================================================= */}
                             {cleanStatus === "DIAGNOSTIC_ACTIVE" && (
                               <motion.div key="stage-04" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
-                                <span className="text-[10px] text-purple-500 font-mono font-black tracking-[0.2em] block">// STAGE 04 // 90-QUESTION CAPSTONE DIAGNOSTIC ENGINE (4-NODE MATRIX DRIFT Telemetry)</span>
+                                <span className="text-[10px] text-purple-500 font-mono font-black tracking-[0.2em] block">// STAGE 04 // 90-QUESTION CAPSTONE DIAGNOSTIC ENGINE (4-NODE MATRIX DRIFT TELEMETRY)</span>
                                 
-                                {/* 🛡️ FAULT-ISOLATED INTERFACE BOUNDARY SHIELDS */}
                                 <div className="my-4">
-                                  {audit.id ? (
-                                    <FidelityMetricsStrip auditId={audit.id} />
-                                  ) : (
-                                    <div className="p-6 border border-slate-900 font-mono text-xs text-slate-600">// SYNCHRONIZING METRIC LAYERS...</div>
-                                  )}
+                                  {audit.id ? <FidelityMetricsStrip auditId={audit.id} /> : <div className="p-4 font-mono">// MOUNTING TRACKING ARRAYS...</div>}
                                 </div>
 
                                 <div className="my-4">
-                                  {audit.id ? (
-                                    <CentralCommandCockpit initialAuditId={audit.id} initialGroupId={audit.id} initialOrgName={audit.org_name || "PROSPECT"} onSuccess={() => { runSynthesis(audit.id); }} />
-                                  ) : (
-                                    <div className="p-6 border border-slate-900 font-mono text-xs text-slate-600">// MOUNTING ENGINE INTERFACE...</div>
-                                  )}
+                                  {audit.id ? <CentralCommandCockpit initialAuditId={audit.id} initialGroupId={audit.id} initialOrgName={audit.org_name || "PROSPECT"} onSuccess={() => { runSynthesis(audit.id); }} /> : <div className="p-4 font-mono">// ENGAGING CORE COMMAND TERMINAL...</div>}
                                 </div>
                               </motion.div>
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟦 STAGE 4.5: FINALIZED CLEAN-ROOM ARCHITECTURE PLAN DELIVERABLES         */}
+                            {/* 🟦 STAGE 4.5: FINALIZED ARCHITECTURE BLUEPRINTS EXPORT                   */}
                             {/* ========================================================================= */}
                             {cleanStatus === "COMPLETE" && (
                               <motion.div key="stage-04-complete" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
@@ -589,9 +657,9 @@ export default function AdminDashboard() {
                                     <div>
                                       <span className="text-[10px] font-mono font-black text-slate-500 tracking-widest block mb-1">// PROVEN_GROUND_TRUTH_USER_WORKAROUNDS</span>
                                       <div className="text-xl font-black text-white uppercase">4-WAY VARIANCE TELEMETRY SYNTHESIZED</div>
-                                      <p className="text-xs leading-relaxed font-sans text-slate-400 normal-case mt-2">Shadow user operations and unmonitored workflows have been isolated cleanly into your private tenant cloud specification matrix container rules.</p>
+                                      <p className="text-xs leading-relaxed font-sans text-slate-400 normal-case mt-2">Shadow user operations and unmonitored workflows have been isolated cleanly into your private tenant reference container spec configuration frames.</p>
                                     </div>
-                                    <div className="bg-black/40 border border-slate-900 p-3 font-mono text-[11px] text-emerald-500 mt-4">// REFERENCE SPECIFICATION PROVISIONED AND SHARED SECURELY WITH ADMIN.</div>
+                                    <div className="bg-black/40 border border-slate-900 p-3 font-mono text-[11px] text-emerald-500 mt-4">// REFERENCE BLUEPRINT EXPORT GENERATED AND ARCHIVED FOR ACCOUNT.</div>
                                   </div>
                                 </div>
 
@@ -619,7 +687,42 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               )}
-            </div>
+            </motion.div>
+          ) : (
+            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public Service Mapping</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic font-black">
+                  {BMR_IP_SUITE.services.map((s) => (
+                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
+                      <div className="text-red-600 mb-6 italic">{s.icon}</div>
+                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
+                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="italic">
+                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary Directives</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
+                  {BMR_IP_SUITE.directives.map((d) => (
+                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
+                      <div className="absolute top-0 right-0 p-4 opacity-10 italic"><Binary className={d.color} size={32} /></div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 italic">
+                        <div className="space-y-2 italic">
+                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic font-black`}>PROTOCOL // {d.id}</span>
+                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
+                        </div>
+                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic font-black">{d.price}</div>}
+                      </div>
+                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            </motion.div>
           )}
         </AnimatePresence>
       </main>
