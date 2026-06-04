@@ -42,7 +42,7 @@ export default function AdminDashboard() {
   const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "", user: "" });
 
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"ALL" | "LEAD" | "TRIANGULATING" | "COMPLETE">("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "LEAD" | "TRIANGULATING" | "BRIDGE_ACTIVE" | "DIAGNOSTIC_ACTIVE" | "COMPLETE">("ALL");
   const [currentPage, setCurrentPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const ROWS_PER_PAGE = 10;
@@ -54,7 +54,7 @@ export default function AdminDashboard() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      alert("AUTHORIZATION FAILED: UNRECOGNIZED SIGNAL");
+      alert("AUTHORIZATION FAILED");
       setLoading(false);
     } else {
       setIsAuthenticated(true);
@@ -66,7 +66,22 @@ export default function AdminDashboard() {
     if (isUpdating) return;
 
     let query = supabase.from('audits').select('*', { count: 'exact' });
-    if (statusFilter !== "ALL") query = query.eq('status', statusFilter);
+    
+    // 🛡️ Safe multidimensional database map array matrix to keep queries from dropping
+    if (statusFilter !== "ALL") {
+      if (statusFilter === "LEAD") {
+        query = query.in('status', ['LEAD', 'lead', 'Stage 1', 'STAGE_1', 'INTAKE', '']);
+      } else if (statusFilter === "TRIANGULATING") {
+        query = query.in('status', ['TRIANGULATING', 'triangulating', 'Stage 2', 'STAGE_2', 'ACTIVE_TESTING']);
+      } else if (statusFilter === "BRIDGE_ACTIVE") {
+        query = query.in('status', ['BRIDGE_ACTIVE', 'bridge_active', 'Stage 3', 'STAGE_3', 'PROPOSAL_SENT']);
+      } else if (statusFilter === "DIAGNOSTIC_ACTIVE") {
+        query = query.in('status', ['DIAGNOSTIC_ACTIVE', 'diagnostic_active', 'Stage 4', 'STAGE_4', 'DEEP_DIVE']);
+      } else if (statusFilter === "COMPLETE") {
+        query = query.in('status', ['COMPLETE', 'COMPLETED', 'completed', 'PUBLISHED', 'RESULT PUBLISHED']);
+      }
+    }
+
     if (searchTerm.trim() !== "") {
       query = query.or(`org_name.ilike.%${searchTerm}%,lead_email.ilike.%${searchTerm}%`);
     }
@@ -142,9 +157,9 @@ export default function AdminDashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ groupId: auditRecord.id, orgName: auditRecord.org_name, parentAuditId: auditRecord.id, emails: { [targetRoleKey]: node.email } })
       });
-      if (res.ok) alert(`NUDGE SUCCESS: REMINDER DISPATCHED TO ${node.email}`);
+      if (res.ok) alert(`REMINDER DISPATCHED TO ${node.email}`);
     } catch (err) {
-      alert("NUDGE LOGISTICS FAILURE.");
+      console.error(err);
     } finally {
       setIsUpdating(false);
     }
@@ -162,7 +177,7 @@ export default function AdminDashboard() {
         await supabase.from('audits').update({ status: 'COMPLETE' }).eq('id', auditId);
         setExpandedRow(null);
         await fetchLedger();
-        alert("SYNTHESIS RUN SUCCESSFUL: PIPELINE GRADUATED TO FINAL DELIVERY BLUEPRINTS.");
+        alert("SYNTHESIS RUN SUCCESSFUL: LIFECYCLE DISPATCH GRADUATED.");
       }
     } catch (err) { 
       console.error(err); 
@@ -231,6 +246,34 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
+      <AnimatePresence>
+        {selectedAudit && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
+              <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
+              <h2 className="text-4xl font-black uppercase tracking-tighter text-left leading-none mb-6">LAUNCH 3-NODE COGNITIVE DIVE</h2>
+              <div className="space-y-4 text-left">
+                <div>
+                  <label className="text-[9px] text-slate-500 font-mono tracking-wider block mb-1">NODE 01 // EXECUTIVE TRACK EMAIL</label>
+                  <input placeholder="EXECUTIVE STRATEGY LEAD" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                </div>
+                <div>
+                  <label className="text-[9px] text-slate-500 font-mono tracking-wider block mb-1">NODE 02 // MANAGERIAL TRACK EMAIL</label>
+                  <input placeholder="MANAGERIAL TRANSLATION LEAD" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                </div>
+                <div>
+                  <label className="text-[9px] text-slate-500 font-mono tracking-wider block mb-1">NODE 03 // TECHNICAL TRACK EMAIL</label>
+                  <input placeholder="SYSTEMS ENGINEER" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                </div>
+                <button onClick={triggerActivation} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest hover:bg-white hover:text-black transition-all">
+                  PROVISION LINKS & DISPATCH COGNITIVE DIVE
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
           {activeTab === 'ledger' && (
@@ -263,12 +306,15 @@ export default function AdminDashboard() {
                     className="w-full bg-black border border-slate-800 pl-12 pr-4 py-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic placeholder:text-slate-700"
                   />
                 </div>
+                
                 <div className="flex bg-black border border-slate-800 p-1 gap-1 overflow-x-auto shrink-0">
                   {([
                     { label: "All Assets", value: "ALL" },
                     { label: "Stage 01 Intake", value: "LEAD" },
                     { label: "Stage 02 Triangulation", value: "TRIANGULATING" },
-                    { label: "Stage 04 Closing", value: "COMPLETE" }
+                    { label: "Stage 03 Proposal", value: "BRIDGE_ACTIVE" },
+                    { label: "Stage 04 Capstone", value: "DIAGNOSTIC_ACTIVE" },
+                    { label: "Stage 4.5 Closed", value: "COMPLETE" }
                   ] as const).map((tab) => (
                     <button 
                       key={tab.value} 
@@ -294,18 +340,17 @@ export default function AdminDashboard() {
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
                   
-                  // 🛡️ Safe Local Anchoring to encapsulate derived arithmetic properties
                   const laborTax = (dbDecay / 100) * 0.4 * (fte * 160000 * 1.3);
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
                   let playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
-                  let playbookNarrative = "Multi-node operational telemetry validation parameters require survey response aggregation.";
+                  let playbookNarrative = "Multi-node operational telemetry parameters require response aggregation.";
                   let playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
-                  let targetTier = "TIER_01 // DRIFT DIAGNOSTICS";
+                  let targetTier = "TIER_02 // STRUCTURAL HARDENING";
 
                   if (sfi >= 45) {
                     playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
-                    playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Strategic leaders remain completely disconnected from operational engineering layers.`;
+                    playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap.`;
                     playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance.";
                     targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
                   } else if (sfi > 0) {
@@ -315,7 +360,6 @@ export default function AdminDashboard() {
                     targetTier = "TIER_02 // STRUCTURAL HARDENING";
                   }
 
-                  // 🛡️ TOPO NORMALIZATION ENGINE: Catch legacy markers ('COMPLETED', 'PUBLISHED') or blank entries cleanly
                   let rawStatus = (audit.status || "").toUpperCase().trim();
                   let cleanStatus = "LEAD"; 
                   
@@ -325,7 +369,7 @@ export default function AdminDashboard() {
                     cleanStatus = "BRIDGE_ACTIVE";
                   } else if (rawStatus === "DIAGNOSTIC_ACTIVE") {
                     cleanStatus = "DIAGNOSTIC_ACTIVE";
-                  } else if (rawStatus === "COMPLETE" || rawStatus === "COMPLETED" || rawStatus === "PUBLISHED") {
+                  } else if (rawStatus === "COMPLETE" || rawStatus === "COMPLETED" || rawStatus === "PUBLISHED" || rawStatus === "RESULT PUBLISHED") {
                     cleanStatus = "COMPLETE";
                   }
 
@@ -451,10 +495,10 @@ export default function AdminDashboard() {
                                 
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                   <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 font-mono text-xs space-y-3">
-                                    <div className="text-[10px] text-slate-500 font-black tracking-widest block mb-2">// INITIAL_FRICTION_MARKERS_LEDGER</div>
-                                    <div className="flex justify-between"><span className="text-slate-600">MANAGEMENT FRICTION INDEX:</span><span className="text-red-500 font-black">CALCULATING GAP VARIANCE</span></div>
-                                    <div className="flex justify-between"><span className="text-slate-600">ESTIMATED RUN-RATE TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                    <div className="text-[10px] text-slate-500 font-black tracking-widest block mb-2">// INTRODUCTORY_MANAGEMENT_FRACTURES_LEDGER</div>
+                                    <div className="flex justify-between"><span className="text-slate-600">ESTIMATED REWORK RUN-RATE TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                                     <div className="flex justify-between"><span className="text-slate-600">INACTION RISK EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                    <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL SCRUTINIZED MISALIGNMENT:</span><span className="text-red-500 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                                   </div>
                                   <div className="lg:col-span-7 border border-slate-900 bg-slate-950 p-6 flex flex-col justify-between">
                                     <div>
@@ -472,12 +516,16 @@ export default function AdminDashboard() {
                                     <span className="text-[10px] font-mono text-slate-400 font-black uppercase">{targetTier}</span>
                                   </div>
                                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {realFractures.slice(0, 3).map((frac: any, index: number) => (
-                                      <div key={frac.id} className="border border-slate-100 bg-slate-50/60 p-5 space-y-2">
-                                        <span className="text-[9px] font-mono text-slate-400 block font-bold uppercase">PHASE 0{index + 1} // {frac.severity} RISK</span>
-                                        <h5 className="text-sm font-black text-slate-900 uppercase">{frac.directive.replace("Implement ", "")}</h5>
-                                      </div>
-                                    ))}
+                                    {realFractures.length > 0 ? (
+                                      realFractures.slice(0, 3).map((frac: any, index: number) => (
+                                        <div key={frac.id} className="border border-slate-100 bg-slate-50/60 p-5 space-y-2">
+                                          <span className="text-[9px] font-mono text-slate-400 block font-bold uppercase">PHASE 0{index + 1} // {frac.severity} RISK</span>
+                                          <h5 className="text-sm font-black text-slate-900 uppercase">{frac.directive || "Optimization Layer Deployment"}</h5>
+                                        </div>
+                                      ))
+                                    ) : (
+                                      <div className="col-span-3 text-center py-4 text-xs font-mono text-slate-400">// ANALYZING SECTOR METRICS MATRIX FOR BULK SOW AUTO-MAPPING</div>
+                                    )}
                                   </div>
                                 </div>
 
@@ -496,51 +544,60 @@ export default function AdminDashboard() {
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟪 STAGE 04: THE 90-QUESTION FORENSIC CAPSTONE EVENT (PAID GATE 2)        */}
+                            {/* 🟪 STAGE 04: THE 90-QUESTION FORENSIC CAPSTONE EVENT (HAI // AVS // IGF)   */}
                             {/* ========================================================================= */}
                             {cleanStatus === "DIAGNOSTIC_ACTIVE" && (
                               <motion.div key="stage-04" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
-                                <span className="text-[10px] text-purple-500 font-mono font-black tracking-[0.2em] block">// STAGE 04 // 90-QUESTION CAPSTONE DIAGNOSTIC ENGINE (4-WAY VARIANCE MAPPING)</span>
+                                <span className="text-[10px] text-purple-500 font-mono font-black tracking-[0.2em] block">// STAGE 04 // 90-QUESTION CAPSTONE DIAGNOSTIC ENGINE (4-NODE MATRIX DRIFT Telemetry)</span>
                                 
+                                {/* 🛡️ FAULT-ISOLATED INTERFACE BOUNDARY SHIELDS */}
                                 <div className="my-4">
-                                  <FidelityMetricsStrip auditId={audit.id} />
+                                  {audit.id ? (
+                                    <FidelityMetricsStrip auditId={audit.id} />
+                                  ) : (
+                                    <div className="p-6 border border-slate-900 font-mono text-xs text-slate-600">// SYNCHRONIZING METRIC LAYERS...</div>
+                                  )}
                                 </div>
 
                                 <div className="my-4">
-                                  <CentralCommandCockpit initialAuditId={audit.id} initialGroupId={audit.id} initialOrgName={audit.org_name} onSuccess={() => { runSynthesis(audit.id); }} />
+                                  {audit.id ? (
+                                    <CentralCommandCockpit initialAuditId={audit.id} initialGroupId={audit.id} initialOrgName={audit.org_name || "PROSPECT"} onSuccess={() => { runSynthesis(audit.id); }} />
+                                  ) : (
+                                    <div className="p-6 border border-slate-900 font-mono text-xs text-slate-600">// MOUNTING ENGINE INTERFACE...</div>
+                                  )}
                                 </div>
                               </motion.div>
                             )}
 
                             {/* ========================================================================= */}
-                            {/* 🟦 STAGE 4.5: FINALIZED CLEAN-ROOM ARCHITECTURE CONTAINER BLUEPRINTS      */}
+                            {/* 🟦 STAGE 4.5: FINALIZED CLEAN-ROOM ARCHITECTURE PLAN DELIVERABLES         */}
                             {/* ========================================================================= */}
                             {cleanStatus === "COMPLETE" && (
                               <motion.div key="stage-04-complete" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
-                                <span className="text-[10px] text-emerald-500 font-mono font-black tracking-[0.2em] block">// FINAL DELIVERABLE // CLEAN-ROOM REFERENCE ARCHITECTURE CONTAINER SPEC</span>
+                                <span className="text-[10px] text-emerald-500 font-mono font-black tracking-[0.2em] block">// DELIVERED // CLEAN-ROOM REFERENCE ARCHITECTURE CONTAINER SPEC BLUEPRINTS</span>
                                 
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                   <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 font-mono text-xs space-y-3">
-                                    <div className="text-[10px] text-slate-500 font-black tracking-widest block mb-2">// FINALIZED_VERIFIED_ECONOMIC_LEAKAGE</div>
+                                    <div className="text-[10px] text-slate-500 font-black tracking-widest block mb-2">// FINAL_VERIFIED_ECONOMIC_LEAKAGE_LEDGER</div>
                                     <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
                                     <div className="flex justify-between"><span className="text-slate-600">VERIFIED LOGIC FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
                                     <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                                     <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                    <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE RECOVERED:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                    <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL NET CAPITAL RECOVERED:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                                   </div>
                                   <div className="lg:col-span-7 border border-slate-900 bg-slate-950 p-6 flex flex-col justify-between">
                                     <div>
                                       <span className="text-[10px] font-mono font-black text-slate-500 tracking-widest block mb-1">// PROVEN_GROUND_TRUTH_USER_WORKAROUNDS</span>
                                       <div className="text-xl font-black text-white uppercase">4-WAY VARIANCE TELEMETRY SYNTHESIZED</div>
-                                      <p className="text-xs leading-relaxed font-sans text-slate-400 normal-case mt-2">Shadow infrastructure, manual spreadsheets, and governance logic fractures have been mapped cleanly into an isolated enterprise reference container.</p>
+                                      <p className="text-xs leading-relaxed font-sans text-slate-400 normal-case mt-2">Shadow user operations and unmonitored workflows have been isolated cleanly into your private tenant cloud specification matrix container rules.</p>
                                     </div>
-                                    <div className="bg-black/40 border border-slate-900 p-3 font-mono text-[11px] text-emerald-500 mt-4">// DELIVERY SPECIFICATION: NOMINAL ISOLATED NETWORK CONTAINER PROVISIONED.</div>
+                                    <div className="bg-black/40 border border-slate-900 p-3 font-mono text-[11px] text-emerald-500 mt-4">// REFERENCE SPECIFICATION PROVISIONED AND SHARED SECURELY WITH ADMIN.</div>
                                   </div>
                                 </div>
 
                                 <div className="flex flex-wrap items-center justify-between pt-6 border-t border-slate-900/60 gap-4 font-mono">
                                   <button type="button" onClick={async (e) => { e.stopPropagation(); await supabase.from('audits').update({ is_paid: !audit.is_paid }).eq('id', audit.id); fetchLedger(); }} className={`px-6 py-4 border text-[10px] tracking-widest transition-all ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}>MARK CONTRACT REVENUE PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}</button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="bg-white text-black px-8 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2"><FileText size={14} /> EXPORT CLEAN-ROOM REFERENCE BLUEPRINT (PDF)</button>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="bg-white text-black px-8 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2"><FileText size={14} /> EXPORT CONTAINER SPEC BLUEPRINT (PDF)</button>
                                 </div>
                               </motion.div>
                             )}
