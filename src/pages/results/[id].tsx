@@ -30,7 +30,12 @@ export default function UnifiedResultsPortal() {
 
     const channelSubscription = supabase.channel(`live-workshop-${id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` }, 
-        (payload) => { if (payload.new) setAudit(payload.new as AuditRecord); }
+        (payload) => { 
+          if (payload.new) {
+            console.log("⚡ Live Workshop Real-Time Sync:", payload.new);
+            setAudit(payload.new as AuditRecord); 
+          }
+        }
       ).subscribe();
 
     return () => { supabase.removeChannel(channelSubscription); };
@@ -55,18 +60,34 @@ export default function UnifiedResultsPortal() {
     };
   }, [loading, audit?.created_at]);
 
-  // 🎨 GLOBAL FIXED BRAND GREEN LOOK
-  const dbDecay = audit?.decay_pct || 24;
-  const isPhaseTwoActive = !!audit?.is_released;
-  const spend = audit?.ai_spend || 1.2;
-  const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
+  // =========================================================================
+  // ⚙️ RECONCILED DYNAMIC CALCULATION BLOCK (ALIGNED WITH ADMIN LEDGER TRACKS)
+  // =========================================================================
   
-  const laborMultiplier = 0.5; 
+  // 1. Safe float parsing to clean up high-precision string packets from database channels
+  const spend = audit?.ai_spend ? parseFloat(audit.ai_spend as any) : 1.2;
+  const dbDecay = audit?.decay_pct ? parseFloat(audit.decay_pct as any) : 24;
+  
+  // 2. Read explicit workforce scale from your dashboard slider, fallback to old derived logic seamlessly
+  const fteCount = audit?.roi_pct 
+    ? parseInt(audit.roi_pct as any, 10) 
+    : Math.round((spend * 1000000) / 200000) || 5;
+
+  // 3. Align status gateways flexibly to capture both branch casing variations
+  const rawStatus = (audit?.status || "").toUpperCase().trim();
+  const isPhaseTwoActive = !!audit?.is_released || rawStatus === "COMPLETE" || rawStatus === "COMPLETED";
+
+  // 4. Resolve the dynamic sector modifier from your database matrix case-insensitively
+  const normalizedSector = (audit?.sector || "finance").toLowerCase().trim();
+  const laborMultiplier = normalizedSector === 'finance' ? 0.5 
+                        : normalizedSector === 'healthcare' ? 0.45 
+                        : 0.4;
+  
   const accentColorClass = "text-green-500"; 
   const borderAccentClass = "border-green-600"; 
   const fallbackDirectiveColor = "text-green-500";
 
-  // Macro parent pool calculation
+  // Macro parent pool calculation matching your cockpit equations exactly
   const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
   
   // Clean 60/40 Labor Friction Splits
