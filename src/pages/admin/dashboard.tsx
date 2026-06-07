@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText
+  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText, Plus
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -42,13 +42,16 @@ export default function AdminDashboard() {
   const [emails, setEmails] = useState({ exec: "", mgr: "", tech: "" });
 
   const [searchTerm, setSearchTerm] = useState("");
-  // 🛡️ RECONCILED FILTER MATRIX: Aligned with the exact database hooks to prevent empty state filters
   const [statusFilter, setStatusFilter] = useState<"ALL" | "LEAD" | "TRIANGULATING" | "BRIDGE_ACTIVE" | "DIAGNOSTIC_ACTIVE" | "COMPLETE">("ALL");
   const [currentPage, setCurrentPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
   const ROWS_PER_PAGE = 10;
 
-  const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
+  // 🛡️ Intake Modal state variables for Option B
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [newOrgName, setNewOrgName] = useState("");
+  const [newLeadEmail, setNewLeadEmail] = useState("");
+  const [newSector, setNewSector] = useState<"finance" | "healthcare" | "enterprise">("finance");
 
   // 🛡️ High-speed references to catch layout execution background timers
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
@@ -73,7 +76,6 @@ export default function AdminDashboard() {
       .from('audits')
       .select('*', { count: 'exact' });
 
-    // Forgiving translation map query layout configuration
     if (statusFilter !== "ALL") {
       if (statusFilter === "LEAD") {
         query = query.in('status', ['LEAD', 'lead', 'Stage 1', 'STAGE_1', 'INTAKE', '']);
@@ -119,6 +121,48 @@ export default function AdminDashboard() {
     }
   }, [statusFilter, searchTerm, currentPage, isUpdating]);
 
+  // 🌟 SAFE FRONTEND INITIALIZATION METHOD (OPTION B)
+  const handleCreateNewAuditRecord = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newOrgName.trim() || !newLeadEmail.trim() || isUpdating) return;
+    
+    setIsUpdating(true);
+    try {
+      const { data: newRecord, error } = await supabase
+        .from('audits')
+        .insert([
+          {
+            org_name: newOrgName.trim(),
+            lead_email: newLeadEmail.trim().toLowerCase(),
+            sector: newSector,
+            status: 'LEAD',          // 🔴 Strictly lock status parameter to initial state 
+            is_released: false,      // 🔴 Explicitly engage presentation shield protection
+            decay_pct: 24,           // Baseline safe assumptions
+            ai_spend: 1.2,
+            roi_pct: 6
+          }
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+      
+      setIsCreateModalOpen(false);
+      setNewOrgName("");
+      setNewLeadEmail("");
+      setNewSector("finance");
+      
+      await fetchLedger();
+      if (newRecord?.id) toggleRow(newRecord.id);
+      
+      alert(`SUCCESS: ${newOrgName.toUpperCase()} ARCHITECTURE INITIALIZED BEHIND SHIELD.`);
+    } catch (err: any) {
+      alert(`INTAKE INITIALIZATION ERROR: ${err.message || "UNRECOGNIZED SCHEMA THROW"}`);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     if (isUpdating) return;
     const { data: nodes } = await supabase.from('operators').select('persona_type, status, email').eq('audit_id', auditId);
@@ -147,7 +191,6 @@ export default function AdminDashboard() {
       });
       if (!res.ok) throw new Error("Dispatch Failed");
       
-      // Dynamic inline stage layout escalation
       await supabase.from('audits').update({ status: 'TRIANGULATING' }).eq('id', selectedAudit.id);
       
       setSelectedAudit(null);
@@ -258,7 +301,6 @@ export default function AdminDashboard() {
     }, 120);
   };
 
-  // Inline business step promotion bridges
   const advanceToStageThreeBridge = async (auditId: string) => {
     setIsUpdating(true);
     try {
@@ -324,14 +366,19 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
           </div>
         </div>
+        {activeTab === 'ledger' && (
+          <button onClick={() => setIsCreateModalOpen(true)} className="bg-red-600 text-white px-5 py-2.5 font-mono text-[10px] font-black tracking-widest flex items-center gap-2 border border-red-500 hover:bg-white hover:text-black transition-all">
+            <Plus size={14} /> INITIALIZE INTAKE ASSET
+          </button>
+        )}
       </nav>
 
+      {/* 🌟 PROVISIONING NODES DIALOG CONTAINER */}
       <AnimatePresence>
         {selectedAudit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
-              
               <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
               <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
               
@@ -345,6 +392,45 @@ export default function AdminDashboard() {
                   {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 🌟 INTAKE INITIALIZATION CREATION MODAL CONTAINER (OPTION B GATEWAY) */}
+      <AnimatePresence>
+        {isCreateModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
+              <button onClick={() => setIsCreateModalOpen(false)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">INITIALIZE NEW INTAKE ASSET</h2>
+              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">// HARDENING INITIAL DATA BASELINE SHAPE UNDER SECURITY ENVELOPE</p>
+              
+              <form onSubmit={handleCreateNewAuditRecord} className="space-y-4 mt-10 text-left">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-mono text-slate-500 block tracking-widest">// TARGET ORGANIZATION IDENTITY</span>
+                  <input required placeholder="COMPANY NAME / IDENTITY" value={newOrgName} onChange={(e) => setNewOrgName(e.target.value)} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                </div>
+                
+                <div className="space-y-1">
+                  <span className="text-[9px] font-mono text-slate-500 block tracking-widest">// LEAD CAPTURE ROUTING VECTOR</span>
+                  <input required type="email" placeholder="PRIMARY LEAD SIGNAL EMAIL" value={newLeadEmail} onChange={(e) => setNewLeadEmail(e.target.value)} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                </div>
+
+                <div className="space-y-1">
+                  <span className="text-[9px] font-mono text-slate-500 block tracking-widest">// MARKET SEGMENTATION ECONOMIC MODIFIER</span>
+                  <select value={newSector} onChange={(e: any) => setNewSector(e.target.value)} className="w-full bg-slate-900 border-2 border-slate-800 p-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic appearance-none cursor-pointer">
+                    <option value="finance">FINANCIAL LAYERS (0.50 MULTIPLIER)</option>
+                    <option value="healthcare">HEALTHCARE LAYERS (0.45 MULTIPLIER)</option>
+                    <option value="enterprise">ENTERPRISE STANDARD (0.40 MULTIPLIER)</option>
+                  </select>
+                </div>
+                
+                <button type="submit" disabled={isUpdating} className="w-full bg-red-600 text-white py-5 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
+                  {isUpdating ? <Activity className="animate-spin" /> : <CheckCircle size={18} />} 
+                  {isUpdating ? "HARDENING REPOSITORIES..." : "DEPLOY INTAKE SHIELD ASSET"}
+                </button>
+              </form>
             </motion.div>
           </div>
         )}
@@ -436,7 +522,6 @@ export default function AdminDashboard() {
                     targetTier = "TIER_02 // STRUCTURAL HARDENING";
                   }
 
-                  // 🛡️ TOPO NORMALIZATION ENGINE: Catch legacy string variations seamlessly without table writes
                   let rawStatus = (audit.status || "").toUpperCase().trim();
                   let cleanStatus = "LEAD"; 
                   
@@ -478,9 +563,7 @@ export default function AdminDashboard() {
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/10 select-text">
                           <AnimatePresence mode="wait">
                             
-                            {/* ========================================================================= */}
-                            {/* 🟩 STAGE 01: CUSTOMER DISCOVERY INTAKE GATING (Sliders & Leakage Ledger) */}
-                            {/* ========================================================================= */}
+                            {/* 🟩 STAGE 01 LAYOUT */}
                             {cleanStatus === "LEAD" && (
                               <motion.div key="stage-01" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4">
                                 <span className="text-[10px] text-red-500 font-mono font-black tracking-[0.2em] block mb-4">// STAGE 01 // INITIAL ACCOUNT INTAKE & 12-QUESTION HOOK</span>
@@ -523,9 +606,7 @@ export default function AdminDashboard() {
                               </motion.div>
                             )}
 
-                            {/* ========================================================================= */}
-                            {/* 🟨 STAGE 02: 30-QUESTION DIAGNOSTIC WEDGE MANAGEMENT TRIANGULATION       */}
-                            {/* ========================================================================= */}
+                            {/* 🟨 STAGE 02 LAYOUT */}
                             {cleanStatus === "TRIANGULATING" && (
                               <motion.div key="stage-02" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4">
                                 <span className="text-[10px] text-yellow-500 font-mono font-black tracking-[0.2em] block mb-4">// STAGE 02 // 30-QUESTION TARGETED DIAGNOSTIC WEDGE (MANAGEMENT TRIANGULATION)</span>
@@ -563,9 +644,7 @@ export default function AdminDashboard() {
                               </motion.div>
                             )}
 
-                            {/* ========================================================================= */}
-                            {/* 🟦 STAGE 03: THE BOARDROOM PRESENTATION & PROPOSAL CLOSING FUNDING BRIDGE */}
-                            {/* ========================================================================= */}
+                            {/* 🟦 STAGE 03 LAYOUT */}
                             {cleanStatus === "BRIDGE_ACTIVE" && (
                               <motion.div key="stage-03" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
                                 <span className="text-[10px] text-blue-500 font-mono font-black tracking-[0.2em] block">// STAGE 03 // BOARDROOM PRESENTATION & SOW FUNDING CLOSING BRIDGE</span>
@@ -620,9 +699,7 @@ export default function AdminDashboard() {
                               </motion.div>
                             )}
 
-                            {/* ========================================================================= */}
-                            {/* 🟪 STAGE 04: THE 4-NODE 90-QUESTION FORENSIC CAPSTONE EVENT                */}
-                            {/* ========================================================================= */}
+                            {/* 🟨 STAGE 04 LAYOUT */}
                             {cleanStatus === "DIAGNOSTIC_ACTIVE" && (
                               <motion.div key="stage-04" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
                                 <span className="text-[10px] text-purple-500 font-mono font-black tracking-[0.2em] block">// STAGE 04 // 90-QUESTION CAPSTONE DIAGNOSTIC ENGINE (4-NODE MATRIX DRIFT TELEMETRY)</span>
@@ -637,9 +714,7 @@ export default function AdminDashboard() {
                               </motion.div>
                             )}
 
-                            {/* ========================================================================= */}
-                            {/* 🟦 STAGE 4.5: FINALIZED ARCHITECTURE BLUEPRINTS EXPORT                   */}
-                            {/* ========================================================================= */}
+                            {/* 🟦 STAGE 4.5 LAYOUT */}
                             {cleanStatus === "COMPLETE" && (
                               <motion.div key="stage-04-complete" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4 space-y-6">
                                 <span className="text-[10px] text-emerald-500 font-mono font-black tracking-[0.2em] block">// DELIVERED // CLEAN-ROOM REFERENCE ARCHITECTURE CONTAINER SPEC BLUEPRINTS</span>
