@@ -208,7 +208,8 @@ export default function AdminDashboard() {
         body: JSON.stringify({ auditId })
       });
       if (res.ok) {
-        await supabase.from('audits').update({ status: 'COMPLETE', sfi_score: 55 }).eq('id', auditId);
+        // 🟢 FIXED SURGICALLY: Changed legacy payload from COMPLETE to LEAD initialization specs
+        await supabase.from('audits').update({ status: 'LEAD', sfi_score: 0 }).eq('id', auditId);
         setExpandedRow(null);
         await fetchLedger();
       }
@@ -363,16 +364,17 @@ export default function AdminDashboard() {
                     targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
                   }
 
-                  // 🛡️ DATA-DRIVEN LIFECYCLE GATE OVERRIDE: 
-                  // If sfi_score is zero or missing, it is physically locked to Stage 01 Intake, regardless of string tags.
+                  // 🛡️ DYNAMIC DATA CHECKPOINT: Force Stage 01 if SFI has not been generated yet
                   let cleanStatus = "LEAD";
                   const rawStatus = (audit.status || "").toUpperCase().trim();
                   
-                  if (sfi > 0 || rawStatus === "COMPLETE" || rawStatus === "COMPLETED") {
+                  if (sfi > 0) {
                     if (rawStatus === "TRIANGULATING") cleanStatus = "TRIANGULATING";
                     else if (rawStatus === "BRIDGE_ACTIVE") cleanStatus = "BRIDGE_ACTIVE";
                     else if (rawStatus === "DIAGNOSTIC_ACTIVE") cleanStatus = "DIAGNOSTIC_ACTIVE";
                     else if (rawStatus === "COMPLETE" || rawStatus === "COMPLETED") cleanStatus = "COMPLETE";
+                  } else {
+                    cleanStatus = "LEAD";
                   }
 
                   return (
@@ -389,11 +391,16 @@ export default function AdminDashboard() {
                         </div>
                         <div className="col-span-4 text-center font-black text-xs tracking-[0.2em] font-mono">
                           ACTIVE LIFECYCLE STAGE: <span className="text-red-500">
-                            {cleanStatus === "COMPLETE" && "04.5 // ARCHITECTURE DELIVERED"}
-                            {cleanStatus === "DIAGNOSTIC_ACTIVE" && "04 // 90-QUESTION CAPSTONE AUDIT"}
-                            {cleanStatus === "BRIDGE_ACTIVE" && "03 // BOARDROOM PROPOSAL BRIDGE"}
-                            {cleanStatus === "TRIANGULATING" && "02 // 30-QUESTION DIAGNOSTIC WEDGE"}
-                            {cleanStatus === "LEAD" && "01 // CUSTOMER DISCOVERY INTAKE"}
+                            {(() => {
+                              switch (cleanStatus) {
+                                case "COMPLETE": return "04.5 // ARCHITECTURE DELIVERED";
+                                case "DIAGNOSTIC_ACTIVE": return "04 // 90-QUESTION CAPSTONE AUDIT";
+                                case "BRIDGE_ACTIVE": return "03 // BOARDROOM PROPOSAL BRIDGE";
+                                case "TRIANGULATING": return "02 // 30-QUESTION DIAGNOSTIC WEDGE";
+                                case "LEAD":
+                                default: return "01 // CUSTOMER DISCOVERY INTAKE";
+                              }
+                            })()}
                           </span>
                         </div>
                         <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
