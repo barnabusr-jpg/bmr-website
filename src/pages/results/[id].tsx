@@ -18,7 +18,8 @@ export default function UnifiedResultsPortal() {
   useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
-    if (!id || !mounted) return;
+    if (!id || !mounted || id === "undefined") return;
+    
     const fetchInitialAuditState = async () => {
       try {
         const { data, error } = await supabase.from("audits").select("*").eq("id", id).single();
@@ -32,8 +33,30 @@ export default function UnifiedResultsPortal() {
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` }, 
         (payload) => { 
           if (payload.new) {
-            console.log("⚡ Live Workshop Real-Time Sync:", payload.new);
-            setAudit(payload.new as AuditRecord); 
+            console.log("⚡ Live Workshop Real-Time Sync Received:", payload.new);
+            
+            // 🎯 Establish gating flags out of incoming database payload
+            const incomingStatus = (payload.new.status || "").toUpperCase().trim();
+            const incomingIsReleased = !!payload.new.is_released || incomingStatus === "COMPLETE" || incomingStatus === "COMPLETED";
+
+            if (incomingIsReleased) {
+              // 🟢 REVEAL ENGAGED: Release the floodgates completely
+              setAudit(payload.new as AuditRecord); 
+            } else {
+              // 🔴 SHIELD ACTIVE: Calibrations are occurring in the dark
+              // Save the structural state flags so the page knows when the presentation button flips, 
+              // but hard-freeze the slider properties onto their original baseline positions.
+              setAudit((prevAudit) => {
+                if (!prevAudit) return payload.new as AuditRecord;
+                return {
+                  ...payload.new, // Incorporate metadata updates
+                  ai_spend: prevAudit.ai_spend, // Freeze Spend
+                  decay_pct: prevAudit.decay_pct, // Freeze Decay Coefficient
+                  roi_pct: prevAudit.roi_pct, // Freeze Headcount Matrix Override
+                  sector: prevAudit.sector // Freeze Sector Weight
+                } as AuditRecord;
+              });
+            }
           }
         }
       ).subscribe();
@@ -232,12 +255,12 @@ export default function UnifiedResultsPortal() {
           <Info className={`${accentColorClass} shrink-0 mt-0.5`} size={16} />
           <div className="space-y-1">
             <span className="text-white font-mono text-[10px] tracking-widest block">SYSTEM CONFIGURATION // MODEL READOUT SPECIFICATION</span>
-            <p className="text-slate-400 font-sans text-[11px] leading-relaxed font-black normal-case">
+            <div className="text-slate-400 font-sans text-[11px] leading-relaxed font-black normal-case">
               {isPhaseTwoActive 
                 ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${fteCount} FTE resources.` 
                 : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status.`
               }
-            </p>
+            </div>
           </div>
         </div>
 
