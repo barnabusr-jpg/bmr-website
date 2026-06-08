@@ -305,7 +305,6 @@ export default function AdminDashboard() {
                   const sfi = audit.sfi_score || 0;
                   const dbDecay = audit.decay_pct || 20;
                   
-                  // Read fields uniquely from item memory row cells
                   const spend = parseFloat(audit.ai_spend) || 11.3;
                   const fte = parseInt(audit.roi_pct) || 150;
                   
@@ -313,8 +312,8 @@ export default function AdminDashboard() {
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
-                  let cleanStatus = "LEAD";
                   const rawStatus = (audit.status || "").toUpperCase().trim();
+                  let cleanStatus = "LEAD";
                   
                   if (sfi > 0) {
                     if (rawStatus === "TRIANGULATING") cleanStatus = "TRIANGULATING";
@@ -322,7 +321,6 @@ export default function AdminDashboard() {
                     else if (rawStatus === "DIAGNOSTIC_ACTIVE") cleanStatus = "DIAGNOSTIC_ACTIVE";
                     else if (rawStatus === "COMPLETE" || rawStatus === "COMPLETED") cleanStatus = "COMPLETE";
                   } else {
-                    // Lock protection guardrail inside engine calculations
                     cleanStatus = (rawStatus === "TRIANGULATING") ? "TRIANGULATING" : "LEAD";
                   }
 
@@ -341,7 +339,6 @@ export default function AdminDashboard() {
                         <div className="col-span-4 text-center font-black text-xs tracking-[0.2em] font-mono">
                           ACTIVE LIFECYCLE STAGE: <span className="text-red-500">
                             {(() => {
-                              // Fixed: Visual display switch block reads exactly from aligned cleanStatus calculation
                               switch (cleanStatus) {
                                 case "COMPLETE": return "04.5 // ARCHITECTURE DELIVERED";
                                 case "DIAGNOSTIC_ACTIVE": return "04 // 90-QUESTION CAPSTONE AUDIT";
@@ -364,4 +361,86 @@ export default function AdminDashboard() {
                               <div className="border border-slate-900 bg-slate-950 p-6 mb-4 space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                   <div className="space-y-2">
-                                    <div className="flex justify-between text-xs font-mono"><span className="text-slate-5
+                                    <div className="flex justify-between text-xs font-mono"><span className="text-slate-500">ANNUAL SPEND:</span><span className="text-red-500 font-black">${spend.toFixed(1)}M</span></div>
+                                    <input type="range" min="0.1" max="25.0" step="0.1" value={spend} onChange={(e) => handleLiveSliderChange(audit.id, "ai_spend", parseFloat(e.target.value))} className="w-full accent-red-600 bg-slate-900 h-1.5" />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <div className="flex justify-between text-xs font-mono"><span className="text-slate-500">WORKFORCE SCALE:</span><span className="text-red-500 font-black">{fte} FTES</span></div>
+                                    <input type="range" min="1" max="250" step="1" value={fte} onChange={(e) => handleLiveSliderChange(audit.id, "roi_pct", parseInt(e.target.value))} className="w-full accent-red-600 bg-slate-900 h-1.5" />
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="border border-slate-900 bg-slate-950 p-6 mb-6 font-mono text-xs space-y-2">
+                                <div className="flex justify-between"><span className="text-slate-600">CORE REWORK LABOR TAX:</span><span className="text-white font-black">${Math.round(laborTax).toLocaleString()} / YR</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">RISK INACTION EXPOSURE:</span><span className="text-white font-black">${Math.round(exposure).toLocaleString()} / YR</span></div>
+                              </div>
+
+                              <div className="flex flex-wrap items-center justify-between bg-slate-950/60 border border-slate-900 p-6 mb-6">
+                                <span className="text-xs font-black text-white">Dossier Presentation Visibility Shield</span>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`px-8 py-4 text-[10px] font-mono font-black border ${clientHasAccess ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
+                                  {clientHasAccess ? "✔ CLIENT DOSSIER VIEWABLE" : "✘ Shield Dossier (Blur Portal Access)"}
+                                </button>
+                              </div>
+
+                              <div className="flex gap-4">
+                                {cleanStatus === "LEAD" && (
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] font-mono tracking-widest flex items-center gap-2"><Mail size={14} /> Initialize & Launch 3-Node 360 Dive</button>
+                                )}
+                                
+                                {cleanStatus === "TRIANGULATING" && (
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); advanceToStageThreeBridge(audit.id); }} className="bg-amber-600 text-white px-6 py-4 font-black uppercase text-[10px] font-mono tracking-widest flex items-center gap-2"><Zap size={14} /> Advance Asset to Stage 3 Bridge</button>
+                                )}
+
+                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="bg-slate-950 border border-slate-800 text-slate-400 px-6 py-4 font-black text-[10px] font-mono tracking-widest"><Monitor size={14} /> Open Discovery Screen Ledger</button>
+                              </div>
+
+                            </motion.div>
+                          </AnimatePresence>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </motion.div>
+          ) : (
+            <motion.div key="frameworks" className="space-y-12">
+              <div className="text-slate-500 font-mono text-xs font-black">// REFERENCE MATERIALS LOADED CLEAN-ROOM SPEC</div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </main>
+
+      <AnimatePresence>
+        {selectedAudit && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-slate-950 border-2 border-red-600 p-10 max-w-lg w-full relative">
+              <button onClick={() => setSelectedAudit(null)} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20} /></button>
+              <h3 className="text-xl font-black text-red-600 tracking-wider mb-2">3-NODE DEPLOYMENT CADENCE</h3>
+              <p className="text-xs text-slate-400 font-mono mb-6">ORG: {selectedAudit.org_name}</p>
+              
+              <div className="space-y-4 font-mono text-xs">
+                <div>
+                  <label className="text-slate-500 block mb-1">EXECUTIVE COUNTERPART EMAIL</label>
+                  <input type="email" value={emails.exec} onChange={(e) => setEmails(p => ({ ...p, exec: e.target.value }))} className="w-full bg-black border border-slate-800 p-3 text-white outline-none focus:border-red-600" placeholder="exec@company.com" />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">OPERATIONAL MANAGER EMAIL</label>
+                  <input type="email" value={emails.mgr} onChange={(e) => setEmails(p => ({ ...p, mgr: e.target.value }))} className="w-full bg-black border border-slate-800 p-3 text-white outline-none focus:border-red-600" placeholder="mgr@company.com" />
+                </div>
+                <div>
+                  <label className="text-slate-500 block mb-1">TECHNICAL LEAD ENGINEER EMAIL</label>
+                  <input type="email" value={emails.tech} onChange={(e) => setEmails(p => ({ ...p, tech: e.target.value }))} className="w-full bg-black border border-slate-800 p-3 text-white outline-none focus:border-red-600" placeholder="tech@company.com" />
+                </div>
+              </div>
+              <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white font-black py-4 uppercase text-xs tracking-widest mt-8 hover:bg-white hover:text-black transition-all disabled:opacity-50">
+                {isUpdating ? "DISPATCHING ASSETS..." : "GENERATE SECURE ACCESS KEYS"}
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
