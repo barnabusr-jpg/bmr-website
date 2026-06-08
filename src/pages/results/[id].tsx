@@ -80,10 +80,8 @@ export default function UnifiedResultsPortal() {
   const sfiScore = audit?.sfi_score || 0;
   const rawStatus = (audit?.status || "").toUpperCase().trim();
   
-  // Explicitly mapping view condition flags
   const isPhaseTwoActive = (rawStatus === "TRIANGULATING" || rawStatus === "BRIDGE_ACTIVE" || rawStatus === "DIAGNOSTIC_ACTIVE" || rawStatus === "COMPLETE" || rawStatus === "COMPLETED" || sfiScore > 0);
 
-  // 🟢 CORRECTION: System Reality maps live sliders, Efficiency Verdict maps baseline constants
   const liveSpend = audit?.ai_spend ? parseFloat(audit.ai_spend as any) : 11.3;
   const liveFte = audit?.roi_pct ? parseInt(audit.roi_pct as any, 10) : 150;
   
@@ -100,7 +98,6 @@ export default function UnifiedResultsPortal() {
   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (currentActiveSpend * 1000000)) * 1.15;
   const dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
-  // 🟢 CORRECTION: Clear, non-contradictory directive statements
   const genericAnomalies: AnomalyNode[] = [
     { 
       id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(totalLaborTaxPool * 0.58).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
@@ -140,7 +137,6 @@ export default function UnifiedResultsPortal() {
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-6">
         
-        {/* Main Interface Status Branding Title Card */}
         <div className="bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-red-600 shadow-2xl relative">
           <div className="md:col-span-7 flex flex-col justify-between space-y-8">
             <div>
@@ -165,7 +161,6 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* 🟢 REPOSITIONED, EMBOLDENED & SCALED SPECIFICATION NOTICE BOX (LOCATED ABOVE WHITE DATA PANELS) */}
         <div className="border border-slate-800 bg-slate-950 p-8 shadow-xl flex items-start gap-4">
           <Monitor className="text-red-600 mt-0.5 shrink-0" size={20} />
           <div className="space-y-1.5">
@@ -179,7 +174,6 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* Dynamic Numerical Readout Box Grid Container */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 text-center space-y-4 shadow-xl">
             <div className="text-5xl font-black text-white font-mono">${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
@@ -191,7 +185,6 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* Anomalies and Vulnerabilities Mapping Deck */}
         <div className="pt-8 space-y-6">
           <div className="text-[10px] font-mono text-slate-500 font-black tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
