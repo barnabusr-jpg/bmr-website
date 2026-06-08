@@ -144,7 +144,7 @@ export default function AdminDashboard() {
       if (newRecord?.id) toggleRow(newRecord.id);
     } catch (err: any) {
       alert(`INTAKE INITIALIZATION ERROR: ${err.message}`);
-    } firstLys: { // 🟢 TYPO FIXED HERE (Changed from fillly to standard finally block)
+    } finally {
       setIsUpdating(false);
     }
   };
@@ -164,17 +164,29 @@ export default function AdminDashboard() {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
     try {
+      // Robust payload structure containing multiple parameter configurations to ensure complete backend alignment
       const res = await fetch('/api/dispatch-directives', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          auditId: selectedAudit.id,
+          parentAuditId: selectedAudit.id,
           groupId: selectedAudit.id, 
           orgName: selectedAudit.org_name,
-          parentAuditId: selectedAudit.id,
-          emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
+          execEmail: emails.exec.trim(),
+          mgrEmail: emails.mgr.trim(),
+          techEmail: emails.tech.trim(),
+          emails: { 
+            EXECUTIVE: emails.exec.trim(), 
+            MANAGERIAL: emails.mgr.trim(), 
+            TECHNICAL: emails.tech.trim(),
+            executive: emails.exec.trim(),
+            managerial: emails.mgr.trim(),
+            technical: emails.tech.trim()
+          }
         })
       });
-      if (!res.ok) throw new Error("Dispatch Failed");
+      if (!res.ok) throw new Error("Dispatch Parameters Rejected by Core API Route");
       
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
