@@ -37,7 +37,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    // 🟢 HARDENED EXTRACTOR LOGIC: Normalizes nested objects and flat string variants simultaneously
     const normalizedInputs: Record<string, string> = {};
 
     // 1. Process nested object keys safely if sent by front-end configurations
@@ -65,7 +64,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const normalizedKey = rawRole.toLowerCase().trim();
       const standardizedRole = ROLE_MAP[normalizedKey];
 
-      if (!standardizedRole) continue; // Skip rogue or invalid mapping noise safely
+      if (!standardizedRole) continue; 
 
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
@@ -86,43 +85,31 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         to: targetEmail,
         from: FROM_EMAIL,
         subject: `ACTION REQUIRED: ${standardizedRole} Forensic Node Authorized // ${orgName}`,
+        // 🟢 TRACKING OVERRIDES INJECTED: Disables redirect link manipulation to bypass firewall traps completely
+        trackingSettings: {
+          clickTracking: { enable: false },
+          openTracking: { enable: false }
+        },
         html: `
-          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
-            <tr>
-              <td align="center" style="padding: 40px 20px;">
-                <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box;">
-                  <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                    <tr>
-                      <td align="left" style="text-align: left;">
-                        <h2 style="color: #dc2626; font-family: monospace; font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 1px;">
-                          BMR Solutions // Systems Audit Engine
-                        </h2>
-                        <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase;">
-                          Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
-                        </p>
-                        <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;"/>
-                        <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0;">
-                          Your company leadership recently started a diagnostic project with BMR Solutions.
-                        </p>
-                        <p style="font-family: monospace; line-height: 1.6; font-size: 14px; color: #ffffff; margin: 0 0 30px 0;">
-                          Your personal access code is: <span style="color: #dc2626; font-weight: bold;">${code}</span>
-                        </p>
-                        <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 30px; margin-bottom: 40px;">
-                          <tr>
-                            <td align="left">
-                              <a href="${diagnosticLink}" target="_blank" style="background: #dc2626; color: #ffffff; padding: 18px 30px; text-decoration: none; font-weight: bold; display: inline-block; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; border: 1px solid #dc2626;">
-                                Open Diagnostic Module →
-                              </a>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-              </td>
-            </tr>
-          </table>
+          <div style="font-family: monospace; padding: 30px; background-color: #020617; color: #ffffff; border: 2px solid #dc2626; max-width: 600px;">
+            <h2 style="color: #dc2626; text-transform: uppercase; margin: 0 0 10px 0; font-size: 18px; font-weight: 900;">BMR SOLUTIONS // AUDIT PORTAL</h2>
+            <p style="font-size: 11px; color: #64748b; text-transform: uppercase; margin: 0 0 20px 0;">TARGET IDENTIFIER: ${orgName} | SECURE NODE TYPE: ${standardizedRole}</p>
+            <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;" />
+            
+            <p style="font-size: 13px; color: #94a3b8; line-height: 1.6; font-style: italic;">Your organization has initialized an interactive operational alignment wedge evaluation.</p>
+            
+            <p style="font-size: 14px; color: #ffffff; margin: 30px 0;">
+              YOUR AUTHORIZED ASSIGNMENT NODE ACCESS KEY IS: <br />
+              <span style="color: #dc2626; font-weight: bold; font-size: 22px; tracking-spacing: 2px; display: block; margin-top: 10px;">${code}</span>
+            </p>
+            
+            <div style="margin-top: 40px; padding: 20px; background-color: #000000; border: 1px solid #1e293b;">
+              <span style="color: #64748b; font-size: 10px; display: block; margin-bottom: 5px;">// TERMINAL ACCESS LINK LINK</span>
+              <a href="${diagnosticLink}" target="_blank" style="color: #dc2626; text-decoration: underline; font-size: 12px; font-weight: bold; break-all: break-all;">
+                ${diagnosticLink}
+              </a>
+            </div>
+          </div>
         `
       });
     }
