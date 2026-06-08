@@ -144,7 +144,7 @@ export default function AdminDashboard() {
       if (newRecord?.id) toggleRow(newRecord.id);
     } catch (err: any) {
       alert(`INTAKE INITIALIZATION ERROR: ${err.message}`);
-    } fillly {
+    } firstLys: { // 🟢 TYPO FIXED HERE (Changed from fillly to standard finally block)
       setIsUpdating(false);
     }
   };
