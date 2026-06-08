@@ -16,7 +16,8 @@ const supabaseAdmin = createClient(
 const ROLE_MAP: Record<string, string> = {
   'executive': 'EXECUTIVE', 'managerial': 'MANAGERIAL', 'technical': 'TECHNICAL',
   'exec': 'EXECUTIVE', 'manager': 'MANAGERIAL', 'tech': 'TECHNICAL', 'man': 'MANAGERIAL',
-  'executivenode': 'EXECUTIVE', 'technicalnode': 'TECHNICAL', 'managerialnode': 'MANAGERIAL'
+  'executivenode': 'EXECUTIVE', 'technicalnode': 'TECHNICAL', 'managerialnode': 'MANAGERIAL',
+  'execemail': 'EXECUTIVE', 'mgremail': 'MANAGERIAL', 'techemail': 'TECHNICAL'
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -26,7 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
   
-  const { groupId, orgName, emails, parentAuditId } = req.body;
+  const { groupId, orgName, emails, parentAuditId, execEmail, mgrEmail, techEmail } = req.body;
   const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmradvisory.co';
   const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmrsolutions.co'; 
 
@@ -36,30 +37,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const roles = Object.entries(emails);
+    // 🟢 HARDENED EXTRACTOR LOGIC: Normalizes nested objects and flat string variants simultaneously
+    const normalizedInputs: Record<string, string> = {};
+
+    // 1. Process nested object keys safely if sent by front-end configurations
+    if (emails && typeof emails === 'object') {
+      Object.entries(emails).forEach(([key, val]) => {
+        if (typeof val === 'string' && val.trim()) {
+          normalizedInputs[key.toLowerCase().trim()] = val.trim().toLowerCase();
+        }
+      });
+    }
+
+    // 2. Process alternative flat property parameters safely as robust overrides
+    if (execEmail && typeof execEmail === 'string' && execEmail.trim()) normalizedInputs['executive'] = execEmail.trim().toLowerCase();
+    if (mgrEmail && typeof mgrEmail === 'string' && mgrEmail.trim()) normalizedInputs['managerial'] = mgrEmail.trim().toLowerCase();
+    if (techEmail && typeof techEmail === 'string' && techEmail.trim()) normalizedInputs['technical'] = techEmail.trim().toLowerCase();
+
     const emailMessages = [];
     const intakeRecords = [];
 
-    // 1. Structural Normalization and Token Preparation Loop
-    for (const [rawRole, email] of roles) {
-      const targetEmail = (email as string).trim().toLowerCase();
+    // 3. Structural Normalization and Token Preparation Loop
+    for (const [rawRole, emailStr] of Object.entries(normalizedInputs)) {
+      const targetEmail = emailStr.trim().toLowerCase();
       if (!targetEmail) continue;
 
       const normalizedKey = rawRole.toLowerCase().trim();
       const standardizedRole = ROLE_MAP[normalizedKey];
 
-      if (!standardizedRole) {
-        return res.status(400).json({ 
-          error: 'INVALID NODE ASSIGNMENT', 
-          message: `The provided role identifier "${rawRole}" is incompatible with the system engine.` 
-        });
-      }
+      if (!standardizedRole) continue; // Skip rogue or invalid mapping noise safely
 
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
       intakeRecords.push({
         audit_id: parentAuditId,
-        group_id: groupId,
+        group_id: groupId || parentAuditId,
         email: targetEmail,
         persona_type: standardizedRole,
         access_code: code,
@@ -115,18 +127,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 2. Perform Safe Database Upsert using the Privileged Admin Client
-    if (intakeRecords.length > 0) {
-      const { error: upsertError } = await supabaseAdmin
-        .from('operators')
-        .upsert(intakeRecords, { onConflict: 'audit_id,email' });
-
-      if (upsertError) {
-        throw new Error(`Database Upsert Mapping Failure: ${upsertError.message}`);
-      }
+    if (intakeRecords.length === 0) {
+      console.warn("⚠️ SKIPPED: No valid emails parsed from parameters.");
+      return res.status(200).json({ status: 'SKIPPED', message: 'No valid operator strings provided.' });
     }
 
-    // 3. Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
+    // 4. Perform Safe Database Upsert using the Privileged Admin Client
+    const { error: upsertError } = await supabaseAdmin
+      .from('operators')
+      .upsert(intakeRecords, { onConflict: 'audit_id,email' });
+
+    if (upsertError) {
+      throw new Error(`Database Upsert Mapping Failure: ${upsertError.message}`);
+    }
+
+    // 5. Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
     const { data: allOperators, error: queryError } = await supabaseAdmin
       .from('operators')
       .select('survey_completed')
@@ -140,7 +155,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const unsubmittedPaths = allOperators.filter((o) => !o.survey_completed).length;
     const logicDecayCoefficient = totalPaths > 0 ? unsubmittedPaths / totalPaths : 0.00;
 
-    // 4. Retrieve Current Raw Diagnostic Metrics via Admin Bypass
+    // 6. Retrieve Current Raw Diagnostic Metrics via Admin Bypass
     const { data: activeAudit, error: auditFetchError } = await supabaseAdmin
       .from('audits')
       .select('hai_raw_score, avs_raw_score, igf_raw_score, status, compiled_at')
@@ -151,7 +166,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error('Failed to retrieve primary core diagnostic metrics.');
     }
 
-    // 5. Multi-Pillar Core Vector Assessment Engine Execution
+    // 7. Multi-Pillar Core Vector Assessment Engine Execution
     const adjustedHAI = Number(activeAudit.hai_raw_score || 0) * (1 - logicDecayCoefficient);
     const adjustedAVS = Number(activeAudit.avs_raw_score || 0) * (1 - logicDecayCoefficient);
     const adjustedIGF = Number(activeAudit.igf_raw_score || 0) * (1 - logicDecayCoefficient);
@@ -174,7 +189,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       speciesIdentifier = 'Expectation Continuity Fracture';
     }
 
-    // 6. Persist Compiled State Metrics directly back to the main Ledger Audit row
+    // 8. Persist Compiled State Metrics directly back to the main Ledger Audit row
     const cleanSystemTimestamp = new Date().toISOString();
     const calculatedDecayPercent = Number((logicDecayCoefficient * 100).toFixed(0));
 
@@ -191,9 +206,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(`Primary Ledger State Compilation Error: ${updateError.message}`);
     }
 
-    // 7. 🛡️ DEFENSIVE EMAIL OUTBOUND SANDBOX
-    // Wrap the notification delivery inside its own try/catch block.
-    // If SendGrid rejects the keys, we log it but don't crash the handler.
+    // 9. 🛡️ DEFENSIVE EMAIL OUTBOUND SENDING EXECUTION
     if (emailMessages.length > 0 && SENDGRID_KEY) {
       try {
         const promises = emailMessages.map(msg => sgMail.send(msg));
