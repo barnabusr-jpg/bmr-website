@@ -26,18 +26,20 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 1. Fetch operator
-      const { data: op, error: opError } = await supabase
+      // 1. Fetch operators as an array to tolerate historical duplicate test entries gracefully
+      const { data: opArray, error: opError } = await supabase
         .from('operators')
         .select('*')
-        .eq('access_code', code)
-        .single();
+        .eq('access_code', code);
 
-      if (opError || !op) {
+      if (opError || !opArray || opArray.length === 0) {
         console.error("DB_ERROR: Operator lookup failed.", opError?.message);
         setStep("invalid");
         return;
       }
+
+      // Pluck the primary matching node record securely
+      const op = opArray[0];
 
       // 2. Fetch parent audit
       const { data: audit, error: auditError } = await supabase
@@ -55,7 +57,6 @@ export default function ForensicDiagnostic() {
       }
 
       // 3. DEFENSIVE FILTERING: Matches MGR, MANAGERIAL, etc.
-      // This ensures the "Manager" node doesn't fail even if naming is inconsistent.
       const filtered = FORENSIC_MATRIX.filter(q => {
         const lens = q.lens?.toUpperCase();
         const persona = op.persona_type?.toUpperCase();
@@ -132,7 +133,7 @@ export default function ForensicDiagnostic() {
   };
 
   if (step === "loading") return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-[0.3em]">Handshake_Initializing...</div>;
-  if (step === "invalid") return <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center text-white font-mono uppercase tracking-widest"><ShieldAlert className="mb-4 text-red-600 mx-auto" size={48} /> Unauthorized_Node</div>;
+  if (step === "invalid") return <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center text-white font-mono uppercase tracking-widest"><ShieldAlert className="mb-4 text-red-600 mx-auto" size={48} /> {`Unauthorized_Node`}</div>;
   if (step === "finalized") return <div className="min-h-screen bg-black flex items-center justify-center p-16 text-center text-slate-500 font-mono uppercase tracking-widest border-2 border-red-900/10"><Lock className="mr-4 text-red-600 inline" /> NODE_SECURED: LINK_DEACTIVATED</div>;
 
   if (step === "diagnostic" && (!questions || !questions[currentIndex])) {
