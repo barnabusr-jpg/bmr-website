@@ -164,6 +164,8 @@ export default function AdminDashboard() {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
     try {
+      console.log("📡 DISPATCH INITIALIZED: Transferring key packages to secure API router...");
+      
       const res = await fetch('/api/dispatch-directives', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -174,12 +176,22 @@ export default function AdminDashboard() {
           emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
         })
       });
-      if (!res.ok) throw new Error("Dispatch Failed");
+
+      // 🛡️ VERIFICATION GATEWAY: Blocks silent UI advancement if backend fails or throws exceptions
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `Server rejected request with status code: ${res.status}`);
+      }
       
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       await fetchLedger();
-    } catch (err: any) { alert(err.message); } finally { setIsUpdating(false); }
+    } catch (err: any) { 
+      console.error("❌ DISPATCH RUNTIME ERROR:", err);
+      alert(`DIAGNOSTIC UNCAUGHT CRASH BLOCKER: ${err.message}`); 
+    } finally { 
+      setIsUpdating(false); 
+    }
   };
 
   const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
@@ -189,12 +201,13 @@ export default function AdminDashboard() {
     try {
       const formattedPayload: Record<string, string> = {};
       formattedPayload[targetRoleKey] = matchingNode.email;
-      await fetch('/api/dispatch-directives', {
+      const res = await fetch('/api/dispatch-directives', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ groupId: auditRecord.id, orgName: auditRecord.org_name, parentAuditId: auditRecord.id, emails: formattedPayload })
       });
-    } catch (err) { console.error(err); } finally { setIsUpdating(false); }
+      if (!res.ok) throw new Error("Nudge Dispatch Failed");
+    } catch (err: any) { alert(err.message); } finally { setIsUpdating(false); }
   };
 
   const runSynthesis = async (auditId: string) => {
@@ -385,62 +398,4 @@ export default function AdminDashboard() {
 
                               <div className="flex gap-4">
                                 {cleanStatus === "LEAD" && (
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] font-mono tracking-widest flex items-center gap-2"><Mail size={14} /> Initialize & Launch 3-Node 360 Dive</button>
-                                )}
-                                
-                                {cleanStatus === "TRIANGULATING" && (
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); advanceToStageThreeBridge(audit.id); }} className="bg-amber-600 text-white px-6 py-4 font-black uppercase text-[10px] font-mono tracking-widest flex items-center gap-2"><Zap size={14} /> Advance Asset to Stage 3 Bridge</button>
-                                )}
-
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="bg-slate-950 border border-slate-800 text-slate-400 px-6 py-4 font-black text-[10px] font-mono tracking-widest"><Monitor size={14} /> Open Discovery Screen Ledger</button>
-                              </div>
-
-                            </motion.div>
-                          </AnimatePresence>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </motion.div>
-          ) : (
-            <motion.div key="frameworks" className="space-y-12">
-              <div className="text-slate-500 font-mono text-xs font-black">// REFERENCE MATERIALS LOADED CLEAN-ROOM SPEC</div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-
-      <AnimatePresence>
-        {selectedAudit && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-slate-950 border-2 border-red-600 p-10 max-w-lg w-full relative">
-              <button onClick={() => setSelectedAudit(null)} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20} /></button>
-              <h3 className="text-xl font-black text-red-600 tracking-wider mb-2">3-NODE DEPLOYMENT CADENCE</h3>
-              <p className="text-xs text-slate-400 font-mono mb-6">ORG: {selectedAudit.org_name}</p>
-              
-              <div className="space-y-4 font-mono text-xs">
-                <div>
-                  <label className="text-slate-500 block mb-1">EXECUTIVE COUNTERPART EMAIL</label>
-                  <input type="email" value={emails.exec} onChange={(e) => setEmails(p => ({ ...p, exec: e.target.value }))} className="w-full bg-black border border-slate-800 p-3 text-white outline-none focus:border-red-600" placeholder="exec@company.com" />
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">OPERATIONAL MANAGER EMAIL</label>
-                  <input type="email" value={emails.mgr} onChange={(e) => setEmails(p => ({ ...p, mgr: e.target.value }))} className="w-full bg-black border border-slate-800 p-3 text-white outline-none focus:border-red-600" placeholder="mgr@company.com" />
-                </div>
-                <div>
-                  <label className="text-slate-500 block mb-1">TECHNICAL LEAD ENGINEER EMAIL</label>
-                  <input type="email" value={emails.tech} onChange={(e) => setEmails(p => ({ ...p, tech: e.target.value }))} className="w-full bg-black border border-slate-800 p-3 text-white outline-none focus:border-red-600" placeholder="tech@company.com" />
-                </div>
-              </div>
-              <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white font-black py-4 uppercase text-xs tracking-widest mt-8 hover:bg-white hover:text-black transition-all disabled:opacity-50">
-                {isUpdating ? "DISPATCHING ASSETS..." : "GENERATE SECURE ACCESS KEYS"}
-              </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
+                                  <button type="button"
