@@ -176,7 +176,6 @@ export default function AdminDashboard() {
       });
       if (!res.ok) throw new Error("Dispatch Failed");
       
-      // Clear current UI modal state cleanly
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       await fetchLedger();
@@ -306,7 +305,7 @@ export default function AdminDashboard() {
                   const sfi = audit.sfi_score || 0;
                   const dbDecay = audit.decay_pct || 20;
                   
-                  // Optimized reactive values linked securely to input state keys
+                  // Read fields uniquely from item memory row cells
                   const spend = parseFloat(audit.ai_spend) || 11.3;
                   const fte = parseInt(audit.roi_pct) || 150;
                   
@@ -323,7 +322,8 @@ export default function AdminDashboard() {
                     else if (rawStatus === "DIAGNOSTIC_ACTIVE") cleanStatus = "DIAGNOSTIC_ACTIVE";
                     else if (rawStatus === "COMPLETE" || rawStatus === "COMPLETED") cleanStatus = "COMPLETE";
                   } else {
-                    cleanStatus = "LEAD";
+                    // Lock protection guardrail inside engine calculations
+                    cleanStatus = (rawStatus === "TRIANGULATING") ? "TRIANGULATING" : "LEAD";
                   }
 
                   return (
@@ -341,11 +341,9 @@ export default function AdminDashboard() {
                         <div className="col-span-4 text-center font-black text-xs tracking-[0.2em] font-mono">
                           ACTIVE LIFECYCLE STAGE: <span className="text-red-500">
                             {(() => {
-                              // Dynamic UI mapping anchored directly onto database status strings
-                              const mappedStatus = (audit.status || "").toUpperCase().trim();
-                              switch (mappedStatus) {
-                                case "COMPLETE":
-                                case "COMPLETED": return "04.5 // ARCHITECTURE DELIVERED";
+                              // Fixed: Visual display switch block reads exactly from aligned cleanStatus calculation
+                              switch (cleanStatus) {
+                                case "COMPLETE": return "04.5 // ARCHITECTURE DELIVERED";
                                 case "DIAGNOSTIC_ACTIVE": return "04 // 90-QUESTION CAPSTONE AUDIT";
                                 case "BRIDGE_ACTIVE": return "03 // BOARDROOM PROPOSAL BRIDGE";
                                 case "TRIANGULATING": return "02 // 30-QUESTION DIAGNOSTIC WEDGE";
@@ -363,58 +361,7 @@ export default function AdminDashboard() {
                           <AnimatePresence mode="wait">
                             <motion.div key="stage-panel" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10 pb-4">
                               
-                              {/* Sliders container available on the main discovery pane view */}
                               <div className="border border-slate-900 bg-slate-950 p-6 mb-4 space-y-6">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                   <div className="space-y-2">
-                                    <div className="flex justify-between text-xs font-mono"><span className="text-slate-500">ANNUAL SPEND:</span><span className="text-red-500 font-black">${spend.toFixed(1)}M</span></div>
-                                    <input type="range" min="0.1" max="25.0" step="0.1" value={spend} onChange={(e) => handleLiveSliderChange(audit.id, "ai_spend", parseFloat(e.target.value))} className="w-full accent-red-600 bg-slate-900 h-1.5" />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <div className="flex justify-between text-xs font-mono"><span className="text-slate-500">WORKFORCE SCALE:</span><span className="text-red-500 font-black">{fte} FTES</span></div>
-                                    <input type="range" min="1" max="250" step="1" value={fte} onChange={(e) => handleLiveSliderChange(audit.id, "roi_pct", parseInt(e.target.value))} className="w-full accent-red-600 bg-slate-900 h-1.5" />
-                                  </div>
-                                </div>
-                              </div>
-
-                              <div className="border border-slate-900 bg-slate-950 p-6 mb-6 font-mono text-xs space-y-2">
-                                <div className="flex justify-between"><span className="text-slate-600">CORE REWORK LABOR TAX:</span><span className="text-white font-black">${Math.round(laborTax).toLocaleString()} / YR</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">RISK INACTION EXPOSURE:</span><span className="text-white font-black">${Math.round(exposure).toLocaleString()} / YR</span></div>
-                              </div>
-
-                              <div className="flex flex-wrap items-center justify-between bg-slate-950/60 border border-slate-900 p-6 mb-6">
-                                <span className="text-xs font-black text-white">Dossier Presentation Visibility Shield</span>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`px-8 py-4 text-[10px] font-mono font-black border ${clientHasAccess ? 'bg-emerald-600 text-white' : 'bg-red-600 text-white'}`}>
-                                  {clientHasAccess ? "✔ CLIENT DOSSIER VIEWABLE" : "✘ Shield Dossier (Blur Portal Access)"}
-                                </button>
-                              </div>
-
-                              {/* Action controls mapped directly onto system state conditions */}
-                              <div className="flex gap-4">
-                                {(audit.status || "").toUpperCase().trim() === "LEAD" && (
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] font-mono tracking-widest flex items-center gap-2"><Mail size={14} /> Initialize & Launch 3-Node 360 Dive</button>
-                                )}
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="bg-slate-950 border border-slate-800 text-slate-400 px-6 py-4 font-black text-[10px] font-mono tracking-widest"><Monitor size={14} /> Open Discovery Screen Ledger</button>
-                              </div>
-
-                            </motion.div>
-                          </AnimatePresence>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })
-              )}
-            </motion.div>
-          ) : (
-            <motion.div key="frameworks" className="space-y-12">
-              <div className="text-slate-500 font-mono text-xs font-black">// REFERENCE MATERIALS LOADED CLEAN-ROOM SPEC</div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-
-      {/* ... Keeping remaining authorization and layout modal overlays untouched and operational ... */}
-    </div>
-  );
-}
+                                    <div className="flex justify-between text-xs font-mono"><span className="text-slate-5
