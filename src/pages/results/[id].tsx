@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { Activity, Monitor } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
 export default function UnifiedResultsPortal() {
   const router = useRouter();
@@ -11,7 +10,7 @@ export default function UnifiedResultsPortal() {
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [audit, setAudit] = useState<AuditRecord | null>(null);
+  const [audit, setAudit] = useState<any | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -24,7 +23,7 @@ export default function UnifiedResultsPortal() {
       try {
         const { data, error } = await supabase.from("audits").select("*").eq("id", id).single();
         if (error) throw error;
-        if (data) setAudit(data as AuditRecord);
+        if (data) setAudit(data);
       } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     fetchInitialAuditState();
@@ -39,17 +38,17 @@ export default function UnifiedResultsPortal() {
             const sfi = payload.new.sfi_score || 0;
 
             if (incomingIsReleased && sfi > 0) {
-              setAudit(payload.new as AuditRecord); 
+              setAudit(payload.new); 
             } else {
-              setAudit((prevAudit) => {
-                if (!prevAudit) return payload.new as AuditRecord;
+              setAudit((prevAudit: any) => {
+                if (!prevAudit) return payload.new;
                 return {
                   ...payload.new,
                   ai_spend: prevAudit.ai_spend,
                   decay_pct: prevAudit.decay_pct,
                   roi_pct: prevAudit.roi_pct,
                   sector: prevAudit.sector
-                } as AuditRecord;
+                };
               });
             }
           }
@@ -98,7 +97,7 @@ export default function UnifiedResultsPortal() {
   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (currentActiveSpend * 1000000)) * 1.15;
   const dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
-  const genericAnomalies: AnomalyNode[] = [
+  const genericAnomalies: any[] = [
     { 
       id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(totalLaborTaxPool * 0.58).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Initial diagnostic parameters verified. Preliminary structural risks have been recorded under initial intake protocols.", 
@@ -113,7 +112,7 @@ export default function UnifiedResultsPortal() {
     }
   ];
 
-  const activeAnomaliesList = (sfiScore > 0 && audit?.fractures && audit.fractures.length > 0) ? audit.fractures : genericAnomalies;
+  const activeAnomaliesList = (sfiScore > 0 && Array.isArray(audit?.fractures) && audit.fractures.length > 0) ? audit.fractures : genericAnomalies;
 
   if (!mounted || loading) {
     return (
@@ -188,7 +187,7 @@ export default function UnifiedResultsPortal() {
         <div className="pt-8 space-y-6">
           <div className="text-[10px] font-mono text-slate-500 font-black tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {activeAnomaliesList.map((anomaly, idx) => (
+            {activeAnomaliesList.map((anomaly: any, idx: number) => (
               <div key={idx} className="border border-slate-900 bg-slate-950/40 p-8 flex flex-col justify-between min-h-[260px]">
                 <div>
                   <div className="flex justify-between items-center mb-4">
