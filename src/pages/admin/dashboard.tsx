@@ -8,23 +8,6 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-import CentralCommandCockpit from "../../components/CentralCommandCockpit";
-import { FidelityMetricsStrip } from "../../components/FidelityMetricsStrip";
-
-const BMR_IP_SUITE = {
-  directives: [
-    { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now.", color: "text-red-600" },
-    { id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K", description: "The system rebuilds the logic that connects your operational layers.", color: "text-blue-500" },
-    { id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO", description: "Developing new organizational rule sets to protect leadership.", color: "text-purple-500" },
-    { id: "DIR_04", label: "FORENSIC CONTINUITY", description: "Monitoring structural health through specialized reporting cadence.", color: "text-green-500" }
-  ],
-  services: [
-    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments." },
-    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols." },
-    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse." }
-  ]
-};
-
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [email, setEmail] = useState("");
@@ -293,7 +276,6 @@ export default function AdminDashboard() {
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
-                  // 🟢 RECONCILED Lifecyle Matching: Ensures legacy or unconfigured entries default cleanly back to Stage 1
                   const rawStatus = (audit.status || "").toUpperCase().trim();
                   let cleanStatus = "LEAD";
                   
