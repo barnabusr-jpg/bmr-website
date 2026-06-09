@@ -277,9 +277,11 @@ export default function AdminDashboard() {
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
                   const rawStatus = (audit.status || "").toUpperCase().trim();
+                  const currentSfi = audit.sfi_score || 0;
                   let cleanStatus = "LEAD";
                   
-                  if (rawStatus === "COMPLETE" || rawStatus === "COMPLETED") {
+                  // 🟢 COMBINED SECURE FILTER: If sfi_score is 0, completely ignore "COMPLETED" database overrides
+                  if ((rawStatus === "COMPLETE" || rawStatus === "COMPLETED") && currentSfi > 0) {
                     cleanStatus = "COMPLETE";
                   } else if (rawStatus === "DIAGNOSTIC_ACTIVE") {
                     cleanStatus = "DIAGNOSTIC_ACTIVE";
@@ -312,7 +314,7 @@ export default function AdminDashboard() {
                                 case "BRIDGE_ACTIVE": return "03 // BOARDROOM PROPOSAL BRIDGE";
                                 case "TRIANGULATING": return "02 // 30-QUESTION DIAGNOSTIC WEDGE";
                                 case "LEAD":
-                                default: return "01 // CUSTOMER DISCOVERY INTAKE"; // 🟢 FIXED FALLBACK
+                                default: return "01 // CUSTOMER DISCOVERY INTAKE";
                               }
                             })()}
                           </span>
