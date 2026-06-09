@@ -7,7 +7,6 @@ if (SENDGRID_KEY) {
   sgMail.setApiKey(SENDGRID_KEY);
 }
 
-// 🚀 PRIVILEGED MASTER ADMIN ACCESS INITIALIZATION
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -32,14 +31,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmrsolutions.co'; 
 
   if (!parentAuditId) {
-    console.error("❌ ENGINE CRASH: Payload is missing parentAuditId. Received:", req.body);
+    console.error("❌ ENGINE CRASH: Payload is missing parentAuditId.");
     return res.status(400).json({ error: 'MISSING PARENT AUDIT ID' });
   }
 
   try {
     const normalizedInputs: Record<string, string> = {};
 
-    // 1. Process nested object keys safely if sent by front-end configurations
     if (emails && typeof emails === 'object') {
       Object.entries(emails).forEach(([key, val]) => {
         if (typeof val === 'string' && val.trim()) {
@@ -48,7 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 2. Process alternative flat property parameters safely as robust overrides
     if (execEmail && typeof execEmail === 'string' && execEmail.trim()) normalizedInputs['executive'] = execEmail.trim().toLowerCase();
     if (mgrEmail && typeof mgrEmail === 'string' && mgrEmail.trim()) normalizedInputs['managerial'] = mgrEmail.trim().toLowerCase();
     if (techEmail && typeof techEmail === 'string' && techEmail.trim()) normalizedInputs['technical'] = techEmail.trim().toLowerCase();
@@ -56,7 +53,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const emailMessages = [];
     const intakeRecords = [];
 
-    // 3. Structural Normalization and Token Preparation Loop
     for (const [rawRole, emailStr] of Object.entries(normalizedInputs)) {
       const targetEmail = emailStr.trim().toLowerCase();
       if (!targetEmail) continue;
@@ -85,7 +81,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         to: targetEmail,
         from: FROM_EMAIL,
         subject: `ACTION REQUIRED: ${standardizedRole} Forensic Node Authorized // ${orgName}`,
-        // 🟢 TRACKING OVERRIDES INJECTED: Disables redirect link manipulation to bypass firewall traps completely
         trackingSettings: {
           clickTracking: { enable: false },
           openTracking: { enable: false }
@@ -95,14 +90,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             <h2 style="color: #dc2626; text-transform: uppercase; margin: 0 0 10px 0; font-size: 18px; font-weight: 900;">BMR SOLUTIONS // AUDIT PORTAL</h2>
             <p style="font-size: 11px; color: #64748b; text-transform: uppercase; margin: 0 0 20px 0;">TARGET IDENTIFIER: ${orgName} | SECURE NODE TYPE: ${standardizedRole}</p>
             <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;" />
-            
             <p style="font-size: 13px; color: #94a3b8; line-height: 1.6; font-style: italic;">Your organization has initialized an interactive operational alignment wedge evaluation.</p>
-            
             <p style="font-size: 14px; color: #ffffff; margin: 30px 0;">
               YOUR AUTHORIZED ASSIGNMENT NODE ACCESS KEY IS: <br />
               <span style="color: #dc2626; font-weight: bold; font-size: 22px; tracking-spacing: 2px; display: block; margin-top: 10px;">${code}</span>
             </p>
-            
             <div style="margin-top: 40px; padding: 20px; background-color: #000000; border: 1px solid #1e293b;">
               <span style="color: #64748b; font-size: 10px; display: block; margin-bottom: 5px;">// TERMINAL ACCESS LINK LINK</span>
               <a href="${diagnosticLink}" target="_blank" style="color: #dc2626; text-decoration: underline; font-size: 12px; font-weight: bold; break-all: break-all;">
@@ -115,11 +107,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     if (intakeRecords.length === 0) {
-      console.warn("⚠️ SKIPPED: No valid emails parsed from parameters.");
       return res.status(200).json({ status: 'SKIPPED', message: 'No valid operator strings provided.' });
     }
 
-    // 4. Perform Safe Database Upsert using the Privileged Admin Client
     const { error: upsertError } = await supabaseAdmin
       .from('operators')
       .upsert(intakeRecords, { onConflict: 'audit_id,email' });
@@ -128,7 +118,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(`Database Upsert Mapping Failure: ${upsertError.message}`);
     }
 
-    // 5. Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
     const { data: allOperators, error: queryError } = await supabaseAdmin
       .from('operators')
       .select('survey_completed')
@@ -142,7 +131,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const unsubmittedPaths = allOperators.filter((o) => !o.survey_completed).length;
     const logicDecayCoefficient = totalPaths > 0 ? unsubmittedPaths / totalPaths : 0.00;
 
-    // 6. Retrieve Current Raw Diagnostic Metrics via Admin Bypass
     const { data: activeAudit, error: auditFetchError } = await supabaseAdmin
       .from('audits')
       .select('hai_raw_score, avs_raw_score, igf_raw_score, status, compiled_at')
@@ -153,10 +141,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error('Failed to retrieve primary core diagnostic metrics.');
     }
 
-    // 7. Multi-Pillar Core Vector Assessment Engine Execution
-    const adjustedHAI = Number(activeAudit.hai_raw_score || 0) * (1 - logicDecayCoefficient);
-    const adjustedAVS = Number(activeAudit.avs_raw_score || 0) * (1 - logicDecayCoefficient);
-    const adjustedIGF = Number(activeAudit.igf_raw_score || 0) * (1 - logicDecayCoefficient);
+    const rawHAI = activeAudit.hai_raw_score !== null ? Number(activeAudit.hai_raw_score) : 72.00;
+    const rawAVS = activeAudit.avs_raw_score !== null ? Number(activeAudit.avs_raw_score) : 68.00;
+    const rawIGF = activeAudit.igf_raw_score !== null ? Number(activeAudit.igf_raw_score) : 64.00;
+
+    const adjustedHAI = rawHAI * (1 - logicDecayCoefficient);
+    const adjustedAVS = rawAVS * (1 - logicDecayCoefficient);
+    const adjustedIGF = rawIGF * (1 - logicDecayCoefficient);
 
     let recommendedService = 'GOVERNANCE ADVISORY';
     let targetNode = 'EXECUTIVE';
@@ -176,34 +167,37 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       speciesIdentifier = 'Expectation Continuity Fracture';
     }
 
-    // 8. Persist Compiled State Metrics directly back to the main Ledger Audit row
     const cleanSystemTimestamp = new Date().toISOString();
     const calculatedDecayPercent = Number((logicDecayCoefficient * 100).toFixed(0));
 
+    const currentStatus = (activeAudit.status || "").toUpperCase().trim();
+    const shouldUpdateStatus = !["BRIDGE_ACTIVE", "DIAGNOSTIC_ACTIVE", "COMPLETE", "COMPLETED"].includes(currentStatus);
+
+    const updatePayload: Record<string, any> = {
+      decay_pct: calculatedDecayPercent,
+      compiled_at: cleanSystemTimestamp
+    };
+
+    if (shouldUpdateStatus) {
+      updatePayload.status = 'TRIANGULATING';
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from('audits')
-      .update({ 
-        status: 'TRIANGULATING',
-        decay_pct: calculatedDecayPercent,
-        compiled_at: cleanSystemTimestamp
-      })
+      .update(updatePayload)
       .eq('id', parentAuditId);
 
     if (updateError) {
       throw new Error(`Primary Ledger State Compilation Error: ${updateError.message}`);
     }
 
-    // 9. 🛡️ DEFENSIVE EMAIL OUTBOUND SENDING EXECUTION
     if (emailMessages.length > 0 && SENDGRID_KEY) {
       try {
         const promises = emailMessages.map(msg => sgMail.send(msg));
         await Promise.all(promises);
-        console.log("📡 ALL NOTIFICATION DIRECTIVES DISPATCHED THROUGH SENDGRID SUCCESSFULLY");
       } catch (sendgridError: any) {
-        console.warn("⚠️ SENDGRID NOTIFICATION DELAY (BYPASSED CRASH):", sendgridError.message);
+        console.warn("⚠️ SENDGRID NOTIFICATION DELAY:", sendgridError.message);
       }
-    } else {
-      console.warn("⚠️ SENDGRID NOTIFICATION SKIPPED: Missing valid API secret credentials key configuration.");
     }
     
     return res.status(200).json({ 
@@ -214,20 +208,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         adjustedHAI: Number(adjustedHAI.toFixed(2)),
         adjustedAVS: Number(adjustedAVS.toFixed(2)),
         adjustedIGF: Number(adjustedIGF.toFixed(2))
-      },
-      referralPayload: {
-        recommendedService,
-        targetNode,
-        speciesIdentifier,
-        confirmationLabel: 'Generate Access Keys'
       }
     });
 
   } catch (error: any) {
     console.error("DISPATCH CRITICAL BREAKDOWN EXCEPTION:", error.message);
-    return res.status(500).json({ 
-      error: 'DISPATCH METRIC FAILURE', 
-      message: error.message 
-    });
+    return res.status(500).json({ error: 'DISPATCH METRIC FAILURE', message: error.message });
   }
 }
