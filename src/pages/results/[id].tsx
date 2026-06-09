@@ -70,21 +70,22 @@ export default function UnifiedResultsPortal() {
   const currentActiveSpend = isPhaseTwoActive ? liveSpend : baselineSpend;
   const currentActiveFte = isPhaseTwoActive ? liveFte : baselineFte;
 
-  // Admin / Real Numbers (Used exclusively when isPhaseTwoActive is TRUE)
+  // Live Dynamic Calculations (Used exclusively when isPhaseTwoActive is TRUE)
   const totalLaborTaxPoolReal = (dbDecay / 100) * laborMultiplier * (currentActiveFte * 160000 * 1.3);
+  const internalReworkTaxReal = totalLaborTaxPoolReal * 0.60;
+  const operationalDragTaxReal = totalLaborTaxPoolReal * 0.40;
   const exposureReal = ((dbDecay > 60 ? 0.30 : 0.18) * (currentActiveSpend * 1000000)) * 1.15;
 
-  // 🔒 THE SEED VERDICT HARDCODED VALUES: Your frozen psychological placeholders for Stage 1 Intake
+  // 🔒 IRONCLAD FROZEN BASELINES: Completely severed from database calculations during Stage 1 Intake
   const totalLaborTaxPool = isPhaseTwoActive ? totalLaborTaxPoolReal : 143620;
-  const internalReworkTax = isPhaseTwoActive ? (totalLaborTaxPoolReal * 0.60) : 86112;   
-  const operationalDragTax = isPhaseTwoActive ? (totalLaborTaxPoolReal * 0.40) : 57408;  
-  const exposure = isPhaseTwoActive ? exposureReal : 279312;
+  const internalReworkTax  = isPhaseTwoActive ? internalReworkTaxReal : 86112;   
+  const operationalDragTax = isPhaseTwoActive ? operationalDragTaxReal : 57408;  
+  const exposure           = isPhaseTwoActive ? exposureReal : 279312;
   
   // Dynamic incremental loss velocity calculations
-  const liveErosionVelocity = isPhaseTwoActive ? 4.07 : 39.18; 
   const dynamicAccumulatedLoss = isPhaseTwoActive 
     ? ((exposureReal / 31536000) * elapsedSeconds) 
-    : liveErosionVelocity;
+    : 39.18;
 
   const genericAnomalies: any[] = [
     { 
@@ -150,7 +151,7 @@ export default function UnifiedResultsPortal() {
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-left">
-              <div><span className="text-[9px] font-mono block text-red-600 uppercase">LOGIC DECAY COEFFICIENT</span><p className="text-xs font-black mt-2 text-slate-900">DECAY INDEX: <span className="text-red-600 text-base">23%</span></p></div>
+              <div><span className="text-[9px] font-mono block text-red-600 uppercase">LOGIC DECAY COEFFICIENT</span><p className="text-xs font-black mt-2 text-slate-900">DECAY INDEX: <span className="text-red-600 text-base">{isPhaseTwoActive ? `${dbDecay}%` : "23%"}</span></p></div>
               <div><span className="text-[9px] font-mono block text-red-600 uppercase">PROCESS WASTE TAX</span><p className="text-xs font-black mt-2 text-slate-900">LIABILITY TOTAL: <span className="text-red-600 font-mono text-sm">${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p></div>
               <div><span className="text-[9px] font-mono block text-red-600 uppercase">PROJECTED ANNUAL EXPOSURE</span><p className="text-xs font-black mt-2 text-slate-900">TOTAL CAPITAL RISK: <span className="text-red-600 font-mono text-sm">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p></div>
             </div>
@@ -158,7 +159,7 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-5 flex flex-col justify-center items-start md:items-end text-left md:text-right">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block">// CAPITAL EROSION VELOCITY</span>
-            <div className="font-mono font-black mt-2 tracking-tighter tabular-nums text-emerald-500 text-4xl md:text-5xl">
+            <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums text-4xl md:text-5xl ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>
               ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <span className="text-[8px] font-mono text-slate-400 tracking-wider uppercase block mt-1">// REAL TIME LOSS SINCE FIRST CONTACT</span>
@@ -171,8 +172,8 @@ export default function UnifiedResultsPortal() {
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 text-center space-y-4 shadow-xl">
-            <div className="text-5xl font-black text-emerald-500 font-mono">${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-[10px] font-mono text-emerald-500 tracking-[0.25em] block">SYSTEMIC OPERATIONAL DRAG TAX</span>
+            <div className={`text-5xl font-black font-mono ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className={`text-[10px] font-mono tracking-[0.25em] block ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
 
@@ -185,7 +186,7 @@ export default function UnifiedResultsPortal() {
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-[10px] font-mono text-slate-500 tracking-widest uppercase">// INDEX NODE FR-0{idx + 1}</span>
-                    <span className="text-[9px] font-mono px-3 py-1 bg-emerald-950/40 text-emerald-400 border border-emerald-900/30 font-black tracking-widest">SECURE GATE</span>
+                    <span className={`text-[9px] font-mono px-3 py-1 bg-slate-900 text-slate-400 border border-slate-800 font-black tracking-widest ${isPhaseTwoActive ? "text-red-400 border-red-900/30 bg-red-950/40" : "text-emerald-400 border-emerald-900/30 bg-emerald-950/40"}`}>{anomaly.severity || "SECURE GATE"}</span>
                   </div>
                   <h3 className="text-xl font-black italic text-white uppercase tracking-tight mb-2">
                     {anomaly.id}
@@ -195,8 +196,8 @@ export default function UnifiedResultsPortal() {
                   </p>
                 </div>
                 <div className="border-t border-slate-900/60 pt-4 font-mono text-[11px] leading-tight">
-                  <span className="text-emerald-500 font-black uppercase block mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</span>
-                  <span className="text-slate-300 italic font-black">Requires active 30 question operational diagnostic to unmask root cause paths.</span>
+                  <span className={`font-black uppercase block mb-1 ${isPhaseTwoActive ? "text-red-500" : "text-emerald-500"}`}>REQUIRED TARGETED REMEDIATION DIRECTIVE:</span>
+                  <span className="text-slate-300 italic font-black">{isPhaseTwoActive ? anomaly.directive : "Requires active 30 question operational diagnostic to unmask root cause paths."}</span>
                 </div>
               </div>
             ))}
