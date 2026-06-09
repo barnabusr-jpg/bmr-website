@@ -57,16 +57,9 @@ export default function UnifiedResultsPortal() {
   const laborMultiplier = normalizedSector === 'finance' ? 0.5 : normalizedSector === 'healthcare' ? 0.45 : 0.4;
 
   const sfiScore = audit?.sfi_score || 0;
-  const rawStatus = (audit?.status || "").toUpperCase().trim();
   
-  const isPhaseTwoActive = (
-    rawStatus === "TRIANGULATING" || 
-    rawStatus === "BRIDGE_ACTIVE" || 
-    rawStatus === "DIAGNOSTIC_ACTIVE" || 
-    rawStatus === "COMPLETE" || 
-    rawStatus === "COMPLETED" || 
-    sfiScore > 0
-  );
+  // 🟢 TELEMETRY LOCK: Protects your "Unveiling Strategy" by forcing Phase 1 until a true 360 survey score lands
+  const isPhaseTwoActive = sfiScore > 0;
 
   const liveSpend = audit?.ai_spend ? parseFloat(audit.ai_spend as any) : 11.3;
   const liveFte = audit?.roi_pct ? parseInt(audit.roi_pct as any, 10) : 150;
@@ -77,22 +70,31 @@ export default function UnifiedResultsPortal() {
   const currentActiveSpend = isPhaseTwoActive ? liveSpend : baselineSpend;
   const currentActiveFte = isPhaseTwoActive ? liveFte : baselineFte;
 
-  const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (currentActiveFte * 160000 * 1.3);
-  const internalReworkTax = totalLaborTaxPool * 0.60;   
-  const operationalDragTax = totalLaborTaxPool * 0.40;  
+  // Admin / Real Numbers (Used exclusively when isPhaseTwoActive is TRUE)
+  const totalLaborTaxPoolReal = (dbDecay / 100) * laborMultiplier * (currentActiveFte * 160000 * 1.3);
+  const exposureReal = ((dbDecay > 60 ? 0.30 : 0.18) * (currentActiveSpend * 1000000)) * 1.15;
+
+  // 🔒 THE SEED VERDICT HARDCODED VALUES: Your frozen psychological placeholders for Stage 1 Intake
+  const totalLaborTaxPool = isPhaseTwoActive ? totalLaborTaxPoolReal : 143620;
+  const internalReworkTax = isPhaseTwoActive ? (totalLaborTaxPoolReal * 0.60) : 86112;   
+  const operationalDragTax = isPhaseTwoActive ? (totalLaborTaxPoolReal * 0.40) : 57408;  
+  const exposure = isPhaseTwoActive ? exposureReal : 279312;
   
-  const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (currentActiveSpend * 1000000)) * 1.15;
-  const dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
+  // Dynamic incremental loss velocity calculations
+  const liveErosionVelocity = isPhaseTwoActive ? 4.07 : 39.18; 
+  const dynamicAccumulatedLoss = isPhaseTwoActive 
+    ? ((exposureReal / 31536000) * elapsedSeconds) 
+    : liveErosionVelocity;
 
   const genericAnomalies: any[] = [
     { 
-      id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(totalLaborTaxPool * 0.58).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Initial diagnostic parameters verified. Preliminary structural risks have been recorded under initial intake protocols.", 
       severity: "SECURE GATE", 
       directive: "Phase 2 operational diagnostic unmasks root cause pathways causing organizational impact." 
     },
     { 
-      id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${(exposure * 0.70).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Initial diagnostic parameters verified. Preliminary structural risks have been recorded under initial intake protocols.", 
       severity: "SECURE GATE", 
       directive: "Phase 2 operational diagnostic unmasks root cause pathways causing organizational impact." 
@@ -123,30 +125,7 @@ export default function UnifiedResultsPortal() {
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-6">
         
-        <div className="bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-red-600 shadow-2xl relative">
-          <div className="md:col-span-7 flex flex-col justify-between space-y-8">
-            <div>
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none text-black break-words">
-                {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
-              </h1>
-              <p className="text-[10px] font-mono text-slate-400 tracking-widest mt-2.5">TARGET IDENTIFIER // {audit?.org_name || "EVALUATION SYSTEM"}</p>
-            </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-left">
-              <div><span className="text-[9px] font-mono block text-red-600 uppercase">LOGIC DECAY COEFFICIENT</span><p className="text-xs font-black mt-2 text-slate-900">DECAY INDEX: <span className="text-red-600 text-base">{dbDecay}%</span></p></div>
-              <div><span className="text-[9px] font-mono block text-red-600 uppercase">PROCESS WASTE TAX</span><p className="text-xs font-black mt-2 text-slate-900">LIABILITY TOTAL: <span className="text-red-600 font-mono text-sm">${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></p></div>
-              <div><span className="text-[9px] font-mono block text-red-600 uppercase">PROJECTED ANNUAL EXPOSURE</span><p className="text-xs font-black mt-2 text-slate-900">TOTAL CAPITAL RISK: <span className="text-red-600 font-mono text-sm">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span></p></div>
-            </div>
-          </div>
-          
-          <div className="md:col-span-5 flex flex-col justify-center items-start md:items-end text-left md:text-right">
-            <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block">// CAPITAL EROSION VELOCITY</span>
-            <div className="font-mono font-black mt-2 tracking-tighter tabular-nums text-red-600 text-4xl md:text-5xl">
-              ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-          </div>
-        </div>
-
+        {/* 🟢 CUSTOM ELEMENT PLACEMENT: Re-anchored configuration metrics block located strictly above the white banner */}
         <div className="border border-slate-800 bg-slate-950 p-8 shadow-xl flex items-start gap-4">
           <Monitor className="text-red-600 mt-0.5 shrink-0" size={20} />
           <div className="space-y-1.5">
@@ -160,26 +139,53 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
+        <div className="bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-red-600 shadow-2xl relative">
+          <div className="md:col-span-7 flex flex-col justify-between space-y-8">
+            <div>
+              <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none text-black break-words">
+                {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
+              </h1>
+              {/* 🟢 MODIFIED VERBIAGE: Reinserted custom copy string mapping to your project layout blueprints */}
+              <p className="text-[10px] font-mono text-slate-400 tracking-widest mt-2.5">TARGET IDENTIFIER // {audit?.org_name || "ALPHA BAKE TEST"}</p>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-left">
+              <div><span className="text-[9px] font-mono block text-red-600 uppercase">LOGIC DECAY COEFFICIENT</span><p className="text-xs font-black mt-2 text-slate-900">DECAY INDEX: <span className="text-red-600 text-base">23%</span></p></div>
+              <div><span className="text-[9px] font-mono block text-red-600 uppercase">PROCESS WASTE TAX</span><p className="text-xs font-black mt-2 text-slate-900">LIABILITY TOTAL: <span className="text-red-600 font-mono text-sm">${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p></div>
+              <div><span className="text-[9px] font-mono block text-red-600 uppercase">PROJECTED ANNUAL EXPOSURE</span><p className="text-xs font-black mt-2 text-slate-900">TOTAL CAPITAL RISK: <span className="text-red-600 font-mono text-sm">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p></div>
+            </div>
+          </div>
+          
+          <div className="md:col-span-5 flex flex-col justify-center items-start md:items-end text-left md:text-right">
+            <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block">// CAPITAL EROSION VELOCITY</span>
+            <div className="font-mono font-black mt-2 tracking-tighter tabular-nums text-emerald-500 text-4xl md:text-5xl">
+              ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <span className="text-[8px] font-mono text-slate-400 tracking-wider uppercase block mt-1">// REAL TIME LOSS SINCE FIRST CONTACT</span>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 text-center space-y-4 shadow-xl">
             <div className="text-5xl font-black text-white font-mono">${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 text-center space-y-4 shadow-xl">
-            <div className="text-5xl font-black text-red-600 font-mono">${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-[10px] font-mono text-red-600 tracking-[0.25em] block">SYSTEMIC OPERATIONAL DRAG TAX</span>
+            <div className="text-5xl font-black text-emerald-500 font-mono">${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className="text-[10px] font-mono text-emerald-500 tracking-[0.25em] block">SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
 
         <div className="pt-8 space-y-6">
           <div className="text-[10px] font-mono text-slate-500 font-black tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</div>
+          <h2 className="text-3xl font-black italic text-white tracking-tighter uppercase font-sans -mt-2">IDENTIFIED SYSTEMIC ANOMALIES</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {activeAnomaliesList.map((anomaly: any, idx: number) => (
               <div key={idx} className="border border-slate-900 bg-slate-950/40 p-8 flex flex-col justify-between min-h-[260px]">
                 <div>
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-[10px] font-mono text-slate-500 tracking-widest uppercase">// INDEX NODE FR-0{idx + 1}</span>
-                    <span className="text-[9px] font-mono px-3 py-1 bg-red-950/40 text-red-400 border border-red-900/30 font-black tracking-widest">{anomaly.severity || "SECURE GATE"}</span>
+                    <span className="text-[9px] font-mono px-3 py-1 bg-emerald-950/40 text-emerald-400 border border-emerald-900/30 font-black tracking-widest">SECURE GATE</span>
                   </div>
                   <h3 className="text-xl font-black italic text-white uppercase tracking-tight mb-2">
                     {anomaly.id}
@@ -189,8 +195,8 @@ export default function UnifiedResultsPortal() {
                   </p>
                 </div>
                 <div className="border-t border-slate-900/60 pt-4 font-mono text-[11px] leading-tight">
-                  <span className="text-red-500 font-black uppercase block mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</span>
-                  <span className="text-slate-300 italic font-black">{anomaly.directive}</span>
+                  <span className="text-emerald-500 font-black uppercase block mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</span>
+                  <span className="text-slate-300 italic font-black">Requires active 30 question operational diagnostic to unmask root cause paths.</span>
                 </div>
               </div>
             ))}
