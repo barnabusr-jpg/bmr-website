@@ -312,7 +312,7 @@ export default function AdminDashboard() {
                                 case "BRIDGE_ACTIVE": return "03 // BOARDROOM PROPOSAL BRIDGE";
                                 case "TRIANGULATING": return "02 // 30-QUESTION DIAGNOSTIC WEDGE";
                                 case "LEAD":
-                                default: return "01 // CUSTOMER DISCOVERY INTAKE";
+                                default: return "01 // CUSTOMER DISCOVERY INTAKE"; // 🟢 FIXED FALLBACK
                               }
                             })()}
                           </span>
