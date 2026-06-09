@@ -33,24 +33,7 @@ export default function UnifiedResultsPortal() {
         (payload) => { 
           if (payload.new) {
             console.log("⚡ Live Workshop Sync Payload:", payload.new);
-            
-            const incomingIsReleased = !!payload.new.is_released;
-            const sfi = payload.new.sfi_score || 0;
-
-            if (incomingIsReleased && sfi > 0) {
-              setAudit(payload.new); 
-            } else {
-              setAudit((prevAudit: any) => {
-                if (!prevAudit) return payload.new;
-                return {
-                  ...payload.new,
-                  ai_spend: prevAudit.ai_spend,
-                  decay_pct: prevAudit.decay_pct,
-                  roi_pct: prevAudit.roi_pct,
-                  sector: prevAudit.sector
-                };
-              });
-            }
+            setAudit(payload.new); 
           }
         }
       ).subscribe();
@@ -69,9 +52,6 @@ export default function UnifiedResultsPortal() {
     return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
   }, [loading, audit?.created_at]);
 
-  // =========================================================================
-  // ⚙️ RECONCILED DYNAMIC CALCULATION BLOCK (FIXED TARGET BOUNDARIES)
-  // =========================================================================
   const dbDecay = audit?.decay_pct ? parseFloat(audit.decay_pct as any) : 24;
   const normalizedSector = (audit?.sector || "finance").toLowerCase().trim();
   const laborMultiplier = normalizedSector === 'finance' ? 0.5 : normalizedSector === 'healthcare' ? 0.45 : 0.4;
@@ -79,7 +59,14 @@ export default function UnifiedResultsPortal() {
   const sfiScore = audit?.sfi_score || 0;
   const rawStatus = (audit?.status || "").toUpperCase().trim();
   
-  const isPhaseTwoActive = (rawStatus === "TRIANGULATING" || rawStatus === "BRIDGE_ACTIVE" || rawStatus === "DIAGNOSTIC_ACTIVE" || rawStatus === "COMPLETE" || rawStatus === "COMPLETED" || sfiScore > 0);
+  const isPhaseTwoActive = (
+    rawStatus === "TRIANGULATING" || 
+    rawStatus === "BRIDGE_ACTIVE" || 
+    rawStatus === "DIAGNOSTIC_ACTIVE" || 
+    rawStatus === "COMPLETE" || 
+    rawStatus === "COMPLETED" || 
+    sfiScore > 0
+  );
 
   const liveSpend = audit?.ai_spend ? parseFloat(audit.ai_spend as any) : 11.3;
   const liveFte = audit?.roi_pct ? parseInt(audit.roi_pct as any, 10) : 150;
