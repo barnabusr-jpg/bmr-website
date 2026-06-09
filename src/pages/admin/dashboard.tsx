@@ -3,27 +3,10 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
-  Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  Monitor, X, Send, CheckCircle, Search, BellRing, FileText, Plus
+  Shield, Zap, ZoomIn, Hammer, Mail, 
+  Monitor, X, Search, Plus, CheckCircle
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-
-import CentralCommandCockpit from "../../components/CentralCommandCockpit";
-import { FidelityMetricsStrip } from "../../components/FidelityMetricsStrip";
-
-const BMR_IP_SUITE = {
-  directives: [
-    { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now.", color: "text-red-600" },
-    { id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K", description: "The system rebuilds the logic that connects your operational layers.", color: "text-blue-500" },
-    { id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO", description: "Developing new organizational rule sets to protect leadership.", color: "text-purple-500" },
-    { id: "DIR_04", label: "FORENSIC CONTINUITY", description: "Monitoring structural health through specialized reporting cadence.", color: "text-green-500" }
-  ],
-  services: [
-    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments." },
-    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols." },
-    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse." }
-  ]
-};
 
 export default function AdminDashboard() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -71,15 +54,9 @@ export default function AdminDashboard() {
 
     if (statusFilter !== "ALL") {
       if (statusFilter === "LEAD") {
-        query = query.in('status', ['LEAD', 'lead', 'Stage 1', 'STAGE_1', 'INTAKE', '']);
-      } else if (statusFilter === "TRIANGULATING") {
-        query = query.in('status', ['TRIANGULATING', 'triangulating', 'Stage 2', 'STAGE_2']);
-      } else if (statusFilter === "BRIDGE_ACTIVE") {
-        query = query.in('status', ['BRIDGE_ACTIVE', 'bridge_active', 'Stage 3', 'STAGE_3']);
-      } else if (statusFilter === "DIAGNOSTIC_ACTIVE") {
-        query = query.in('status', ['DIAGNOSTIC_ACTIVE', 'diagnostic_active', 'Stage 4', 'STAGE_4']);
-      } else if (statusFilter === "COMPLETE") {
-        query = query.in('status', ['COMPLETE', 'COMPLETED', 'completed']);
+        query = query.or("status.ilike.LEAD,status.eq.,status.is.null");
+      } else {
+        query = query.ilike('status', statusFilter);
       }
     }
 
@@ -164,7 +141,6 @@ export default function AdminDashboard() {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
     try {
-      // Robust payload structure containing multiple parameter configurations to ensure complete backend alignment
       const res = await fetch('/api/dispatch-directives', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -194,37 +170,6 @@ export default function AdminDashboard() {
     } catch (err: any) { alert(err.message); } finally { setIsUpdating(false); }
   };
 
-  const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
-    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey);
-    if (!matchingNode || !matchingNode.email) return;
-    setIsUpdating(true);
-    try {
-      const formattedPayload: Record<string, string> = {};
-      formattedPayload[targetRoleKey] = matchingNode.email;
-      await fetch('/api/dispatch-directives', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId: auditRecord.id, orgName: auditRecord.org_name, parentAuditId: auditRecord.id, emails: formattedPayload })
-      });
-    } catch (err) { console.error(err); } finally { setIsUpdating(false); }
-  };
-
-  const runSynthesis = async (auditId: string) => {
-    setIsUpdating(true);
-    try {
-      const res = await fetch('/api/synthesize-fracture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ auditId })
-      });
-      if (res.ok) {
-        await supabase.from('audits').update({ status: 'LEAD', sfi_score: 0 }).eq('id', auditId);
-        setExpandedRow(null);
-        await fetchLedger();
-      }
-    } catch (err) { console.error(err); } finally { setIsUpdating(false); }
-  };
-
   const toggleClientAccess = async (audit: any) => {
     setIsUpdating(true);
     try {
@@ -244,6 +189,9 @@ export default function AdminDashboard() {
     }, 120);
   };
 
+  // =========================================================================
+  // ⚙️ SYSTEM TRANSITION PIPELINES (CLEAN LEDGER STATE MODIFIERS)
+  // =========================================================================
   const advanceToStageThreeBridge = async (auditId: string) => {
     setIsUpdating(true);
     try {
@@ -256,6 +204,14 @@ export default function AdminDashboard() {
     setIsUpdating(true);
     try {
       await supabase.from('audits').update({ status: 'DIAGNOSTIC_ACTIVE' }).eq('id', auditId);
+      await fetchLedger();
+    } catch (err) { console.error(err); } finally { setIsUpdating(false); }
+  };
+
+  const advanceToStageFiveComplete = async (auditId: string) => {
+    setIsUpdating(true);
+    try {
+      await supabase.from('audits').update({ status: 'COMPLETE', sfi_score: 84 }).eq('id', auditId);
       await fetchLedger();
     } catch (err) { console.error(err); } finally { setIsUpdating(false); }
   };
@@ -314,7 +270,6 @@ export default function AdminDashboard() {
               ) : (
                 data.map((audit) => {
                   const clientHasAccess = !!audit.is_released;
-                  const sfi = audit.sfi_score || 0;
                   const dbDecay = audit.decay_pct || 20;
                   
                   const spend = parseFloat(audit.ai_spend) || 11.3;
@@ -324,16 +279,20 @@ export default function AdminDashboard() {
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
+                  // 🟢 UNALIGNED CONDITIONALS EXTRACTED: Explicit state matching rules
                   const rawStatus = (audit.status || "").toUpperCase().trim();
                   let cleanStatus = "LEAD";
                   
-                  if (sfi > 0) {
-                    if (rawStatus === "TRIANGULATING") cleanStatus = "TRIANGULATING";
-                    else if (rawStatus === "BRIDGE_ACTIVE") cleanStatus = "BRIDGE_ACTIVE";
-                    else if (rawStatus === "DIAGNOSTIC_ACTIVE") cleanStatus = "DIAGNOSTIC_ACTIVE";
-                    else if (rawStatus === "COMPLETE" || rawStatus === "COMPLETED") cleanStatus = "COMPLETE";
+                  if (rawStatus === "COMPLETE" || rawStatus === "COMPLETED") {
+                    cleanStatus = "COMPLETE";
+                  } else if (rawStatus === "DIAGNOSTIC_ACTIVE") {
+                    cleanStatus = "DIAGNOSTIC_ACTIVE";
+                  } else if (rawStatus === "BRIDGE_ACTIVE") {
+                    cleanStatus = "BRIDGE_ACTIVE";
+                  } else if (rawStatus === "TRIANGULATING") {
+                    cleanStatus = "TRIANGULATING";
                   } else {
-                    cleanStatus = (rawStatus === "TRIANGULATING") ? "TRIANGULATING" : "LEAD";
+                    cleanStatus = "LEAD";
                   }
 
                   return (
@@ -395,13 +354,21 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
 
-                              <div className="flex gap-4">
+                              <div className="flex flex-wrap gap-4">
                                 {cleanStatus === "LEAD" && (
                                   <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] font-mono tracking-widest flex items-center gap-2"><Mail size={14} /> Initialize & Launch 3-Node 360 Dive</button>
                                 )}
                                 
                                 {cleanStatus === "TRIANGULATING" && (
                                   <button type="button" onClick={(e) => { e.stopPropagation(); advanceToStageThreeBridge(audit.id); }} className="bg-amber-600 text-white px-6 py-4 font-black uppercase text-[10px] font-mono tracking-widest flex items-center gap-2"><Zap size={14} /> Advance Asset to Stage 3 Bridge</button>
+                                )}
+
+                                {cleanStatus === "BRIDGE_ACTIVE" && (
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); advanceToStageFourCapstone(audit.id); }} className="bg-blue-600 text-white px-6 py-4 font-black uppercase text-[10px] font-mono tracking-widest flex items-center gap-2"><Activity size={14} /> Deploy Stage 4 Capstone Audit</button>
+                                )}
+
+                                {cleanStatus === "DIAGNOSTIC_ACTIVE" && (
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); advanceToStageFiveComplete(audit.id); }} className="bg-emerald-600 text-white px-6 py-4 font-black uppercase text-[10px] font-mono tracking-widest flex items-center gap-2"><CheckCircle size={14} /> Deliver Core Final Architecture</button>
                                 )}
 
                                 <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="bg-slate-950 border border-slate-800 text-slate-400 px-6 py-4 font-black text-[10px] font-mono tracking-widest"><Monitor size={14} /> Open Discovery Screen Ledger</button>
