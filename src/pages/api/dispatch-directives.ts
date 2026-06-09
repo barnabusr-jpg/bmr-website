@@ -27,8 +27,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   
   const { groupId, orgName, emails, parentAuditId, execEmail, mgrEmail, techEmail } = req.body;
-  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmradvisory.co';
+  
+  // 🟢 ENVIRONMENT ISOLATION ENGINE: Strict parsing protects live production records from testing data bleed
+  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ? process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '') : '';
   const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmrsolutions.co'; 
+
+  if (!BASE_URL) {
+    console.error("❌ CRITICAL INFRASTRUCTURE DEPLOYMENT FAILURE: NEXT_PUBLIC_APP_URL environment variable is null.");
+    return res.status(500).json({ 
+      error: 'CONFIGURATION_ERROR', 
+      message: 'CORE RUNTIME BOUNDS BROKEN: Missing base routing domain parameters.' 
+    });
+  }
 
   if (!parentAuditId) {
     console.error("❌ ENGINE CRASH: Payload is missing parentAuditId.");
