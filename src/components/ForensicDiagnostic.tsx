@@ -18,45 +18,42 @@ export default function ForensicDiagnostic() {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code')?.trim().toUpperCase();
 
-      console.log("DIAGNOSTIC_AUTH: Attempting handshake with code:", code);
-
       if (!code) {
-        console.error("AUTH_ERROR: No code provided in URL.");
         setStep("invalid");
         return;
       }
 
-      // 1. Fetch operators as an array to tolerate historical duplicate test entries gracefully
       const { data: opArray, error: opError } = await supabase
         .from('operators')
         .select('*')
         .eq('access_code', code);
 
       if (opError || !opArray || opArray.length === 0) {
-        console.error("DB_ERROR: Operator lookup failed.", opError?.message);
         setStep("invalid");
         return;
       }
 
-      // Pluck the primary matching node record securely
       const op = opArray[0];
 
-      // 2. Fetch parent audit
       const { data: audit, error: auditError } = await supabase
         .from('audits')
         .select('status, org_name, id')
         .eq('id', op.audit_id)
         .single();
 
-      // SECURITY: Check if already completed
-      if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
-        console.log("NODE_ACCESS: Link is deactivated or already completed.");
-        setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
+      if (auditError || !audit) {
+        setStep("invalid");
+        return;
+      }
+
+      const rawAuditStatus = (audit.status || "").toUpperCase().trim();
+
+      if (rawAuditStatus === 'COMPLETE' || rawAuditStatus === 'COMPLETED') {
+        setOperator({ ...op, org_name: audit.org_name });
         setStep("finalized");
         return;
       }
 
-      // 3. DEFENSIVE FILTERING: Matches MGR, MANAGERIAL, etc.
       const filtered = FORENSIC_MATRIX.filter(q => {
         const lens = q.lens?.toUpperCase();
         const persona = op.persona_type?.toUpperCase();
@@ -66,11 +63,8 @@ export default function ForensicDiagnostic() {
                (persona === 'TECHNICAL' && lens === 'TEC') ||
                (persona === 'EXECUTIVE' && lens === 'EXE');
       });
-      
-      console.log(`LENS_CHECK: Persona is [${op.persona_type}]. Questions found: ${filtered.length}`);
 
       if (!filtered || filtered.length === 0) {
-        console.error("LOGIC_ERROR: No matrix mapping for persona type:", op.persona_type);
         setStep("invalid");
         return;
       }
@@ -92,13 +86,10 @@ export default function ForensicDiagnostic() {
       .eq('id', operator.id); 
 
     if (updateError) {
-      console.error("SUBMIT_ERROR: Failed to save results.", updateError.message);
-      alert("SIGNAL_LOST: Database rejection.");
       setStep("diagnostic");
       return;
     }
 
-    // Trigger synthesis if all 3 nodes are done
     const { data: nodes } = await supabase
       .from('operators')
       .select('status')
@@ -106,8 +97,7 @@ export default function ForensicDiagnostic() {
       .eq('status', 'completed');
 
     if (nodes && nodes.length === 3) {
-      console.log("SYNTHESIS_TRIGGERED: All nodes complete.");
-      fetch('/api/synthesize-fractures', {
+      fetch('/api/synthesize-fracture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auditId: operator.audit_id }) 
@@ -133,7 +123,7 @@ export default function ForensicDiagnostic() {
   };
 
   if (step === "loading") return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-[0.3em]">Handshake_Initializing...</div>;
-  if (step === "invalid") return <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center text-white font-mono uppercase tracking-widest"><ShieldAlert className="mb-4 text-red-600 mx-auto" size={48} /> {`Unauthorized_Node`}</div>;
+  if (step === "invalid") return <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center text-white font-mono uppercase tracking-widest"><ShieldAlert className="mb-4 text-red-600 mx-auto" size={48} /> Unauthorized_Node</div>;
   if (step === "finalized") return <div className="min-h-screen bg-black flex items-center justify-center p-16 text-center text-slate-500 font-mono uppercase tracking-widest border-2 border-red-900/10"><Lock className="mr-4 text-red-600 inline" /> NODE_SECURED: LINK_DEACTIVATED</div>;
 
   if (step === "diagnostic" && (!questions || !questions[currentIndex])) {
