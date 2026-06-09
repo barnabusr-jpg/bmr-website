@@ -89,13 +89,13 @@ export default function UnifiedResultsPortal() {
 
   const genericAnomalies: any[] = [
     { 
-      id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $86,112`, 
       description: "Initial diagnostic parameters verified. Preliminary structural risks have been recorded under initial intake protocols.", 
       severity: "SECURE GATE", 
       directive: "Phase 2 operational diagnostic unmasks root cause pathways causing organizational impact." 
     },
     { 
-      id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      id: `ANOMALY SEGMENT BETA // LOSS BASELINE $57,408`, 
       description: "Initial diagnostic parameters verified. Preliminary structural risks have been recorded under initial intake protocols.", 
       severity: "SECURE GATE", 
       directive: "Phase 2 operational diagnostic unmasks root cause pathways causing organizational impact." 
@@ -126,7 +126,7 @@ export default function UnifiedResultsPortal() {
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-6">
         
-        {/* 🟢 CUSTOM ELEMENT PLACEMENT: Re-anchored configuration metrics block located strictly above the white banner */}
+        {/* 🟢 CONFIGURATION BLOCK: Positioned above main showcase container */}
         <div className="border border-slate-800 bg-slate-950 p-8 shadow-xl flex items-start gap-4">
           <Monitor className="text-red-600 mt-0.5 shrink-0" size={20} />
           <div className="space-y-1.5">
@@ -146,14 +146,22 @@ export default function UnifiedResultsPortal() {
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none text-black break-words">
                 {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
               </h1>
-              {/* 🟢 MODIFIED VERBIAGE: Reinserted custom copy string mapping to your project layout blueprints */}
               <p className="text-[10px] font-mono text-slate-400 tracking-widest mt-2.5">TARGET IDENTIFIER // {audit?.org_name || "ALPHA BAKE TEST"}</p>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-left">
-              <div><span className="text-[9px] font-mono block text-red-600 uppercase">LOGIC DECAY COEFFICIENT</span><p className="text-xs font-black mt-2 text-slate-900">DECAY INDEX: <span className="text-red-600 text-base">{isPhaseTwoActive ? `${dbDecay}%` : "23%"}</span></p></div>
-              <div><span className="text-[9px] font-mono block text-red-600 uppercase">PROCESS WASTE TAX</span><p className="text-xs font-black mt-2 text-slate-900">LIABILITY TOTAL: <span className="text-red-600 font-mono text-sm">${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p></div>
-              <div><span className="text-[9px] font-mono block text-red-600 uppercase">PROJECTED ANNUAL EXPOSURE</span><p className="text-xs font-black mt-2 text-slate-900">TOTAL CAPITAL RISK: <span className="text-red-600 font-mono text-sm">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p></div>
+              <div>
+                <span className="text-[9px] font-mono block text-red-600 uppercase">LOGIC DECAY COEFFICIENT</span>
+                <p className="text-xs font-black mt-2 text-slate-900">DECAY INDEX: <span className="text-red-600 text-base">{isPhaseTwoActive ? `${dbDecay}%` : "23%"}</span></p>
+              </div>
+              <div>
+                <span className="text-[9px] font-mono block text-red-600 uppercase">PROCESS WASTE TAX</span>
+                <p className="text-xs font-black mt-2 text-slate-900">LIABILITY TOTAL: <span className="text-red-600 font-mono text-sm">${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p>
+              </div>
+              <div>
+                <span className="text-[9px] font-mono block text-red-600 uppercase">PROJECTED ANNUAL EXPOSURE</span>
+                <p className="text-xs font-black mt-2 text-slate-900">TOTAL CAPITAL RISK: <span className="text-red-600 font-mono text-sm">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p>
+              </div>
             </div>
           </div>
           
@@ -189,7 +197,7 @@ export default function UnifiedResultsPortal() {
                     <span className={`text-[9px] font-mono px-3 py-1 bg-slate-900 text-slate-400 border border-slate-800 font-black tracking-widest ${isPhaseTwoActive ? "text-red-400 border-red-900/30 bg-red-950/40" : "text-emerald-400 border-emerald-900/30 bg-emerald-950/40"}`}>{anomaly.severity || "SECURE GATE"}</span>
                   </div>
                   <h3 className="text-xl font-black italic text-white uppercase tracking-tight mb-2">
-                    {anomaly.id}
+                    {isPhaseTwoActive && anomaly.id.includes("LOSS BASELINE") ? anomaly.id : `ANOMALY SEGMENT ${idx === 0 ? "ALPHA" : "BETA"} // LOSS BASELINE ${idx === 0 ? "$86,112" : "$57,408"}`}
                   </h3>
                   <p className="text-xs text-slate-400 font-mono leading-relaxed lowercase italic mb-6">
                     {anomaly.description}
