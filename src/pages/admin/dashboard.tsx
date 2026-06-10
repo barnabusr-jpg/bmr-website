@@ -129,6 +129,8 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error("Dispatch Failed");
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
+      setToastMessage("🔒 3-NODE TOKENS DISPATCHED SUCCESSFUL VIA SENDGRID");
+      setTimeout(() => setToastMessage(null), 4000);
       fetchLedger();
     } catch (err: any) { 
       alert(err.message); 
