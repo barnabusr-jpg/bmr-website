@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
-import { Activity, Monitor } from "lucide-react";
+import { Monitor } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
  
 export default function UnifiedResultsPortal() {
@@ -55,29 +55,32 @@ export default function UnifiedResultsPortal() {
     return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
   }, [loading, audit?.created_at]);
  
+  // 🔒 STATUS-BASED GATE: Controls the unmasking across the view
+  const isPhaseTwoActive = audit?.status === "SYSTEM REALITY";
+ 
   const dbDecay = audit?.decay_pct ? parseFloat(audit.decay_pct as any) : 24;
   const normalizedSector = (audit?.sector || "finance").toLowerCase().trim();
   const laborMultiplier = normalizedSector === 'finance' ? 0.5 : normalizedSector === 'healthcare' ? 0.45 : 0.4;
  
-  // 🔒 STATUS-BASED GATE: Controls the unmasking across the view
-  const isPhaseTwoActive = audit?.status === "SYSTEM REALITY";
- 
+  const sfiScore = audit?.sfi_score || 0;
+  
   const liveSpend = audit?.ai_spend ? parseFloat(audit.ai_spend as any) : 1.2;
   const liveFte = audit?.roi_pct ? parseInt(audit.roi_pct as any, 10) : 6;
   
-  // Adjusted baseline definitions to align character-for-character with corporate configurations
+  // Base targets configured to align character-for-character with corporate baselines
   const baselineSpend = 1.2;
   const baselineFte = 6;
  
   const currentActiveSpend = isPhaseTwoActive ? liveSpend : baselineSpend;
   const currentActiveFte = isPhaseTwoActive ? liveFte : baselineFte;
+  const calculatedDecayIndex = isPhaseTwoActive ? dbDecay : 23;
  
-  const totalLaborTaxPoolReal = (dbDecay / 100) * laborMultiplier * (currentActiveFte * 160000 * 1.3);
+  const totalLaborTaxPoolReal = (calculatedDecayIndex / 100) * laborMultiplier * (currentActiveFte * 160000 * 1.3);
   const internalReworkTaxReal = totalLaborTaxPoolReal * 0.60;
   const operationalDragTaxReal = totalLaborTaxPoolReal * 0.40;
-  const exposureReal = ((dbDecay > 60 ? 0.30 : 0.18) * (currentActiveSpend * 1000000)) * 1.15;
+  const exposureReal = ((calculatedDecayIndex > 60 ? 0.30 : 0.18) * (currentActiveSpend * 1000000)) * 1.15;
  
-  // 🔒 HARD STAGE 01 BASELINE GATES
+  // 🔒 HARD STAGE 01 BASELINE PROTECTION GATES
   const internalReworkTax   = isPhaseTwoActive ? internalReworkTaxReal : 86112;   
   const operationalDragTax = isPhaseTwoActive ? operationalDragTaxReal : 57408;  
   const totalLaborTaxPool  = internalReworkTax + operationalDragTax;
@@ -152,15 +155,15 @@ export default function UnifiedResultsPortal() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-left">
               <div>
                 <span className="text-[9px] font-mono block text-red-600 uppercase">LOGIC DECAY COEFFICIENT</span>
-                <p className="text-xs font-black mt-2 text-slate-900">DECAY INDEX: <span className="text-red-600 text-base">{isPhaseTwoActive ? `${dbDecay}%` : "23%"}</span></p>
+                <p className="text-xs font-black mt-2 text-slate-900">DECAY INDEX: <span className="text-red-600 text-base">{calculatedDecayIndex}%</span></p>
               </div>
               <div>
                 <span className="text-[9px] font-mono block text-red-600 uppercase">PROCESS WASTE TAX</span>
-                <p className="text-xs font-black mt-2 text-slate-900">LIABILITY TOTAL: <span className="text-red-600 font-mono text-sm">${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p>
+                <p className="text-xs font-black mt-2 text-slate-900">LIABILITY TOTAL: <span className="text-red-600 font-mono text-sm">${Math.round(totalLaborTaxPool).toLocaleString()}.</span></p>
               </div>
               <div>
                 <span className="text-[9px] font-mono block text-red-600 uppercase">PROJECTED ANNUAL EXPOSURE</span>
-                <p className="text-xs font-black mt-2 text-slate-900">TOTAL CAPITAL RISK: <span className="text-red-600 font-mono text-sm">${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span></p>
+                <p className="text-xs font-black mt-2 text-slate-900">TOTAL CAPITAL RISK: <span className="text-red-600 font-mono text-sm">${Math.round(exposure).toLocaleString()}.</span></p>
               </div>
             </div>
           </div>
@@ -177,12 +180,13 @@ export default function UnifiedResultsPortal() {
         {/* SUB-TAX CONTAINER MATRIX */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 text-center space-y-4 shadow-xl">
-            <div className="text-5xl font-black text-white font-mono">${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
+            <div className="text-5xl font-black text-white font-mono">${Math.round(internalReworkTax).toLocaleString()}</div>
+            <span className="text-[10px] font-mono text-slate-500 tracking-[0.2em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 text-center space-y-4 shadow-xl">
-            <div className={`text-5xl font-black font-mono ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>\${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className={`text-[10px] font-mono tracking-[0.25em] block ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
+            {/* Cleaned backslash formatting escape character trap */}
+            <div className={`text-5xl font-black font-mono ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>${Math.round(operationalDragTax).toLocaleString()}</div>
+            <span className={`text-[10px] font-mono tracking-[0.2em] block ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
  
