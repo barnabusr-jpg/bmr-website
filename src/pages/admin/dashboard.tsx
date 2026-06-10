@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText
+  Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText, RotateCcw
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -44,6 +44,7 @@ export default function AdminDashboard() {
   const ROWS_PER_PAGE = 10;
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -145,7 +146,27 @@ export default function AdminDashboard() {
         .eq('id', auditId);
         
       if (error) throw error;
-      alert("🛡️ SHIELD LOWERED: SYSTEM REALITY VECTOR BROADCAST LIVE TO WEB CHANNELS.");
+      setToastMessage("LIVE UNMASKING: SYSTEM REALITY BROADCAST VECTOR DEPLOYED");
+      setTimeout(() => setToastMessage(null), 4000);
+      fetchLedger();
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const rollbackToEfficiencyView = async (auditId: string) => {
+    setIsUpdating(true);
+    try {
+      const { error } = await supabase
+        .from('audits')
+        .update({ status: "TRIANGULATING" })
+        .eq('id', auditId);
+        
+      if (error) throw error;
+      setToastMessage("VECTOR REVERTED: VIEW RESTORED TO STAGE 01 DATA COMPRESSION");
+      setTimeout(() => setToastMessage(null), 4000);
       fetchLedger();
     } catch (err) {
       console.error(err);
@@ -641,12 +662,42 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
 
-                              <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 space-y-3">
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
+                              <div className="flex flex-col space-y-3">
+                                <div className="flex gap-4">
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="flex-1 bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Mail size={14} /> Launch 360 Deep Dive</button>
+                                  <button type="button" onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="flex-1 bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
                                 </div>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); triggerSystemRealityReveal(audit.id); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border ${isRealityActive ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{isRealityActive ? "Reality Engaged" : "Unveil System Reality"}</span></button>
+                                
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { e.stopPropagation(); triggerSystemRealityReveal(audit.id); }} 
+                                  disabled={isRealityActive}
+                                  className={`w-full px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex items-center justify-center gap-3 border ${
+                                    isRealityActive 
+                                      ? 'bg-emerald-950/20 text-emerald-500 border-emerald-900/40 cursor-not-allowed' 
+                                      : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'
+                                  }`}
+                                >
+                                  <Shield size={18} />
+                                  <span>{isRealityActive ? "REALITY INTERLOCK ACTIVE" : "UNVEIL LIVE SYSTEM REALITY"}</span>
+                                </button>
+
+                                {isRealityActive && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); rollbackToEfficiencyView(audit.id); }}
+                                    className="w-full bg-slate-900/60 hover:bg-red-600 text-slate-400 hover:text-white border border-slate-800 hover:border-red-500 py-3 font-mono text-[9px] tracking-widest uppercase transition-all font-black flex items-center justify-center gap-2 shadow-md"
+                                  >
+                                    <RotateCcw size={12} />
+                                    ✕ ROLLBACK TO STAGE 01 (COMPRESSED BASELINE)
+                                  </button>
+                                )}
+
+                                {toastMessage && (
+                                  <div className="bg-emerald-950/80 border border-emerald-500 text-emerald-400 font-mono text-[9px] tracking-widest py-3 px-4 uppercase text-center animate-pulse mt-2">
+                                    🛰️ {toastMessage}
+                                  </div>
+                                )}
                               </div>
                             </div>
 
