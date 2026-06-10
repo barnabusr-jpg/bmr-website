@@ -3,19 +3,19 @@ import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { Activity, Monitor } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-
+ 
 export default function UnifiedResultsPortal() {
   const router = useRouter();
   const { id } = router.query;
-
+ 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<any | null>(null);
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
+ 
   useEffect(() => { setMounted(true); }, []);
-
+ 
   useEffect(() => {
     if (!id || !mounted || id === "undefined") return;
     
@@ -24,10 +24,14 @@ export default function UnifiedResultsPortal() {
         const { data, error } = await supabase.from("audits").select("*").eq("id", id).single();
         if (error) throw error;
         if (data) setAudit(data);
-      } catch (err) { console.error(err); } finally { setLoading(false); }
+      } catch (err) { 
+        console.error(err); 
+      } finally { 
+        setLoading(false); 
+      }
     };
     fetchInitialAuditState();
-
+ 
     const channelSubscription = supabase.channel(`live-workshop-${id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` }, 
         (payload) => { 
@@ -36,10 +40,10 @@ export default function UnifiedResultsPortal() {
           }
         }
       ).subscribe();
-
+ 
     return () => { supabase.removeChannel(channelSubscription); };
   }, [id, mounted]);
-
+ 
   useEffect(() => {
     if (loading || !audit?.created_at) return;
     const calculateDeltaTime = () => {
@@ -50,40 +54,39 @@ export default function UnifiedResultsPortal() {
     timerIntervalRef.current = setInterval(calculateDeltaTime, 100);
     return () => { if (timerIntervalRef.current) clearInterval(timerIntervalRef.current); };
   }, [loading, audit?.created_at]);
-
+ 
   const dbDecay = audit?.decay_pct ? parseFloat(audit.decay_pct as any) : 24;
   const normalizedSector = (audit?.sector || "finance").toLowerCase().trim();
   const laborMultiplier = normalizedSector === 'finance' ? 0.5 : normalizedSector === 'healthcare' ? 0.45 : 0.4;
-
-  const sfiScore = audit?.sfi_score || 0;
-  
-  // 🔒 STATUS-BASED GATE: Completely severs the view from calculations until status is flipped explicitly
+ 
+  // 🔒 STATUS-BASED GATE: Controls the unmasking across the view
   const isPhaseTwoActive = audit?.status === "SYSTEM REALITY";
-
-  const liveSpend = audit?.ai_spend ? parseFloat(audit.ai_spend as any) : 11.3;
-  const liveFte = audit?.roi_pct ? parseInt(audit.roi_pct as any, 10) : 150;
+ 
+  const liveSpend = audit?.ai_spend ? parseFloat(audit.ai_spend as any) : 1.2;
+  const liveFte = audit?.roi_pct ? parseInt(audit.roi_pct as any, 10) : 6;
   
-  const baselineSpend = 3.3;
-  const baselineFte = 40;
-
+  // Adjusted baseline definitions to align character-for-character with corporate configurations
+  const baselineSpend = 1.2;
+  const baselineFte = 6;
+ 
   const currentActiveSpend = isPhaseTwoActive ? liveSpend : baselineSpend;
   const currentActiveFte = isPhaseTwoActive ? liveFte : baselineFte;
-
+ 
   const totalLaborTaxPoolReal = (dbDecay / 100) * laborMultiplier * (currentActiveFte * 160000 * 1.3);
   const internalReworkTaxReal = totalLaborTaxPoolReal * 0.60;
   const operationalDragTaxReal = totalLaborTaxPoolReal * 0.40;
   const exposureReal = ((dbDecay > 60 ? 0.30 : 0.18) * (currentActiveSpend * 1000000)) * 1.15;
-
-  // 🔒 HARD BASELINE PROTECTION GATES
-  const totalLaborTaxPool = isPhaseTwoActive ? totalLaborTaxPoolReal : 143620;
-  const internalReworkTax  = isPhaseTwoActive ? internalReworkTaxReal : 86112;   
+ 
+  // 🔒 HARD STAGE 01 BASELINE GATES
+  const internalReworkTax   = isPhaseTwoActive ? internalReworkTaxReal : 86112;   
   const operationalDragTax = isPhaseTwoActive ? operationalDragTaxReal : 57408;  
+  const totalLaborTaxPool  = internalReworkTax + operationalDragTax;
   const exposure           = isPhaseTwoActive ? exposureReal : 279312;
   
   const dynamicAccumulatedLoss = isPhaseTwoActive 
     ? ((exposureReal / 31536000) * elapsedSeconds) 
     : 39.18;
-
+ 
   const genericAnomalies: any[] = [
     { 
       id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $86,112`, 
@@ -98,9 +101,9 @@ export default function UnifiedResultsPortal() {
       directive: "Phase 2 operational diagnostic unmasks root cause pathways causing organizational impact." 
     }
   ];
-
+ 
   const activeAnomaliesList = (isPhaseTwoActive && Array.isArray(audit?.fractures) && audit.fractures.length > 0) ? audit.fractures : genericAnomalies;
-
+ 
   if (!mounted || loading) {
     return (
       <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-red-600 italic font-mono text-xs uppercase tracking-[0.4em]">
@@ -108,7 +111,7 @@ export default function UnifiedResultsPortal() {
       </div>
     );
   }
-
+ 
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden text-left uppercase italic font-black select-none">
       <nav className="h-28 bg-black/40 backdrop-blur-md border-b border-slate-900/60 px-6 md:px-12 flex items-center justify-between">
@@ -119,7 +122,7 @@ export default function UnifiedResultsPortal() {
           </span>
         </div>
       </nav>
-
+ 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-6">
         
         {/* SYSTEM READOUT COMPONENT */}
@@ -135,7 +138,7 @@ export default function UnifiedResultsPortal() {
             </div>
           </div>
         </div>
-
+ 
         {/* HERO SHOWCASE BANNER CONTAINER */}
         <div className="bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-red-600 shadow-2xl relative">
           <div className="md:col-span-7 flex flex-col justify-between space-y-8">
@@ -170,7 +173,7 @@ export default function UnifiedResultsPortal() {
             <span className="text-[8px] font-mono text-slate-400 tracking-wider uppercase block mt-1">// REAL TIME LOSS SINCE FIRST CONTACT</span>
           </div>
         </div>
-
+ 
         {/* SUB-TAX CONTAINER MATRIX */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 text-center space-y-4 shadow-xl">
@@ -178,11 +181,11 @@ export default function UnifiedResultsPortal() {
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 text-center space-y-4 shadow-xl">
-            <div className={`text-5xl font-black font-mono ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className={`text-5xl font-black font-mono ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>\${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className={`text-[10px] font-mono tracking-[0.25em] block ${isPhaseTwoActive ? "text-red-600" : "text-emerald-500"}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
-
+ 
         {/* ANOMALY WORKFLOW TARGETS */}
         <div className="pt-8 space-y-6">
           <div className="text-[10px] font-mono text-slate-500 font-black tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</div>
@@ -206,7 +209,7 @@ export default function UnifiedResultsPortal() {
             ))}
           </div>
         </div>
-
+ 
       </main>
     </div>
   );
