@@ -128,7 +128,7 @@ export default function AdminDashboard() {
       if (!res.ok) throw new Error("Dispatch Failed");
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
-      setToastMessage("🔒 3-NODE TOKENS COMMITTED TO LEDGER & DISPATCHED VIA SENDGRID");
+      setToastMessage("🔒 3-NODE SURYEY PROTOCOLS ACTIVATED VIA SENDGRID");
       setTimeout(() => setToastMessage(null), 4000);
       fetchLedger();
     } catch (err: any) { 
@@ -231,6 +231,24 @@ export default function AdminDashboard() {
     }, 120);
   };
 
+  const toggleClientAccess = async (audit: any) => {
+    setIsUpdating(true);
+    const targetNewReleaseState = !audit.is_released;
+    try {
+      const { error } = await supabase
+        .from('audits')
+        .update({ is_released: targetNewReleaseState })
+        .eq('id', audit.id);
+        
+      if (error) throw error;
+      await fetchLedger();
+    } catch (err) {
+      console.error("ACCESS TOGGLE ERR ->", err);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
   useEffect(() => {
     setCurrentPage(0);
   }, [searchTerm, statusFilter]);
@@ -279,6 +297,30 @@ export default function AdminDashboard() {
           </div>
         </div>
       </nav>
+
+      <AnimatePresence>
+        {selectedAudit && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic">
+              <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white"><X size={24}/></button>
+              
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
+              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
+              
+              <div className="space-y-4 mt-10 text-left">
+                <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+                
+                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all">
+                  {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
+                  {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
@@ -334,11 +376,11 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 data.map((audit) => {
+                  const clientHasAccess = !!audit.is_released;
                   const isRealityActive = audit.status === "SYSTEM REALITY";
                   const sfi = audit.sfi_score || 0;
                   const realFractures = audit.fractures || [];
                   
-                  // Active state trackers matching row parameters explicitly
                   const dbDecay = audit.decay_pct || 24;
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct || 6;
@@ -389,7 +431,6 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
-                          {/* STAKEHOLDER MATRIX TRACKS */}
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
                               { label: 'EXECUTIVE TRACK', key: 'EXE' },
@@ -411,16 +452,14 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* ========================================================================= */}
-                          {/* NEW 3-NODE PARAMETER SUITE: ADDS MANUALoverride DECAY SLIDER             */}
-                          {/* ========================================================================= */}
+                          {/* 3 PARAMETER SLIDERS: ADDS CLEAN INTEGRATION TO ADJUST DECAY COEFFICIENTS */}
                           <div className="border border-slate-900 bg-slate-950 p-6 mb-8 space-y-6">
                             <span className="text-[10px] text-slate-500 font-black tracking-widest uppercase block">// REAL-TIME PRESENTATION CALIBRATION STRIPS</span>
                             
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs font-mono">
-                                  <span className="text-slate-500">LOGIC DECAY COEFFICIENT:</span>
+                                  <span className="text-slate-400">LOGIC DECAY COEFFICIENT:</span>
                                   <span className="text-red-500 font-black">{dbDecay}%</span>
                                 </div>
                                 <input 
@@ -432,7 +471,7 @@ export default function AdminDashboard() {
 
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs font-mono">
-                                  <span className="text-slate-500">ANNUAL SYSTEM SOFTWARE SPEND:</span>
+                                  <span className="text-slate-400">ANNUAL SYSTEM SOFTWARE SPEND:</span>
                                   <span className="text-red-500 font-black">${spend.toFixed(1)}M</span>
                                 </div>
                                 <input 
@@ -444,7 +483,7 @@ export default function AdminDashboard() {
 
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs font-mono">
-                                  <span className="text-slate-500">IMPACTED WORKFORCE SCALE (FTES):</span>
+                                  <span className="text-slate-400">IMPACTED WORKFORCE SCALE (FTES):</span>
                                   <span className="text-red-500 font-black">{fte} PEOPLE</span>
                                 </div>
                                 <input 
@@ -456,7 +495,6 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
-                          {/* FINANCIAL SUMMARY PANEL */}
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
                             <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
                               <div className="text-[10px] text-slate-500 font-black block">// RUN_RATE_METRICS_LEDGER</div>
@@ -477,22 +515,38 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
-                          {/* SOW & CONTROL PANEL ACTIONS CONTAINER */}
+                          {/* DYNAMIC PERMANENT BUTTON CARD WRAPPER */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-900 pt-8">
                             <div className="flex flex-col space-y-3">
                               <span className="text-[9px] font-mono text-slate-600 block font-black uppercase">// PHASE GATEWAY CONTROLS</span>
                               
+                              <div className="grid grid-cols-2 gap-3 w-full">
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} 
+                                  className="bg-red-900/40 hover:bg-red-600 text-red-400 hover:text-white border border-red-900/60 p-4 font-black uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2"
+                                >
+                                  <Mail size={12} /> Launch 360 Deep Dive
+                                </button>
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} 
+                                  className="bg-yellow-600/20 hover:bg-yellow-600 text-yellow-500 hover:text-black border border-yellow-600/40 p-4 font-black uppercase text-[10px] tracking-widest transition-all flex items-center justify-center gap-2"
+                                >
+                                  <Zap size={12} /> Compile Triangulation
+                                </button>
+                              </div>
+
                               <button 
                                 type="button" 
                                 onClick={(e) => { e.stopPropagation(); triggerSystemRealityReveal(audit.id); }} 
-                                disabled={isRealityActive}
                                 className={`w-full px-10 py-5 font-black uppercase text-[10px] tracking-widest border transition-all ${
                                   isRealityActive 
-                                    ? 'bg-emerald-950/20 text-emerald-500 border-emerald-900/40 cursor-not-allowed' 
+                                    ? 'bg-emerald-950/20 text-emerald-500 border-emerald-900/40' 
                                     : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'
                                 }`}
                               >
-                                <span>{isRealityActive ? "REALITY INTERLOCK ACTIVE" : "UNVEIL LIVE SYSTEM REALITY"}</span>
+                                <span>{isRealityActive ? "REALITY INTERLOCK ENGAGED" : "UNVEIL LIVE SYSTEM REALITY"}</span>
                               </button>
 
                               {isRealityActive && (
@@ -511,9 +565,19 @@ export default function AdminDashboard() {
                               )}
                             </div>
 
-                            <div className="space-y-3 md:border-l md:border-slate-900 md:pl-12">
-                              <span className="text-[9px] font-mono text-slate-600 block font-black">// INTERNAL ASSET EXPORTS</span>
-                              <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
+                            <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
+                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
+                              <div className="w-full space-y-1 mb-2">
+                                <input 
+                                  type="text" value={dossierNotes[audit.id] || ""} onChange={(e) => setDossierNotes({ ...dossierNotes, [audit.id]: e.target.value })}
+                                  placeholder="APPEND CUSTOM DOSSIER ANNOTATION NOTE..."
+                                  className="w-full bg-black border border-slate-900 p-3 text-[10px] font-mono font-black italic uppercase text-slate-300 focus:border-red-600 outline-none"
+                                />
+                              </div>
+                              <div className="space-y-3">
+                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`w-full px-8 py-4 font-black uppercase text-[10px] tracking-widest transition-all border ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-950 text-slate-400 border-slate-900 hover:text-white'}`}><Shield size={14} /> {clientHasAccess ? "Dossier Unblurred" : "Dossier Blurred"}</button>
+                              </div>
                             </div>
                           </div>
 
