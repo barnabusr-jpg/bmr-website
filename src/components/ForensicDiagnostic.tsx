@@ -82,9 +82,12 @@ export default function ForensicDiagnostic() {
   }, []);
 
   const submitResults = async (finalAnswers: any) => {
+    // 🛡️ Double-click prevention thread lock
+    if (step === "submitting" || step === "done") return;
+    
     setStep("submitting");
 
-    // 1. Save data natively to the database table cell layout
+    // Save data natively to the database table cell layout
     const { error: updateError } = await supabase
       .from('operators')
       .update({ status: 'completed', raw_responses: finalAnswers })
@@ -97,10 +100,7 @@ export default function ForensicDiagnostic() {
       return;
     }
 
-    // 2. Decouple background synthesis network calls to protect state flow
     console.log("SURVEY_SUBMITTED_SUCCESSFULLY // NODE_SECURED");
-
-    // 3. Move the page cleanly to the success screen
     setStep("done");
   };
 
@@ -119,9 +119,24 @@ export default function ForensicDiagnostic() {
     }
   };
 
+  // ========================================================================
+  // 🛡️ RE-ENGINEERED TOP-LEVEL CONTROL GATES (THE FLASH LOOP LOCKOUT)
+  // ========================================================================
   if (step === "loading") return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-[0.3em]">Handshake_Initializing...</div>;
   if (step === "invalid") return <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center text-white font-mono uppercase tracking-widest"><ShieldAlert className="mb-4 text-red-600 mx-auto" size={48} /> Unauthorized_Node</div>;
   if (step === "finalized") return <div className="min-h-screen bg-black flex items-center justify-center p-16 text-center text-slate-500 font-mono uppercase tracking-widest border-2 border-red-900/10"><Lock className="mr-4 text-red-600 inline" /> NODE_SECURED: LINK_DEACTIVATED</div>;
+  
+  // Intercept the execution path right here during processing states!
+  if (step === "submitting") return <div className="min-h-screen bg-black flex items-center justify-center text-center py-20 font-mono font-black animate-pulse text-red-600 uppercase italic tracking-widest leading-none">Syncing_Ledger...</div>;
+  if (step === "done") return (
+    <div className="min-h-screen bg-black text-white p-12 font-mono flex items-center justify-center">
+      <div className="max-w-2xl w-full border border-red-900/30 p-16 bg-slate-950 shadow-2xl text-center py-10 animate-in zoom-in duration-500">
+        <CheckCircle className="mx-auto text-red-600 mb-6" size={48} />
+        <div className="font-black italic text-red-600 uppercase tracking-widest text-3xl">Segment_Secured</div>
+        <p className="text-slate-500 mt-4 text-[10px] uppercase tracking-widest">Forensic data packet transmitted.</p>
+      </div>
+    </div>
+  );
 
   if (step === "diagnostic" && (!questions || !questions[currentIndex])) {
     return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono italic animate-pulse">Syncing_Protocol_Questions...</div>;
@@ -158,15 +173,6 @@ export default function ForensicDiagnostic() {
                  </select>
                </div>
              )}
-          </div>
-        )}
-
-        {step === "submitting" && <div className="text-center py-20 font-black animate-pulse text-red-600 uppercase italic tracking-widest leading-none">Syncing_Ledger...</div>}
-        {step === "done" && (
-          <div className="text-center py-10 animate-in zoom-in duration-500">
-            <CheckCircle className="mx-auto text-red-600 mb-6" size={48} />
-            <div className="font-black italic text-red-600 uppercase tracking-widest text-3xl">Segment_Secured</div>
-            <p className="text-slate-500 mt-4 text-[10px] uppercase tracking-widest">Forensic data packet transmitted.</p>
           </div>
         )}
       </div>
