@@ -176,7 +176,8 @@ export default function AdminDashboard() {
   const runSynthesis = async (auditId: string) => {
     setIsUpdating(true);
     try {
-      const res = await fetch('/api/synthesize-fracture', {
+      // 🛠️ PLURAL ROUTE ALIGNMENT PATCH APPLIED HERE
+      const res = await fetch('/api/synthesize-fractures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auditId })
