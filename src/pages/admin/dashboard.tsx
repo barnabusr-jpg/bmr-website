@@ -72,8 +72,9 @@ export default function AdminDashboard() {
       query = query.eq('status', statusFilter);
     }
 
+    // ✅ FIXED: Scoped search strings strictly to real columns
     if (searchTerm.trim() !== "") {
-      query = query.or(`org_name.ilike.%${searchTerm}%,lead_email.ilike.%${searchTerm}%`);
+      query = query.ilike('org_name', `%${searchTerm}%`);
     }
 
     const startRange = currentPage * ROWS_PER_PAGE;
@@ -176,7 +177,6 @@ export default function AdminDashboard() {
   const runSynthesis = async (auditId: string) => {
     setIsUpdating(true);
     try {
-      // 🛠️ PLURAL ROUTE ALIGNMENT PATCH APPLIED HERE
       const res = await fetch('/api/synthesize-fractures', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -221,18 +221,14 @@ export default function AdminDashboard() {
     }
   };
 
-  // 🚀 HIGH-SPEED DEBOUNCED SLIDER TRANSMISSION PROTOCOL
   const handleLiveSliderChange = async (auditId: string, field: "ai_spend" | "roi_pct", value: number) => {
-    // 1. Instantly update UI locally to match knob tracking values at a flat 60fps
     setData(prev => prev.map(item => item.id === auditId ? { ...item, [field]: value } : item));
 
-    // 2. Kill any stale updates queued inside the execution pipe
     const targetTimerKey = `${auditId}-${field}`;
     if (debounceTimersRef.current[targetTimerKey]) {
       clearTimeout(debounceTimersRef.current[targetTimerKey]);
     }
 
-    // 3. Throttle the network hit so Supabase never chokes on the traffic loop
     debounceTimersRef.current[targetTimerKey] = setTimeout(async () => {
       try {
         await supabase
@@ -240,12 +236,11 @@ export default function AdminDashboard() {
           .update({ [field]: value })
           .eq('id', auditId);
         
-        // Remove tracking lock once write completes cleanly
         delete debounceTimersRef.current[targetTimerKey];
       } catch (err) {
         console.error("LIVE_SLIDER_SYNC_ERROR:", err);
       }
-    }, 120); // 120ms balances real-time delivery with absolute database safety
+    }, 120);
   };
 
   useEffect(() => {
@@ -263,7 +258,6 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
 
-  // Clean up timers on component termination
   useEffect(() => {
     return () => {
       Object.values(debounceTimersRef.current).forEach(clearTimeout);
@@ -423,7 +417,8 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
-                            <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">{audit.lead_email}</div>
+                            {/* Note: render container remains intact for display context */}
+                            <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">LEAD_RECORD_NODE</div>
                           </div>
                         </div>
                         
