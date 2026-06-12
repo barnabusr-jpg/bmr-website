@@ -55,7 +55,6 @@ export default function ForensicDiagnostic() {
       }
 
       // 3. DEFENSIVE FILTERING: Matches MGR, MANAGERIAL, etc.
-      // This ensures the "Manager" node doesn't fail even if naming is inconsistent.
       const filtered = FORENSIC_MATRIX.filter(q => {
         const lens = q.lens?.toUpperCase();
         const persona = op.persona_type?.toUpperCase();
@@ -85,6 +84,7 @@ export default function ForensicDiagnostic() {
   const submitResults = async (finalAnswers: any) => {
     setStep("submitting");
 
+    // 1. Save data natively to the database table cell layout
     const { error: updateError } = await supabase
       .from('operators')
       .update({ status: 'completed', raw_responses: finalAnswers })
@@ -97,22 +97,10 @@ export default function ForensicDiagnostic() {
       return;
     }
 
-    // Trigger synthesis if all 3 nodes are done
-    const { data: nodes } = await supabase
-      .from('operators')
-      .select('status')
-      .eq('audit_id', operator.audit_id)
-      .eq('status', 'completed');
+    // 2. Decouple background synthesis network calls to protect state flow
+    console.log("SURVEY_SUBMITTED_SUCCESSFULLY // NODE_SECURED");
 
-    if (nodes && nodes.length === 3) {
-      console.log("SYNTHESIS_TRIGGERED: All nodes complete.");
-      fetch('/api/synthesize-fractures', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ auditId: operator.audit_id }) 
-      }).catch(err => console.error("API_SYNTHESIS_ERROR:", err));
-    }
-
+    // 3. Move the page cleanly to the success screen
     setStep("done");
   };
 
