@@ -66,13 +66,14 @@ export default function AdminDashboard() {
 
     let query = supabase
       .from('audits')
-      .select('*', { count: 'exact' });
+      // ✅ BULLETPROOF SELECTION: Explicitly map real table properties, preventing PGRST204 cache failures
+      .select('id, org_name, status, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
 
     if (statusFilter !== "ALL") {
       query = query.eq('status', statusFilter);
     }
 
-    // ✅ FIXED: Scoped search strings strictly to real columns
+    // ✅ BULLETPROOF SEARCH: Filter exclusively by the valid company text columns
     if (searchTerm.trim() !== "") {
       query = query.ilike('org_name', `%${searchTerm}%`);
     }
@@ -85,7 +86,7 @@ export default function AdminDashboard() {
       .range(startRange, endRange);
 
     if (!error && audits) {
-      // ⚠️ Prevent background poll cycles from snatching values out of the user's hand while dragging
+      // ⚠️ Prevent background poll cycles from snatching values out of the user's hand while dragging sliders
       setData(prev => {
         return audits.map(newAudit => {
           const spendTimerKey = `${newAudit.id}-ai_spend`;
@@ -187,7 +188,7 @@ export default function AdminDashboard() {
       
       if (res.ok) {
         setIsUpdating(false);
-        let query = supabase.from('audits').select('*').eq('id', auditId).single();
+        let query = supabase.from('audits').select('id, org_name, status, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid').eq('id', auditId).single();
         const { data: cleanAudit } = await query;
         if (cleanAudit) {
           setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
@@ -417,7 +418,6 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
-                            {/* Note: render container remains intact for display context */}
                             <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">LEAD_RECORD_NODE</div>
                           </div>
                         </div>
