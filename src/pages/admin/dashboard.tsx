@@ -66,14 +66,13 @@ export default function AdminDashboard() {
 
     let query = supabase
       .from('audits')
-      // ✅ Explicitly map real table properties, preventing PGRST204 cache failures
-      .select('id, org_name, status, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
+      // 🔒 PERMANENT MATRIX FIX: Added sfi_score explicitly to prevent missing column data masking
+      .select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
 
     if (statusFilter !== "ALL") {
       query = query.eq('status', statusFilter);
     }
 
-    // ✅ Filter exclusively by the valid company text columns
     if (searchTerm.trim() !== "") {
       query = query.ilike('org_name', `%${searchTerm}%`);
     }
@@ -86,7 +85,6 @@ export default function AdminDashboard() {
       .range(startRange, endRange);
 
     if (!error && audits) {
-      // ⚠️ Prevent background poll cycles from snatching values out of the user's hand while dragging sliders
       setData(prev => {
         return audits.map(newAudit => {
           const spendTimerKey = `${newAudit.id}-ai_spend`;
@@ -108,7 +106,6 @@ export default function AdminDashboard() {
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     if (isUpdating) return;
-    // ✅ Captures both textual status and survey_completed logic flag parameters
     const { data: nodes } = await supabase
       .from('operators')
       .select('persona_type, status, email, survey_completed')
@@ -183,7 +180,6 @@ export default function AdminDashboard() {
   const runSynthesis = async (auditId: string) => {
     setIsUpdating(true);
     try {
-      // 🔒 ALIGNED ROUTE FIX: Unified path configured to tap your singular api repo file
       const res = await fetch('/api/synthesize-fracture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -194,7 +190,7 @@ export default function AdminDashboard() {
       
       if (res.ok) {
         setIsUpdating(false);
-        let query = supabase.from('audits').select('id, org_name, status, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid').eq('id', auditId).single();
+        let query = supabase.from('audits').select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid').eq('id', auditId).single();
         const { data: cleanAudit } = await query;
         if (cleanAudit) {
           setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
@@ -400,7 +396,7 @@ export default function AdminDashboard() {
 
                   const cleanStatus = (audit.status || "").toUpperCase();
                   
-                  // 🔒 HIGH-FIDELITY RE-COUPLING: Evaluates the parent status safely without a strict zero check blocker
+                  // 🔒 Unlocked evaluation condition: only hooks triangulation state
                   if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
                     playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
@@ -451,14 +447,11 @@ export default function AdminDashboard() {
                           
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
-                              // ✅ Full schema string identifiers aligned with database strings
                               { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
                               { label: 'MANAGERIAL TRACK', key: 'MANAGERIAL' },
                               { label: 'TECHNICAL TRACK', key: 'TECHNICAL' }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
-                              
-                              // ✅ Evaluates legacy workflow configurations and boolean indicators side by side
                               const isDone = node?.survey_completed === true || node?.status?.toLowerCase() === 'completed';
                               
                               return (
