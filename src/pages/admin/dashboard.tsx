@@ -183,7 +183,7 @@ export default function AdminDashboard() {
   const runSynthesis = async (auditId: string) => {
     setIsUpdating(true);
     try {
-      // 🔒 ALIGNED ROUTE FIX: Changed to singular path to match your repo route
+      // 🔒 ALIGNED ROUTE FIX: Unified path configured to tap your singular api repo file
       const res = await fetch('/api/synthesize-fracture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -399,7 +399,9 @@ export default function AdminDashboard() {
                   let targetTier = "TIER_01 // DRIFT DIAGNOSTICS";
 
                   const cleanStatus = (audit.status || "").toUpperCase();
-                  if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING") || sfi === 0) {
+                  
+                  // 🔒 HIGH-FIDELITY RE-COUPLING: Evaluates the parent status safely without a strict zero check blocker
+                  if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
                     playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
                     playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
@@ -408,7 +410,7 @@ export default function AdminDashboard() {
                     playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
                     playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance, removing the manual tax on your staff.";
                     targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
-                  } else if (sfi > 0) {
+                  } else if (sfi >= 0) {
                     playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
                     playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrating inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
                     playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
@@ -449,14 +451,14 @@ export default function AdminDashboard() {
                           
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
-                              // ✅ Full schema string identifiers aligned with database
+                              // ✅ Full schema string identifiers aligned with database strings
                               { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
                               { label: 'MANAGERIAL TRACK', key: 'MANAGERIAL' },
                               { label: 'TECHNICAL TRACK', key: 'TECHNICAL' }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
                               
-                              // ✅ Evaluates legacy structures alongside true boolean responses
+                              // ✅ Evaluates legacy workflow configurations and boolean indicators side by side
                               const isDone = node?.survey_completed === true || node?.status?.toLowerCase() === 'completed';
                               
                               return (
