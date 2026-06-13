@@ -183,7 +183,8 @@ export default function AdminDashboard() {
   const runSynthesis = async (auditId: string) => {
     setIsUpdating(true);
     try {
-      const res = await fetch('/api/synthesize-fractures', {
+      // 🔒 ALIGNED ROUTE FIX: Changed to singular path to match your repo route
+      const res = await fetch('/api/synthesize-fracture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auditId })
@@ -448,14 +449,14 @@ export default function AdminDashboard() {
                           
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
-                              // ✅ PERMANENT STRING ALIGNMENT: Explicitly searches full database entities verbatim
+                              // ✅ Full schema string identifiers aligned with database
                               { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
                               { label: 'MANAGERIAL TRACK', key: 'MANAGERIAL' },
                               { label: 'TECHNICAL TRACK', key: 'TECHNICAL' }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
                               
-                              // ✅ DYNAMIC SCHEMABREAK SAFETY: Supports legacy strings and direct booleans simultaneously
+                              // ✅ Evaluates legacy structures alongside true boolean responses
                               const isDone = node?.survey_completed === true || node?.status?.toLowerCase() === 'completed';
                               
                               return (
