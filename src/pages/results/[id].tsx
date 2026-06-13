@@ -15,17 +15,31 @@ export default function UnifiedResultsPortal() {
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => { setMounted(true); }, []);
+  // 🛡️ Lock out hydration rendering race conditions
+  useEffect(() => { 
+    setMounted(true); 
+  }, []);
 
   useEffect(() => {
     if (!id || !mounted) return;
+    
     const fetchInitialAuditState = async () => {
       try {
-        const { data, error } = await supabase.from("audits").select("*").eq("id", id).single();
+        const { data, error } = await supabase
+          .from("audits")
+          .select("*")
+          .eq("id", id)
+          .single();
+          
         if (error) throw error;
         if (data) setAudit(data as AuditRecord);
-      } catch (err) { console.error(err); } finally { setLoading(false); }
+      } catch (err) { 
+        console.error("Audit state fetch failure:", err); 
+      } finally { 
+        setLoading(false); 
+      }
     };
+    
     fetchInitialAuditState();
 
     const channelSubscription = supabase.channel(`live-workshop-${id}`)
@@ -36,30 +50,36 @@ export default function UnifiedResultsPortal() {
     return () => { supabase.removeChannel(channelSubscription); };
   }, [id, mounted]);
 
-  // 🚀 CUSTOMER LIFECYCLE TIME COUNTER
+  // 🚀 REAL-TIME TICKER COUNTER
   useEffect(() => {
     if (loading || !audit?.created_at) return;
 
     const calculateDeltaTime = () => {
       const historicalAnchorTime = new Date(audit.created_at).getTime();
       const currentRealTime = Date.now();
-      const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - historicalAnchorTime) / 1000);
+      // Ensure there is a minimum baseline time gap so fresh organic submissions start ticking immediately
+      const absoluteDeltaInSeconds = Math.max(0.5, (currentRealTime - historicalAnchorTime) / 1000);
       setElapsedSeconds(absoluteDeltaInSeconds);
     };
 
     calculateDeltaTime();
-    timerIntervalRef.current = setInterval(calculateDeltaTime, 100);
+    timerIntervalRef.current = setInterval(calculateDeltaTime, 50); // Increased resolution frequency to 50ms
 
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
   }, [loading, audit?.created_at]);
 
-  // 🎨 GLOBAL FIXED BRAND GREEN LOOK
-  const dbDecay = audit?.decay_pct || 24;
+  // 🎨 OPTION B DATA ENGINE: FALLBACK SAFETY CONTROLS
+  const dbDecay = audit?.decay_pct || 22;
   const isPhaseTwoActive = !!audit?.is_released;
-  const spend = audit?.ai_spend || 1.2;
-  const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
+
+  // Protect the mathematical scale factors from evaluating against zero/null components
+  const spend = audit?.ai_spend && audit.ai_spend > 0 ? audit.ai_spend : 1.45; // Falls back to $1.45M for real conditions
+  const targetRoi = audit?.roi_pct && audit.roi_pct > 0 ? audit.roi_pct : 18.5;  // Falls back to 18.5% expectation
+
+  // Generate resource volume calculations based on industry metrics
+  const fteCount = Math.round((spend * 1000000) / 200000) || 7;
   
   const laborMultiplier = 0.5; 
   const accentColorClass = "text-green-500"; 
@@ -73,7 +93,7 @@ export default function UnifiedResultsPortal() {
   const internalReworkTax = totalLaborTaxPool * 0.60;   
   const operationalDragTax = totalLaborTaxPool * 0.40;  
 
-  // Continuous linear exposure rate calculation
+  // Continuous linear exposure calculation powered by standard baseline constants
   const dynamicExposureRate = 0.22 * (dbDecay / 25); 
   const exposure = (dynamicExposureRate * (spend * 1000000)) * 1.15;
   
@@ -110,11 +130,12 @@ export default function UnifiedResultsPortal() {
 
   const activeAnomaliesList = isPhaseTwoActive && audit?.fractures && audit.fractures.length > 0 ? audit.fractures : genericAnomalies;
 
-  if (!mounted || loading) {
+  // 🛡️ CIRCUIT BREAKER: Block rendering completely until Next.js parameters and database are ready
+  if (!mounted || loading || !router.isReady) {
     return (
-      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic">
+      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
         <Activity className="animate-spin mb-4" size={48} />
-        <p className="font-mono text-xs uppercase tracking-[0.4em] font-black">DECRYPTING SECURE VAULT METRICS...</p>
+        <p className="font-mono text-xs uppercase tracking-[0.4em]">DECRYPTING SECURE VAULT METRICS...</p>
       </div>
     );
   }
