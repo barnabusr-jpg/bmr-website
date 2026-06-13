@@ -108,7 +108,7 @@ export default function AdminDashboard() {
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     if (isUpdating) return;
-    // ✅ CRITICAL UPGRADE: Added selection parameters to capture survey_completed flag state
+    // ✅ Captures both textual status and survey_completed logic flag parameters
     const { data: nodes } = await supabase
       .from('operators')
       .select('persona_type, status, email, survey_completed')
@@ -448,13 +448,14 @@ export default function AdminDashboard() {
                           
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
-                              { label: 'EXECUTIVE TRACK', key: 'EXE' },
-                              { label: 'MANAGERIAL TRACK', key: 'MGR' },
-                              { label: 'TECHNICAL TRACK', key: 'TEC' }
+                              // ✅ PERMANENT STRING ALIGNMENT: Explicitly searches full database entities verbatim
+                              { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
+                              { label: 'MANAGERIAL TRACK', key: 'MANAGERIAL' },
+                              { label: 'TECHNICAL TRACK', key: 'TECHNICAL' }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
                               
-                              // ✅ DYNAMIC CIRCUIT FIX: Evaluates BOTH string identifiers and new true boolean flags
+                              // ✅ DYNAMIC SCHEMABREAK SAFETY: Supports legacy strings and direct booleans simultaneously
                               const isDone = node?.survey_completed === true || node?.status?.toLowerCase() === 'completed';
                               
                               return (
