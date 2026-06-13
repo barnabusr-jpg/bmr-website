@@ -26,10 +26,10 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 1. Fetch operator
+      // 1. Fetch operator: ✅ FIXED to select only explicit, existing columns instead of '*'
       const { data: op, error: opError } = await supabase
         .from('operators')
-        .select('*')
+        .select('id, audit_id, access_code, status, persona_type')
         .eq('access_code', code)
         .single();
 
@@ -39,7 +39,7 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 2. Fetch parent audit
+      // 2. Fetch parent audit: Explicitly target safe structural columns
       const { data: audit, error: auditError } = await supabase
         .from('audits')
         .select('status, org_name, id')
@@ -126,7 +126,6 @@ export default function ForensicDiagnostic() {
   if (step === "invalid") return <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center text-white font-mono uppercase tracking-widest"><ShieldAlert className="mb-4 text-red-600 mx-auto" size={48} /> Unauthorized_Node</div>;
   if (step === "finalized") return <div className="min-h-screen bg-black flex items-center justify-center p-16 text-center text-slate-500 font-mono uppercase tracking-widest border-2 border-red-900/10"><Lock className="mr-4 text-red-600 inline" /> NODE_SECURED: LINK_DEACTIVATED</div>;
   
-  // Intercept the execution path right here during processing states!
   if (step === "submitting") return <div className="min-h-screen bg-black flex items-center justify-center text-center py-20 font-mono font-black animate-pulse text-red-600 uppercase italic tracking-widest leading-none">Syncing_Ledger...</div>;
   if (step === "done") return (
     <div className="min-h-screen bg-black text-white p-12 font-mono flex items-center justify-center">
