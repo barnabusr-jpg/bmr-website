@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText
+  X, Send, CheckCircle, Clock, Search, BellRing, FileText, Monitor
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -66,13 +66,13 @@ export default function AdminDashboard() {
 
     let query = supabase
       .from('audits')
-      .select('*', { count: 'exact' });
+      // 🔒 PERMANENT MATRIX FIX: Added sfi_score explicitly to prevent missing column data masking
+      .select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
 
     if (statusFilter !== "ALL") {
       query = query.eq('status', statusFilter);
     }
 
-    // ✅ FIXED: Scoped search strings strictly to real columns
     if (searchTerm.trim() !== "") {
       query = query.ilike('org_name', `%${searchTerm}%`);
     }
@@ -85,7 +85,6 @@ export default function AdminDashboard() {
       .range(startRange, endRange);
 
     if (!error && audits) {
-      // ⚠️ Prevent background poll cycles from snatching values out of the user's hand while dragging
       setData(prev => {
         return audits.map(newAudit => {
           const spendTimerKey = `${newAudit.id}-ai_spend`;
@@ -107,7 +106,11 @@ export default function AdminDashboard() {
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     if (isUpdating) return;
-    const { data: nodes } = await supabase.from('operators').select('persona_type, status, email').eq('audit_id', auditId);
+    const { data: nodes } = await supabase
+      .from('operators')
+      .select('persona_type, status, email, survey_completed')
+      .eq('audit_id', auditId);
+      
     if (nodes) setNodeDetails(nodes);
   }, [isUpdating]);
 
@@ -177,7 +180,7 @@ export default function AdminDashboard() {
   const runSynthesis = async (auditId: string) => {
     setIsUpdating(true);
     try {
-      const res = await fetch('/api/synthesize-fractures', {
+      const res = await fetch('/api/synthesize-fracture', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ auditId })
@@ -187,7 +190,7 @@ export default function AdminDashboard() {
       
       if (res.ok) {
         setIsUpdating(false);
-        let query = supabase.from('audits').select('*').eq('id', auditId).single();
+        let query = supabase.from('audits').select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid').eq('id', auditId).single();
         const { data: cleanAudit } = await query;
         if (cleanAudit) {
           setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
@@ -392,7 +395,9 @@ export default function AdminDashboard() {
                   let targetTier = "TIER_01 // DRIFT DIAGNOSTICS";
 
                   const cleanStatus = (audit.status || "").toUpperCase();
-                  if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING") || sfi === 0) {
+                  
+                  // 🔒 Unlocked evaluation condition: only hooks triangulation state
+                  if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
                     playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
                     playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
@@ -401,7 +406,7 @@ export default function AdminDashboard() {
                     playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
                     playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance, removing the manual tax on your staff.";
                     targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
-                  } else if (sfi > 0) {
+                  } else if (sfi >= 0) {
                     playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
                     playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrating inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
                     playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
@@ -417,7 +422,6 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
-                            {/* Note: render container remains intact for display context */}
                             <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">LEAD_RECORD_NODE</div>
                           </div>
                         </div>
@@ -443,12 +447,13 @@ export default function AdminDashboard() {
                           
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
-                              { label: 'EXECUTIVE TRACK', key: 'EXE' },
-                              { label: 'MANAGERIAL TRACK', key: 'MGR' },
-                              { label: 'TECHNICAL TRACK', key: 'TEC' }
+                              { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
+                              { label: 'MANAGERIAL TRACK', key: 'MANAGERIAL' },
+                              { label: 'TECHNICAL TRACK', key: 'TECHNICAL' }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
-                              const isDone = node?.status?.toLowerCase() === 'completed';
+                              const isDone = node?.survey_completed === true || node?.status?.toLowerCase() === 'completed';
+                              
                               return (
                                 <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
                                   <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
@@ -473,7 +478,7 @@ export default function AdminDashboard() {
                                   </div>
                                   
                                   <div className="flex-1 flex flex-col justify-center items-center text-center py-4">
-                                    <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-white' : 'text-2xl text-slate-800 animate-pulse'}`}>
+                                    <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-green-500' : 'text-2xl text-slate-800 animate-pulse'}`}>
                                       {isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}
                                     </div>
                                   </div>
