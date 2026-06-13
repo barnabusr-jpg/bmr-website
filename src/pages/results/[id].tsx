@@ -63,14 +63,14 @@ export default function UnifiedResultsPortal() {
     };
 
     calculateDeltaTime();
-    timerIntervalRef.current = setInterval(calculateDeltaTime, 50); // Increased resolution frequency to 50ms
+    timerIntervalRef.current = setInterval(calculateDeltaTime, 50); // High resolution update frequency (50ms)
 
     return () => {
       if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
     };
   }, [loading, audit?.created_at]);
 
-  // 🎨 OPTION B DATA ENGINE: FALLBACK SAFETY CONTROLS
+  // 🎨 DATA ENGINE: FALLBACK SAFETY CONTROLS
   const dbDecay = audit?.decay_pct || 22;
   const isPhaseTwoActive = !!audit?.is_released;
 
@@ -206,14 +206,15 @@ export default function UnifiedResultsPortal() {
           
           <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-200/80" />
           
-          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
+          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[280px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
-            <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums ${accentColorClass} leading-none block break-keep ${
-              dynamicAccumulatedLoss > 9999 ? "text-3xl lg:text-4xl" : "text-4xl md:text-5xl"
-            }`}>
-              ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            
+            {/* 🪟 SAFARI UNMASKED LAYOUT CONTAINER */}
+            <div className={`font-mono font-black mt-3 text-4xl md:text-5xl lg:text-6xl ${accentColorClass} leading-none block tracking-normal min-w-[280px]`}>
+              ${dynamicAccumulatedLoss.toFixed(2)}
             </div>
-            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">// REAL TIME LOSS SINCE FIRST CONTACT</span>
+            
+            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-2.5 whitespace-nowrap">// REAL TIME LOSS SINCE FIRST CONTACT</span>
           </div>
         </div>
 
