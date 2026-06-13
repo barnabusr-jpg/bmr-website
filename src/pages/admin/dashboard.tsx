@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  FileDown, Monitor, X, Send, CheckCircle, Clock, Search, BellRing, FileText
+  X, Send, CheckCircle, Clock, Search, BellRing, FileText, Monitor
 } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -66,14 +66,14 @@ export default function AdminDashboard() {
 
     let query = supabase
       .from('audits')
-      // ✅ BULLETPROOF SELECTION: Explicitly map real table properties, preventing PGRST204 cache failures
+      // ✅ Explicitly map real table properties, preventing PGRST204 cache failures
       .select('id, org_name, status, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
 
     if (statusFilter !== "ALL") {
       query = query.eq('status', statusFilter);
     }
 
-    // ✅ BULLETPROOF SEARCH: Filter exclusively by the valid company text columns
+    // ✅ Filter exclusively by the valid company text columns
     if (searchTerm.trim() !== "") {
       query = query.ilike('org_name', `%${searchTerm}%`);
     }
@@ -108,7 +108,12 @@ export default function AdminDashboard() {
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     if (isUpdating) return;
-    const { data: nodes } = await supabase.from('operators').select('persona_type, status, email').eq('audit_id', auditId);
+    // ✅ CRITICAL UPGRADE: Added selection parameters to capture survey_completed flag state
+    const { data: nodes } = await supabase
+      .from('operators')
+      .select('persona_type, status, email, survey_completed')
+      .eq('audit_id', auditId);
+      
     if (nodes) setNodeDetails(nodes);
   }, [isUpdating]);
 
@@ -448,7 +453,10 @@ export default function AdminDashboard() {
                               { label: 'TECHNICAL TRACK', key: 'TEC' }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
-                              const isDone = node?.status?.toLowerCase() === 'completed';
+                              
+                              // ✅ DYNAMIC CIRCUIT FIX: Evaluates BOTH string identifiers and new true boolean flags
+                              const isDone = node?.survey_completed === true || node?.status?.toLowerCase() === 'completed';
+                              
                               return (
                                 <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
                                   <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
@@ -473,7 +481,7 @@ export default function AdminDashboard() {
                                   </div>
                                   
                                   <div className="flex-1 flex flex-col justify-center items-center text-center py-4">
-                                    <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-white' : 'text-2xl text-slate-800 animate-pulse'}`}>
+                                    <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-green-500' : 'text-2xl text-slate-800 animate-pulse'}`}>
                                       {isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}
                                     </div>
                                   </div>
