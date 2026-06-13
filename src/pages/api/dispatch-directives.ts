@@ -89,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase;">
                           Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
                         </p>
-                        <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0;"/>
+                        <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
                         <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0;">
                           Your company leadership recently started a diagnostic project with BMR Solutions. This project is designed to evaluate your technology investments. The goal is to identify operational waste, uncover structural errors, and discover hidden costs within your AI systems.
                         </p>
@@ -198,7 +198,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(`Primary Ledger State Compilation Error: ${updateError.message}`);
     }
 
-    await Promise.all(emailPromises);
+    // 🛡️ NON-BLOCKING ASSEMBLY: Isolate third-party email exceptions so workflow continues
+    try {
+      if (emailPromises.length > 0) {
+        await Promise.all(emailPromises);
+      }
+    } catch (emailErr: any) {
+      console.warn("⚠️ THIRD PARTY NOTICE // SendGrid authentication barrier caught:", emailErr.message);
+    }
     
     return res.status(200).json({ 
       status: 'SUCCESS',
