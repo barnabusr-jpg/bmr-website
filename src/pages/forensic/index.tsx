@@ -16,10 +16,10 @@ interface TriangulationState {
 }
 
 export default function ForensicEngineRoot() {
-  const [viewState, setViewState] = useState<'GATE' | 'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT'>('GATE');
+  const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT'>('INTAKE');
   const [companyName, setCompanyName] = useState('');
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF');
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // null tracks "checking status" phase
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({
     EXECUTIVE: '',
@@ -32,7 +32,7 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null);
   const [inputError, setInputError] = useState('');
 
-  // Read URL parameters on initialization to check for structural prescriptions and admin access
+  // Enforce runtime parameter query evaluation
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -47,13 +47,11 @@ export default function ForensicEngineRoot() {
         setCompanyName(entityParam.toUpperCase());
       }
       
-      // Strict Admin Gating Condition: Requires prescriptive pass token from main core engine
+      // Strict Gating Evaluation
       if (authParam === 'admin_verified_secure') {
         setIsAdmin(true);
-        setViewState('INTAKE');
       } else {
         setIsAdmin(false);
-        setViewState('GATE');
       }
     }
   }, []);
@@ -66,7 +64,7 @@ export default function ForensicEngineRoot() {
       OPS_MGMT: 'operations-director@metricdrift.com',
       SYSTEM_USER: 'platform-operator@metricdrift.com'
     });
-    setActivePillar('IGF');
+    setActivePillar('AVS');
     setInputError('');
   };
 
@@ -134,31 +132,40 @@ export default function ForensicEngineRoot() {
     };
   };
 
-  return (
-    <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white">
-      
-      {/* 🔒 PHASE 0: INSTITUTIONAL PAYWALL GATE (NON-ADMIN PREVIEW) */}
-      {viewState === 'GATE' && (
+  // 1. Loading Guard State
+  if (isAdmin === null) {
+    return (
+      <div className="bg-black min-h-screen text-zinc-500 font-mono flex items-center justify-center">
+        <span className="text-xs tracking-widest animate-pulse">// INITIALIZING SECURE INTERFACE VECTOR...</span>
+      </div>
+    );
+  }
+
+  // 2. ABSOLUTE SECURITY GATEWAY BYPASS (IF NOT ADMIN, FORCE RENDER INFRASTRUCTURE PAYWALL EXCLUSIVELY)
+  if (isAdmin === false) {
+    return (
+      <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4 select-none">
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl">
+          
           <div className="border-b border-zinc-900 pb-4 mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Lock size={18} className="text-red-500 animate-pulse" />
+              <Lock size={18} className="text-red-500" />
               <div>
-                <h2 className="text-xs font-black text-white uppercase tracking-widest leading-none">// PROTECTED DIAGNOSTIC INFRASTRUCTURE</h2>
-                <span className="text-[9px] text-zinc-500 tracking-wider block mt-1">LEVEL 3 HIGH-DENSITY ANALYSIS SUITE</span>
+                <h2 className="text-xs font-black text-white uppercase tracking-widest leading-none">// SECURE GATEWAY ENFORCED</h2>
+                <span className="text-[9px] text-zinc-500 tracking-wider block mt-1">ORGANIZATIONAL SUITE LICENSE REQUIRED</span>
               </div>
             </div>
-            <span className="text-[9px] font-black bg-red-950 text-red-500 border border-red-900 px-2 py-0.5 rounded-xs tracking-widest uppercase">RESTRICTED</span>
+            <span className="text-[9px] font-black bg-red-950 text-red-500 border border-red-900 px-2 py-0.5 rounded-xs tracking-widest uppercase">LOCKED</span>
           </div>
 
           <div className="space-y-6">
             <div className="bg-black border border-zinc-900 p-5 rounded-sm">
-              <span className="text-[9px] text-zinc-500 block font-black tracking-widest uppercase mb-1">// PRESCRIBED EVALUATION LAYER</span>
+              <span className="text-[9px] text-zinc-500 block font-black tracking-widest uppercase mb-1">// SYSTEM DETECTED ASSESSMENT SECTOR</span>
               <h3 className="text-sm font-black text-white uppercase tracking-wider mb-2">{getPillarNodeDetails().title}</h3>
               <p className="text-xs text-zinc-400 font-sans leading-relaxed normal-case font-normal mb-4">
                 {getPillarNodeDetails().exposure}
               </p>
-              <div className="border-t border-zinc-900 pt-3 flex items-center gap-2 text-red-400 text-[10px] font-bold tracking-wider uppercase">
+              <div className="border-t border-zinc-900 pt-3 flex items-center gap-2 text-red-500 text-[10px] font-bold tracking-wider uppercase">
                 <ShieldAlert size={12} /> {getPillarNodeDetails().metric}
               </div>
             </div>
@@ -166,34 +173,40 @@ export default function ForensicEngineRoot() {
             <div className="border border-zinc-900 bg-zinc-950/60 p-5 rounded-sm flex items-start gap-4">
               <Building size={24} className="text-zinc-600 shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wide mb-1">Administrative Action Required</h4>
+                <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wide mb-1">Administrative Access Required</h4>
                 <p className="text-xs text-zinc-500 font-sans leading-relaxed normal-case font-normal">
-                  This multi-persona triangulation matrix is part of an enterprise-tier compliance license. To execute this posture run, your organization's designated **Primary Workspace Administrator** must initialize the distribution keys directly from the main administrative panel dashboard.
+                  This triangulated assessment stream can only be authorized and initialized by a licensed administrator. Please contact your organization's workspace system supervisor to request access links for your assigned node endpoints.
                 </p>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-zinc-900 flex flex-col gap-2">
+            <div className="pt-4 border-t border-zinc-900">
               <a 
                 href="/dashboard"
                 className="w-full bg-zinc-100 text-black font-mono text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center"
               >
-                Return to Admin System Space <ArrowRight size={14} />
+                Return to Master Workspace Dashboard <ArrowRight size={14} />
               </a>
-              <span className="text-[9px] text-zinc-600 text-center uppercase tracking-widest mt-2">// End-User direct initialization pathways disabled // Code-ID status: Locked</span>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* 🏢 CASE 1: MASTER INTAKE SETUP SCREEN (ONLY ACCESSED VIA ADMIN LINK) */}
-      {viewState === 'INTAKE' && isAdmin && (
+        </div>
+      </div>
+    );
+  }
+
+  // 3. SECURE RE-ROUTE: ONLY COMPILED IF AUTHORIZED ADMIN IS CONFIRMED TRUE
+  return (
+    <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white">
+      
+      {/* CASE 1: PRIVILEGED INTAKE SCREEN */}
+      {viewState === 'INTAKE' && (
         <div className="w-full max-w-lg border border-zinc-900 bg-zinc-950/40 p-8 text-left italic rounded-sm shadow-xl shadow-black/40">
           <div className="border-b border-zinc-900 pb-4 mb-6 flex items-center gap-3">
             <ShieldAlert size={20} className="text-red-500 animate-pulse shrink-0" />
             <div>
               <h2 className="text-sm font-black text-white uppercase tracking-widest leading-none">// QUAD-NODE ENGINE SETUP</h2>
-              <span className="text-[9px] text-zinc-500 tracking-wider block mt-1">AUTHORIZED PRIVILEGED ADMIN MODE</span>
+              <span className="text-[9px] text-zinc-500 tracking-wider block mt-1 font-mono not-italic uppercase text-red-500">PRIVILEGED SYSTEM SPACE // SECURE</span>
             </div>
           </div>
 
@@ -211,7 +224,7 @@ export default function ForensicEngineRoot() {
             </div>
 
             <div>
-              <label className="text-[10px] text-zinc-500 block font-black tracking-widest uppercase mb-2">// PRIMARY FUNNEL PILLAR STRATIFICATION</label>
+              <label className="text-[10px] text-zinc-500 block font-black tracking-widest uppercase mb-2">// ACTIVE PRESCRIBED PILLAR SECTOR</label>
               <div className="grid grid-cols-1 gap-2">
                 {[
                   { id: 'IGF', title: 'Compliance & Legal (IGF)', desc: 'Regulatory exposures & opaque decision metrics' },
@@ -233,7 +246,7 @@ export default function ForensicEngineRoot() {
             </div>
 
             <div className="space-y-3 pt-2 border-t border-zinc-900">
-              <label className="text-[10px] text-zinc-500 block font-black tracking-widest uppercase mb-1">// ENTER ALIGNMENT VECTOR ROUTING PATHS</label>
+              <label className="text-[10px] text-zinc-500 block font-black tracking-widest uppercase mb-1">// ASSIGN VECTOR TARGET ROLES</label>
               {Object.keys(emails).map((role) => (
                 <div key={role}>
                   <span className="text-[9px] text-zinc-500 block mb-1 font-black tracking-widest">// {role.replace('_', ' ')} ENDPOINT</span>
@@ -257,7 +270,7 @@ export default function ForensicEngineRoot() {
                 type="submit"
                 className="w-full bg-zinc-100 text-black font-mono text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md"
               >
-                Assemble Triangulation matrix <ArrowRight size={14}/>
+                Assemble Triangulation Matrix <ArrowRight size={14}/>
               </button>
 
               <button
@@ -272,7 +285,7 @@ export default function ForensicEngineRoot() {
         </div>
       )}
 
-      {/* 📊 CASE 2: CENTRAL OPERATIONS HUB */}
+      {/* CASE 2: COORDINATION REWIRING HUB */}
       {viewState === 'HUB' && triangulation && (
         <div className="w-full max-w-2xl border border-zinc-900 bg-zinc-950/40 p-8 text-left rounded-sm shadow-2xl">
           <div className="border-b border-zinc-900 pb-4 mb-6 flex justify-between items-center">
@@ -320,7 +333,7 @@ export default function ForensicEngineRoot() {
                         onClick={() => {
                           const email = triangulation.emails[persona];
                           const subject = `CRITICAL ACTION REQUIRED: Complete Assessment for ${triangulation.companyName}`;
-                          const body = `Team,\n\nYour specific organizational vantage point is required to map our unhedged exposure under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease synchronize inputs directly with our account architect at your earliest convenience.\n\nSecure Session Access Port: ${window.location.href}\n\nEncryption Protocol Verified: Pure Client-Side In-Memory Sandbox`;
+                          const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access the gateway platform at your convenience.\n\nSecure Terminal Link: ${window.location.origin}${window.location.pathname}?pillar=${triangulation.pillar}`;
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                         }}
                         className="text-[9px] text-zinc-500 font-bold hover:text-red-400 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0"
@@ -350,7 +363,7 @@ export default function ForensicEngineRoot() {
               disabled={!allPersonasComplete}
               className={`w-full sm:w-auto px-6 py-4 text-xs font-black uppercase tracking-widest rounded-sm transition-all ${
                 allPersonasComplete
-                  ? 'bg-red-600 text-white hover:bg-white hover:text-black cursor-pointer shadow-lg shadow-red-900/10'
+                  ? 'bg-red-600 text-white hover:bg-white hover:text-black cursor-pointer'
                   : 'bg-zinc-950 text-zinc-700 border border-zinc-900 cursor-not-allowed'
               }`}
             >
@@ -360,7 +373,7 @@ export default function ForensicEngineRoot() {
         </div>
       )}
 
-      {/* 📝 CASE 3: DIAGNOSTIC MATRIX ENGINE BLOCK */}
+      {/* CASE 3: EXECUTING ASSESSMENT CODES */}
       {viewState === 'WIZARD' && triangulation && activePersona && (
         <ForensicDiagnosticWizard 
           companyName={`${triangulation.companyName}::${activePersona}`}
@@ -376,7 +389,7 @@ export default function ForensicEngineRoot() {
         />
       )}
 
-      {/* 🚀 CASE 4: PREMIUM ALIGNED DASHBOARD VIEWS CONTAINER */}
+      {/* CASE 4: LIVE PREMIUM ANALYSIS VIEW COCKPIT */}
       {viewState === 'COCKPIT' && triangulation && (
         <ForensicCommandCockpit 
           companyName={triangulation.companyName} 
