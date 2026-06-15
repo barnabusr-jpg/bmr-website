@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import ForensicDiagnosticWizard from '@/components/ForensicDiagnosticWizard';
-import ForensicCommandCockpit from '@/components/ForensicCommandCockpit';
+import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard';
+import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
 import { Shield, ShieldAlert, ArrowRight, Play } from 'lucide-react';
 import { InMemoryCalculatedMetrics } from '../../types/forensicRuntime';
 
