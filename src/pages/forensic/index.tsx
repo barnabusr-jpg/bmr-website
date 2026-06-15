@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard';
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
 import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building } from 'lucide-react';
@@ -19,8 +19,7 @@ export default function ForensicEngineRoot() {
   const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT'>('INTAKE');
   const [companyName, setCompanyName] = useState('');
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF');
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // null tracks "checking status" phase
-
+  
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({
     EXECUTIVE: '',
     TECH_MGMT: '',
@@ -32,29 +31,33 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null);
   const [inputError, setInputError] = useState('');
 
-  // Enforce runtime parameter query evaluation
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const pillarParam = params.get('pillar') as FunnelPillar;
-      const authParam = params.get('auth');
-      const entityParam = params.get('entity');
+  // 🔒 HARD GATEWAY VERIFICATION LAYER (RUNS BEFORE COMPONENT LAYOUT PARSING)
+  let authorizedAdmin = false;
+  let dynamicPrescription: FunnelPillar = 'IGF';
+  let initialEntity = '';
 
-      if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam)) {
-        setActivePillar(pillarParam);
-      }
-      if (entityParam) {
-        setCompanyName(entityParam.toUpperCase());
-      }
-      
-      // Strict Gating Evaluation
-      if (authParam === 'admin_verified_secure') {
-        setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
-      }
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    authorizedAdmin = params.get('auth') === 'admin_verified_secure';
+    
+    const pillarParam = params.get('pillar') as FunnelPillar;
+    if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam)) {
+      dynamicPrescription = pillarParam;
     }
-  }, []);
+    
+    const entityParam = params.get('entity');
+    if (entityParam) {
+      initialEntity = entityParam.toUpperCase();
+    }
+  }
+
+  // Sync state variables synchronously on first layout frame pass
+  React.useMemo(() => {
+    setActivePillar(dynamicPrescription);
+    if (initialEntity && !companyName) {
+      setCompanyName(initialEntity);
+    }
+  }, [dynamicPrescription, initialEntity]);
 
   const handleLoadDemoParameters = () => {
     setCompanyName('METRIC_DRIFT_CORP');
@@ -64,7 +67,7 @@ export default function ForensicEngineRoot() {
       OPS_MGMT: 'operations-director@metricdrift.com',
       SYSTEM_USER: 'platform-operator@metricdrift.com'
     });
-    setActivePillar('AVS');
+    setActivePillar(dynamicPrescription);
     setInputError('');
   };
 
@@ -132,19 +135,10 @@ export default function ForensicEngineRoot() {
     };
   };
 
-  // 1. Loading Guard State
-  if (isAdmin === null) {
+  // ❌ CRITICAL SECURITY OVERRIDE: IF THE AUTH ARGUMENT IS NOT MATCHED, BLOCK RENDERING IMMEDIATELY
+  if (!authorizedAdmin) {
     return (
-      <div className="bg-black min-h-screen text-zinc-500 font-mono flex items-center justify-center">
-        <span className="text-xs tracking-widest animate-pulse">// INITIALIZING SECURE INTERFACE VECTOR...</span>
-      </div>
-    );
-  }
-
-  // 2. ABSOLUTE SECURITY GATEWAY BYPASS (IF NOT ADMIN, FORCE RENDER INFRASTRUCTURE PAYWALL EXCLUSIVELY)
-  if (isAdmin === false) {
-    return (
-      <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4 select-none">
+      <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4">
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl">
           
           <div className="border-b border-zinc-900 pb-4 mb-6 flex items-center justify-between">
@@ -165,7 +159,7 @@ export default function ForensicEngineRoot() {
               <p className="text-xs text-zinc-400 font-sans leading-relaxed normal-case font-normal mb-4">
                 {getPillarNodeDetails().exposure}
               </p>
-              <div className="border-t border-zinc-900 pt-3 flex items-center gap-2 text-red-500 text-[10px] font-bold tracking-wider uppercase">
+              <div className="border-t border-zinc-900 pt-3 flex items-center gap-2 text-red-400 text-[10px] font-bold tracking-wider uppercase">
                 <ShieldAlert size={12} /> {getPillarNodeDetails().metric}
               </div>
             </div>
@@ -183,7 +177,7 @@ export default function ForensicEngineRoot() {
             <div className="pt-4 border-t border-zinc-900">
               <a 
                 href="/dashboard"
-                className="w-full bg-zinc-100 text-black font-mono text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center"
+                className="w-full bg-zinc-100 text-black font-mono text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer"
               >
                 Return to Master Workspace Dashboard <ArrowRight size={14} />
               </a>
@@ -195,11 +189,10 @@ export default function ForensicEngineRoot() {
     );
   }
 
-  // 3. SECURE RE-ROUTE: ONLY COMPILED IF AUTHORIZED ADMIN IS CONFIRMED TRUE
+  // 🔓 OTHERWISE: DISPLAY SECURED MANAGEMENT SETUP PANEL
   return (
     <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white">
       
-      {/* CASE 1: PRIVILEGED INTAKE SCREEN */}
       {viewState === 'INTAKE' && (
         <div className="w-full max-w-lg border border-zinc-900 bg-zinc-950/40 p-8 text-left italic rounded-sm shadow-xl shadow-black/40">
           <div className="border-b border-zinc-900 pb-4 mb-6 flex items-center gap-3">
@@ -285,7 +278,6 @@ export default function ForensicEngineRoot() {
         </div>
       )}
 
-      {/* CASE 2: COORDINATION REWIRING HUB */}
       {viewState === 'HUB' && triangulation && (
         <div className="w-full max-w-2xl border border-zinc-900 bg-zinc-950/40 p-8 text-left rounded-sm shadow-2xl">
           <div className="border-b border-zinc-900 pb-4 mb-6 flex justify-between items-center">
@@ -373,7 +365,6 @@ export default function ForensicEngineRoot() {
         </div>
       )}
 
-      {/* CASE 3: EXECUTING ASSESSMENT CODES */}
       {viewState === 'WIZARD' && triangulation && activePersona && (
         <ForensicDiagnosticWizard 
           companyName={`${triangulation.companyName}::${activePersona}`}
@@ -389,7 +380,6 @@ export default function ForensicEngineRoot() {
         />
       )}
 
-      {/* CASE 4: LIVE PREMIUM ANALYSIS VIEW COCKPIT */}
       {viewState === 'COCKPIT' && triangulation && (
         <ForensicCommandCockpit 
           companyName={triangulation.companyName} 
