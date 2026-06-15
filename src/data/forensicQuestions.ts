@@ -625,9 +625,9 @@ export const forensicQuestions: Record<string, LocalQuestion> = {
     }
   },
 
-  -- ===========================================================================
-  -- PILLAR 3: HUMAN-AUTONOMOUS INTERACTION [HAI] (QUESTIONS 61-90)
-  -- ===========================================================================
+  // ===========================================================================
+  // PILLAR 3: HUMAN-AUTONOMOUS INTERACTION [HAI] (QUESTIONS 61-90)
+  // ===========================================================================
   
   -- --- HAI: EXECUTIVE NODE (GOVERNANCE & STRATEGY) ---
   "HAI-61-EXEC": {
