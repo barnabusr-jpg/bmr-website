@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard';
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
-import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail } from 'lucide-react';
+import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building } from 'lucide-react';
 import { InMemoryCalculatedMetrics } from '../../types/forensicRuntime';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI';
@@ -16,10 +16,11 @@ interface TriangulationState {
 }
 
 export default function ForensicEngineRoot() {
-  const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT'>('INTAKE');
+  const [viewState, setViewState] = useState<'GATE' | 'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT'>('GATE');
   const [companyName, setCompanyName] = useState('');
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF');
-  
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({
     EXECUTIVE: '',
     TECH_MGMT: '',
@@ -31,7 +32,32 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null);
   const [inputError, setInputError] = useState('');
 
-  // Refinement 3: Demo Mode Injector for Sales Optimization
+  // Read URL parameters on initialization to check for structural prescriptions and admin access
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const pillarParam = params.get('pillar') as FunnelPillar;
+      const authParam = params.get('auth');
+      const entityParam = params.get('entity');
+
+      if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam)) {
+        setActivePillar(pillarParam);
+      }
+      if (entityParam) {
+        setCompanyName(entityParam.toUpperCase());
+      }
+      
+      // Strict Admin Gating Condition: Requires prescriptive pass token from main core engine
+      if (authParam === 'admin_verified_secure') {
+        setIsAdmin(true);
+        setViewState('INTAKE');
+      } else {
+        setIsAdmin(false);
+        setViewState('GATE');
+      }
+    }
+  }, []);
+
   const handleLoadDemoParameters = () => {
     setCompanyName('METRIC_DRIFT_CORP');
     setEmails({
@@ -90,17 +116,84 @@ export default function ForensicEngineRoot() {
     ? Object.values(triangulation.completions).every(status => status === true)
     : false;
 
+  const getPillarNodeDetails = () => {
+    if (activePillar === 'AVS') return {
+      title: "PIPELINE DRIFT & REWORK TAX NODE (AVS)",
+      exposure: "Quantifies silent schema fractures and engineering budget drain.",
+      metric: "Avg. Loss: $425,000 to $637,500 per 100 deployments due to unhedged architectural drift."
+    };
+    if (activePillar === 'HAI') return {
+      title: "AUTOMATION BIAS & ALARM FATIGUE NODE (HAI)",
+      exposure: "Exposes critical downstream model anomalies and balance-sheet structural profit leakage.",
+      metric: "Avg. Loss: $270,000 to $430,000 due to telemetry alert blindness."
+    };
+    return {
+      title: "COMPLIANCE & REGULATORY EXPOSURE NODE (IGF)",
+      exposure: "Exposes opaque decision paths carrying severe statutory liabilities under global regulatory frameworks.",
+      metric: "Avg. Statutory Risk: Up to €20M or 4% of global turnover under unchecked validation trails."
+    };
+  };
+
   return (
     <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white">
       
-      {/* CASE 1: MASTER SETUP SCREEN WITH DEMO ACCELERATOR */}
-      {viewState === 'INTAKE' && (
+      {/* 🔒 PHASE 0: INSTITUTIONAL PAYWALL GATE (NON-ADMIN PREVIEW) */}
+      {viewState === 'GATE' && (
+        <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl">
+          <div className="border-b border-zinc-900 pb-4 mb-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Lock size={18} className="text-red-500 animate-pulse" />
+              <div>
+                <h2 className="text-xs font-black text-white uppercase tracking-widest leading-none">// PROTECTED DIAGNOSTIC INFRASTRUCTURE</h2>
+                <span className="text-[9px] text-zinc-500 tracking-wider block mt-1">LEVEL 3 HIGH-DENSITY ANALYSIS SUITE</span>
+              </div>
+            </div>
+            <span className="text-[9px] font-black bg-red-950 text-red-500 border border-red-900 px-2 py-0.5 rounded-xs tracking-widest uppercase">RESTRICTED</span>
+          </div>
+
+          <div className="space-y-6">
+            <div className="bg-black border border-zinc-900 p-5 rounded-sm">
+              <span className="text-[9px] text-zinc-500 block font-black tracking-widest uppercase mb-1">// PRESCRIBED EVALUATION LAYER</span>
+              <h3 className="text-sm font-black text-white uppercase tracking-wider mb-2">{getPillarNodeDetails().title}</h3>
+              <p className="text-xs text-zinc-400 font-sans leading-relaxed normal-case font-normal mb-4">
+                {getPillarNodeDetails().exposure}
+              </p>
+              <div className="border-t border-zinc-900 pt-3 flex items-center gap-2 text-red-400 text-[10px] font-bold tracking-wider uppercase">
+                <ShieldAlert size={12} /> {getPillarNodeDetails().metric}
+              </div>
+            </div>
+
+            <div className="border border-zinc-900 bg-zinc-950/60 p-5 rounded-sm flex items-start gap-4">
+              <Building size={24} className="text-zinc-600 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wide mb-1">Administrative Action Required</h4>
+                <p className="text-xs text-zinc-500 font-sans leading-relaxed normal-case font-normal">
+                  This multi-persona triangulation matrix is part of an enterprise-tier compliance license. To execute this posture run, your organization's designated **Primary Workspace Administrator** must initialize the distribution keys directly from the main administrative panel dashboard.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-zinc-900 flex flex-col gap-2">
+              <a 
+                href="/dashboard"
+                className="w-full bg-zinc-100 text-black font-mono text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center"
+              >
+                Return to Admin System Space <ArrowRight size={14} />
+              </a>
+              <span className="text-[9px] text-zinc-600 text-center uppercase tracking-widest mt-2">// End-User direct initialization pathways disabled // Code-ID status: Locked</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 🏢 CASE 1: MASTER INTAKE SETUP SCREEN (ONLY ACCESSED VIA ADMIN LINK) */}
+      {viewState === 'INTAKE' && isAdmin && (
         <div className="w-full max-w-lg border border-zinc-900 bg-zinc-950/40 p-8 text-left italic rounded-sm shadow-xl shadow-black/40">
           <div className="border-b border-zinc-900 pb-4 mb-6 flex items-center gap-3">
             <ShieldAlert size={20} className="text-red-500 animate-pulse shrink-0" />
             <div>
               <h2 className="text-sm font-black text-white uppercase tracking-widest leading-none">// QUAD-NODE ENGINE SETUP</h2>
-              <span className="text-[9px] text-zinc-500 tracking-wider block mt-1">ZERO-DATABASE ZERO-TRUST EXPLORATION GATE</span>
+              <span className="text-[9px] text-zinc-500 tracking-wider block mt-1">AUTHORIZED PRIVILEGED ADMIN MODE</span>
             </div>
           </div>
 
@@ -134,7 +227,6 @@ export default function ForensicEngineRoot() {
                     }`}
                   >
                     <span className="text-xs font-black text-zinc-200">{p.title}</span>
-                    <span className="text-[10px] text-zinc-500 font-sans mt-0.5 normal-case">{p.desc}</span>
                   </button>
                 ))}
               </div>
@@ -180,7 +272,7 @@ export default function ForensicEngineRoot() {
         </div>
       )}
 
-      {/* CASE 2: CENTRAL COORDINATION OPERATOR HUB WITH PROGRESS OVERVIEW */}
+      {/* 📊 CASE 2: CENTRAL OPERATIONS HUB */}
       {viewState === 'HUB' && triangulation && (
         <div className="w-full max-w-2xl border border-zinc-900 bg-zinc-950/40 p-8 text-left rounded-sm shadow-2xl">
           <div className="border-b border-zinc-900 pb-4 mb-6 flex justify-between items-center">
@@ -193,7 +285,6 @@ export default function ForensicEngineRoot() {
             </div>
           </div>
 
-          {/* Refinement 1: Floating Progress Dashboard Component */}
           <div className="bg-black border border-zinc-900 p-4 mb-6 rounded-sm">
             <span className="text-[9px] text-zinc-500 block font-black tracking-widest uppercase mb-3">// REAL-TIME MATRIX COMPLETION POSTURE</span>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -213,7 +304,6 @@ export default function ForensicEngineRoot() {
             </div>
           </div>
 
-          {/* PERSISTENT NODE ACTIONS MATRIX LOOP */}
           <div className="space-y-3">
             {(Object.keys(triangulation.emails) as PersonaKey[]).map((persona) => {
               const isDone = triangulation.completions[persona];
@@ -225,7 +315,6 @@ export default function ForensicEngineRoot() {
                   </div>
 
                   <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-                    {/* Refinement 2: Native Mailto Out-of-Band Crisis Reminders */}
                     {!isDone && (
                       <button
                         onClick={() => {
@@ -271,7 +360,7 @@ export default function ForensicEngineRoot() {
         </div>
       )}
 
-      {/* CASE 3: DIAGNOSTIC MATRIX ENGINE BLOCK */}
+      {/* 📝 CASE 3: DIAGNOSTIC MATRIX ENGINE BLOCK */}
       {viewState === 'WIZARD' && triangulation && activePersona && (
         <ForensicDiagnosticWizard 
           companyName={`${triangulation.companyName}::${activePersona}`}
@@ -287,7 +376,7 @@ export default function ForensicEngineRoot() {
         />
       )}
 
-      {/* CASE 4: PREMIUM ALIGNED DASHBOARD VIEWS CONTAINER */}
+      {/* 🚀 CASE 4: PREMIUM ALIGNED DASHBOARD VIEWS CONTAINER */}
       {viewState === 'COCKPIT' && triangulation && (
         <ForensicCommandCockpit 
           companyName={triangulation.companyName} 
