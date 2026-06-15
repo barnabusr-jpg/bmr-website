@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard';
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
 import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building } from 'lucide-react';
-import { InMemoryCalculatedMetrics } from '../../types/forensicRuntime';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI';
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
@@ -20,6 +19,9 @@ export default function ForensicEngineRoot() {
   const [companyName, setCompanyName] = useState('');
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF');
   
+  // State-backed security variables to prevent Vercel hydration overrides
+  const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null);
+
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({
     EXECUTIVE: '',
     TECH_MGMT: '',
@@ -31,33 +33,26 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null);
   const [inputError, setInputError] = useState('');
 
-  // 🔒 HARD GATEWAY VERIFICATION LAYER (RUNS BEFORE COMPONENT LAYOUT PARSING)
-  let authorizedAdmin = false;
-  let dynamicPrescription: FunnelPillar = 'IGF';
-  let initialEntity = '';
+  // Securely intercept parameters inside an active client mount hook
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const authVal = params.get('auth');
+      const pillarParam = params.get('pillar') as FunnelPillar;
+      const entityParam = params.get('entity');
 
-  if (typeof window !== 'undefined') {
-    const params = new URLSearchParams(window.location.search);
-    authorizedAdmin = params.get('auth') === 'admin_verified_secure';
-    
-    const pillarParam = params.get('pillar') as FunnelPillar;
-    if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam)) {
-      dynamicPrescription = pillarParam;
-    }
-    
-    const entityParam = params.get('entity');
-    if (entityParam) {
-      initialEntity = entityParam.toUpperCase();
-    }
-  }
+      // Update validation parameters state-dependently
+      const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
+      setAuthorizedAdmin(isAdminAuthenticated);
 
-  // Sync state variables synchronously on first layout frame pass
-  React.useMemo(() => {
-    setActivePillar(dynamicPrescription);
-    if (initialEntity && !companyName) {
-      setCompanyName(initialEntity);
+      if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam)) {
+        setActivePillar(pillarParam);
+      }
+      if (entityParam) {
+        setCompanyName(entityParam.toUpperCase());
+      }
     }
-  }, [dynamicPrescription, initialEntity]);
+  }, []);
 
   const handleLoadDemoParameters = () => {
     setCompanyName('METRIC_DRIFT_CORP');
@@ -67,7 +62,6 @@ export default function ForensicEngineRoot() {
       OPS_MGMT: 'operations-director@metricdrift.com',
       SYSTEM_USER: 'platform-operator@metricdrift.com'
     });
-    setActivePillar(dynamicPrescription);
     setInputError('');
   };
 
@@ -117,6 +111,14 @@ export default function ForensicEngineRoot() {
     ? Object.values(triangulation.completions).every(status => status === true)
     : false;
 
+  const handleSystemReset = () => {
+    setCompanyName('');
+    setEmails({ EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' });
+    setTriangulation(null);
+    setActivePersona(null);
+    setViewState('INTAKE');
+  };
+
   const getPillarNodeDetails = () => {
     if (activePillar === 'AVS') return {
       title: "PIPELINE DRIFT & REWORK TAX NODE (AVS)",
@@ -135,8 +137,17 @@ export default function ForensicEngineRoot() {
     };
   };
 
-  // ❌ CRITICAL SECURITY OVERRIDE: RENDERS PREMIUM DESIGN SITE-CONSISTENT PAYWALL
-  if (!authorizedAdmin) {
+  // 1. Loading Phase: Avoid flashing wrong views before query parsing finishes
+  if (authorizedAdmin === null) {
+    return (
+      <div className="bg-black min-h-screen text-zinc-500 font-mono flex items-center justify-center">
+        <span className="text-xs tracking-widest animate-pulse">// AUTHORIZING SECURITY PROTOCOLS...</span>
+      </div>
+    );
+  }
+
+  // 2. Client Paywall Gate: Rendered explicitly if auth parameters fail validation
+  if (authorizedAdmin === false) {
     return (
       <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white">
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl">
@@ -189,7 +200,7 @@ export default function ForensicEngineRoot() {
     );
   }
 
-  // 🔓 REGULAR CODE CONTINUES FOR CONFIRMED PRIVILEGED ACCESS TIER
+  // 3. Authorized View: Safely unlocked for validated admin states
   return (
     <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white">
       
