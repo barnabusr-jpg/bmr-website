@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, ChevronRight, CheckSquare, Activity, AlertCircle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
 import { calculateForensicMetrics } from '../lib/forensicCalculus';
 
@@ -7,50 +7,47 @@ type PillarType = 'IGF' | 'AVS' | 'HAI';
 
 export default function ForensicDiagnosticWizard({ 
   companyName, 
+  activePillar,
   onCalculated 
 }: { 
   companyName: string; 
+  activePillar: PillarType;
   onCalculated: (metrics: any) => void; 
 }) {
-  // Hybrid Funnel sequence dictates leading with IGF (Compliance Risks) first
-  const [currentPillar, setCurrentPillar] = useState<PillarType>('IGF');
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
 
-  // Filter out the questions dedicated exclusively to the running active pillar lane
-  const activeQuestions = Object.values(forensicQuestions).filter(
-    q => q.pillar === currentPillar
-  );
+  // 🔒 STRICT BOUNDARY FILTER: Restricts view to only the active framework lane
+  const activeQuestions = useMemo(() => {
+    return Object.values(forensicQuestions).filter(
+      q => q.pillar === activePillar
+    );
+  }, [activePillar]);
 
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
     setAnswers(prev => ({ ...prev, [questionId]: choiceKey }));
   };
 
-  const advancePillarPipeline = () => {
-    if (currentPillar === 'IGF') {
-      setCurrentPillar('AVS'); // Shift to Pillar 2: Rework Tax
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (currentPillar === 'AVS') {
-      setCurrentPillar('HAI'); // Shift to Pillar 3: Auto-Pilot Trap
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else if (currentPillar === 'HAI') {
-      setIsCompiling(true);
-      
-      // Execute the pure client-side mathematical calculations out-of-band
-      const computedResults = calculateForensicMetrics(companyName, answers);
-      
-      // Cache values securely in the user's browser sandbox session
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem(
-          `bmr_runtime_${companyName}`, 
-          JSON.stringify(computedResults)
-        );
-      }
-      
-      // Hand the output properties straight back to the parent layout container
-      onCalculated(computedResults);
-      setIsCompiling(false);
+  // Terminate step loop immediately and bubble up responses cleanly to parent hub
+  const compileActiveNodePosture = () => {
+    setIsCompiling(true);
+    
+    // Execute the pure client-side mathematical calculations out-of-band
+    const computedResults = calculateForensicMetrics(companyName, answers);
+    
+    // Cache values securely in the user's browser sandbox session
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.setItem(
+        `bmr_runtime_${companyName}`, 
+        JSON.stringify(computedResults)
+      );
+      // Cache answers locally for parent state persistence checks
+      window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(answers));
     }
+    
+    // Hand properties straight back to the parent layout container (closes wizard)
+    onCalculated(computedResults);
+    setIsCompiling(false);
   };
 
   const currentStepTotal = activeQuestions.length;
@@ -65,9 +62,9 @@ export default function ForensicDiagnosticWizard({
         <div className="flex items-center gap-3">
           <Activity className="text-red-600 animate-pulse shrink-0" size={16} />
           <span className="text-xs font-black uppercase tracking-widest text-white not-italic">
-            {currentPillar === 'IGF' && "HYBRID FUNNEL SECTION 01 // THE LEGAL BLACK BOX (IGF)"}
-            {currentPillar === 'AVS' && "HYBRID FUNNEL SECTION 02 // THE REWORK TAX (AVS)"}
-            {currentPillar === 'HAI' && "HYBRID FUNNEL SECTION 03 // THE AUTO-PILOT TRAP (HAI)"}
+            {activePillar === 'IGF' && "HYBRID FUNNEL SECTION 01 // THE LEGAL BLACK BOX (IGF)"}
+            {activePillar === 'AVS' && "HYBRID FUNNEL SECTION 02 // THE REWORK TAX (AVS)"}
+            {activePillar === 'HAI' && "HYBRID FUNNEL SECTION 03 // THE AUTO-PILOT TRAP (HAI)"}
           </span>
         </div>
         <div className="text-[10px] text-zinc-500 tracking-widest font-black shrink-0">
@@ -79,9 +76,9 @@ export default function ForensicDiagnosticWizard({
       <div className="bg-zinc-950 border border-zinc-900 p-4 mb-8 text-xs text-zinc-400 not-italic normal-case leading-relaxed flex items-start gap-3">
         <AlertCircle size={16} className="text-red-500 shrink-0 mt-0.5" />
         <div>
-          {currentPillar === 'IGF' && "This layer examines algorithmic decision trails, data privacy isolations, and compliance failure exposures. These boundaries carry structural statutory liabilities under global regulatory guidelines."}
-          {currentPillar === 'AVS' && "This layer maps structural data pipeline waste, technical debt indices, and schema mutation risks. These metrics quantify corporate developer bandwidth leakage."}
-          {currentPillar === 'HAI' && "This layer maps automation anomalies, alarm fatigue thresholds, and strategic operational drift. These metrics isolate silent balance-sheet profit bleeding."}
+          {activePillar === 'IGF' && "This layer examines spiking security validation trails, data compliance fractures, and statutory exposures under global guidelines."}
+          {activePillar === 'AVS' && "This layer maps structural data pipeline waste, technical debt indices, and schema mutation risks. These metrics quantify corporate developer bandwidth leakage."}
+          {activePillar === 'HAI' && "This layer maps automation anomalies, alarm fatigue thresholds, and strategic operational drift. These metrics isolate silent balance-sheet profit bleeding."}
         </div>
       </div>
 
@@ -89,11 +86,11 @@ export default function ForensicDiagnosticWizard({
       <div className="space-y-8 mb-10">
         {activeQuestions.map((question, index) => (
           <div key={question.id} className="border border-zinc-950 bg-zinc-950/40 p-6 relative rounded-sm">
-            <span className="text-[9px] font-mono text-zinc-600 block mb-2 font-black tracking-widest">// TARGET LAYER NODE: {question.target_node} // ID: {question.id}</span>
+            <span className="text-[9px] font-mono text-zinc-600 block mb-2 font-black tracking-widest">// TARGET NODE: {question.target_node || 'STAKEHOLDER'} // ID: {question.id}</span>
             <p className="text-xs text-zinc-200 uppercase leading-relaxed tracking-wide font-black mb-4 not-all-caps">{index + 1}. {question.symptomatic_scenario}</p>
             
             <div className="grid grid-cols-1 gap-2 mt-4 font-sans normal-case font-medium text-xs">
-              {(Object.keys(question.choices) as Array<'A' | 'A' | 'B' | 'C' | 'D'>).map((key) => {
+              {(Object.keys(question.choices) as Array<'A' | 'B' | 'C' | 'D'>).map((key) => {
                 const choice = question.choices[key];
                 const isSelected = answers[question.id] === key;
                 return (
@@ -116,16 +113,16 @@ export default function ForensicDiagnosticWizard({
       <div className="border-t border-zinc-900 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="text-[10px] text-zinc-500 tracking-wider flex items-center gap-2 not-italic">
           <Shield size={12} className={isPillarIncomplete ? "text-zinc-600" : "text-green-500"} /> 
-          {isPillarIncomplete ? "ALL POSTURE SECTIONS MANDATORY" : "STAGE SECTOR VALIDATED // READY TO ADVANCE"}
+          {isPillarIncomplete ? "ALL POSTURE SECTIONS MANDATORY" : "STAGE SECTOR VALIDATED // READY TO COMPUTE"}
         </div>
         
         <button
           type="button"
           disabled={isPillarIncomplete || isCompiling}
-          onClick={advancePillarPipeline}
+          onClick={compileActiveNodePosture}
           className={`w-full sm:w-auto px-8 py-4 font-mono font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all not-italic rounded-sm ${isPillarIncomplete ? 'bg-zinc-900 text-zinc-600 border border-zinc-800 cursor-not-allowed' : 'bg-red-600 text-white hover:bg-white hover:text-black shadow-lg shadow-red-900/10'}`}
         >
-          {isCompiling ? "COMPILING LOCAL METRICS..." : currentPillar === 'HAI' ? "Compile Forensic Profile" : "Advance System Tier"} 
+          {isCompiling ? "COMPILING SYSTEM LOGS..." : "Save & Close Node Posture"} 
           <ChevronRight size={14} />
         </button>
       </div>
