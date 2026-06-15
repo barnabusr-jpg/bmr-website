@@ -629,7 +629,7 @@ export const forensicQuestions: Record<string, LocalQuestion> = {
   // PILLAR 3: HUMAN-AUTONOMOUS INTERACTION [HAI] (QUESTIONS 61-90)
   // ===========================================================================
   
-  -- --- HAI: EXECUTIVE NODE (GOVERNANCE & STRATEGY) ---
+  // --- HAI: EXECUTIVE NODE (GOVERNANCE & STRATEGY) ---
   "HAI-61-EXEC": {
     id: "HAI-61-EXEC", pillar: "HAI", subarea: "Automated Verification Loops", target_node: "EXECUTIVE",
     symptomatic_scenario: "An autonomous optimization engine updates corporate pricing models dynamically. How does corporate governance verify that runtime margin changes adhere to boardroom risk strategy parameters?",
