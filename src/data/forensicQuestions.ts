@@ -389,7 +389,7 @@ export const forensicQuestions: Record<string, LocalQuestion> = {
     }
   },
 
-  -- --- AVS: MANAGERIAL NODE (LOGIC TRANSLATION) ---
+  // --- AVS: MANAGERIAL NODE (LOGIC TRANSLATION) ---
   "AVS-38-MGMT": {
     id: "AVS-38-MGMT", pillar: "AVS", subarea: "Upstream Mutation Tracking", target_node: "MANAGERIAL",
     symptomatic_scenario: "When an external vendor modifies their payload data models unannounced, how does your management layer capture the resulting pipeline failure?",
