@@ -120,7 +120,7 @@ export default function ForensicEngineRoot() {
   const getPillarNodeDetails = () => {
     if (activePillar === 'AVS') return {
       title: "PIPELINE DRIFT & REWORK TAX NODE (AVS)",
-      exposure: "Quantifies silent schema fractures and engineering budget drain.",
+      exposure: "Quantifies silent schema fractures and engineering budget drain across systems.",
       metric: "Avg. Loss: $425,000 to $637,500 per 100 deployments due to unhedged architectural drift."
     };
     if (activePillar === 'HAI') return {
@@ -135,49 +135,49 @@ export default function ForensicEngineRoot() {
     };
   };
 
-  // ❌ CRITICAL SECURITY OVERRIDE: IF THE AUTH ARGUMENT IS NOT MATCHED, BLOCK RENDERING IMMEDIATELY
+  // ❌ CRITICAL SECURITY OVERRIDE: RENDERS PREMIUM DESIGN SITE-CONSISTENT PAYWALL
   if (!authorizedAdmin) {
     return (
-      <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4">
+      <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white">
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl">
           
-          <div className="border-b border-zinc-900 pb-4 mb-6 flex items-center justify-between">
+          <div className="border-b border-zinc-900 pb-5 mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Lock size={18} className="text-red-500" />
-              <div>
+              <Lock size={18} className="text-red-500 shrink-0" />
+              <div className="font-mono">
                 <h2 className="text-xs font-black text-white uppercase tracking-widest leading-none">// SECURE GATEWAY ENFORCED</h2>
-                <span className="text-[9px] text-zinc-500 tracking-wider block mt-1">ORGANIZATIONAL SUITE LICENSE REQUIRED</span>
+                <span className="text-[9px] text-zinc-500 tracking-wider block mt-1 uppercase">ORGANIZATIONAL SUITE LICENSE REQUIRED</span>
               </div>
             </div>
-            <span className="text-[9px] font-black bg-red-950 text-red-500 border border-red-900 px-2 py-0.5 rounded-xs tracking-widest uppercase">LOCKED</span>
+            <span className="font-mono text-[9px] font-black bg-red-950 text-red-500 border border-red-900 px-2 py-0.5 rounded-xs tracking-widest uppercase">LOCKED</span>
           </div>
 
           <div className="space-y-6">
-            <div className="bg-black border border-zinc-900 p-5 rounded-sm">
-              <span className="text-[9px] text-zinc-500 block font-black tracking-widest uppercase mb-1">// SYSTEM DETECTED ASSESSMENT SECTOR</span>
-              <h3 className="text-sm font-black text-white uppercase tracking-wider mb-2">{getPillarNodeDetails().title}</h3>
-              <p className="text-xs text-zinc-400 font-sans leading-relaxed normal-case font-normal mb-4">
+            <div className="bg-black border border-zinc-900 p-6 rounded-sm">
+              <span className="font-mono text-[9px] text-zinc-500 block font-black tracking-widest uppercase mb-1">// SYSTEM DETECTED ASSESSMENT SECTOR</span>
+              <h3 className="font-mono text-sm font-black text-white uppercase tracking-wider mb-2">{getPillarNodeDetails().title}</h3>
+              <p className="text-sm text-zinc-300 font-sans leading-relaxed tracking-normal font-normal mb-4">
                 {getPillarNodeDetails().exposure}
               </p>
-              <div className="border-t border-zinc-900 pt-3 flex items-center gap-2 text-red-400 text-[10px] font-bold tracking-wider uppercase">
-                <ShieldAlert size={12} /> {getPillarNodeDetails().metric}
+              <div className="border-t border-zinc-900 pt-4 flex items-center gap-2 text-red-500 font-mono text-[10px] font-black tracking-widest uppercase">
+                <ShieldAlert size={12} className="shrink-0" /> {getPillarNodeDetails().metric}
               </div>
             </div>
 
-            <div className="border border-zinc-900 bg-zinc-950/60 p-5 rounded-sm flex items-start gap-4">
-              <Building size={24} className="text-zinc-600 shrink-0 mt-0.5" />
+            <div className="border border-zinc-900 bg-zinc-950/60 p-6 rounded-sm flex items-start gap-4">
+              <Building size={20} className="text-zinc-500 shrink-0 mt-0.5" />
               <div>
-                <h4 className="text-xs font-black text-zinc-300 uppercase tracking-wide mb-1">Administrative Access Required</h4>
-                <p className="text-xs text-zinc-500 font-sans leading-relaxed normal-case font-normal">
+                <h4 className="font-mono text-xs font-black text-zinc-300 uppercase tracking-widest mb-2">Administrative Access Required</h4>
+                <p className="text-sm text-zinc-400 font-sans leading-relaxed tracking-normal font-normal">
                   This triangulated assessment stream can only be authorized and initialized by a licensed administrator. Please contact your organization's workspace system supervisor to request access links for your assigned node endpoints.
                 </p>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-zinc-900">
+            <div className="pt-4 border-t border-zinc-900 font-mono">
               <a 
                 href="/dashboard"
-                className="w-full bg-zinc-100 text-black font-mono text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer"
+                className="w-full bg-zinc-100 text-black text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md"
               >
                 Return to Master Workspace Dashboard <ArrowRight size={14} />
               </a>
@@ -189,7 +189,7 @@ export default function ForensicEngineRoot() {
     );
   }
 
-  // 🔓 OTHERWISE: DISPLAY SECURED MANAGEMENT SETUP PANEL
+  // 🔓 REGULAR CODE CONTINUES FOR CONFIRMED PRIVILEGED ACCESS TIER
   return (
     <div className="bg-black min-h-screen text-zinc-100 font-mono flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white">
       
