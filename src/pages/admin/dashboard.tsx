@@ -293,6 +293,16 @@ export default function AdminDashboard() {
           <div className="flex gap-1 bg-slate-900 p-1 shrink-0">
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
+            
+            {/* 🎯 INJECTED DIAGNOSTIC ENGINE ACTION LINK */}
+            <a 
+              href="https://bmr-website.vercel.app/forensic?pillar=AVS&auth=admin_verified_secure" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="px-6 py-2 text-[10px] text-slate-500 hover:text-red-500 border border-transparent hover:border-red-900/40 bg-transparent hover:bg-red-950/10 font-black uppercase tracking-widest transition-all flex items-center justify-center cursor-pointer"
+            >
+              Diagnostic Wizard
+            </a>
           </div>
         </div>
       </nav>
@@ -396,7 +406,6 @@ export default function AdminDashboard() {
 
                   const cleanStatus = (audit.status || "").toUpperCase();
                   
-                  // 🔒 Unlocked evaluation condition: only hooks triangulation state
                   if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
                     playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
