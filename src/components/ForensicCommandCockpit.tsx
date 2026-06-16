@@ -1,5 +1,6 @@
 import React from 'react';
 import { SectorType } from '../lib/supabaseAdapter';
+import { FileText, Shield, AlertTriangle, Activity } from 'lucide-react';
 
 interface CockpitProps {
   companyName: string;
@@ -15,9 +16,9 @@ interface CockpitProps {
 }
 
 /**
- * 🕹️ SECTOR-AWARE FORENSIC COMMAND COCKPIT
- * Integrates dynamic financial data matrices with print-ready CSS 
- * overrides to instantly emit pristine white-background executive SOW proposals.
+ * 🕹️ SECTOR-AWARE FORENSIC COMMAND COCKPIT (DASHBOARD-ALIGNED EDITION)
+ * Inherits strict styling configurations from the main Admin Dashboard to maintain
+ * perfect system-wide visual parity in production.
  */
 export default function ForensicCommandCockpit({ companyName, sector, metrics }: CockpitProps) {
   const sectorLabel = {
@@ -28,80 +29,122 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics }:
   }[sector];
 
   return (
-    <div className="bg-black text-zinc-100 font-mono p-8 border border-zinc-900 max-w-4xl mx-auto my-6 relative rounded-sm shadow-2xl">
+    <div className="bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden p-10 max-w-[1600px] mx-auto pb-32">
       
-      {/* SECTOR RISK TELEMETRY CONTROL BAR */}
-      <div className="border-b border-zinc-900 pb-4 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 no-print">
-        <div className="text-left not-italic">
-          <span className="text-[9px] text-zinc-500 block tracking-widest font-black uppercase">// ACTIVE RISK MULTIPLIER SECTOR</span>
-          <span className="text-sm font-black text-white">
-            <span className="text-red-500 font-mono font-black">{metrics.multiplier.toFixed(2)}×</span> ({sectorLabel})
+      {/* HEADER TELEMETRY READOUT (Dashboard Style) */}
+      <div className="flex items-center justify-between bg-black p-6 border border-slate-900 mb-6 no-print">
+        <div className="flex items-center gap-3 shrink-0">
+          <Activity className="text-red-600 animate-pulse" size={20} />
+          <span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">
+            // RISK MULTIPLIER SECTOR STATE: <span className="text-red-600">{metrics.multiplier.toFixed(2)}×</span> ({sectorLabel})
           </span>
         </div>
         
         <button
           type="button"
           onClick={() => typeof window !== 'undefined' && window.print()}
-          className="w-full sm:w-auto bg-zinc-100 text-black text-[10px] font-black px-5 py-2.5 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all cursor-pointer shadow-lg font-mono"
+          className="bg-zinc-100 text-black text-[10px] font-black px-6 py-2.5 uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all cursor-pointer font-mono shrink-0 leading-none"
         >
-          🖨️ Print SOW Blueprint
+          PRINT SOW DOSSIER (PDF)
         </button>
       </div>
 
-      {/* DYNAMIC EXECUTIVE DASHBOARD METRICS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 no-print not-italic">
-        <div className="border border-zinc-900 p-5 bg-zinc-950/40 text-left rounded-sm">
-          <span className="text-[9px] text-zinc-500 block font-black uppercase tracking-wider">// COMPLIANCE EXP INDEX</span>
-          <span className="text-xl font-black text-white font-mono">{metrics.complianceScore.toFixed(0)} / 100</span>
+      {/* MATCHING QUAD-STYLE SUMMARY CARDS */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 italic no-print">
+        <div className="bg-slate-950/60 border border-slate-800 p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950">
+          <span className="text-[9px] font-mono text-slate-500 font-black tracking-widest uppercase block">// COMPLIANCE EXP INDEX</span>
+          <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-white font-sans">
+            {metrics.complianceScore.toFixed(0)}/100
+          </div>
         </div>
-        <div className="border border-zinc-900 p-5 bg-zinc-950/40 text-left rounded-sm">
-          <span className="text-[9px] text-zinc-500 block font-black uppercase tracking-wider">// REWORK TAX IMPACT</span>
-          <span className="text-xl font-black text-red-500 font-mono">${metrics.annualSalaryLeakage.toLocaleString()}</span>
+
+        <div className="bg-slate-950/60 border border-yellow-600/30 p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950">
+          <span className="text-[9px] font-mono text-yellow-500 font-black tracking-widest uppercase block">// ANNUAL REWORK TAX IMPACT</span>
+          <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-yellow-500 font-sans">
+            ${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </div>
         </div>
-        <div className="border border-zinc-900 p-5 bg-zinc-950/40 text-left rounded-sm">
-          <span className="text-[9px] text-zinc-500 block font-black uppercase tracking-wider">// UNHEDGED EXPOSURE</span>
-          <span className="text-xl font-black text-red-500 font-mono">${metrics.unhedgedLegalExposure.toLocaleString()}</span>
+
+        <div className="bg-slate-950/60 border border-red-600/30 p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950">
+          <span className="text-[9px] font-mono text-red-500 font-black tracking-widest uppercase block">// UNHEDGED EXP EXPOSURE</span>
+          <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-red-500 font-sans">
+            ${metrics.unhedgedLegalExposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          </div>
         </div>
       </div>
 
-      {/* 📑 STATEMENT OF WORK (SOW) DOCUMENT ENGINE CONTAINER */}
-      <div className="p-8 bg-zinc-950 border border-zinc-900 text-left rounded-sm font-sans print-override-container">
+      {/* RECOMMENDED STATEMENT OF WORK COMPONENT CONTAINER */}
+      <div className="bg-white text-black p-10 border-l-[16px] border-slate-900 shadow-2xl space-y-6 mb-10 font-sans">
         
-        {/* SOW Document Core Header */}
-        <div className="border-b border-zinc-800 pb-4 mb-6 font-mono">
-          <span className="text-[10px] text-red-500 font-black tracking-widest uppercase block">// ARCHITECTURE REMEDIATION PROPOSAL</span>
-          <h3 className="text-xl font-black text-white uppercase tracking-wider mt-1 print-black-text">Target Entity: {companyName}</h3>
-          <p className="text-xs text-zinc-500 mt-2">
-            Sector Matrix: {sectorLabel} &bull; Security Envelope State: {metrics.isTierThreeExposure ? 'CRITICAL RISK TIER 3' : 'STANDARD RISK TIER 1'}
-          </p>
+        {/* Document Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
+          <div className="not-italic">
+            <span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// ENGAGEMENT_ROADMAP_CONFIGURATION</span>
+            <h3 className="text-4xl font-black uppercase italic tracking-tighter text-black leading-none mt-1">
+              TARGET SOW DOSSIER: {companyName}
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono text-slate-400 font-black tracking-wider uppercase">
+            {metrics.isTierThreeExposure ? 'TIER_03 // CRITICAL RECONSTRUCTION' : 'TIER_01 // DRIFT DIAGNOSTICS'}
+          </span>
         </div>
 
-        {/* Narrative Framework Loop */}
-        <div className="space-y-6 text-sm text-zinc-300 leading-relaxed font-normal print-black-text">
+        {/* Narrative Block Segment */}
+        <div className="space-y-6 text-sm text-slate-800 leading-relaxed font-sans font-medium normal-case">
           <div>
-            <h4 className="font-mono text-xs font-black text-zinc-400 uppercase tracking-widest mb-2 print-black-text">// SECTION 01: EXECUTIVE ANALYSIS SUMMARY</h4>
+            <h4 className="font-mono text-xs font-black text-slate-400 uppercase tracking-widest mb-2 italic">// SECTION 01: EXECUTIVE ANALYSIS SUMMARY</h4>
             <p>
-              Cross-persona triangulation maps severe algorithmic and infrastructure operational design decay across organizational layers. For the target system profile <strong>{companyName}</strong>, this operational alignment breakdown causes a recurring annual revenue drain of <strong>${metrics.annualSalaryLeakage.toLocaleString()}</strong> driven directly by technical debt, developer cycle abandonment, and unhedged remediation efforts.
+              Cross-persona triangulation logs identify a significant technical debt layer across operations pipelines for <strong>{companyName}</strong>. At current workforce configurations, this structural friction generates a predictable annual leakage calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>, resulting directly in developers abandoning active sprints to manage single-vendor dependencies manually.
             </p>
             
-            {/* Context-Aware Regulatory Danger Alert Trigger */}
+            {/* Dashboard-Aligned Alert Box */}
             {metrics.regulatoryAlertActive && (
-              <div className="mt-4 border border-red-900/60 bg-red-950/20 text-red-400 p-4 font-mono text-xs not-italic rounded-sm leading-relaxed print-alert-box">
-                <strong>🚨 CRITICAL STATUTORY LIABILITY DETECTED:</strong> Operational parameters indicate compliance failure trails across localized application layers. This exposes data groups directly to statutory enforcement thresholds and unhedged liability positions modeling up to <strong>${metrics.unhedgedLegalExposure.toLocaleString()}</strong>.
+              <div className="mt-4 border-2 border-red-600/30 bg-red-50 p-6 flex flex-col space-y-2 text-left italic uppercase font-black tracking-tighter">
+                <span className="text-[10px] font-mono font-black text-red-600 tracking-widest block">// SECURE_BRIEFING_ALIGNMENT_ALERT</span>
+                <div className="text-2xl text-red-600 flex items-center gap-2">
+                  <AlertTriangle size={24} className="animate-pulse" /> HIGH STATUTORY EXPOSURE THRESHOLD DETECTED
+                </div>
+                <p className="text-xs leading-relaxed font-sans text-slate-700 normal-case font-normal border-l-2 border-red-600 pl-4 py-1 not-italic">
+                  Localized operational systems fail baseline regulatory schema checks. System architecture trends project a maximum unhedged compliance exposure of <strong>${metrics.unhedgedLegalExposure.toLocaleString()}</strong> under modern regulatory frameworks.
+                </p>
               </div>
             )}
           </div>
 
-          <hr className="border-zinc-900 print-hidden-line" />
+          <hr className="border-slate-100" />
 
+          {/* SOW Milestones Checklist */}
           <div>
-            <h4 className="font-mono text-xs font-black text-zinc-400 uppercase tracking-widest mb-2 print-black-text">// SECTION 02: MANDATED TECHNICAL OVERRIDES</h4>
-            <p className="mb-3">To neutralize localized technical debt leakage, the following structural engineering milestones are established under this SOW:</p>
-            <ul className="list-decimal list-inside space-y-2 text-zinc-300 pl-1 print-black-text">
-              <li><strong>Interface Abstraction Layering:</strong> Decouple primary logic routes from external runtime environments to completely isolate schema changes.</li>
-              <li><strong>Telemetry Event Prioritization:</strong> Implement event filtering protocols to drop noise metrics and prevent critical telemetry alert fatigue.</li>
-            </ul>
+            <h4 className="font-mono text-xs font-black text-slate-400 uppercase tracking-widest mb-3 italic">// SECTION 02: REMEDIATION ROADMAP</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 italic font-black">
+              
+              <div className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
+                <div className="space-y-1 not-italic font-sans">
+                  <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase italic">
+                    <span>PHASE 01</span>
+                    <span className="text-red-600 font-black uppercase">CORE RISK</span>
+                  </div>
+                  <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900 font-sans">Pipeline Abstraction Layering</h5>
+                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium normal-case">Deploying vendor-agnostic adapter interfaces to insulate application databases from arbitrary external breaking modifications.</p>
+                </div>
+                <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">01</div>
+              </div>
+
+              <div className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
+                <div className="space-y-1 not-italic font-sans">
+                  <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase italic">
+                    <span>PHASE 02</span>
+                    <span className="text-amber-600 font-black uppercase">MODERATE RISK</span>
+                  </div>
+                  <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900 font-sans">Telemetry Filter Prioritization</h5>
+                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium normal-case">Configuring internal monitoring alerts to filter background noise and eradicate structural operator alert fatigue.</p>
+                </div>
+                <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">02</div>
+              </div>
+
+            </div>
           </div>
+
         </div>
       </div>
 
