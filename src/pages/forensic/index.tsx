@@ -65,7 +65,8 @@ export default function ForensicEngineRoot() {
     setInputError('');
   };
 
-  const handleInitializeTriangulation = (e: React.FormEvent) => {
+  // 🚀 AUTOMATED BATCH INITIATION: Fires all 4 email notifications to your SendGrid handler concurrently
+  const handleInitializeTriangulation = async (e: React.FormEvent) => {
     e.preventDefault();
     const sanitizedInput = companyName.trim().toUpperCase();
     
@@ -80,6 +81,7 @@ export default function ForensicEngineRoot() {
     
     setInputError('');
     
+    // 1. Immediately establish the matrix visualization layout
     setTriangulation({
       companyName: sanitizedInput,
       pillar: activePillar,
@@ -88,6 +90,50 @@ export default function ForensicEngineRoot() {
       responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
     });
     setViewState('HUB');
+
+    // 2. Automated background dispatch across all vectors
+    try {
+      await fetch('/api/send-triangulation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyName: sanitizedInput,
+          activePillar: activePillar,
+          endpoints: emails,
+          originUrl: typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://www.bmradvisory.co/forensic'
+        }),
+      });
+    } catch (error) {
+      console.error("CRITICAL BACKGROUND AUTOMATION DISPATCH EXCEPTION:", error);
+    }
+  };
+
+  // 🚀 AUTOMATED NODE NUDGE: Triggers a dedicated transactional alert for a single stakeholder vector
+  const handleTriggerIsolatedNudge = async (persona: PersonaKey) => {
+    if (!triangulation) return;
+    
+    try {
+      // Isolates the precise recipient string map context
+      const targetEndpoint: Record<string, string> = {};
+      targetEndpoint[persona] = triangulation.emails[persona];
+
+      await fetch('/api/send-triangulation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyName: triangulation.companyName,
+          activePillar: triangulation.pillar,
+          endpoints: targetEndpoint,
+          originUrl: typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : 'https://www.bmradvisory.co/forensic'
+        }),
+      });
+    } catch (error) {
+      console.error("CRITICAL SINGLE NODE NUDGE DISPATCH EXCEPTION:", error);
+    }
   };
 
   const handleLaunchPersonaWizard = (persona: PersonaKey) => {
@@ -209,7 +255,6 @@ export default function ForensicEngineRoot() {
           <div className="border-b border-slate-900 pb-5 mb-8 flex items-center gap-3">
             <ShieldAlert size={24} className="text-red-600 animate-pulse shrink-0" />
             <div>
-              {/* 🎯 BUMPED HEADER: Matching dashboard row title formatting weights */}
               <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white leading-none font-sans">// QUAD-NODE ENGINE SETUP</h2>
               <span className="text-[9px] font-mono font-black tracking-widest uppercase block mt-2 text-red-500 not-italic">// PRIVILEGED SYSTEM SPACE // SECURE RUNTIME CONTROL</span>
             </div>
@@ -273,7 +318,7 @@ export default function ForensicEngineRoot() {
             <div className="pt-4 space-y-3">
               <button
                 type="submit"
-                className="w-full bg-zinc-100 text-black font-sans text-sm font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md italic"
+                className="w-full bg-zinc-100 text-black font-sans text-sm font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md italic"
               >
                 Assemble Triangulation Matrix <ArrowRight size={14}/>
               </button>
@@ -281,7 +326,7 @@ export default function ForensicEngineRoot() {
               <button
                 type="button"
                 onClick={handleLoadDemoParameters}
-                className="w-full bg-zinc-900 text-zinc-400 border border-slate-800 font-mono text-xs font-black py-3.5 uppercase tracking-widest rounded-sm hover:bg-zinc-800 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer tracking-wider"
+                className="w-full bg-zinc-900 text-zinc-400 border border-slate-800 font-mono text-xs font-black py-3.5 uppercase tracking-widest rounded-sm hover:bg-zinc-800 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer tracking-wider"
               >
                 <Play size={12} /> Inject High-Exposure Demo Parameters
               </button>
@@ -290,14 +335,13 @@ export default function ForensicEngineRoot() {
         </div>
       )}
 
-      {/* 📊 THE HUB MONITOR VIEW — TEXT SCALE ALIGNED TO LEDGER */}
+      {/* 📊 THE HUB MONITOR VIEW — PARALLEL NOTIFICATION PANEL */}
       {viewState === 'HUB' && triangulation && (
         <div className="w-full max-w-2xl border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl">
           <div className="border-b border-slate-900 pb-4 mb-6 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <Users size={20} className="text-red-500" />
               <div>
-                {/* 🎯 BUMPED HEADER */}
                 <h2 className="text-2xl font-black text-white uppercase tracking-tighter leading-none font-sans">// INFRASTRUCTURE TRIANGULATION MONITOR</h2>
                 <span className="text-[9px] text-zinc-500 block mt-2 tracking-widest uppercase">// TARGET COMPANY ID: {triangulation.companyName} // PILLAR STREAM: {triangulation.pillar}</span>
               </div>
@@ -329,7 +373,6 @@ export default function ForensicEngineRoot() {
               return (
                 <div key={persona} className="border border-slate-900 bg-black p-5 rounded-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div>
-                    {/* 🎯 BUMPED HEADER */}
                     <span className="text-lg font-black text-white uppercase tracking-wider font-sans italic">{persona.replace('_', ' ')} TELEMETRY STREAM</span>
                     <span className="text-[11px] text-zinc-500 block font-mono mt-1 tracking-wide">{triangulation.emails[persona]}</span>
                   </div>
@@ -337,12 +380,8 @@ export default function ForensicEngineRoot() {
                   <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
                     {!isDone && (
                       <button
-                        onClick={() => {
-                          const email = triangulation.emails[persona];
-                          const subject = `CRITICAL ACTION REQUIRED: Complete Assessment for ${triangulation.companyName}`;
-                          const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access the gateway platform at your convenience.\n\nSecure Terminal Link: ${window.location.origin}${window.location.pathname}?pillar=${triangulation.pillar}`;
-                          window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-                        }}
+                        type="button"
+                        onClick={() => handleTriggerIsolatedNudge(persona)}
                         className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0"
                       >
                         <Mail size={12}/> Trigger Nudge
@@ -350,6 +389,7 @@ export default function ForensicEngineRoot() {
                     )}
 
                     <button
+                      type="button"
                       onClick={() => handleLaunchPersonaWizard(persona)}
                       className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${
                         isDone ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white'
@@ -366,9 +406,10 @@ export default function ForensicEngineRoot() {
           <div className="mt-8 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black">// SECURE GATEWAY UNLOCK MATRIX DEPENDENCY</span>
             <button
+              type="button"
               onClick={() => setViewState('COCKPIT')}
               disabled={!allPersonasComplete}
-              className={`w-full sm:w-auto px-6 py-4 text-xs font-black uppercase tracking-widest rounded-xs transition-all font-sans italic text-sm ${
+              className={`w-full sm:w-auto px-6 py-4 font-black uppercase tracking-widest rounded-xs transition-all font-sans italic text-sm ${
                 allPersonasComplete
                   ? 'bg-red-600 text-white hover:bg-white hover:text-black cursor-pointer shadow-lg'
                   : 'bg-slate-950 text-slate-700 border border-slate-900 cursor-not-allowed'
