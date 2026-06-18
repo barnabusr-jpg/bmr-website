@@ -66,7 +66,6 @@ export default function AdminDashboard() {
 
     let query = supabase
       .from('audits')
-      // 🔒 PERMANENT MATRIX FIX: Added sfi_score explicitly to prevent missing column data masking
       .select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
 
     if (statusFilter !== "ALL") {
@@ -298,20 +297,41 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
             
-            {/* 🎯 RESTORED GLOBAL DEEP DIVE GATEWAY LINK BUTTON */}
-            <a 
-              href="/forensic?pillar=AVS&auth=admin_verified_secure" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="px-6 py-2 text-[10px] text-slate-500 hover:text-red-500 border border-transparent hover:border-red-900/40 bg-transparent hover:bg-red-950/10 font-black uppercase tracking-widest transition-all flex items-center justify-center cursor-pointer"
+            {/* 🛰️ COMPONENT SEPARATION PAYLOAD DISPATCH GATEWAY BUTTON */}
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                const activeAudit = data.find(item => item.id === expandedRow);
+                
+                if (activeAudit) {
+                  const entityCode = `${activeAudit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
+                  const targetPillar = activeAudit.sfi_score >= 45 ? "AVS" : "IGF"; 
+                  
+                  const execEmail = encodeURIComponent(emails.exec || "");
+                  const techEmail = encodeURIComponent(emails.tech || "");
+                  const opsEmail  = encodeURIComponent(emails.mgr || "");
+                  const sysEmail  = encodeURIComponent(emails.tech || ""); // Logical developer default fallback
+
+                  window.open(
+                    `/forensic?entity_code=${encodeURIComponent(entityCode)}&pillar=${targetPillar}&exec=${execEmail}&tech_mgmt=${techEmail}&ops_mgmt=${opsEmail}&sys_user=${sysEmail}&auth=admin_verified_secure`, 
+                    '_blank'
+                  );
+                } else {
+                  window.open("/forensic?pillar=AVS&auth=admin_verified_secure", '_blank');
+                }
+              }}
+              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
+                expandedRow 
+                  ? 'text-red-500 border-red-900/40 bg-red-950/10 animate-pulse' 
+                  : 'text-slate-500 border-transparent hover:text-red-500 hover:bg-red-950/10'
+              }`}
             >
-              Diagnostic Wizard
-            </a>
+              {expandedRow ? "Configure Quad-Node Engine" : "Diagnostic Wizard"}
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* 🛰️ CONFIGURATION PORTAL MATRIX OVERLAY LAYOUT LAYER */}
       <AnimatePresence>
         {selectedAudit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
