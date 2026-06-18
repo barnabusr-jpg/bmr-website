@@ -1,9 +1,45 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
 import { Lock, Unlock, Activity, Info } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
+
+// 🏎️ ISOLATED TICKER ENGINE: Prevents layout thrashing across the whole page
+function RealTimeLossTicker({ 
+  createdAt, 
+  exposure 
+}: { 
+  createdAt: string; 
+  exposure: number; 
+}) {
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+
+  useEffect(() => {
+    const historicalAnchorTime = new Date(createdAt).getTime();
+
+    const calculateDeltaTime = () => {
+      const currentRealTime = Date.now();
+      const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - historicalAnchorTime) / 1000);
+      setElapsedSeconds(absoluteDeltaInSeconds);
+    };
+
+    calculateDeltaTime();
+    const interval = setInterval(calculateDeltaTime, 100); // Stable 100ms interval matching baseline behavior
+
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  const dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
+
+  return (
+    <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums text-green-500 leading-none block break-keep ${
+      dynamicAccumulatedLoss > 9999 ? "text-3xl lg:text-4xl" : "text-4xl md:text-5xl"
+    }`}>
+      ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    </div>
+  );
+}
 
 export default function UnifiedResultsPortal() {
   const router = useRouter();
@@ -12,10 +48,7 @@ export default function UnifiedResultsPortal() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<AuditRecord | null>(null);
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 🛡️ Lock out hydration rendering race conditions
   useEffect(() => { 
     setMounted(true); 
   }, []);
@@ -50,87 +83,60 @@ export default function UnifiedResultsPortal() {
     return () => { supabase.removeChannel(channelSubscription); };
   }, [id, mounted]);
 
-  // 🚀 REAL-TIME TICKER COUNTER
-  useEffect(() => {
-    if (loading || !audit?.created_at) return;
-
-    const calculateDeltaTime = () => {
-      const historicalAnchorTime = new Date(audit.created_at).getTime();
-      const currentRealTime = Date.now();
-      // Ensure there is a minimum baseline time gap so fresh organic submissions start ticking immediately
-      const absoluteDeltaInSeconds = Math.max(0.5, (currentRealTime - historicalAnchorTime) / 1000);
-      setElapsedSeconds(absoluteDeltaInSeconds);
-    };
-
-    calculateDeltaTime();
-    timerIntervalRef.current = setInterval(calculateDeltaTime, 50); // High resolution update frequency (50ms)
-
-    return () => {
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    };
-  }, [loading, audit?.created_at]);
-
-  // 🎨 DATA ENGINE: FALLBACK SAFETY CONTROLS
-  const dbDecay = audit?.decay_pct || 22;
+  // 🎨 CORE METRIC FORMULAS RESTORED TO SYSTEM BASES
+  const dbDecay = audit?.decay_pct || 24;
   const isPhaseTwoActive = !!audit?.is_released;
-
-  // Protect the mathematical scale factors from evaluating against zero/null components
-  const spend = audit?.ai_spend && audit.ai_spend > 0 ? audit.ai_spend : 1.45; // Falls back to $1.45M for real conditions
-  const targetRoi = audit?.roi_pct && audit.roi_pct > 0 ? audit.roi_pct : 18.5;  // Falls back to 18.5% expectation
-
-  // Generate resource volume calculations based on industry metrics
-  const fteCount = Math.round((spend * 1000000) / 200000) || 7;
   
-  const laborMultiplier = 0.5; 
+  // Spend tracks the database admin slider value, or falls back to standard 1.2 default
+  const spend = audit?.ai_spend || 1.2;
+
+  const metrics = useMemo(() => {
+    const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
+    const laborMultiplier = 0.5;
+    const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
+    
+    return {
+      fteCount,
+      totalLaborTaxPool,
+      internalReworkTax: totalLaborTaxPool * 0.60,
+      operationalDragTax: totalLaborTaxPool * 0.40,
+      exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15
+    };
+  }, [dbDecay, spend, audit?.roi_pct]);
+
   const accentColorClass = "text-green-500"; 
   const borderAccentClass = "border-green-600"; 
   const fallbackDirectiveColor = "text-green-500";
 
-  // Macro parent pool calculation
-  const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
-  
-  // Clean 60/40 Labor Friction Splits
-  const internalReworkTax = totalLaborTaxPool * 0.60;   
-  const operationalDragTax = totalLaborTaxPool * 0.40;  
-
-  // Continuous linear exposure calculation powered by standard baseline constants
-  const dynamicExposureRate = 0.22 * (dbDecay / 25); 
-  const exposure = (dynamicExposureRate * (spend * 1000000)) * 1.15;
-  
-  // Calculates pure cumulative capital drop since first contact point
-  const dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
-
-  // 🔒 FINANCIAL CONTINUITY MAPPING FOR LOCKED SYSTEMIC ANOMALIES
-  const genericAnomalies: AnomalyNode[] = [
+  const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
-      id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
       severity: "SECURE GATE", 
       directive: "Requires active 30 question operational diagnostic to unmask root cause paths." 
     },
     { 
-      id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${(totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
       severity: "SECURE GATE", 
       directive: "Requires active 30 question operational diagnostic to unmask root cause paths." 
     },
     { 
-      id: `ANOMALY SEGMENT GAMMA // LOSS BASELINE $${(totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      id: `ANOMALY SEGMENT GAMMA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
       severity: "SECURE GATE", 
       directive: "Requires active 30 question operational diagnostic to unmask root cause paths." 
     },
     { 
-      id: `ANOMALY SEGMENT DELTA // LOSS BASELINE $${(totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      id: `ANOMALY SEGMENT DELTA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
       severity: "SECURE GATE", 
       directive: "Requires active 30 question operational diagnostic to unmask root cause paths." 
     }
-  ];
+  ], [metrics.totalLaborTaxPool]);
 
   const activeAnomaliesList = isPhaseTwoActive && audit?.fractures && audit.fractures.length > 0 ? audit.fractures : genericAnomalies;
 
-  // 🛡️ CIRCUIT BREAKER: Block rendering completely until Next.js parameters and database are ready
   if (!mounted || loading || !router.isReady) {
     return (
       <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
@@ -157,6 +163,19 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
+        
+        {/* 🧠 EXPLANATORY BANNER POSITIONED PROMINENTLY ABOVE THE HERO CORE */}
+        <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
+          <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
+          <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
+            {isPhaseTwoActive 
+              ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
+              : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
+            }
+          </p>
+        </div>
+
+        {/* 🎨 MAIN WHITE CORE BLOCK */}
         <div className={`bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
             <div>
@@ -187,7 +206,7 @@ export default function UnifiedResultsPortal() {
                   </span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-sm`}>${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-sm`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                 </p>
               </div>
 
@@ -198,7 +217,7 @@ export default function UnifiedResultsPortal() {
                   </span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${metrics.exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                 </p>
               </div>
             </div>
@@ -206,42 +225,30 @@ export default function UnifiedResultsPortal() {
           
           <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-200/80" />
           
-          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[280px] shrink-0 md:pr-4">
+          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* 🪟 SAFARI UNMASKED LAYOUT CONTAINER */}
-            <div className={`font-mono font-black mt-3 text-4xl md:text-5xl lg:text-6xl ${accentColorClass} leading-none block tracking-normal min-w-[280px]`}>
-              ${dynamicAccumulatedLoss.toFixed(2)}
-            </div>
+            {audit?.created_at && (
+              <RealTimeLossTicker createdAt={audit.created_at} exposure={metrics.exposure} />
+            )}
             
-            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-2.5 whitespace-nowrap">// REAL TIME LOSS SINCE FIRST CONTACT</span>
+            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">// REAL TIME LOSS SINCE FIRST CONTACT</span>
           </div>
         </div>
 
+        {/* 📊 DUAL LIABILITY GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>{`$${operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}</div>
+            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>{`$${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}</div>
             <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
 
-        <div className="bg-slate-950/60 border border-slate-900 p-6 text-left flex items-start gap-4 shadow-xl">
-          <Info className={`${accentColorClass} shrink-0 mt-0.5`} size={16} />
-          <div className="space-y-1">
-            <span className="text-white font-mono text-[10px] tracking-widest block">SYSTEM CONFIGURATION // MODEL READOUT SPECIFICATION</span>
-            <p className="text-slate-400 font-sans text-[11px] leading-relaxed font-black normal-case">
-              {isPhaseTwoActive 
-                ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${fteCount} FTE resources.` 
-                : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status.`
-              }
-            </p>
-          </div>
-        </div>
-
+        {/* 🗺️ ANOMALIES LOCATION SECTION */}
         <div className="pt-8 text-left">
           <div className="border-b border-slate-900 pb-4 mb-8">
             <span className="text-[10px] font-mono text-slate-500 tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</span>
@@ -273,6 +280,7 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
+        {/* 🤝 INTERACTIVE CTAS */}
         {!isPhaseTwoActive && (
           <div 
             className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
