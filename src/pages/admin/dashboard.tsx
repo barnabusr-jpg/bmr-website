@@ -45,7 +45,6 @@ export default function AdminDashboard() {
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
 
-  // 🛡️ High-speed references to catch layout execution background timers
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -304,29 +303,39 @@ export default function AdminDashboard() {
                 const activeAudit = data.find(item => item.id === expandedRow);
                 
                 if (activeAudit) {
+                  // 1. Convert organization name to clear machine-safe snake_case notation
                   const entityCode = `${activeAudit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
+                  
+                  // 2. Algorithmically isolate target pillar by current triangulation metrics
                   const targetPillar = activeAudit.sfi_score >= 45 ? "AVS" : "IGF"; 
                   
-                  const execEmail = encodeURIComponent(emails.exec || "");
-                  const techEmail = encodeURIComponent(emails.tech || "");
-                  const opsEmail  = encodeURIComponent(emails.mgr || "");
-                  const sysEmail  = encodeURIComponent(emails.tech || ""); // Logical developer default fallback
+                  // 3. Scan the live operators state array to extract database-compiled emails
+                  const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
+                  const mgrNode  = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
+                  const techNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
+
+                  // 4. Safely encode URI parameters to cleanly pass across the isolation line
+                  const execEmail = encodeURIComponent(execNode?.email || "");
+                  const techEmail = encodeURIComponent(techNode?.email || "");
+                  const opsEmail  = encodeURIComponent(mgrNode?.email || "");
+                  const sysEmail  = encodeURIComponent(techNode?.email || ""); // Tech fallback layout track
 
                   window.open(
                     `/forensic?entity_code=${encodeURIComponent(entityCode)}&pillar=${targetPillar}&exec=${execEmail}&tech_mgmt=${techEmail}&ops_mgmt=${opsEmail}&sys_user=${sysEmail}&auth=admin_verified_secure`, 
                     '_blank'
                   );
                 } else {
-                  window.open("/forensic?pillar=AVS&auth=admin_verified_secure", '_blank');
+                  // 🛡️ Guardrail handler if operator hits config before expanding an audit track
+                  alert("ATTENTION: Please expand an active ledger row below to prime the configuration matrix before initializing the engine.");
                 }
               }}
               className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
                 expandedRow 
                   ? 'text-red-500 border-red-900/40 bg-red-950/10 animate-pulse' 
-                  : 'text-slate-500 border-transparent hover:text-red-500 hover:bg-red-950/10'
+                  : 'text-slate-500 border-slate-800 bg-transparent hover:text-slate-300'
               }`}
             >
-              {expandedRow ? "Configure Quad-Node Engine" : "Diagnostic Wizard"}
+              Configure Quad-Node Engine
             </button>
           </div>
         </div>
