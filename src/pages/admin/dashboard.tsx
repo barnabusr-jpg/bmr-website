@@ -252,14 +252,18 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      fetchLedger();
+      if (!selectedAudit) {
+        fetchLedger();
+      }
       const interval = setInterval(() => { 
-        fetchLedger(); 
-        if (expandedRow) refreshActiveNodes(expandedRow); 
+        if (!selectedAudit) {
+          fetchLedger(); 
+          if (expandedRow) refreshActiveNodes(expandedRow); 
+        }
       }, 5000); 
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes]);
+  }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes, selectedAudit]);
 
   useEffect(() => {
     return () => {
@@ -293,11 +297,21 @@ export default function AdminDashboard() {
           <div className="flex gap-1 bg-slate-900 p-1 shrink-0">
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
+            
+            {/* 🎯 RESTORED GLOBAL DEEP DIVE GATEWAY LINK BUTTON */}
+            <a 
+              href="/forensic?pillar=AVS&auth=admin_verified_secure" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="px-6 py-2 text-[10px] text-slate-500 hover:text-red-500 border border-transparent hover:border-red-900/40 bg-transparent hover:bg-red-950/10 font-black uppercase tracking-widest transition-all flex items-center justify-center cursor-pointer"
+            >
+              Diagnostic Wizard
+            </a>
           </div>
         </div>
       </nav>
 
-      {/* 🛰️ CONFIGURATION PORTAL MATRIX OVERLAY LAYOUT LAYER (Restored from functional main branch pattern) */}
+      {/* 🛰️ CONFIGURATION PORTAL MATRIX OVERLAY LAYOUT LAYER */}
       <AnimatePresence>
         {selectedAudit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
