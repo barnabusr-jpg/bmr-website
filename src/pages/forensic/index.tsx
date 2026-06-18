@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building } from 'lucide-react'; 
+import { supabase } from '../../lib/supabaseClient'; // Ensure accurate relative path to client instance
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
@@ -33,6 +34,13 @@ export default function ForensicEngineRoot() {
 
   const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic');
 
+  const roleLabels: Record<string, string> = {
+    EXECUTIVE: 'Executive Leadership (Strategic Oversight Node)',
+    TECH_MGMT: 'Technical Management (Infrastructure & DevOps Node)',
+    OPS_MGMT: 'Operations Management (Workflow & Process Node)',
+    SYSTEM_USER: 'Core System Operator (Terminal Execution Node)'
+  };
+
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
       try {
@@ -50,7 +58,6 @@ export default function ForensicEngineRoot() {
         if (isAdminAuthenticated) { 
           setAuthorizedAdmin(true); 
           
-          // 📊 Rule 1: Guard pillar validation bounds. If unverified or corrupt, fallback cleanly to IGF.
           const cleanPillar = pillarParam?.toUpperCase();
           if (cleanPillar && ['IGF', 'AVS', 'HAI'].includes(cleanPillar)) { 
             setActivePillar(cleanPillar as FunnelPillar); 
@@ -58,7 +65,6 @@ export default function ForensicEngineRoot() {
             setActivePillar('IGF');
           }
 
-          // 🏢 Rule 2: Clean and force uppercase snake_case notation on raw string params
           if (entityParam) { 
             const formattedCode = decodeURIComponent(entityParam)
               .trim()
@@ -67,7 +73,6 @@ export default function ForensicEngineRoot() {
             setCompanyName(formattedCode); 
           } 
 
-          // 📬 Rule 3: Extract and defensively parse multi-key email inputs via regular expression matching
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           const filterIncomingEmail = (paramKey: string): string => {
             const rawVal = params.get(paramKey);
@@ -166,14 +171,51 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
-  const handlePersonaAnswersSaved = (personaAnswers: Record<string, string>) => { 
+  // 📡 RE-ENGINEERED PERSISTENCE INTERFACE: Synchronizes directly with backend database records
+  const handlePersonaAnswersSaved = async (personaAnswers: Record<string, string>) => { 
     if (!triangulation || !activePersona) return; 
 
     const updatedState = { ...triangulation }; 
     updatedState.responses[activePersona] = personaAnswers; 
     updatedState.completions[activePersona] = true; 
-
     setTriangulation(updatedState); 
+
+    try {
+      // 1. Map frontend UI keys directly to matching backend schema string definitions
+      const personaToBackendKey = {
+        EXECUTIVE: "EXECUTIVE",
+        TECH_MGMT: "TECHNICAL",
+        OPS_MGMT: "MANAGERIAL",
+        SYSTEM_USER: "OPERATOR"
+      }[activePersona];
+
+      let updateQuery = supabase
+        .from("operators")
+        .update({
+          survey_completed: true,
+          status: "COMPLETED"
+        })
+        .eq("persona_type", personaToBackendKey);
+
+      // 2. Identify targeting vectors dynamically based on participant ingress route configurations
+      if (triangulation.emails[activePersona]) {
+        updateQuery = updateQuery.eq("email", triangulation.emails[activePersona]);
+      } else {
+        const params = new URLSearchParams(window.location.search);
+        const fallbackOrgName = params.get('org') || params.get('entity') || triangulation.companyName;
+        
+        // Scrub global markers out of lookup names to prevent configuration index missing matches
+        const cleanedOrgSearch = fallbackOrgName.replace(/_GLOBAL$/, '').replace(/_/g, ' ');
+        updateQuery = updateQuery.ilike("org_name", cleanedOrgSearch);
+      }
+
+      const { error } = await updateQuery;
+      if (error) throw error;
+      console.log(`[NETWORK SUCCESS] Database payload synchronized for role vector: ${activePersona}`);
+    } catch (dbError) {
+      console.error("[CRITICAL NODE OUTAGE] Sync to database aborted via network mutation failure:", dbError);
+    }
+
     setActivePersona(null); 
 
     if (typeof window !== 'undefined') {
@@ -402,6 +444,7 @@ export default function ForensicEngineRoot() {
           <div className="space-y-3"> 
             {(Object.keys(triangulation.emails) as PersonaKey[]).map((persona) => { 
               const isDone = triangulation.completions[persona]; 
+              const cleanLabel = roleLabels[persona] || persona;
               return ( 
                 <div key={persona} className="border border-slate-900 bg-black p-5 rounded-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
                   <div> 
@@ -414,7 +457,7 @@ export default function ForensicEngineRoot() {
                       <button 
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
-                          const subject = `CRITICAL ACTION REQUIRED: Complete Assessment for ${triangulation.companyName}`; 
+                          const subject = `CRITICAL ACTION REQUIRED: Complete ${cleanLabel} for ${triangulation.companyName}`; 
                           const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
