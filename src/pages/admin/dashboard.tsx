@@ -303,29 +303,23 @@ export default function AdminDashboard() {
                 const activeAudit = data.find(item => item.id === expandedRow);
                 
                 if (activeAudit) {
-                  // 1. Convert organization name to clear machine-safe snake_case notation
                   const entityCode = `${activeAudit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
-                  
-                  // 2. Algorithmically isolate target pillar by current triangulation metrics
                   const targetPillar = activeAudit.sfi_score >= 45 ? "AVS" : "IGF"; 
                   
-                  // 3. Scan the live operators state array to extract database-compiled emails
                   const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
                   const mgrNode  = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
                   const techNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
 
-                  // 4. Safely encode URI parameters to cleanly pass across the isolation line
                   const execEmail = encodeURIComponent(execNode?.email || "");
                   const techEmail = encodeURIComponent(techNode?.email || "");
                   const opsEmail  = encodeURIComponent(mgrNode?.email || "");
-                  const sysEmail  = encodeURIComponent(techNode?.email || ""); // Tech fallback layout track
+                  const sysEmail  = encodeURIComponent(techNode?.email || ""); 
 
                   window.open(
                     `/forensic?entity_code=${encodeURIComponent(entityCode)}&pillar=${targetPillar}&exec=${execEmail}&tech_mgmt=${techEmail}&ops_mgmt=${opsEmail}&sys_user=${sysEmail}&auth=admin_verified_secure`, 
                     '_blank'
                   );
                 } else {
-                  // 🛡️ Guardrail handler if operator hits config before expanding an audit track
                   alert("ATTENTION: Please expand an active ledger row below to prime the configuration matrix before initializing the engine.");
                 }
               }}
@@ -700,7 +694,30 @@ export default function AdminDashboard() {
                               </div>
 
                               <div className="space-y-3">
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
+                                {/* 🛠️ UPGRADED INTERACTIVE COCKPIT VIEWPORT REDIRECTION FILTER */}
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    const entityCode = `${audit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
+                                    const targetPillar = audit.sfi_score >= 45 ? "AVS" : "IGF";
+
+                                    const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
+                                    const mgrNode  = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
+                                    const techNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
+
+                                    const execEmail = encodeURIComponent(execNode?.email || "");
+                                    const techEmail = encodeURIComponent(techNode?.email || "");
+                                    const opsEmail  = encodeURIComponent(mgrNode?.email || "");
+                                    const sysEmail  = encodeURIComponent(techNode?.email || "");
+
+                                    window.open(`/forensic?entity_code=${encodeURIComponent(entityCode)}&pillar=${targetPillar}&exec=${execEmail}&tech_mgmt=${techEmail}&ops_mgmt=${opsEmail}&sys_user=${sysEmail}&auth=admin_verified_secure&mode=interactive_cockpit`, '_blank');
+                                  }} 
+                                  className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"
+                                >
+                                  <Monitor size={18} /> OPEN ONSCREEN LEDGER
+                                </button>
+                                
                                 <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
                               </div>
                             </div>
