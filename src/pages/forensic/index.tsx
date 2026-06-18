@@ -18,8 +18,6 @@ export default function ForensicEngineRoot() {
   const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT'>('INTAKE'); 
   const [companyName, setCompanyName] = useState(''); 
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
-   
-  // State-backed security variables to prevent Vercel hydration overrides 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({ 
@@ -33,49 +31,54 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null); 
   const [inputError, setInputError] = useState(''); 
 
-  // Securely intercept parameters inside an active client mount hook 
+  // Track base path inside local state safely to isolate window mutations from query parameters
+  const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic');
+
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
-      const params = new URLSearchParams(window.location.search); 
-      const authVal = params.get('auth'); 
-      const pillarParam = params.get('pillar') as FunnelPillar; 
-      const entityParam = params.get('entity') || params.get('org'); // Supports both variants safely
-      const roleParam = params.get('role') as PersonaKey; 
+      try {
+        // Cache the safe window origin without reading active mutable query objects down-stack
+        setBaseSecurePath(`${window.location.origin}${window.location.pathname}`);
 
-      // 1. Check Admin Signatures
-      const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
+        const params = new URLSearchParams(window.location.search); 
+        const authVal = params.get('auth'); 
+        const pillarParam = params.get('pillar') as FunnelPillar; 
+        const entityParam = params.get('entity') || params.get('org'); 
+        const roleParam = params.get('role') as PersonaKey; 
 
-      // 2. Check Participant Routing Parameters
-      const isParticipantRoute = !!(roleParam && entityParam && pillarParam);
+        const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
+        const isParticipantRoute = !!(roleParam && entityParam && pillarParam); 
 
-      if (isAdminAuthenticated) { 
-        setAuthorizedAdmin(true); 
-        if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam)) { 
+        if (isAdminAuthenticated) { 
+          setAuthorizedAdmin(true); 
+          if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam)) { 
+            setActivePillar(pillarParam); 
+          } 
+          if (entityParam) { 
+            setCompanyName(entityParam.toUpperCase()); 
+          } 
+        } else if (isParticipantRoute) { 
+          setAuthorizedAdmin(true); 
           setActivePillar(pillarParam); 
-        } 
-        if (entityParam) { 
           setCompanyName(entityParam.toUpperCase()); 
+          setActivePersona(roleParam); 
+
+          setTriangulation({ 
+            companyName: entityParam.toUpperCase(), 
+            pillar: pillarParam, 
+            emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }, 
+            completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
+            responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} } 
+          }); 
+
+          setViewState('WIZARD'); 
+        } else { 
+          setAuthorizedAdmin(false); 
         } 
-      } else if (isParticipantRoute) {
-        // 🚀 PARTICIPANT ROUTE BYPASS: Autopass security walls and mount the active runtime
-        setAuthorizedAdmin(true);
-        setActivePillar(pillarParam);
-        setCompanyName(entityParam.toUpperCase());
-        setActivePersona(roleParam);
-
-        // Provision a shell tracking state matrix so wizard dependencies do not break
-        setTriangulation({
-          companyName: entityParam.toUpperCase(),
-          pillar: pillarParam,
-          emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' },
-          completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
-          responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
-        });
-
-        setViewState('WIZARD');
-      } else { 
-        setAuthorizedAdmin(false); 
-      } 
+      } catch (e) {
+        console.error("Hydration parsing interrupted by security policy filters:", e);
+        setAuthorizedAdmin(false);
+      }
     } 
   }, []); 
 
@@ -90,7 +93,8 @@ export default function ForensicEngineRoot() {
     setInputError(''); 
   }; 
 
-  const handleInitializeTriangulation = (e: React.FormEvent) => { 
+  // Updated async submit handler that routes SendGrid triggers cleanly
+  const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     const sanitizedInput = companyName.trim().toUpperCase(); 
      
@@ -113,6 +117,23 @@ export default function ForensicEngineRoot() {
       responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} } 
     }); 
     setViewState('HUB'); 
+
+    try {
+      await fetch('/api/send-triangulation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyName: sanitizedInput,
+          activePillar: activePillar,
+          endpoints: emails,
+          originUrl: baseSecurePath
+        }),
+      });
+    } catch (error) {
+      console.error("BACKGROUND AUTOMATION HANDLER DISPATCH EXCEPTION:", error);
+    }
   }; 
 
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
@@ -130,13 +151,16 @@ export default function ForensicEngineRoot() {
     setTriangulation(updatedState); 
     setActivePersona(null); 
 
-    // If an isolated deep-link user finishes, confirm submission safely
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('role')) {
-      setAuthorizedAdmin(false); // Drop view context safely
-      alert("Telemetry node submitted successfully. You can now close this tab safely.");
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search); 
+      if (params.get('role')) { 
+        setAuthorizedAdmin(false); 
+        alert("Telemetry node submitted successfully. You can close this tab safely."); 
+      } else { 
+        setViewState('HUB'); 
+      } 
     } else {
-      setViewState('HUB'); 
+      setViewState('HUB');
     }
   }; 
 
@@ -170,7 +194,6 @@ export default function ForensicEngineRoot() {
     }; 
   }; 
 
-  // 1. Loading Phase 
   if (authorizedAdmin === null) { 
     return ( 
       <div className="bg-black min-h-screen text-zinc-500 font-mono flex items-center justify-center"> 
@@ -179,7 +202,6 @@ export default function ForensicEngineRoot() {
     ); 
   } 
 
-  // 2. Client Paywall Gate: Rendered explicitly if auth parameters fail validation 
   if (authorizedAdmin === false) { 
     return ( 
       <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white"> 
@@ -233,7 +255,6 @@ export default function ForensicEngineRoot() {
     ); 
   } 
 
-  // 3. Authorized View: Safely unlocked for validated admin or deep-linked participant states 
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white italic"> 
        
@@ -305,7 +326,7 @@ export default function ForensicEngineRoot() {
             <div className="pt-4 space-y-3"> 
               <button 
                 type="submit" 
-                className="w-full bg-zinc-100 text-black font-sans text-sm font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md italic" 
+                className="w-full bg-zinc-100 text-black font-sans text-sm font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md italic" 
               > 
                 Assemble Triangulation Matrix <ArrowRight size={14}/> 
               </button> 
@@ -313,7 +334,7 @@ export default function ForensicEngineRoot() {
               <button 
                 type="button" 
                 onClick={handleLoadDemoParameters} 
-                className="w-full bg-zinc-900 text-zinc-400 border border-slate-800 font-mono text-xs font-black py-3.5 uppercase tracking-widest rounded-sm hover:bg-zinc-800 hover:text-white transition-all flex items-center justify-center gap-2 cursor-pointer tracking-wider" 
+                className="w-full bg-zinc-900 text-zinc-400 border border-slate-800 font-mono text-xs font-black py-3.5 uppercase tracking-widest rounded-sm hover:bg-zinc-800 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer tracking-wider" 
               > 
                 <Play size={12} /> Inject High-Exposure Demo Parameters 
               </button> 
@@ -369,8 +390,8 @@ export default function ForensicEngineRoot() {
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
                           const subject = `CRITICAL ACTION REQUIRED: Complete Assessment for ${triangulation.companyName}`; 
-                          // 🎯 SECURE SYNC: Includes role and org parameters in manual mailto triggers
-                          const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${window.location.origin}${window.location.pathname}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}`; 
+                          // 🛡️ RE-SECURED: Pulls pathing value out of the state container rather than raw live window checks
+                          const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
                         className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0" 
