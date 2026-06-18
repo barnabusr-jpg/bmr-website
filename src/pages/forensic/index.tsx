@@ -31,19 +31,17 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null); 
   const [inputError, setInputError] = useState(''); 
 
-  // Track base path inside local state safely to isolate window mutations from query parameters
   const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic');
 
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
       try {
-        // Cache the safe window origin without reading active mutable query objects down-stack
         setBaseSecurePath(`${window.location.origin}${window.location.pathname}`);
 
         const params = new URLSearchParams(window.location.search); 
         const authVal = params.get('auth'); 
         const pillarParam = params.get('pillar') as FunnelPillar; 
-        const entityParam = params.get('entity') || params.get('org'); 
+        const entityParam = params.get('entity') || params.get('org') || params.get('entity_code'); 
         const roleParam = params.get('role') as PersonaKey; 
 
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
@@ -51,21 +49,49 @@ export default function ForensicEngineRoot() {
 
         if (isAdminAuthenticated) { 
           setAuthorizedAdmin(true); 
-          if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam)) { 
-            setActivePillar(pillarParam); 
-          } 
+          
+          // 📊 Rule 1: Guard pillar validation bounds. If unverified or corrupt, fallback cleanly to IGF.
+          const cleanPillar = pillarParam?.toUpperCase();
+          if (cleanPillar && ['IGF', 'AVS', 'HAI'].includes(cleanPillar)) { 
+            setActivePillar(cleanPillar as FunnelPillar); 
+          } else {
+            setActivePillar('IGF');
+          }
+
+          // 🏢 Rule 2: Clean and force uppercase snake_case notation on raw string params
           if (entityParam) { 
-            setCompanyName(entityParam.toUpperCase()); 
+            const formattedCode = decodeURIComponent(entityParam)
+              .trim()
+              .toUpperCase()
+              .replace(/\s+/g, '_');
+            setCompanyName(formattedCode); 
           } 
+
+          // 📬 Rule 3: Extract and defensively parse multi-key email inputs via regular expression matching
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          const filterIncomingEmail = (paramKey: string): string => {
+            const rawVal = params.get(paramKey);
+            if (!rawVal) return "";
+            const cleanVal = decodeURIComponent(rawVal).trim();
+            return emailRegex.test(cleanVal) ? cleanVal : "";
+          };
+
+          setEmails({
+            EXECUTIVE: filterIncomingEmail('exec'),
+            TECH_MGMT: filterIncomingEmail('tech_mgmt'),
+            OPS_MGMT: filterIncomingEmail('ops_mgmt'),
+            SYSTEM_USER: filterIncomingEmail('sys_user')
+          });
+
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
-          setActivePillar(pillarParam); 
-          setCompanyName(entityParam.toUpperCase()); 
+          setActivePillar(['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF'); 
+          setCompanyName(entityParam.toUpperCase().replace(/\s+/g, '_')); 
           setActivePersona(roleParam); 
 
           setTriangulation({ 
-            companyName: entityParam.toUpperCase(), 
-            pillar: pillarParam, 
+            companyName: entityParam.toUpperCase().replace(/\s+/g, '_'), 
+            pillar: ['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF', 
             emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }, 
             completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
             responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} } 
@@ -93,11 +119,10 @@ export default function ForensicEngineRoot() {
     setInputError(''); 
   }; 
 
-  // Updated async submit handler that routes SendGrid triggers cleanly
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     const sanitizedInput = companyName.trim().toUpperCase(); 
-     
+       
     if (!sanitizedInput) { 
       setInputError('CRITICAL INPUT EXCEPTION: TARGET COMPLIANCE SPECIFICATION REQUIRES ENTITY CODE'); 
       return; 
@@ -106,9 +131,9 @@ export default function ForensicEngineRoot() {
       setInputError('DISTRIBUTION ERROR: ALL FOUR PERSISTENT PERSONA EMAIL PATHS MANDATORY'); 
       return; 
     } 
-     
+       
     setInputError(''); 
-     
+       
     setTriangulation({ 
       companyName: sanitizedInput, 
       pillar: activePillar, 
@@ -206,7 +231,7 @@ export default function ForensicEngineRoot() {
     return ( 
       <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white"> 
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl"> 
-           
+            
           <div className="border-b border-zinc-900 pb-5 mb-6 flex items-center justify-between"> 
             <div className="flex items-center gap-3"> 
               <Lock size={18} className="text-red-500 shrink-0" /> 
@@ -241,7 +266,7 @@ export default function ForensicEngineRoot() {
             </div> 
 
             <div className="pt-4 border-t border-zinc-900 font-mono"> 
-              <a   
+              <a     
                 href="/dashboard" 
                 className="w-full bg-zinc-100 text-black text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md" 
               > 
@@ -257,7 +282,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white italic"> 
-       
+         
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl shadow-black/40 backdrop-blur-md"> 
           <div className="border-b border-slate-900 pb-5 mb-8 flex items-center gap-3"> 
@@ -271,7 +296,7 @@ export default function ForensicEngineRoot() {
           <form onSubmit={handleInitializeTriangulation} className="space-y-6 not-italic font-mono"> 
             <div> 
               <label className="text-[10px] text-slate-500 block font-black tracking-widest uppercase mb-2">// ENTITY ANALYSIS CODE</label> 
-              <input   
+              <input    
                 type="text" 
                 autoComplete="off" 
                 placeholder="E.G., SIGMA_TIER_GLOBAL" 
@@ -305,13 +330,13 @@ export default function ForensicEngineRoot() {
 
             <div className="space-y-4 pt-4 border-t border-slate-900"> 
               <label className="text-[10px] text-slate-500 block font-black tracking-widest uppercase mb-2">// ASSIGN VECTOR TARGET ROLES</label> 
-              {Object.keys(emails).map((role) => ( 
+              {(Object.keys(emails) as PersonaKey[]).map((role) => ( 
                 <div key={role}> 
                   <span className="text-[9px] text-slate-600 block mb-1.5 font-black tracking-widest uppercase">// {role.replace('_', ' ')} ENDPOINT NODE</span> 
-                  <input   
+                  <input    
                     type="email" 
                     placeholder={`e.g., manager@domain.com`} 
-                    value={emails[role as PersonaKey]} 
+                    value={emails[role]} 
                     onChange={(e) => setEmails({ ...emails, [role]: e.target.value })} 
                     className="w-full bg-slate-950 border border-slate-900 rounded-sm px-4 py-3.5 text-xs text-zinc-300 font-mono tracking-wider focus:outline-none focus:border-red-600 transition-colors uppercase" 
                   /> 
@@ -390,7 +415,6 @@ export default function ForensicEngineRoot() {
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
                           const subject = `CRITICAL ACTION REQUIRED: Complete Assessment for ${triangulation.companyName}`; 
-                          // 🛡️ RE-SECURED: Pulls pathing value out of the state container rather than raw live window checks
                           const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
