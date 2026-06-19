@@ -66,10 +66,7 @@ export default function ForensicEngineRoot() {
           } 
 
           if (entityParam) { 
-            const formattedCode = decodeURIComponent(entityParam) 
-              .trim() 
-              .toUpperCase() 
-              .replace(/\s+/g, '_'); 
+            const formattedCode = decodeURIComponent(entityParam).trim(); 
             setCompanyName(formattedCode); 
           }  
 
@@ -88,14 +85,32 @@ export default function ForensicEngineRoot() {
             SYSTEM_USER: filterIncomingEmail('sys_user') 
           }); 
 
+          // Clean initialization mapping for the persistent administration hub view
+          if (entityParam) {
+            const resolvedOrgCode = decodeURIComponent(entityParam).trim();
+            setTriangulation({
+              companyName: resolvedOrgCode,
+              pillar: (cleanPillar && ['IGF', 'AVS', 'HAI'].includes(cleanPillar)) ? (cleanPillar as FunnelPillar) : 'IGF',
+              emails: {
+                EXECUTIVE: filterIncomingEmail('exec'),
+                TECH_MGMT: filterIncomingEmail('tech_mgmt'),
+                OPS_MGMT: filterIncomingEmail('ops_mgmt'),
+                SYSTEM_USER: filterIncomingEmail('sys_user')
+              },
+              completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
+              responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
+            });
+            setViewState('HUB');
+          }
+
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
           setActivePillar(['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF'); 
-          setCompanyName(entityParam.toUpperCase().replace(/\s+/g, '_')); 
+          setCompanyName(decodeURIComponent(entityParam).trim()); 
           setActivePersona(roleParam); 
 
           setTriangulation({ 
-            companyName: entityParam.toUpperCase().replace(/\s+/g, '_'), 
+            companyName: decodeURIComponent(entityParam).trim(), 
             pillar: ['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF', 
             emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }, 
             completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
@@ -126,7 +141,7 @@ export default function ForensicEngineRoot() {
 
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
-    const sanitizedInput = companyName.trim().toUpperCase(); 
+    const sanitizedInput = companyName.trim(); 
         
     if (!sanitizedInput) { 
       setInputError('CRITICAL INPUT EXCEPTION: TARGET COMPLIANCE SPECIFICATION REQUIRES ENTITY CODE'); 
@@ -199,7 +214,7 @@ export default function ForensicEngineRoot() {
       const exactOrgCode = params.get('entity_code') || params.get('org') || params.get('entity') || triangulation.companyName; 
        
       if (exactOrgCode) { 
-        const strictDatabaseCode = exactOrgCode.trim().toUpperCase().replace(/\s+/g, '_'); 
+        const strictDatabaseCode = exactOrgCode.trim(); 
          
         if (strictDatabaseCode.includes('-')) { 
           updateQuery = updateQuery.eq("audit_id", strictDatabaseCode); 
@@ -223,10 +238,20 @@ export default function ForensicEngineRoot() {
     setActivePersona(null); 
 
     if (typeof window !== 'undefined') { 
-      const params = new URLSearchParams(window.location.search); 
-      if (params.get('role')) { 
-        setAuthorizedAdmin(false); 
-        alert("Telemetry node submitted successfully. You can close this tab safely."); 
+      const currentParams = new URLSearchParams(window.location.search); 
+      const nextParams = new URLSearchParams(); 
+       
+      const activeAuth = currentParams.get('auth') || 'admin_verified_secure'; 
+      const activeOrg = currentParams.get('entity_code') || currentParams.get('org') || currentParams.get('entity') || triangulation.companyName; 
+      const activePillar = currentParams.get('pillar') || triangulation.pillar; 
+
+      nextParams.set('auth', activeAuth); 
+      nextParams.set('org', activeOrg); 
+      nextParams.set('pillar', activePillar); 
+
+      if (currentParams.get('role')) { 
+        alert("Telemetry node submitted successfully. Returning to monitor platform."); 
+        window.location.href = `${window.location.origin}${window.location.pathname}?${nextParams.toString()}`; 
       } else { 
         setViewState('HUB'); 
       } 
