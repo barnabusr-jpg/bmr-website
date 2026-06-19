@@ -32,19 +32,19 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null); 
   const [inputError, setInputError] = useState(''); 
 
-  const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic');
+  const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic'); 
 
-  const roleLabels: Record<string, string> = {
-    EXECUTIVE: 'Executive Leadership (Strategic Oversight Node)',
-    TECH_MGMT: 'Technical Management (Infrastructure & DevOps Node)',
-    OPS_MGMT: 'Operations Management (Workflow & Process Node)',
-    SYSTEM_USER: 'Core System Operator (Terminal Execution Node)'
-  };
+  const roleLabels: Record<string, string> = { 
+    EXECUTIVE: 'Executive Leadership (Strategic Oversight Node)', 
+    TECH_MGMT: 'Technical Management (Infrastructure & DevOps Node)', 
+    OPS_MGMT: 'Operations Management (Workflow & Process Node)', 
+    SYSTEM_USER: 'Core System Operator (Terminal Execution Node)' 
+  }; 
 
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
-      try {
-        setBaseSecurePath(`${window.location.origin}${window.location.pathname}`);
+      try { 
+        setBaseSecurePath(`${window.location.origin}${window.location.pathname}`); 
 
         const params = new URLSearchParams(window.location.search); 
         const authVal = params.get('auth'); 
@@ -57,36 +57,36 @@ export default function ForensicEngineRoot() {
 
         if (isAdminAuthenticated) { 
           setAuthorizedAdmin(true); 
-          
-          const cleanPillar = pillarParam?.toUpperCase();
+           
+          const cleanPillar = pillarParam?.toUpperCase(); 
           if (cleanPillar && ['IGF', 'AVS', 'HAI'].includes(cleanPillar)) { 
             setActivePillar(cleanPillar as FunnelPillar); 
-          } else {
-            setActivePillar('IGF');
-          }
-
-          if (entityParam) { 
-            const formattedCode = decodeURIComponent(entityParam)
-              .trim()
-              .toUpperCase()
-              .replace(/\s+/g, '_');
-            setCompanyName(formattedCode); 
+          } else { 
+            setActivePillar('IGF'); 
           } 
 
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          const filterIncomingEmail = (paramKey: string): string => {
-            const rawVal = params.get(paramKey);
-            if (!rawVal) return "";
-            const cleanVal = decodeURIComponent(rawVal).trim();
-            return emailRegex.test(cleanVal) ? cleanVal : "";
-          };
+          if (entityParam) { 
+            const formattedCode = decodeURIComponent(entityParam) 
+              .trim() 
+              .toUpperCase() 
+              .replace(/\s+/g, '_'); 
+            setCompanyName(formattedCode); 
+          }  
 
-          setEmails({
-            EXECUTIVE: filterIncomingEmail('exec'),
-            TECH_MGMT: filterIncomingEmail('tech_mgmt'),
-            OPS_MGMT: filterIncomingEmail('ops_mgmt'),
-            SYSTEM_USER: filterIncomingEmail('sys_user')
-          });
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+          const filterIncomingEmail = (paramKey: string): string => { 
+            const rawVal = params.get(paramKey); 
+            if (!rawVal) return ""; 
+            const cleanVal = decodeURIComponent(rawVal).trim(); 
+            return emailRegex.test(cleanVal) ? cleanVal : ""; 
+          }; 
+
+          setEmails({ 
+            EXECUTIVE: filterIncomingEmail('exec'), 
+            TECH_MGMT: filterIncomingEmail('tech_mgmt'), 
+            OPS_MGMT: filterIncomingEmail('ops_mgmt'), 
+            SYSTEM_USER: filterIncomingEmail('sys_user') 
+          }); 
 
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
@@ -106,10 +106,10 @@ export default function ForensicEngineRoot() {
         } else { 
           setAuthorizedAdmin(false); 
         } 
-      } catch (e) {
-        console.error("Hydration parsing interrupted by security policy filters:", e);
-        setAuthorizedAdmin(false);
-      }
+      } catch (e) { 
+        console.error("Hydration parsing interrupted by security policy filters:", e); 
+        setAuthorizedAdmin(false); 
+      } 
     } 
   }, []); 
 
@@ -127,7 +127,7 @@ export default function ForensicEngineRoot() {
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     const sanitizedInput = companyName.trim().toUpperCase(); 
-       
+        
     if (!sanitizedInput) { 
       setInputError('CRITICAL INPUT EXCEPTION: TARGET COMPLIANCE SPECIFICATION REQUIRES ENTITY CODE'); 
       return; 
@@ -136,9 +136,9 @@ export default function ForensicEngineRoot() {
       setInputError('DISTRIBUTION ERROR: ALL FOUR PERSISTENT PERSONA EMAIL PATHS MANDATORY'); 
       return; 
     } 
-       
+        
     setInputError(''); 
-       
+        
     setTriangulation({ 
       companyName: sanitizedInput, 
       pillar: activePillar, 
@@ -148,22 +148,22 @@ export default function ForensicEngineRoot() {
     }); 
     setViewState('HUB'); 
 
-    try {
-      await fetch('/api/send-triangulation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          companyName: sanitizedInput,
-          activePillar: activePillar,
-          endpoints: emails,
-          originUrl: baseSecurePath
-        }),
-      });
-    } catch (error) {
-      console.error("BACKGROUND AUTOMATION HANDLER DISPATCH EXCEPTION:", error);
-    }
+    try { 
+      await fetch('/api/send-triangulation', { 
+        method: 'POST', 
+        headers: { 
+          'Content-Type': 'application/json', 
+        }, 
+        body: JSON.stringify({ 
+          companyName: sanitizedInput, 
+          activePillar: activePillar, 
+          endpoints: emails, 
+          originUrl: baseSecurePath 
+        }), 
+      }); 
+    } catch (error) { 
+      console.error("BACKGROUND AUTOMATION HANDLER DISPATCH EXCEPTION:", error); 
+    } 
   }; 
 
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
@@ -171,7 +171,6 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
-  // 📡 HARDENED PERSISTENCE INTERFACE: Anchored strictly to unique data parameters
   const handlePersonaAnswersSaved = async (personaAnswers: Record<string, string>) => { 
     if (!triangulation || !activePersona) return; 
 
@@ -180,55 +179,50 @@ export default function ForensicEngineRoot() {
     updatedState.completions[activePersona] = true; 
     setTriangulation(updatedState); 
 
-    try {
-      // 1. Map frontend UI keys directly to matching backend schema string definitions
-      const personaToBackendKey = {
-        EXECUTIVE: "EXECUTIVE",
-        TECH_MGMT: "TECHNICAL",
-        OPS_MGMT: "MANAGERIAL",
-        SYSTEM_USER: "OPERATOR"
-      }[activePersona];
+    try { 
+      const personaToBackendKey = { 
+        EXECUTIVE: "EXECUTIVE", 
+        TECH_MGMT: "TECHNICAL", 
+        OPS_MGMT: "MANAGERIAL", 
+        SYSTEM_USER: "OPERATOR" 
+      }[activePersona]; 
 
-      let updateQuery = supabase
-        .from("operators")
-        .update({
-          survey_completed: true,
-          status: "COMPLETED"
-        })
-        .eq("persona_type", personaToBackendKey);
+      let updateQuery = supabase 
+        .from("operators") 
+        .update({ 
+          survey_completed: true, 
+          status: "COMPLETED" 
+        }) 
+        .eq("persona_type", personaToBackendKey); 
 
-      // 2. Extract explicit configuration tokens from current browser state environment
-      const params = new URLSearchParams(window.location.search);
-      const exactOrgCode = params.get('entity_code') || params.get('org') || params.get('entity') || triangulation.companyName;
-      
-      // 3. ENFORCE HARD CONTEXT ALIGNMENT MATCHING
-      if (exactOrgCode) {
-        const strictDatabaseCode = exactOrgCode.trim().toUpperCase().replace(/\s+/g, '_');
-        
-        // Evaluates dynamically if passing standard client UUIDs or direct system string trackers
-        if (strictDatabaseCode.includes('-')) {
-          updateQuery = updateQuery.eq("audit_id", strictDatabaseCode);
-        } else {
-          updateQuery = updateQuery.ilike("audit_id", strictDatabaseCode);
-        }
-      }
+      const params = new URLSearchParams(window.location.search); 
+      const exactOrgCode = params.get('entity_code') || params.get('org') || params.get('entity') || triangulation.companyName; 
+       
+      if (exactOrgCode) { 
+        const strictDatabaseCode = exactOrgCode.trim().toUpperCase().replace(/\s+/g, '_'); 
+         
+        if (strictDatabaseCode.includes('-')) { 
+          updateQuery = updateQuery.eq("audit_id", strictDatabaseCode); 
+        } else { 
+          updateQuery = updateQuery.ilike("audit_id", strictDatabaseCode); 
+        } 
+      } 
 
-      // 4. Secure email destination route cross-check validation
-      const currentPersonaEmail = triangulation.emails[activePersona] || params.get('exec') || params.get('tech_mgmt') || params.get('ops_mgmt') || params.get('sys_user');
-      if (currentPersonaEmail) {
-        updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail).trim());
-      }
+      const currentPersonaEmail = triangulation.emails[activePersona] || params.get('exec') || params.get('tech_mgmt') || params.get('ops_mgmt') || params.get('sys_user'); 
+      if (currentPersonaEmail) { 
+        updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail).trim()); 
+      } 
 
-      const { error } = await updateQuery;
-      if (error) throw error;
-      console.log(`[NETWORK SUCCESS] Database payload synchronized for role vector: ${activePersona}`);
-    } catch (dbError) {
-      console.error("[CRITICAL NODE OUTAGE] Sync to database aborted via network mutation failure:", dbError);
-    }
+      const { error } = await updateQuery; 
+      if (error) throw error; 
+      console.log(`[NETWORK SUCCESS] Database payload synchronized for role vector: ${activePersona}`); 
+    } catch (dbError) { 
+      console.error("[CRITICAL NODE OUTAGE] Sync to database aborted via network mutation failure:", dbError); 
+    } 
 
     setActivePersona(null); 
 
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined') { 
       const params = new URLSearchParams(window.location.search); 
       if (params.get('role')) { 
         setAuthorizedAdmin(false); 
@@ -236,12 +230,12 @@ export default function ForensicEngineRoot() {
       } else { 
         setViewState('HUB'); 
       } 
-    } else {
-      setViewState('HUB');
-    }
+    } else { 
+      setViewState('HUB'); 
+    } 
   }; 
 
-  const allPersonasComplete = triangulation  
+  const allPersonasComplete = triangulation   
     ? Object.values(triangulation.completions).every(status => status === true) 
     : false; 
 
@@ -283,7 +277,7 @@ export default function ForensicEngineRoot() {
     return ( 
       <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white"> 
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl"> 
-             
+               
           <div className="border-b border-zinc-900 pb-5 mb-6 flex items-center justify-between"> 
             <div className="flex items-center gap-3"> 
               <Lock size={18} className="text-red-500 shrink-0" /> 
@@ -318,7 +312,7 @@ export default function ForensicEngineRoot() {
             </div> 
 
             <div className="pt-4 border-t border-zinc-900 font-mono"> 
-              <a     
+              <a       
                 href="/dashboard" 
                 className="w-full bg-zinc-100 text-black text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md" 
               > 
@@ -334,7 +328,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white italic"> 
-         
+           
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl shadow-black/40 backdrop-blur-md"> 
           <div className="border-b border-slate-900 pb-5 mb-8 flex items-center gap-3"> 
@@ -348,7 +342,7 @@ export default function ForensicEngineRoot() {
           <form onSubmit={handleInitializeTriangulation} className="space-y-6 not-italic font-mono"> 
             <div> 
               <label className="text-[10px] text-slate-500 block font-black tracking-widest uppercase mb-2">// ENTITY ANALYSIS CODE</label> 
-              <input    
+              <input     
                 type="text" 
                 autoComplete="off" 
                 placeholder="E.G., SIGMA_TIER_GLOBAL" 
@@ -385,7 +379,7 @@ export default function ForensicEngineRoot() {
               {(Object.keys(emails) as PersonaKey[]).map((role) => ( 
                 <div key={role}> 
                   <span className="text-[9px] text-slate-600 block mb-1.5 font-black tracking-widest uppercase">// {role.replace('_', ' ')} ENDPOINT NODE</span> 
-                  <input    
+                  <input     
                     type="email" 
                     placeholder={`e.g., manager@domain.com`} 
                     value={emails[role]} 
@@ -413,7 +407,7 @@ export default function ForensicEngineRoot() {
                 onClick={handleLoadDemoParameters} 
                 className="w-full bg-zinc-900 text-zinc-400 border border-slate-800 font-mono text-xs font-black py-3.5 uppercase tracking-widest rounded-sm hover:bg-zinc-800 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer tracking-wider" 
               > 
-                <Play size={12} /> Inject High-Exposure Demo Parameters 
+                <Play size={12} /> Run Extended Staging Simulation 
               </button> 
             </div> 
           </form> 
@@ -454,7 +448,7 @@ export default function ForensicEngineRoot() {
           <div className="space-y-3"> 
             {(Object.keys(triangulation.emails) as PersonaKey[]).map((persona) => { 
               const isDone = triangulation.completions[persona]; 
-              const cleanLabel = roleLabels[persona] || persona;
+              const cleanLabel = roleLabels[persona] || persona; 
               return ( 
                 <div key={persona} className="border border-slate-900 bg-black p-5 rounded-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
                   <div> 
@@ -497,7 +491,7 @@ export default function ForensicEngineRoot() {
               onClick={() => setViewState('COCKPIT')} 
               disabled={!allPersonasComplete} 
               className={`w-full sm:w-auto px-6 py-4 font-black uppercase tracking-widest rounded-xs transition-all font-sans italic text-sm ${ 
-                allPersonasComplete  
+                allPersonasComplete 
                   ? 'bg-red-600 text-white hover:bg-white hover:text-black cursor-pointer shadow-lg' 
                   : 'bg-slate-950 text-slate-700 border border-slate-900 cursor-not-allowed' 
               }`} 
@@ -509,7 +503,7 @@ export default function ForensicEngineRoot() {
       )} 
 
       {viewState === 'WIZARD' && triangulation && activePersona && ( 
-        <ForensicDiagnosticWizard    
+        <ForensicDiagnosticWizard     
           companyName={`${triangulation.companyName}::${activePersona}`} 
           activePillar={triangulation.pillar} 
           onCalculated={() => { 
@@ -519,14 +513,15 @@ export default function ForensicEngineRoot() {
             } else { 
               handlePersonaAnswersSaved({}); 
             } 
-          }}    
+          }}     
         /> 
       )} 
 
       {viewState === 'COCKPIT' && triangulation && ( 
-        <ForensicCommandCockpit    
-          companyName={triangulation.companyName}    
-          onReset={handleSystemReset}    
+        <ForensicCommandCockpit     
+          companyName={triangulation.companyName} 
+          activePillar={triangulation.pillar} 
+          onReset={handleSystemReset}     
         /> 
       )} 
 
