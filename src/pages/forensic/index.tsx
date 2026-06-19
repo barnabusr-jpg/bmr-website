@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building } from 'lucide-react'; 
-import { supabase } from '../../lib/supabaseClient'; // Ensure accurate relative path to client instance
+import { supabase } from '../../lib/supabaseClient'; 
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
@@ -171,7 +171,7 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
-  // 📡 RE-ENGINEERED PERSISTENCE INTERFACE: Synchronizes directly with backend database records
+  // 📡 HARDENED PERSISTENCE INTERFACE: Anchored strictly to unique data parameters
   const handlePersonaAnswersSaved = async (personaAnswers: Record<string, string>) => { 
     if (!triangulation || !activePersona) return; 
 
@@ -197,16 +197,26 @@ export default function ForensicEngineRoot() {
         })
         .eq("persona_type", personaToBackendKey);
 
-      // 2. Identify targeting vectors dynamically based on participant ingress route configurations
-      if (triangulation.emails[activePersona]) {
-        updateQuery = updateQuery.eq("email", triangulation.emails[activePersona]);
-      } else {
-        const params = new URLSearchParams(window.location.search);
-        const fallbackOrgName = params.get('org') || params.get('entity') || triangulation.companyName;
+      // 2. Extract explicit configuration tokens from current browser state environment
+      const params = new URLSearchParams(window.location.search);
+      const exactOrgCode = params.get('entity_code') || params.get('org') || params.get('entity') || triangulation.companyName;
+      
+      // 3. ENFORCE HARD CONTEXT ALIGNMENT MATCHING
+      if (exactOrgCode) {
+        const strictDatabaseCode = exactOrgCode.trim().toUpperCase().replace(/\s+/g, '_');
         
-        // Scrub global markers out of lookup names to prevent configuration index missing matches
-        const cleanedOrgSearch = fallbackOrgName.replace(/_GLOBAL$/, '').replace(/_/g, ' ');
-        updateQuery = updateQuery.ilike("org_name", cleanedOrgSearch);
+        // Evaluates dynamically if passing standard client UUIDs or direct system string trackers
+        if (strictDatabaseCode.includes('-')) {
+          updateQuery = updateQuery.eq("audit_id", strictDatabaseCode);
+        } else {
+          updateQuery = updateQuery.ilike("audit_id", strictDatabaseCode);
+        }
+      }
+
+      // 4. Secure email destination route cross-check validation
+      const currentPersonaEmail = triangulation.emails[activePersona] || params.get('exec') || params.get('tech_mgmt') || params.get('ops_mgmt') || params.get('sys_user');
+      if (currentPersonaEmail) {
+        updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail).trim());
       }
 
       const { error } = await updateQuery;
@@ -273,7 +283,7 @@ export default function ForensicEngineRoot() {
     return ( 
       <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white"> 
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl"> 
-            
+             
           <div className="border-b border-zinc-900 pb-5 mb-6 flex items-center justify-between"> 
             <div className="flex items-center gap-3"> 
               <Lock size={18} className="text-red-500 shrink-0" /> 
@@ -352,9 +362,9 @@ export default function ForensicEngineRoot() {
               <label className="text-[10px] text-slate-500 block font-black tracking-widest uppercase mb-2">// ACTIVE PRESCRIBED PILLAR SECTOR</label> 
               <div className="grid grid-cols-1 gap-2"> 
                 {[ 
-                  { id: 'IGF', title: 'Compliance & Legal (IGF)', desc: 'Regulatory exposures & opaque decision metrics' }, 
-                  { id: 'AVS', title: 'Technical Debt & Rework Tax (AVS)', desc: 'Wasted developer allocation & architecture drift' }, 
-                  { id: 'HAI', title: 'Automation Bias & Fatigue (HAI)', desc: 'Alarm failures & unhedged balance-sheet profit leaks' } 
+                  { id: 'IGF', title: 'Compliance & Legal (IGF)' }, 
+                  { id: 'AVS', title: 'Technical Debt & Rework Tax (AVS)' }, 
+                  { id: 'HAI', title: 'Automation Bias & Fatigue (HAI)' } 
                 ].map((p) => ( 
                   <button 
                     key={p.id} 
@@ -487,7 +497,7 @@ export default function ForensicEngineRoot() {
               onClick={() => setViewState('COCKPIT')} 
               disabled={!allPersonasComplete} 
               className={`w-full sm:w-auto px-6 py-4 font-black uppercase tracking-widest rounded-xs transition-all font-sans italic text-sm ${ 
-                allPersonasComplete 
+                allPersonasComplete  
                   ? 'bg-red-600 text-white hover:bg-white hover:text-black cursor-pointer shadow-lg' 
                   : 'bg-slate-950 text-slate-700 border border-slate-900 cursor-not-allowed' 
               }`} 
@@ -499,7 +509,7 @@ export default function ForensicEngineRoot() {
       )} 
 
       {viewState === 'WIZARD' && triangulation && activePersona && ( 
-        <ForensicDiagnosticWizard   
+        <ForensicDiagnosticWizard    
           companyName={`${triangulation.companyName}::${activePersona}`} 
           activePillar={triangulation.pillar} 
           onCalculated={() => { 
@@ -509,14 +519,14 @@ export default function ForensicEngineRoot() {
             } else { 
               handlePersonaAnswersSaved({}); 
             } 
-          }}   
+          }}    
         /> 
       )} 
 
       {viewState === 'COCKPIT' && triangulation && ( 
-        <ForensicCommandCockpit   
-          companyName={triangulation.companyName}   
-          onReset={handleSystemReset}   
+        <ForensicCommandCockpit    
+          companyName={triangulation.companyName}    
+          onReset={handleSystemReset}    
         /> 
       )} 
 
