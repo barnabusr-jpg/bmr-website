@@ -422,7 +422,6 @@ export default function AdminDashboard() {
                   const dbDecay = audit.decay_pct || 24;
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   
-                  // 🔒 RESTORED PROPORTIONAL CALIBRATION MULTIPLIER CORE LOGIC BACK TO 6 FTEs
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
                   
                   const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
