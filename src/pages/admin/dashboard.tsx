@@ -782,7 +782,7 @@ export default function AdminDashboard() {
                       <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
                       <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
                     </div>
-                  ))}
+                  ))}k
                 </div>
               </section>
 
