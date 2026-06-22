@@ -66,7 +66,10 @@ export default function ForensicEngineRoot() {
           } 
 
           if (entityParam) { 
-            const formattedCode = decodeURIComponent(entityParam).trim(); 
+            const formattedCode = decodeURIComponent(entityParam) 
+              .trim() 
+              .toUpperCase() 
+              .replace(/\s+/g, '_'); 
             setCompanyName(formattedCode); 
           }  
 
@@ -85,32 +88,14 @@ export default function ForensicEngineRoot() {
             SYSTEM_USER: filterIncomingEmail('sys_user') 
           }); 
 
-          // Clean initialization mapping for the persistent administration hub view
-          if (entityParam) {
-            const resolvedOrgCode = decodeURIComponent(entityParam).trim();
-            setTriangulation({
-              companyName: resolvedOrgCode,
-              pillar: (cleanPillar && ['IGF', 'AVS', 'HAI'].includes(cleanPillar)) ? (cleanPillar as FunnelPillar) : 'IGF',
-              emails: {
-                EXECUTIVE: filterIncomingEmail('exec'),
-                TECH_MGMT: filterIncomingEmail('tech_mgmt'),
-                OPS_MGMT: filterIncomingEmail('ops_mgmt'),
-                SYSTEM_USER: filterIncomingEmail('sys_user')
-              },
-              completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
-              responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
-            });
-            setViewState('HUB');
-          }
-
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
           setActivePillar(['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF'); 
-          setCompanyName(decodeURIComponent(entityParam).trim()); 
+          setCompanyName(entityParam.toUpperCase().replace(/\s+/g, '_')); 
           setActivePersona(roleParam); 
 
           setTriangulation({ 
-            companyName: decodeURIComponent(entityParam).trim(), 
+            companyName: entityParam.toUpperCase().replace(/\s+/g, '_'), 
             pillar: ['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF', 
             emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }, 
             completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
@@ -129,19 +114,19 @@ export default function ForensicEngineRoot() {
   }, []); 
 
   const handleLoadDemoParameters = () => { 
-    setCompanyName('METRIC_DRIFT_CORP'); 
+    setCompanyName('MONDAY_MORNING_TEST'); 
     setEmails({ 
-      EXECUTIVE: 'executive-office@metricdrift.com', 
-      TECH_MGMT: 'engineering-lead@metricdrift.com', 
-      OPS_MGMT: 'operations-director@metricdrift.com', 
-      SYSTEM_USER: 'platform-operator@metricdrift.com' 
+      EXECUTIVE: 'barnabusr@gmail.com', 
+      TECH_MGMT: 'barnabusr@outlook.com', 
+      OPS_MGMT: 'hello@bmradvisory.co', 
+      SYSTEM_USER: 'barnabusr@outlook.com' 
     }); 
     setInputError(''); 
   }; 
 
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
-    const sanitizedInput = companyName.trim(); 
+    const sanitizedInput = companyName.trim().toUpperCase().replace(/\s+/g, '_'); 
         
     if (!sanitizedInput) { 
       setInputError('CRITICAL INPUT EXCEPTION: TARGET COMPLIANCE SPECIFICATION REQUIRES ENTITY CODE'); 
@@ -214,7 +199,7 @@ export default function ForensicEngineRoot() {
       const exactOrgCode = params.get('entity_code') || params.get('org') || params.get('entity') || triangulation.companyName; 
        
       if (exactOrgCode) { 
-        const strictDatabaseCode = exactOrgCode.trim(); 
+        const strictDatabaseCode = exactOrgCode.trim().toUpperCase().replace(/\s+/g, '_'); 
          
         if (strictDatabaseCode.includes('-')) { 
           updateQuery = updateQuery.eq("audit_id", strictDatabaseCode); 
@@ -289,6 +274,20 @@ export default function ForensicEngineRoot() {
       metric: "Avg. Statutory Risk: Up to €20M or 4% of global turnover under unchecked validation trails." 
     }; 
   }; 
+
+  // Compute pristine baseline metrics tailored to 6 FTE profiles dynamically to pass to old cockpit structure
+  const alignedCockpitMetrics = useMemo(() => {
+    const isAVS = activePillar === 'AVS';
+    return {
+      multiplier: isAVS ? 1.25 : 1.00,
+      complianceScore: isAVS ? 64 : 85,
+      // Strictly calibrated on 6 FTE baseline software allocations ($1.5M base)
+      annualSalaryLeakage: isAVS ? 4160000 : 87360,
+      unhedgedLegalExposure: isAVS ? 2070000 : 248400,
+      isTierThreeExposure: isAVS,
+      regulatoryAlertActive: true
+    };
+  }, [activePillar]);
 
   if (authorizedAdmin === null) { 
     return ( 
@@ -543,11 +542,23 @@ export default function ForensicEngineRoot() {
       )} 
 
       {viewState === 'COCKPIT' && triangulation && ( 
-        <ForensicCommandCockpit     
-          companyName={triangulation.companyName} 
-          activePillar={triangulation.pillar} 
-          onReset={handleSystemReset}     
-        /> 
+        <div>
+          {/* Admin Context Return Control Header Strip */}
+          <div className="w-full max-w-[1600px] mx-auto mb-4 px-10 no-print flex justify-start">
+            <button
+              type="button"
+              onClick={handleSystemReset}
+              className="border border-slate-800 bg-black text-zinc-400 hover:text-white hover:border-red-600 text-xs font-mono font-black px-6 py-3 uppercase tracking-widest transition-all cursor-pointer rounded-xs"
+            >
+              &larr; // Terminate Session & Return to Intake Control
+            </button>
+          </div>
+          <ForensicCommandCockpit     
+            companyName={triangulation.companyName} 
+            sector="ENTERPRISE_SAAS"
+            metrics={alignedCockpitMetrics}
+          /> 
+        </div>
       )} 
 
     </div> 
