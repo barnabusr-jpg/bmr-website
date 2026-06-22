@@ -45,7 +45,6 @@ export default function AdminDashboard() {
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
 
-  // 🛡️ High-speed references to catch layout execution background timers
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -66,7 +65,6 @@ export default function AdminDashboard() {
 
     let query = supabase
       .from('audits')
-      // 🔒 PERMANENT MATRIX FIX: Added sfi_score explicitly to prevent missing column data masking
       .select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
 
     if (statusFilter !== "ALL") {
@@ -599,6 +597,16 @@ export default function AdminDashboard() {
                                       <th className="pb-2 w-1/4">REQUIRED_IP_DIRECTIVE</th>
                                     </tr>
                                   </thead>
+                                  <tbody className="divide-y divide-slate-900/50 text-white font-medium">
+                                    {realFractures.map((frac: any) => (
+                                      <tr key={frac.id} className="hover:bg-white/5 transition-all">
+                                        <td className="py-3 text-slate-400 font-black">{frac.id}</td>
+                                        <td className={`py-3 font-black ${frac.severity === 'CRITICAL' ? 'text-red-500' : 'text-yellow-600'}`}>{frac.severity}</td>
+                                        <td className="py-3 pr-4 normal-case font-sans text-slate-300 font-normal leading-relaxed">{frac.description}</td>
+                                        <td className="py-3 text-red-400 font-black uppercase italic">{frac.directive}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
                                 </table>
                               </div>
                             </div>
