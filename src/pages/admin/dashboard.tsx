@@ -422,6 +422,7 @@ export default function AdminDashboard() {
                   const dbDecay = audit.decay_pct || 24;
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   
+                  // 🔒 ABSOLUTE RESTORATION WORKFORCE SETTING AT THE METRIC LOGIC SCALE LAYER
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
                   
                   const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
@@ -782,7 +783,7 @@ export default function AdminDashboard() {
                       <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
                       <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
                     </div>
-                  ))}k
+                  ))}
                 </div>
               </section>
 
