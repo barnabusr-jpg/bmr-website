@@ -421,10 +421,7 @@ export default function AdminDashboard() {
                   const realFractures = audit.fractures || [];
                   const dbDecay = audit.decay_pct || 24;
                   const spend = parseFloat(audit.ai_spend) || 1.2;
-                  
-                  // 🔒 PERFECT ALIGNMENT FIX: Dynamic calibration default firmly set to 6 FTEs
-                  const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
-                  
+                  const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
                   const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
@@ -751,11 +748,11 @@ export default function AdminDashboard() {
                                     e.stopPropagation(); 
                                     const dbDecay = audit.decay_pct || 24;
                                     const spend = parseFloat(audit.ai_spend) || 1.2;
-                                    const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
+                                    const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
                                     const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
                                     
                                     const laborTax = Math.round((dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3));
-                                    const exposure = Math.round(((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+                                    const exposure = Math.round(((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15);
                                     const totalLeakage = laborTax + exposure;
 
                                     window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${totalLeakage}&tax=${laborTax}`, '_blank');
