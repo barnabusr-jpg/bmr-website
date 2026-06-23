@@ -198,23 +198,14 @@ export default function ForensicEngineRoot() {
       const params = new URLSearchParams(window.location.search); 
       const exactOrgCode = params.get('entity_code') || params.get('org') || params.get('entity') || triangulation.companyName; 
        
-      if (exactOrgCode) { 
-        const strictDatabaseCode = exactOrgCode.trim().toUpperCase().replace(/\s+/g, '_'); 
-         
-        if (strictDatabaseCode.includes('-')) { 
-          updateQuery = updateQuery.eq("audit_id", strictDatabaseCode); 
-        } else { 
-          updateQuery = updateQuery.ilike("audit_id", strictDatabaseCode); 
-        } 
-      } 
+      // Scope specifically by email + persona type to bypass the broken string-to-UUID audit_id match
+      if (currentPersonaEmail) {
+        updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail) .trim());
+      }
+      
+      const { error } = await updatedQuery;
+      if (error) throw error;
 
-      const currentPersonaEmail = triangulation.emails[activePersona] || params.get('exec') || params.get('tech_mgmt') || params.get('ops_mgmt') || params.get('sys_user'); 
-      if (currentPersonaEmail) { 
-        updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail).trim()); 
-      } 
-
-      const { error } = await updateQuery; 
-      if (error) throw error; 
       console.log(`[NETWORK SUCCESS] Database payload synchronized for role vector: ${activePersona}`); 
     } catch (dbError) { 
       console.error("[CRITICAL NODE OUTAGE] Sync to database aborted via network mutation failure:", dbError); 
