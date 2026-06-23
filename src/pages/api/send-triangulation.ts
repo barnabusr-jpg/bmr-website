@@ -5,7 +5,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   }
 
-  // Expects the four emails, company descriptor, and framework code
   const { endpoints, companyName, activePillar, originUrl } = req.body;
 
   if (!endpoints || !companyName || !activePillar) {
@@ -17,23 +16,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: 'MISSING_SENDGRID_CREDENTIALS' });
   }
 
-  // Map user-friendly labels to your specialized framework roles
+  // 📋 Elevated Premium Vector Labels to give explicit instruction context
   const roleLabels: Record<string, string> = {
-    EXECUTIVE: 'Executive / Stakeholder Node',
-    TECH_MGMT: 'Technical Management / Engineering Node',
-    OPS_MGMT: 'Operations Management / Systems Node',
-    SYSTEM_USER: 'Core System Operator Node'
+    EXECUTIVE: 'Executive Leadership (Strategic Oversight Node)',
+    TECH_MGMT: 'Technical Management (Infrastructure & DevOps Node)',
+    OPS_MGMT: 'Operations Management (Workflow & Process Node)',
+    SYSTEM_USER: 'Core System Operator (Terminal Execution Node)'
   };
 
   try {
     const formattedOrg = companyName.toUpperCase().trim();
     
-    // 🔗 Loop through all 4 roles and construct an isolated SendGrid request for each
     const mailRequests = Object.entries(endpoints).map(([roleKey, emailAddress]) => {
       const targetEmail = (emailAddress as string).toLowerCase().trim();
       const roleName = roleLabels[roleKey] || roleKey;
       
-      // Build dynamic unique deep links back to their specialized terminal view
       const diagnosticUrl = `${originUrl}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${activePillar}`;
 
       const sendgridPayload = {
@@ -58,16 +55,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       
                       <div style="margin-bottom: 40px; border-left: 4px solid #dc2626; padding-left: 16px;">
                         <h2 style="color: #ffffff; font-weight: 900; font-style: italic; text-transform: uppercase; margin: 0; letter-spacing: 2px; font-size: 20px; line-height: 1.3;">
-                          Triangulation Matrix Initialized
+                          // Triangulation Matrix Initialized
                         </h2>
                         <p style="color: #64748b; font-family: monospace; font-size: 11px; margin: 6px 0 0 0; letter-spacing: 0.1em; font-weight: bold;">
                           TARGET ENTITY // ${formattedOrg}
                         </p>
                       </div>
                       
-                      <h3 style="color: #ffffff; font-weight: 800; text-transform: uppercase; font-size: 14px; letter-spacing: 1px; margin-bottom: 16px;">
-                        Assigned Vector: ${roleName}
-                      </h3>
+                      <div style="background-color: #000000; border-left: 4px solid #dc2626; padding: 15px; margin: 25px 0;">
+                        <span style="color: #64748b; font-size: 9px; font-family: monospace; font-weight: bold; display: block; margin-bottom: 4px;">// ASSIGNED VECTOR</span>
+                        <strong style="color: #ffffff; font-size: 14px; text-transform: uppercase; font-family: sans-serif;">${roleName.toUpperCase()}</strong>
+                      </div>
 
                       <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
                         BMR Advisory has initiated a specialized Forensic Diagnostic stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${activePillar} Framework Layer</strong>.
@@ -95,7 +93,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ]
       };
 
-      // Ship out async request promise shell
       return fetch('https://api.sendgrid.com/v3/mail/send', {
         method: 'POST',
         headers: {
@@ -106,7 +103,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     });
 
-    // Execute all 4 dispatches simultaneously
     const outcomes = await Promise.all(mailRequests);
     const failedDispatch = outcomes.find(res => !res.ok);
 

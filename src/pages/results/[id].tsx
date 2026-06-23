@@ -5,35 +5,71 @@ import { Lock, Unlock, Activity, Info } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
-// 🏎️ ISOLATED TICKER ENGINE: Prevents layout thrashing across the whole page
+interface LossTickerProps {
+  diagnosticCompletedAt: string; 
+  exposure: number;
+  anomalies: Array<{ severity: string }>;
+  isArchived: boolean; 
+}
+
+// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE
 function RealTimeLossTicker({ 
-  createdAt, 
-  exposure 
-}: { 
-  createdAt: string; 
-  exposure: number; 
-}) {
+  diagnosticCompletedAt, 
+  exposure,
+  anomalies,
+  isArchived
+}: LossTickerProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const frozenLossRef = useRef<number | null>(null);
+
+  // 🧮 Calculate dynamic velocity acceleration scaling factors from database anomaly metadata
+  const severityVelocityMultiplier = useMemo(() => {
+    let multiplier = 1.0;
+    anomalies.forEach(anomaly => {
+      const severity = anomaly.severity?.toUpperCase();
+      if (severity === 'CRITICAL') multiplier += 2.5; 
+      if (severity === 'HIGH') multiplier += 1.5;
+      if (severity === 'MEDIUM') multiplier += 0.5;
+    });
+    return multiplier;
+  }, [anomalies]);
 
   useEffect(() => {
-    const historicalAnchorTime = new Date(createdAt).getTime();
+    if (!diagnosticCompletedAt) {
+      setElapsedSeconds(0);
+      return;
+    }
+
+    const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
 
     const calculateDeltaTime = () => {
+      if (isArchived) return;
+
       const currentRealTime = Date.now();
-      const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - historicalAnchorTime) / 1000);
-      setElapsedSeconds(absoluteDeltaInSeconds);
+      const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - baselineAnchorTime) / 1000);
+      setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
     };
 
     calculateDeltaTime();
-    const interval = setInterval(calculateDeltaTime, 100); // Stable 100ms interval matching baseline behavior
+    const interval = setInterval(calculateDeltaTime, 100); 
 
     return () => clearInterval(interval);
-  }, [createdAt]);
+  }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
 
-  const dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
+  let dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
+
+  // 🔒 ARCHIVE FREEZE LOCK SYSTEM
+  if (isArchived) {
+    if (frozenLossRef.current === null) {
+      frozenLossRef.current = dynamicAccumulatedLoss;
+    }
+    dynamicAccumulatedLoss = frozenLossRef.current;
+  } else {
+    frozenLossRef.current = null; 
+  }
 
   return (
-    <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums text-green-500 leading-none block break-keep ${
+    <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums text-red-500 leading-none block break-keep ${
       dynamicAccumulatedLoss > 9999 ? "text-3xl lg:text-4xl" : "text-4xl md:text-5xl"
     }`}>
       ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -43,7 +79,7 @@ function RealTimeLossTicker({
 
 export default function UnifiedResultsPortal() {
   const router = useRouter();
-  const { id } = router.query;
+  const { id, live_sync, unblurred, decay, spend: querySpend, leakage, tax } = router.query;
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -83,14 +119,32 @@ export default function UnifiedResultsPortal() {
     return () => { supabase.removeChannel(channelSubscription); };
   }, [id, mounted]);
 
-  // 🎨 CORE METRIC FORMULAS RESTORED TO SYSTEM BASES
-  const dbDecay = audit?.decay_pct || 24;
-  const isPhaseTwoActive = !!audit?.is_released;
-  
-  // Spend tracks the database admin slider value, or falls back to standard 1.2 default
-  const spend = audit?.ai_spend || 1.2;
+  const dbDecay = useMemo(() => {
+    if (live_sync === "true" && decay) return parseInt(decay as string);
+    return audit?.decay_pct || 24;
+  }, [live_sync, decay, audit?.decay_pct]);
+
+  const spend = useMemo(() => {
+    if (live_sync === "true" && querySpend) return parseFloat(querySpend as string);
+    return audit?.ai_spend || 1.2;
+  }, [live_sync, querySpend, audit?.ai_spend]);
+
+  const isPhaseTwoActive = useMemo(() => {
+    return !!audit?.is_released || unblurred === "true";
+  }, [audit?.is_released, unblurred]);
 
   const metrics = useMemo(() => {
+    if (live_sync === "true" && leakage && tax) {
+      const parsedTax = parseFloat(tax as string);
+      return {
+        fteCount: audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6,
+        totalLaborTaxPool: parsedTax,
+        internalReworkTax: parsedTax * 0.60,
+        operationalDragTax: parsedTax * 0.40,
+        exposure: parseFloat(leakage as string) - parsedTax
+      };
+    }
+
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
     const laborMultiplier = 0.5;
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
@@ -102,11 +156,11 @@ export default function UnifiedResultsPortal() {
       operationalDragTax: totalLaborTaxPool * 0.40,
       exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15
     };
-  }, [dbDecay, spend, audit?.roi_pct]);
+  }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
 
-  const accentColorClass = "text-green-500"; 
-  const borderAccentClass = "border-green-600"; 
-  const fallbackDirectiveColor = "text-green-500";
+  const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
+  const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
+  const fallbackDirectiveColor = isPhaseTwoActive ? "text-red-400" : "text-green-500";
 
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
@@ -152,7 +206,7 @@ export default function UnifiedResultsPortal() {
         <div>
           <div className="text-white text-xl tracking-tighter italic">BMR<span className={accentColorClass}>SOLUTIONS</span></div>
           <span className={`text-[8px] font-mono uppercase tracking-[0.3em] italic block mt-0.5 ${accentColorClass}`}>
-            {isPhaseTwoActive ? "PORTAL MODE // PARTNER PHASE 2" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
+            {isPhaseTwoActive ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
           </span>
         </div>
         {isPhaseTwoActive && (
@@ -164,7 +218,6 @@ export default function UnifiedResultsPortal() {
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
         
-        {/* 🧠 EXPLANATORY BANNER POSITIONED PROMINENTLY ABOVE THE HERO CORE */}
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
@@ -175,7 +228,6 @@ export default function UnifiedResultsPortal() {
           </p>
         </div>
 
-        {/* 🎨 MAIN WHITE CORE BLOCK */}
         <div className={`bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
             <div>
@@ -217,7 +269,7 @@ export default function UnifiedResultsPortal() {
                   </span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${metrics.exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                 </p>
               </div>
             </div>
@@ -228,15 +280,25 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {audit?.created_at && (
-              <RealTimeLossTicker createdAt={audit.created_at} exposure={metrics.exposure} />
+            {/* 🏎️ IMPLEMENTED COMPARE STATE TIMING ANCHOR TRACE */}
+            {audit && (
+              <RealTimeLossTicker 
+                diagnosticCompletedAt={audit.completed_at || audit.updated_at || ""} 
+                exposure={metrics.exposure + metrics.totalLaborTaxPool} 
+                anomalies={activeAnomaliesList}
+                isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
+              />
             )}
             
-            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">// REAL TIME LOSS SINCE FIRST CONTACT</span>
+            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
+              {audit?.status?.toUpperCase() === 'ARCHIVED' 
+                ? "// METRIC LOCKED // ARCHIVED FILE HISTORICAL VALUE" 
+                : "// REAL TIME LOSS SINCE VERDICT LOCK"
+              }
+            </span>
           </div>
         </div>
 
-        {/* 📊 DUAL LIABILITY GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
             <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
@@ -248,7 +310,6 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* 🗺️ ANOMALIES LOCATION SECTION */}
         <div className="pt-8 text-left">
           <div className="border-b border-slate-900 pb-4 mb-8">
             <span className="text-[10px] font-mono text-slate-500 tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</span>
@@ -256,14 +317,18 @@ export default function UnifiedResultsPortal() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {activeAnomaliesList.map((frac: AnomalyNode, index: number) => {
-              const isSecureGate = frac.severity === 'SECURE GATE' || frac.severity === 'SECURE_GATE';
+            {activeAnomaliesList.map((frac: any, index: number) => {
+              const isSecureGate = !isPhaseTwoActive;
               return (
-                <div key={frac.id || index} className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] ${isSecureGate ? 'border-green-500/20 bg-green-950/5' : 'border-slate-900'}`}>
+                <div key={frac.id || index} className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] ${!isSecureGate ? 'border-red-500/20 bg-red-950/5' : 'border-green-500/20 bg-green-950/5'}`}>
                   <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
                     <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
-                    <span className="text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 bg-green-600/20 text-green-500 border border-green-600/30">
-                      {isPhaseTwoActive ? <Unlock size={10} /> : <Lock size={10} />} {isSecureGate ? "SECURE GATE" : frac.severity}
+                    <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border ${
+                      isPhaseTwoActive 
+                        ? 'bg-red-600/20 text-red-500 border-red-600/30' 
+                        : 'bg-green-600/20 text-green-500 border-green-600/30'
+                    }`}>
+                      {isPhaseTwoActive ? <Unlock size={10} /> : <Lock size={10} />} {isPhaseTwoActive ? (frac.severity || "CRITICAL RISK") : "SECURE GATE"}
                     </span>
                   </div>
                   <div className="my-6 space-y-2">
@@ -272,7 +337,7 @@ export default function UnifiedResultsPortal() {
                   </div>
                   <div className="border-t border-slate-900 pt-4 font-mono">
                     <div className="text-[9px] text-slate-600 tracking-widest mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
-                    <div className={`text-xs ${isSecureGate ? 'text-green-500 font-sans tracking-wide font-medium normal-case' : fallbackDirectiveColor}`}>{frac.directive}</div>
+                    <div className={`text-xs ${isPhaseTwoActive ? 'text-red-400 font-mono uppercase font-black' : 'text-green-500 font-sans tracking-wide font-medium normal-case'}`}>{frac.directive}</div>
                   </div>
                 </div>
               );
@@ -280,7 +345,6 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* 🤝 INTERACTIVE CTAS */}
         {!isPhaseTwoActive && (
           <div 
             className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
