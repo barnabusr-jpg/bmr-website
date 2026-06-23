@@ -45,7 +45,6 @@ export default function AdminDashboard() {
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
 
-  // 🛡️ High-speed references to catch layout execution background timers
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -66,7 +65,6 @@ export default function AdminDashboard() {
 
     let query = supabase
       .from('audits')
-      // 🔒 PERMANENT MATRIX FIX: Added sfi_score explicitly to prevent missing column data masking
       .select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
 
     if (statusFilter !== "ALL") {
@@ -298,20 +296,44 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
             
-            {/* 🎯 RESTORED GLOBAL DEEP DIVE GATEWAY LINK BUTTON */}
-            <a 
-              href="/forensic?pillar=AVS&auth=admin_verified_secure" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="px-6 py-2 text-[10px] text-slate-500 hover:text-red-500 border border-transparent hover:border-red-900/40 bg-transparent hover:bg-red-950/10 font-black uppercase tracking-widest transition-all flex items-center justify-center cursor-pointer"
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                const activeAudit = data.find(item => item.id === expandedRow);
+                
+                if (activeAudit) {
+                  const entityCode = `${activeAudit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
+                  const targetPillar = activeAudit.sfi_score >= 45 ? "AVS" : "IGF"; 
+                  
+                  const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
+                  const mgrNode  = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
+                  const techNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
+
+                  const execEmail = encodeURIComponent(execNode?.email || "");
+                  const techEmail = encodeURIComponent(techNode?.email || "");
+                  const opsEmail  = encodeURIComponent(mgrNode?.email || "");
+                  const sysEmail  = encodeURIComponent(techNode?.email || ""); 
+
+                  window.open(
+                    `/forensic?entity_code=${encodeURIComponent(entityCode)}&pillar=${targetPillar}&exec=${execEmail}&tech_mgmt=${techEmail}&ops_mgmt=${opsEmail}&sys_user=${sysEmail}&auth=admin_verified_secure`, 
+                    '_blank'
+                  );
+                } else {
+                  alert("ATTENTION: Please expand an active ledger row below to prime the configuration matrix before initializing the engine.");
+                }
+              }}
+              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
+                expandedRow 
+                  ? 'text-red-500 border-red-900/40 bg-red-950/10 animate-pulse' 
+                  : 'text-slate-500 border-slate-800 bg-transparent hover:text-slate-300'
+              }`}
             >
-              Diagnostic Wizard
-            </a>
+              Configure Quad-Node Engine
+            </button>
           </div>
         </div>
       </nav>
 
-      {/* 🛰️ CONFIGURATION PORTAL MATRIX OVERLAY LAYOUT LAYER */}
       <AnimatePresence>
         {selectedAudit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
@@ -399,7 +421,7 @@ export default function AdminDashboard() {
                   const realFractures = audit.fractures || [];
                   const dbDecay = audit.decay_pct || 24;
                   const spend = parseFloat(audit.ai_spend) || 1.2;
-                  const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
+                  const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
                   const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
@@ -415,6 +437,11 @@ export default function AdminDashboard() {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
                     playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
                     playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
+                  } else if (cleanStatus === "ARCHIVED") {
+                    playbookHeadline = "RECORD DEACTIVATED // HISTORICAL STORAGE";
+                    playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing telemetry channels are hard-locked.";
+                    playbookPitch = "System metrics are now preserved for permanent historical reference compliance logs.";
+                    targetTier = "ARCHIVED VAULT CONTENT";
                   } else if (sfi >= 45) {
                     playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
                     playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
@@ -441,7 +468,7 @@ export default function AdminDashboard() {
                         </div>
                         
                         <div className="col-span-4 text-center font-black italic text-xs tracking-[0.2em] font-mono flex items-center justify-center gap-3">
-                          {audit.sfi_score >= 45 && (
+                          {audit.sfi_score >= 45 && cleanStatus !== "ARCHIVED" && (
                             <span className="bg-red-600/10 text-red-500 border border-red-600/30 px-3 py-1 text-[9px] font-mono tracking-widest uppercase block font-black animate-pulse shrink-0">
                               ⚠️ CRITICAL EXPOSURE ALERT
                             </span>
@@ -449,6 +476,7 @@ export default function AdminDashboard() {
                           <span className="text-white">
                             {cleanStatus.includes("COMPLETE") && 'RESULT PUBLISHED'}
                             {cleanStatus === 'LEAD' && 'LEAD CAPTURED'}
+                            {cleanStatus === 'ARCHIVED' && '📁 ARCHIVED INACTIVE'}
                             {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'TRIANGULATION ACTIVE'}
                           </span>
                         </div>
@@ -480,11 +508,11 @@ export default function AdminDashboard() {
                                         <button 
                                           type="button"
                                           title="Fire Email Reminder Nudge" 
-                                          disabled={isUpdating}
+                                          disabled={isUpdating || cleanStatus === "ARCHIVED"}
                                           onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
-                                          className="text-red-500 hover:text-white transition-all cursor-pointer opacity-40 group-hover/node:opacity-100"
+                                          className="text-red-500 hover:text-white transition-all cursor-pointer opacity-40 group-hover/node:opacity-100 disabled:opacity-10"
                                         >
-                                          <BellRing size={12} className="animate-bounce" />
+                                          <BellRing size={12} className={cleanStatus === "ARCHIVED" ? "" : "animate-bounce"} />
                                         </button>
                                         <Clock className="text-slate-700" size={14}/>
                                       </div>
@@ -512,8 +540,9 @@ export default function AdminDashboard() {
                                 </div>
                                 <input 
                                   type="range" min="0.1" max="25.0" step="0.1" value={spend}
+                                  disabled={cleanStatus === "ARCHIVED"}
                                   onChange={(e) => handleLiveSliderChange(audit.id, "ai_spend", parseFloat(e.target.value))}
-                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer"
+                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer disabled:opacity-40"
                                 />
                               </div>
 
@@ -524,8 +553,9 @@ export default function AdminDashboard() {
                                 </div>
                                 <input 
                                   type="range" min="1" max="250" step="1" value={fte}
+                                  disabled={cleanStatus === "ARCHIVED"}
                                   onChange={(e) => handleLiveSliderChange(audit.id, "roi_pct", parseInt(e.target.value))}
-                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer"
+                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer disabled:opacity-40"
                                 />
                               </div>
                             </div>
@@ -544,7 +574,9 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <div className="lg:col-span-7 border-2 border-red-900/60 bg-red-950/5 p-6 flex flex-col justify-between space-y-4">
+                            <div className={`lg:col-span-7 border-2 p-6 flex flex-col justify-between space-y-4 ${
+                              cleanStatus === "ARCHIVED" ? "border-slate-800 bg-slate-900/5" : "border-red-900/60 bg-red-950/5"
+                            }`}>
                               <div className="space-y-2">
                                 <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block">// SECURE_BRIEFING_ALIGNMENT_SCRIPT</span>
                                 <div className="text-2xl font-black italic tracking-tighter text-white uppercase">{playbookHeadline}</div>
@@ -647,14 +679,52 @@ export default function AdminDashboard() {
                                 >
                                   MARK PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}
                                 </button>
+
+                                <button 
+                                  type="button"
+                                  disabled={isUpdating}
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    const isCurrentlyArchived = cleanStatus === 'ARCHIVED';
+                                    const nextStatusState = isCurrentlyArchived ? 'COMPLETE' : 'ARCHIVED';
+                                    
+                                    if (!isCurrentlyArchived && !window.confirm(`CRITICAL DEACTIVATION PROTOCOL:\nAre you sure you want to ARCHIVE ${audit.org_name}?\nThis action immediately locks and freezes all live ticker telemetry.`)) {
+                                      return;
+                                    }
+
+                                    setIsUpdating(true);
+                                    try {
+                                      const { error } = await supabase
+                                        .from('audits')
+                                        .update({ status: nextStatusState })
+                                        .eq('id', audit.id);
+
+                                      if (error) throw error;
+                                      if (nextStatusState === 'ARCHIVED') setExpandedRow(null);
+                                      await fetchLedger();
+                                    } catch (err) {
+                                      console.error("ARCHIVE_MUTATION_CRASH:", err);
+                                      alert("CRITICAL TRANSMISSION INTERRUPTION: Failed to mutate database entry posture.");
+                                    } finally {
+                                      setIsUpdating(false);
+                                    }
+                                  }}
+                                  className={`flex-1 py-2 border transition-all cursor-pointer ${
+                                    cleanStatus === 'ARCHIVED' 
+                                      ? 'bg-red-950 text-red-500 border-red-900/60 font-black tracking-widest' 
+                                      : 'text-slate-500 border-slate-800 hover:text-red-500 hover:border-red-900/40'
+                                  }`}
+                                >
+                                  FILE STATUS: {cleanStatus === 'ARCHIVED' ? "🔒 ARCHIVED" : "📁 ARCHIVE RECORD"}
+                                </button>
                               </div>
 
                               <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1 space-y-3">
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer"><Mail size={14} /> Launch 360 Deep Dive</button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
+                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer disabled:opacity-20"><Mail size={14} /> Launch 360 Deep Dive</button>
+                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer disabled:opacity-20"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
                                 </div>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border cursor-pointer ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
+                                <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border cursor-pointer disabled:opacity-20 ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
                               </div>
                             </div>
                             <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
@@ -663,15 +733,35 @@ export default function AdminDashboard() {
                               <div className="w-full space-y-1 mb-2">
                                 <input 
                                   type="text"
+                                  disabled={cleanStatus === "ARCHIVED"}
                                   value={dossierNotes[audit.id] || ""}
                                   onChange={(e) => setDossierNotes({ ...dossierNotes, [audit.id]: e.target.value })}
                                   placeholder="APPEND CUSTOM DOSSIER ANNOTATION NOTE..."
-                                  className="w-full bg-black border border-slate-900 p-3 text-[10px] font-mono font-black italic uppercase text-slate-300 focus:border-red-600 outline-none placeholder:text-slate-700 tracking-wider"
+                                  className="w-full bg-black border border-slate-900 p-3 text-[10px] font-mono font-black italic uppercase text-slate-300 focus:border-red-600 outline-none placeholder:text-slate-700 tracking-wider disabled:opacity-30"
                                 />
                               </div>
 
                               <div className="space-y-3">
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    const dbDecay = audit.decay_pct || 24;
+                                    const spend = parseFloat(audit.ai_spend) || 1.2;
+                                    const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
+                                    const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
+                                    
+                                    const laborTax = Math.round((dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3));
+                                    const exposure = Math.round(((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15);
+                                    const totalLeakage = laborTax + exposure;
+
+                                    window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${totalLeakage}&tax=${laborTax}`, '_blank');
+                                  }} 
+                                  className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"
+                                >
+                                  <Monitor size={18} /> Open Onscreen Ledger
+                                </button>
+                                
                                 <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
                               </div>
                             </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building } from 'lucide-react'; 
+import { supabase } from '../../lib/supabaseClient'; 
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
@@ -31,19 +32,24 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null); 
   const [inputError, setInputError] = useState(''); 
 
-  // Track base path inside local state safely to isolate window mutations from query parameters
-  const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic');
+  const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic'); 
+
+  const roleLabels: Record<string, string> = { 
+    EXECUTIVE: 'Executive Leadership (Strategic Oversight Node)', 
+    TECH_MGMT: 'Technical Management (Infrastructure & DevOps Node)', 
+    OPS_MGMT: 'Operations Management (Workflow & Process Node)', 
+    SYSTEM_USER: 'Core System Operator (Terminal Execution Node)' 
+  }; 
 
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
-      try {
-        // Cache the safe window origin without reading active mutable query objects down-stack
-        setBaseSecurePath(`${window.location.origin}${window.location.pathname}`);
+      try { 
+        setBaseSecurePath(`${window.location.origin}${window.location.pathname}`); 
 
         const params = new URLSearchParams(window.location.search); 
         const authVal = params.get('auth'); 
         const pillarParam = params.get('pillar') as FunnelPillar; 
-        const entityParam = params.get('entity') || params.get('org'); 
+        const entityParam = params.get('entity') || params.get('org') || params.get('entity_code'); 
         const roleParam = params.get('role') as PersonaKey; 
 
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
@@ -51,21 +57,46 @@ export default function ForensicEngineRoot() {
 
         if (isAdminAuthenticated) { 
           setAuthorizedAdmin(true); 
-          if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam)) { 
-            setActivePillar(pillarParam); 
+           
+          const cleanPillar = pillarParam?.toUpperCase(); 
+          if (cleanPillar && ['IGF', 'AVS', 'HAI'].includes(cleanPillar)) { 
+            setActivePillar(cleanPillar as FunnelPillar); 
+          } else { 
+            setActivePillar('IGF'); 
           } 
+
           if (entityParam) { 
-            setCompanyName(entityParam.toUpperCase()); 
-          } 
+            const formattedCode = decodeURIComponent(entityParam) 
+              .trim() 
+              .toUpperCase() 
+              .replace(/\s+/g, '_'); 
+            setCompanyName(formattedCode); 
+          }  
+
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+          const filterIncomingEmail = (paramKey: string): string => { 
+            const rawVal = params.get(paramKey); 
+            if (!rawVal) return ""; 
+            const cleanVal = decodeURIComponent(rawVal).trim(); 
+            return emailRegex.test(cleanVal) ? cleanVal : ""; 
+          }; 
+
+          setEmails({ 
+            EXECUTIVE: filterIncomingEmail('exec'), 
+            TECH_MGMT: filterIncomingEmail('tech_mgmt'), 
+            OPS_MGMT: filterIncomingEmail('ops_mgmt'), 
+            SYSTEM_USER: filterIncomingEmail('sys_user') 
+          }); 
+
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
-          setActivePillar(pillarParam); 
-          setCompanyName(entityParam.toUpperCase()); 
+          setActivePillar(['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF'); 
+          setCompanyName(entityParam.toUpperCase().replace(/\s+/g, '_')); 
           setActivePersona(roleParam); 
 
           setTriangulation({ 
-            companyName: entityParam.toUpperCase(), 
-            pillar: pillarParam, 
+            companyName: entityParam.toUpperCase().replace(/\s+/g, '_'), 
+            pillar: ['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF', 
             emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }, 
             completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
             responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} } 
@@ -75,29 +106,28 @@ export default function ForensicEngineRoot() {
         } else { 
           setAuthorizedAdmin(false); 
         } 
-      } catch (e) {
-        console.error("Hydration parsing interrupted by security policy filters:", e);
-        setAuthorizedAdmin(false);
-      }
+      } catch (e) { 
+        console.error("Hydration parsing interrupted by security policy filters:", e); 
+        setAuthorizedAdmin(false); 
+      } 
     } 
   }, []); 
 
   const handleLoadDemoParameters = () => { 
-    setCompanyName('METRIC_DRIFT_CORP'); 
+    setCompanyName('MONDAY_MORNING_TEST'); 
     setEmails({ 
-      EXECUTIVE: 'executive-office@metricdrift.com', 
-      TECH_MGMT: 'engineering-lead@metricdrift.com', 
-      OPS_MGMT: 'operations-director@metricdrift.com', 
-      SYSTEM_USER: 'platform-operator@metricdrift.com' 
+      EXECUTIVE: 'barnabusr@gmail.com', 
+      TECH_MGMT: 'barnabusr@outlook.com', 
+      OPS_MGMT: 'hello@bmradvisory.co', 
+      SYSTEM_USER: 'barnabusr@outlook.com' 
     }); 
     setInputError(''); 
   }; 
 
-  // Updated async submit handler that routes SendGrid triggers cleanly
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
-    const sanitizedInput = companyName.trim().toUpperCase(); 
-     
+    const sanitizedInput = companyName.trim().toUpperCase().replace(/\s+/g, '_'); 
+        
     if (!sanitizedInput) { 
       setInputError('CRITICAL INPUT EXCEPTION: TARGET COMPLIANCE SPECIFICATION REQUIRES ENTITY CODE'); 
       return; 
@@ -106,9 +136,9 @@ export default function ForensicEngineRoot() {
       setInputError('DISTRIBUTION ERROR: ALL FOUR PERSISTENT PERSONA EMAIL PATHS MANDATORY'); 
       return; 
     } 
-     
+        
     setInputError(''); 
-     
+        
     setTriangulation({ 
       companyName: sanitizedInput, 
       pillar: activePillar, 
@@ -118,22 +148,22 @@ export default function ForensicEngineRoot() {
     }); 
     setViewState('HUB'); 
 
-    try {
-      await fetch('/api/send-triangulation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          companyName: sanitizedInput,
-          activePillar: activePillar,
-          endpoints: emails,
-          originUrl: baseSecurePath
-        }),
-      });
-    } catch (error) {
-      console.error("BACKGROUND AUTOMATION HANDLER DISPATCH EXCEPTION:", error);
-    }
+    try { 
+      await fetch('/api/send-triangulation', { 
+        method: 'POST', 
+        headers: { 
+          'Content-Type': 'application/json', 
+        }, 
+        body: JSON.stringify({ 
+          companyName: sanitizedInput, 
+          activePillar: activePillar, 
+          endpoints: emails, 
+          originUrl: baseSecurePath 
+        }), 
+      }); 
+    } catch (error) { 
+      console.error("BACKGROUND AUTOMATION HANDLER DISPATCH EXCEPTION:", error); 
+    } 
   }; 
 
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
@@ -141,30 +171,81 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
-  const handlePersonaAnswersSaved = (personaAnswers: Record<string, string>) => { 
+  const handlePersonaAnswersSaved = async (personaAnswers: Record<string, string>) => { 
     if (!triangulation || !activePersona) return; 
 
     const updatedState = { ...triangulation }; 
     updatedState.responses[activePersona] = personaAnswers; 
     updatedState.completions[activePersona] = true; 
-
     setTriangulation(updatedState); 
+
+    try { 
+      const personaToBackendKey = { 
+        EXECUTIVE: "EXECUTIVE", 
+        TECH_MGMT: "TECHNICAL", 
+        OPS_MGMT: "MANAGERIAL", 
+        SYSTEM_USER: "OPERATOR" 
+      }[activePersona]; 
+
+      let updateQuery = supabase 
+        .from("operators") 
+        .update({ 
+          survey_completed: true, 
+          status: "COMPLETED" 
+        }) 
+        .eq("persona_type", personaToBackendKey); 
+
+      const params = new URLSearchParams(window.location.search); 
+      const exactOrgCode = params.get('entity_code') || params.get('org') || params.get('entity') || triangulation.companyName; 
+       
+      if (exactOrgCode) { 
+        const strictDatabaseCode = exactOrgCode.trim().toUpperCase().replace(/\s+/g, '_'); 
+         
+        if (strictDatabaseCode.includes('-')) { 
+          updateQuery = updateQuery.eq("audit_id", strictDatabaseCode); 
+        } else { 
+          updateQuery = updateQuery.ilike("audit_id", strictDatabaseCode); 
+        } 
+      } 
+
+      const currentPersonaEmail = triangulation.emails[activePersona] || params.get('exec') || params.get('tech_mgmt') || params.get('ops_mgmt') || params.get('sys_user'); 
+      if (currentPersonaEmail) { 
+        updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail).trim()); 
+      } 
+
+      const { error } = await updateQuery; 
+      if (error) throw error; 
+      console.log(`[NETWORK SUCCESS] Database payload synchronized for role vector: ${activePersona}`); 
+    } catch (dbError) { 
+      console.error("[CRITICAL NODE OUTAGE] Sync to database aborted via network mutation failure:", dbError); 
+    } 
+
     setActivePersona(null); 
 
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search); 
-      if (params.get('role')) { 
-        setAuthorizedAdmin(false); 
-        alert("Telemetry node submitted successfully. You can close this tab safely."); 
+    if (typeof window !== 'undefined') { 
+      const currentParams = new URLSearchParams(window.location.search); 
+      const nextParams = new URLSearchParams(); 
+       
+      const activeAuth = currentParams.get('auth') || 'admin_verified_secure'; 
+      const activeOrg = currentParams.get('entity_code') || currentParams.get('org') || currentParams.get('entity') || triangulation.companyName; 
+      const activePillar = currentParams.get('pillar') || triangulation.pillar; 
+
+      nextParams.set('auth', activeAuth); 
+      nextParams.set('org', activeOrg); 
+      nextParams.set('pillar', activePillar); 
+
+      if (currentParams.get('role')) { 
+        alert("Telemetry node submitted successfully. Returning to monitor platform."); 
+        window.location.href = `${window.location.origin}${window.location.pathname}?${nextParams.toString()}`; 
       } else { 
         setViewState('HUB'); 
       } 
-    } else {
-      setViewState('HUB');
-    }
+    } else { 
+      setViewState('HUB'); 
+    } 
   }; 
 
-  const allPersonasComplete = triangulation  
+  const allPersonasComplete = triangulation   
     ? Object.values(triangulation.completions).every(status => status === true) 
     : false; 
 
@@ -194,6 +275,20 @@ export default function ForensicEngineRoot() {
     }; 
   }; 
 
+  // Compute pristine baseline metrics tailored to 6 FTE profiles dynamically to pass to old cockpit structure
+  const alignedCockpitMetrics = useMemo(() => {
+    const isAVS = activePillar === 'AVS';
+    return {
+      multiplier: isAVS ? 1.25 : 1.00,
+      complianceScore: isAVS ? 64 : 85,
+      // Strictly calibrated on 6 FTE baseline software allocations ($1.5M base)
+      annualSalaryLeakage: isAVS ? 4160000 : 87360,
+      unhedgedLegalExposure: isAVS ? 2070000 : 248400,
+      isTierThreeExposure: isAVS,
+      regulatoryAlertActive: true
+    };
+  }, [activePillar]);
+
   if (authorizedAdmin === null) { 
     return ( 
       <div className="bg-black min-h-screen text-zinc-500 font-mono flex items-center justify-center"> 
@@ -206,7 +301,7 @@ export default function ForensicEngineRoot() {
     return ( 
       <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white"> 
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl"> 
-           
+               
           <div className="border-b border-zinc-900 pb-5 mb-6 flex items-center justify-between"> 
             <div className="flex items-center gap-3"> 
               <Lock size={18} className="text-red-500 shrink-0" /> 
@@ -241,7 +336,7 @@ export default function ForensicEngineRoot() {
             </div> 
 
             <div className="pt-4 border-t border-zinc-900 font-mono"> 
-              <a   
+              <a       
                 href="/dashboard" 
                 className="w-full bg-zinc-100 text-black text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md" 
               > 
@@ -257,7 +352,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white italic"> 
-       
+           
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl shadow-black/40 backdrop-blur-md"> 
           <div className="border-b border-slate-900 pb-5 mb-8 flex items-center gap-3"> 
@@ -271,7 +366,7 @@ export default function ForensicEngineRoot() {
           <form onSubmit={handleInitializeTriangulation} className="space-y-6 not-italic font-mono"> 
             <div> 
               <label className="text-[10px] text-slate-500 block font-black tracking-widest uppercase mb-2">// ENTITY ANALYSIS CODE</label> 
-              <input   
+              <input     
                 type="text" 
                 autoComplete="off" 
                 placeholder="E.G., SIGMA_TIER_GLOBAL" 
@@ -285,9 +380,9 @@ export default function ForensicEngineRoot() {
               <label className="text-[10px] text-slate-500 block font-black tracking-widest uppercase mb-2">// ACTIVE PRESCRIBED PILLAR SECTOR</label> 
               <div className="grid grid-cols-1 gap-2"> 
                 {[ 
-                  { id: 'IGF', title: 'Compliance & Legal (IGF)', desc: 'Regulatory exposures & opaque decision metrics' }, 
-                  { id: 'AVS', title: 'Technical Debt & Rework Tax (AVS)', desc: 'Wasted developer allocation & architecture drift' }, 
-                  { id: 'HAI', title: 'Automation Bias & Fatigue (HAI)', desc: 'Alarm failures & unhedged balance-sheet profit leaks' } 
+                  { id: 'IGF', title: 'Compliance & Legal (IGF)' }, 
+                  { id: 'AVS', title: 'Technical Debt & Rework Tax (AVS)' }, 
+                  { id: 'HAI', title: 'Automation Bias & Fatigue (HAI)' } 
                 ].map((p) => ( 
                   <button 
                     key={p.id} 
@@ -305,13 +400,13 @@ export default function ForensicEngineRoot() {
 
             <div className="space-y-4 pt-4 border-t border-slate-900"> 
               <label className="text-[10px] text-slate-500 block font-black tracking-widest uppercase mb-2">// ASSIGN VECTOR TARGET ROLES</label> 
-              {Object.keys(emails).map((role) => ( 
+              {(Object.keys(emails) as PersonaKey[]).map((role) => ( 
                 <div key={role}> 
                   <span className="text-[9px] text-slate-600 block mb-1.5 font-black tracking-widest uppercase">// {role.replace('_', ' ')} ENDPOINT NODE</span> 
-                  <input   
+                  <input     
                     type="email" 
                     placeholder={`e.g., manager@domain.com`} 
-                    value={emails[role as PersonaKey]} 
+                    value={emails[role]} 
                     onChange={(e) => setEmails({ ...emails, [role]: e.target.value })} 
                     className="w-full bg-slate-950 border border-slate-900 rounded-sm px-4 py-3.5 text-xs text-zinc-300 font-mono tracking-wider focus:outline-none focus:border-red-600 transition-colors uppercase" 
                   /> 
@@ -336,7 +431,7 @@ export default function ForensicEngineRoot() {
                 onClick={handleLoadDemoParameters} 
                 className="w-full bg-zinc-900 text-zinc-400 border border-slate-800 font-mono text-xs font-black py-3.5 uppercase tracking-widest rounded-sm hover:bg-zinc-800 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer tracking-wider" 
               > 
-                <Play size={12} /> Inject High-Exposure Demo Parameters 
+                <Play size={12} /> Run Extended Staging Simulation 
               </button> 
             </div> 
           </form> 
@@ -377,6 +472,7 @@ export default function ForensicEngineRoot() {
           <div className="space-y-3"> 
             {(Object.keys(triangulation.emails) as PersonaKey[]).map((persona) => { 
               const isDone = triangulation.completions[persona]; 
+              const cleanLabel = roleLabels[persona] || persona; 
               return ( 
                 <div key={persona} className="border border-slate-900 bg-black p-5 rounded-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
                   <div> 
@@ -389,8 +485,7 @@ export default function ForensicEngineRoot() {
                       <button 
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
-                          const subject = `CRITICAL ACTION REQUIRED: Complete Assessment for ${triangulation.companyName}`; 
-                          // 🛡️ RE-SECURED: Pulls pathing value out of the state container rather than raw live window checks
+                          const subject = `CRITICAL ACTION REQUIRED: Complete ${cleanLabel} for ${triangulation.companyName}`; 
                           const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
@@ -432,7 +527,7 @@ export default function ForensicEngineRoot() {
       )} 
 
       {viewState === 'WIZARD' && triangulation && activePersona && ( 
-        <ForensicDiagnosticWizard   
+        <ForensicDiagnosticWizard     
           companyName={`${triangulation.companyName}::${activePersona}`} 
           activePillar={triangulation.pillar} 
           onCalculated={() => { 
@@ -442,15 +537,28 @@ export default function ForensicEngineRoot() {
             } else { 
               handlePersonaAnswersSaved({}); 
             } 
-          }}   
+          }}     
         /> 
       )} 
 
       {viewState === 'COCKPIT' && triangulation && ( 
-        <ForensicCommandCockpit   
-          companyName={triangulation.companyName}   
-          onReset={handleSystemReset}   
-        /> 
+        <div>
+          {/* Admin Context Return Control Header Strip */}
+          <div className="w-full max-w-[1600px] mx-auto mb-4 px-10 no-print flex justify-start">
+            <button
+              type="button"
+              onClick={handleSystemReset}
+              className="border border-slate-800 bg-black text-zinc-400 hover:text-white hover:border-red-600 text-xs font-mono font-black px-6 py-3 uppercase tracking-widest transition-all cursor-pointer rounded-xs"
+            >
+              &larr; // Terminate Session & Return to Intake Control
+            </button>
+          </div>
+          <ForensicCommandCockpit     
+            companyName={triangulation.companyName} 
+            sector="ENTERPRISE_SAAS"
+            metrics={alignedCockpitMetrics}
+          /> 
+        </div>
       )} 
 
     </div> 
