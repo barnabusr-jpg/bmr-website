@@ -422,7 +422,7 @@ export default function AdminDashboard() {
                   const dbDecay = audit.decay_pct || 24;
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   
-                  // 🔒 ABSOLUTE RESTORATION WORKFORCE SETTING AT THE METRIC LOGIC SCALE LAYER
+                  // 🔒 RESTORED PROPORTIONAL CALIBRATION BASELINE FALLBACK TO 6 FTEs
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
                   
                   const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
@@ -440,6 +440,11 @@ export default function AdminDashboard() {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
                     playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
                     playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
+                  } else if (cleanStatus === "ARCHIVED") {
+                    playbookHeadline = "RECORD DEACTIVATED // HISTORICAL STORAGE";
+                    playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing telemetry channels are hard-locked.";
+                    playbookPitch = "System metrics are now preserved for permanent historical reference compliance logs.";
+                    targetTier = "ARCHIVED VAULT CONTENT";
                   } else if (sfi >= 45) {
                     playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
                     playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
@@ -466,7 +471,7 @@ export default function AdminDashboard() {
                         </div>
                         
                         <div className="col-span-4 text-center font-black italic text-xs tracking-[0.2em] font-mono flex items-center justify-center gap-3">
-                          {audit.sfi_score >= 45 && (
+                          {audit.sfi_score >= 45 && cleanStatus !== "ARCHIVED" && (
                             <span className="bg-red-600/10 text-red-500 border border-red-600/30 px-3 py-1 text-[9px] font-mono tracking-widest uppercase block font-black animate-pulse shrink-0">
                               ⚠️ CRITICAL EXPOSURE ALERT
                             </span>
@@ -474,6 +479,7 @@ export default function AdminDashboard() {
                           <span className="text-white">
                             {cleanStatus.includes("COMPLETE") && 'RESULT PUBLISHED'}
                             {cleanStatus === 'LEAD' && 'LEAD CAPTURED'}
+                            {cleanStatus === 'ARCHIVED' && '📁 ARCHIVED INACTIVE'}
                             {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'TRIANGULATION ACTIVE'}
                           </span>
                         </div>
@@ -505,11 +511,11 @@ export default function AdminDashboard() {
                                         <button 
                                           type="button"
                                           title="Fire Email Reminder Nudge" 
-                                          disabled={isUpdating}
+                                          disabled={isUpdating || cleanStatus === "ARCHIVED"}
                                           onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
-                                          className="text-red-500 hover:text-white transition-all cursor-pointer opacity-40 group-hover/node:opacity-100"
+                                          className="text-red-500 hover:text-white transition-all cursor-pointer opacity-40 group-hover/node:opacity-100 disabled:opacity-10"
                                         >
-                                          <BellRing size={12} className="animate-bounce" />
+                                          <BellRing size={12} className={cleanStatus === "ARCHIVED" ? "" : "animate-bounce"} />
                                         </button>
                                         <Clock className="text-slate-700" size={14}/>
                                       </div>
@@ -537,8 +543,9 @@ export default function AdminDashboard() {
                                 </div>
                                 <input 
                                   type="range" min="0.1" max="25.0" step="0.1" value={spend}
+                                  disabled={cleanStatus === "ARCHIVED"}
                                   onChange={(e) => handleLiveSliderChange(audit.id, "ai_spend", parseFloat(e.target.value))}
-                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer"
+                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer disabled:opacity-40"
                                 />
                               </div>
 
@@ -549,8 +556,9 @@ export default function AdminDashboard() {
                                 </div>
                                 <input 
                                   type="range" min="1" max="250" step="1" value={fte}
+                                  disabled={cleanStatus === "ARCHIVED"}
                                   onChange={(e) => handleLiveSliderChange(audit.id, "roi_pct", parseInt(e.target.value))}
-                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer"
+                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer disabled:opacity-40"
                                 />
                               </div>
                             </div>
@@ -569,7 +577,9 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <div className="lg:col-span-7 border-2 border-red-900/60 bg-red-950/5 p-6 flex flex-col justify-between space-y-4">
+                            <div className={`lg:col-span-7 border-2 p-6 flex flex-col justify-between space-y-4 ${
+                              cleanStatus === "ARCHIVED" ? "border-slate-800 bg-slate-900/5" : "border-red-900/60 bg-red-950/5"
+                            }`}>
                               <div className="space-y-2">
                                 <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block">// SECURE_BRIEFING_ALIGNMENT_SCRIPT</span>
                                 <div className="text-2xl font-black italic tracking-tighter text-white uppercase">{playbookHeadline}</div>
@@ -699,116 +709,3 @@ export default function AdminDashboard() {
                                       console.error("ARCHIVE_MUTATION_CRASH:", err);
                                       alert("CRITICAL TRANSMISSION INTERRUPTION: Failed to mutate database entry posture.");
                                     } finally {
-                                      setIsUpdating(false);
-                                    }
-                                  }}
-                                  className={`flex-1 py-2 border transition-all cursor-pointer ${
-                                    cleanStatus === 'ARCHIVED' 
-                                      ? 'bg-red-950 text-red-500 border-red-900/60 font-black tracking-widest' 
-                                      : 'text-slate-500 border-slate-800 hover:text-red-500 hover:border-red-900/40'
-                                  }`}
-                                >
-                                  FILE STATUS: {cleanStatus === 'ARCHIVED' ? "🔒 ARCHIVED" : "📁 ARCHIVE RECORD"}
-                                </button>
-                              </div>
-
-                              <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 space-y-3">
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer"><Mail size={14} /> Launch 360 Deep Dive</button>
-                                  <button type="button" onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
-                                </div>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border cursor-pointer ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
-                              </div>
-                            </div>
-                            <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
-                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
-                              
-                              <div className="w-full space-y-1 mb-2">
-                                <input 
-                                  type="text"
-                                  value={dossierNotes[audit.id] || ""}
-                                  onChange={(e) => setDossierNotes({ ...dossierNotes, [audit.id]: e.target.value })}
-                                  placeholder="APPEND CUSTOM DOSSIER ANNOTATION NOTE..."
-                                  className="w-full bg-black border border-slate-900 p-3 text-[10px] font-mono font-black italic uppercase text-slate-300 focus:border-red-600 outline-none placeholder:text-slate-700 tracking-wider"
-                                />
-                              </div>
-
-                              <div className="space-y-3">
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"><Monitor size={18} /> OPEN ONSCREEN LEDGER</button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
-                              </div>
-                            </div>
-                          </div>
-
-                        </div>
-                      )}
-                    </div>
-                  );
-                }
-              )}
-
-              {totalCount > ROWS_PER_PAGE && (
-                <div className="flex items-center justify-between bg-slate-950 p-6 border border-slate-900 text-slate-500 font-mono text-[10px] uppercase tracking-wider mt-4">
-                  <div>SHOWING {currentPage * ROWS_PER_PAGE + 1} - {Math.min((currentPage + 1) * ROWS_PER_PAGE, totalCount)} OF {totalCount} ACTIVE RECORDS</div>
-                  <div className="flex gap-2">
-                    <button 
-                      type="button"
-                      disabled={currentPage === 0}
-                      onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                      className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black cursor-pointer"
-                    >
-                      PREV
-                    </button>
-                    <button 
-                      type="button"
-                      disabled={(currentPage + 1) * ROWS_PER_PAGE >= totalCount}
-                      onClick={() => setCurrentPage(p => p + 1)}
-                      className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black cursor-pointer"
-                    >
-                      NEXT
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
-              <section className="italic">
-                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public Service Mapping</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic font-black">
-                  {BMR_IP_SUITE.services.map((s) => (
-                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
-                      <div className="text-red-600 mb-6 italic">{s.icon}</div>
-                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
-                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
-                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-
-              <section className="italic">
-                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary Directives</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
-                  {BMR_IP_SUITE.directives.map((d) => (
-                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 italic"><Binary className={d.color} size={32} /></div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 italic">
-                        <div className="space-y-2 italic">
-                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic font-black`}>PROTOCOL // {d.id}</span>
-                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
-                        </div>
-                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic font-black">{d.price}</div>}
-                      </div>
-                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
-                    </div>
-                  ))}
-                </div>
-              </section>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-    </div>
-  );
-}
