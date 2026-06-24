@@ -78,7 +78,8 @@ export default function ForensicEngineRoot() {
           } 
         } 
 
-        if (isAdminAuthenticated) { 
+        // Strictly avoid evaluation routing collisions by isolating admin configs from parameters-driven user paths
+        if (isAdminAuthenticated && !roleParam) { 
           setAuthorizedAdmin(true); 
            
           const cleanPillar = pillarParam?.toUpperCase(); 
@@ -500,7 +501,7 @@ export default function ForensicEngineRoot() {
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
                           const subject = `CRITICAL ACTION REQUIRED: Triangulation Matrix Initialization for ${triangulation.companyName}`; 
-                          const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}&auth=admin_verified_secure`; 
+                          const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
                         className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0" 
@@ -523,8 +524,27 @@ export default function ForensicEngineRoot() {
             })} 
           </div> 
 
+          {/* FINAL ENGINE COMPILE ACTION */} 
           <div className="mt-8 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
-            <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black">// SECURE GATEWAY UNLOCK MATRIX DEPENDENCY</span> 
+            <div className="text-left">
+              <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK MATRIX DEPENDENCY</span> 
+              
+              {/* ⚡ THE ADMINISTRATIVE BYPASS LINK */}
+              {!allPersonasComplete && authorizedAdmin && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (window.confirm("CRITICAL OVERRIDE: Force aggregation loop compilation using currently validated data segments?")) {
+                      setViewState('COCKPIT');
+                    }
+                  }}
+                  className="text-[10px] text-red-500 font-mono font-black uppercase tracking-wider hover:text-white transition-colors bg-transparent border-0 p-0 mt-1 cursor-pointer underline block"
+                >
+                  // Force Administrative Override & Compile Partial Matrix
+                </button>
+              )}
+            </div>
+
             <button 
               onClick={() => setViewState('COCKPIT')} 
               disabled={!allPersonasComplete} 
@@ -587,7 +607,7 @@ export default function ForensicEngineRoot() {
 
           <div className="space-y-6 not-italic font-sans normal-case text-sm text-slate-300 font-normal leading-relaxed">
             <p>
-              Thank you for completing your assigned forensic assessment track. Your infrastructure insights have been safely aggregated into the core corporation matrix pipeline.
+              Thank you for completing your assigned forensic assessment track. Your infrastructure insights have been safely aggregated into the core corporation matrix pipeline at BMR Solutions.
             </p>
             
             <div className="border-t border-slate-900 pt-5 mt-4 text-xs text-slate-400 font-mono uppercase tracking-wide space-y-1">
