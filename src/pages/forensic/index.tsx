@@ -127,7 +127,7 @@ export default function ForensicEngineRoot() {
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     const sanitizedInput = companyName.trim().toUpperCase().replace(/\s+/g, '_'); 
-        
+         
     if (!sanitizedInput) { 
       setInputError('CRITICAL INPUT EXCEPTION: TARGET COMPLIANCE SPECIFICATION REQUIRES ENTITY CODE'); 
       return; 
@@ -136,9 +136,9 @@ export default function ForensicEngineRoot() {
       setInputError('DISTRIBUTION ERROR: ALL FOUR PERSISTENT PERSONA EMAIL PATHS MANDATORY'); 
       return; 
     } 
-        
+         
     setInputError(''); 
-        
+         
     setTriangulation({ 
       companyName: sanitizedInput, 
       pillar: activePillar, 
@@ -184,7 +184,7 @@ export default function ForensicEngineRoot() {
         EXECUTIVE: "EXECUTIVE", 
         TECH_MGMT: "TECHNICAL", 
         OPS_MGMT: "MANAGERIAL", 
-        SYSTEM_USER: "OPERATOR" 
+        SYSTEM_USER: "TECHNICAL" 
       }[activePersona]; 
 
       let updateQuery = supabase 
@@ -196,15 +196,14 @@ export default function ForensicEngineRoot() {
         .eq("persona_type", personaToBackendKey); 
 
       const params = new URLSearchParams(window.location.search); 
-      const exactOrgCode = params.get('entity_code') || params.get('org') || params.get('entity') || triangulation.companyName; 
+      const currentPersonaEmail = params.get('email') || triangulation.emails[activePersona] || params.get('exec') || params.get('tech_mgmt') || params.get('ops_mgmt') || params.get('sys_user'); 
        
-      // Scope specifically by email + persona type to bypass the broken string-to-UUID audit_id match
-      if (currentPersonaEmail) {
-        updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail) .trim());
-      }
-      
-      const { error } = await updatedQuery;
-      if (error) throw error;
+      if (currentPersonaEmail) { 
+        updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail).trim()); 
+      } 
+       
+      const { error } = await updateQuery; 
+      if (error) throw error; 
 
       console.log(`[NETWORK SUCCESS] Database payload synchronized for role vector: ${activePersona}`); 
     } catch (dbError) { 
@@ -266,19 +265,17 @@ export default function ForensicEngineRoot() {
     }; 
   }; 
 
-  // Compute pristine baseline metrics tailored to 6 FTE profiles dynamically to pass to old cockpit structure
-  const alignedCockpitMetrics = useMemo(() => {
-    const isAVS = activePillar === 'AVS';
-    return {
-      multiplier: isAVS ? 1.25 : 1.00,
-      complianceScore: isAVS ? 64 : 85,
-      // Strictly calibrated on 6 FTE baseline software allocations ($1.5M base)
-      annualSalaryLeakage: isAVS ? 4160000 : 87360,
-      unhedgedLegalExposure: isAVS ? 2070000 : 248400,
-      isTierThreeExposure: isAVS,
-      regulatoryAlertActive: true
-    };
-  }, [activePillar]);
+  const alignedCockpitMetrics = useMemo(() => { 
+    const isAVS = activePillar === 'AVS'; 
+    return { 
+      multiplier: isAVS ? 1.25 : 1.00, 
+      complianceScore: isAVS ? 64 : 85, 
+      annualSalaryLeakage: isAVS ? 4160000 : 87360, 
+      unhedgedLegalExposure: isAVS ? 2070000 : 248400, 
+      isTierThreeExposure: isAVS, 
+      regulatoryAlertActive: true 
+    }; 
+  }, [activePillar]); 
 
   if (authorizedAdmin === null) { 
     return ( 
@@ -292,7 +289,7 @@ export default function ForensicEngineRoot() {
     return ( 
       <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white"> 
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl"> 
-               
+                 
           <div className="border-b border-zinc-900 pb-5 mb-6 flex items-center justify-between"> 
             <div className="flex items-center gap-3"> 
               <Lock size={18} className="text-red-500 shrink-0" /> 
@@ -327,7 +324,7 @@ export default function ForensicEngineRoot() {
             </div> 
 
             <div className="pt-4 border-t border-zinc-900 font-mono"> 
-              <a       
+              <a         
                 href="/dashboard" 
                 className="w-full bg-zinc-100 text-black text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md" 
               > 
@@ -343,7 +340,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white italic"> 
-           
+             
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl shadow-black/40 backdrop-blur-md"> 
           <div className="border-b border-slate-900 pb-5 mb-8 flex items-center gap-3"> 
@@ -477,7 +474,7 @@ export default function ForensicEngineRoot() {
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
                           const subject = `CRITICAL ACTION REQUIRED: Complete ${cleanLabel} for ${triangulation.companyName}`; 
-                          const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}`; 
+                          const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
                         className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0" 
