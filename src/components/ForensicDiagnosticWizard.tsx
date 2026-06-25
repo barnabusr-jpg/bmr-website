@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
 import { calculateForensicMetrics } from '../lib/forensicCalculus';
@@ -16,6 +16,22 @@ export default function ForensicDiagnosticWizard({
 }) {
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
+
+  // 📥 PASSIVE MOUNT CAPTURE: Lock stakeholder parameter tokens into session memory fallback
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const emailParam = params.get('email');
+      const roleParam = params.get('role');
+      
+      if (emailParam) {
+        window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
+      }
+      if (roleParam) {
+        window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
+      }
+    }
+  }, []);
 
   // 🔒 STRICT BOUNDARY FILTER: Restricts view to only the active framework lane
   const activeQuestions = useMemo(() => {
