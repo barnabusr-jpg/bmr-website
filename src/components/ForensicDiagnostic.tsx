@@ -90,7 +90,11 @@ export default function ForensicDiagnostic() {
     // Save data natively to the database table cell layout
     const { error: updateError } = await supabase
       .from('operators')
-      .update({ status: 'completed', raw_responses: finalAnswers })
+      .update({
+        status: 'completed',
+        raw_responses: finalAnswers,
+        survey_completed: true
+      })
       .eq('id', operator.id); 
 
     if (updateError) {
