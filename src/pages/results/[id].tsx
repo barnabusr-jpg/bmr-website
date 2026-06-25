@@ -280,10 +280,10 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* 🏎️ IMPLEMENTED COMPARE STATE TIMING ANCHOR TRACE */}
+            {/* 🏎️ ACCELERATED TICKER INITIATION TRACE: Injects Date fallback to guarantee automated counting activation on generation */}
             {audit && (
               <RealTimeLossTicker 
-                diagnosticCompletedAt={audit.completed_at || audit.updated_at || ""} 
+                diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
                 exposure={metrics.exposure + metrics.totalLaborTaxPool} 
                 anomalies={activeAnomaliesList}
                 isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
