@@ -117,7 +117,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
 
         <div className="space-y-6 text-sm text-slate-800 leading-relaxed font-sans font-medium normal-case not-italic">
           <p>
-            Cross-persona triangulation logs identify a significant technical debt layer across operations pipelines for <strong>{companyName}</strong>. At current workforce configurations, this structural friction generates a predictable annual leakage calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>.
+            Cross-persona quad-vector correlation logs identify a significant technical debt layer across operations pipelines for <strong>{companyName}</strong>. At current workforce configurations, this structural friction generates a predictable annual leakage calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>.
           </p>
         </div>
       </div>
