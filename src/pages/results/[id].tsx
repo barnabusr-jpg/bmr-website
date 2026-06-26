@@ -133,7 +133,7 @@ export default function UnifiedResultsPortal() {
     return !!audit?.is_released || unblurred === "true";
   }, [audit?.is_released, unblurred]);
 
-  // ⚡ FIX 1: DYNAMIC PROPERTY REALIGNMENT WITH THE DATABASE
+  // ⚡ METRICS CALCULUS REALIGNMENT WITH THE DATABASE
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
@@ -146,7 +146,6 @@ export default function UnifiedResultsPortal() {
       };
     }
 
-    // Direct database extraction matching admin ledger numbers precisely
     const validatedRework = audit?.rework_tax || (dbDecay / 100) * 144000;
     const operationalDrag = audit?.drag_tax || validatedRework * 0.6666;
     const combinedLaborTaxPool = validatedRework + operationalDrag;
@@ -255,12 +254,12 @@ export default function UnifiedResultsPortal() {
 
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight` parent-box-wrap}>
                     PROCESS WASTE TAX
                   </span>
                 </div>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-sm`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                <p className="text-xs font-black mt-2 leading-tight text-slate-900 whitespace-nowrap">
+                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-base`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
 
@@ -270,8 +269,8 @@ export default function UnifiedResultsPortal() {
                     PROJECTED ANNUAL EXPOSURE
                   </span>
                 </div>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                <p className="text-xs font-black mt-2 leading-tight text-slate-900 whitespace-nowrap">
+                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-base`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
             </div>
@@ -282,7 +281,6 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* ⚡ FIX 2: PERMANENT ARCHOR TO CREATED_AT DATE */}
             {audit && (
               <RealTimeLossTicker 
                 diagnosticCompletedAt={audit.created_at || audit.completed_at || new Date().toISOString()} 
@@ -301,14 +299,14 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
+            <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono whitespace-nowrap">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block whitespace-nowrap">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>{`$${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}</div>
-            <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
+            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono whitespace-nowrap ${accentColorClass}` validation-safe-field}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className={`text-[10px] font-mono tracking-[0.25em] block whitespace-nowrap ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
 
