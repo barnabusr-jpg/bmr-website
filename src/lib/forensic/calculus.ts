@@ -24,6 +24,7 @@ export interface CalculatedMetrics {
   unhedgedLegalExposure: number;
   isTierThreeExposure: boolean;
   regulatoryAlertActive: boolean;
+  prescribedDirectiveIds: string[]; // ◄ Unlocked blueprint recommendations pointer array
 }
 
 // 📡 UNIFIED FORENSIC TRACE ENGINE DATA REGISTER
@@ -88,6 +89,61 @@ const RESPONSE_PENALTIES: Record<string, number> = {
 };
 
 /**
+ * 🧠 PROTOCOL OF ACCEPTANCE ENGINE
+ * Evaluates raw questionnaire vectors to dynamically authorize SOW directives
+ */
+export function evaluateProtocolOfAcceptance(responses: any, totalMacroDrift: number, criticalFailureCount: number): string[] {
+  const unlockedDirectives: string[] = [];
+
+  // Flatten choices into an easy lookup table
+  const answers: Record<string, string> = {};
+  if (responses && typeof responses === 'object') {
+    Object.keys(responses).forEach((role) => {
+      if (responses[role] && typeof responses[role] === 'object') {
+        Object.keys(responses[role]).forEach((qId) => {
+          answers[qId] = String(responses[role][qId]).toUpperCase();
+        });
+      }
+    });
+  }
+
+  // Vector 1: Technical Debt Layer (AVS Infrastructure Drift)
+  if (answers["TEC_01"] === "D" || answers["TEC_02"] === "D" || totalMacroDrift > 0.60) {
+    unlockedDirectives.push("DIR_01", "DIR_02");
+  }
+  if (answers["TEC_06"] === "D" || answers["TEC_07"] === "D") {
+    unlockedDirectives.push("DIR_05");
+  }
+
+  // Vector 2: Compliance Gaps (Fiduciary Framework Cracks)
+  if (answers["EXE_05"] === "C" || answers["EXE_05"] === "D" || criticalFailureCount >= 3) {
+    unlockedDirectives.push("DIR_03");
+  }
+  if (answers["EXE_01"] === "D" || answers["TEC_05"] === "D") {
+    unlockedDirectives.push("DIR_06");
+  }
+
+  // Vector 3: Operational Cost & Leakage Trails
+  if (answers["MGR_02"] === "C" || answers["MGR_02"] === "D") {
+    unlockedDirectives.push("DIR_04"); // Correcting AI generated drift
+  }
+  if (answers["TEC_08"] === "D" || answers["MGR_08"] === "D") {
+    unlockedDirectives.push("DIR_08"); // Cost tracking pipeline visibility
+  }
+
+  // Vector 4: Enterprise Solution Blueprint Escalation Tiers
+  if (criticalFailureCount >= 5 || totalMacroDrift > 0.75) {
+    unlockedDirectives.push("TIER_03"); // Logic Reconstruction Needed
+  } else if (criticalFailureCount >= 2 || totalMacroDrift > 0.45) {
+    unlockedDirectives.push("TIER_02"); // Structural Hardening Blueprint
+  } else {
+    unlockedDirectives.push("TIER_01"); // Drift Diagnostics Baseline
+  }
+
+  return [...new Set(unlockedDirectives)];
+}
+
+/**
  * 🧮 UNIFIED MULTI-PERSONA FORENSIC CALCULUS ENGINE
  */
 export function calculateForensicMetrics(
@@ -138,6 +194,9 @@ export function calculateForensicMetrics(
   const salaryLeakageBase = totalMacroDrift * 300000;
   const legalExposureBase = criticalFailureCount >= 4 ? 4000000 : 1200000;
 
+  // 5. Fire Protocol of Acceptance Engine
+  const prescribedDirectiveIds = evaluateProtocolOfAcceptance(responses, totalMacroDrift, criticalFailureCount);
+
   return {
     companyName,
     multiplier,
@@ -146,5 +205,6 @@ export function calculateForensicMetrics(
     unhedgedLegalExposure: Math.round(legalExposureBase * multiplier),
     isTierThreeExposure: multiplier >= 1.50 || complianceScoreBase < 60,
     regulatoryAlertActive: sector === 'FINANCE_HEALTHCARE' || criticalFailureCount >= 3,
+    prescribedDirectiveIds, // ◄ Prescriptions loaded flawlessly into data registry payload
   };
 }
