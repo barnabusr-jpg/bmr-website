@@ -133,7 +133,7 @@ export default function UnifiedResultsPortal() {
     return !!audit?.is_released || unblurred === "true";
   }, [audit?.is_released, unblurred]);
 
-  // ⚡ METRICS CALCULUS REALIGNMENT WITH THE DATABASE
+  // ⚡ METRICS CALCULUS HARMONIZED DIRECTLY FROM MAIN BRANCH FORMULAS
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
@@ -146,16 +146,23 @@ export default function UnifiedResultsPortal() {
       };
     }
 
-    const validatedRework = audit?.rework_tax || (dbDecay / 100) * 144000;
-    const operationalDrag = audit?.drag_tax || validatedRework * 0.6666;
-    const combinedLaborTaxPool = validatedRework + operationalDrag;
-    const directExposure = audit?.legal_exposure || 1200000;
+    const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
+    const laborMultiplier = 0.5;
+    
+    // Protect against test mock entries by falling back to standard math if db contains single-digit entries
+    const totalLaborTaxPool = (audit?.rework_tax && audit.rework_tax > 10) 
+      ? (audit.rework_tax + (audit.drag_tax || 0))
+      : (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
+
+    const directExposure = (audit?.legal_exposure && audit.legal_exposure > 10)
+      ? audit.legal_exposure
+      : (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15;
 
     return {
-      fteCount: audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6,
-      totalLaborTaxPool: combinedLaborTaxPool,
-      internalReworkTax: validatedRework,
-      operationalDragTax: operationalDrag,
+      fteCount,
+      totalLaborTaxPool,
+      internalReworkTax: totalLaborTaxPool * 0.60,
+      operationalDragTax: totalLaborTaxPool * 0.40,
       exposure: directExposure
     };
   }, [dbDecay, spend, audit, live_sync, leakage, tax]);
