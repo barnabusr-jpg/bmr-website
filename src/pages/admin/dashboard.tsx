@@ -117,7 +117,6 @@ export default function AdminDashboard() {
     await refreshActiveNodes(auditId);
   };
 
-  // 📡 DYNAMIC BACKGROUND DIRECTIVE DISPATCHER (PREVENTS CLIENT EMAIL POPUPS)
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
@@ -292,6 +291,11 @@ export default function AdminDashboard() {
     );
   }
 
+  // Determine active dynamic prescriptions for selected/expanded audit
+  const currentActiveAudit = data.find(item => item.id === expandedRow);
+  const activeSfiScore = currentActiveAudit?.sfi_score || 0;
+  const activeFailureCount = currentActiveAudit?.fractures?.length || 0;
+
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden">
       
@@ -310,9 +314,8 @@ export default function AdminDashboard() {
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                const activeAudit = data.find(item => item.id === expandedRow);
-                if (activeAudit) {
-                  setSelectedAudit(activeAudit); // Opens the fully integrated background dispatch window
+                if (currentActiveAudit) {
+                  setSelectedAudit(currentActiveAudit);
                 } else {
                   alert("ATTENTION: Please expand an active ledger row below to prime the target dataset configuration matrix.");
                 }
@@ -693,7 +696,7 @@ export default function AdminDashboard() {
                                     const isCurrentlyArchived = cleanStatus === 'ARCHIVED';
                                     const nextStatusState = isCurrentlyArchived ? 'COMPLETE' : 'ARCHIVED';
                                     
-                                    if (!isCurrentlyArchived && !window.confirm(`CRITICAL DEACTIVATION PROTOCOL:\nAre you sure you want to ARCHIVE {audit.org_name}?\nThis action immediately locks live ticker telemetry.`)) {
+                                    if (!isCurrentlyArchived && !window.confirm(`CRITICAL DEACTIVATION PROTOCOL:\nAre you sure you want to ARCHIVE ${audit.org_name}?\nThis action immediately locks live ticker telemetry.`)) {
                                       return;
                                     }
 
@@ -817,36 +820,87 @@ export default function AdminDashboard() {
             </motion.div>
           ) : (
             <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
+              
+              {/* 🖥️ DYNAMIC SOLUTION BLUEPRINT HUBS BANNER */}
+              {currentActiveAudit ? (
+                <div className="bg-zinc-950 border-2 border-red-600 p-8 relative overflow-hidden shadow-2xl text-left font-mono">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 animate-pulse"><Zap size={40} className="text-red-500" /></div>
+                  <span className="text-[9px] font-mono text-red-500 font-black block tracking-widest">// AUTOMATED PROTOCOL OF ACCEPTANCE MATCHED</span>
+                  <h2 className="text-3xl font-black text-white mt-1">
+                    TARGET HUB: {currentActiveAudit.org_name}
+                  </h2>
+                  <div className="mt-4 flex flex-wrap gap-2 text-[10px] font-mono not-italic normal-case">
+                    <span className="bg-red-950/40 border border-red-800 text-red-400 px-3 py-1 font-black uppercase tracking-wider">
+                      AUTO-PRESCRIBED PROTOCOLS: {currentActiveAudit.prescribedDirectiveIds?.filter((id: string) => id.startsWith('DIR')).join(', ') || "DIR_04 (STANDARD_MONITORING)"}
+                    </span>
+                    <span className="bg-zinc-900 border border-zinc-800 text-zinc-400 px-3 py-1 font-black uppercase tracking-wider">
+                      BLUEPRINT SOLUTION TIER: {currentActiveAudit.prescribedDirectiveIds?.find((id: string) => id.startsWith('TIER')) || "TIER_01"}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-950 border border-dashed border-slate-800 p-8 text-center text-xs font-mono text-slate-500 uppercase tracking-widest">
+                  // ATTENTION: Primary record tracking vector not initialized. Expand a company row on the ledger view to check dynamic prescriptions.
+                </div>
+              )}
+
+              {/* PUBLIC SERVICE MAPPING TIER ENVELOPE */}
               <section className="italic">
                 <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public Service Mapping</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic font-black">
-                  {BMR_IP_SUITE.services.map((s) => (
-                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
-                      <div className="text-red-600 mb-6 italic">{s.icon}</div>
-                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
-                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4">{s.title}</h4>
-                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
-                    </div>
-                  ))}
+                  {BMR_IP_SUITE.services.map((s) => {
+                    const isServicePrescribed = currentActiveAudit?.prescribedDirectiveIds?.includes(s.tier);
+
+                    return (
+                      <div 
+                        key={s.tier} 
+                        className={`p-8 border transition-all duration-300 ${
+                          isServicePrescribed 
+                            ? "border-red-600 bg-red-950/10 shadow-[0_0_30px_rgba(220,38,38,0.1)] text-white scale-[1.01]" 
+                            : "border-slate-900 bg-slate-950/40 opacity-25 grayscale"
+                        }`}
+                      >
+                        <div className={`mb-6 ${isServicePrescribed ? "text-red-500" : "text-slate-600"}`}>{s.icon}</div>
+                        <div className="flex justify-between items-center w-full">
+                          <span className="text-[8px] font-mono uppercase tracking-widest font-black">{s.tier}</span>
+                          {isServicePrescribed && <span className="bg-red-600 text-white font-black px-2 py-0.5 text-[8px] uppercase tracking-wider animate-pulse rounded-xs">PRESCRIPTION ATTAINED</span>}
+                        </div>
+                        <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4">{s.title}</h4>
+                        <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed normal-case">{s.description}</p>
+                      </div>
+                    );
+                  })}
                 </div>
               </section>
 
+              {/* PROPRIETARY REMEDIATION DIRECTIVES */}
               <section className="italic">
                 <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary Directives</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
-                  {BMR_IP_SUITE.directives.map((d) => (
-                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
-                      <div className="absolute top-0 right-0 p-4 opacity-10"><Binary className={d.color} size={32} /></div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10">
-                        <div className="space-y-2">
-                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic font-black`}>PROTOCOL // {d.id}</span>
-                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">{d.label}</h2>
+                  {BMR_IP_SUITE.directives.map((d) => {
+                    const isDirectivePrescribed = currentActiveAudit?.prescribedDirectiveIds?.includes(d.id) || d.id === "DIR_04";
+
+                    return (
+                      <div 
+                        key={d.id} 
+                        className={`p-12 border-2 transition-all duration-300 group relative overflow-hidden ${
+                          isDirectivePrescribed
+                            ? "border-red-600 bg-slate-950 shadow-[0_0_40px_rgba(220,38,38,0.05)] text-white"
+                            : "border-slate-900 bg-slate-950 opacity-25 grayscale"
+                        }`}
+                      >
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Binary className={d.color} size={32} /></div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start mb-10">
+                          <div className="space-y-2">
+                            <span className={`text-[9px] font-mono font-black tracking-widest ${isDirectivePrescribed ? "text-red-500" : "text-slate-600"}`}>PROTOCOL // {d.id}</span>
+                            <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">{d.label}</h2>
+                          </div>
+                          {d.price && <div className={`px-4 py-2 text-[10px] font-black tracking-widest ${isDirectivePrescribed ? "bg-red-600 text-white" : "bg-zinc-900 text-slate-500"}`}>{d.price}</div>}
                         </div>
-                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest font-black">{d.price}</div>}
+                        <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
                       </div>
-                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </section>
             </motion.div>
