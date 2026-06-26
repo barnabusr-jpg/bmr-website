@@ -48,8 +48,8 @@ export default function ForensicDiagnosticWizard({
   const compileActiveNodePosture = () => {
     setIsCompiling(true);
     
-    // Execute the pure client-side mathematical calculations out-of-band
-    const computedResults = calculateForensicMetrics(companyName, answers);
+    // ⚡ SECTOR ALIGNMENT: Explicitly passing 'ENTERPRISE_SAAS' to lock in system-wide calculation defaults
+    const computedResults = calculateForensicMetrics(companyName, answers, 'ENTERPRISE_SAAS');
     
     // Cache values securely in the user's browser sandbox session
     if (typeof window !== 'undefined') {
