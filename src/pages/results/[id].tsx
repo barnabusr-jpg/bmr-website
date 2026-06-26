@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Lock, Unlock, Activity, Info } from "lucide-react";
+import { Lock, Unlock, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
@@ -133,6 +133,7 @@ export default function UnifiedResultsPortal() {
     return !!audit?.is_released || unblurred === "true";
   }, [audit?.is_released, unblurred]);
 
+  // ⚡ FIX 1: DYNAMIC PROPERTY REALIGNMENT WITH THE DATABASE
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
@@ -145,22 +146,23 @@ export default function UnifiedResultsPortal() {
       };
     }
 
-    const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
-    const laborMultiplier = 0.5;
-    const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
-    
+    // Direct database extraction matching admin ledger numbers precisely
+    const validatedRework = audit?.rework_tax || (dbDecay / 100) * 144000;
+    const operationalDrag = audit?.drag_tax || validatedRework * 0.6666;
+    const combinedLaborTaxPool = validatedRework + operationalDrag;
+    const directExposure = audit?.legal_exposure || 1200000;
+
     return {
-      fteCount,
-      totalLaborTaxPool,
-      internalReworkTax: totalLaborTaxPool * 0.60,
-      operationalDragTax: totalLaborTaxPool * 0.40,
-      exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15
+      fteCount: audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6,
+      totalLaborTaxPool: combinedLaborTaxPool,
+      internalReworkTax: validatedRework,
+      operationalDragTax: operationalDrag,
+      exposure: directExposure
     };
-  }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit, live_sync, leakage, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
-  const fallbackDirectiveColor = isPhaseTwoActive ? "text-red-400" : "text-green-500";
 
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
@@ -280,10 +282,10 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* 🏎️ ACCELERATED TICKER INITIATION TRACE: Injects Date fallback to guarantee automated counting activation on generation */}
+            {/* ⚡ FIX 2: PERMANENT ARCHOR TO CREATED_AT DATE */}
             {audit && (
               <RealTimeLossTicker 
-                diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
+                diagnosticCompletedAt={audit.created_at || audit.completed_at || new Date().toISOString()} 
                 exposure={metrics.exposure + metrics.totalLaborTaxPool} 
                 anomalies={activeAnomaliesList}
                 isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
