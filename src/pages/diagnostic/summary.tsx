@@ -1,4 +1,3 @@
-"use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { decompressFromEncodedURIComponent } from 'lz-string';
@@ -85,4 +84,4 @@ export default function DiagnosticSummaryPage() {
       responses={parsedDossier.responses}
     />
   );
-}
+}Commit
