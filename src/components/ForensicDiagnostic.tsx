@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-import { FORENSIC_MATRIX } from '@/lib/forensicMatrix';
+import { FORENSIC_MATRIX } from '@/lib/forensic/calculus';
 import { Lock, CheckCircle, ShieldAlert } from 'lucide-react';
 
 export default function ForensicDiagnostic() {
