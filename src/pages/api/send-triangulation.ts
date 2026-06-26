@@ -42,12 +42,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ],
         from: {
           email: 'hello@bmradvisory.co',
-          name: 'BMR Advisory'
+          name: 'BMR Solutions'
         },
         content: [
           {
             type: 'text/html',
             value: `
+              <div style="display: none; max-height: 0px; overflow: hidden;">
+                Secure Forensic Diagnostic access matrix has been generated for your operational vector.
+              </div>
+              
               <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
                 <tr>
                   <td align="center" style="padding: 40px 20px;">
@@ -68,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       </div>
 
                       <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
-                        BMR Advisory has initiated a specialized Forensic Diagnostic stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${activePillar} Framework Layer</strong>.
+                        BMR Solutions has initiated a specialized Forensic Diagnostic stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${activePillar} Framework Layer</strong>.
                       </p>
                       
                       <div style="background: #090d16; border: 1px solid #1e293b; padding: 32px; margin: 40px 0; text-align: center;">
