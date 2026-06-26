@@ -188,7 +188,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const { error: updateError } = await supabaseAdmin
       .from('audits')
       .update({ 
-        status: 'TRIANGULATING',
+        status: 'QUAD_CORRELATION',
         decay_pct: calculatedDecayPercent,
         compiled_at: cleanSystemTimestamp
       })
