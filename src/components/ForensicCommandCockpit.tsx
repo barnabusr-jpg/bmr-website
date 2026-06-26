@@ -56,8 +56,13 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
     }
   };
 
+  // Convert and sanitize numerical values safely to prevent layout dropouts
+  const displayCompliance = typeof metrics.complianceScore === 'number' ? Math.round(metrics.complianceScore) : 0;
+  const displayLeakage = typeof metrics.annualSalaryLeakage === 'number' ? metrics.annualSalaryLeakage : 0;
+  const displayExposure = typeof metrics.unhedgedLegalExposure === 'number' ? metrics.unhedgedLegalExposure : 0;
+
   return (
-    <div className="bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden p-10 max-w-[1600px] mx-auto pb-32">
+    <div className="bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden p-10 max-w-[1600px] mx-auto pb-32 selection:bg-red-600/30">
       
       {/* HEADER TELEMETRY READOUT */}
       <div className="flex items-center justify-between bg-black p-6 border border-slate-900 mb-6 no-print">
@@ -78,25 +83,25 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
       </div>
 
       {/* MATCHING QUAD-STYLE SUMMARY CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 italic no-print">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 italic no-print w-full items-stretch">
         <div className="bg-slate-950/60 border border-slate-800 p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950">
           <span className="text-[9px] font-mono text-slate-500 font-black tracking-widest uppercase block">// COMPLIANCE EXP INDEX</span>
-          <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-white font-sans">
-            {metrics.complianceScore.toFixed(0)}/100
+          <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-white font-sans whitespace-nowrap">
+            {displayCompliance}/100
           </div>
         </div>
 
         <div className="bg-slate-950/60 border border-yellow-600/30 p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950">
           <span className="text-[9px] font-mono text-yellow-500 font-black tracking-widest uppercase block">// ANNUAL REWORK TAX IMPACT</span>
-          <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-yellow-500 font-sans">
-            ${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-yellow-500 font-sans whitespace-nowrap">
+            ${displayLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </div>
         </div>
 
         <div className="bg-slate-950/60 border border-red-600/30 p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950">
           <span className="text-[9px] font-mono text-red-500 font-black tracking-widest uppercase block">// UNHEDGED EXP EXPOSURE</span>
-          <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-red-500 font-sans">
-            ${metrics.unhedgedLegalExposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+          <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-red-500 font-sans whitespace-nowrap">
+            ${displayExposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </div>
         </div>
       </div>
@@ -106,18 +111,18 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
           <div className="not-italic">
             <span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// ENGAGEMENT_ROADMAP_CONFIGURATION</span>
-            <h3 className="text-4xl font-black uppercase italic tracking-tighter text-black leading-none mt-1">
+            <h3 className="text-4xl font-black uppercase italic tracking-tighter text-black leading-none mt-1 whitespace-normal break-normal">
               TARGET SOW DOSSIER: {companyName}
             </h3>
           </div>
-          <span className="text-[10px] font-mono text-slate-400 font-black tracking-wider uppercase">
+          <span className="text-[10px] font-mono text-slate-400 font-black tracking-wider uppercase shrink-0">
             {metrics.isTierThreeExposure ? 'TIER_03 // CRITICAL RECONSTRUCTION' : 'TIER_01 // DRIFT DIAGNOSTICS'}
           </span>
         </div>
 
         <div className="space-y-6 text-sm text-slate-800 leading-relaxed font-sans font-medium normal-case not-italic">
           <p>
-            Cross-persona quad-vector correlation logs identify a significant technical debt layer across operations pipelines for <strong>{companyName}</strong>. At current workforce configurations, this structural friction generates a predictable annual leakage calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>.
+            Cross-persona quad-vector correlation logs identify a significant technical debt layer across operations pipelines for <strong>{companyName}</strong>. At current workforce configurations, this structural friction generates a predictable annual leakage calculated at <strong className="text-black">${displayLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>.
           </p>
         </div>
       </div>
@@ -143,7 +148,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
             type="button"
             onClick={handleCopy}
             className={`px-6 py-3 font-sans font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shrink-0 cursor-pointer ${
-              copied ? 'bg-green-600 text-white' : 'bg-red-600 text-white hover:bg-red-500'
+              copied ? 'bg-green-600 text-white border-green-700' : 'bg-red-600 text-white border-red-700 hover:bg-red-500'
             }`}
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
