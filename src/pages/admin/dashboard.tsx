@@ -44,7 +44,6 @@ export default function AdminDashboard() {
   const ROWS_PER_PAGE = 10;
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
-
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -118,6 +117,7 @@ export default function AdminDashboard() {
     await refreshActiveNodes(auditId);
   };
 
+  // 📡 DYNAMIC BACKGROUND DIRECTIVE DISPATCHER (PREVENTS CLIENT EMAIL POPUPS)
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
@@ -126,13 +126,18 @@ export default function AdminDashboard() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          groupId: selectedAudit.id, 
+          groupId: Math.random().toString(36).substring(2, 10).toUpperCase(), 
           orgName: selectedAudit.org_name,
           parentAuditId: selectedAudit.id,
-          emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
+          emails: { 
+            EXECUTIVE: emails.exec.trim() || "hello@bmrsolutions.co", 
+            MANAGERIAL: emails.mgr.trim() || "hello@bmrsolutions.co", 
+            TECHNICAL: emails.tech.trim() || "hello@bmrsolutions.co" 
+          }
         })
       });
-      if (!res.ok) throw new Error("Dispatch Failed");
+      if (!res.ok) throw new Error("Automatic SendGrid routing barrier hit.");
+      alert("// STAKEHOLDER CORRELATION NODES SECURED VIA BACKGROUND DISPATCH");
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
@@ -289,68 +294,59 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden">
+      
+      {/* 🧭 SYNCHRONIZED NAVIGATION CONSOLE */}
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 backdrop-blur-md border-b border-slate-900 z-50 px-10 flex items-center justify-between">
         <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3 shrink-0"><Activity className="text-red-600 animate-pulse" size={20} /><span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">FORENSIC COMMAND</span></div>
+          <div className="flex items-center gap-3 shrink-0">
+            <Activity className="text-red-600 animate-pulse" size={20} />
+            <span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">QUAD COMMAND CENTRE</span>
+          </div>
           <div className="flex gap-1 bg-slate-900 p-1 shrink-0">
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
             
             <button 
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 const activeAudit = data.find(item => item.id === expandedRow);
-                
                 if (activeAudit) {
-                  const entityCode = `${activeAudit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
-                  const targetPillar = activeAudit.sfi_score >= 45 ? "AVS" : "IGF"; 
-                  
-                  const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
-                  const mgrNode  = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
-                  const techNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
-
-                  const execEmail = encodeURIComponent(execNode?.email || "");
-                  const techEmail = encodeURIComponent(techNode?.email || "");
-                  const opsEmail  = encodeURIComponent(mgrNode?.email || "");
-                  const sysEmail  = encodeURIComponent(techNode?.email || ""); 
-
-                  window.open(
-                    `/forensic?entity_code=${encodeURIComponent(entityCode)}&pillar=${targetPillar}&exec=${execEmail}&tech_mgmt=${techEmail}&ops_mgmt=${opsEmail}&sys_user=${sysEmail}&auth=admin_verified_secure`, 
-                    '_blank'
-                  );
+                  setSelectedAudit(activeAudit); // Opens the fully integrated background dispatch window
                 } else {
-                  alert("ATTENTION: Please expand an active ledger row below to prime the configuration matrix before initializing the engine.");
+                  alert("ATTENTION: Please expand an active ledger row below to prime the target dataset configuration matrix.");
                 }
               }}
               className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
                 expandedRow 
-                  ? 'text-red-500 border-red-900/40 bg-red-950/10 animate-pulse' 
+                  ? 'text-green-500 border-green-900/40 bg-green-950/10 animate-pulse' 
                   : 'text-slate-500 border-slate-800 bg-transparent hover:text-slate-300'
               }`}
             >
-              Configure Quad-Node Engine
+              // INITIALIZE AUTOMATED NODE ROUTING
             </button>
           </div>
         </div>
       </nav>
 
+      {/* 🔐 MODAL OVERLAY INGESTION CAPTURE CARD */}
       <AnimatePresence>
         {selectedAudit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic select-text">
-              <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white cursor-pointer"><X size={24}/></button>
+              <button type="button" onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white cursor-pointer"><X size={24}/></button>
               
-              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
-              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
+              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER MATRIX</h2>
+              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING DIRECTIVE ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
               
               <div className="space-y-4 mt-10 text-left">
                 <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
                 <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
                 <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
                 
-                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all cursor-pointer">
+                <button type="button" onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all cursor-pointer">
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
-                  {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
+                  {isUpdating ? "DEPLOYING ENVELOPE STRUCTURING..." : "GENERATE AUTOMATED KEY ROUTING"}
                 </button>
               </div>
             </motion.div>
@@ -358,15 +354,17 @@ export default function AdminDashboard() {
         )}
       </AnimatePresence>
 
+      {/* MAIN DATA GRID CONTENT RUNTIME */}
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
           {activeTab === 'ledger' ? (
             <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
               
+              {/* STATUS CARD SUMMARY STRIPS */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 italic">
                 {[
                   { label: "TOTAL ASSETS INGESTED", value: totalCount, color: "border-slate-800 text-white" },
-                  { label: "ACTIVE TRIANGULATIONS", value: data.filter(d => d.status?.toUpperCase().includes("TRIANGULATION") || d.status?.toUpperCase().includes("TRIANGULATING")).length, color: "border-yellow-600/30 text-yellow-500" },
+                  { label: "ACTIVE QUAD-VECTOR MATRIX RUNTIMES", value: data.filter(d => (d.status || "").toUpperCase().includes("QUAD") || (d.status || "").toUpperCase().includes("TRIANGULATING")).length, color: "border-yellow-600/30 text-yellow-500" },
                   { label: "PROPOSED SOW DOSSIERS SENT", value: data.filter(d => d.sow_sent === true).length, color: "border-blue-600/30 text-blue-400" },
                   { label: "CLOSED/REVENUE REALIZED", value: data.filter(d => d.is_paid === true).length, color: "border-emerald-600/30 text-emerald-500" }
                 ].map((stat) => (
@@ -379,6 +377,7 @@ export default function AdminDashboard() {
                 ))}
               </div>
 
+              {/* SEARCH FILTERS RACK */}
               <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between bg-slate-950 p-4 border border-slate-900">
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
@@ -395,11 +394,12 @@ export default function AdminDashboard() {
                   {([
                     { label: "All Assets", value: "ALL" },
                     { label: "Initial Leads", value: "LEAD" },
-                    { label: "Triangulating", value: "TRIANGULATING" },
+                    { label: "Quad Correlation", value: "TRIANGULATING" },
                     { label: "Calculated Dossiers", value: "COMPLETE" }
                   ] as const).map((tab) => (
                     <button 
                       key={tab.value} 
+                      type="button"
                       onClick={() => setStatusFilter(tab.value)}
                       className={`px-4 py-2 font-mono text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === tab.value ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
                     >
@@ -409,6 +409,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* LEDGER RENDER FEED ENGINE */}
               {data.length === 0 ? (
                 <div className="text-center p-20 border border-dashed border-slate-900 font-mono text-xs text-slate-600 uppercase tracking-widest">
                   No corresponding forensic ledger entries located inside this category index.
@@ -416,7 +417,6 @@ export default function AdminDashboard() {
               ) : (
                 data.map((audit) => {
                   const clientHasAccess = !!audit.is_released;
-
                   const sfi = audit.sfi_score || 0;
                   const realFractures = audit.fractures || [];
                   const dbDecay = audit.decay_pct || 24;
@@ -433,24 +433,24 @@ export default function AdminDashboard() {
 
                   const cleanStatus = (audit.status || "").toUpperCase();
                   
-                  if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) {
+                  if (cleanStatus.includes("QUAD") || cleanStatus.includes("TRIANGULATING") || cleanStatus.includes("TRIANGULATION")) {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
-                    playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
-                    playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
+                    playbookNarrative = "Multi-node operational telemetry validation parameters are matching baseline presets. Click the red launch tracking matrix button below to compile results natively via back-channel automations.";
+                    playbookPitch = "Initialize matrix correlation override engine to evaluate internal contradiction markers securely.";
                   } else if (cleanStatus === "ARCHIVED") {
                     playbookHeadline = "RECORD DEACTIVATED // HISTORICAL STORAGE";
-                    playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing telemetry channels are hard-locked.";
+                    playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing channels are locked.";
                     playbookPitch = "System metrics are now preserved for permanent historical reference compliance logs.";
                     targetTier = "ARCHIVED VAULT CONTENT";
                   } else if (sfi >= 45) {
                     playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
-                    playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
-                    playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance, removing the manual tax on your staff.";
+                    playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Strategic configurations are sound, but manual workflows absorb friction at the cost of execution velocity.`;
+                    playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance frameworks.";
                     targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
                   } else if (sfi >= 0) {
                     playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
-                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrating inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
-                    playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
+                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrating inside workflow operations. Human-in-the-loop tracking hand-offs between layers require modern structural hardening.`;
+                    playbookPitch = "Modernize workflow data layers to automate pipelines and release management bandwidth overheads.";
                     targetTier = "TIER_02 // STRUCTURAL HARDENING";
                   }
 
@@ -477,21 +477,22 @@ export default function AdminDashboard() {
                             {cleanStatus.includes("COMPLETE") && 'RESULT PUBLISHED'}
                             {cleanStatus === 'LEAD' && 'LEAD CAPTURED'}
                             {cleanStatus === 'ARCHIVED' && '📁 ARCHIVED INACTIVE'}
-                            {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'TRIANGULATION ACTIVE'}
+                            {(cleanStatus.includes("QUAD") || cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'QUAD_CORRELATION ACTIVE'}
                           </span>
                         </div>
                         
                         <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
                       </div>
                       
+                      {/* ACCORDION EXPANSION SHEETS */}
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
                           
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
-                              { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
-                              { label: 'MANAGERIAL TRACK', key: 'MANAGERIAL' },
-                              { label: 'TECHNICAL TRACK', key: 'TECHNICAL' }
+                              { label: 'EXECUTIVE NODE TRACK', key: 'EXECUTIVE' },
+                              { label: 'MANAGERIAL NODE TRACK', key: 'MANAGERIAL' },
+                              { label: 'TECHNICAL NODE TRACK', key: 'TECHNICAL' }
                             ].map((role) => {
                               const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
                               const isDone = node?.survey_completed === true || node?.status?.toLowerCase() === 'completed';
@@ -529,6 +530,7 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
+                          {/* CALIBRATION STRIPS */}
                           <div className="border border-slate-900 bg-slate-950 p-6 mb-8 space-y-6">
                             <span className="text-[10px] text-slate-500 font-black tracking-widest uppercase block">// REAL-TIME PRESENTATION CALIBRATION STRIPS</span>
                             
@@ -561,8 +563,8 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
+                          {/* ANALYTICS FEED BLOCK */}
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                            
                             <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
                               <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
                               <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
@@ -591,6 +593,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
+                          {/* INVENTORY TABLE ROWS */}
                           {realFractures.length > 0 && (
                             <div className="border border-slate-900 bg-slate-950 p-6 space-y-4 mb-8">
                               <div className="text-[10px] font-mono text-red-500 font-black tracking-widest uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
@@ -619,6 +622,7 @@ export default function AdminDashboard() {
                             </div>
                           )}
 
+                          {/* SOW CONTAINER CARDS */}
                           <div className="bg-white text-black p-8 border-l-[16px] border-slate-900 shadow-2xl space-y-6 mb-10 font-sans">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
                               <div>
@@ -649,6 +653,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
                           
+                          {/* ADMINISTRATIVE BUTTON BAR PANEL CONTAINER */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-900 pt-8 italic text-left">
                             <div className="space-y-4">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
@@ -662,7 +667,7 @@ export default function AdminDashboard() {
                                     await supabase.from('audits').update({ sow_sent: updatedState }).eq('id', audit.id);
                                     fetchLedger();
                                   }}
-                                  className={`flex-1 py-2 border transition-all ${audit.sow_sent ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                  className={`flex-1 py-2 border transition-all cursor-pointer ${audit.sow_sent ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
                                 >
                                   MARK SOW SENT: {audit.sow_sent ? "✔ TRUE" : "✘ FALSE"}
                                 </button>
@@ -675,7 +680,7 @@ export default function AdminDashboard() {
                                     await supabase.from('audits').update({ is_paid: updatedState }).eq('id', audit.id);
                                     fetchLedger();
                                   }}
-                                  className={`flex-1 py-2 border transition-all ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                  className={`flex-1 py-2 border transition-all cursor-pointer ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
                                 >
                                   MARK PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}
                                 </button>
@@ -688,7 +693,7 @@ export default function AdminDashboard() {
                                     const isCurrentlyArchived = cleanStatus === 'ARCHIVED';
                                     const nextStatusState = isCurrentlyArchived ? 'COMPLETE' : 'ARCHIVED';
                                     
-                                    if (!isCurrentlyArchived && !window.confirm(`CRITICAL DEACTIVATION PROTOCOL:\nAre you sure you want to ARCHIVE ${audit.org_name}?\nThis action immediately locks and freezes all live ticker telemetry.`)) {
+                                    if (!isCurrentlyArchived && !window.confirm(`CRITICAL DEACTIVATION PROTOCOL:\nAre you sure you want to ARCHIVE {audit.org_name}?\nThis action immediately locks live ticker telemetry.`)) {
                                       return;
                                     }
 
@@ -704,7 +709,7 @@ export default function AdminDashboard() {
                                       await fetchLedger();
                                     } catch (err) {
                                       console.error("ARCHIVE_MUTATION_CRASH:", err);
-                                      alert("CRITICAL TRANSMISSION INTERRUPTION: Failed to mutate database entry posture.");
+                                      alert("TRANSMISSION ERROR: Failed to mutate database entry posture.");
                                     } finally {
                                       setIsUpdating(false);
                                     }
@@ -721,12 +726,23 @@ export default function AdminDashboard() {
 
                               <div className="flex flex-col sm:flex-row gap-4">
                                 <div className="flex-1 space-y-3">
-                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer disabled:opacity-20"><Mail size={14} /> Launch 360 Deep Dive</button>
+                                  {/* UNCOUPLED ACTION TRIGGER INTERFACE NODE */}
+                                  <button 
+                                    type="button" 
+                                    disabled={cleanStatus === "ARCHIVED"} 
+                                    onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} 
+                                    className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic cursor-pointer disabled:opacity-20"
+                                  >
+                                    <Mail size={14} /> // LAUNCH QUAD AUTOMATION DISPATCH
+                                  </button>
+                                  
                                   <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer disabled:opacity-20"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
                                 </div>
                                 <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border cursor-pointer disabled:opacity-20 ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
                               </div>
                             </div>
+                            
+                            {/* EXPORT COLUMNS */}
                             <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
                               
@@ -774,6 +790,7 @@ export default function AdminDashboard() {
                 })
               )}
 
+              {/* PAGINATION LAYOUT CONTAINER */}
               {totalCount > ROWS_PER_PAGE && (
                 <div className="flex items-center justify-between bg-slate-950 p-6 border border-slate-900 text-slate-500 font-mono text-[10px] uppercase tracking-wider mt-4">
                   <div>SHOWING {currentPage * ROWS_PER_PAGE + 1} - {Math.min((currentPage + 1) * ROWS_PER_PAGE, totalCount)} OF {totalCount} ACTIVE RECORDS</div>
@@ -807,7 +824,7 @@ export default function AdminDashboard() {
                     <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
                       <div className="text-red-600 mb-6 italic">{s.icon}</div>
                       <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
-                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
+                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4">{s.title}</h4>
                       <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
                     </div>
                   ))}
@@ -819,13 +836,13 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
                   {BMR_IP_SUITE.directives.map((d) => (
                     <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 italic"><Binary className={d.color} size={32} /></div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 italic">
-                        <div className="space-y-2 italic">
+                      <div className="absolute top-0 right-0 p-4 opacity-10"><Binary className={d.color} size={32} /></div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10">
+                        <div className="space-y-2">
                           <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic font-black`}>PROTOCOL // {d.id}</span>
-                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
+                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white">{d.label}</h2>
                         </div>
-                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic font-black">{d.price}</div>}
+                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest font-black">{d.price}</div>}
                       </div>
                       <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
                     </div>
