@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
-import { calculateForensicMetrics } from '../lib/forensicCalculus';
+import { calculateForensicMetrics } from '../lib/forensic/calculus';
 
 type PillarType = 'IGF' | 'AVS' | 'HAI';
 
