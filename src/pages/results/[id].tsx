@@ -254,7 +254,7 @@ export default function UnifiedResultsPortal() {
 
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight` parent-box-wrap}>
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>
                     PROCESS WASTE TAX
                   </span>
                 </div>
@@ -305,7 +305,7 @@ export default function UnifiedResultsPortal() {
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block whitespace-nowrap">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono whitespace-nowrap ${accentColorClass}` validation-safe-field}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono whitespace-nowrap ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className={`text-[10px] font-mono tracking-[0.25em] block whitespace-nowrap ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
