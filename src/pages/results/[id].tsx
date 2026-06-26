@@ -12,7 +12,7 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
-// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE
+// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE (STABLE REAL-TIME LOOP)
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -40,6 +40,7 @@ function RealTimeLossTicker({
       return;
     }
 
+    // 🔒 FIXED TIME ANCHOR: Uses the original record creation epoch to prevent slider re-computation resets
     const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
 
     const calculateDeltaTime = () => {
@@ -47,6 +48,8 @@ function RealTimeLossTicker({
 
       const currentRealTime = Date.now();
       const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - baselineAnchorTime) / 1000);
+      
+      // Updates the accumulated elapsed time scaled cleanly by severity coefficients
       setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
     };
 
@@ -56,9 +59,10 @@ function RealTimeLossTicker({
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
 
+  // Evaluates the financial run-rate dynamically without breaking the time continuum loop
   let dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
-  // 🔒 ARCHIVE FREEZE LOCK SYSTEM
+  // ARCHIVE FREEZE LOCK SYSTEM
   if (isArchived) {
     if (frozenLossRef.current === null) {
       frozenLossRef.current = dynamicAccumulatedLoss;
@@ -242,7 +246,7 @@ export default function UnifiedResultsPortal() {
               </p>
             </div>
             
-            {/* 🛠️ LETTERING LAYOUT CORRECTION: SHIFTED BREAKPOINT TO MD TO PROVIDE UNRESTRICTED WIDTH SPACE FOR LARGE MULTI-DIGIT FINANCIAL NUMBERS */}
+            {/* 🛠️ LETTERING BREAKPOINT FIXED TO md:GRI-COLS-3 TO MANAGE LARGE DATA WIDTHS WITHOUT ELEMENT COLLISION */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
@@ -257,11 +261,10 @@ export default function UnifiedResultsPortal() {
 
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight` ?? ""}>
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>
                     PROCESS WASTE TAX
                   </span>
                 </div>
-                {/* 🛠️ WORD-WRAPPING PATCH: REMOVED THE WHITESPACE-NOWRAP INTRUSION PREVENTING INTERNAL LAYOUT COLLIDANCE */}
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-base`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
@@ -273,7 +276,6 @@ export default function UnifiedResultsPortal() {
                     PROJECTED ANNUAL EXPOSURE
                   </span>
                 </div>
-                {/* 🛠️ WORD-WRAPPING PATCH: ALLOWS PROPER MULTI-LINE RESPONSIVE BREAKING ON CARD CONTAINER COMPRESSION */}
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-base`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
@@ -286,9 +288,10 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
+            {/* 🛡️ IMMUTABLE TIME STAMP ANCHOR: Uses fixed created_at field to stop ticker from ever resetting back to 0 on state shifts */}
             {audit && (
               <RealTimeLossTicker 
-                diagnosticCompletedAt={audit.created_at || audit.completed_at || new Date().toISOString()} 
+                diagnosticCompletedAt={audit.created_at || new Date().toISOString()} 
                 exposure={metrics.exposure + metrics.totalLaborTaxPool} 
                 anomalies={activeAnomaliesList}
                 isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
@@ -304,7 +307,6 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* 🛠️ SPLIT GRID OVERLAP RESOLUTION BLOCK */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
             <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono whitespace-nowrap">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
