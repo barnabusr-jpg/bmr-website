@@ -83,7 +83,7 @@ export default function UnifiedResultsPortal() {
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [audit, setAudit] = useState<AuditRecord | any>(null);
+  const [audit, setAudit] = useState<AuditRecord | null>(null);
 
   useEffect(() => { 
     setMounted(true); 
@@ -94,14 +94,14 @@ export default function UnifiedResultsPortal() {
     
     const fetchInitialAuditState = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error = null } = await supabase
           .from("audits")
           .select("*")
           .eq("id", id)
           .single();
           
         if (error) throw error;
-        if (data) setAudit(data);
+        if (data) setAudit(data as AuditRecord);
       } catch (err) { 
         console.error("Audit state fetch failure:", err); 
       } finally { 
@@ -113,7 +113,7 @@ export default function UnifiedResultsPortal() {
 
     const channelSubscription = supabase.channel(`live-workshop-${id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` }, 
-        (payload) => { if (payload.new) setAudit(payload.new); }
+        (payload) => { if (payload.new) setAudit(payload.new as AuditRecord); }
       ).subscribe();
 
     return () => { supabase.removeChannel(channelSubscription); };
@@ -133,7 +133,7 @@ export default function UnifiedResultsPortal() {
     return !!audit?.is_released || unblurred === "true";
   }, [audit?.is_released, unblurred]);
 
-  // ⚡ UPDATED CALCULUS LOOKUP LOOP LAYER
+  // ⚡ METRICS CALCULUS HARMONIZED NATIVELY FROM MAIN BRANCH FORMULAS
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
@@ -148,37 +148,10 @@ export default function UnifiedResultsPortal() {
 
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
     const laborMultiplier = 0.5;
-
-    // Condition Check: Does this record match a Stage 2 Triangulation dataset?
-    const isStageTwoRun = !!(audit?.triangulation_data || audit?.is_triangulation_run || audit?.fractures?.length > 0);
-
-    if (isStageTwoRun) {
-      // Execute updated Stage 2 math loops cleanly
-      const totalLaborTaxPool = (audit?.triangulation_tax_pool && audit.triangulation_tax_pool > 100)
-        ? audit.triangulation_tax_pool
-        : (dbDecay / 100) * 450000;
-
-      const directExposure = (audit?.triangulation_exposure && audit.triangulation_exposure > 100)
-        ? audit.triangulation_exposure
-        : 2400000;
-
-      return {
-        fteCount,
-        totalLaborTaxPool,
-        internalReworkTax: totalLaborTaxPool * 0.55,
-        operationalDragTax: totalLaborTaxPool * 0.45,
-        exposure: directExposure
-      };
-    }
-
-    // Default Baseline: Native Main Branch Metrics Formulas
-    const totalLaborTaxPool = (audit?.rework_tax && audit.rework_tax > 100) 
-      ? (audit.rework_tax + (audit.drag_tax || 0))
-      : (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
-
-    const directExposure = (audit?.legal_exposure && audit.legal_exposure > 100)
-      ? audit.legal_exposure
-      : (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15;
+    
+    // Pure main branch industrial calculation tracking sequence
+    const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
+    const directExposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15;
 
     return {
       fteCount,
@@ -187,7 +160,7 @@ export default function UnifiedResultsPortal() {
       operationalDragTax: totalLaborTaxPool * 0.40,
       exposure: directExposure
     };
-  }, [dbDecay, spend, audit, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
@@ -269,7 +242,8 @@ export default function UnifiedResultsPortal() {
               </p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
+            {/* 🛠️ LETTERING LAYOUT CORRECTION: SHIFTED BREAKPOINT TO MD TO PROVIDE UNRESTRICTED WIDTH SPACE FOR LARGE MULTI-DIGIT FINANCIAL NUMBERS */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
                   <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>
@@ -283,11 +257,12 @@ export default function UnifiedResultsPortal() {
 
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight` ?? ""}>
                     PROCESS WASTE TAX
                   </span>
                 </div>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900 whitespace-nowrap">
+                {/* 🛠️ WORD-WRAPPING PATCH: REMOVED THE WHITESPACE-NOWRAP INTRUSION PREVENTING INTERNAL LAYOUT COLLIDANCE */}
+                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-base`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
@@ -298,7 +273,8 @@ export default function UnifiedResultsPortal() {
                     PROJECTED ANNUAL EXPOSURE
                   </span>
                 </div>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900 whitespace-nowrap">
+                {/* 🛠️ WORD-WRAPPING PATCH: ALLOWS PROPER MULTI-LINE RESPONSIVE BREAKING ON CARD CONTAINER COMPRESSION */}
+                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-base`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
@@ -328,6 +304,7 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
+        {/* 🛠️ SPLIT GRID OVERLAP RESOLUTION BLOCK */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
             <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono whitespace-nowrap">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
