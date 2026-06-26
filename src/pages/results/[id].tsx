@@ -83,7 +83,7 @@ export default function UnifiedResultsPortal() {
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [audit, setAudit] = useState<AuditRecord | null>(null);
+  const [audit, setAudit] = useState<AuditRecord | any>(null);
 
   useEffect(() => { 
     setMounted(true); 
@@ -101,7 +101,7 @@ export default function UnifiedResultsPortal() {
           .single();
           
         if (error) throw error;
-        if (data) setAudit(data as AuditRecord);
+        if (data) setAudit(data);
       } catch (err) { 
         console.error("Audit state fetch failure:", err); 
       } finally { 
@@ -113,7 +113,7 @@ export default function UnifiedResultsPortal() {
 
     const channelSubscription = supabase.channel(`live-workshop-${id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` }, 
-        (payload) => { if (payload.new) setAudit(payload.new as AuditRecord); }
+        (payload) => { if (payload.new) setAudit(payload.new); }
       ).subscribe();
 
     return () => { supabase.removeChannel(channelSubscription); };
@@ -133,7 +133,7 @@ export default function UnifiedResultsPortal() {
     return !!audit?.is_released || unblurred === "true";
   }, [audit?.is_released, unblurred]);
 
-  // ⚡ METRICS CALCULUS HARMONIZED DIRECTLY FROM MAIN BRANCH FORMULAS
+  // ⚡ UPDATED CALCULUS LOOKUP LOOP LAYER
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
@@ -148,13 +148,35 @@ export default function UnifiedResultsPortal() {
 
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
     const laborMultiplier = 0.5;
-    
-    // Protect against test mock entries by falling back to standard math if db contains single-digit entries
-    const totalLaborTaxPool = (audit?.rework_tax && audit.rework_tax > 10) 
+
+    // Condition Check: Does this record match a Stage 2 Triangulation dataset?
+    const isStageTwoRun = !!(audit?.triangulation_data || audit?.is_triangulation_run || audit?.fractures?.length > 0);
+
+    if (isStageTwoRun) {
+      // Execute updated Stage 2 math loops cleanly
+      const totalLaborTaxPool = (audit?.triangulation_tax_pool && audit.triangulation_tax_pool > 100)
+        ? audit.triangulation_tax_pool
+        : (dbDecay / 100) * 450000;
+
+      const directExposure = (audit?.triangulation_exposure && audit.triangulation_exposure > 100)
+        ? audit.triangulation_exposure
+        : 2400000;
+
+      return {
+        fteCount,
+        totalLaborTaxPool,
+        internalReworkTax: totalLaborTaxPool * 0.55,
+        operationalDragTax: totalLaborTaxPool * 0.45,
+        exposure: directExposure
+      };
+    }
+
+    // Default Baseline: Native Main Branch Metrics Formulas
+    const totalLaborTaxPool = (audit?.rework_tax && audit.rework_tax > 100) 
       ? (audit.rework_tax + (audit.drag_tax || 0))
       : (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
 
-    const directExposure = (audit?.legal_exposure && audit.legal_exposure > 10)
+    const directExposure = (audit?.legal_exposure && audit.legal_exposure > 100)
       ? audit.legal_exposure
       : (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15;
 
