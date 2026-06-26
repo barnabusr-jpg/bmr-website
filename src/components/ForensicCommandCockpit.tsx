@@ -16,9 +16,9 @@ interface CockpitProps {
 }
 
 /**
- * 🕹️ SECTOR-AWARE FORENSIC COMMAND COCKPIT (DASHBOARD-ALIGNED EDITION)
+ * 🕹️ SECTOR-AWARE FORENSIC COMMAND COCKPIT (CLEAN REPORTING EDITION)
  * Inherits strict styling configurations from the main Admin Dashboard to maintain
- * perfect system-wide visual parity in production.
+ * perfect system-wide visual parity in production while cleaning client telemetry.
  */
 export default function ForensicCommandCockpit({ companyName, sector, metrics }: CockpitProps) {
   const sectorLabel = {
@@ -31,12 +31,12 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics }:
   return (
     <div className="bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden p-10 max-w-[1600px] mx-auto pb-32">
       
-      {/* HEADER TELEMETRY READOUT (Dashboard Style) */}
+      {/* HEADER TELEMETRY READOUT (⚡ CLEANED MULTIPLIER HEADER OUT) */}
       <div className="flex items-center justify-between bg-black p-6 border border-slate-900 mb-6 no-print">
         <div className="flex items-center gap-3 shrink-0">
           <Activity className="text-red-600 animate-pulse" size={20} />
           <span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">
-            // RISK MULTIPLIER SECTOR STATE: <span className="text-red-600">{metrics.multiplier.toFixed(2)}×</span> ({sectorLabel})
+            // PLATFORM RUNTIME INTEGRITY // COMPILATION POSTURE DETECTED
           </span>
         </div>
         
