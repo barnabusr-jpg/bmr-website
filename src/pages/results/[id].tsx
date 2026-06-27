@@ -40,7 +40,7 @@ function RealTimeLossTicker({
       return;
     }
 
-    // 🔒 FIXED TIME ANCHOR UPGRADE: Bind strictly to un-mutated survey epoch creation date to prevent resets
+    // 🔒 FIXED TIME ANCHOR: Bind to creation date to safeguard against slider re-computation resets
     const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
 
     const calculateDeltaTime = () => {
@@ -85,6 +85,10 @@ export default function UnifiedResultsPortal() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<AuditRecord | null>(null);
+
+  // Modal State Triggers
+  const [isQuadModalOpen, setIsQuadModalOpen] = useState(false);
+  const [quadEmails, setQuadEmails] = useState({ exec: "", mgr: "", tech: "", user: "" });
 
   useEffect(() => { 
     setMounted(true); 
@@ -210,11 +214,22 @@ export default function UnifiedResultsPortal() {
             {isPhaseTwoActive ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
           </span>
         </div>
-        {isPhaseTwoActive && (
-          <button onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono">
-              DOWNLOAD FORENSIC LEDGER PDF
+        
+        <div className="flex items-center gap-4">
+          {/* 📐 TOP RIGHT ARCHITECTURAL VECTOR TRIGGER: Launches 4-Box Automated Node Matrix Overlay */}
+          <button 
+            onClick={() => setIsQuadModalOpen(true)}
+            className="bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-[10px] px-5 py-3 font-mono transition-all duration-150 tracking-wider shadow-lg text-green-500"
+          >
+            // INITIALIZE AUTOMATED NODE ROUTING
           </button>
-        )}
+
+          {isPhaseTwoActive && (
+            <button onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono">
+                DOWNLOAD FORENSIC LEDGER PDF
+            </button>
+          )}
+        </div>
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
@@ -240,7 +255,7 @@ export default function UnifiedResultsPortal() {
               </p>
             </div>
             
-            {/* 🛠️ UPGRADED LAYOUT TRACK BREAKPOINT (FROM sm: TO md:) TO SECURE WIDTH DEPTH FOR LARGER METRICS */}
+            {/* 🛠️ GRID BREAKPOINT ADJUSTMENT (md:grid-cols-3) TO PRESERVE LARGE FINANCIAL CARD LAYOUT STRINGS */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
@@ -259,7 +274,7 @@ export default function UnifiedResultsPortal() {
                     PROCESS WASTE TAX
                   </span>
                 </div>
-                {/* 🛠️ TYPOGRAPHY UPGRADE: Stripped raw punctuation period boundary to preserve design clean flow */}
+                {/* 🛠️ TYPOGRAPHY ALIGNMENT: Stripped trailing period to fix visual output layout */}
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-base`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
@@ -271,7 +286,7 @@ export default function UnifiedResultsPortal() {
                     PROJECTED ANNUAL EXPOSURE
                   </span>
                 </div>
-                {/* 🛠️ TYPOGRAPHY UPGRADE: Stripped raw punctuation trailing period */}
+                {/* 🛠️ TYPOGRAPHY ALIGNMENT: Stripped trailing period formatting token */}
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-base`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
@@ -284,7 +299,6 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* 🛡️ COUNTER TIMELINE UPGRADE: Anchored strictly onto immutable created_at database property to shield clock continuum from resets */}
             {audit && (
               <RealTimeLossTicker 
                 diagnosticCompletedAt={audit.created_at || new Date().toISOString()} 
@@ -349,7 +363,7 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* 📐 ADMINISTRATIVE HUB INTERFACE AND GATEWAY UTILITIES CONTROL PANEL */}
+        {/* --- DYNAMIC ADMINISTRATIVE PANEL UTILITIES --- */}
         <div className="pt-12 border-t border-slate-900 grid grid-cols-1 md:grid-cols-12 gap-8">
           
           {/* Phase Gateway Action Controls */}
@@ -368,7 +382,7 @@ export default function UnifiedResultsPortal() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              {/* 📐 SECURE GATEWAY LAUNCHER: Routes the active audit target parameter forward straight to Phase 2 Triangulation survey environment */}
+              {/* 📐 LOWER ADMIN UTILITY: Dispatches 30-Question Staging Gateway */}
               <button 
                 onClick={() => {
                   if (audit?.id) {
@@ -380,7 +394,7 @@ export default function UnifiedResultsPortal() {
                 className="bg-red-600 hover:bg-red-700 text-white text-xs p-6 font-mono font-black transition-colors duration-200 flex flex-col items-center justify-center text-center tracking-wider leading-tight border border-red-500/30 shadow-xl"
               >
                 <span className="block text-[9px] text-red-200/60 mb-1 tracking-[0.2em]">// INITIALIZE PHASE 2</span>
-                LAUNCH 360° TRIANGULATION DIAGNOSTIC
+                LAUNCH 360° DEEP DIVE
               </button>
 
               <button className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 text-xs p-6 font-mono font-black transition-colors duration-200">
@@ -442,6 +456,80 @@ export default function UnifiedResultsPortal() {
           </div>
         )}
       </main>
+
+      {/* 📐 PURE QUAD-NODE 4-EMAIL BOX MODAL INTERFACE */}
+      {isQuadModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#050b18] border-2 border-red-600 max-w-xl w-full p-8 md:p-10 relative shadow-2xl text-left uppercase italic font-black">
+            
+            <button 
+              onClick={() => setIsQuadModalOpen(false)}
+              className="absolute top-6 right-6 text-slate-500 hover:text-white font-mono text-sm"
+            >
+              ✕
+            </button>
+
+            <h3 className="text-3xl font-black text-white font-sans tracking-tight leading-none">
+              ASSIGN STAKEHOLDER MATRIX
+            </h3>
+            <p className="text-[9px] font-mono text-slate-500 tracking-wider mt-2">
+              PROVISIONING DIRECTIVE ASSOCIATION NODES FOR: {audit?.org_name || "EVALUATION SYSTEM"}
+            </p>
+
+            <div className="space-y-4 mt-8">
+              <div className="relative font-mono">
+                <input 
+                  type="email" 
+                  placeholder="EXECUTIVE STAKEHOLDER EMAIL" 
+                  className="w-full bg-slate-900/60 border border-slate-800 p-4 text-xs uppercase italic text-white placeholder-slate-600 focus:outline-none focus:border-red-600 font-black"
+                  value={quadEmails.exec}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, exec: e.target.value })}
+                />
+              </div>
+              <div className="relative font-mono">
+                <input 
+                  type="email" 
+                  placeholder="MANAGERIAL STAKEHOLDER EMAIL" 
+                  className="w-full bg-slate-900/60 border border-slate-800 p-4 text-xs uppercase italic text-white placeholder-slate-600 focus:outline-none focus:border-red-600 font-black"
+                  value={quadEmails.mgr}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, mgr: e.target.value })}
+                />
+              </div>
+              <div className="relative font-mono">
+                <input 
+                  type="email" 
+                  placeholder="TECHNICAL STAKEHOLDER EMAIL" 
+                  className="w-full bg-slate-900/60 border border-slate-800 p-4 text-xs uppercase italic text-white placeholder-slate-600 focus:outline-none focus:border-red-600 font-black"
+                  value={quadEmails.tech}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, tech: e.target.value })}
+                />
+              </div>
+              <div className="relative font-mono">
+                <input 
+                  type="email" 
+                  placeholder="END-USER STAKEHOLDER EMAIL" 
+                  className="w-full bg-slate-900/60 border border-slate-800 p-4 text-xs uppercase italic text-white placeholder-slate-600 focus:outline-none focus:border-red-600 font-black"
+                  value={quadEmails.user}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, user: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={() => {
+                if (audit?.id) {
+                  router.push(`/diagnostic/triangulation?parent_id=${audit.id}&e=${encodeURIComponent(quadEmails.exec)}&m=${encodeURIComponent(quadEmails.mgr)}&t=${encodeURIComponent(quadEmails.tech)}&u=${encodeURIComponent(quadEmails.user)}`);
+                }
+                setIsQuadModalOpen(false);
+              }}
+              className="w-full bg-red-600 hover:bg-red-700 text-white text-xs font-mono font-black py-4 mt-6 tracking-widest flex items-center justify-center gap-2 transition-colors duration-150"
+            >
+              GENERATED AUTOMATED KEY ROUTING
+            </button>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
