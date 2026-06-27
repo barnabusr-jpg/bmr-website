@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Lock, Unlock, Activity } from "lucide-react";
+import { Lock, Unlock, Activity, Info } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
@@ -12,7 +12,7 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
-// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE (STABLE REAL-TIME LOOP)
+// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -40,7 +40,7 @@ function RealTimeLossTicker({
       return;
     }
 
-    // 🔒 FIXED TIME ANCHOR: Uses the original record creation epoch to prevent slider re-computation resets
+    // 🔒 FIXED TIME ANCHOR UPGRADE: Bind strictly to un-mutated survey epoch creation date to prevent resets
     const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
 
     const calculateDeltaTime = () => {
@@ -48,8 +48,6 @@ function RealTimeLossTicker({
 
       const currentRealTime = Date.now();
       const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - baselineAnchorTime) / 1000);
-      
-      // Updates the accumulated elapsed time scaled cleanly by severity coefficients
       setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
     };
 
@@ -59,10 +57,9 @@ function RealTimeLossTicker({
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
 
-  // Evaluates the financial run-rate dynamically without breaking the time continuum loop
   let dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
-  // ARCHIVE FREEZE LOCK SYSTEM
+  // 🔒 ARCHIVE FREEZE LOCK SYSTEM
   if (isArchived) {
     if (frozenLossRef.current === null) {
       frozenLossRef.current = dynamicAccumulatedLoss;
@@ -98,7 +95,7 @@ export default function UnifiedResultsPortal() {
     
     const fetchInitialAuditState = async () => {
       try {
-        const { data, error = null } = await supabase
+        const { data, error } = await supabase
           .from("audits")
           .select("*")
           .eq("id", id)
@@ -137,7 +134,6 @@ export default function UnifiedResultsPortal() {
     return !!audit?.is_released || unblurred === "true";
   }, [audit?.is_released, unblurred]);
 
-  // ⚡ METRICS CALCULUS HARMONIZED NATIVELY FROM MAIN BRANCH FORMULAS
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
@@ -152,22 +148,20 @@ export default function UnifiedResultsPortal() {
 
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
     const laborMultiplier = 0.5;
-    
-    // Pure main branch industrial calculation tracking sequence
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
-    const directExposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15;
-
+    
     return {
       fteCount,
       totalLaborTaxPool,
       internalReworkTax: totalLaborTaxPool * 0.60,
       operationalDragTax: totalLaborTaxPool * 0.40,
-      exposure: directExposure
+      exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15
     };
   }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
+  const fallbackDirectiveColor = isPhaseTwoActive ? "text-red-400" : "text-green-500";
 
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
@@ -246,7 +240,7 @@ export default function UnifiedResultsPortal() {
               </p>
             </div>
             
-            {/* 🛠️ LETTERING BREAKPOINT FIXED TO md:GRI-COLS-3 TO MANAGE LARGE DATA WIDTHS WITHOUT ELEMENT COLLISION */}
+            {/* 🛠️ UPGRADED LAYOUT TRACK BREAKPOINT (FROM sm: TO md:) TO SECURE WIDTH DEPTH FOR LARGER METRICS */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
@@ -265,6 +259,7 @@ export default function UnifiedResultsPortal() {
                     PROCESS WASTE TAX
                   </span>
                 </div>
+                {/* 🛠️ TYPOGRAPHY UPGRADE: Stripped raw punctuation period boundary to preserve design clean flow */}
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-base`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
@@ -276,6 +271,7 @@ export default function UnifiedResultsPortal() {
                     PROJECTED ANNUAL EXPOSURE
                   </span>
                 </div>
+                {/* 🛠️ TYPOGRAPHY UPGRADE: Stripped raw punctuation trailing period */}
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-base`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
@@ -288,7 +284,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* 🛡️ IMMUTABLE TIME STAMP ANCHOR: Uses fixed created_at field to stop ticker from ever resetting back to 0 on state shifts */}
+            {/* 🛡️ COUNTER TIMELINE UPGRADE: Anchored strictly onto immutable created_at database property to shield clock continuum from resets */}
             {audit && (
               <RealTimeLossTicker 
                 diagnosticCompletedAt={audit.created_at || new Date().toISOString()} 
@@ -307,14 +303,14 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono whitespace-nowrap">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block whitespace-nowrap">VALIDATED REWORK LIABILITY TAX</span>
+            <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono whitespace-nowrap ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className={`text-[10px] font-mono tracking-[0.25em] block whitespace-nowrap ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
+            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>{`$${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}</div>
+            <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
 
@@ -351,6 +347,75 @@ export default function UnifiedResultsPortal() {
               );
             })}
           </div>
+        </div>
+
+        {/* 📐 ADMINISTRATIVE HUB INTERFACE AND GATEWAY UTILITIES CONTROL PANEL */}
+        <div className="pt-12 border-t border-slate-900 grid grid-cols-1 md:grid-cols-12 gap-8">
+          
+          {/* Phase Gateway Action Controls */}
+          <div className="md:col-span-5 bg-slate-950/40 border border-slate-900 p-6 space-y-6">
+            <span className="text-[9px] font-mono text-slate-500 tracking-widest block">// PHASE GATEWAY CONTROLS</span>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-black/40 p-4 border border-slate-900 text-center font-mono">
+                <span className="text-[8px] text-slate-600 block mb-1">MARK SOW SENT:</span>
+                <span className="text-xs text-slate-400 font-black">FALSE</span>
+              </div>
+              <div className="bg-black/40 p-4 border border-slate-900 text-center font-mono">
+                <span className="text-[8px] text-slate-600 block mb-1">MARK PAID:</span>
+                <span className="text-xs text-yellow-500 font-black">PENDING</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              {/* 📐 SECURE GATEWAY LAUNCHER: Routes the active audit target parameter forward straight to Phase 2 Triangulation survey environment */}
+              <button 
+                onClick={() => {
+                  if (audit?.id) {
+                    router.push(`/diagnostic/triangulation?parent_id=${audit.id}`);
+                  } else {
+                    router.push('/diagnostic/triangulation');
+                  }
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white text-xs p-6 font-mono font-black transition-colors duration-200 flex flex-col items-center justify-center text-center tracking-wider leading-tight border border-red-500/30 shadow-xl"
+              >
+                <span className="block text-[9px] text-red-200/60 mb-1 tracking-[0.2em]">// INITIALIZE PHASE 2</span>
+                LAUNCH 360° TRIANGULATION DIAGNOSTIC
+              </button>
+
+              <button className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/20 text-xs p-6 font-mono font-black transition-colors duration-200">
+                COMPILE PARTIAL ANSWERS
+              </button>
+            </div>
+          </div>
+
+          {/* Dossier Exposure Lock/Blur States */}
+          <div className="md:col-span-3">
+            <button className="w-full h-full min-h-[180px] bg-emerald-600 hover:bg-emerald-700 text-white font-mono font-black text-sm uppercase tracking-widest flex flex-col items-center justify-center gap-2 border border-emerald-500/30 transition-colors duration-200 shadow-xl">
+              <Lock size={18} />
+              BLUR DOSSIER
+            </button>
+          </div>
+
+          {/* Export Ledger Annotations */}
+          <div className="md:col-span-4 flex flex-col justify-between gap-4">
+            <div className="w-full relative font-mono">
+              <textarea 
+                placeholder="APPEND CUSTOM DOSSIER ANNOTATION NOTE..." 
+                className="w-full h-24 bg-black/40 border border-slate-900 p-4 text-xs font-mono text-slate-400 placeholder-slate-700 uppercase italic resize-none focus:outline-none focus:border-slate-800"
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <button className="w-full bg-slate-950 hover:bg-white hover:text-black border border-slate-900 text-xs py-4 font-mono font-black tracking-widest flex items-center justify-center gap-2 transition-all duration-200">
+                <Activity size={12} /> OPEN ONSCREEN LEDGER
+              </button>
+              <button className="w-full bg-white hover:bg-slate-100 text-black text-xs py-4 font-mono font-black tracking-widest flex items-center justify-center gap-2 transition-all duration-200">
+                PRINT FORENSIC LEDGER (PDF)
+              </button>
+            </div>
+          </div>
+
         </div>
 
         {!isPhaseTwoActive && (
