@@ -44,7 +44,6 @@ export default function AdminDashboard() {
   const ROWS_PER_PAGE = 10;
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
-
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -65,7 +64,7 @@ export default function AdminDashboard() {
 
     let query = supabase
       .from('audits')
-      .select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
+      .select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid, sector', { count: 'exact' });
 
     if (statusFilter !== "ALL") {
       query = query.eq('status', statusFilter);
@@ -188,7 +187,7 @@ export default function AdminDashboard() {
       
       if (res.ok) {
         setIsUpdating(false);
-        let query = supabase.from('audits').select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid').eq('id', auditId).single();
+        let query = supabase.from('audits').select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid, sector').eq('id', auditId).single();
         const { data: cleanAudit } = await query;
         if (cleanAudit) {
           setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
@@ -303,7 +302,7 @@ export default function AdminDashboard() {
                 
                 if (activeAudit) {
                   const entityCode = `${activeAudit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
-                  const targetPillar = activeAudit.sfi_score >= 45 ? "AVS" : "IGF"; 
+                  const targetPillar = (activeAudit.sfi_score || activeAudit.decay_pct) >= 45 ? "AVS" : "IGF"; 
                   
                   const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
                   const mgrNode  = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
@@ -417,14 +416,19 @@ export default function AdminDashboard() {
                 data.map((audit) => {
                   const clientHasAccess = !!audit.is_released;
 
-                  const sfi = audit.sfi_score || 0;
-                  const realFractures = audit.fractures || [];
                   const dbDecay = audit.decay_pct || 24;
+                  // 🛡️ HARMONIZED TRACKER FALLBACK: Reconciles empty index markers to scale cleanly against Phase 1 entry weights
+                  const sfi = audit.sfi_score || dbDecay;
+                  const realFractures = audit.fractures || [];
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
+                  
                   const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
+                  
+                  // 🧮 HARMONIZED MATHEMATICAL EQUATION: Matching the metric layer with Admin view calculations
                   const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+                  const totalLeakage = laborTax + exposure;
 
                   let playbookHeadline = "BALANCED INFRASTRUCTURE STATE";
                   let playbookNarrative = "Operational alignment metrics indicate standard operational velocity. Cross-functional communication tracks are solid, and system parameters are matching organizational intent.";
@@ -437,12 +441,13 @@ export default function AdminDashboard() {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
                     playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
                     playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
+                    targetTier = "TIER_02 // MULTI-NODE TRIANGULATION";
                   } else if (cleanStatus === "ARCHIVED") {
                     playbookHeadline = "RECORD DEACTIVATED // HISTORICAL STORAGE";
                     playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing telemetry channels are hard-locked.";
                     playbookPitch = "System metrics are now preserved for permanent historical reference compliance logs.";
                     targetTier = "ARCHIVED VAULT CONTENT";
-                  } else if (sfi >= 45) {
+                  } else if (sfi padding >= 45) {
                     playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
                     playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
                     playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance, removing the manual tax on your staff.";
@@ -468,7 +473,7 @@ export default function AdminDashboard() {
                         </div>
                         
                         <div className="col-span-4 text-center font-black italic text-xs tracking-[0.2em] font-mono flex items-center justify-center gap-3">
-                          {audit.sfi_score >= 45 && cleanStatus !== "ARCHIVED" && (
+                          {sfi >= 45 && cleanStatus !== "ARCHIVED" && (
                             <span className="bg-red-600/10 text-red-500 border border-red-600/30 px-3 py-1 text-[9px] font-mono tracking-widest uppercase block font-black animate-pulse shrink-0">
                               ⚠️ CRITICAL EXPOSURE ALERT
                             </span>
@@ -486,7 +491,6 @@ export default function AdminDashboard() {
                       
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
-                          
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
                               { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
@@ -500,7 +504,6 @@ export default function AdminDashboard() {
                                 <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
                                   <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
                                     <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
-                                    
                                     {isDone ? (
                                       <CheckCircle className="text-green-500" size={14}/>
                                     ) : (
@@ -519,7 +522,7 @@ export default function AdminDashboard() {
                                     )}
                                   </div>
                                   
-                                  <div className="flex-1 flex flex-col justify-center items-center text-center py-4">
+                                  <div className="text-center py-4">
                                     <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-green-500' : 'text-2xl text-slate-800 animate-pulse'}`}>
                                       {isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}
                                     </div>
@@ -562,7 +565,6 @@ export default function AdminDashboard() {
                           </div>
 
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                            
                             <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
                               <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
                               <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
@@ -570,7 +572,7 @@ export default function AdminDashboard() {
                                 <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
                                 <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                                 <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                               </div>
                             </div>
 
@@ -727,6 +729,7 @@ export default function AdminDashboard() {
                                 <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border cursor-pointer disabled:opacity-20 ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
                               </div>
                             </div>
+                            
                             <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
                               
@@ -746,22 +749,12 @@ export default function AdminDashboard() {
                                   type="button" 
                                   onClick={(e) => { 
                                     e.stopPropagation(); 
-                                    const dbDecay = audit.decay_pct || 24;
-                                    const spend = parseFloat(audit.ai_spend) || 1.2;
-                                    const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
-                                    const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
-                                    
-                                    const laborTax = Math.round((dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3));
-                                    const exposure = Math.round(((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15);
-                                    const totalLeakage = laborTax + exposure;
-
-                                    window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${totalLeakage}&tax=${laborTax}`, '_blank');
+                                    window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${exposure + laborTax}&tax=${laborTax}`, '_blank');
                                   }} 
                                   className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"
                                 >
                                   <Monitor size={18} /> Open Onscreen Ledger
                                 </button>
-                                
                                 <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
                               </div>
                             </div>
