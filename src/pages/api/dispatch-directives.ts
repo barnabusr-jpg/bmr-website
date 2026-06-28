@@ -6,7 +6,6 @@ const SENDGRID_KEY = process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KE
 sgMail.setApiKey(SENDGRID_KEY as string);
 
 // 🚀 PRIVILEGED MASTER ADMIN ACCESS INITIALIZATION
-// This client bypasses RLS policies securely by using the hidden service role key
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -19,7 +18,6 @@ const ROLE_MAP: Record<string, string> = {
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // 1. Force a raw runtime print line to completely break through Vercel's log view caching
   console.log("🚀 ENGINE ACTIVATED - INCOMING BODY:", JSON.stringify(req.body));
 
   if (req.method !== 'POST') {
@@ -27,10 +25,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
   
   const { groupId, orgName, emails, parentAuditId } = req.body;
-  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://lab.bmradvisory.co';
-  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmrsolutions.co'; 
+  
+  // 🌐 FIXED ROUTING DOMAIN PROTOCOL
+  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://bmradvisory.co';
+  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co'; 
 
-  // 2. Explicit error print line if the payload properties look empty
   if (!parentAuditId) {
     console.error("❌ ENGINE CRASH: Payload is missing parentAuditId. Received:", req.body);
     return res.status(400).json({ error: 'MISSING PARENT AUDIT ID' });
@@ -41,7 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const emailPromises = [];
     const intakeRecords = [];
 
-    // 3. Structural Normalization and Token Preparation Loop
+    // Structural Normalization and Token Preparation Loop
     for (const [rawRole, email] of roles) {
       const targetEmail = (email as string).trim().toLowerCase();
       if (!targetEmail) continue;
@@ -73,13 +72,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       emailPromises.push(sgMail.send({
         to: targetEmail,
-        from: FROM_EMAIL,
+        // 📧 BRAND DISPLAY NAME UPGRADE: Uses "BMR SOLUTIONS" purely as display alias on secure domain outbound mail
+        from: {
+          name: "BMR SOLUTIONS",
+          email: FROM_EMAIL
+        },
         subject: `ACTION REQUIRED: ${standardizedRole} Forensic Node Authorized // ${orgName}`,
         html: `
           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
             <tr>
               <td align="center" style="padding: 40px 20px;">
-                <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box;">
+                <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-transform: uppercase;">
                   <table width="100%" border="0" cellspacing="0" cellpadding="0">
                     <tr>
                       <td align="left" style="text-align: left;">
@@ -90,10 +93,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                           Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
                         </p>
                         <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
-                        <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0;">
+                        <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0; text-transform: none;">
                           Your company leadership recently started a diagnostic project with BMR Solutions. This project is designed to evaluate your technology investments. The goal is to identify operational waste, uncover structural errors, and discover hidden costs within your AI systems.
                         </p>
-                        <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0;">
+                        <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0; text-transform: none;">
                           To complete this system review, we require independent feedback from different departments. You are designated as the representative for the <strong>${standardizedRole} Node</strong>. When you select the verification link below, the system will open your specific questionnaire module. Thank you for your attention and support in this matter.
                         </p>
                         <p style="font-family: monospace; line-height: 1.6; font-size: 14px; color: #ffffff; margin: 0 0 30px 0;">
@@ -122,7 +125,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    // 4. Perform Safe Database Upsert using the Privileged Admin Client
     if (intakeRecords.length > 0) {
       const { error: upsertError } = await supabaseAdmin
         .from('operators')
@@ -133,7 +135,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     }
 
-    // 5. Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
+    // Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
     const { data: allOperators, error: queryError } = await supabaseAdmin
       .from('operators')
       .select('survey_completed')
@@ -147,10 +149,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const unsubmittedPaths = allOperators.filter((o) => !o.survey_completed).length;
     const logicDecayCoefficient = totalPaths > 0 ? unsubmittedPaths / totalPaths : 0.00;
 
-    // 6. Retrieve Current Raw Diagnostic Metrics via Admin Bypass
+    // Retrieve Current Raw Diagnostic Metrics via Admin Bypass
     const { data: activeAudit, error: auditFetchError } = await supabaseAdmin
       .from('audits')
-      .select('hai_raw_score, avs_raw_score, igf_raw_score, status, compiled_at')
+      .select('hai_raw_score, avs_raw_score, igf_raw_score, status, compiled_at, decay_pct')
       .eq('id', parentAuditId)
       .single();
 
@@ -158,7 +160,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error('Failed to retrieve primary core diagnostic metrics.');
     }
 
-    // 7. Multi-Pillar Core Vector Assessment Engine Execution
     const adjustedHAI = Number(activeAudit.hai_raw_score || 0) * (1 - logicDecayCoefficient);
     const adjustedAVS = Number(activeAudit.avs_raw_score || 0) * (1 - logicDecayCoefficient);
     const adjustedIGF = Number(activeAudit.igf_raw_score || 0) * (1 - logicDecayCoefficient);
@@ -181,15 +182,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       speciesIdentifier = 'Expectation Continuity Fracture';
     }
 
-    // 8. Persist Compiled State Metrics directly back to the main Ledger Audit row
     const cleanSystemTimestamp = new Date().toISOString();
-    const calculatedDecayPercent = Number((logicDecayCoefficient * 100).toFixed(0));
 
+    // 🔒 RECONCILIATION PRESERVATION SYSTEM
+    // Transitions row to 'TRIANGULATING' while protecting Phase 1 decay score values from calculation resets
     const { error: updateError } = await supabaseAdmin
       .from('audits')
       .update({ 
         status: 'TRIANGULATING',
-        decay_pct: calculatedDecayPercent,
         compiled_at: cleanSystemTimestamp
       })
       .eq('id', parentAuditId);
@@ -198,7 +198,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw new Error(`Primary Ledger State Compilation Error: ${updateError.message}`);
     }
 
-    // 🛡️ NON-BLOCKING ASSEMBLY: Isolate third-party email exceptions so workflow continues
     try {
       if (emailPromises.length > 0) {
         await Promise.all(emailPromises);
@@ -209,7 +208,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     
     return res.status(200).json({ 
       status: 'SUCCESS',
-      compilationMode: logicDecayCoefficient > 0 ? 'PARTIAL DECAY APPLIED' : 'COMPLETE TRIANGULATION',
+      compilationMode: 'COMPLETE TRIANGULATION',
       metrics: {
         logicDecayCoefficient: Number(logicDecayCoefficient.toFixed(2)),
         adjustedHAI: Number(adjustedHAI.toFixed(2)),
