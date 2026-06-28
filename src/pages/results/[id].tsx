@@ -35,17 +35,19 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    if (!diagnosticCompletedAt) {
-      setElapsedSeconds(0);
-      return;
-    }
-
-    const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
-
     const calculateDeltaTime = () => {
       if (isArchived) return;
 
+      // 🔒 HARD REAL-TIME RESOLUTION: Evaluates the prop dynamically on every tick
+      const anchorTimeString = diagnosticCompletedAt;
+      if (!anchorTimeString) {
+        setElapsedSeconds(0);
+        return;
+      }
+
+      const baselineAnchorTime = new Date(anchorTimeString).getTime();
       const currentRealTime = Date.now();
+      
       const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - baselineAnchorTime) / 1000);
       setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
     };
@@ -55,7 +57,7 @@ function RealTimeLossTicker({
 
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
-
+  
   let dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
   // 🔒 ARCHIVE FREEZE LOCK SYSTEM
