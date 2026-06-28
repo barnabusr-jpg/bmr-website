@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
 import { Lock, Unlock, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { AnomalyNode } from "@/types/database.types";
+import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
 interface LossTickerProps {
   diagnosticCompletedAt: string; 
@@ -12,7 +12,7 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
-// 🏎️ ACCELERATED TICKER ENGINE
+// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -22,6 +22,7 @@ function RealTimeLossTicker({
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const frozenLossRef = useRef<number | null>(null);
 
+  // 🧮 Calculate dynamic velocity acceleration scaling factors from database anomaly metadata
   const severityVelocityMultiplier = useMemo(() => {
     let multiplier = 1.0;
     anomalies.forEach(anomaly => {
@@ -43,6 +44,7 @@ function RealTimeLossTicker({
 
     const calculateDeltaTime = () => {
       if (isArchived) return;
+
       const currentRealTime = Date.now();
       const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - baselineAnchorTime) / 1000);
       setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
@@ -56,6 +58,7 @@ function RealTimeLossTicker({
 
   let dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
+  // 🔒 ARCHIVE FREEZE LOCK SYSTEM
   if (isArchived) {
     if (frozenLossRef.current === null) {
       frozenLossRef.current = dynamicAccumulatedLoss;
@@ -80,7 +83,7 @@ export default function UnifiedResultsPortal() {
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [audit, setAudit] = useState<any>(null);
+  const [audit, setAudit] = useState<AuditRecord | null>(null);
 
   useEffect(() => { 
     setMounted(true); 
@@ -98,7 +101,7 @@ export default function UnifiedResultsPortal() {
           .single();
           
         if (error) throw error;
-        if (data) setAudit(data);
+        if (data) setAudit(data as AuditRecord);
       } catch (err) { 
         console.error("Audit state fetch failure:", err); 
       } finally { 
@@ -110,7 +113,7 @@ export default function UnifiedResultsPortal() {
 
     const channelSubscription = supabase.channel(`live-workshop-${id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` }, 
-        (payload) => { if (payload.new) setAudit(payload.new); }
+        (payload) => { if (payload.new) setAudit(payload.new as AuditRecord); }
       ).subscribe();
 
     return () => { supabase.removeChannel(channelSubscription); };
@@ -130,7 +133,7 @@ export default function UnifiedResultsPortal() {
     return !!audit?.is_released || unblurred === "true";
   }, [audit?.is_released, unblurred]);
 
-  // ⚡ COMBINED UPGRADE: PULLS DIRECT METRICS AND HARMONIZES SECTOR ENGINE FORMULAS
+  // 🧮 HARMONIZED CORE LOGIC CALCULUS LAYER
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
@@ -144,20 +147,29 @@ export default function UnifiedResultsPortal() {
     }
 
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
-    
-    // Reads verified sector matrices dynamically to align with Admin Dashboard behaviors
-    const sector = audit?.sector || 'other';
-    const laborMultiplier = sector === 'finance' ? 0.5 : sector === 'healthcare' ? 0.45 : 0.4;
-    
+    const laborMultiplier = 0.5;
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
-    const directExposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+    
+    // 🧠 THE SECTOR MULTIPLIER MATRIX RESOLUTION
+    const sector = (audit?.sector || 'services').toLowerCase().trim();
+    let sectorInflationMultiplier = 1.2; // Default fallback (Services)
 
+    if (sector === 'finance' || sector === 'compliance') {
+      sectorInflationMultiplier = 1.5;
+    } else if (sector === 'manufacturing' || sector === 'industrial' || sector === 'operations') {
+      sectorInflationMultiplier = 1.5; // Maps your 1.5 industrial intake card bounds precisely
+    } else if (sector === 'healthcare' || sector === 'liability') {
+      sectorInflationMultiplier = 1.3;
+    } else if (sector === 'services' || sector === 'labor') {
+      sectorInflationMultiplier = 1.2;
+    }
+    
     return {
       fteCount,
       totalLaborTaxPool,
       internalReworkTax: totalLaborTaxPool * 0.60,
       operationalDragTax: totalLaborTaxPool * 0.40,
-      exposure: directExposure
+      exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier
     };
   }, [dbDecay, spend, audit, live_sync, leakage, tax]);
 
@@ -219,6 +231,7 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
+        
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
@@ -259,7 +272,7 @@ export default function UnifiedResultsPortal() {
                   </span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-base`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-sm`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                 </p>
               </div>
 
@@ -270,7 +283,7 @@ export default function UnifiedResultsPortal() {
                   </span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-base`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                 </p>
               </div>
             </div>
@@ -281,7 +294,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* 🔒 IMMUTABLE TIMESTAMPS BIND: Anchored cleanly to created_at so updates never drop the clock back to 0 */}
+            {/* 🔒 FIX: Locked velocity counter to audit.created_at to block administrative reset parameters */}
             {audit && (
               <RealTimeLossTicker 
                 diagnosticCompletedAt={audit.created_at || new Date().toISOString()} 
@@ -357,9 +370,11 @@ export default function UnifiedResultsPortal() {
                   body: JSON.stringify({ auditId: audit.id }),
                 }).catch((err) => console.error('Silent reminder cancellation skipped:', err));
               }
+
               const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
               const baseCalendlyUrl = "https://calendly.com/hello-bmradvisory/forensic-briefing";
               const specializedUrl = clientEmail ? `${baseCalendlyUrl}?email=${clientEmail}` : baseCalendlyUrl;
+              
               window.open(specializedUrl, "_blank");
             }}
           >
