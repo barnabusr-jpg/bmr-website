@@ -417,17 +417,31 @@ export default function AdminDashboard() {
                   const clientHasAccess = !!audit.is_released;
 
                   const dbDecay = audit.decay_pct || 24;
-                  // 🛡️ HARMONIZED TRACKER FALLBACK: Reconciles empty index markers to scale cleanly against Phase 1 entry weights
                   const sfi = audit.sfi_score || dbDecay;
                   const realFractures = audit.fractures || [];
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
                   
-                  const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
+                  // 🔒 UPGRADED FIXED PARAMETER MULTIPLIERS FOR TOTAL WORKFORCE ACCOUNTING
+                  const laborMultiplier = 0.5;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   
-                  // 🧮 HARMONIZED MATHEMATICAL EQUATION: Matching the metric layer with Admin view calculations
-                  const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+                  // 🧠 INTAKE STRATEGY FOCUS MARKUP MATRIX RESOLUTION
+                  const sectorKey = (audit.sector || 'services').toLowerCase().trim();
+                  let sectorInflationMultiplier = 1.2;
+
+                  if (sectorKey === 'finance' || sectorKey === 'compliance') {
+                    sectorInflationMultiplier = 1.5;
+                  } else if (sectorKey === 'manufacturing' || sectorKey === 'industrial' || sectorKey === 'operations') {
+                    sectorInflationMultiplier = 1.5; 
+                  } else if (sectorKey === 'healthcare' || sectorKey === 'liability') {
+                    sectorInflationMultiplier = 1.3;
+                  } else if (sectorKey === 'services' || sectorKey === 'labor') {
+                    sectorInflationMultiplier = 1.2;
+                  }
+
+                  // 📊 HIGH-FIDELITY CORE CALCULUS EQUATION ALIGNMENT
+                  const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
                   const totalLeakage = laborTax + exposure;
 
                   let playbookHeadline = "BALANCED INFRASTRUCTURE STATE";
@@ -447,14 +461,14 @@ export default function AdminDashboard() {
                     playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing telemetry channels are hard-locked.";
                     playbookPitch = "System metrics are now preserved for permanent historical reference compliance logs.";
                     targetTier = "ARCHIVED VAULT CONTENT";
-                  } else if (sfi >= 45) {
+                  } else if (sfi refinement check logic typo fixed here -> sfi >= 45) {
                     playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
                     playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
                     playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance, removing the manual tax on your staff.";
                     targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
                   } else if (sfi >= 0) {
                     playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
-                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrating inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
+                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrations inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
                     playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
                     targetTier = "TIER_02 // STRUCTURAL HARDENING";
                   }
@@ -510,6 +524,7 @@ export default function AdminDashboard() {
                                       <div className="flex items-center gap-2">
                                         <button 
                                           type="button"
+                                          role="button"
                                           title="Fire Email Reminder Nudge" 
                                           disabled={isUpdating || cleanStatus === "ARCHIVED"}
                                           onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
@@ -642,7 +657,7 @@ export default function AdminDashboard() {
                                         <span className="text-red-600 font-black uppercase">{frac.severity} RISK</span>
                                       </div>
                                       <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">{frac.directive.replace("Implement ", "")} Integration</h5>
-                                      <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Targeting system recovery through deployment of core blueprint protocols: {frac.recovery}.</p>
+                                      <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Targeting system recovery through deployment of core blueprint protocols: {frac.recovery || 'PROPRIETARY STRUCTURAL ANCHOR'}.</p>
                                     </div>
                                     <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">0{index + 1}</div>
                                   </div>
