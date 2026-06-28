@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Lock, Unlock, Activity, Info } from "lucide-react";
+import { Lock, Unlock, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
@@ -12,7 +12,6 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
-// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -22,7 +21,6 @@ function RealTimeLossTicker({
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const frozenLossRef = useRef<number | null>(null);
 
-  // 🧮 Calculate dynamic velocity acceleration scaling factors from database anomaly metadata
   const severityVelocityMultiplier = useMemo(() => {
     let multiplier = 1.0;
     anomalies.forEach(anomaly => {
@@ -44,7 +42,6 @@ function RealTimeLossTicker({
 
     const calculateDeltaTime = () => {
       if (isArchived) return;
-
       const currentRealTime = Date.now();
       const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - baselineAnchorTime) / 1000);
       setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
@@ -58,7 +55,6 @@ function RealTimeLossTicker({
 
   let dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
-  // 🔒 ARCHIVE FREEZE LOCK SYSTEM
   if (isArchived) {
     if (frozenLossRef.current === null) {
       frozenLossRef.current = dynamicAccumulatedLoss;
@@ -83,7 +79,7 @@ export default function UnifiedResultsPortal() {
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [audit, setAudit] = useState<AuditRecord | null>(null);
+  const [audit, setAudit] = useState<any>(null);
 
   useEffect(() => { 
     setMounted(true); 
@@ -101,7 +97,7 @@ export default function UnifiedResultsPortal() {
           .single();
           
         if (error) throw error;
-        if (data) setAudit(data as AuditRecord);
+        if (data) setAudit(data);
       } catch (err) { 
         console.error("Audit state fetch failure:", err); 
       } finally { 
@@ -113,7 +109,7 @@ export default function UnifiedResultsPortal() {
 
     const channelSubscription = supabase.channel(`live-workshop-${id}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` }, 
-        (payload) => { if (payload.new) setAudit(payload.new as AuditRecord); }
+        (payload) => { if (payload.new) setAudit(payload.new); }
       ).subscribe();
 
     return () => { supabase.removeChannel(channelSubscription); };
@@ -146,21 +142,25 @@ export default function UnifiedResultsPortal() {
     }
 
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
-    const laborMultiplier = 0.5;
-    const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
     
+    // 🧠 HARMONIZED CORE LOGIC LAYER: Syncing with dynamic sector arrays from Admin Cockpit rules
+    const sector = audit?.sector || 'other';
+    const laborMultiplier = sector === 'finance' ? 0.5 : sector === 'healthcare' ? 0.45 : 0.4;
+    
+    const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
+    const directExposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+
     return {
       fteCount,
       totalLaborTaxPool,
       internalReworkTax: totalLaborTaxPool * 0.60,
       operationalDragTax: totalLaborTaxPool * 0.40,
-      exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15
+      exposure: directExposure
     };
-  }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit?.roi_pct, audit?.sector, live_sync, leakage, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
-  const fallbackDirectiveColor = isPhaseTwoActive ? "text-red-400" : "text-green-500";
 
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
@@ -217,7 +217,6 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
-        
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
@@ -258,7 +257,7 @@ export default function UnifiedResultsPortal() {
                   </span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-sm`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-base`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
 
@@ -269,7 +268,7 @@ export default function UnifiedResultsPortal() {
                   </span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-base`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
             </div>
@@ -279,17 +278,14 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
-            
-            {/* 🏎️ ACCELERATED TICKER INITIATION TRACE: Injects Date fallback to guarantee automated counting activation on generation */}
             {audit && (
               <RealTimeLossTicker 
-                diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
+                diagnosticCompletedAt={audit.created_at || new Date().toISOString()} 
                 exposure={metrics.exposure + metrics.totalLaborTaxPool} 
                 anomalies={activeAnomaliesList}
                 isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
               />
             )}
-            
             <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
               {audit?.status?.toUpperCase() === 'ARCHIVED' 
                 ? "// METRIC LOCKED // ARCHIVED FILE HISTORICAL VALUE" 
@@ -356,11 +352,9 @@ export default function UnifiedResultsPortal() {
                   body: JSON.stringify({ auditId: audit.id }),
                 }).catch((err) => console.error('Silent reminder cancellation skipped:', err));
               }
-
               const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
               const baseCalendlyUrl = "https://calendly.com/hello-bmradvisory/forensic-briefing";
               const specializedUrl = clientEmail ? `${baseCalendlyUrl}?email=${clientEmail}` : baseCalendlyUrl;
-              
               window.open(specializedUrl, "_blank");
             }}
           >
