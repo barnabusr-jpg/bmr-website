@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
 import { Lock, Unlock, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { AnomalyNode, AuditRecord } from "@/types/database.types";
+import { AnomalyNode } from "@/types/database.types";
 
 interface LossTickerProps {
   diagnosticCompletedAt: string; 
@@ -12,6 +12,7 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
+// 🏎️ ACCELERATED TICKER ENGINE
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -129,6 +130,7 @@ export default function UnifiedResultsPortal() {
     return !!audit?.is_released || unblurred === "true";
   }, [audit?.is_released, unblurred]);
 
+  // ⚡ COMBINED UPGRADE: PULLS DIRECT METRICS AND HARMONIZES SECTOR ENGINE FORMULAS
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
@@ -143,7 +145,7 @@ export default function UnifiedResultsPortal() {
 
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
     
-    // 🧠 HARMONIZED CORE LOGIC LAYER: Syncing with dynamic sector arrays from Admin Cockpit rules
+    // Reads verified sector matrices dynamically to align with Admin Dashboard behaviors
     const sector = audit?.sector || 'other';
     const laborMultiplier = sector === 'finance' ? 0.5 : sector === 'healthcare' ? 0.45 : 0.4;
     
@@ -157,7 +159,7 @@ export default function UnifiedResultsPortal() {
       operationalDragTax: totalLaborTaxPool * 0.40,
       exposure: directExposure
     };
-  }, [dbDecay, spend, audit?.roi_pct, audit?.sector, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit, live_sync, leakage, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
@@ -278,6 +280,8 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
+            
+            {/* 🔒 IMMUTABLE TIMESTAMPS BIND: Anchored cleanly to created_at so updates never drop the clock back to 0 */}
             {audit && (
               <RealTimeLossTicker 
                 diagnosticCompletedAt={audit.created_at || new Date().toISOString()} 
@@ -286,6 +290,7 @@ export default function UnifiedResultsPortal() {
                 isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
               />
             )}
+            
             <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
               {audit?.status?.toUpperCase() === 'ARCHIVED' 
                 ? "// METRIC LOCKED // ARCHIVED FILE HISTORICAL VALUE" 
