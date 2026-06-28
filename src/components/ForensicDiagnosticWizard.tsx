@@ -44,24 +44,20 @@ export default function ForensicDiagnosticWizard({
     setAnswers(prev => ({ ...prev, [questionId]: choiceKey }));
   };
 
-  // Terminate step loop immediately and bubble up responses cleanly to parent hub
   const compileActiveNodePosture = () => {
     setIsCompiling(true);
     
-    // Execute the pure client-side mathematical calculations out-of-band
+    // Execute calculations out-of-band cleanly
     const computedResults = calculateForensicMetrics(companyName, answers);
     
-    // Cache values securely in the user's browser sandbox session
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem(
         `bmr_runtime_${companyName}`, 
         JSON.stringify(computedResults)
       );
-      // Cache answers locally for parent state persistence checks
       window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(answers));
     }
     
-    // Hand properties straight back to the parent layout container (closes wizard)
     onCalculated(computedResults);
     setIsCompiling(false);
   };
@@ -103,17 +99,14 @@ export default function ForensicDiagnosticWizard({
         {activeQuestions.map((question, index) => (
           <div key={question.id} className="border border-slate-900 bg-slate-950/40 p-8 relative rounded-sm group/card">
             
-            {/* Metadata Label Readout */}
             <span className="text-[9px] font-mono text-slate-600 block mb-3 font-black tracking-widest not-italic">
               // TARGET NODE: {question.target_node || 'STAKEHOLDER'} // ID: {question.id}
             </span>
 
-            {/* 🎯 SCALED QUESTION SCENARIO: Bumped to look identical to heavy ledger title components */}
             <p className="text-2xl md:text-3xl text-white uppercase leading-tight tracking-tighter font-black mb-6 font-sans">
               {index + 1}. {question.symptomatic_scenario}
             </p>
             
-            {/* Options Layout Container Stack */}
             <div className="grid grid-cols-1 gap-3 mt-6 font-mono not-italic text-sm">
               {(Object.keys(question.choices) as Array<'A' | 'B' | 'C' | 'D'>).map((key) => {
                 const choice = question.choices[key];
@@ -122,13 +115,9 @@ export default function ForensicDiagnosticWizard({
                   <div 
                     key={key}
                     onClick={() => handleSelectOption(question.id, key)}
-                    className={`border p-5 cursor-pointer transition-all flex items-start gap-4 rounded-xs ${
-                      isSelected 
-                        ? 'bg-red-950/10 border-red-600 text-white' 
-                        : 'bg-black border-slate-800 text-slate-400 hover:border-slate-600 hover:bg-slate-900/30'
-                    }`}
+                    className="border p-5 cursor-pointer transition-all flex items-start gap-4 rounded-xs border-slate-800 text-slate-400 hover:border-slate-600 hover:bg-slate-900/30"
+                    style={isSelected ? { backgroundColor: 'rgba(153, 27, 27, 0.1)', borderColor: '#dc2626', color: '#ffffff' } : {}}
                   >
-                    {/* Aligned Key Selector Box */}
                     <span className={`text-xs font-black px-3 py-1 border shrink-0 transition-all rounded-xs ${
                       isSelected 
                         ? 'bg-red-600 text-white border-red-500' 
@@ -137,7 +126,6 @@ export default function ForensicDiagnosticWizard({
                       {key}
                     </span>
 
-                    {/* Standard Weight Normal-Case Option Text Layer */}
                     <p className={`leading-relaxed font-sans normal-case text-sm font-semibold pt-0.5 transition-colors ${
                       isSelected ? 'text-white' : 'text-slate-400'
                     }`}>
@@ -155,7 +143,7 @@ export default function ForensicDiagnosticWizard({
       {/* Bottom Pipeline Status Controller */}
       <div className="border-t border-slate-900 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono not-italic">
         <div className="text-[10px] text-slate-500 tracking-wider flex items-center gap-2 font-black">
-          <Shield size={14} className={isPillarIncomplete ? "text-slate-700" : "text-green-500"} /> 
+          <Shield size={14} className={isPillarIncomplete ? "text-slate-700" : "text-red-500"} /> 
           {isPillarIncomplete ? "ALL POSTURE SECTIONS MANDATORY" : "STAGE SECTOR VALIDATED // READY TO COMPUTE"}
         </div>
         
