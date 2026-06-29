@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { SectorType } from '../lib/supabaseAdapter';
+import { SectorType } from '@/lib/supabaseAdapter';
 import { Activity, AlertTriangle, Copy, Check } from 'lucide-react';
 import { compressToEncodedURIComponent } from 'lz-string';
 
