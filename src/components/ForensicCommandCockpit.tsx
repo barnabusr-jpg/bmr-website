@@ -31,23 +31,24 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics }:
   return (
     <div className="bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden p-10 max-w-[1600px] mx-auto pb-32">
       
-      {/* HEADER TELEMETRY READOUT (Dashboard Style) */}
-      <div className="flex items-center justify-between bg-black p-6 border border-slate-900 mb-6 no-print">
-        <div className="flex items-center gap-3 shrink-0">
-          <Activity className="text-red-600 animate-pulse" size={20} />
-          <span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">
-            // RISK MULTIPLIER SECTOR STATE: <span className="text-red-600">{metrics.multiplier.toFixed(2)}×</span> ({sectorLabel})
-          </span>
-        </div>
-        
-        <button
-          type="button"
-          onClick={() => typeof window !== 'undefined' && window.print()}
-          className="bg-zinc-100 text-black text-[10px] font-black px-6 py-2.5 uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all cursor-pointer font-mono shrink-0 leading-none"
-        >
-          PRINT SOW DOSSIER (PDF)
-        </button>
-      </div>
+      {/* HEADER TELEMETRY READOUT (Client-Safe Dashboard Style) */}
+<div className="flex items-center justify-between bg-black p-6 border border-slate-900 mb-6 no-print">
+  <div className="flex items-center gap-3 shrink-0">
+    <Activity className="text-red-600 animate-pulse" size={20} />
+    <span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">
+      {/* 🔒 MULTIPLIER SCRUBBED: Discloses classification level only, hiding raw math parameters */}
+      // SYSTEM RISK SECTOR REGIME: <span className="text-red-600">{sectorLabel}</span>
+    </span>
+  </div>
+  
+  <button
+    type="button"
+    onClick={() => typeof window !== 'undefined' && window.print()}
+    className="bg-zinc-100 text-black text-[10px] font-black px-6 py-2.5 uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all cursor-pointer font-mono shrink-0 leading-none"
+  >
+    PRINT SOW DOSSIER (PDF)
+  </button>
+</div>
 
       {/* MATCHING QUAD-STYLE SUMMARY CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 italic no-print">
