@@ -205,7 +205,8 @@ export default function UnifiedResultsPortal() {
     }
   ], [metrics.totalLaborTaxPool]);
 
-  const activeAnomaliesList = isPhaseTwoActive && audit?.fractures && audit.fractures.length > 0 ? audit.fractures : genericAnomalies;
+  // 🔒 HARD CODE PROTECTION: Guarantees text logs remain generic throughout this phase
+  const activeAnomaliesList = genericAnomalies;
 
   if (!mounted || loading || !router.isReady) {
     return (
@@ -326,7 +327,7 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        <div className="pt-8 text-left">
+        <div className="grid-vulnerabilities pt-8 text-left">
           <div className="border-b border-slate-900 pb-4 mb-8">
             <span className="text-[10px] font-mono text-slate-500 tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</span>
             <h3 className="text-3xl font-black tracking-tighter mt-1 text-white">IDENTIFIED SYSTEMIC ANOMALIES</h3>
@@ -334,17 +335,13 @@ export default function UnifiedResultsPortal() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {activeAnomaliesList.map((frac: any, index: number) => {
-              const isSecureGate = !isPhaseTwoActive;
               return (
-                <div key={frac.id || index} className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] ${!isSecureGate ? 'border-red-500/20 bg-red-950/5' : 'border-green-500/20 bg-green-950/5'}`}>
+                <div key={frac.id || index} className="border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] border-green-500/20 bg-green-950/5">
                   <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
                     <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
-                    <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border ${
-                      isPhaseTwoActive 
-                        ? 'bg-red-600/20 text-red-500 border-red-600/30' 
-                        : 'bg-green-600/20 text-green-500 border-green-600/30'
-                    }`}>
-                      {isPhaseTwoActive ? <Unlock size={10} /> : <Lock size={10} />} {isPhaseTwoActive ? (frac.severity || "CRITICAL RISK") : "SECURE GATE"}
+                    {/* 🔒 ACCORDION INDICATOR BADGES HARD-LOCKED TO SECURE GATE CONSTANT POSTURE */}
+                    <span className="text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border bg-green-600/20 text-green-500 border-green-600/30">
+                      <Lock size={10} /> SECURE GATE
                     </span>
                   </div>
                   <div className="my-6 space-y-2">
@@ -353,7 +350,7 @@ export default function UnifiedResultsPortal() {
                   </div>
                   <div className="border-t border-slate-900 pt-4 font-mono">
                     <div className="text-[9px] text-slate-600 tracking-widest mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
-                    <div className={`text-xs ${isPhaseTwoActive ? 'text-red-400 font-mono uppercase font-black' : 'text-green-500 font-sans tracking-wide font-medium normal-case'}`}>{frac.directive}</div>
+                    <div className="text-xs text-green-500 font-sans tracking-wide font-medium normal-case">{frac.directive}</div>
                   </div>
                 </div>
               );
