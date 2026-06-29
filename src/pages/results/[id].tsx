@@ -299,7 +299,7 @@ export default function UnifiedResultsPortal() {
             {/* 🔒 FIX: Locked velocity counter to audit.created_at to block administrative reset parameters */}
             {audit && (
               <RealTimeLossTicker 
-                diagnosticCompletedAt={audit.created_at || new Date().toISOString()} 
+                diagnosticCompletedAt={audit.compiled_at || audit.created_at || new Date().toISOString()} 
                 exposure={metrics.exposure + metrics.totalLaborTaxPool} 
                 anomalies={activeAnomaliesList}
                 isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
