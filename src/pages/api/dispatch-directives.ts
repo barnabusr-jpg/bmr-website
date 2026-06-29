@@ -31,7 +31,7 @@ const ROLE_MAP: Record<string, string> = {
   // 🛰️ ADD THESE NEW SYSTEM TARGET KEYS
   'ops_mgmt': 'MANAGERIAL',
   'system user': 'EXECUTIVE',
-  'system_user': 'EXECUTIVE'
+  'system_user': 'EXECUTIVE',
   'techMgmt': 'TECHNICAL',
   'opsMgmt': 'MANAGERIAL',
   'systemUser': 'EXECUTIVE',
