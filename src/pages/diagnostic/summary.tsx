@@ -3,9 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { Activity } from 'lucide-react';
-import { SectorType } from '../../lib/supabaseAdapter';
-import { calculateForensicMetrics } from '../../lib/forensic/calculus';
-import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
+import { SectorType } from '@/lib/supabaseAdapter';
+import ForensicCommandCockpit from '@/components/ForensicCommandCockpit';
 
 interface DecodedPayload {
   org: string;
@@ -41,22 +40,44 @@ export default function DiagnosticSummaryPage() {
     }
   }, [router.isReady, router.query.matrix]);
 
-  // Execute out-of-band computations safely once token unpacks from search params
+  // Execute out-of-band computations dynamically based on the link's state token payload
   const parsedDossier = React.useMemo(() => {
     if (!hydratedData) return null;
     
-    // Pass precise complete signature parameter map to lock calculation fallbacks
-    const calculatedMetrics = calculateForensicMetrics(
-      hydratedData.org, 
-      hydratedData.ans, 
-      hydratedData.sec || 'ENTERPRISE_SAAS'
-    );
+    // 📊 100% DYNAMIC STATE PARSER: Pulls raw user data right out of the compressed token answers object
+    const dbDecay = parseFloat(hydratedData.ans.decay_pct) || 24; 
+    const spend = parseFloat(hydratedData.ans.ai_spend) || 1.2;
+    const fteCount = parseInt(hydratedData.ans.roi_pct) || 6;
+    const complianceIndex = parseFloat(hydratedData.ans.sfi_score) || 78;
+    
+    const laborMultiplier = 0.5;
+    const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
+    
+    const sector = (hydratedData.sec || 'SERVICES_RETAIL').toLowerCase().trim();
+    let sectorInflationMultiplier = 1.2;
+
+    if (sector.includes('finance') || sector.includes('healthcare')) {
+      sectorInflationMultiplier = 1.5;
+    } else if (sector.includes('industrial') || sector.includes('logistics')) {
+      sectorInflationMultiplier = 1.5; 
+    } else if (sector.includes('saas') || sector.includes('enterprise')) {
+      sectorInflationMultiplier = 1.2;
+    }
+
+    const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
 
     return {
-      metrics: calculatedMetrics,
       companyName: hydratedData.org,
       sector: hydratedData.sec || 'ENTERPRISE_SAAS',
-      responses: hydratedData.ans
+      responses: hydratedData.ans,
+      metrics: {
+        multiplier: sectorInflationMultiplier,
+        complianceScore: complianceIndex, 
+        annualSalaryLeakage: totalLaborTaxPool,
+        unhedgedLegalExposure: exposure,
+        isTierThreeExposure: dbDecay >= 45,
+        regulatoryAlertActive: sectorInflationMultiplier >= 1.3
+      }
     };
   }, [hydratedData]);
 
