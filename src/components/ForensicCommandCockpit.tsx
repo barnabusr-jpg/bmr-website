@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { SectorType } from '../lib/supabaseAdapter';
-import { FileText, Shield, AlertTriangle, Activity } from 'lucide-react';
+import { Activity, AlertTriangle, Copy, Check } from 'lucide-react';
+import { compressToEncodedURIComponent } from 'lz-string';
 
 interface CockpitProps {
   companyName: string;
@@ -13,20 +14,47 @@ interface CockpitProps {
     isTierThreeExposure: boolean;
     regulatoryAlertActive: boolean;
   };
+  responses?: Record<string, any>; // 🚀 Added to capture stateless user inputs
 }
 
 /**
- * 🕹️ SECTOR-AWARE FORENSIC COMMAND COCKPIT (DASHBOARD-ALIGNED EDITION)
- * Inherits strict styling configurations from the main Admin Dashboard to maintain
- * perfect system-wide visual parity in production.
+ * 🕹️ SECTOR-AWARE FORENSIC COMMAND COCKPIT (CLEAN RETRIEVAL EDITION)
+ * Inherits strict dashboard parallax parity while adding a stateless, 
+ * zero-database magic link recovery module.
  */
-export default function ForensicCommandCockpit({ companyName, sector, metrics }: CockpitProps) {
+export default function ForensicCommandCockpit({ companyName, sector, metrics, responses = {} }: CockpitProps) {
+  const [copied, setCopied] = React.useState(false);
+
   const sectorLabel = {
     FINANCE_HEALTHCARE: 'Highly Regulated (Finance/Healthcare)',
     ENTERPRISE_SAAS: 'Enterprise/SaaS',
     INDUSTRIAL_LOGISTICS: 'Industrial/Logistics',
     SERVICES_RETAIL: 'Services/Retail (Baseline)',
   }[sector];
+
+  // 🔐 Compress contextual operational parameters into an immutable URL token
+  const magicLink = useMemo(() => {
+    if (typeof window === 'undefined' || !responses) return '';
+    
+    const payload = {
+      org: companyName,
+      sec: sector,
+      ans: responses
+    };
+    
+    const compressed = compressToEncodedURIComponent(JSON.stringify(payload));
+    return `${window.location.origin}/diagnostic/summary?matrix=${compressed}`;
+  }, [companyName, sector, responses]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(magicLink);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Clipboard write exception:', err);
+    }
+  };
 
   return (
     <div className="bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden p-10 max-w-[1600px] mx-auto pb-32">
@@ -36,7 +64,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics }:
         <div className="flex items-center gap-3 shrink-0">
           <Activity className="text-red-600 animate-pulse" size={20} />
           <span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">
-            {/* 🔒 FIXED: Displays clean, non-mathematical sector classification safely */}
             SYSTEM RISK SECTOR REGIME: <span className="text-red-600">{sectorLabel}</span>
           </span>
         </div>
@@ -146,6 +173,36 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics }:
             </div>
           </div>
 
+        </div>
+      </div>
+
+      {/* 🔗 STATELESS RECORD MAGIC LINK RETRIEVAL INTERFACE CARD */}
+      <div className="bg-slate-950/40 border border-slate-900 p-8 space-y-4 no-print">
+        <div>
+          <span className="text-[9px] font-mono text-red-500 font-black tracking-widest block">// IMMUTABLE RETRIEVAL LOG DEPLOYMENT</span>
+          <h4 className="text-xl font-black uppercase tracking-tight text-white mt-0.5">PERMANENT STATELESS SHARE URL</h4>
+          <p className="text-xs font-sans text-slate-400 font-normal normal-case not-italic mt-1 leading-relaxed">
+            This platform runs database-free architecture patterns. Bookmark or copy this cryptographically compressed hyperlink token to re-compile this exact Statement of Work dataset dynamically at any future date.
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row items-stretch gap-2 font-mono not-italic text-xs">
+          <input
+            type="text"
+            value={magicLink}
+            readOnly
+            onClick={(e) => (e.target as HTMLInputElement).select()}
+            className="flex-1 bg-black border border-slate-800 p-3 text-slate-300 font-mono text-[11px] focus:outline-none focus:border-slate-600 truncate selection:bg-red-950 selection:text-red-400"
+          />
+          <button
+            type="button"
+            onClick={handleCopy}
+            className={`px-6 py-3 font-sans font-black uppercase tracking-widest flex items-center justify-center gap-2 transition-all shrink-0 cursor-pointer ${
+              copied ? 'bg-green-600 text-white' : 'bg-red-600 text-white hover:bg-red-500'
+            }`}
+          >
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+            {copied ? 'COPIED' : 'COPY LEDGER LINK'}
+          </button>
         </div>
       </div>
 
