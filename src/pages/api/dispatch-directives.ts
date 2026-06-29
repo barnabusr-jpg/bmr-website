@@ -11,10 +11,31 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// 🚀 UPDATE THIS MATRIX TO MATCH YOUR FORM INPUTS
 const ROLE_MAP: Record<string, string> = {
-  'executive': 'EXECUTIVE', 'managerial': 'MANAGERIAL', 'technical': 'TECHNICAL',
-  'exec': 'EXECUTIVE', 'manager': 'MANAGERIAL', 'tech': 'TECHNICAL', 'man': 'MANAGERIAL',
-  'executivenode': 'EXECUTIVE', 'technicalnode': 'TECHNICAL', 'managerialnode': 'MANAGERIAL'
+  'executive': 'EXECUTIVE', 
+  'exec': 'EXECUTIVE',
+  'executivenode': 'EXECUTIVE', 
+  
+  'tech mgmt': 'TECHNICAL',
+  'technical': 'TECHNICAL', 
+  'tech': 'TECHNICAL', 
+  'technicalnode': 'TECHNICAL',
+  
+  'ops mgmt': 'MANAGERIAL', 
+  'managerial': 'MANAGERIAL', 
+  'manager': 'MANAGERIAL', 
+  'man': 'MANAGERIAL',
+  'managerialnode': 'MANAGERIAL',
+
+  // 🛰️ ADD THESE NEW SYSTEM TARGET KEYS
+  'ops_mgmt': 'MANAGERIAL',
+  'system user': 'EXECUTIVE',
+  'system_user': 'EXECUTIVE'
+  'techMgmt': 'TECHNICAL',
+  'opsMgmt': 'MANAGERIAL',
+  'systemUser': 'EXECUTIVE',
+
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
