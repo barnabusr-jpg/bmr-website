@@ -82,7 +82,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics }:
           <div className="not-italic">
             <span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// ENGAGEMENT_ROADMAP_CONFIGURATION</span>
             <h3 className="text-4xl font-black uppercase italic tracking-tighter text-black leading-none mt-1">
-              TARGET SOW DOSSIER: {companyName}
+              TARGET STRATEGIC VERDICT DOSSIER: {companyName}
             </h3>
           </div>
           <span className="text-[10px] font-mono text-slate-400 font-black tracking-wider uppercase">
