@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Lock, Unlock, Activity } from "lucide-react";
+import { Lock, Unlock, Activity, Info } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
@@ -35,19 +35,17 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
+    if (!diagnosticCompletedAt) {
+      setElapsedSeconds(0);
+      return;
+    }
+
+    const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
+
     const calculateDeltaTime = () => {
       if (isArchived) return;
 
-      // 🔒 HARD REAL-TIME RESOLUTION: Evaluates the prop dynamically on every tick
-      const anchorTimeString = diagnosticCompletedAt;
-      if (!anchorTimeString) {
-        setElapsedSeconds(0);
-        return;
-      }
-
-      const baselineAnchorTime = new Date(anchorTimeString).getTime();
       const currentRealTime = Date.now();
-      
       const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - baselineAnchorTime) / 1000);
       setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
     };
@@ -57,7 +55,7 @@ function RealTimeLossTicker({
 
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
-  
+
   let dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
 
   // 🔒 ARCHIVE FREEZE LOCK SYSTEM
@@ -135,7 +133,6 @@ export default function UnifiedResultsPortal() {
     return !!audit?.is_released || unblurred === "true";
   }, [audit?.is_released, unblurred]);
 
-  // 🧮 HARMONIZED CORE LOGIC CALCULUS LAYER
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
@@ -152,28 +149,14 @@ export default function UnifiedResultsPortal() {
     const laborMultiplier = 0.5;
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
     
-    // 🧠 THE SECTOR MULTIPLIER MATRIX RESOLUTION
-    const sector = (audit?.sector || 'services').toLowerCase().trim();
-    let sectorInflationMultiplier = 1.2; // Default fallback (Services)
-
-    if (sector === 'finance' || sector === 'compliance') {
-      sectorInflationMultiplier = 1.5;
-    } else if (sector === 'manufacturing' || sector === 'industrial' || sector === 'operations') {
-      sectorInflationMultiplier = 1.5; // Maps your 1.5 industrial intake card bounds precisely
-    } else if (sector === 'healthcare' || sector === 'liability') {
-      sectorInflationMultiplier = 1.3;
-    } else if (sector === 'services' || sector === 'labor') {
-      sectorInflationMultiplier = 1.2;
-    }
-    
     return {
       fteCount,
       totalLaborTaxPool,
       internalReworkTax: totalLaborTaxPool * 0.60,
       operationalDragTax: totalLaborTaxPool * 0.40,
-      exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier
+      exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15
     };
-  }, [dbDecay, spend, audit, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
@@ -297,10 +280,9 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* 🔒 FIX: Locked velocity counter to audit.created_at to block administrative reset parameters */}
             {audit && (
               <RealTimeLossTicker 
-                diagnosticCompletedAt={audit.compiled_at || audit.created_at || new Date().toISOString()} 
+                diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
                 exposure={metrics.exposure + metrics.totalLaborTaxPool} 
                 anomalies={activeAnomaliesList}
                 isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
@@ -327,7 +309,7 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        <div className="grid-vulnerabilities pt-8 text-left">
+        <div className="pt-8 text-left">
           <div className="border-b border-slate-900 pb-4 mb-8">
             <span className="text-[10px] font-mono text-slate-500 tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</span>
             <h3 className="text-3xl font-black tracking-tighter mt-1 text-white">IDENTIFIED SYSTEMIC ANOMALIES</h3>
@@ -335,11 +317,11 @@ export default function UnifiedResultsPortal() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {activeAnomaliesList.map((frac: any, index: number) => {
+              // 🔒 VISUAL HARD LOCK: Definitively locks the card elements to stay green and masked
               return (
                 <div key={frac.id || index} className="border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] border-green-500/20 bg-green-950/5">
                   <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
                     <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
-                    {/* 🔒 ACCORDION INDICATOR BADGES HARD-LOCKED TO SECURE GATE CONSTANT POSTURE */}
                     <span className="text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border bg-green-600/20 text-green-500 border-green-600/30">
                       <Lock size={10} /> SECURE GATE
                     </span>
