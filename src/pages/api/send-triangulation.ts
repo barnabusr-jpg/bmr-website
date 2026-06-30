@@ -55,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       
                       <div style="margin-bottom: 40px; border-left: 4px solid #dc2626; padding-left: 16px;">
                         <h2 style="color: #ffffff; font-weight: 900; font-style: italic; text-transform: uppercase; margin: 0; letter-spacing: 2px; font-size: 20px; line-height: 1.3;">
-                          // Triangulation Matrix Initialized
+                          // Quad-Node Assessment Initialized
                         </h2>
                         <p style="color: #64748b; font-family: monospace; font-size: 11px; margin: 6px 0 0 0; letter-spacing: 0.1em; font-weight: bold;">
                           TARGET ENTITY // ${formattedOrg}
