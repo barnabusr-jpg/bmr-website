@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         ],
         from: {
           email: 'hello@bmradvisory.co',
-          name: 'BMR Advisory'
+          name: 'BMR Solutions'
         },
         content: [
           {
