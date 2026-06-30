@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         personalizations: [
           {
             to: [{ email: targetEmail }],
-            subject: `ACTION REQUIRED: Triangulation Matrix Initialized // ${formattedOrg}`
+            subject: `ACTION REQUIRED: Quad-Node Assessment Initialized // ${formattedOrg}`
           }
         ],
         from: {
@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       </div>
 
                       <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
-                        BMR Advisory has initiated a specialized Forensic Diagnostic stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${activePillar} Framework Layer</strong>.
+                        BMR Solutions has initiated a specialized Quad-Node Assessment stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${activePillar} Framework Layer</strong>.
                       </p>
                       
                       <div style="background: #090d16; border: 1px solid #1e293b; padding: 32px; margin: 40px 0; text-align: center;">
