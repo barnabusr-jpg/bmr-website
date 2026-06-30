@@ -35,15 +35,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const autoReplyMsg = {
     to: email,
     from: 'hello@bmradvisory.co',
-    subject: 'Signal Received | BMR Advisory',
+    subject: 'Signal Received | BMR Solutions',
     html: `
       <div style="font-family: sans-serif; color: #020617; max-width: 600px; margin: 0 auto; line-height: 1.6;">
         <h2 style="color: #14b8a6; font-size: 24px; letter-spacing: -0.02em;">Inquiry Received.</h2>
-        <p>Thank you for reaching out to BMR Advisory, ${name.split(' ')[0]}.</p>
+        <p>Thank you for reaching out to BMR Solutions, ${name.split(' ')[0]}.</p>
         <p>We have received your strategic inquiry regarding <strong>${company || 'your organization'}</strong>. A strategist is currently reviewing the friction points you described.</p>
         <p>You can expect a direct response within 24–48 hours to discuss the specific architecture required to close your Promise Gap™.</p>
         <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-          <p style="margin: 0; font-weight: bold; color: #020617;">BMR Advisory</p>
+          <p style="margin: 0; font-weight: bold; color: #020617;">BMR Solutions</p>
           <p style="margin: 0; color: #64748b; font-size: 14px;">Trust. Govern. Evolve.</p>
         </div>
       </div>
