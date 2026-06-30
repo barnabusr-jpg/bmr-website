@@ -37,12 +37,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         personalizations: [
           {
             to: [{ email: targetEmail }],
-            subject: `ACTION REQUIRED: Triangulation Matrix Initialized // ${formattedOrg}`
+            subject: `ACTION REQUIRED: Quad-Node Assessment Initialized // ${formattedOrg}`
           }
         ],
         from: {
           email: 'hello@bmradvisory.co',
-          name: 'BMR Advisory'
+          name: 'BMR Solutions'
         },
         content: [
           {
@@ -55,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       
                       <div style="margin-bottom: 40px; border-left: 4px solid #dc2626; padding-left: 16px;">
                         <h2 style="color: #ffffff; font-weight: 900; font-style: italic; text-transform: uppercase; margin: 0; letter-spacing: 2px; font-size: 20px; line-height: 1.3;">
-                          // Triangulation Matrix Initialized
+                          // Quad-Node Assessment Initialized
                         </h2>
                         <p style="color: #64748b; font-family: monospace; font-size: 11px; margin: 6px 0 0 0; letter-spacing: 0.1em; font-weight: bold;">
                           TARGET ENTITY // ${formattedOrg}
@@ -68,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       </div>
 
                       <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
-                        BMR Advisory has initiated a specialized Forensic Diagnostic stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${activePillar} Framework Layer</strong>.
+                        BMR Solutions has initiated a specialized Quad-Node Assessment stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${activePillar} Framework Layer</strong>.
                       </p>
                       
                       <div style="background: #090d16; border: 1px solid #1e293b; padding: 32px; margin: 40px 0; text-align: center;">

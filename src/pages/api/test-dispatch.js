@@ -10,7 +10,7 @@ const mockPayload = {
   emails: {
     "executive": "barnabusr@gmail.com",
     "managerial": "hello@bmradvisory.co",
-    "technical": "test-engineer@bmrsolutions.co"
+    "technical": "test-engineer@bmradvisory.co"
   }
 };
 

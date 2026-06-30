@@ -19,7 +19,7 @@ export default function AboutPage() {
             Re-anchoring AI to <br/><span className="text-[#14b8a6]">Strategic Intent.</span>
           </h1>
           <p className="text-slate-400 text-xl max-w-3xl mx-auto leading-relaxed">
-            BMR Advisory was founded to solve the &quot;Promise Gap&quot;&mdash;the space where technical AI deployment fails to translate into realized operational value.
+            BMR Solutions was founded to solve the &quot;Promise Gap&quot;&mdash;the space where technical AI deployment fails to translate into realized operational value.
           </p>
         </section>
 
