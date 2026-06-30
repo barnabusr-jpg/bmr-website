@@ -48,7 +48,7 @@ export default function ComparisonGrid() {
               <tr className="bg-slate-950/80 border-b-2 border-slate-900">
                 <th className="p-8 text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] italic">Audit Vector</th>
                 <th className="p-8 text-slate-500 text-[10px] font-black uppercase tracking-[0.4em] italic">Standard Approach</th>
-                <th className="p-8 text-red-600 text-[10px] font-black uppercase tracking-[0.4em] italic">BMR Advisory</th>
+                <th className="p-8 text-red-600 text-[10px] font-black uppercase tracking-[0.4em] italic">BMR Solutions</th>
               </tr>
             </thead>
             <tbody>
