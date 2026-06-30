@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useEffect, useMemo } from 'react'; 
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
@@ -138,7 +139,7 @@ export default function ForensicEngineRoot() {
   }, []); 
 
   const handleLoadDemoParameters = () => { 
-    setCompanyName('MONDAY_MORNING_TEST'); 
+    setCompanyName('TUESDAY_MORNING_TEST_GLOBAL'); 
     setEmails({ 
       EXECUTIVE: 'barnabusr@gmail.com', 
       TECH_MGMT: 'barnabusr@outlook.com', 
@@ -260,7 +261,7 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  const allPersonasComplete = triangulation   
+  const allPersonasComplete = triangulation    
     ? Object.values(triangulation.completions).every(status => status === true) 
     : false; 
 
@@ -345,7 +346,7 @@ export default function ForensicEngineRoot() {
               <div> 
                 <h4 className="font-mono text-xs font-black text-zinc-300 uppercase tracking-widest mb-2">Administrative Access Required</h4> 
                 <p className="text-sm text-zinc-400 font-sans leading-relaxed tracking-normal font-normal"> 
-                  This triangulated assessment stream can only be authorized and initialized by a licensed administrator. Please contact your organization's workspace system supervisor to request access links for your assigned node endpoints. 
+                  This quad-node assessment stream can only be authorized and initialized by a licensed administrator. Please contact your organization's workspace system supervisor to request access links for your assigned node endpoints. 
                 </p> 
               </div> 
             </div> 
@@ -434,11 +435,12 @@ export default function ForensicEngineRoot() {
             )} 
 
             <div className="pt-4 space-y-3"> 
+              {/* 🚀 FIXED SUBMIT LINK TEXT LINE 188: */}
               <button 
                 type="submit" 
                 className="w-full bg-zinc-100 text-black font-sans text-sm font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md italic" 
               > 
-                Assemble Triangulation Matrix <ArrowRight size={14}/> 
+                Assemble Quad-Node Engine <ArrowRight size={14}/> 
               </button> 
 
               <button 
@@ -459,7 +461,7 @@ export default function ForensicEngineRoot() {
             <div className="flex items-center gap-3"> 
               <Users size={20} className="text-red-500" /> 
               <div> 
-                <h2 className="text-2xl font-black text-white uppercase tracking-tighter leading-none font-sans">// INFRASTRUCTURE TRIANGULATION MONITOR</h2> 
+                <h2 className="text-2xl font-black text-white uppercase tracking-tighter leading-none font-sans">// INFRASTRUCTURE QUAD-NODE MONITOR</h2> 
                 <span className="text-[9px] text-zinc-500 block mt-2 tracking-widest uppercase">// TARGET COMPANY ID: {triangulation.companyName} // PILLAR STREAM: {triangulation.pillar}</span> 
               </div> 
             </div> 
@@ -487,7 +489,6 @@ export default function ForensicEngineRoot() {
           <div className="space-y-3"> 
             {(Object.keys(triangulation.emails) as PersonaKey[]).map((persona) => { 
               const isDone = triangulation.completions[persona]; 
-              const cleanLabel = roleLabels[persona] || persona; 
               return ( 
                 <div key={persona} className="border border-slate-900 bg-black p-5 rounded-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
                   <div> 
@@ -500,8 +501,8 @@ export default function ForensicEngineRoot() {
                       <button 
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
-                          const subject = `CRITICAL ACTION REQUIRED: Triangulation Matrix Initialization for ${triangulation.companyName}`; 
-                          const body = `Team,\n\nYour specific vantage point is required to complete our assessment matrix under the ${triangulation.pillar} framework for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
+                          const subject = `ACTION REQUIRED: Quad-Node Assessment Initialized for ${triangulation.companyName}`; 
+                          const body = `Team,\n\nYour specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the ${triangulation.pillar} Framework Layer for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
                         className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0" 
@@ -528,7 +529,7 @@ export default function ForensicEngineRoot() {
           <div className="mt-8 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
             <div className="text-left">
               <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK MATRIX DEPENDENCY</span> 
-              
+               
               {/* ⚡ THE ADMINISTRATIVE BYPASS LINK */}
               {!allPersonasComplete && authorizedAdmin && (
                 <button
@@ -554,7 +555,7 @@ export default function ForensicEngineRoot() {
                   : 'bg-slate-950 text-slate-700 border border-slate-900 cursor-not-allowed' 
               }`} 
             > 
-              Compile Triangulated Cockpit 
+              Compile Cockpit Matrix 
             </button> 
           </div> 
         </div> 
@@ -616,10 +617,10 @@ export default function ForensicEngineRoot() {
                 If you have any questions regarding your team's structural data alignment mapping, please reach out to your designated supervisor or contact our advisory desk at:
               </p>
               <a 
-                href="mailto:Hello@BMRAdvisory.co" 
+                href="mailto:hello@bmrsolutions.com" 
                 className="block text-red-500 font-bold hover:text-white transition-colors text-xs lowercase mt-2 tracking-normal"
               >
-                Hello@BMRAdvisory.co
+                hello@bmrsolutions.com
               </a>
             </div>
           </div>

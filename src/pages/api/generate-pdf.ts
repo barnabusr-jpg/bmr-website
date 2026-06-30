@@ -19,26 +19,27 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: "NOT FOUND // SPECIFIED RECORD MISSING" });
     }
 
-    // 🎨 GLOBAL PERMANENT GREEN PROFILE DEFINITIONS
+    // 🎨 GLOBAL PERMANENT INDUSTRIAL RED PRODUCTION DEFINITIONS
     const orgName = audit.org_name || "EVALUATION CLIENT SYSTEM";
     const dbDecay = audit.decay_pct || 24;
     const spend = parseFloat(audit.ai_spend) || 1.2;
-    const fteCount = audit.roi_pct ? parseInt(audit.roi_pct) : Math.round((spend * 1000000) / 200000) || 5;
+    const fteCount = audit.roi_pct ? parseInt(audit.roi_pct) : Math.round((spend * 1000000) / 200000) || 6;
 
     // ⏳ CUSTOMER LIFECYCLE ACCUMULATION TRACKING AT PRINT TIME
     const historicalAnchorTime = new Date(audit.created_at).getTime();
     const currentRealTime = Date.now();
     const elapsedSeconds = Math.max(0, (currentRealTime - historicalAnchorTime) / 1000);
 
-    const laborMultiplier = 0.5;
-    const brandHexAccent = "#16a34a"; // Pure premium green design line
+    // 🧠 HARMONIZED CORE METRIC ENGINE: Syncing dynamic sector arrays across layouts precisely
+    const sector = audit.sector || 'other';
+    const laborMultiplier = sector === 'finance' ? 0.5 : sector === 'healthcare' ? 0.45 : 0.4;
+    const brandHexAccent = "#dc2626"; // Pure industrial red design line
 
     // Macro parent pool calculation
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
 
-    // FIX: Continuous linear exposure calculation replaces the old binary threshold block bug
-    const dynamicExposureRate = 0.22 * (dbDecay / 25); 
-    const exposure = (dynamicExposureRate * (spend * 1000000)) * 1.15;
+    // Continuous linear exposure calculation
+    const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
 
     // Computes the exact absolute lifecycle loss dropped between first submit and this PDF click
     const totalErosion = (exposure / 31536000) * elapsedSeconds;
@@ -55,7 +56,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       },
       { 
         id: `ANOMALY SEGMENT GAMMA // LOSS BASELINE $${(totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols." 
+        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
       },
       { 
         id: `ANOMALY SEGMENT DELTA // LOSS BASELINE $${(totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
@@ -105,7 +106,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .cell-value { font-size: 14px; font-weight: 900; color: #000000; margin-top: 4px; }
           .cell-value span { color: ${brandHexAccent}; }
           
-          .placard-right { text-align: right; min-w-[240px]; }
+          .placard-right { text-align: right; min-width: 240px; }
           .erosion-label { font-size: 9px; color: #64748b; font-weight: bold; display: block; margin-bottom: 4px; }
           .erosion-val { font-size: 32px; color: ${brandHexAccent}; font-weight: 900; tracking: -1px; }
 
@@ -113,7 +114,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           .anomaly-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
           .node-card { border: 1px solid #1e293b; background-color: rgba(5, 11, 24, 0.6); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; min-height: 240px; }
           .node-top { border-bottom: 1px solid #1e293b; padding-bottom: 10px; margin-bottom: 12px; font-size: 10px; color: #475569; text-align: left; }
-          .node-top span { float: right; background-color: rgba(22, 163, 74, 0.1); color: ${brandHexAccent}; padding: 1px 6px; font-size: 9px; border: 1px solid rgba(22, 163, 74, 0.2); }
+          .node-top span { float: right; background-color: rgba(220, 38, 38, 0.1); color: ${brandHexAccent}; padding: 1px 6px; font-size: 9px; border: 1px solid rgba(220, 38, 38, 0.2); }
           .node-title { font-size: 16px; font-weight: 900; color: #ffffff; margin-bottom: 8px; text-align: left; }
           .node-desc { font-family: monospace; font-size: 11px; color: #94a3b8; text-transform: uppercase; line-height: 1.5; margin-bottom: 15px; text-align: left; }
           .directive-label { font-size: 8px; color: #475569; margin-bottom: 2px; text-align: left; }

@@ -14,7 +14,7 @@ export default function Document() {
         />
         
         {/* 🏛️ OPEN GRAPH (SOCIAL PREVIEW) */}
-        <meta property="og:title" content="BMR Advisory | Forensic AI Audit" />
+        <meta property="og:title" content="BMR Solutions | Forensic AI Audit" />
         <meta 
           property="og:description" 
           content="Identify systemic friction and quantify the fiscal bleed of logic rot in your AI infrastructure." 

@@ -82,7 +82,7 @@ export const StressTestUI = () => {
           <h2 className="text-2xl font-bold text-slate-900 mb-2 uppercase tracking-tight">Scan Complete</h2>
           <p className="text-slate-600 text-sm leading-relaxed mb-8">
             Your representative data for the <strong>{activeLens}</strong> lens has been logged for forensic reconciliation. 
-            The final Verdict is currently being processed by BMR Advisory.
+            The final Verdict is currently being processed by BMR Solutions.
           </p>
           <div className="py-2 px-4 bg-slate-100 border rounded text-[10px] font-mono text-slate-500 uppercase tracking-widest">
             Status: Awaiting Owner Authorization

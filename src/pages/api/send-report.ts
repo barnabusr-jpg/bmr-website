@@ -61,7 +61,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         </div>
         
         <p style="font-size: 10px; color: #94a3b8; margin-top: 50px; text-align: center; text-transform: uppercase; letter-spacing: 1px;">
-          BMR ADVISORY // SECURE AUDIT DISPATCH // CONFIDENTIAL
+          BMR SOLUTIONS // SECURE AUDIT DISPATCH // CONFIDENTIAL
         </p>
       </div>`
   };

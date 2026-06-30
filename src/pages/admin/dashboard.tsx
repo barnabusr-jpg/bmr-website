@@ -44,7 +44,6 @@ export default function AdminDashboard() {
   const ROWS_PER_PAGE = 10;
 
   const [dossierNotes, setDossierNotes] = useState<Record<string, string>>({});
-
   const debounceTimersRef = useRef<Record<string, NodeJS.Timeout>>({});
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -65,7 +64,7 @@ export default function AdminDashboard() {
 
     let query = supabase
       .from('audits')
-      .select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid', { count: 'exact' });
+      .select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid, sector', { count: 'exact' });
 
     if (statusFilter !== "ALL") {
       query = query.eq('status', statusFilter);
@@ -188,7 +187,7 @@ export default function AdminDashboard() {
       
       if (res.ok) {
         setIsUpdating(false);
-        let query = supabase.from('audits').select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid').eq('id', auditId).single();
+        let query = supabase.from('audits').select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid, sector').eq('id', auditId).single();
         const { data: cleanAudit } = await query;
         if (cleanAudit) {
           setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
@@ -303,7 +302,7 @@ export default function AdminDashboard() {
                 
                 if (activeAudit) {
                   const entityCode = `${activeAudit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
-                  const targetPillar = activeAudit.sfi_score >= 45 ? "AVS" : "IGF"; 
+                  const targetPillar = (activeAudit.sfi_score || activeAudit.decay_pct) >= 45 ? "AVS" : "IGF"; 
                   
                   const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
                   const mgrNode  = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
@@ -417,14 +416,33 @@ export default function AdminDashboard() {
                 data.map((audit) => {
                   const clientHasAccess = !!audit.is_released;
 
-                  const sfi = audit.sfi_score || 0;
-                  const realFractures = audit.fractures || [];
                   const dbDecay = audit.decay_pct || 24;
+                  const sfi = audit.sfi_score || dbDecay;
+                  const realFractures = audit.fractures || [];
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
-                  const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
+                  
+                  // 🔒 UPGRADED FIXED PARAMETER MULTIPLIERS FOR TOTAL WORKFORCE ACCOUNTING
+                  const laborMultiplier = 0.5;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
-                  const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+                  
+                  // 🧠 INTAKE STRATEGY FOCUS MARKUP MATRIX RESOLUTION
+                  const sectorKey = (audit.sector || 'services').toLowerCase().trim();
+                  let sectorInflationMultiplier = 1.2;
+
+                  if (sectorKey === 'finance' || sectorKey === 'compliance') {
+                    sectorInflationMultiplier = 1.5;
+                  } else if (sectorKey === 'manufacturing' || sectorKey === 'industrial' || sectorKey === 'operations') {
+                    sectorInflationMultiplier = 1.5; 
+                  } else if (sectorKey === 'healthcare' || sectorKey === 'liability') {
+                    sectorInflationMultiplier = 1.3;
+                  } else if (sectorKey === 'services' || sectorKey === 'labor') {
+                    sectorInflationMultiplier = 1.2;
+                  }
+
+                  // 📊 HIGH-FIDELITY CORE CALCULUS EQUATION ALIGNMENT
+                  const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
+                  const totalLeakage = laborTax + exposure;
 
                   let playbookHeadline = "BALANCED INFRASTRUCTURE STATE";
                   let playbookNarrative = "Operational alignment metrics indicate standard operational velocity. Cross-functional communication tracks are solid, and system parameters are matching organizational intent.";
@@ -437,6 +455,7 @@ export default function AdminDashboard() {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
                     playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
                     playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
+                    targetTier = "TIER_02 // MULTI-NODE TRIANGULATION";
                   } else if (cleanStatus === "ARCHIVED") {
                     playbookHeadline = "RECORD DEACTIVATED // HISTORICAL STORAGE";
                     playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing telemetry channels are hard-locked.";
@@ -449,7 +468,7 @@ export default function AdminDashboard() {
                     targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
                   } else if (sfi >= 0) {
                     playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
-                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrating inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
+                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrations inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
                     playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
                     targetTier = "TIER_02 // STRUCTURAL HARDENING";
                   }
@@ -468,7 +487,7 @@ export default function AdminDashboard() {
                         </div>
                         
                         <div className="col-span-4 text-center font-black italic text-xs tracking-[0.2em] font-mono flex items-center justify-center gap-3">
-                          {audit.sfi_score >= 45 && cleanStatus !== "ARCHIVED" && (
+                          {sfi >= 45 && cleanStatus !== "ARCHIVED" && (
                             <span className="bg-red-600/10 text-red-500 border border-red-600/30 px-3 py-1 text-[9px] font-mono tracking-widest uppercase block font-black animate-pulse shrink-0">
                               ⚠️ CRITICAL EXPOSURE ALERT
                             </span>
@@ -486,7 +505,6 @@ export default function AdminDashboard() {
                       
                       {expandedRow === audit.id && (
                         <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
-                          
                           <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
                             {[
                               { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
@@ -500,13 +518,13 @@ export default function AdminDashboard() {
                                 <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
                                   <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
                                     <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
-                                    
                                     {isDone ? (
                                       <CheckCircle className="text-green-500" size={14}/>
                                     ) : (
                                       <div className="flex items-center gap-2">
                                         <button 
                                           type="button"
+                                          role="button"
                                           title="Fire Email Reminder Nudge" 
                                           disabled={isUpdating || cleanStatus === "ARCHIVED"}
                                           onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
@@ -519,7 +537,7 @@ export default function AdminDashboard() {
                                     )}
                                   </div>
                                   
-                                  <div className="flex-1 flex flex-col justify-center items-center text-center py-4">
+                                  <div className="text-center py-4">
                                     <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-green-500' : 'text-2xl text-slate-800 animate-pulse'}`}>
                                       {isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}
                                     </div>
@@ -562,7 +580,6 @@ export default function AdminDashboard() {
                           </div>
 
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                            
                             <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
                               <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
                               <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
@@ -570,7 +587,7 @@ export default function AdminDashboard() {
                                 <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
                                 <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                                 <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${(laborTax + exposure).toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                               </div>
                             </div>
 
@@ -640,7 +657,7 @@ export default function AdminDashboard() {
                                         <span className="text-red-600 font-black uppercase">{frac.severity} RISK</span>
                                       </div>
                                       <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">{frac.directive.replace("Implement ", "")} Integration</h5>
-                                      <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Targeting system recovery through deployment of core blueprint protocols: {frac.recovery}.</p>
+                                      <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Targeting system recovery through deployment of core blueprint protocols: {frac.recovery || 'PROPRIETARY STRUCTURAL ANCHOR'}.</p>
                                     </div>
                                     <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">0{index + 1}</div>
                                   </div>
@@ -727,6 +744,7 @@ export default function AdminDashboard() {
                                 <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border cursor-pointer disabled:opacity-20 ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
                               </div>
                             </div>
+                            
                             <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
                               
@@ -746,22 +764,12 @@ export default function AdminDashboard() {
                                   type="button" 
                                   onClick={(e) => { 
                                     e.stopPropagation(); 
-                                    const dbDecay = audit.decay_pct || 24;
-                                    const spend = parseFloat(audit.ai_spend) || 1.2;
-                                    const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 5;
-                                    const laborMultiplier = audit.sector === 'finance' ? 0.5 : audit.sector === 'healthcare' ? 0.45 : 0.4;
-                                    
-                                    const laborTax = Math.round((dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3));
-                                    const exposure = Math.round(((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15);
-                                    const totalLeakage = laborTax + exposure;
-
-                                    window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${totalLeakage}&tax=${laborTax}`, '_blank');
+                                    window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${exposure + laborTax}&tax=${laborTax}`, '_blank');
                                   }} 
                                   className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"
                                 >
                                   <Monitor size={18} /> Open Onscreen Ledger
                                 </button>
-                                
                                 <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
                               </div>
                             </div>
