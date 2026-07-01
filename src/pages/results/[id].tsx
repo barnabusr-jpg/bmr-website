@@ -1,11 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Lock, Unlock, Activity, Info } from "lucide-react";
+import { Lock, Unlock, Activity } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
-interface LossTickerProps {
+interface LossTickerProps { 
   diagnosticCompletedAt: string; 
   exposure: number;
   anomalies: Array<{ severity: string }>;
@@ -130,8 +130,8 @@ export default function UnifiedResultsPortal() {
   }, [live_sync, querySpend, audit?.ai_spend]);
 
   const isPhaseTwoActive = useMemo(() => {
-    return !!audit?.is_released || unblurred === "true";
-  }, [audit?.is_released, unblurred]);
+    return !!audit?.is_released || unblurred === "true" || audit?.status?.toUpperCase() === 'PAID';
+  }, [audit?.is_released, unblurred, audit?.status]);
 
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
@@ -188,8 +188,18 @@ export default function UnifiedResultsPortal() {
     }
   ], [metrics.totalLaborTaxPool]);
 
-  // 🔒 HARD CODE PROTECTION: Guarantees text logs remain generic throughout this phase
-  const activeAnomaliesList = genericAnomalies;
+  // 🔓 DYNAMIC BREAK SYSTEM: Unmasks real 360 Deep Dive details if paid/released
+  const activeAnomaliesList = useMemo(() => {
+    if (isPhaseTwoActive && audit?.anomalies && audit.anomalies.length > 0) {
+      return audit.anomalies.map((anom: any) => ({
+        id: anom.title || anom.anomaly_id || "IDENTIFIED SYSTEMIC ANOMALY",
+        description: anom.description || anom.impact_narrative || "No description provided.",
+        severity: anom.severity?.toUpperCase() || "CRITICAL",
+        directive: anom.remediation_directive || anom.directive || "Remediation plan held in terminal ledger state."
+      }));
+    }
+    return genericAnomalies;
+  }, [isPhaseTwoActive, audit?.anomalies, genericAnomalies]);
 
   if (!mounted || loading || !router.isReady) {
     return (
@@ -317,22 +327,33 @@ export default function UnifiedResultsPortal() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {activeAnomaliesList.map((frac: any, index: number) => {
-              // 🔒 VISUAL HARD LOCK: Definitively locks the card elements to stay green and masked
               return (
-                <div key={frac.id || index} className="border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] border-green-500/20 bg-green-950/5">
+                <div 
+                  key={frac.id || index} 
+                  className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] transition-all ${
+                    isPhaseTwoActive 
+                      ? 'border-red-500/20 bg-red-950/5' 
+                      : 'border-green-500/20 bg-green-950/5'
+                  }`}
+                >
                   <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
                     <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
-                    <span className="text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border bg-green-600/20 text-green-500 border-green-600/30">
-                      <Lock size={10} /> SECURE GATE
+                    <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border uppercase ${
+                      isPhaseTwoActive 
+                        ? 'bg-red-600/20 text-red-500 border-red-600/30' 
+                        : 'bg-green-600/20 text-green-500 border-green-600/30'
+                    }`}>
+                      {isPhaseTwoActive ? <Unlock size={10} /> : <Lock size={10} />} 
+                      {isPhaseTwoActive ? frac.severity : "SECURE GATE"}
                     </span>
                   </div>
                   <div className="my-6 space-y-2">
                     <h4 className="text-xl font-black text-white font-mono">{String(frac.id || 'ANOMALY DETECTED')}</h4>
-                    <p className="text-xs font-mono text-slate-300 font-normal leading-relaxed">{frac.description}</p>
+                    <p className="text-xs font-mono text-slate-300 font-normal leading-relaxed normal-case">{frac.description}</p>
                   </div>
                   <div className="border-t border-slate-900 pt-4 font-mono">
                     <div className="text-[9px] text-slate-600 tracking-widest mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
-                    <div className="text-xs text-green-500 font-sans tracking-wide font-medium normal-case">{frac.directive}</div>
+                    <div className={`text-xs font-sans tracking-wide font-medium normal-case ${accentColorClass}`}>{frac.directive}</div>
                   </div>
                 </div>
               );
