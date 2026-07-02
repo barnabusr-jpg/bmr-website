@@ -84,6 +84,7 @@ export default function UnifiedResultsPortal() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<AuditRecord | null>(null);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false); // Controlled structural state modifier
 
   useEffect(() => { 
     setMounted(true); 
@@ -371,21 +372,31 @@ export default function UnifiedResultsPortal() {
         <div className="pt-6">
           <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
             
-            {/* 🔴 ACTIVE BUTTON GATING: Explicit logic check preventing execution before payment validation */}
-            <button
-              disabled={!isPaidGateUnlocked}
-              onClick={async () => {
-                if (!isPaidGateUnlocked) return;
-              }}
-              className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
-                isPaidGateUnlocked
-                  ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
-                  : "bg-slate-900/40 text-slate-600 border-slate-950 cursor-not-allowed opacity-40"
-              }`}
-            >
-              <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
-              {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
-            </button>
+            {/* 🔴 TERMINAL SYSTEM BUTTON: RE-COUPLED WITH SOLID COGNITIVE EVENT BLOCK EXCLUSIONS */}
+            <div className="w-full">
+              <button
+                disabled={!isPaidGateUnlocked}
+                onClick={(e) => {
+                  // 🚫 INTERCEPTION LAYER: Stops execution and modal bubbling completely if payment verification is missing
+                  if (!isPaidGateUnlocked) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
+                  
+                  // 🟢 OPEN LAUNCHPAD SEQUENCE (Only reached if status evaluates to PAID)
+                  setIsEmailModalOpen(true);
+                }}
+                className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
+                  isPaidGateUnlocked
+                    ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
+                    : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none shadow-none"
+                }`}
+              >
+                <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
+                {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
+              </button>
+            </div>
 
             {/* COMPILE PARTIAL ANSWERS: Accessible configuration handoff for mid-funnel client sessions */}
             <button 
