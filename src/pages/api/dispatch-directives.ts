@@ -11,7 +11,6 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// 🚀 UPDATE THIS MATRIX TO MATCH YOUR FORM INPUTS
 const ROLE_MAP: Record<string, string> = {
   'executive': 'EXECUTIVE', 
   'exec': 'EXECUTIVE',
@@ -28,14 +27,12 @@ const ROLE_MAP: Record<string, string> = {
   'man': 'MANAGERIAL',
   'managerialnode': 'MANAGERIAL',
 
-  // 🛰️ ADD THESE NEW SYSTEM TARGET KEYS
   'ops_mgmt': 'MANAGERIAL',
   'system user': 'EXECUTIVE',
   'system_user': 'EXECUTIVE',
   'techMgmt': 'TECHNICAL',
   'opsMgmt': 'MANAGERIAL',
   'systemUser': 'EXECUTIVE',
-
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -47,7 +44,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   const { groupId, orgName, emails, parentAuditId } = req.body;
   
-  // 🌐 FIXED ROUTING DOMAIN PROTOCOL
   const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://bmradvisory.co';
   const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co'; 
 
@@ -59,9 +55,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const roles = Object.entries(emails);
     const emailPromises = [];
-    const intakeRecords = [];
 
-    // Structural Normalization and Token Preparation Loop
+    // 🔄 PURE CODE STATE CHECK AND INGESTION PROTOCOL
     for (const [rawRole, email] of roles) {
       const targetEmail = (email as string).trim().toLowerCase();
       if (!targetEmail) continue;
@@ -78,22 +73,50 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      intakeRecords.push({
-        audit_id: parentAuditId,
-        group_id: groupId,
-        email: targetEmail,
-        persona_type: standardizedRole,
-        access_code: code,
-        is_authorized: true,
-        status: 'pending',
-        survey_completed: false
-      });
+      // Look up if a record for this persona already exists on this specific audit container
+      const { data: existingNode, error: checkError } = await supabaseAdmin
+        .from('operators')
+        .select('id')
+        .eq('audit_id', parentAuditId)
+        .eq('persona_type', standardizedRole)
+        .maybeSingle();
+
+      if (checkError) throw checkError;
+
+      if (existingNode) {
+        // 🎯 TARGET PATCH: Overwrite the typoed email address field on the exact container ID found
+        const { error: updateError } = await supabaseAdmin
+          .from('operators')
+          .update({
+            email: targetEmail,
+            access_code: code, // Issues a fresh secure entry token configuration
+            status: 'pending'  // Resets lane to clear prior submission metrics
+          })
+          .eq('id', existingNode.id);
+
+        if (updateError) throw updateError;
+      } else {
+        // ➕ SAFE INSERTION: Create the structural row container if this is the initial workspace launch setup
+        const { error: insertError } = await supabaseAdmin
+          .from('operators')
+          .insert({
+            audit_id: parentAuditId,
+            group_id: groupId,
+            email: targetEmail,
+            persona_type: standardizedRole,
+            access_code: code,
+            is_authorized: true,
+            status: 'pending',
+            survey_completed: false
+          });
+
+        if (insertError) throw insertError;
+      }
 
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
       emailPromises.push(sgMail.send({
         to: targetEmail,
-        // 📧 BRAND DISPLAY NAME UPGRADE: Uses "BMR SOLUTIONS" purely as display alias on secure domain outbound mail
         from: {
           name: "BMR SOLUTIONS",
           email: FROM_EMAIL
@@ -146,16 +169,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    if (intakeRecords.length > 0) {
-      const { error: upsertError } = await supabaseAdmin
-        .from('operators')
-        .upsert(intakeRecords, { onConflict: 'audit_id,email' });
-
-      if (upsertError) {
-        throw new Error(`Database Upsert Mapping Failure: ${upsertError.message}`);
-      }
-    }
-
     // Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
     const { data: allOperators, error: queryError } = await supabaseAdmin
       .from('operators')
@@ -205,8 +218,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const cleanSystemTimestamp = new Date().toISOString();
 
-    // 🔒 RECONCILIATION PRESERVATION SYSTEM
-    // Transitions row to 'TRIANGULATING' while protecting Phase 1 decay score values from calculation resets
     const { error: updateError } = await supabaseAdmin
       .from('audits')
       .update({ 
