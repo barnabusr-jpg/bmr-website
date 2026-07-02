@@ -227,7 +227,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .eq('id', parentAuditId);
 
     if (updateError) {
-      throw new Error suicide(`Primary Ledger State Compilation Error: ${updateError.message}`);
+      throw new Error(`Primary Ledger State Compilation Error: ${updateError.message}`);
     }
 
     try {
