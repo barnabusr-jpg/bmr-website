@@ -372,7 +372,7 @@ export default function UnifiedResultsPortal() {
         <div className="pt-6">
           <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
             
-            {/* 🔴 TERMINAL SYSTEM BUTTON: RE-COUPLED WITH SOLID COGNITIVE EVENT BLOCK EXCLUSIONS */}
+            {/* 🔴 TERMINAL SYSTEM BUTTON: TIED EXCLUSIVELY TO IS_PAID STATUS GATE */}
             <div className="w-full">
               <button
                 disabled={!isPaidGateUnlocked}
