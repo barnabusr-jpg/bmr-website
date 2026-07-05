@@ -321,7 +321,7 @@ export default function UnifiedResultsPortal() {
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>{`$${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}</div>
+            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
