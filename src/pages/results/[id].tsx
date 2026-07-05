@@ -84,6 +84,7 @@ export default function UnifiedResultsPortal() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<AuditRecord | null>(null);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false); // Controlled structural state modifier
 
   useEffect(() => { 
     setMounted(true); 
@@ -129,9 +130,15 @@ export default function UnifiedResultsPortal() {
     return audit?.ai_spend || 1.2;
   }, [live_sync, querySpend, audit?.ai_spend]);
 
-  const isPhaseTwoActive = useMemo(() => {
+  // 👁️ ADMIN BRIEFING CONTROL: Manages visibility of upper overview metrics panel
+  const isDossierUnblurred = useMemo(() => {
     return !!audit?.is_released || unblurred === "true" || audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.is_released, unblurred, audit?.status]);
+
+  // 🔒 TRANSACTIONAL PHASE GATE CONTROL: Decoupled gate strictly protecting anomaly matrices
+  const isPaidGateUnlocked = useMemo(() => {
+    return audit?.status?.toUpperCase() === 'PAID';
+  }, [audit?.status]);
 
   const metrics = useMemo(() => {
     if (live_sync === "true" && leakage && tax) {
@@ -158,8 +165,8 @@ export default function UnifiedResultsPortal() {
     };
   }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
 
-  const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
-  const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
+  const accentColorClass = isDossierUnblurred ? "text-red-500" : "text-green-500"; 
+  const borderAccentClass = isDossierUnblurred ? "border-red-600" : "border-green-600"; 
 
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
@@ -188,9 +195,9 @@ export default function UnifiedResultsPortal() {
     }
   ], [metrics.totalLaborTaxPool]);
 
-  // 🔓 DYNAMIC BREAK SYSTEM: Unmasks real 360 Deep Dive details if paid/released
+  // 🔓 DYNAMIC BREAK SYSTEM: Only unmasks real database payload anomalies when PAID gate evaluates true
   const activeAnomaliesList = useMemo(() => {
-    if (isPhaseTwoActive && audit?.anomalies && audit.anomalies.length > 0) {
+    if (isPaidGateUnlocked && audit?.anomalies && audit.anomalies.length > 0) {
       return audit.anomalies.map((anom: any) => ({
         id: anom.title || anom.anomaly_id || "IDENTIFIED SYSTEMIC ANOMALY",
         description: anom.description || anom.impact_narrative || "No description provided.",
@@ -199,7 +206,7 @@ export default function UnifiedResultsPortal() {
       }));
     }
     return genericAnomalies;
-  }, [isPhaseTwoActive, audit?.anomalies, genericAnomalies]);
+  }, [isPaidGateUnlocked, audit?.anomalies, genericAnomalies]);
 
   if (!mounted || loading || !router.isReady) {
     return (
@@ -216,10 +223,10 @@ export default function UnifiedResultsPortal() {
         <div>
           <div className="text-white text-xl tracking-tighter italic">BMR<span className={accentColorClass}>SOLUTIONS</span></div>
           <span className={`text-[8px] font-mono uppercase tracking-[0.3em] italic block mt-0.5 ${accentColorClass}`}>
-            {isPhaseTwoActive ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
+            {isDossierUnblurred ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
           </span>
         </div>
-        {isPhaseTwoActive && (
+        {isDossierUnblurred && (
           <button onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono">
               DOWNLOAD FORENSIC LEDGER PDF
           </button>
@@ -231,7 +238,7 @@ export default function UnifiedResultsPortal() {
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
-            {isPhaseTwoActive 
+            {isDossierUnblurred 
               ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
               : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
             }
@@ -242,7 +249,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
             <div>
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none md:leading-none text-black break-words">
-                {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
+                {isDossierUnblurred ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
               </h1>
               <p className="text-[10px] md:text-[11px] font-mono text-slate-400 tracking-widest mt-2.5">
                 TARGET IDENTIFIER // {audit?.org_name || "EVALUATION CLIENT SYSTEM"}
@@ -331,7 +338,7 @@ export default function UnifiedResultsPortal() {
                 <div 
                   key={frac.id || index} 
                   className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] transition-all ${
-                    isPhaseTwoActive 
+                    isPaidGateUnlocked 
                       ? 'border-red-500/20 bg-red-950/5' 
                       : 'border-green-500/20 bg-green-950/5'
                   }`}
@@ -339,12 +346,12 @@ export default function UnifiedResultsPortal() {
                   <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
                     <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
                     <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border uppercase ${
-                      isPhaseTwoActive 
+                      isPaidGateUnlocked 
                         ? 'bg-red-600/20 text-red-500 border-red-600/30' 
                         : 'bg-green-600/20 text-green-500 border-green-600/30'
                     }`}>
-                      {isPhaseTwoActive ? <Unlock size={10} /> : <Lock size={10} />} 
-                      {isPhaseTwoActive ? frac.severity : "SECURE GATE"}
+                      {isPaidGateUnlocked ? <Unlock size={10} /> : <Lock size={10} />} 
+                      {isPaidGateUnlocked ? frac.severity : "SECURE GATE"}
                     </span>
                   </div>
                   <div className="my-6 space-y-2">
@@ -361,29 +368,60 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {!isPhaseTwoActive && (
-          <div 
-            className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
-            onClick={async () => {
-              if (audit?.id) {
-                fetch('/api/cancel-reminder', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ auditId: audit.id }),
-                }).catch((err) => console.error('Silent reminder cancellation skipped:', err));
-              }
+        {/* 🛡️ LOCKED GATE INTERACTIVE CONTROLS CONTAINER */}
+        <div className="pt-6">
+          <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
+            
+            {/* 🔴 TERMINAL SYSTEM BUTTON: RE-COUPLED WITH SOLID COGNITIVE EVENT BLOCK EXCLUSIONS */}
+            <div className="w-full">
+              <button
+                disabled={!isPaidGateUnlocked}
+                onClick={(e) => {
+                  // 🚫 INTERCEPTION LAYER: Stops execution and modal bubbling completely if payment verification is missing
+                  if (!isPaidGateUnlocked) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
+                  
+                  // 🟢 OPEN LAUNCHPAD SEQUENCE (Only reached if status evaluates to PAID)
+                  setIsEmailModalOpen(true);
+                }}
+                className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
+                  isPaidGateUnlocked
+                    ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
+                    : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none shadow-none"
+                }`}
+              >
+                <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
+                {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
+              </button>
+            </div>
 
-              const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
-              const baseCalendlyUrl = "https://calendly.com/hello-bmradvisory/forensic-briefing";
-              const specializedUrl = clientEmail ? `${baseCalendlyUrl}?email=${clientEmail}` : baseCalendlyUrl;
-              
-              window.open(specializedUrl, "_blank");
-            }}
-          >
-            <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
-            <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
+            {/* COMPILE PARTIAL ANSWERS: Accessible configuration handoff for mid-funnel client sessions */}
+            <button 
+              onClick={() => {
+                if (audit?.id) {
+                  fetch('/api/cancel-reminder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ auditId: audit.id }),
+                  }).catch((err) => console.error('Silent reminder cancellation skipped:', err));
+                }
+
+                const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
+                const baseCalendlyUrl = "https://calendly.com/hello-bmradvisory/forensic-briefing";
+                const specializedUrl = clientEmail ? `${baseCalendlyUrl}?email=${clientEmail}` : baseCalendlyUrl;
+                
+                window.open(specializedUrl, "_blank");
+              }}
+              className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-5 uppercase w-full font-black tracking-tight"
+            >
+              COMPILE PARTIAL ANSWERS
+            </button>
+            
           </div>
-        )}
+        </div>
       </main>
     </div>
   );
