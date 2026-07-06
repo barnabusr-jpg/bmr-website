@@ -17,7 +17,7 @@ interface CockpitProps {
   responses?: Record<string, any>; // 🚀 Captured from stateless multi-persona user inputs
 }
 
-// 🌐 MULTI-TENANT INDUSTRY INTELLIGENCE LOOKUP MATRIX
+// 🌐 MULTI-TENANT INDUSTRY LOOKUP MATRIX (1:1 PARITY WITH STRATEGY INTAKE CONFIGS)
 const INDUSTRY_PROFILES: Record<string, {
   label: string;
   taxLabel: string;
@@ -39,32 +39,32 @@ const INDUSTRY_PROFILES: Record<string, {
     blackBoxDesc: string;
   };
 }> = {
-  ENTERPRISE_SAAS: {
-    label: "ENTERPRISE / SAAS CORE REGIME",
-    taxLabel: "ANNUAL REWORK TAX IMPACT",
-    exposureLabel: "UNHEDGED EXP EXPOSURE",
-    taxFormula: "Total Rework Tax = (Impacted FTEs × Burdened Engineering Cost) × (Systemic Friction Index / 100) × Velocity Loss Multiplier",
-    metric1Label: "SCHEMA STABILITY INDEX",
-    metric1Val: "24% (CRITICAL)",
-    metric1Pct: 24,
-    metric1Peer: "Peer Avg: 78%",
-    metric2Label: "TELEMETRY SIGNAL TO NOISE RATIO",
-    metric2Val: "41% (DEGRADED)",
-    metric2Pct: 41,
-    metric2Peer: "Peer Avg: 65%",
+  FINANCE: {
+    label: "FINANCIAL SERVICES & TRANSACTIONS COMPLIANCE REGIME",
+    taxLabel: "SETTLEMENT LEAKAGE TAX IMPACT",
+    exposureLabel: "UNHEDGED REGULATORY FINES LIABILITY",
+    taxFormula: "Total Settlement Leakage = (Settlement Volume × Clearing Friction Coefficient) × (Ledger Drift Index / 100) × Regulatory Multiplier",
+    metric1Label: "LEDGER RECONCILIATION ACCURACY",
+    metric1Val: "71% (NON-COMPLIANT)",
+    metric1Pct: 71,
+    metric1Peer: "Peer Avg: 99.99%",
+    metric2Label: "REAL-TIME TRANSACTION AUDITABILITY",
+    metric2Val: "33% (CRITICAL RISK)",
+    metric2Pct: 33,
+    metric2Peer: "Peer Avg: 88%",
     standards: [
-      { title: "ISO/IEC 25010 // Product Quality Architecture", desc: "Coupled single-vendor interfaces violate Sub-characteristic 4.2 (Modifiability), inflating downstream modification regression risks exponentially." },
-      { title: "SOC 2 Type II // Trust Services Criteria (CC7.2)", desc: "Unfiltered telemetry packet saturation directly degrades production anomaly identification timelines, violating core operational monitoring clauses." }
+      { title: "PCI-DSS v4.0 // Requirement 10.2", desc: "Telemetry signal saturation and delayed processing times break real-time automated audit log generation loops for critical cardholder data environments." },
+      { title: "Sarbanes-Oxley (SOX) // Section 404", desc: "Undocumented schema alterations in transactional messaging queues create high-severity unmapped risk vectors in internal financial reporting controls." }
     ],
     aiRiskDossier: {
-      shadowAiVector: "UNSANCTIONED ARCHITECTURE GENERATION",
-      shadowAiDesc: "Engineering pods are actively utilizing unvetted commercial LLMs to expedite sprint velocity. Critical corporate IP and internal system schema designs are leaking outside your security boundary into public model training sets.",
-      blackBoxVector: "OPAQUE PIPELINE BIAS & HALLUCINATION",
-      blackBoxDesc: "Automated routing and data transform tasks rely on closed, third-party model layers. The logic paths are completely unlogged, creating an architectural single point of failure with no deterministic fallback state."
+      shadowAiVector: "UNSANCTIONED TRADING POSITION SCALPING",
+      shadowAiDesc: "Analysts and options desk teams are routing proprietary transactional datasets through commercial public endpoints to generate text optimizations, leaking protected customer asset metrics.",
+      blackBoxVector: "BLACK-BOX ALGORITHMIC POSITIONING LIABILITIES",
+      blackBoxDesc: "Automated routing and account rebalancing rules rely on unmapped external model steps. These processes operate with zero intermediate calculation data logging, creating significant internal audit exposures."
     }
   },
-  FINANCE_HEALTHCARE: {
-    label: "HEALTH-TECH & CLINICAL TRANSACTIONAL REGIME",
+  HEALTHCARE: {
+    label: "HEALTH-TECH & CLINICAL LIABILITY REGIME",
     taxLabel: "CLINICAL OPERATIONAL TAX IMPACT",
     exposureLabel: "STATUTORY HIPAA RISK EXPOSURE",
     taxFormula: "Total Operational Tax = (Active Provider Endpoints × Data Sync Overhead) × (Interoperability Friction / 100) × Liability Multiplier",
@@ -83,26 +83,25 @@ const INDUSTRY_PROFILES: Record<string, {
     aiRiskDossier: {
       shadowAiVector: "ELEVATED PHI/PII REPOSITORY TRACE",
       shadowAiDesc: "Clinical and operations administrative staff are routing complex patient triage documentation and financial summary logs through public diagnostic model endpoints to generate custom text outputs, violating strict statutory handling provisions.",
-      blackBoxVector: "STOCHASTIC CLINICAL & FINANCIAL DECISION DRIFT",
+      blackBoxVector: "STOCHASTIC CLINICAL DECISION DRIFT LIABILITY",
       blackBoxDesc: "Opaque machine learning layers running inside analytics tools are making structural operational calls. Because these algorithmic nodes lack deterministic trace logs, they expose the entity to severe clinical accountability liability and audit rejections."
     }
   },
-  INDUSTRIAL_LOGISTICS: {
-    label: "FINTECH & TRANSACTIONAL METRIC REGIME",
-    taxLabel: "SETTLEMENT LEAKAGE TAX IMPACT",
-    exposureLabel: "UNHEDGED REGULATORY FINES LIABILITY",
-    taxFormula: "Total Settlement Leakage = (Settlement Volume × Clearing Friction Coefficient) × (Ledger Drift Index / 100) × Regulatory Multiplier",
-    metric1Label: "LEDGER RECONCILIATION ACCURACY",
-    metric1Val: "71% (NON-COMPLIANT)",
-    metric1Pct: 71,
-    metric1Peer: "Peer Avg: 99.99%",
-    metric2Label: "REAL-TIME TRANSACTION AUDITABILITY",
-    metric2Val: "33% (CRITICAL RISK)",
-    metric2Pct: 33,
-    metric2Peer: "Peer Avg: 88%",
+  INDUSTRIAL: {
+    label: "INDUSTRIAL LOGISTICS & SUPPLY OPERATIONS REGIME",
+    taxLabel: "SUPPLY PIPELINE TAX OVERHEAD",
+    exposureLabel: "OPERATIONAL HAZARD CAPITAL LOSS",
+    taxFormula: "Total Supply Friction = (Siloed Distribution Warehouses × Network Synchronization Latency) × Overhead Margin Index",
+    metric1Label: "NODE DISTORTION COEFFICIENT",
+    metric1Val: "54% (STRESSED)",
+    metric1Pct: 54,
+    metric1Peer: "Peer Avg: 85%",
+    metric2Label: "LOGISTICS INVENTORY BLINDNESS",
+    metric2Val: "47% (DEGRADED)",
+    metric2Pct: 47,
+    metric2Peer: "Peer Avg: 75%",
     standards: [
-      { title: "PCI-DSS v4.0 // Requirement 10.2", desc: "Telemetry signal saturation and delayed processing times break real-time automated audit log generation loops for critical cardholder data environments." },
-      { title: "Sarbanes-Oxley (SOX) // Section 404", desc: "Undocumented schema alterations in transactional messaging queues create high-severity unmapped risk vectors in internal financial reporting controls." }
+      { title: "ISO 9001:2015 // Clause 8.5.1", desc: "Uncontrolled schema alterations in transactional messaging queues create high-severity unmapped risk vectors in distribution metrics." }
     ],
     aiRiskDossier: {
       shadowAiVector: "UNMANAGED SUPPLY NODE ROUTING AUTOMATION",
@@ -111,27 +110,27 @@ const INDUSTRY_PROFILES: Record<string, {
       blackBoxDesc: "Automated warehouse optimization engines are re-allocating physical space and sorting priority lists based on unaccountable predictive weights, masking core demand signals from structural operations management."
     }
   },
-  SERVICES_RETAIL: {
-    label: "SERVICES / RETAIL CORE REGIME (BASELINE)",
-    taxLabel: "RETAIL PROCESSING FRICTION TAX",
-    exposureLabel: "RETAIL RISK EXPOSURE post-AUDIT",
+  SERVICES: {
+    label: "SERVICES & LABOR CORE OPERATIONS REGIME",
+    taxLabel: "WORKFORCE FRICTION REWORK OVERHEAD",
+    exposureLabel: "UNHEDGED LABOR FRICTION CAPITAL TAX",
     taxFormula: "Total Processing Friction = (Point-of-Sale Nodes × Synchronization Latency) × Overhead Index",
     metric1Label: "TRANSACTION SYNC COHERENCE",
     metric1Val: "52% (STRESSED)",
     metric1Pct: 52,
     metric1Peer: "Peer Avg: 89%",
-    metric2Label: "LOGISTICS ENDPOINT INVENTORY BLINDNESS",
-    metric2Val: "47% (DEGRADED)",
-    metric2Pct: 47,
-    metric2Peer: "Peer Avg: 75%",
+    metric2Label: "WORKFORCE EXTRACTION LEAKAGE",
+    metric2Val: "64% (HIGH RESISTANCE)",
+    metric2Pct: 64,
+    metric2Peer: "Peer Avg: 78%",
     standards: [
       { title: "NIST Cybersecurity Framework v2 (PR.DS)", desc: "Unfiltered event telemetry configurations limit automated detection responsiveness across point-of-sale node networks." }
     ],
     aiRiskDossier: {
-      shadowAiVector: "UNMONITORED MERCHANDISING LOG GENERATION",
-      shadowAiDesc: "Store operators use unsanctioned public language plugins to format localized promotion manifests, exposing internal logistics structures.",
+      shadowAiVector: "UNMONITORED WORKFORCE TASK AUTOMATION",
+      shadowAiDesc: "Store operators and client teams use unsanctioned public language plugins to format customized promotion manifests, exposing internal operational parameters.",
       blackBoxVector: "BLACK-BOX DEMAND PREDICTION DISCONNECTS",
-      blackBoxDesc: "Inventory allocation queries utilize opaque third-party analytics APIs that lack historical logic state persistence parameters."
+      blackBoxDesc: "Inventory and task allocation queries utilize opaque third-party analytics APIs that lack historical logic state persistence parameters, skewing labor scheduling profiles."
     }
   }
 };
@@ -141,8 +140,8 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
 
   // 📡 Resolve active industry parameters safely from our data dictionary map
   const activeProfile = useMemo(() => {
-    const key = (sector || 'SERVICES_RETAIL').toUpperCase() as string;
-    return INDUSTRY_PROFILES[key] || INDUSTRY_PROFILES.SERVICES_RETAIL;
+    const key = (sector || 'SERVICES').toUpperCase() as string;
+    return INDUSTRY_PROFILES[key] || INDUSTRY_PROFILES.SERVICES;
   }, [sector]);
 
   // 🛰️ DETERMINISTIC TELEMETRY ASSESSMENT CALCULATOR
@@ -167,18 +166,12 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
     });
 
     // Evaluation Matrix A: SHADOW AI (Triggers on Symptom Weight Scales 'C' or 'D')
-    // - IGF-29-USER: Streaming unmasked record rows straight to external AI logs/chat panes
-    // - IGF-10-MGMT: Streaming un-encrypted data feeds directly into unvetted partner endpoints
-    // - HAI-84-USER: Workforce building personal shadow workaround tracks due to interface friction
     const showsShadowAiRisk = 
       ['C', 'D'].includes(selectedAnswers['IGF-29-USER']) ||
       ['C', 'D'].includes(selectedAnswers['IGF-10-MGMT']) ||
       ['C', 'D'].includes(selectedAnswers['HAI-84-USER']);
 
     // Evaluation Matrix B: BLACK-BOX LOGIC RISK
-    // - IGF-01-EXEC: Autonomous models running calculations with zero intermediate logic weights logs
-    // - HAI-73-MGMT: Unhardened core ingestion interfacing third-party ML directly to databases
-    // - HAI-83-USER: Ground operators processing anomalous machine recommendations blindly due to automation bias
     const showsBlackBoxRisk = 
       ['C', 'D'].includes(selectedAnswers['IGF-01-EXEC']) ||
       ['C', 'D'].includes(selectedAnswers['HAI-73-MGMT']) ||
@@ -214,7 +207,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
   return (
     <div className="bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden p-10 max-w-[1600px] mx-auto pb-32">
       
-      {/* HEADER TELEMETRY READOUT (Client-Safe Dashboard Style) */}
+      {/* HEADER TELEMETRY READOUT */}
       <div className="flex items-center justify-between bg-black p-6 border border-slate-900 mb-6 no-print">
         <div className="flex items-center gap-3 shrink-0">
           <Activity className="text-red-600 animate-pulse" size={20} />
@@ -280,13 +273,12 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
               Cross-persona triangulation logs identify a significant technical debt layer across operations pipelines for <strong>{companyName}</strong>. At current workforce configurations, this structural friction generates a predictable annual leakage calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>, resulting directly in operational resource overhead matching your explicit vertical parameters.
             </p>
 
-            {/* 🧮 THE ANTI-BULL CIO CALCULUS MATRIX (Dynamic Integration) */}
+            {/* 🧮 THE ANTI-BULL CIO CALCULUS MATRIX */}
             <div className="bg-[#090d16] border border-slate-900 font-mono p-6 my-8 text-left text-slate-300 shadow-inner rounded-sm not-italic normal-case font-medium">
               <div className="text-[10px] text-red-500 font-black tracking-widest uppercase mb-4 flex justify-between items-center">
                 <span>// QUANTITATIVE LEAKAGE DERIVATION LEDGER</span>
                 <span className="text-[9px] text-slate-500 bg-black/50 px-2 py-0.5 border border-slate-800 tracking-normal">REGIME: {activeProfile.label}</span>
               </div>
-              
               <div className="text-xs space-y-4 leading-relaxed">
                 <div>
                   <span className="text-white font-bold block mb-1 uppercase tracking-tight text-[11px]">Formula Verification Anchor:</span>
@@ -297,11 +289,10 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
               </div>
             </div>
 
-            {/* 📊 INDUSTRY BENCHMARK PARITY MATRIX (Dynamic Integration) */}
+            {/* 📊 INDUSTRY BENCHMARK PARITY MATRIX */}
             <div className="my-8 border-t border-b border-slate-200 py-6 not-italic normal-case font-medium">
               <span className="text-[10px] font-mono font-black tracking-widest text-slate-400 block mb-4 uppercase">// COHORT BENCHMARK PARITY MATRIX</span>
               <div className="space-y-4 font-mono text-xs">
-                {/* Dynamic Metric 1 */}
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
                     <span className="font-bold text-slate-700">{activeProfile.metric1Label}:</span>
@@ -311,7 +302,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
                     <div className="bg-red-600 h-full" style={{ width: `${activeProfile.metric1Pct}%` }} />
                   </div>
                 </div>
-                {/* Dynamic Metric 2 */}
                 <div>
                   <div className="flex justify-between text-[11px] mb-1">
                     <span className="font-bold text-slate-700">{activeProfile.metric2Label}:</span>
@@ -345,7 +335,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
                 <AlertTriangle size={16} className="animate-pulse" /> 
                 <span>// TRIANGULATION WARNING: COGNITIVE OVERHEAD DETECTED</span>
               </div>
-
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* Dynamic Shadow AI Exposure Card */}
@@ -394,7 +383,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
 
           <hr className="border-slate-100" />
 
-          {/* 📜 STANDARDS COMPLIANCE CROSS-REFERENCE (Dynamic Integration) */}
+          {/* 📜 STANDARDS COMPLIANCE CROSS-REFERENCE */}
           <div className="bg-slate-50 border border-slate-200 p-6 my-6 font-mono text-xs text-slate-700 not-italic normal-case font-medium">
             <div className="text-[10px] text-black font-black tracking-widest uppercase mb-3">// ARCHITECTURAL CODES & STANDARDS CROSS-REFERENCE</div>
             <ul className="space-y-3 list-none p-0 m-0 text-[11px]">
@@ -415,7 +404,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
           <div>
             <h4 className="font-mono text-xs font-black text-slate-400 uppercase tracking-widest mb-3 italic">// SECTION 02: REMEDIATION ROADMAP</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 italic font-black">
-              
               <div className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
                 <div className="space-y-1 not-italic font-sans">
                   <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase italic">
@@ -427,7 +415,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
                 </div>
                 <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">01</div>
               </div>
-
               <div className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
                 <div className="space-y-1 not-italic font-sans">
                   <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase italic">
@@ -439,14 +426,13 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
                 </div>
                 <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">02</div>
               </div>
-
             </div>
           </div>
 
         </div>
       </div>
 
-      {/* 🔗 STATELESS RECORD MAGIC LINK RETRIEVAL INTERFACE CARD */}
+      {/* STATELESS Magic Link SHARE CARD */}
       <div className="bg-slate-950/40 border border-slate-900 p-8 space-y-4 no-print">
         <div>
           <span className="text-[9px] font-mono text-red-500 font-black tracking-widest block">// IMMUTABLE RETRIEVAL LOG DEPLOYMENT</span>
