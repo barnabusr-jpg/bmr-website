@@ -14,7 +14,7 @@ interface CockpitProps {
     isTierThreeExposure: boolean;
     regulatoryAlertActive: boolean;
   };
-  responses?: Record<string, any>; // 🚀 Captured from stateless user inputs
+  responses?: Record<string, any>; // 🚀 Captured from stateless multi-persona user inputs
 }
 
 // 🌐 MULTI-TENANT INDUSTRY INTELLIGENCE LOOKUP MATRIX
@@ -32,6 +32,12 @@ const INDUSTRY_PROFILES: Record<string, {
   metric2Pct: number;
   metric2Peer: string;
   standards: Array<{ title: string; desc: string }>;
+  aiRiskDossier: {
+    shadowAiVector: string;
+    shadowAiDesc: string;
+    blackBoxVector: string;
+    blackBoxDesc: string;
+  };
 }> = {
   ENTERPRISE_SAAS: {
     label: "ENTERPRISE / SAAS CORE REGIME",
@@ -49,7 +55,13 @@ const INDUSTRY_PROFILES: Record<string, {
     standards: [
       { title: "ISO/IEC 25010 // Product Quality Architecture", desc: "Coupled single-vendor interfaces violate Sub-characteristic 4.2 (Modifiability), inflating downstream modification regression risks exponentially." },
       { title: "SOC 2 Type II // Trust Services Criteria (CC7.2)", desc: "Unfiltered telemetry packet saturation directly degrades production anomaly identification timelines, violating core operational monitoring clauses." }
-    ]
+    ],
+    aiRiskDossier: {
+      shadowAiVector: "UNSANCTIONED ARCHITECTURE GENERATION",
+      shadowAiDesc: "Engineering pods are actively utilizing unvetted commercial LLMs to expedite sprint velocity. Critical corporate IP and internal system schema designs are leaking outside your security boundary into public model training sets.",
+      blackBoxVector: "OPAQUE PIPELINE BIAS & HALLUCINATION",
+      blackBoxDesc: "Automated routing and data transform tasks rely on closed, third-party model layers. The logic paths are completely unlogged, creating an architectural single point of failure with no deterministic fallback state."
+    }
   },
   FINANCE_HEALTHCARE: {
     label: "HEALTH-TECH & CLINICAL TRANSACTIONAL REGIME",
@@ -67,7 +79,13 @@ const INDUSTRY_PROFILES: Record<string, {
     standards: [
       { title: "HIPAA Security Rule // § 164.312(b)", desc: "Lack of centralized pipeline abstraction mechanisms risks structural audit trail fractures across disparate distributed endpoints." },
       { title: "HL7 FHIR v4 // Data Exchange Conformance", desc: "Unstructured schema drift in clinical telemetry ingestion points causes severe serialization rejections, threatening clinical data lineage." }
-    ]
+    ],
+    aiRiskDossier: {
+      shadowAiVector: "ELEVATED PHI/PII REPOSITORY TRACE",
+      shadowAiDesc: "Clinical and operations administrative staff are routing complex patient triage documentation and financial summary logs through public diagnostic model endpoints to generate custom text outputs, violating strict statutory handling provisions.",
+      blackBoxVector: "STOCHASTIC CLINICAL & FINANCIAL DECISION DRIFT",
+      blackBoxDesc: "Opaque machine learning layers running inside analytics tools are making structural operational calls. Because these algorithmic nodes lack deterministic trace logs, they expose the entity to severe clinical accountability liability and audit rejections."
+    }
   },
   INDUSTRIAL_LOGISTICS: {
     label: "FINTECH & TRANSACTIONAL METRIC REGIME",
@@ -85,14 +103,20 @@ const INDUSTRY_PROFILES: Record<string, {
     standards: [
       { title: "PCI-DSS v4.0 // Requirement 10.2", desc: "Telemetry signal saturation and delayed processing times break real-time automated audit log generation loops for critical cardholder data environments." },
       { title: "Sarbanes-Oxley (SOX) // Section 404", desc: "Undocumented schema alterations in transactional messaging queues create high-severity unmapped risk vectors in internal financial reporting controls." }
-    ]
+    ],
+    aiRiskDossier: {
+      shadowAiVector: "UNMANAGED SUPPLY NODE ROUTING AUTOMATION",
+      shadowAiDesc: "Procurement agents are passing proprietary vendor transaction histories and localized route sheets to unmapped public optimization agents to bypass standard workflow steps.",
+      blackBoxVector: "BLACK-BOX INVENTORY EXTRAPOLATION EXPONENT",
+      blackBoxDesc: "Automated warehouse optimization engines are re-allocating physical space and sorting priority lists based on unaccountable predictive weights, masking core demand signals from structural operations management."
+    }
   },
   SERVICES_RETAIL: {
     label: "SERVICES / RETAIL CORE REGIME (BASELINE)",
     taxLabel: "RETAIL PROCESSING FRICTION TAX",
     exposureLabel: "RETAIL RISK EXPOSURE post-AUDIT",
     taxFormula: "Total Processing Friction = (Point-of-Sale Nodes × Synchronization Latency) × Overhead Index",
-    metric1Label: "TRANSACTION SYNCポスト COHERENCE",
+    metric1Label: "TRANSACTION SYNC COHERENCE",
     metric1Val: "52% (STRESSED)",
     metric1Pct: 52,
     metric1Peer: "Peer Avg: 89%",
@@ -102,7 +126,13 @@ const INDUSTRY_PROFILES: Record<string, {
     metric2Peer: "Peer Avg: 75%",
     standards: [
       { title: "NIST Cybersecurity Framework v2 (PR.DS)", desc: "Unfiltered event telemetry configurations limit automated detection responsiveness across point-of-sale node networks." }
-    ]
+    ],
+    aiRiskDossier: {
+      shadowAiVector: "UNMONITORED MERCHANDISING LOG GENERATION",
+      shadowAiDesc: "Store operators use unsanctioned public language plugins to format localized promotion manifests, exposing internal logistics structures.",
+      blackBoxVector: "BLACK-BOX DEMAND PREDICTION DISCONNECTS",
+      blackBoxDesc: "Inventory allocation queries utilize opaque third-party analytics APIs that lack historical logic state persistence parameters."
+    }
   }
 };
 
@@ -114,6 +144,48 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
     const key = (sector || 'SERVICES_RETAIL').toUpperCase() as string;
     return INDUSTRY_PROFILES[key] || INDUSTRY_PROFILES.SERVICES_RETAIL;
   }, [sector]);
+
+  // 🛰️ DETERMINISTIC TELEMETRY ASSESSMENT CALCULATOR
+  const aiTelemetryMetrics = useMemo(() => {
+    if (!responses || Object.keys(responses).length === 0) {
+      return { showsShadowAiRisk: false, showsBlackBoxRisk: false };
+    }
+
+    const selectedAnswers: Record<string, string> = {};
+    
+    // Flatten and clean raw response payloads across all submitted operator nodes
+    Object.values(responses).forEach((personaPayload) => {
+      if (personaPayload) {
+        Object.entries(personaPayload).forEach(([questionId, selection]) => {
+          if (selection && typeof selection === 'object' && 'key' in selection) {
+            selectedAnswers[questionId] = String(selection.key).toUpperCase();
+          } else if (typeof selection === 'string') {
+            selectedAnswers[questionId] = selection.toUpperCase();
+          }
+        });
+      }
+    });
+
+    // Evaluation Matrix A: SHADOW AI (Triggers on Symptom Weight Scales 'C' or 'D')
+    // - IGF-29-USER: Streaming unmasked record rows straight to external AI logs/chat panes
+    // - IGF-10-MGMT: Streaming un-encrypted data feeds directly into unvetted partner endpoints
+    // - HAI-84-USER: Workforce building personal shadow workaround tracks due to interface friction
+    const showsShadowAiRisk = 
+      ['C', 'D'].includes(selectedAnswers['IGF-29-USER']) ||
+      ['C', 'D'].includes(selectedAnswers['IGF-10-MGMT']) ||
+      ['C', 'D'].includes(selectedAnswers['HAI-84-USER']);
+
+    // Evaluation Matrix B: BLACK-BOX LOGIC RISK
+    // - IGF-01-EXEC: Autonomous models running calculations with zero intermediate logic weights logs
+    // - HAI-73-MGMT: Unhardened core ingestion interfacing third-party ML directly to databases
+    // - HAI-83-USER: Ground operators processing anomalous machine recommendations blindly due to automation bias
+    const showsBlackBoxRisk = 
+      ['C', 'D'].includes(selectedAnswers['IGF-01-EXEC']) ||
+      ['C', 'D'].includes(selectedAnswers['HAI-73-MGMT']) ||
+      ['C', 'D'].includes(selectedAnswers['HAI-83-USER']);
+
+    return { showsShadowAiRisk, showsBlackBoxRisk };
+  }, [responses]);
 
   // 🔐 Compress contextual operational parameters into an immutable URL token
   const magicLink = useMemo(() => {
@@ -205,7 +277,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
           <div>
             <h4 className="font-mono text-xs font-black text-slate-400 uppercase tracking-widest mb-2 italic">// SECTION 01: EXECUTIVE ANALYSIS SUMMARY</h4>
             <p>
-              Cross-persona triangulation logs identify a significant technical debt layer across operations pipelines for <strong>{companyName}</strong>. At current workforce configurations, this structural friction generates a predictable annual leakage calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>, resulting directly in developers abandoning active sprints to manage single-vendor dependencies manually.
+              Cross-persona triangulation logs identify a significant technical debt layer across operations pipelines for <strong>{companyName}</strong>. At current workforce configurations, this structural friction generates a predictable annual leakage calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>, resulting directly in operational resource overhead matching your explicit vertical parameters.
             </p>
 
             {/* 🧮 THE ANTI-BULL CIO CALCULUS MATRIX (Dynamic Integration) */}
@@ -265,6 +337,60 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
               </div>
             )}
           </div>
+
+          {/* 🛰️ SECTION 01-B: ADVANCED COGNITIVE RISK LEDGER (Deterministic Evaluation) */}
+          {(aiTelemetryMetrics.showsShadowAiRisk || aiTelemetryMetrics.showsBlackBoxRisk) ? (
+            <div className="my-10 border-t-2 border-slate-900 pt-6 not-italic normal-case font-medium">
+              <div className="flex items-center gap-2 text-red-600 font-mono text-xs font-black uppercase tracking-widest italic mb-6">
+                <AlertTriangle size={16} className="animate-pulse" /> 
+                <span>// TRIANGULATION WARNING: COGNITIVE OVERHEAD DETECTED</span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Dynamic Shadow AI Exposure Card */}
+                {aiTelemetryMetrics.showsShadowAiRisk ? (
+                  <div className="border border-red-900/40 bg-red-950/5 p-6 space-y-2 text-left">
+                    <span className="text-[9px] font-mono font-black text-red-600 tracking-widest block">
+                      // RISK VECTOR ENCOUNTERED: SHADOW AI LIFECYCLE
+                    </span>
+                    <h5 className="font-sans text-base font-black uppercase tracking-tight text-slate-950">
+                      {activeProfile.aiRiskDossier.shadowAiVector}
+                    </h5>
+                    <p className="font-sans text-xs text-slate-600 leading-relaxed font-normal">
+                      {activeProfile.aiRiskDossier.shadowAiDesc}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="border border-emerald-900/20 bg-emerald-950/5 p-6 space-y-1 text-left opacity-60">
+                    <span className="text-[9px] font-mono text-emerald-600 tracking-widest block">// EXPOSURE CLEAR</span>
+                    <h5 className="font-sans text-sm font-black text-slate-400 uppercase">SHADOW AI INSULATION SECURE</h5>
+                  </div>
+                )}
+
+                {/* Dynamic Black Box Exposure Card */}
+                {aiTelemetryMetrics.showsBlackBoxRisk ? (
+                  <div className="border border-slate-300 bg-slate-50 p-6 space-y-2 text-left">
+                    <span className="text-[9px] font-mono font-black text-slate-500 tracking-widest block">
+                      // RISK VECTOR ENCOUNTERED: BLACK-BOX UNCERTAINTY
+                    </span>
+                    <h5 className="font-sans text-base font-black uppercase tracking-tight text-slate-950">
+                      {activeProfile.aiRiskDossier.blackBoxVector}
+                    </h5>
+                    <p className="font-sans text-xs text-slate-600 leading-relaxed font-normal">
+                      {activeProfile.aiRiskDossier.blackBoxDesc}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="border border-slate-200 bg-slate-50/50 p-6 space-y-1 text-left opacity-60">
+                    <span className="text-[9px] font-mono text-slate-400 tracking-widest block">// EXPOSURE CLEAR</span>
+                    <h5 className="font-sans text-sm font-black text-slate-400 uppercase">DETERMINISTIC DECISION LOGGING ACTIVE</h5>
+                  </div>
+                )}
+
+              </div>
+            </div>
+          ) : null}
 
           <hr className="border-slate-100" />
 
