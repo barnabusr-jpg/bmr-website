@@ -5,7 +5,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   }
 
-  const { email, orgName, auditId, userName, personaType } = req.body;
+  const { email, orgName, auditId, userName } = req.body;
 
   if (!email || !auditId) {
     return res.status(400).json({ error: 'MISSING_REQUIRED_PARAMETERS' });
@@ -14,21 +14,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const apiKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
 
   try {
-    const secureUrl = `https://lab.bmradvisory.co/diagnostic/forensic?code=${auditId}`;
+    const secureUrl = `https://www.bmradvisory.co/results/${auditId}`;
     const targetEmail = email.toLowerCase().trim();
     const formattedOrg = orgName?.toUpperCase() || 'CLIENT NODE';
     const namePrefix = userName ? `${userName}: ` : '';
-    
-    // Dynamic fallback labeling for the explicit track text block
-    const assignedVectorLabel = personaType 
-      ? personaType.toUpperCase() 
-      : 'TECHNICAL MANAGEMENT (INFRASTRUCTURE & DEVOPS NODE)';
 
     const sendgridPayload = {
       personalizations: [
         {
           to: [{ email: targetEmail }],
-          subject: `${namePrefix}Quad-Node Assessment Initialized // ${formattedOrg}`
+          subject: `${namePrefix}Forensic Assessment Complete // ${formattedOrg}`
         }
       ],
       from: {
@@ -50,37 +45,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                           
                           <div style="margin-bottom: 40px; border-left: 4px solid #dc2626; padding-left: 16px;">
                             <h2 style="color: #ffffff; font-weight: 900; font-style: italic; text-transform: uppercase; margin: 0; letter-spacing: 2px; font-size: 22px; line-height: 1.3;">
-                              // Quad-Node Assessment Initialized
+                              ${namePrefix}Forensic Assessment Complete
                             </h2>
                             <p style="color: #64748b; font-family: monospace; font-size: 11px; margin: 6px 0 0 0; letter-spacing: 0.1em; font-weight: bold;">
-                              TARGET ENTITY // ${formattedOrg}
+                              ENTITY REF // ${formattedOrg}
                             </p>
                           </div>
                           
-                          <div style="background-color: #0f172a; border-left: 4px solid #dc2626; padding: 24px; margin-bottom: 32px; box-sizing: border-box;">
-                            <span style="color: #ef4444; font-family: monospace; font-size: 10px; font-weight: 900; letter-spacing: 0.2em; display: block; margin-bottom: 6px;">
-                              // ASSIGNED VECTOR
-                            </span>
-                            <span style="color: #ffffff; font-size: 15px; font-weight: 900; letter-spacing: -0.01em; text-transform: uppercase; line-height: 1.4; display: block;">
-                              ${assignedVectorLabel}
-                            </span>
-                          </div>
+                          <h3 style="color: #ffffff; font-weight: 800; text-transform: uppercase; font-size: 16px; letter-spacing: 1px; margin-bottom: 16px;">
+                            Forensic Verdict
+                          </h3>
 
                           <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
-                            BMR Solutions has initiated a specialized Quad-Node Assessment stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the AVS Framework Layer.
+                            Your completed forensic signals are saved to your secure profile ledger and can be accessed below:
                           </p>
                           
                           <div style="background: #090d16; border: 1px solid #1e293b; padding: 32px; margin: 40px 0; text-align: center;">
                             <p style="font-size: 10px; font-family: monospace; color: #475569; margin-bottom: 20px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">
-                              SECURE DIAGNOSTIC ACCESS TERMINAL
+                              SECURE WORKSPACE TOKEN // ${auditId}
                             </p>
                             <a href="${secureUrl}" style="background: #dc2626; color: #ffffff; padding: 16px 32px; font-weight: 900; text-decoration: none; display: inline-block; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; font-style: italic;">
-                              Launch Assessment Node
+                              Access Your Forensic Vault
                             </a>
                           </div>
 
                           <p style="font-size: 11px; color: #475569; line-height: 1.8; text-transform: uppercase; font-weight: bold; font-family: monospace; border-top: 1px solid #0f172a; padding-top: 20px; margin: 40px 0 0 0;">
-                            CONFIDENTIALITY NOTICE: This entry link is uniquely customized for your operational assignment. Do not forward this telemetry signal.
+                            Your permanent access key corresponds directly to this baseline instance. Use your live dashboard console to coordinate your strategic briefing registration.
                           </p>
 
                         </td>
