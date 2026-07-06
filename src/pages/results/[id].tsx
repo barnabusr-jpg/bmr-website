@@ -12,7 +12,7 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
-// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE (STAYS ACTIVE FOR EVERYONE)
+// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -24,8 +24,9 @@ function RealTimeLossTicker({
 
   const severityVelocityMultiplier = useMemo(() => {
     let multiplier = 1.0;
+    if (!anomalies) return multiplier;
     anomalies.forEach(anomaly => {
-      const severity = anomaly.severity?.toUpperCase();
+      const severity = anomaly?.severity?.toUpperCase();
       if (severity === 'CRITICAL') multiplier += 2.5; 
       if (severity === 'HIGH') multiplier += 1.5;
       if (severity === 'MEDIUM') multiplier += 0.5;
@@ -34,7 +35,7 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    if (!diagnosticCompletedAt) {
+    if (!diagnosticCompletedAt || isNaN(Date.parse(diagnosticCompletedAt))) {
       setElapsedSeconds(0);
       return;
     }
@@ -54,7 +55,8 @@ function RealTimeLossTicker({
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
 
-  let dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
+  const validExposure = exposure && !isNaN(exposure) ? exposure : 0;
+  let dynamicAccumulatedLoss = (validExposure / 31536000) * elapsedSeconds;
 
   if (isArchived) {
     if (frozenLossRef.current === null) {
@@ -87,7 +89,7 @@ export default function UnifiedResultsPortal() {
     setMounted(true); 
   }, []);
 
-  // 📡 REAL-TIME SUBSCRIPTION LISTENER (Keeps metrics in perfect sync for users and admins)
+  // 📡 REAL-TIME SUBSCRIPTION LISTENER
   useEffect(() => {
     if (!id || !mounted) return;
     
@@ -128,7 +130,7 @@ export default function UnifiedResultsPortal() {
     return audit?.ai_spend || 1.2;
   }, [live_sync, querySpend, audit?.ai_spend]);
 
-  const isDossierUnblurred = useMemo(() => {
+  const isPhaseTwoActive = useMemo(() => {
     return !!audit?.is_released || unblurred === "true" || audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.is_released, unblurred, audit?.status]);
 
@@ -161,8 +163,8 @@ export default function UnifiedResultsPortal() {
     };
   }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
 
-  const accentColorClass = isDossierUnblurred ? "text-red-500" : "text-green-500"; 
-  const borderAccentClass = isDossierUnblurred ? "border-red-600" : "border-green-600"; 
+  const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
+  const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
 
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
@@ -218,7 +220,8 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
-  if (!mounted || loading || !router.isReady) {
+  // 🛡️ CRITICAL RACE-CONDITION GATEWAY: Forces page to wait until audit record has been fully returned
+  if (!mounted || loading || !router.isReady || !audit) {
     return (
       <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
         <Activity className="animate-spin mb-4" size={48} />
@@ -229,15 +232,14 @@ export default function UnifiedResultsPortal() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden text-left uppercase italic font-black">
-      {/* HEADER NAV */}
       <nav className="h-28 bg-black/40 backdrop-blur-md border-b border-slate-900/60 px-6 md:px-12 flex items-center justify-between">
         <div>
           <div className="text-white text-xl tracking-tighter italic">BMR<span className={accentColorClass}>SOLUTIONS</span></div>
           <span className={`text-[8px] font-mono uppercase tracking-[0.3em] italic block mt-0.5 ${accentColorClass}`}>
-            {isDossierUnblurred ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
+            {isPhaseTwoActive ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
           </span>
         </div>
-        {isDossierUnblurred && (
+        {isPhaseTwoActive && (
           <button onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono">
               DOWNLOAD FORENSIC LEDGER PDF
           </button>
@@ -245,23 +247,21 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
-        {/* METRICS DISCLOSURE BLOCK */}
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
-            {isDossierUnblurred 
+            {isPhaseTwoActive 
               ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
               : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
             }
           </p>
         </div>
 
-        {/* REVENUE LOSS TICKER DISPLAY */}
         <div className={`bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
             <div>
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none md:leading-none text-black break-words">
-                {isDossierUnblurred ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
+                {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
               </h1>
               <p className="text-[10px] md:text-[11px] font-mono text-slate-400 tracking-widest mt-2.5">
                 TARGET IDENTIFIER // {audit?.org_name || "EVALUATION CLIENT SYSTEM"}
@@ -302,14 +302,12 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
-            {audit && (
-              <RealTimeLossTicker 
-                diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
-                exposure={metrics.exposure + metrics.totalLaborTaxPool} 
-                anomalies={activeAnomaliesList}
-                isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
-              />
-            )}
+            <RealTimeLossTicker 
+              diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
+              exposure={metrics.exposure + metrics.totalLaborTaxPool} 
+              anomalies={activeAnomaliesList}
+              isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
+            />
             <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
               {audit?.status?.toUpperCase() === 'ARCHIVED' ? "// METRIC LOCKED // ARCHIVED VALUE" : "// REAL TIME LOSS SINCE VERDICT LOCK"}
             </span>
@@ -358,16 +356,11 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* ========================================================= */}
-        {/* INTERACTIVE ROUTING GATEWAY SWITCH ENGINE                 */}
-        {/* ========================================================= */}
-        
-        {/* 🔒 VIEW A: Admin Workspace Frame (Only loads if opened via 'live_sync=true' flag) */}
+        {/* 🔒 VIEW A: Admin Workspace Frame */}
         {live_sync === "true" && (
-          <div className="pt-6 border-t border-slate-900/60 mt-8 animate-fadeIn">
+          <div className="pt-6 border-t border-slate-900/60 mt-8">
             <span className="text-[9px] font-mono text-slate-500 block mb-3 tracking-widest">// ADMINISTRATOR CONTROLS SYSTEM</span>
             <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
-              
               <div className="w-full">
                 <button
                   disabled={!isPaidGateUnlocked}
@@ -396,12 +389,11 @@ export default function UnifiedResultsPortal() {
               >
                 COMPILE PARTIAL ANSWERS
               </button>
-              
             </div>
           </div>
         )}
 
-        {/* 🌐 VIEW B: Public Customer Landing Call-To-Action (Renders only for clean email link strings) */}
+        {/* 🌐 VIEW B: Public Customer Landing Call-To-Action */}
         {live_sync !== "true" && !isPhaseTwoActive && (
           <div 
             className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
