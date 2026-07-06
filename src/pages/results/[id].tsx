@@ -22,11 +22,11 @@ function RealTimeLossTicker({
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const frozenLossRef = useRef<number | null>(null);
 
-  // 🧮 Calculate dynamic velocity acceleration scaling factors from database anomaly metadata
   const severityVelocityMultiplier = useMemo(() => {
     let multiplier = 1.0;
+    if (!anomalies) return multiplier;
     anomalies.forEach(anomaly => {
-      const severity = anomaly.severity?.toUpperCase();
+      const severity = anomaly?.severity?.toUpperCase();
       if (severity === 'CRITICAL') multiplier += 2.5; 
       if (severity === 'HIGH') multiplier += 1.5;
       if (severity === 'MEDIUM') multiplier += 0.5;
@@ -35,7 +35,7 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    if (!diagnosticCompletedAt) {
+    if (!diagnosticCompletedAt || isNaN(Date.parse(diagnosticCompletedAt))) {
       setElapsedSeconds(0);
       return;
     }
@@ -44,7 +44,6 @@ function RealTimeLossTicker({
 
     const calculateDeltaTime = () => {
       if (isArchived) return;
-
       const currentRealTime = Date.now();
       const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - baselineAnchorTime) / 1000);
       setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
@@ -56,9 +55,9 @@ function RealTimeLossTicker({
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
 
-  let dynamicAccumulatedLoss = (exposure / 31536000) * elapsedSeconds;
+  const validExposure = exposure && !isNaN(exposure) ? exposure : 0;
+  let dynamicAccumulatedLoss = (validExposure / 31536000) * elapsedSeconds;
 
-  // 🔒 ARCHIVE FREEZE LOCK SYSTEM
   if (isArchived) {
     if (frozenLossRef.current === null) {
       frozenLossRef.current = dynamicAccumulatedLoss;
@@ -84,12 +83,13 @@ export default function UnifiedResultsPortal() {
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<AuditRecord | null>(null);
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false); // Controlled structural state modifier
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   useEffect(() => { 
     setMounted(true); 
   }, []);
 
+  // 📡 REAL-TIME SUBSCRIPTION LISTENER
   useEffect(() => {
     if (!id || !mounted) return;
     
@@ -130,12 +130,10 @@ export default function UnifiedResultsPortal() {
     return audit?.ai_spend || 1.2;
   }, [live_sync, querySpend, audit?.ai_spend]);
 
-  // 👁️ ADMIN BRIEFING CONTROL: Manages visibility of upper overview metrics panel
-  const isDossierUnblurred = useMemo(() => {
+  const isPhaseTwoActive = useMemo(() => {
     return !!audit?.is_released || unblurred === "true" || audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.is_released, unblurred, audit?.status]);
 
-  // 🔒 TRANSACTIONAL PHASE GATE CONTROL: Decoupled gate strictly protecting anomaly matrices
   const isPaidGateUnlocked = useMemo(() => {
     return audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.status]);
@@ -165,37 +163,37 @@ export default function UnifiedResultsPortal() {
     };
   }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
 
-  const accentColorClass = isDossierUnblurred ? "text-red-500" : "text-green-500"; 
-  const borderAccentClass = isDossierUnblurred ? "border-red-600" : "border-green-600"; 
+  const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
+  const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
 
+  // 📝 CLEANED PLACEHOLDER TEXT DATA STRINGS
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
       id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
       severity: "SECURE GATE", 
-      directive: "Requires active 30 question operational diagnostic to unmask root cause paths." 
+      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
     },
     { 
       id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
       severity: "SECURE GATE", 
-      directive: "Requires active 30 question operational diagnostic to unmask root cause paths." 
+      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
     },
     { 
       id: `ANOMALY SEGMENT GAMMA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
       severity: "SECURE GATE", 
-      directive: "Requires active 30 question operational diagnostic to unmask root cause paths." 
+      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
     },
     { 
       id: `ANOMALY SEGMENT DELTA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
       description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
       severity: "SECURE GATE", 
-      directive: "Requires active 30 question operational diagnostic to unmask root cause paths." 
+      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
     }
   ], [metrics.totalLaborTaxPool]);
 
-  // 🔓 DYNAMIC BREAK SYSTEM: Only unmasks real database payload anomalies when PAID gate evaluates true
   const activeAnomaliesList = useMemo(() => {
     if (isPaidGateUnlocked && audit?.anomalies && audit.anomalies.length > 0) {
       return audit.anomalies.map((anom: any) => ({
@@ -208,7 +206,23 @@ export default function UnifiedResultsPortal() {
     return genericAnomalies;
   }, [isPaidGateUnlocked, audit?.anomalies, genericAnomalies]);
 
-  if (!mounted || loading || !router.isReady) {
+  const fireBriefingSequence = () => {
+    if (audit?.id) {
+      fetch('/api/cancel-reminder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ auditId: audit.id }),
+      }).catch((err) => console.error('Silent reminder cancellation skipped:', err));
+    }
+
+    const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
+    const baseCalendlyUrl = "https://calendly.com/hello-bmradvisory/forensic-briefing";
+    const specializedUrl = clientEmail ? `${baseCalendlyUrl}?email=${clientEmail}` : baseCalendlyUrl;
+    window.open(specializedUrl, "_blank");
+  };
+
+  // 🛡️ CRITICAL GATE: Prevents render math until data arrives
+  if (!mounted || loading || !router.isReady || !audit) {
     return (
       <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
         <Activity className="animate-spin mb-4" size={48} />
@@ -217,16 +231,18 @@ export default function UnifiedResultsPortal() {
     );
   }
 
+  const verifyIsAdminView = String(router.query.live_sync).toLowerCase() === "true";
+
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden text-left uppercase italic font-black">
       <nav className="h-28 bg-black/40 backdrop-blur-md border-b border-slate-900/60 px-6 md:px-12 flex items-center justify-between">
         <div>
           <div className="text-white text-xl tracking-tighter italic">BMR<span className={accentColorClass}>SOLUTIONS</span></div>
           <span className={`text-[8px] font-mono uppercase tracking-[0.3em] italic block mt-0.5 ${accentColorClass}`}>
-            {isDossierUnblurred ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
+            {isPhaseTwoActive ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
           </span>
         </div>
-        {isDossierUnblurred && (
+        {isPhaseTwoActive && (
           <button onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono">
               DOWNLOAD FORENSIC LEDGER PDF
           </button>
@@ -234,11 +250,10 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
-        
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
-            {isDossierUnblurred 
+            {isPhaseTwoActive 
               ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
               : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
             }
@@ -249,7 +264,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
             <div>
               <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none md:leading-none text-black break-words">
-                {isDossierUnblurred ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
+                {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
               </h1>
               <p className="text-[10px] md:text-[11px] font-mono text-slate-400 tracking-widest mt-2.5">
                 TARGET IDENTIFIER // {audit?.org_name || "EVALUATION CLIENT SYSTEM"}
@@ -259,9 +274,7 @@ export default function UnifiedResultsPortal() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>
-                    LOGIC DECAY COEFFICIENT
-                  </span>
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>LOGIC DECAY COEFFICIENT</span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   DECAY INDEX: <span className={`${accentColorClass} text-base`}>{dbDecay}%</span>
@@ -270,9 +283,7 @@ export default function UnifiedResultsPortal() {
 
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>
-                    PROCESS WASTE TAX
-                  </span>
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>PROCESS WASTE TAX</span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-sm`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
@@ -281,9 +292,7 @@ export default function UnifiedResultsPortal() {
 
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>
-                    PROJECTED ANNUAL EXPOSURE
-                  </span>
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>PROJECTED ANNUAL EXPOSURE</span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
@@ -296,36 +305,31 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
-            
-            {audit && (
-              <RealTimeLossTicker 
-                diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
-                exposure={metrics.exposure + metrics.totalLaborTaxPool} 
-                anomalies={activeAnomaliesList}
-                isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
-              />
-            )}
-            
+            <RealTimeLossTicker 
+              diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
+              exposure={metrics.exposure + metrics.totalLaborTaxPool} 
+              anomalies={activeAnomaliesList}
+              isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
+            />
             <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
-              {audit?.status?.toUpperCase() === 'ARCHIVED' 
-                ? "// METRIC LOCKED // ARCHIVED FILE HISTORICAL VALUE" 
-                : "// REAL TIME LOSS SINCE VERDICT LOCK"
-              }
+              {audit?.status?.toUpperCase() === 'ARCHIVED' ? "// METRIC LOCKED // ARCHIVED VALUE" : "// REAL TIME LOSS SINCE VERDICT LOCK"}
             </span>
           </div>
         </div>
 
+        {/* METRICS SPLIT CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
             <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>{`$${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}</div>
+            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
 
+        {/* ANOMALIES CHART INDEX */}
         <div className="pt-8 text-left">
           <div className="border-b border-slate-900 pb-4 mb-8">
             <span className="text-[10px] font-mono text-slate-500 tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</span>
@@ -333,95 +337,75 @@ export default function UnifiedResultsPortal() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {activeAnomaliesList.map((frac: any, index: number) => {
-              return (
-                <div 
-                  key={frac.id || index} 
-                  className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] transition-all ${
-                    isPaidGateUnlocked 
-                      ? 'border-red-500/20 bg-red-950/5' 
-                      : 'border-green-500/20 bg-green-950/5'
+            {activeAnomaliesList.map((frac: any, index: number) => (
+              <div key={frac.id || index} className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] transition-all ${isPaidGateUnlocked ? 'border-red-500/20 bg-red-950/5' : 'border-green-500/20 bg-green-950/5'}`}>
+                <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
+                  <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
+                  <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border uppercase ${isPaidGateUnlocked ? 'bg-red-600/20 text-red-500 border-red-600/30' : 'bg-green-600/20 text-green-500 border-green-600/30'}`}>
+                    {isPaidGateUnlocked ? <Unlock size={10} /> : <Lock size={10} />} 
+                    {isPaidGateUnlocked ? frac.severity : "SECURE GATE"}
+                  </span>
+                </div>
+                <div className="my-6 space-y-2">
+                  <h4 className="text-xl font-black text-white font-mono">{String(frac.id || 'ANOMALY DETECTED')}</h4>
+                  <p className="text-xs font-mono text-slate-300 font-normal leading-relaxed normal-case">{frac.description}</p>
+                </div>
+                <div className="border-t border-slate-900 pt-4 font-mono">
+                  <div className="text-[9px] text-slate-600 tracking-widest mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
+                  <div className={`text-xs font-sans tracking-wide font-medium normal-case ${accentColorClass}`}>{frac.directive}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 🔒 VIEW A: Admin Command Strip */}
+        {verifyIsAdminView ? (
+          <div className="pt-6 border-t border-slate-900/60 mt-8">
+            <span className="text-[9px] font-mono text-slate-500 block mb-3 tracking-widest">// ADMINISTRATOR CONTROLS SYSTEM</span>
+            <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
+              <div className="w-full">
+                <button
+                  disabled={!isPaidGateUnlocked}
+                  onClick={(e) => {
+                    if (!isPaidGateUnlocked) {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      return;
+                    }
+                    setIsEmailModalOpen(true);
+                  }}
+                  className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
+                    isPaidGateUnlocked
+                      ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
+                      : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none"
                   }`}
                 >
-                  <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
-                    <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
-                    <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border uppercase ${
-                      isPaidGateUnlocked 
-                        ? 'bg-red-600/20 text-red-500 border-red-600/30' 
-                        : 'bg-green-600/20 text-green-500 border-green-600/30'
-                    }`}>
-                      {isPaidGateUnlocked ? <Unlock size={10} /> : <Lock size={10} />} 
-                      {isPaidGateUnlocked ? frac.severity : "SECURE GATE"}
-                    </span>
-                  </div>
-                  <div className="my-6 space-y-2">
-                    <h4 className="text-xl font-black text-white font-mono">{String(frac.id || 'ANOMALY DETECTED')}</h4>
-                    <p className="text-xs font-mono text-slate-300 font-normal leading-relaxed normal-case">{frac.description}</p>
-                  </div>
-                  <div className="border-t border-slate-900 pt-4 font-mono">
-                    <div className="text-[9px] text-slate-600 tracking-widest mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
-                    <div className={`text-xs font-sans tracking-wide font-medium normal-case ${accentColorClass}`}>{frac.directive}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+                  <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
+                  {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
+                </button>
+              </div>
 
-        {/* 🛡️ LOCKED GATE INTERACTIVE CONTROLS CONTAINER */}
-        <div className="pt-6">
-          <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
-            
-            {/* 🔴 TERMINAL SYSTEM BUTTON: RE-COUPLED WITH SOLID COGNITIVE EVENT BLOCK EXCLUSIONS */}
-            <div className="w-full">
-              <button
-                disabled={!isPaidGateUnlocked}
-                onClick={(e) => {
-                  // 🚫 INTERCEPTION LAYER: Stops execution and modal bubbling completely if payment verification is missing
-                  if (!isPaidGateUnlocked) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                  }
-                  
-                  // 🟢 OPEN LAUNCHPAD SEQUENCE (Only reached if status evaluates to PAID)
-                  setIsEmailModalOpen(true);
-                }}
-                className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
-                  isPaidGateUnlocked
-                    ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
-                    : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none shadow-none"
-                }`}
+              <button 
+                onClick={fireBriefingSequence}
+                className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-5 uppercase w-full font-black tracking-tight cursor-pointer"
               >
-                <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
-                {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
+                COMPILE PARTIAL ANSWERS
               </button>
             </div>
-
-            {/* COMPILE PARTIAL ANSWERS: Accessible configuration handoff for mid-funnel client sessions */}
-            <button 
-              onClick={() => {
-                if (audit?.id) {
-                  fetch('/api/cancel-reminder', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ auditId: audit.id }),
-                  }).catch((err) => console.error('Silent reminder cancellation skipped:', err));
-                }
-
-                const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
-                const baseCalendlyUrl = "https://calendly.com/hello-bmradvisory/forensic-briefing";
-                const specializedUrl = clientEmail ? `${baseCalendlyUrl}?email=${clientEmail}` : baseCalendlyUrl;
-                
-                window.open(specializedUrl, "_blank");
-              }}
-              className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-5 uppercase w-full font-black tracking-tight"
-            >
-              COMPILE PARTIAL ANSWERS
-            </button>
-            
           </div>
-        </div>
+        ) : (
+          /* 🌐 VIEW B: Public Customer Landing Call-To-Action */
+          !isPhaseTwoActive && (
+            <div 
+              className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
+              onClick={fireBriefingSequence}
+            >
+              <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
+              <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
+            </div>
+          )
+        )}
       </main>
     </div>
   );
