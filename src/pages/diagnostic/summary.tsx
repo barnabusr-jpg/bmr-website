@@ -53,22 +53,31 @@ export default function DiagnosticSummaryPage() {
     const laborMultiplier = 0.5;
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
     
-    const sector = (hydratedData.sec || 'SERVICES_RETAIL').toLowerCase().trim();
-    let sectorInflationMultiplier = 1.2;
+    // 🛡️ REFACTORED INDUSTRY VERTICAL NORMALIZER
+    // Aligns layout variables with 4 discrete intake platform nodes
+    const sectorInput = String(hydratedData.sec || '').toUpperCase().trim();
+    let normalizedSector: SectorType = 'SERVICES';
 
-    if (sector.includes('finance') || sector.includes('healthcare')) {
+    if (sectorInput.includes('HEALTHCARE') || sectorInput.includes('CLINICAL') || sectorInput === 'HEALTH') {
+      normalizedSector = 'HEALTHCARE';
+    } else if (sectorInput.includes('FINANCE') || sectorInput.includes('BANKING') || sectorInput === 'COMPLIANCE') {
+      normalizedSector = 'FINANCE';
+    } else if (sectorInput.includes('INDUSTRIAL') || sectorInput.includes('LOGISTICS') || sectorInput === 'OPERATIONS') {
+      normalizedSector = 'INDUSTRIAL';
+    } else if (sectorInput.includes('SERVICES') || sectorInput.includes('RETAIL') || sectorInput.includes('SAAS') || sectorInput === 'LABOR') {
+      normalizedSector = 'SERVICES';
+    }
+
+    let sectorInflationMultiplier = 1.2;
+    if (normalizedSector === 'HEALTHCARE' || normalizedSector === 'FINANCE' || normalizedSector === 'INDUSTRIAL') {
       sectorInflationMultiplier = 1.5;
-    } else if (sector.includes('industrial') || sector.includes('logistics')) {
-      sectorInflationMultiplier = 1.5; 
-    } else if (sector.includes('saas') || sector.includes('enterprise')) {
-      sectorInflationMultiplier = 1.2;
     }
 
     const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
 
     return {
       companyName: hydratedData.org,
-      sector: hydratedData.sec || 'ENTERPRISE_SAAS',
+      sector: normalizedSector,
       responses: hydratedData.ans,
       metrics: {
         multiplier: sectorInflationMultiplier,
