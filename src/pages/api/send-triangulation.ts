@@ -62,9 +62,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                         </p>
                       </div>
                       
-                      <div style="background-color: #000000; border-left: 4px solid #dc2626; padding: 15px; margin: 25px 0;">
-                        <span style="color: #64748b; font-size: 9px; font-family: monospace; font-weight: bold; display: block; margin-bottom: 4px;">// ASSIGNED VECTOR</span>
-                        <strong style="color: #ffffff; font-size: 14px; text-transform: uppercase; font-family: sans-serif;">${roleName.toUpperCase()}</strong>
+                      <div style="background-color: #0f172a; border-left: 4px solid #dc2626; padding: 24px; margin-bottom: 32px; box-sizing: border-box;">
+                        <span style="color: #ef4444; font-family: monospace; font-size: 10px; font-weight: 900; letter-spacing: 0.2em; display: block; margin-bottom: 6px;">
+                          // ASSIGNED VECTOR
+                        </span>
+                        <span style="color: #ffffff; font-size: 15px; font-weight: 900; letter-spacing: -0.01em; text-transform: uppercase; line-height: 1.4; display: block;">
+                          ${roleName.toUpperCase()}
+                        </span>
                       </div>
 
                       <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
