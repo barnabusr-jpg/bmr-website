@@ -12,7 +12,7 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
-// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE
+// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE (STAYS ACTIVE FOR REAL-TIME STREAMING)
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -76,20 +76,19 @@ function RealTimeLossTicker({
   );
 }
 
-export default function UnifiedResultsPortal() {
+export default function PublicUserPortal() {
   const router = useRouter();
-  const { id, live_sync, unblurred, decay, spend: querySpend, leakage, tax } = router.query;
+  const { id } = router.query;
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<AuditRecord | null>(null);
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   useEffect(() => { 
     setMounted(true); 
   }, []);
 
-  // 📡 REAL-TIME SUBSCRIPTION LISTENER
+  // 📡 REAL-TIME SUBSCRIPTION LISTENER (Stream values directly from your Admin Sliders live)
   useEffect(() => {
     if (!id || !mounted) return;
     
@@ -120,36 +119,18 @@ export default function UnifiedResultsPortal() {
     return () => { supabase.removeChannel(channelSubscription); };
   }, [id, mounted]);
 
-  const dbDecay = useMemo(() => {
-    if (live_sync === "true" && decay) return parseInt(decay as string);
-    return audit?.decay_pct || 24;
-  }, [live_sync, decay, audit?.decay_pct]);
-
-  const spend = useMemo(() => {
-    if (live_sync === "true" && querySpend) return parseFloat(querySpend as string);
-    return audit?.ai_spend || 1.2;
-  }, [live_sync, querySpend, audit?.ai_spend]);
+  const dbDecay = audit?.decay_pct || 24;
+  const spend = audit?.ai_spend || 1.2;
 
   const isPhaseTwoActive = useMemo(() => {
-    return !!audit?.is_released || unblurred === "true" || audit?.status?.toUpperCase() === 'PAID';
-  }, [audit?.is_released, unblurred, audit?.status]);
+    return !!audit?.is_released || audit?.status?.toUpperCase() === 'PAID';
+  }, [audit?.is_released, audit?.status]);
 
   const isPaidGateUnlocked = useMemo(() => {
     return audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.status]);
 
   const metrics = useMemo(() => {
-    if (live_sync === "true" && leakage && tax) {
-      const parsedTax = parseFloat(tax as string);
-      return {
-        fteCount: audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6,
-        totalLaborTaxPool: parsedTax,
-        internalReworkTax: parsedTax * 0.60,
-        operationalDragTax: parsedTax * 0.40,
-        exposure: parseFloat(leakage as string) - parsedTax
-      };
-    }
-
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
     const laborMultiplier = 0.5;
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
@@ -161,7 +142,7 @@ export default function UnifiedResultsPortal() {
       operationalDragTax: totalLaborTaxPool * 0.40,
       exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15
     };
-  }, [dbDecay, spend, audit?.roi_pct, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit?.roi_pct]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
@@ -220,7 +201,6 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
-  // 🛡️ CRITICAL RACE-CONDITION GATEWAY: Forces page to wait until audit record has been fully returned
   if (!mounted || loading || !router.isReady || !audit) {
     return (
       <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
@@ -356,45 +336,8 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* 🔒 VIEW A: Admin Workspace Frame */}
-        {live_sync === "true" && (
-          <div className="pt-6 border-t border-slate-900/60 mt-8">
-            <span className="text-[9px] font-mono text-slate-500 block mb-3 tracking-widest">// ADMINISTRATOR CONTROLS SYSTEM</span>
-            <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
-              <div className="w-full">
-                <button
-                  disabled={!isPaidGateUnlocked}
-                  onClick={(e) => {
-                    if (!isPaidGateUnlocked) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      return;
-                    }
-                    setIsEmailModalOpen(true);
-                  }}
-                  className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
-                    isPaidGateUnlocked
-                      ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
-                      : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none"
-                  }`}
-                >
-                  <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
-                  {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
-                </button>
-              </div>
-
-              <button 
-                onClick={fireBriefingSequence}
-                className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-5 uppercase w-full font-black tracking-tight cursor-pointer"
-              >
-                COMPILE PARTIAL ANSWERS
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 🌐 VIEW B: Public Customer Landing Call-To-Action */}
-        {live_sync !== "true" && !isPhaseTwoActive && (
+        {/* 🌐 RESTORED WHITE CALL-TO-ACTION BANNER: Renders exclusively for unpaid users */}
+        {!isPhaseTwoActive && (
           <div 
             className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
             onClick={fireBriefingSequence}
