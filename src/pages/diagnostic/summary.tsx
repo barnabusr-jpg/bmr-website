@@ -44,17 +44,41 @@ export default function DiagnosticSummaryPage() {
   const parsedDossier = React.useMemo(() => {
     if (!hydratedData) return null;
     
-    // 📊 100% DYNAMIC STATE PARSER: Pulls raw user data right out of the compressed token answers object
-    const dbDecay = parseFloat(hydratedData.ans.decay_pct) || 24; 
-    const spend = parseFloat(hydratedData.ans.ai_spend) || 1.2;
-    const fteCount = parseInt(hydratedData.ans.roi_pct) || 6;
-    const complianceIndex = parseFloat(hydratedData.ans.sfi_score) || 78;
+    // 📊 MULTI-PERSONA PAYLOAD FLATTENER
+    // Sweeps through all nested tracks to harvest root values reliably
+    const flatAnswers: Record<string, string> = {};
+    
+    if (hydratedData.ans) {
+      Object.values(hydratedData.ans).forEach((personaPayload) => {
+        if (personaPayload && typeof personaPayload === 'object') {
+          Object.entries(personaPayload).forEach(([key, val]) => {
+            if (val && typeof val === 'object' && 'key' in val) {
+              flatAnswers[key] = String((val as any).key);
+            } else if (val !== undefined && val !== null) {
+              flatAnswers[key] = String(val);
+            }
+          });
+        }
+      });
+      
+      // Fallback fallback: if payload was already flat, overlay it directly
+      Object.entries(hydratedData.ans).forEach(([key, val]) => {
+        if (typeof val !== 'object') {
+          flatAnswers[key] = String(val);
+        }
+      });
+    }
+
+    // Safely parse core data targets out of the consolidated flat log tracking registry
+    const dbDecay = parseFloat(flatAnswers.decay_pct) || parseFloat(hydratedData.ans.decay_pct) || 24; 
+    const spend = parseFloat(flatAnswers.ai_spend) || parseFloat(hydratedData.ans.ai_spend) || 1.2;
+    const fteCount = parseInt(flatAnswers.roi_pct) || parseInt(hydratedData.ans.roi_pct) || 6;
+    const complianceIndex = parseFloat(flatAnswers.sfi_score) || parseFloat(hydratedData.ans.sfi_score) || 78;
     
     const laborMultiplier = 0.5;
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
     
     // 🛡️ REFACTORED INDUSTRY VERTICAL NORMALIZER
-    // Aligns layout variables with 4 discrete intake platform nodes
     const sectorInput = String(hydratedData.sec || '').toUpperCase().trim();
     let normalizedSector: SectorType = 'SERVICES';
 
