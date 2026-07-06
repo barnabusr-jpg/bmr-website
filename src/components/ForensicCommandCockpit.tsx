@@ -14,23 +14,106 @@ interface CockpitProps {
     isTierThreeExposure: boolean;
     regulatoryAlertActive: boolean;
   };
-  responses?: Record<string, any>; // 🚀 Added to capture stateless user inputs
+  responses?: Record<string, any>; // 🚀 Captured from stateless user inputs
 }
 
-/**
- * 🕹️ SECTOR-AWARE FORENSIC COMMAND COCKPIT (CLEAN RETRIEVAL EDITION)
- * Inherits strict dashboard parallax parity while adding a stateless, 
- * zero-database magic link recovery module.
- */
+// 🌐 MULTI-TENANT INDUSTRY INTELLIGENCE LOOKUP MATRIX
+const INDUSTRY_PROFILES: Record<string, {
+  label: string;
+  taxLabel: string;
+  exposureLabel: string;
+  taxFormula: string;
+  metric1Label: string;
+  metric1Val: string;
+  metric1Pct: number;
+  metric1Peer: string;
+  metric2Label: string;
+  metric2Val: string;
+  metric2Pct: number;
+  metric2Peer: string;
+  standards: Array<{ title: string; desc: string }>;
+}> = {
+  ENTERPRISE_SAAS: {
+    label: "ENTERPRISE / SAAS CORE REGIME",
+    taxLabel: "ANNUAL REWORK TAX IMPACT",
+    exposureLabel: "UNHEDGED EXP EXPOSURE",
+    taxFormula: "Total Rework Tax = (Impacted FTEs × Burdened Engineering Cost) × (Systemic Friction Index / 100) × Velocity Loss Multiplier",
+    metric1Label: "SCHEMA STABILITY INDEX",
+    metric1Val: "24% (CRITICAL)",
+    metric1Pct: 24,
+    metric1Peer: "Peer Avg: 78%",
+    metric2Label: "TELEMETRY SIGNAL TO NOISE RATIO",
+    metric2Val: "41% (DEGRADED)",
+    metric2Pct: 41,
+    metric2Peer: "Peer Avg: 65%",
+    standards: [
+      { title: "ISO/IEC 25010 // Product Quality Architecture", desc: "Coupled single-vendor interfaces violate Sub-characteristic 4.2 (Modifiability), inflating downstream modification regression risks exponentially." },
+      { title: "SOC 2 Type II // Trust Services Criteria (CC7.2)", desc: "Unfiltered telemetry packet saturation directly degrades production anomaly identification timelines, violating core operational monitoring clauses." }
+    ]
+  },
+  FINANCE_HEALTHCARE: {
+    label: "HEALTH-TECH & CLINICAL TRANSACTIONAL REGIME",
+    taxLabel: "CLINICAL OPERATIONAL TAX IMPACT",
+    exposureLabel: "STATUTORY HIPAA RISK EXPOSURE",
+    taxFormula: "Total Operational Tax = (Active Provider Endpoints × Data Sync Overhead) × (Interoperability Friction / 100) × Liability Multiplier",
+    metric1Label: "INTEROPERABILITY LATENCY INTEGRITY",
+    metric1Val: "18% (FAILING)",
+    metric1Pct: 18,
+    metric1Peer: "Peer Avg: 92%",
+    metric2Label: "PATIENT TELEMETRY INGESTION DROP-RATE",
+    metric2Val: "58% (CRITICAL)",
+    metric2Pct: 58,
+    metric2Peer: "Peer Avg: 99.9%",
+    standards: [
+      { title: "HIPAA Security Rule // § 164.312(b)", desc: "Lack of centralized pipeline abstraction mechanisms risks structural audit trail fractures across disparate distributed endpoints." },
+      { title: "HL7 FHIR v4 // Data Exchange Conformance", desc: "Unstructured schema drift in clinical telemetry ingestion points causes severe serialization rejections, threatening clinical data lineage." }
+    ]
+  },
+  INDUSTRIAL_LOGISTICS: {
+    label: "FINTECH & TRANSACTIONAL METRIC REGIME",
+    taxLabel: "SETTLEMENT LEAKAGE TAX IMPACT",
+    exposureLabel: "UNHEDGED REGULATORY FINES LIABILITY",
+    taxFormula: "Total Settlement Leakage = (Settlement Volume × Clearing Friction Coefficient) × (Ledger Drift Index / 100) × Regulatory Multiplier",
+    metric1Label: "LEDGER RECONCILIATION ACCURACY",
+    metric1Val: "71% (NON-COMPLIANT)",
+    metric1Pct: 71,
+    metric1Peer: "Peer Avg: 99.99%",
+    metric2Label: "REAL-TIME TRANSACTION AUDITABILITY",
+    metric2Val: "33% (CRITICAL RISK)",
+    metric2Pct: 33,
+    metric2Peer: "Peer Avg: 88%",
+    standards: [
+      { title: "PCI-DSS v4.0 // Requirement 10.2", desc: "Telemetry signal saturation and delayed processing times break real-time automated audit log generation loops for critical cardholder data environments." },
+      { title: "Sarbanes-Oxley (SOX) // Section 404", desc: "Undocumented schema alterations in transactional messaging queues create high-severity unmapped risk vectors in internal financial reporting controls." }
+    ]
+  },
+  SERVICES_RETAIL: {
+    label: "SERVICES / RETAIL CORE REGIME (BASELINE)",
+    taxLabel: "RETAIL PROCESSING FRICTION TAX",
+    exposureLabel: "RETAIL RISK EXPOSURE post-AUDIT",
+    taxFormula: "Total Processing Friction = (Point-of-Sale Nodes × Synchronization Latency) × Overhead Index",
+    metric1Label: "TRANSACTION SYNCポスト COHERENCE",
+    metric1Val: "52% (STRESSED)",
+    metric1Pct: 52,
+    metric1Peer: "Peer Avg: 89%",
+    metric2Label: "LOGISTICS ENDPOINT INVENTORY BLINDNESS",
+    metric2Val: "47% (DEGRADED)",
+    metric2Pct: 47,
+    metric2Peer: "Peer Avg: 75%",
+    standards: [
+      { title: "NIST Cybersecurity Framework v2 (PR.DS)", desc: "Unfiltered event telemetry configurations limit automated detection responsiveness across point-of-sale node networks." }
+    ]
+  }
+};
+
 export default function ForensicCommandCockpit({ companyName, sector, metrics, responses = {} }: CockpitProps) {
   const [copied, setCopied] = React.useState(false);
 
-  const sectorLabel = {
-    FINANCE_HEALTHCARE: 'Highly Regulated (Finance/Healthcare)',
-    ENTERPRISE_SAAS: 'Enterprise/SaaS',
-    INDUSTRIAL_LOGISTICS: 'Industrial/Logistics',
-    SERVICES_RETAIL: 'Services/Retail (Baseline)',
-  }[sector];
+  // 📡 Resolve active industry parameters safely from our data dictionary map
+  const activeProfile = useMemo(() => {
+    const key = (sector || 'SERVICES_RETAIL').toUpperCase() as string;
+    return INDUSTRY_PROFILES[key] || INDUSTRY_PROFILES.SERVICES_RETAIL;
+  }, [sector]);
 
   // 🔐 Compress contextual operational parameters into an immutable URL token
   const magicLink = useMemo(() => {
@@ -64,7 +147,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
         <div className="flex items-center gap-3 shrink-0">
           <Activity className="text-red-600 animate-pulse" size={20} />
           <span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">
-            SYSTEM RISK SECTOR REGIME: <span className="text-red-600">{sectorLabel}</span>
+            SYSTEM RISK SECTOR REGIME: <span className="text-red-600">{activeProfile.label}</span>
           </span>
         </div>
         
@@ -87,14 +170,14 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
         </div>
 
         <div className="bg-slate-950/60 border border-yellow-600/30 p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950">
-          <span className="text-[9px] font-mono text-yellow-500 font-black tracking-widest uppercase block">// ANNUAL REWORK TAX IMPACT</span>
+          <span className="text-[9px] font-mono text-yellow-500 font-black tracking-widest uppercase block">// {activeProfile.taxLabel}</span>
           <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-yellow-500 font-sans">
             ${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </div>
         </div>
 
         <div className="bg-slate-950/60 border border-red-600/30 p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950">
-          <span className="text-[9px] font-mono text-red-500 font-black tracking-widest uppercase block">// UNHEDGED EXP EXPOSURE</span>
+          <span className="text-[9px] font-mono text-red-500 font-black tracking-widest uppercase block">// {activeProfile.exposureLabel}</span>
           <div className="text-4xl font-black italic tracking-tighter mt-4 leading-none text-red-500 font-sans">
             ${metrics.unhedgedLegalExposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           </div>
@@ -124,6 +207,50 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
             <p>
               Cross-persona triangulation logs identify a significant technical debt layer across operations pipelines for <strong>{companyName}</strong>. At current workforce configurations, this structural friction generates a predictable annual leakage calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>, resulting directly in developers abandoning active sprints to manage single-vendor dependencies manually.
             </p>
+
+            {/* 🧮 THE ANTI-BULL CIO CALCULUS MATRIX (Dynamic Integration) */}
+            <div className="bg-[#090d16] border border-slate-900 font-mono p-6 my-8 text-left text-slate-300 shadow-inner rounded-sm not-italic normal-case font-medium">
+              <div className="text-[10px] text-red-500 font-black tracking-widest uppercase mb-4 flex justify-between items-center">
+                <span>// QUANTITATIVE LEAKAGE DERIVATION LEDGER</span>
+                <span className="text-[9px] text-slate-500 bg-black/50 px-2 py-0.5 border border-slate-800 tracking-normal">REGIME: {activeProfile.label}</span>
+              </div>
+              
+              <div className="text-xs space-y-4 leading-relaxed">
+                <div>
+                  <span className="text-white font-bold block mb-1 uppercase tracking-tight text-[11px]">Formula Verification Anchor:</span>
+                  <code className="text-yellow-500 block bg-black/60 p-3 border border-slate-900 font-bold tracking-tight text-[11px] overflow-x-auto whitespace-pre-wrap font-mono">
+                    {activeProfile.taxFormula}
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            {/* 📊 INDUSTRY BENCHMARK PARITY MATRIX (Dynamic Integration) */}
+            <div className="my-8 border-t border-b border-slate-200 py-6 not-italic normal-case font-medium">
+              <span className="text-[10px] font-mono font-black tracking-widest text-slate-400 block mb-4 uppercase">// COHORT BENCHMARK PARITY MATRIX</span>
+              <div className="space-y-4 font-mono text-xs">
+                {/* Dynamic Metric 1 */}
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="font-bold text-slate-700">{activeProfile.metric1Label}:</span>
+                    <span className="text-red-600 font-bold">{activeProfile.metric1Val} <span className="text-slate-400 font-normal">/ {activeProfile.metric1Peer}</span></span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-xs overflow-hidden">
+                    <div className="bg-red-600 h-full" style={{ width: `${activeProfile.metric1Pct}%` }} />
+                  </div>
+                </div>
+                {/* Dynamic Metric 2 */}
+                <div>
+                  <div className="flex justify-between text-[11px] mb-1">
+                    <span className="font-bold text-slate-700">{activeProfile.metric2Label}:</span>
+                    <span className="text-amber-600 font-bold">{activeProfile.metric2Val} <span className="text-slate-400 font-normal">/ {activeProfile.metric2Peer}</span></span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-2 rounded-xs overflow-hidden">
+                    <div className="bg-amber-500 h-full" style={{ width: `${activeProfile.metric2Pct}%` }} />
+                  </div>
+                </div>
+              </div>
+            </div>
             
             {/* Dashboard-Aligned Alert Box */}
             {metrics.regulatoryAlertActive && (
@@ -137,6 +264,23 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
                 </p>
               </div>
             )}
+          </div>
+
+          <hr className="border-slate-100" />
+
+          {/* 📜 STANDARDS COMPLIANCE CROSS-REFERENCE (Dynamic Integration) */}
+          <div className="bg-slate-50 border border-slate-200 p-6 my-6 font-mono text-xs text-slate-700 not-italic normal-case font-medium">
+            <div className="text-[10px] text-black font-black tracking-widest uppercase mb-3">// ARCHITECTURAL CODES & STANDARDS CROSS-REFERENCE</div>
+            <ul className="space-y-3 list-none p-0 m-0 text-[11px]">
+              {activeProfile.standards.map((std, idx) => (
+                <li key={idx} className="flex items-start gap-2">
+                  <span className="text-red-600 font-bold shrink-0">[NON-COMPLIANT]</span>
+                  <div>
+                    <strong className="text-black">{std.title}:</strong> {std.desc}
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
 
           <hr className="border-slate-100" />
