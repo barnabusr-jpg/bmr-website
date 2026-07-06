@@ -17,7 +17,7 @@ export default function ForensicDiagnosticWizard({
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
 
-  // 📥 PASSIVE MOUNT CAPTURE: Lock stakeholder parameter tokens into session memory fallback
+  // 📥 STATE HYDRATION & MOUNT CAPTURE: Restores total survey progress from cache memory
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -30,8 +30,19 @@ export default function ForensicDiagnosticWizard({
       if (roleParam) {
         window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
       }
+
+      // Pre-populate the local component state with historical answers across all active pillars
+      const cachedState = window.sessionStorage.getItem(`bmr_wizard_state_cache`);
+      if (cachedState) {
+        try {
+          const parsedCache = JSON.parse(cachedState);
+          setAnswers(parsedCache);
+        } catch (err) {
+          console.error("Failed to hydrate historical wizard memory:", err);
+        }
+      }
     }
-  }, []);
+  }, [activePillar]); // Hydrates cleanly whenever changing between funnel segments
 
   // 🔒 STRICT BOUNDARY FILTER: Restricts view to only the active framework lane
   const activeQuestions = useMemo(() => {
@@ -41,21 +52,44 @@ export default function ForensicDiagnosticWizard({
   }, [activePillar]);
 
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
-    setAnswers(prev => ({ ...prev, [questionId]: choiceKey }));
+    setAnswers(prev => {
+      const updated = { ...prev, [questionId]: choiceKey };
+      // Keep backing cache updated immediately during click loops
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(updated));
+      }
+      return updated;
+    });
   };
 
+  // 🛰️ GLOBAL CORE COMPILATION FIX
   const compileActiveNodePosture = () => {
     setIsCompiling(true);
     
-    // Execute calculations out-of-band cleanly
-    const computedResults = calculateForensicMetrics(companyName, answers);
+    let combinedAnswers = { ...answers };
+    
+    if (typeof window !== 'undefined') {
+      const cachedState = window.sessionStorage.getItem(`bmr_wizard_state_cache`);
+      if (cachedState) {
+        try {
+          // Pull and merge all historical answer nodes across the three layout lanes
+          const parsedCache = JSON.parse(cachedState);
+          combinedAnswers = { ...parsedCache, ...answers };
+        } catch (err) {
+          console.error("Cache memory triangulation bypass:", err);
+        }
+      }
+    }
+
+    // Execute multi-pillar equations simultaneously without wiping lane states
+    const computedResults = calculateForensicMetrics(companyName, combinedAnswers);
     
     if (typeof window !== 'undefined') {
       window.sessionStorage.setItem(
         `bmr_runtime_${companyName}`, 
         JSON.stringify(computedResults)
       );
-      window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(answers));
+      window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(combinedAnswers));
     }
     
     onCalculated(computedResults);
