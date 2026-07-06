@@ -295,26 +295,35 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
             
+            {/* 💻 REFACTORED MULTI-PILLAR MATRIX LAUNCH ENGINE LINK */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
                 const activeAudit = data.find(item => item.id === expandedRow);
                 
                 if (activeAudit) {
-                  const entityCode = `${activeAudit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
-                  const targetPillar = (activeAudit.sfi_score || activeAudit.decay_pct) >= 45 ? "AVS" : "IGF"; 
+                  const sectorTag = String(activeAudit.sector || 'INDUSTRIAL').toUpperCase().trim();
                   
-                  const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
-                  const mgrNode  = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
-                  const techNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
+                  // Construct comprehensive cross-persona parameters for calculations
+                  const matrixPayload = {
+                    org: activeAudit.org_name,
+                    sec: sectorTag,
+                    ans: {
+                      EXECUTIVE: { 
+                        decay_pct: String(activeAudit.decay_pct || 24), 
+                        ai_spend: String(activeAudit.ai_spend || 1.2) 
+                      },
+                      OPERATIONAL: { 
+                        roi_pct: String(activeAudit.roi_pct || 6), 
+                        sfi_score: String(activeAudit.sfi_score || 78) 
+                      }
+                    }
+                  };
 
-                  const execEmail = encodeURIComponent(execNode?.email || "");
-                  const techEmail = encodeURIComponent(techNode?.email || "");
-                  const opsEmail  = encodeURIComponent(mgrNode?.email || "");
-                  const sysEmail  = encodeURIComponent(techNode?.email || ""); 
-
+                  // Encrypt into dynamic stateless URL window route parameter arrays
+                  const compressedToken = require('lz-string').compressToEncodedURIComponent(JSON.stringify(matrixPayload));
                   window.open(
-                    `/forensic?entity_code=${encodeURIComponent(entityCode)}&pillar=${targetPillar}&exec=${execEmail}&tech_mgmt=${techEmail}&ops_mgmt=${opsEmail}&sys_user=${sysEmail}&auth=admin_verified_secure`, 
+                    `/diagnostic/summary?matrix=${compressedToken}&auth=admin_verified_secure`, 
                     '_blank'
                   );
                 } else {
@@ -422,11 +431,9 @@ export default function AdminDashboard() {
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
                   
-                  // 🔒 UPGRADED FIXED PARAMETER MULTIPLIERS FOR TOTAL WORKFORCE ACCOUNTING
                   const laborMultiplier = 0.5;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   
-                  // 🧠 INTAKE STRATEGY FOCUS MARKUP MATRIX RESOLUTION
                   const sectorKey = (audit.sector || 'services').toLowerCase().trim();
                   let sectorInflationMultiplier = 1.2;
 
@@ -440,7 +447,6 @@ export default function AdminDashboard() {
                     sectorInflationMultiplier = 1.2;
                   }
 
-                  // 📊 HIGH-FIDELITY CORE CALCULUS EQUATION ALIGNMENT
                   const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
                   const totalLeakage = laborTax + exposure;
 
