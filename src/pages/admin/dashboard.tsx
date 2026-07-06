@@ -6,6 +6,7 @@ import {
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
   X, Send, CheckCircle, Clock, Search, BellRing, FileText, Monitor
 } from "lucide-react";
+import LZString from "lz-string"; // 🛰️ ALIGNED ES6 PRODUCTION PACKAGE IMPORT MODULE
 import { supabase } from "@/lib/supabaseClient";
 
 const BMR_IP_SUITE = {
@@ -295,7 +296,7 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
             
-            {/* 💻 REFACTORED MULTI-PILLAR MATRIX LAUNCH ENGINE LINK */}
+            {/* 💻 FULLY SYNCHRONIZED MATRIX LINK COMPILATION GATEWAY */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -304,7 +305,6 @@ export default function AdminDashboard() {
                 if (activeAudit) {
                   const sectorTag = String(activeAudit.sector || 'INDUSTRIAL').toUpperCase().trim();
                   
-                  // Construct comprehensive cross-persona parameters for calculations
                   const matrixPayload = {
                     org: activeAudit.org_name,
                     sec: sectorTag,
@@ -320,8 +320,8 @@ export default function AdminDashboard() {
                     }
                   };
 
-                  // Encrypt into dynamic stateless URL window route parameter arrays
-                  const compressedToken = require('lz-string').compressToEncodedURIComponent(JSON.stringify(matrixPayload));
+                  // 🚀 EXPLICIT CALL UTILIZING CLEANLY INITIALIZED MODULE ROOT OBJECTS
+                  const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
                   window.open(
                     `/diagnostic/summary?matrix=${compressedToken}&auth=admin_verified_secure`, 
                     '_blank'
