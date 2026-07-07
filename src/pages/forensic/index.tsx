@@ -54,6 +54,7 @@ export default function ForensicEngineRoot() {
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
       try { 
+        // Force the path to hold a clean origin address to drop trailing admin params
         setBaseSecurePath(`${window.location.origin}${window.location.pathname}`); 
 
         const params = new URLSearchParams(window.location.search); 
@@ -172,9 +173,10 @@ export default function ForensicEngineRoot() {
 
             setEmails(fallbackEmails);
             
-            if (activeSectorStr.includes('AVS')) {
+            // Fixed to handle clear uppercase checking criteria
+            if (activeSectorStr.includes('AVS') || activeSectorStr.includes('INDUSTRIAL')) {
               setActivePillar('AVS');
-            } else if (activeSectorStr.includes('HAI')) {
+            } else if (activeSectorStr.includes('HAI') || activeSectorStr.includes('SERVICES')) {
               setActivePillar('HAI');
             } else {
               setActivePillar('IGF');
@@ -268,7 +270,7 @@ export default function ForensicEngineRoot() {
           companyName: sanitizedInput, 
           activePillar: activePillar, 
           endpoints: emails, 
-          originUrl: baseSecurePath 
+          originUrl: `${window.location.origin}${window.location.pathname}` 
         }), 
       }); 
     } catch (error) { 
@@ -291,7 +293,7 @@ export default function ForensicEngineRoot() {
     if (typeof window !== 'undefined') { 
       window.localStorage.setItem(`bmr_matrix_run_${updatedState.companyName}`, JSON.stringify(updatedState)); 
     } 
-     
+       
     setTriangulation(updatedState); 
 
     try { 
@@ -311,12 +313,12 @@ export default function ForensicEngineRoot() {
         .eq("persona_type", personaToBackendKey); 
 
       const params = new URLSearchParams(window.location.search); 
-      const currentPersonaEmail = params.get('email') || triangulation.emails[activePersona] || params.get('exec') || params.get('tech_mgmt') || params.get('ops_mgmt') || params.get('sys_user'); 
-       
+      const currentPersonaEmail = params.get('email') || triangulation.emails[activePersona]; 
+         
       if (currentPersonaEmail) { 
         updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail).trim()); 
       } 
-       
+         
       const { error } = await updateQuery; 
       if (error) throw error; 
 
@@ -329,7 +331,7 @@ export default function ForensicEngineRoot() {
 
     if (typeof window !== 'undefined') { 
       const currentParams = new URLSearchParams(window.location.search); 
-       
+         
       if (currentParams.get('role')) { 
         setViewState('THANK_YOU'); 
       } else { 
@@ -431,7 +433,7 @@ export default function ForensicEngineRoot() {
             </div> 
 
             <div className="pt-4 border-t border-zinc-900 font-mono"> 
-              <a             
+              <a                     
                 href="/dashboard" 
                 className="w-full bg-zinc-100 text-black text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md" 
               > 
@@ -509,7 +511,7 @@ export default function ForensicEngineRoot() {
               ))} 
             </div> 
 
-            {inputError && ( 
+            ={inputError && ( 
               <span className="text-[10px] text-red-500 font-mono block font-black uppercase tracking-wider">{inputError}</span> 
             )} 
 
@@ -580,7 +582,9 @@ export default function ForensicEngineRoot() {
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
                           const subject = `ACTION REQUIRED: Quad-Node Assessment Initialized for ${triangulation.companyName}`; 
-                          const body = `Team,\n\nYour specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the ${triangulation.pillar} Framework Layer for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
+                          // ✨ FIX: Swapped legacy path concatenation with a strict URL string vector to isolate handles
+                          const cleanOriginBase = `${window.location.origin}${window.location.pathname}`;
+                          const body = `Team,\n\nYour specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the ${triangulation.pillar} Framework Layer for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${cleanOriginBase}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
                         className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0" 
@@ -639,7 +643,7 @@ export default function ForensicEngineRoot() {
 
       {viewState === 'WIZARD' && triangulation && activePersona && ( 
         <ForensicDiagnosticWizard         
-          companyName={`${triangulation.companyName}::${activePersona}`} 
+          companyName={`${triangulation.companyName}`} 
           activePillar={triangulation.pillar} 
           onCalculated={() => { 
             if (typeof window !== 'undefined') { 
@@ -666,7 +670,7 @@ export default function ForensicEngineRoot() {
 
           <ForensicCommandCockpit         
             companyName={triangulation.companyName} 
-            sector="ENTERPRISE_SAAS" 
+            sector="SERVICES" 
             metrics={alignedCockpitMetrics} 
           /> 
 
