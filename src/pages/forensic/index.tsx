@@ -112,23 +112,23 @@ export default function ForensicEngineRoot() {
             return emailRegex.test(cleanVal) ? cleanVal : ""; 
           }; 
 
-          // 🧠 3-PERSONA INTERCEPT BRIDGE
-          // Maps Executive, Managerial, Technical securely while cloning Technical to System Operator
-          // 📡 TEMPORARY DIAGNOSTIC BRIDGE: Pull raw properties directly
-          const rawExec = decryptedData.execEmail || decryptedData.executive || decryptedData.executiveEmail || decryptedData.exec || params.get('exec') || "";
-          const rawTech = decryptedData.techEmail || decryptedData.technical || decryptedData.technicalEmail || decryptedData.tech || params.get('tech') || "";
-          const rawMgr  = decryptedData.mgrEmail || decryptedData.managerEmail || decryptedData.managerial || decryptedData.managerialEmail || decryptedData.mgr || params.get('mgr') || "";
+          // 🧠 3-PERSONA ADDRESS BAR PARAMETER INTERCEPT BRIDGE
+          // Extracts emails from standard URL parameters since they are not inside the token payload
+          const rawExec = params.get('exec') || params.get('executive') || params.get('execEmail') || "";
+          const rawTech = params.get('tech') || params.get('technical') || params.get('techEmail') || params.get('tech_mgmt') || "";
+          const rawMgr  = params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || params.get('ops_mgmt') || "";
 
-          // Alert the exact keys so we can identify the naming discrepancy instantly
-          if (typeof window !== 'undefined' && matrixToken) {
-            alert("DECRYPTED MATRIX KEYS: " + Object.keys(decryptedData).join(', ') + " | RAW VALUES CAUGHT: " + [rawExec, rawTech, rawMgr].join(' / '));
-          }
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+          const filterIncomingEmail = (val: string): string => { 
+            const cleanVal = decodeURIComponent(val).trim(); 
+            return emailRegex.test(cleanVal) ? cleanVal : ""; 
+          };
 
           setEmails({ 
-            EXECUTIVE: String(rawExec || ""), 
-            TECH_MGMT: String(rawTech || ""), 
-            OPS_MGMT: String(rawMgr || ""), 
-            SYSTEM_USER: String(rawTech || "")
+            EXECUTIVE: filterIncomingEmail(rawExec), 
+            TECH_MGMT: filterIncomingEmail(rawTech), 
+            OPS_MGMT: filterIncomingEmail(rawMgr), 
+            SYSTEM_USER: filterIncomingEmail(rawTech) // Clones technical vector path automatically
           }); 
 
         } else if (isParticipantRoute) { 
