@@ -114,15 +114,21 @@ export default function ForensicEngineRoot() {
 
           // 🧠 3-PERSONA INTERCEPT BRIDGE
           // Maps Executive, Managerial, Technical securely while cloning Technical to System Operator
-          const rawExec = decryptedData.execEmail || decryptedData.executive || decryptedData.executiveEmail || decryptedData.exec || params.get('exec');
-          const rawTech = decryptedData.techEmail || decryptedData.technical || decryptedData.technicalEmail || decryptedData.tech || params.get('tech');
-          const rawMgr  = decryptedData.mgrEmail || decryptedData.managerEmail || decryptedData.managerial || decryptedData.managerialEmail || decryptedData.mgr || params.get('mgr');
+          // 📡 TEMPORARY DIAGNOSTIC BRIDGE: Pull raw properties directly
+          const rawExec = decryptedData.execEmail || decryptedData.executive || decryptedData.executiveEmail || decryptedData.exec || params.get('exec') || "";
+          const rawTech = decryptedData.techEmail || decryptedData.technical || decryptedData.technicalEmail || decryptedData.tech || params.get('tech') || "";
+          const rawMgr  = decryptedData.mgrEmail || decryptedData.managerEmail || decryptedData.managerial || decryptedData.managerialEmail || decryptedData.mgr || params.get('mgr') || "";
+
+          // Alert the exact keys so we can identify the naming discrepancy instantly
+          if (typeof window !== 'undefined' && matrixToken) {
+            alert("DECRYPTED MATRIX KEYS: " + Object.keys(decryptedData).join(', ') + " | RAW VALUES CAUGHT: " + [rawExec, rawTech, rawMgr].join(' / '));
+          }
 
           setEmails({ 
-            EXECUTIVE: filterIncomingEmail(rawExec), 
-            TECH_MGMT: filterIncomingEmail(rawTech), 
-            OPS_MGMT: filterIncomingEmail(rawMgr), 
-            SYSTEM_USER: filterIncomingEmail(rawTech) // Mirror tech to retain terminal grid execution stability
+            EXECUTIVE: String(rawExec || ""), 
+            TECH_MGMT: String(rawTech || ""), 
+            OPS_MGMT: String(rawMgr || ""), 
+            SYSTEM_USER: String(rawTech || "")
           }); 
 
         } else if (isParticipantRoute) { 
