@@ -114,9 +114,9 @@ export default function ForensicEngineRoot() {
 
           // 🧠 3-PERSONA INTERCEPT BRIDGE
           // Maps Executive, Managerial, Technical securely while cloning Technical to System Operator
-          const rawExec = decryptedData.execEmail || params.get('exec');
-          const rawTech = decryptedData.techEmail || params.get('tech') || params.get('tech_mgmt');
-          const rawMgr  = decryptedData.mgrEmail || decryptedData.managerEmail || params.get('mgr') || params.get('ops_mgmt');
+          const rawExec = decryptedData.execEmail || decryptedData.executive || decryptedData.executiveEmail || decryptedData.exec || params.get('exec');
+          const rawTech = decryptedData.techEmail || decryptedData.technical || decryptedData.technicalEmail || decryptedData.tech || params.get('tech');
+          const rawMgr  = decryptedData.mgrEmail || decryptedData.managerEmail || decryptedData.managerial || decryptedData.managerialEmail || decryptedData.mgr || params.get('mgr');
 
           setEmails({ 
             EXECUTIVE: filterIncomingEmail(rawExec), 
