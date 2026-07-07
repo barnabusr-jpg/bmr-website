@@ -22,17 +22,18 @@ const LOCAL_QUESTIONS = [
   { id: "ED_04", text: "Computing resources (GPU/Cloud) are managed efficiently.", options: [{ label: "High waste", weight: 10 }, { label: "Partial", weight: 6 }, { label: "Managed", weight: 4 }, { label: "Hyper", weight: 2 }] }
 ];
 
+// ✨ FIX: Standardized IDs to match database tracking constants exactly
 const sectors = [
-  { id: "finance", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
-  { id: "healthcare", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
-  { id: "manufacturing", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
-  { id: "retail", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
+  { id: "FINANCE", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
+  { id: "HEALTHCARE", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
+  { id: "INDUSTRIAL", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
+  { id: "SERVICES", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
 ];
 
 export default function PulseCheck() {
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState("triage");
-  const [sector, setSector] = useState("finance");
+  const [sector, setSector] = useState("FINANCE");
   const [selectedLens, setSelectedLens] = useState<string | null>(null);
   const [operatorName, setOperatorName] = useState("");
   const [entityName, setEntityName] = useState("");
@@ -64,12 +65,11 @@ export default function PulseCheck() {
       const { data: auditData, error: auditError } = await supabase.from('audits').insert([{ 
         org_name: entityName.toUpperCase(),
         lead_email: email.toLowerCase(),
-        sector: sector,
+        sector: sector, // Always maps cleanly to uppercase rules now
         decay_pct: metrics.decay,
         rework_tax: parseFloat(metrics.rework),
         raw_responses: answers,
         status: 'COMPLETED',
-        // 🚀 PERMANENT LONG-TERM ROOT FIX: Hard-codes standard 6 FTE baseline on every fresh intake generation pass
         roi_pct: 6,
         ai_spend: 1.2
       }]).select('id').single();
@@ -226,7 +226,6 @@ export default function PulseCheck() {
                         
                         if (auditId) {
                           try {
-                            // 🚀 FORWARDING THE OPERATOR NAME LINK TO BACKEND PAYLOAD POOL
                             await fetch('/api/send-vault-link', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
