@@ -17,7 +17,7 @@ export default function ForensicDiagnosticWizard({
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
 
-  // 📥 STATE HYDRATION & MOUNT CAPTURE: Restores total survey progress from cache memory
+  // 📥 STATE HYDRATION & MOUNT CAPTURE: Restores total survey progress from isolated cache tracks
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -31,8 +31,8 @@ export default function ForensicDiagnosticWizard({
         window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
       }
 
-      // Pre-populate the local component state with historical answers across all active pillars
-      const cachedState = window.sessionStorage.getItem(`bmr_wizard_state_cache`);
+      // 🔒 NAMESPACE ISOLATION: Pre-populate local state ONLY with answers belonging to this exact track
+      const cachedState = window.sessionStorage.getItem(`bmr_wizard_state_cache_${activePillar}`);
       if (cachedState) {
         try {
           const parsedCache = JSON.parse(cachedState);
@@ -40,9 +40,12 @@ export default function ForensicDiagnosticWizard({
         } catch (err) {
           console.error("Failed to hydrate historical wizard memory:", err);
         }
+      } else {
+        // Clear local memory frame state if stepping onto a completely un-started track lane
+        setAnswers({});
       }
     }
-  }, [activePillar]); // Hydrates cleanly whenever changing between funnel segments
+  }, [activePillar]); // Hydrates cleanly whenever changing between framework segments
 
   // 🔒 STRICT BOUNDARY FILTER: Restricts view to only the active framework lane
   const activeQuestions = useMemo(() => {
@@ -54,34 +57,35 @@ export default function ForensicDiagnosticWizard({
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
     setAnswers(prev => {
       const updated = { ...prev, [questionId]: choiceKey };
-      // Keep backing cache updated immediately during click loops
+      // 💾 Keep backing cache updated under unique track namespace immediately during click loops
       if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(updated));
+        window.sessionStorage.setItem(`bmr_wizard_state_cache_${activePillar}`, JSON.stringify(updated));
       }
       return updated;
     });
   };
 
-  // 🛰️ GLOBAL CORE COMPILATION FIX
+  // 🛰️ MULTI-PILLAR MATRIX COMPILATION BOUNDARY
   const compileActiveNodePosture = () => {
     setIsCompiling(true);
     
-    let combinedAnswers = { ...answers };
+    let combinedAnswers = {};
     
     if (typeof window !== 'undefined') {
-      const cachedState = window.sessionStorage.getItem(`bmr_wizard_state_cache`);
-      if (cachedState) {
-        try {
-          // Pull and merge all historical answer nodes across the three layout lanes
-          const parsedCache = JSON.parse(cachedState);
-          combinedAnswers = { ...parsedCache, ...answers };
-        } catch (err) {
-          console.error("Cache memory triangulation bypass:", err);
-        }
+      try {
+        // Collect and isolate independent records cleanly across all namespaces
+        const igfCache = JSON.parse(window.sessionStorage.getItem(`bmr_wizard_state_cache_IGF`) || '{}');
+        const avsCache = JSON.parse(window.sessionStorage.getItem(`bmr_wizard_state_cache_AVS`) || '{}');
+        const haiCache = JSON.parse(window.sessionStorage.getItem(`bmr_wizard_state_cache_HAI`) || '{}');
+        
+        // Merge them cleanly at submission boundary to form the completed 90-question matrix
+        combinedAnswers = { ...igfCache, ...avsCache, ...haiCache, ...answers };
+      } catch (err) {
+        console.error("Cache namespace compilation bypass:", err);
       }
     }
 
-    // Execute multi-pillar equations simultaneously without wiping lane states
+    // Execute multi-pillar equations simultaneously using the isolated, aggregated payload
     const computedResults = calculateForensicMetrics(companyName, combinedAnswers);
     
     if (typeof window !== 'undefined') {
@@ -89,7 +93,6 @@ export default function ForensicDiagnosticWizard({
         `bmr_runtime_${companyName}`, 
         JSON.stringify(computedResults)
       );
-      window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(combinedAnswers));
     }
     
     onCalculated(computedResults);
