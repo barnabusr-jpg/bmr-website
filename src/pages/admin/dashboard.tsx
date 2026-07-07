@@ -296,7 +296,7 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
             
-            {/* 💻 FULLY SYNCHRONIZED MATRIX LINK COMPILATION GATEWAY */}
+            {/* 💻 CONSOLIDATED SYNCHRONIZED MATRIX LINK COMPILATION GATEWAY */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -305,25 +305,18 @@ export default function AdminDashboard() {
                 if (activeAudit) {
                   const sectorTag = String(activeAudit.sector || 'INDUSTRIAL').toUpperCase().trim();
                   
+                  // 🔒 CLEAN SLATE STRATEGY: Zero out the response payload to prevent premature UI triggers
                   const matrixPayload = {
                     org: activeAudit.org_name,
                     sec: sectorTag,
-                    ans: {
-                      EXECUTIVE: { 
-                        decay_pct: String(activeAudit.decay_pct || 24), 
-                        ai_spend: String(activeAudit.ai_spend || 1.2) 
-                      },
-                      OPERATIONAL: { 
-                        roi_pct: String(activeAudit.roi_pct || 6), 
-                        sfi_score: String(activeAudit.sfi_score || 78) 
-                      }
-                    }
+                    ans: {} 
                   };
 
-                  // 🚀 EXPLICIT CALL UTILIZING CLEANLY INITIALIZED MODULE ROOT OBJECTS
                   const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
+                  
+                  // 🛰️ ROUTING PARALYSIS BROKEN: Redirect directly to the input wizard instead of the summary page
                   window.open(
-                    `/diagnostic/summary?matrix=${compressedToken}&auth=admin_verified_secure`, 
+                    `/forensic?matrix=${compressedToken}&auth=admin_verified_secure`, 
                     '_blank'
                   );
                 } else {
@@ -766,14 +759,7 @@ export default function AdminDashboard() {
                               </div>
 
                               <div className="space-y-3">
-                                <button 
-                                  type="button" 
-                                  onClick={(e) => { 
-                                    e.stopPropagation(); 
-                                    window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${exposure + laborTax}&tax=${laborTax}`, '_blank');
-                                  }} 
-                                  className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"
-                                >
+                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${exposure + laborTax}&tax=${laborTax}`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer">
                                   <Monitor size={18} /> Open Onscreen Ledger
                                 </button>
                                 <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
