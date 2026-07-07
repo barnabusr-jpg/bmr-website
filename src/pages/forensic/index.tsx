@@ -112,18 +112,19 @@ export default function ForensicEngineRoot() {
             return emailRegex.test(cleanVal) ? cleanVal : ""; 
           }; 
 
-          // 🧠 3-PERSONA ADDRESS BAR PARAMETER INTERCEPT BRIDGE
-          // Extracts emails from standard URL parameters since they are not inside the token payload
+          // 🧠 INDESTRUCTIBLE CROSS-TAB COMPONENT BRIDGE
+          // Extracts parameters dynamically regardless of whether they arrive via short-form or long-form keys
           const rawExec = params.get('exec') || params.get('executive') || params.get('execEmail') || "";
-          const rawTech = params.get('tech') || params.get('technical') || params.get('techEmail') || params.get('tech_mgmt') || "";
-          const rawMgr  = params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || params.get('ops_mgmt') || "";
+          const rawTech = params.get('tech_mgmt') || params.get('tech') || params.get('technical') || params.get('techEmail') || "";
+          const rawMgr  = params.get('ops_mgmt') || params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || "";
+          const rawSys  = params.get('sys_user') || rawTech;
 
           // Uses the pre-existing filterIncomingEmail function declaration securely
           setEmails({ 
             EXECUTIVE: filterIncomingEmail(rawExec), 
             TECH_MGMT: filterIncomingEmail(rawTech), 
             OPS_MGMT: filterIncomingEmail(rawMgr), 
-            SYSTEM_USER: filterIncomingEmail(rawTech) // Clones technical vector path automatically
+            SYSTEM_USER: filterIncomingEmail(rawSys)
           }); 
 
         } else if (isParticipantRoute) { 
