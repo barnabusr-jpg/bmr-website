@@ -84,7 +84,7 @@ export default function ForensicEngineRoot() {
 
         // Extract values checking new namespaced structures first, falling back to legacy keys
         const targetCompanyName = (decryptedData.companyName || entityParam || '').trim().toUpperCase().replace(/\s+/g, '_');
-        const activeSectorStr = String(decryptedData.sector || pillarParam || '').toUpperCase();
+        const activeSectorStr = String(decryptedData.sector || decryptedData.sectorTag || pillarParam || '').toUpperCase();
 
         if (targetCompanyName) { 
           const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`); 
@@ -345,7 +345,7 @@ export default function ForensicEngineRoot() {
           <div className="space-y-6"> 
             <div className="bg-black border border-zinc-900 p-6 rounded-sm"> 
               <span className="font-mono text-[9px] text-zinc-500 block font-black tracking-widest uppercase mb-1">// SYSTEM DETECTED ASSESSMENT SECTOR</span> 
-              <h3 className="font-zinc-500 text-sm font-black text-white uppercase tracking-wider mb-2">{getPillarNodeDetails().title}</h3> 
+              <h3 className="font-mono text-sm font-black text-white uppercase tracking-wider mb-2">{getPillarNodeDetails().title}</h3> 
               <p className="text-sm text-zinc-300 font-sans leading-relaxed tracking-normal font-normal mb-4"> 
                 {getPillarNodeDetails().exposure} 
               </p> 
@@ -420,7 +420,10 @@ export default function ForensicEngineRoot() {
                     className={`w-full p-4 text-left border rounded-xs transition-all flex flex-col justify-center cursor-pointer ${ 
                       activePillar === p.id ? 'border-red-600 bg-red-950/10' : 'border-slate-800 bg-black hover:border-slate-700' 
                     }`} 
-                  /> 
+                  >
+                    {/* 🔧 FIXED: Re-added dropped string layout module */}
+                    <span className="text-xs font-black text-slate-200 tracking-wider uppercase italic">{p.title}</span>
+                  </button> 
                 ))} 
               </div> 
             </div> 
@@ -488,7 +491,7 @@ export default function ForensicEngineRoot() {
                     {completed ? ( 
                       <CheckCircle size={16} className="text-green-500 mt-1" /> 
                     ) : ( 
-                      <div className="w-3 h-3 rounded-full bg-slate-900 border-2 border-red-600 animate-pulse mt-1" /> 
+                      <div className="w-3 h-3 rounded-full bg-slate-900 border-2 border-red-600 animate-pulse mt-1} /> 
                     )} 
                   </div> 
                 ); 
