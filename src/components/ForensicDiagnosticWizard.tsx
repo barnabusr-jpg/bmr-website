@@ -28,7 +28,7 @@ export default function ForensicDiagnosticWizard({
       if (emailParam) window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
       if (roleParam) window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
 
-      // 🔒 GRID ISOLATION: Pull ONLY the current pillar's answers for the Quad-Node phase
+      // 🔒 GRID ISOLATION: Pull ONLY the current pillar's prefixed answers
       const currentQuadTrackCache = window.sessionStorage.getItem(`quad_cache_${activePillar}`);
       
       if (currentQuadTrackCache) {
@@ -38,13 +38,12 @@ export default function ForensicDiagnosticWizard({
           console.error("Failed to parse track cache:", err);
         }
       } else {
-        // Keeps the wizard state clean so the clashing 360 question IDs don't trigger auto-complete
         setAnswers({});
       }
     }
   }, [activePillar]);
 
-  // 🔒 BOUNDARY FILTER: Filters view to only the active pillar lane (IGF, AVS, or HAI)
+  // 🔒 BOUNDARY FILTER: Filters view to only the active pillar lane
   const activeQuestions = useMemo(() => {
     return Object.values(forensicQuestions).filter(
       q => q.pillar === activePillar
@@ -53,8 +52,10 @@ export default function ForensicDiagnosticWizard({
 
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
     setAnswers(prev => {
-      const updated = { ...prev, [questionId]: choiceKey };
-      // Save directly to this specific pillar's Quad phase pocket
+      // 🏷️ APPLY NAMESPACE IMMEDIATELY: Protects input state from clashing with deepdive entries
+      const prefixedKey = `quad_${questionId}`;
+      const updated = { ...prev, [prefixedKey]: choiceKey };
+      
       if (typeof window !== 'undefined') {
         window.sessionStorage.setItem(`quad_cache_${activePillar}`, JSON.stringify(updated));
       }
@@ -69,32 +70,34 @@ export default function ForensicDiagnosticWizard({
     
     if (typeof window !== 'undefined') {
       try {
-        // 1. Gather all Phase 1 (360 Deep Dive) caches across the pillars
+        // 1. Gather historical 360 Deep Dive caches safely
         const ddIgf = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_IGF`) || '{}');
         const ddAvs = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_AVS`) || '{}');
         const ddHai = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_HAI`) || '{}');
 
-        // 2. Gather all Phase 2 (90 Quad) caches across the pillars
+        // 2. Gather active Quad phase caches across all tracks
         const quadIgf = JSON.parse(window.sessionStorage.getItem(`quad_cache_IGF`) || '{}');
         const quadAvs = JSON.parse(window.sessionStorage.getItem(`quad_cache_AVS`) || '{}');
         const quadHai = JSON.parse(window.sessionStorage.getItem(`quad_cache_HAI`) || '{}');
         
-        // Incorporate current active state answers directly into their tracking layer
         const fullQuadSet = { 
           ...quadIgf, 
           ...quadAvs, 
           ...quadHai, 
           ...answers 
         };
+        
         const fullDeepDiveSet = { ...ddIgf, ...ddAvs, ...ddHai };
 
-        // 3. Namespace Prefixing: Map inputs safely to separate keys to completely avoid clashing
+        // 3. Map inputs cleanly into namespaced groups
         Object.keys(fullDeepDiveSet).forEach(key => {
-          fullyCompiledMatrix[`deepdive_${key}`] = fullDeepDiveSet[key];
+          const cleanKey = key.startsWith('deepdive_') ? key : `deepdive_${key}`;
+          fullyCompiledMatrix[cleanKey] = fullDeepDiveSet[key];
         });
 
         Object.keys(fullQuadSet).forEach(key => {
-          fullyCompiledMatrix[`quad_${key}`] = fullQuadSet[key];
+          const cleanKey = key.startsWith('quad_') ? key : `quad_${key}`;
+          fullyCompiledMatrix[cleanKey] = fullQuadSet[key];
         });
 
       } catch (err) {
@@ -102,7 +105,7 @@ export default function ForensicDiagnosticWizard({
       }
     }
 
-    // 4. Pass the dual-namespace object containing all isolated pillars directly to the engine
+    // 4. Pass the clean payload straight to the calculation engine
     const computedResults = calculateForensicMetrics(companyName, fullyCompiledMatrix);
     
     if (typeof window !== 'undefined') {
@@ -115,7 +118,8 @@ export default function ForensicDiagnosticWizard({
   };
 
   const currentStepTotal = activeQuestions.length;
-  const currentStepAnsweredCount = activeQuestions.filter(q => !!answers[q.id]).length;
+  // Adjusted loop count to evaluate correctly against prefixed state strings
+  const currentStepAnsweredCount = activeQuestions.filter(q => !!answers[`quad_${q.id}`] || !!answers[q.id]).length;
   const isPillarIncomplete = currentStepAnsweredCount < currentStepTotal;
 
   return (
@@ -148,46 +152,51 @@ export default function ForensicDiagnosticWizard({
 
       {/* Scenario Ingestion Loop */}
       <div className="space-y-10 mb-10">
-        {activeQuestions.map((question, index) => (
-          <div key={question.id} className="border border-slate-900 bg-slate-950/40 p-8 relative rounded-sm group/card">
-            <span className="text-[9px] font-mono text-slate-600 block mb-3 font-black tracking-widest not-italic">
-              // TARGET NODE: {question.target_node || 'STAKEHOLDER'} // ID: {question.id}
-            </span>
+        {activeQuestions.map((question, index) => {
+          const targetKey = `quad_${question.id}`;
+          const currentSelection = answers[targetKey] || answers[question.id];
+          
+          return (
+            <div key={question.id} className="border border-slate-900 bg-slate-950/40 p-8 relative rounded-sm group/card">
+              <span className="text-[9px] font-mono text-slate-600 block mb-3 font-black tracking-widest not-italic">
+                // TARGET NODE: {question.target_node || 'STAKEHOLDER'} // ID: {question.id}
+              </span>
 
-            <p className="text-2xl md:text-3xl text-white uppercase leading-tight tracking-tighter font-black mb-6 font-sans">
-              {index + 1}. {question.symptomatic_scenario}
-            </p>
-            
-            <div className="grid grid-cols-1 gap-3 mt-6 font-mono not-italic text-sm">
-              {(Object.keys(question.choices) as Array<'A' | 'B' | 'C' | 'D'>).map((key) => {
-                const choice = question.choices[key];
-                const isSelected = answers[question.id] === key;
-                return (
-                  <div 
-                    key={key}
-                    onClick={() => handleSelectOption(question.id, key)}
-                    className="border p-5 cursor-pointer transition-all flex items-start gap-4 rounded-xs border-slate-800 text-slate-400 hover:border-slate-600 hover:bg-slate-900/30"
-                    style={isSelected ? { backgroundColor: 'rgba(153, 27, 27, 0.1)', borderColor: '#dc2626', color: '#ffffff' } : {}}
-                  >
-                    <span className={`text-xs font-black px-3 py-1 border shrink-0 transition-all rounded-xs ${
-                      isSelected 
-                        ? 'bg-red-600 text-white border-red-500' 
-                        : 'bg-slate-900 text-slate-500 border-slate-800 group-hover/card:text-slate-300'
-                    }`}>
-                      {key}
-                    </span>
+              <p className="text-2xl md:text-3xl text-white uppercase leading-tight tracking-tighter font-black mb-6 font-sans">
+                {index + 1}. {question.symptomatic_scenario}
+              </p>
+              
+              <div className="grid grid-cols-1 gap-3 mt-6 font-mono not-italic text-sm">
+                {(Object.keys(question.choices) as Array<'A' | 'B' | 'C' | 'D'>).map((key) => {
+                  const choice = question.choices[key];
+                  const isSelected = currentSelection === key;
+                  return (
+                    <div 
+                      key={key}
+                      onClick={() => handleSelectOption(question.id, key)}
+                      className="border p-5 cursor-pointer transition-all flex items-start gap-4 rounded-xs border-slate-800 text-slate-400 hover:border-slate-600 hover:bg-slate-900/30"
+                      style={isSelected ? { backgroundColor: 'rgba(153, 27, 27, 0.1)', borderColor: '#dc2626', color: '#ffffff' } : {}}
+                    >
+                      <span className={`text-xs font-black px-3 py-1 border shrink-0 transition-all rounded-xs ${
+                        isSelected 
+                          ? 'bg-red-600 text-white border-red-500' 
+                          : 'bg-slate-900 text-slate-500 border-slate-800 group-hover/card:text-slate-300'
+                      }`}>
+                        {key}
+                      </span>
 
-                    <p className={`leading-relaxed font-sans normal-case text-sm font-semibold pt-0.5 transition-colors ${
-                      isSelected ? 'text-white' : 'text-slate-400'
-                    }`}>
-                      {choice.text}
-                    </p>
-                  </div>
-                );
-              })}
+                      <p className={`leading-relaxed font-sans normal-case text-sm font-semibold pt-0.5 transition-colors ${
+                        isSelected ? 'text-white' : 'text-slate-400'
+                      }`}>
+                        {choice.text}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Bottom Pipeline Status Controller */}
