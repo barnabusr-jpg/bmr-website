@@ -90,17 +90,6 @@ export default function ForensicEngineRoot() {
 
         if (isAdminAuthenticated && !roleParam) { 
           setAuthorizedAdmin(true); 
-           
-          // 🎯 AUTO-DETECT AND SELECTED TARGET SECTOR NODE
-          if (activeSectorStr.includes('IGF') || activeSectorStr.includes('FINANCE') || activeSectorStr.includes('COMPLIANCE')) {
-            setActivePillar('IGF');
-          } else if (activeSectorStr.includes('AVS') || activeSectorStr.includes('MANUFACTURING') || activeSectorStr.includes('INDUSTRIAL')) {
-            setActivePillar('AVS');
-          } else if (activeSectorStr.includes('HAI') || activeSectorStr.includes('HEALTHCARE') || activeSectorStr.includes('SERVICES')) {
-            setActivePillar('HAI');
-          } else {
-            setActivePillar('IGF');
-          }
 
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
           const filterIncomingEmail = (val: string | null): string => { 
@@ -109,18 +98,39 @@ export default function ForensicEngineRoot() {
             return emailRegex.test(cleanVal) ? cleanVal : ""; 
           }; 
 
-          // 📡 FORCE DIRECT LIVE SUPABASE SOURCE-OF-TRUTH RECOVERY
-          // Bypasses the dashboard's component state loop by querying operators schema directly on mount
-          const fetchTrueOperatorNodes = async () => {
+          // 📡 UNIFIED SOURCE-OF-TRUTH RECOVERY & EARLY-WARNING MATRIX SELECTOR
+          // Bypasses local state loops to pull real-time risk triage metrics and operator strings together
+          const synchronizeEngineDataMatrix = async () => {
             const cleanOrgLookup = targetCompanyName.replace(/_GLOBAL$/, '').replace(/_/g, ' ');
             
+            // 📊 Phase 1: Retrieve Live Risk Telemetry to Drive Predictive Layout Selections
             const { data: activeAudit } = await supabase
               .from('audits')
-              .select('id')
+              .select('id, sfi_score, decay_pct, sector')
               .ilike('org_name', cleanOrgLookup)
               .maybeSingle();
 
+            let targetCalculatedPillar: FunnelPillar = 'IGF';
+
             if (activeAudit) {
+              const decay = activeAudit.decay_pct || 24;
+              const sfi = activeAudit.sfi_score || decay;
+              const sectorStr = String(activeAudit.sector || '').toUpperCase();
+
+              // 🧠 Early Warning Heuristic Logic Gating Tracks
+              if (sfi >= 45) {
+                targetCalculatedPillar = 'AVS'; // Critical Systemic Friction shifts prioritization to AVS Tax
+              } else if (sectorStr.includes('IGF') || sectorStr.includes('FINANCE') || sectorStr.includes('COMPLIANCE')) {
+                targetCalculatedPillar = 'IGF';
+              } else if (sectorStr.includes('AVS') || sectorStr.includes('MANUFACTURING') || sectorStr.includes('INDUSTRIAL')) {
+                targetCalculatedPillar = 'AVS';
+              } else {
+                targetCalculatedPillar = 'HAI'; // Baseline tracks route to downstream automation monitoring anomalies
+              }
+
+              setActivePillar(targetCalculatedPillar);
+
+              // 🛰️ Phase 2: Direct Operator Schema Extraction Link
               const { data: databaseNodes } = await supabase
                 .from('operators')
                 .select('persona_type, email')
@@ -140,18 +150,19 @@ export default function ForensicEngineRoot() {
 
                 setEmails(freshDBEmails);
 
-                // Instantly force local storage alignment with real-time database records
+                // Instantly force local storage session caches to update with verified database properties
                 const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
                 if (saved) {
                   const parsed = JSON.parse(saved);
                   parsed.emails = freshDBEmails;
+                  parsed.pillar = targetCalculatedPillar; // Overwrites cached layout focus with predictive tracking
                   window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
                 }
-                return; 
+                return; // Graceful termination: Database records completely recovered and processed
               }
             }
 
-            // Fallback to direct query string values if database rows haven't settled yet
+            // 🍂 Secondary Fallback: Read direct address params if target ledger records are pending sync
             const rawExec = params.get('exec') || params.get('executive') || params.get('execEmail') || "";
             const rawTech = params.get('tech_mgmt') || params.get('tech') || params.get('technical') || params.get('techEmail') || "";
             const rawMgr  = params.get('ops_mgmt') || params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || "";
@@ -166,6 +177,15 @@ export default function ForensicEngineRoot() {
 
             setEmails(fallbackEmails);
             
+            // Reassign text sector patterns to pillar state if no custom metrics match yet
+            if (activeSectorStr.includes('AVS')) {
+              setActivePillar('AVS');
+            } else if (activeSectorStr.includes('HAI')) {
+              setActivePillar('HAI');
+            } else {
+              setActivePillar('IGF');
+            }
+
             if (targetCompanyName) {
               const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
               if (saved) {
@@ -176,7 +196,7 @@ export default function ForensicEngineRoot() {
             }
           };
 
-          fetchTrueOperatorNodes();
+          synchronizeEngineDataMatrix();
 
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
