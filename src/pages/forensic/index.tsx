@@ -732,7 +732,7 @@ export default function ForensicEngineRoot() {
                       ⚠️ Forensic Inaction Liability ($2,070,000)
                     </span>
                     <p className="text-xs text-slate-300 font-sans leading-relaxed font-normal">
-                      Projects total regulatory fines, contract penalties, and systemic leakages incurred if endpoints remain unmodified. Weights deficiencies against specific standard framework lookups to justify remediation budgeting.
+                      Projects total regulatory fines, contract penalties, and losses incurred if endpoints remain unmodified. Weights deficiencies against specific standard framework lookups to justify remediation budgeting.
                     </p>
                   </div>
                 </div>
@@ -756,7 +756,7 @@ export default function ForensicEngineRoot() {
                   <div className="border-t border-slate-900 mt-5 pt-4">
                     <span className="font-mono text-[9px] text-slate-500 block font-black uppercase tracking-wider mb-1">⚠️ Enforcement Triggers & Audit Tracing</span>
                     <p className="text-xs text-slate-400 font-sans normal-case tracking-normal font-normal leading-relaxed">
-                      These flags reveal that active non-compliance records are actively writing to system telemetry logs. During standard framework assessments or external audits, these records shift from benign tech debt into explicit regulatory failures—instantly triggering the $2,070,000 inactive liability matrix.
+                      These flags reveal that active non-compliance records are actively writing to system telemetry logs. During standard framework assessments or external audits, these records shift from benign tech debt into explicit regulatory failures—instantly triggering the $2,070,000 liability matrix.
                     </p>
                   </div>
                 </div>
