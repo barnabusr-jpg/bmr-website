@@ -18,7 +18,7 @@ export default function ForensicDiagnosticWizard({
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
 
-  // 📥 TWO-DIMENSIONAL MOUNT HYDRATION
+  // 📥 GLOBAL MOUNT HYDRATION
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -28,36 +28,56 @@ export default function ForensicDiagnosticWizard({
       if (emailParam) window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
       if (roleParam) window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
 
-      // 🔒 GRID ISOLATION: Pull ONLY the current pillar's prefixed answers
-      const currentQuadTrackCache = window.sessionStorage.getItem(`quad_cache_${activePillar}`);
-      
-      if (currentQuadTrackCache) {
-        try {
-          setAnswers(JSON.parse(currentQuadTrackCache));
-        } catch (err) {
-          console.error("Failed to parse track cache:", err);
+      // Restore session logs across all three pillar lanes to allow cross-functional mapping
+      const savedAnswers: Record<string, 'A' | 'B' | 'C' | 'D'> = {};
+      ['IGF', 'AVS', 'HAI'].forEach(pillar => {
+        const cached = window.sessionStorage.getItem(`quad_cache_${pillar}`);
+        if (cached) {
+          try {
+            Object.assign(savedAnswers, JSON.parse(cached));
+          } catch (e) {
+            console.error(`Failed to combine track cache for ${pillar}:`, e);
+          }
         }
-      } else {
-        setAnswers({});
-      }
+      });
+      setAnswers(savedAnswers);
     }
   }, [activePillar]);
 
-  // 🔒 BOUNDARY FILTER: Filters view to only the active pillar lane
+  // 📡 CROSS-ORGANIZATIONAL OPEN HORIZON FILTER
+  // Pulls a balanced cross-section from all three vectors to ensure multi-dimensional visibility
   const activeQuestions = useMemo(() => {
-    return Object.values(forensicQuestions).filter(
-      q => q.pillar === activePillar
-    );
-  }, [activePillar]);
+    const rawList = Object.values(forensicQuestions);
+    
+    // Extracts an even distribution from your complete dataset pool
+    const igfSet = rawList.filter(q => q.pillar === 'IGF').slice(0, 3);
+    const avsSet = rawList.filter(q => q.pillar === 'AVS').slice(0, 3);
+    const haiSet = rawList.filter(q => q.pillar === 'HAI').slice(0, 3);
+    
+    return [...igfSet, ...avsSet, ...haiSet];
+  }, []);
 
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
+    // Dynamically look up the target question to save it into its designated track cache
+    const targetQuestion = Object.values(forensicQuestions).find(q => q.id === questionId);
+    const targetPillar = targetQuestion?.pillar || activePillar;
+
     setAnswers(prev => {
-      // 🏷️ APPLY NAMESPACE IMMEDIATELY: Protects input state from clashing with deepdive entries
       const prefixedKey = `quad_${questionId}`;
       const updated = { ...prev, [prefixedKey]: choiceKey };
       
       if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem(`quad_cache_${activePillar}`, JSON.stringify(updated));
+        // Isolate the answers belonging strictly to this target pillar group
+        const targetPillarAnswers: Record<string, string> = {};
+        Object.keys(updated).forEach(key => {
+          const cleanId = key.replace(/^quad_/, '');
+          const qObj = Object.values(forensicQuestions).find(q => q.id === cleanId);
+          if (qObj?.pillar === targetPillar) {
+            targetPillarAnswers[key] = updated[key];
+          }
+        });
+
+        window.sessionStorage.setItem(`quad_cache_${targetPillar}`, JSON.stringify(targetPillarAnswers));
       }
       return updated;
     });
@@ -70,12 +90,10 @@ export default function ForensicDiagnosticWizard({
     
     if (typeof window !== 'undefined') {
       try {
-        // 1. Gather historical 360 Deep Dive caches safely
         const ddIgf = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_IGF`) || '{}');
         const ddAvs = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_AVS`) || '{}');
         const ddHai = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_HAI`) || '{}');
 
-        // 2. Gather active Quad phase caches across all tracks
         const quadIgf = JSON.parse(window.sessionStorage.getItem(`quad_cache_IGF`) || '{}');
         const quadAvs = JSON.parse(window.sessionStorage.getItem(`quad_cache_AVS`) || '{}');
         const quadHai = JSON.parse(window.sessionStorage.getItem(`quad_cache_HAI`) || '{}');
@@ -89,7 +107,6 @@ export default function ForensicDiagnosticWizard({
         
         const fullDeepDiveSet = { ...ddIgf, ...ddAvs, ...ddHai };
 
-        // 3. Map inputs cleanly into namespaced groups
         Object.keys(fullDeepDiveSet).forEach(key => {
           const cleanKey = key.startsWith('deepdive_') ? key : `deepdive_${key}`;
           fullyCompiledMatrix[cleanKey] = fullDeepDiveSet[key];
@@ -105,7 +122,6 @@ export default function ForensicDiagnosticWizard({
       }
     }
 
-    // 4. Pass the clean payload straight to the calculation engine
     const computedResults = calculateForensicMetrics(companyName, fullyCompiledMatrix);
     
     if (typeof window !== 'undefined') {
@@ -118,7 +134,6 @@ export default function ForensicDiagnosticWizard({
   };
 
   const currentStepTotal = activeQuestions.length;
-  // Adjusted loop count to evaluate correctly against prefixed state strings
   const currentStepAnsweredCount = activeQuestions.filter(q => !!answers[`quad_${q.id}`] || !!answers[q.id]).length;
   const isPillarIncomplete = currentStepAnsweredCount < currentStepTotal;
 
@@ -130,13 +145,11 @@ export default function ForensicDiagnosticWizard({
         <div className="flex items-center gap-3">
           <Activity className="text-red-600 animate-pulse shrink-0" size={20} />
           <span className="text-xs font-black uppercase tracking-widest text-white">
-            {activePillar === 'IGF' && "HYBRID FUNNEL SECTION 01 // THE LEGAL BLACK BOX (IGF)"}
-            {activePillar === 'AVS' && "HYBRID FUNNEL SECTION 02 // THE REWORK TAX (AVS)"}
-            {activePillar === 'HAI' && "HYBRID FUNNEL SECTION 03 // THE AUTO-PILOT TRAP (HAI)"}
+            ENTERPRISE WIDE DIAGNOSTIC // COMBINED 360 TRIANGULATION
           </span>
         </div>
         <div className="text-[10px] text-slate-500 tracking-widest font-black shrink-0">
-          STAGE SECTOR PROGRESS: {currentStepAnsweredCount} / {currentStepTotal}
+          TOTAL MIXED SECTOR PROGRESS: {currentStepAnsweredCount} / {currentStepTotal}
         </div>
       </div>
 
@@ -144,9 +157,7 @@ export default function ForensicDiagnosticWizard({
       <div className="bg-slate-950 border border-slate-900 p-5 mb-8 text-xs text-slate-400 not-italic normal-case font-medium font-sans leading-relaxed flex items-start gap-3 rounded-xs">
         <AlertCircle size={18} className="text-red-600 shrink-0 mt-0.5" />
         <div>
-          {activePillar === 'IGF' && "This layer examines spiking security validation trails, data compliance fractures, and statutory exposures under global guidelines."}
-          {activePillar === 'AVS' && "This layer maps structural data pipeline waste, technical debt indices, and schema mutation risks. These metrics quantify corporate developer bandwidth leakage."}
-          {activePillar === 'HAI' && "This layer maps automation anomalies, alarm fatigue thresholds, and strategic operational drift. These metrics isolate silent balance-sheet profit bleeding."}
+          This multi-persona triage layer acts as a cross-functional probe, scanning regulatory changes (IGF), structural code infrastructure waste (AVS), and systemic automation drift parameters (HAI) simultaneously.
         </div>
       </div>
 
@@ -159,7 +170,7 @@ export default function ForensicDiagnosticWizard({
           return (
             <div key={question.id} className="border border-slate-900 bg-slate-950/40 p-8 relative rounded-sm group/card">
               <span className="text-[9px] font-mono text-slate-600 block mb-3 font-black tracking-widest not-italic">
-                // TARGET NODE: {question.target_node || 'STAKEHOLDER'} // ID: {question.id}
+                // SEGMENT LAYER: {question.pillar} // TARGET NODE: {question.target_node || 'STAKEHOLDER'} // ID: {question.id}
               </span>
 
               <p className="text-2xl md:text-3xl text-white uppercase leading-tight tracking-tighter font-black mb-6 font-sans">
@@ -203,7 +214,7 @@ export default function ForensicDiagnosticWizard({
       <div className="border-t border-slate-900 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono not-italic">
         <div className="text-[10px] text-slate-500 tracking-wider flex items-center gap-2 font-black">
           <Shield size={14} className={isPillarIncomplete ? "text-slate-700" : "text-red-500"} /> 
-          {isPillarIncomplete ? "ALL POSTURE SECTIONS MANDATORY" : "STAGE SECTOR VALIDATED // READY TO COMPUTE"}
+          {isPillarIncomplete ? "ALL CHANNELS MANDATORY FOR BALANCED TRIANGULATION" : "COMPREHENSIVE MATRIX VECTOR VALIDATED // READY TO COMPUTE"}
         </div>
         
         <button
