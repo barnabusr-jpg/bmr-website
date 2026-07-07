@@ -31,7 +31,7 @@ export default function ForensicDiagnosticWizard({
       // Restore session logs across all three pillar lanes to allow cross-functional mapping
       const savedAnswers: Record<string, 'A' | 'B' | 'C' | 'D'> = {};
       ['IGF', 'AVS', 'HAI'].forEach(pillar => {
-        const cached = window.sessionStorage.getItem(`quad_cache_${pillar}`);
+        const cached = window.sessionStorage.getItem(`quad_cache_${pillar.toUpperCase()}`);
         if (cached) {
           try {
             Object.assign(savedAnswers, JSON.parse(cached));
@@ -49,10 +49,10 @@ export default function ForensicDiagnosticWizard({
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
     
-    // Extracts an even distribution from your complete dataset pool
-    const igfSet = rawList.filter(q => q.pillar === 'IGF').slice(0, 3);
-    const avsSet = rawList.filter(q => q.pillar === 'AVS').slice(0, 3);
-    const haiSet = rawList.filter(q => q.pillar === 'HAI').slice(0, 3);
+    // Extracts an even distribution from your complete dataset pool with case safety guards
+    const igfSet = rawList.filter(q => q.pillar?.toUpperCase() === 'IGF').slice(0, 3);
+    const avsSet = rawList.filter(q => q.pillar?.toUpperCase() === 'AVS').slice(0, 3);
+    const haiSet = rawList.filter(q => q.pillar?.toUpperCase() === 'HAI').slice(0, 3);
     
     return [...igfSet, ...avsSet, ...haiSet];
   }, []);
@@ -72,12 +72,14 @@ export default function ForensicDiagnosticWizard({
         Object.keys(updated).forEach(key => {
           const cleanId = key.replace(/^quad_/, '');
           const qObj = Object.values(forensicQuestions).find(q => q.id === cleanId);
-          if (qObj?.pillar === targetPillar) {
+          
+          // Case-insensitive comparative matching to prevent silent grouping failures
+          if (qObj?.pillar?.toUpperCase() === targetPillar.toUpperCase()) {
             targetPillarAnswers[key] = updated[key];
           }
         });
 
-        window.sessionStorage.setItem(`quad_cache_${targetPillar}`, JSON.stringify(targetPillarAnswers));
+        window.sessionStorage.setItem(`quad_cache_${targetPillar.toUpperCase()}`, JSON.stringify(targetPillarAnswers));
       }
       return updated;
     });
