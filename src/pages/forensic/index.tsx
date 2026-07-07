@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
-import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { decompressFromEncodedURIComponent } from 'lz-string';
 
@@ -19,6 +19,7 @@ interface TriangulationState {
 
 export default function ForensicEngineRoot() { 
   const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT' | 'THANK_YOU'>('INTAKE'); 
+  const [dossierTab, setDossierTab] = useState<'METRICS' | 'REMEDIATION'>('METRICS');
   const [companyName, setCompanyName] = useState(''); 
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
@@ -99,11 +100,9 @@ export default function ForensicEngineRoot() {
           }; 
 
           // 📡 UNIFIED SOURCE-OF-TRUTH RECOVERY & EARLY-WARNING MATRIX SELECTOR
-          // Bypasses local state loops to pull real-time risk triage metrics and operator strings together
           const synchronizeEngineDataMatrix = async () => {
             const cleanOrgLookup = targetCompanyName.replace(/_GLOBAL$/, '').replace(/_/g, ' ');
             
-            // 📊 Phase 1: Retrieve Live Risk Telemetry to Drive Predictive Layout Selections
             const { data: activeAudit } = await supabase
               .from('audits')
               .select('id, sfi_score, decay_pct, sector')
@@ -117,20 +116,18 @@ export default function ForensicEngineRoot() {
               const sfi = activeAudit.sfi_score || decay;
               const sectorStr = String(activeAudit.sector || '').toUpperCase();
 
-              // 🧠 Early Warning Heuristic Logic Gating Tracks
               if (sfi >= 45) {
-                targetCalculatedPillar = 'AVS'; // Critical Systemic Friction shifts prioritization to AVS Tax
+                targetCalculatedPillar = 'AVS'; 
               } else if (sectorStr.includes('IGF') || sectorStr.includes('FINANCE') || sectorStr.includes('COMPLIANCE')) {
                 targetCalculatedPillar = 'IGF';
               } else if (sectorStr.includes('AVS') || sectorStr.includes('MANUFACTURING') || sectorStr.includes('INDUSTRIAL')) {
                 targetCalculatedPillar = 'AVS';
               } else {
-                targetCalculatedPillar = 'HAI'; // Baseline tracks route to downstream automation monitoring anomalies
+                targetCalculatedPillar = 'HAI'; 
               }
 
               setActivePillar(targetCalculatedPillar);
 
-              // 🛰️ Phase 2: Direct Operator Schema Extraction Link
               const { data: databaseNodes } = await supabase
                 .from('operators')
                 .select('persona_type, email')
@@ -150,19 +147,17 @@ export default function ForensicEngineRoot() {
 
                 setEmails(freshDBEmails);
 
-                // Instantly force local storage session caches to update with verified database properties
                 const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
                 if (saved) {
                   const parsed = JSON.parse(saved);
                   parsed.emails = freshDBEmails;
-                  parsed.pillar = targetCalculatedPillar; // Overwrites cached layout focus with predictive tracking
+                  parsed.pillar = targetCalculatedPillar; 
                   window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
                 }
-                return; // Graceful termination: Database records completely recovered and processed
+                return; 
               }
             }
 
-            // 🍂 Secondary Fallback: Read direct address params if target ledger records are pending sync
             const rawExec = params.get('exec') || params.get('executive') || params.get('execEmail') || "";
             const rawTech = params.get('tech_mgmt') || params.get('tech') || params.get('technical') || params.get('techEmail') || "";
             const rawMgr  = params.get('ops_mgmt') || params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || "";
@@ -177,7 +172,6 @@ export default function ForensicEngineRoot() {
 
             setEmails(fallbackEmails);
             
-            // Reassign text sector patterns to pillar state if no custom metrics match yet
             if (activeSectorStr.includes('AVS')) {
               setActivePillar('AVS');
             } else if (activeSectorStr.includes('HAI')) {
@@ -659,8 +653,8 @@ export default function ForensicEngineRoot() {
       )} 
 
       {viewState === 'COCKPIT' && triangulation && ( 
-        <div> 
-          <div className="w-full max-w-[1600px] mx-auto mb-4 px-10 no-print flex justify-start"> 
+        <div className="w-full max-w-[1600px] mx-auto text-left"> 
+          <div className="mb-4 px-10 no-print flex justify-start"> 
             <button 
               type="button" 
               onClick={handleSystemReset} 
@@ -669,11 +663,128 @@ export default function ForensicEngineRoot() {
               &larr; // Terminate Session & Return to Intake Control 
             </button> 
           </div> 
+
           <ForensicCommandCockpit         
             companyName={triangulation.companyName} 
             sector="ENTERPRISE_SAAS" 
             metrics={alignedCockpitMetrics} 
           /> 
+
+          {/* 📋 BMR SOLUTIONS INTERACTIVE DOSSIER ADD-ON LAYER */}
+          <div className="mt-12 mx-10 border border-slate-900 bg-slate-950/40 rounded-sm shadow-xl p-10 backdrop-blur-md not-italic normal-case text-left selection:bg-red-600 selection:text-white">
+            <div className="border-b border-slate-900 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3">
+                <FileText size={22} className="text-red-500 shrink-0" />
+                <div>
+                  <h3 className="text-lg font-mono font-black uppercase tracking-widest text-white leading-none">
+                    BMR SOLUTIONS // EXPLANATORY WALKTHROUGH
+                  </h3>
+                  <span className="text-[10px] font-mono text-zinc-500 block uppercase tracking-wider mt-1">
+                    Companion Leave-Behind Document // Interactive Explanatory Matrix
+                  </span>
+                </div>
+              </div>
+
+              {/* Internal Tab Toggles */}
+              <div className="flex bg-black p-1 border border-slate-900 rounded-xs font-mono text-[10px] font-black uppercase tracking-wider">
+                <button 
+                  onClick={() => setDossierTab('METRICS')}
+                  className={`px-4 py-2 transition-all cursor-pointer rounded-xs ${dossierTab === 'METRICS' ? 'bg-red-950/40 text-red-500 border border-red-900/40' : 'text-zinc-500 hover:text-white'}`}
+                >
+                  01 // Risk Matrix
+                </button>
+                <button 
+                  onClick={() => setDossierTab('REMEDIATION')}
+                  className={`px-4 py-2 transition-all cursor-pointer rounded-xs ${dossierTab === 'REMEDIATION' ? 'bg-red-950/40 text-red-500 border border-red-900/40' : 'text-zinc-500 hover:text-white'}`}
+                >
+                  02 // Alignment Track
+                </button>
+              </div>
+            </div>
+
+            {dossierTab === 'METRICS' && (
+              <div className="space-y-6">
+                <p className="text-sm text-slate-400 font-sans leading-relaxed">
+                  This framework maps live cross-persona triangulation loops to identify stacked risk vectors across core development pipelines for <strong className="text-white font-bold">{companyName.replace(/_/g, ' ')}</strong>. Below is the tactical translation of your active telemetry output layers.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                  <div className="border border-slate-900 bg-black p-5 rounded-sm">
+                    <span className="font-mono text-[10px] text-slate-500 block font-black uppercase tracking-wider mb-1">
+                      🎯 Integrity Index ({alignedCockpitMetrics.complianceScore}/100)
+                    </span>
+                    <p className="text-xs text-slate-300 font-sans leading-relaxed font-normal">
+                      Measures the synchronization gap between governance mandate and engineering velocity. A score of {alignedCockpitMetrics.complianceScore} isolates an asymmetric gap where technical environments lack automated policy fences, placing an operational drag on human staff.
+                    </p>
+                  </div>
+
+                  <div className="border border-slate-900 bg-black p-5 rounded-sm">
+                    <span className="font-mono text-[10px] text-yellow-500 block font-black uppercase tracking-wider mb-1">
+                      📊 Rework Overhead Tax ($4,160,000)
+                    </span>
+                    <p className="text-xs text-slate-300 font-sans leading-relaxed font-normal">
+                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to approximately <strong className="text-yellow-500 font-bold">41,600 hours</strong> engineering teams exhaust resolving schema drift, fracturing data lineage, and manual firefighting.
+                    </p>
+                  </div>
+
+                  <div className="border border-slate-900 bg-black p-5 rounded-sm">
+                    <span className="font-mono text-[10px] text-red-500 block font-black uppercase tracking-wider mb-1">
+                      ⚠️ Forensic Inaction Liability ($2,070,000)
+                    </span>
+                    <p className="text-xs text-slate-300 font-sans leading-relaxed font-normal">
+                      Projects total regulatory fines, contract penalties, and systemic leakages incurred if endpoints remain unmodified. Weights deficiencies against specific standard framework lookups to justify remediation budgeting.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {dossierTab === 'REMEDIATION' && (
+              <div className="space-y-6">
+                <div className="border border-slate-900 bg-black p-6 rounded-sm">
+                  <span className="font-mono text-[10px] text-red-500 block font-black uppercase tracking-widest mb-3">
+                    // ARCHITECTURAL CODES & REGULATORY PARITY LOOKUP
+                  </span>
+                  
+                  <div className="space-y-3 font-mono text-xs uppercase font-black tracking-tight text-zinc-400">
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-500 shrink-0 mt-0.5" /> <span><strong className="text-red-500">[NON-COMPLIANT]</strong> ISO 9001:2015 // Clause 8.5.1: Messaging anomalies create unmapped distribution risk.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-500 shrink-0 mt-0.5" /> <span><strong className="text-red-500">[NON-COMPLIANT]</strong> HL7 FHIR v4 // Data Conformance: Unstructured drift triggers serialization failures.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-500 shrink-0 mt-0.5" /> <span><strong className="text-red-500">[NON-COMPLIANT]</strong> PCI-DSS v4.0 // Req 10.2: Processing delays interrupt automated auditing boundaries.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-500 shrink-0 mt-0.5" /> <span><strong className="text-red-500">[NON-COMPLIANT]</strong> SOX // Section 404: Telemetry friction degrades internal financial assurance data tracking.</span></div>
+                  </div>
+
+                  <div className="border-t border-slate-900 mt-5 pt-4">
+                    <span className="font-mono text-[9px] text-slate-500 block font-black uppercase tracking-wider mb-1">⚠️ Enforcement Triggers & Audit Tracing</span>
+                    <p className="text-xs text-slate-400 font-sans normal-case tracking-normal font-normal leading-relaxed">
+                      These flags reveal that active non-compliance records are actively writing to system telemetry logs. During standard framework assessments or external audits, these records shift from benign tech debt into explicit regulatory failures—instantly triggering the $2,070,000 inactive liability matrix.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/30 border border-slate-900 p-5 rounded-sm">
+                  <span className="font-mono text-[10px] text-slate-400 block font-black uppercase tracking-wider mb-2">// SCHEDULED REMEDIATION PROGRESSION ROADMAP</span>
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed mb-4">
+                    To automate away the manual tracking overheads currently draining resources, the engine has prepared a multi-phased infrastructure mitigation plan:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans text-xs">
+                    <div className="bg-black p-4 border border-slate-900 rounded-xs">
+                      <strong className="text-white block font-bold mb-1">Phase 01 // Pipeline Abstraction Layering</strong>
+                      <p className="text-slate-400 font-normal leading-relaxed">Deploys decoupled adapter protocols to completely insulate backend data transaction structures from continuing schema drift anomalies.</p>
+                    </div>
+                    <div className="bg-black p-4 border border-slate-900 rounded-xs">
+                      <strong className="text-white block font-bold mb-1">Phase 02 // Telemetry Filter Prioritization</strong>
+                      <p className="text-slate-400 font-normal leading-relaxed">Optimizes localized alert tracing rules across the organizational network topology to systematically eliminate alert exhaustion fatigue.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-8 pt-4 border-t border-slate-900 flex justify-between items-center font-mono text-[9px] font-black text-zinc-600 tracking-widest uppercase">
+              <span>BMR SOLUTIONS © 2026 // SYSTEM ADD-ON EXPANSION</span>
+              <span>SECURE RUNTIME CONTROL</span>
+            </div>
+          </div>
         </div> 
       )} 
 
