@@ -39,10 +39,10 @@ export function calculateForensicMetrics(
   const inputKeys = Object.keys(responses || {});
   const quadKeys = inputKeys.filter(k => k.startsWith('quad_'));
 
-  // Split into distinct telemetry tracking segments
-  const avsAnswers = quadKeys.filter(k => k.includes('AVS_') || responses[k] === 'AVS');
-  const igfAnswers = quadKeys.filter(k => k.includes('IGF_') || responses[k] === 'IGF');
-  const haiAnswers = quadKeys.filter(k => k.includes('HAI_') || responses[k] === 'HAI');
+  // ✨ FIX: Relaxed string inclusion checks to support both hyphenated (AVS-) and underscore namespaces safely
+  const avsAnswers = quadKeys.filter(k => k.toUpperCase().includes('AVS') || responses[k] === 'AVS');
+  const igfAnswers = quadKeys.filter(k => k.toUpperCase().includes('IGF') || responses[k] === 'IGF');
+  const haiAnswers = quadKeys.filter(k => k.toUpperCase().includes('HAI') || responses[k] === 'HAI');
 
   // 🧠 Dynamic Penalty Accumulation Loops
   let frictionPenaltyCount = 0;
@@ -60,9 +60,11 @@ export function calculateForensicMetrics(
   const baseDeficiencyImpact = frictionPenaltyCount * 4.5;
   const rawComplianceScore = 90 - baseDeficiencyImpact;
   
+  // Salary Leakage runs off AVS/HAI friction metrics (blended engineering hour impact values)
   const infrastructureLossWeight = avsAnswers.length + haiAnswers.length;
   const salaryLeakageBase = 85000 + (infrastructureLossWeight * 15000) + (frictionPenaltyCount * 45000);
   
+  // Inaction Liability runs heavily off compliance framework exposures (IGF statutory risks)
   const complianceRiskWeight = igfAnswers.length * 2.0;
   const legalExposureBase = 450000 + (complianceRiskWeight * 75000) + (frictionPenaltyCount * 115000);
 
