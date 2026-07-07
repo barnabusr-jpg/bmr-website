@@ -80,6 +80,7 @@ export default function ForensicEngineRoot() {
         const activeSectorStr = String(decryptedData.sector || decryptedData.sec || pillarParam || '').toUpperCase();
 
         if (targetCompanyName) { 
+          setCompanyName(targetCompanyName); 
           const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`); 
           if (savedSession) { 
             setTriangulation(JSON.parse(savedSession)); 
@@ -101,10 +102,6 @@ export default function ForensicEngineRoot() {
             setActivePillar('IGF');
           }
 
-          if (targetCompanyName) { 
-            setCompanyName(targetCompanyName); 
-          }  
-
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
           const filterIncomingEmail = (val: string | null): string => { 
             if (!val) return ""; 
@@ -112,20 +109,74 @@ export default function ForensicEngineRoot() {
             return emailRegex.test(cleanVal) ? cleanVal : ""; 
           }; 
 
-          // 🧠 INDESTRUCTIBLE CROSS-TAB COMPONENT BRIDGE
-          // Extracts parameters dynamically regardless of whether they arrive via short-form or long-form keys
-          const rawExec = params.get('exec') || params.get('executive') || params.get('execEmail') || "";
-          const rawTech = params.get('tech_mgmt') || params.get('tech') || params.get('technical') || params.get('techEmail') || "";
-          const rawMgr  = params.get('ops_mgmt') || params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || "";
-          const rawSys  = params.get('sys_user') || rawTech;
+          // 📡 FORCE DIRECT LIVE SUPABASE SOURCE-OF-TRUTH RECOVERY
+          // Bypasses the dashboard's component state loop by querying operators schema directly on mount
+          const fetchTrueOperatorNodes = async () => {
+            const cleanOrgLookup = targetCompanyName.replace(/_GLOBAL$/, '').replace(/_/g, ' ');
+            
+            const { data: activeAudit } = await supabase
+              .from('audits')
+              .select('id')
+              .ilike('org_name', cleanOrgLookup)
+              .maybeSingle();
 
-          // Uses the pre-existing filterIncomingEmail function declaration securely
-          setEmails({ 
-            EXECUTIVE: filterIncomingEmail(rawExec), 
-            TECH_MGMT: filterIncomingEmail(rawTech), 
-            OPS_MGMT: filterIncomingEmail(rawMgr), 
-            SYSTEM_USER: filterIncomingEmail(rawSys)
-          }); 
+            if (activeAudit) {
+              const { data: databaseNodes } = await supabase
+                .from('operators')
+                .select('persona_type, email')
+                .eq('audit_id', activeAudit.id);
+
+              if (databaseNodes && databaseNodes.length > 0) {
+                const dbExec = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE')?.email || "";
+                const dbTech = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL')?.email || "";
+                const dbMgr  = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL')?.email || "";
+
+                const freshDBEmails = {
+                  EXECUTIVE: filterIncomingEmail(dbExec),
+                  TECH_MGMT: filterIncomingEmail(dbTech),
+                  OPS_MGMT: filterIncomingEmail(dbMgr),
+                  SYSTEM_USER: filterIncomingEmail(dbTech)
+                };
+
+                setEmails(freshDBEmails);
+
+                // Instantly force local storage alignment with real-time database records
+                const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
+                if (saved) {
+                  const parsed = JSON.parse(saved);
+                  parsed.emails = freshDBEmails;
+                  window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
+                }
+                return; 
+              }
+            }
+
+            // Fallback to direct query string values if database rows haven't settled yet
+            const rawExec = params.get('exec') || params.get('executive') || params.get('execEmail') || "";
+            const rawTech = params.get('tech_mgmt') || params.get('tech') || params.get('technical') || params.get('techEmail') || "";
+            const rawMgr  = params.get('ops_mgmt') || params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || "";
+            const rawSys  = params.get('sys_user') || rawTech;
+
+            const fallbackEmails = { 
+              EXECUTIVE: filterIncomingEmail(rawExec), 
+              TECH_MGMT: filterIncomingEmail(rawTech), 
+              OPS_MGMT: filterIncomingEmail(rawMgr), 
+              SYSTEM_USER: filterIncomingEmail(rawSys)
+            };
+
+            setEmails(fallbackEmails);
+            
+            if (targetCompanyName) {
+              const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                parsed.emails = fallbackEmails;
+                window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
+              }
+            }
+          };
+
+          fetchTrueOperatorNodes();
 
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
@@ -626,8 +677,8 @@ export default function ForensicEngineRoot() {
               <p className="normal-case font-sans font-normal text-slate-300"> 
                 If you have any questions regarding your team's structural data alignment mapping, please reach out to your designated supervisor or contact our advisory desk at: 
               </p> 
-              <a  
-                href="mailto:hello@bmrsolutions.com"  
+              <a   
+                href="mailto:hello@bmrsolutions.com"   
                 className="block text-red-500 font-bold hover:text-white transition-colors text-xs lowercase mt-2 tracking-normal" 
               > 
                 hello@bmrsolutions.com 
