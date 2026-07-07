@@ -36,13 +36,6 @@ export default function ForensicEngineRoot() {
 
   const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic'); 
 
-  const roleLabels: Record<string, string> = { 
-    EXECUTIVE: 'Executive Leadership (Strategic Oversight Node)', 
-    TECH_MGMT: 'Technical Management (Infrastructure & DevOps Node)', 
-    OPS_MGMT: 'Operations Management (Workflow & Process Node)', 
-    SYSTEM_USER: 'Core System Operator (Terminal Execution Node)' 
-  }; 
-
   // 📡 REAL-TIME CROSS-TAB SYNC LISTENER
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -82,9 +75,9 @@ export default function ForensicEngineRoot() {
           }
         }
 
-        // Extract values checking new namespaced structures first, falling back to legacy keys
-        const targetCompanyName = (decryptedData.companyName || entityParam || '').trim().toUpperCase().replace(/\s+/g, '_');
-        const activeSectorStr = String(decryptedData.sector || decryptedData.sectorTag || pillarParam || '').toUpperCase();
+        // Extract naming conventions with explicit layout fallbacks
+        const targetCompanyName = (decryptedData.companyName || decryptedData.org || entityParam || '').trim().toUpperCase().replace(/\s+/g, '_');
+        const activeSectorStr = String(decryptedData.sector || decryptedData.sec || pillarParam || '').toUpperCase();
 
         if (targetCompanyName) { 
           const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`); 
@@ -119,11 +112,17 @@ export default function ForensicEngineRoot() {
             return emailRegex.test(cleanVal) ? cleanVal : ""; 
           }; 
 
+          // 🧠 3-PERSONA INTERCEPT BRIDGE
+          // Maps Executive, Managerial, Technical securely while cloning Technical to System Operator
+          const rawExec = decryptedData.execEmail || params.get('exec');
+          const rawTech = decryptedData.techEmail || params.get('tech') || params.get('tech_mgmt');
+          const rawMgr  = decryptedData.mgrEmail || decryptedData.managerEmail || params.get('mgr') || params.get('ops_mgmt');
+
           setEmails({ 
-            EXECUTIVE: filterIncomingEmail(decryptedData.execEmail || params.get('exec')), 
-            TECH_MGMT: filterIncomingEmail(decryptedData.techEmail || params.get('tech_mgmt')), 
-            OPS_MGMT: filterIncomingEmail(decryptedData.mgrEmail || params.get('ops_mgmt')), 
-            SYSTEM_USER: filterIncomingEmail(params.get('sys_user')) 
+            EXECUTIVE: filterIncomingEmail(rawExec), 
+            TECH_MGMT: filterIncomingEmail(rawTech), 
+            OPS_MGMT: filterIncomingEmail(rawMgr), 
+            SYSTEM_USER: filterIncomingEmail(rawTech) // Mirror tech to retain terminal grid execution stability
           }); 
 
         } else if (isParticipantRoute) { 
@@ -171,7 +170,7 @@ export default function ForensicEngineRoot() {
       return; 
     } 
     if (!emails.EXECUTIVE || !emails.TECH_MGMT || !emails.OPS_MGMT || !emails.SYSTEM_USER) { 
-      setInputError('DISTRIBUTION ERROR: ALL FOUR PERSISTENT PERSONA EMAIL PATHS MANDATORY'); 
+      setInputError('DISTRIBUTION ERROR: ALL VECTOR PERSISTENT PERSONA EMAIL PATHS MANDATORY'); 
       return; 
     } 
          
@@ -420,8 +419,8 @@ export default function ForensicEngineRoot() {
                     className={`w-full p-4 text-left border rounded-xs transition-all flex flex-col justify-center cursor-pointer ${ 
                       activePillar === p.id ? 'border-red-600 bg-red-950/10' : 'border-slate-800 bg-black hover:border-slate-700' 
                     }`} 
-                  >
-                    <span className="text-xs font-black text-slate-200 tracking-wider uppercase italic">{p.title}</span>
+                  > 
+                    <span className="text-xs font-black text-slate-200 tracking-wider uppercase italic">{p.title}</span> 
                   </button> 
                 ))} 
               </div> 
@@ -523,15 +522,13 @@ export default function ForensicEngineRoot() {
                       </button> 
                     )} 
 
-                    <button
-                      onClick={() => handleLaunchPersonaWizard(persona)}
-                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${
-                        isDone
-                          ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800'
-                          : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white'
-                      }`}
-                    >
-                      {isDone ? 'Override Matrix' : 'Open Posture'}
+                    <button 
+                      onClick={() => handleLaunchPersonaWizard(persona)} 
+                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${ 
+                        isDone ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white' 
+                      }`} 
+                    > 
+                      {isDone ? 'Override Matrix' : 'Open Posture'} 
                     </button> 
                   </div> 
                 </div> 
@@ -540,23 +537,23 @@ export default function ForensicEngineRoot() {
           </div> 
 
           <div className="mt-8 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
-            <div className="text-left">
+            <div className="text-left"> 
               <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK MATRIX DEPENDENCY</span> 
                
-              {!allPersonasComplete && authorizedAdmin && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm("CRITICAL OVERRIDE: Force aggregation loop compilation using currently validated data segments?")) {
-                      setViewState('COCKPIT');
-                    }
-                  }}
-                  className="text-[10px] text-red-500 font-mono font-black uppercase tracking-wider hover:text-white transition-colors bg-transparent border-0 p-0 mt-1 cursor-pointer underline block"
-                >
-                  // Force Administrative Override & Compile Partial Matrix
-                </button>
-              )}
-            </div>
+              {!allPersonasComplete && authorizedAdmin && ( 
+                <button 
+                  type="button" 
+                  onClick={() => { 
+                    if (window.confirm("CRITICAL OVERRIDE: Force aggregation loop compilation using currently validated data segments?")) { 
+                      setViewState('COCKPIT'); 
+                    } 
+                  }} 
+                  className="text-[10px] text-red-500 font-mono font-black uppercase tracking-wider hover:text-white transition-colors bg-transparent border-0 p-0 mt-1 cursor-pointer underline block" 
+                > 
+                  // Force Administrative Override & Compile Partial Matrix 
+                </button> 
+              )} 
+            </div> 
 
             <button 
               onClick={() => setViewState('COCKPIT')} 
@@ -589,54 +586,54 @@ export default function ForensicEngineRoot() {
       )} 
 
       {viewState === 'COCKPIT' && triangulation && ( 
-        <div>
-          <div className="w-full max-w-[1600px] mx-auto mb-4 px-10 no-print flex justify-start">
-            <button
-              type="button"
-              onClick={handleSystemReset}
-              className="border border-slate-800 bg-black text-zinc-400 hover:text-white hover:border-red-600 text-xs font-mono font-black px-6 py-3 uppercase tracking-widest transition-all cursor-pointer rounded-xs"
-            >
-              &larr; // Terminate Session & Return to Intake Control
-            </button>
-          </div>
+        <div> 
+          <div className="w-full max-w-[1600px] mx-auto mb-4 px-10 no-print flex justify-start"> 
+            <button 
+              type="button" 
+              onClick={handleSystemReset} 
+              className="border border-slate-800 bg-black text-zinc-400 hover:text-white hover:border-red-600 text-xs font-mono font-black px-6 py-3 uppercase tracking-widest transition-all cursor-pointer rounded-xs" 
+            > 
+              &larr; // Terminate Session & Return to Intake Control 
+            </button> 
+          </div> 
           <ForensicCommandCockpit         
             companyName={triangulation.companyName} 
-            sector="ENTERPRISE_SAAS"
-            metrics={alignedCockpitMetrics}
+            sector="ENTERPRISE_SAAS" 
+            metrics={alignedCockpitMetrics} 
           /> 
-        </div>
+        </div> 
       )} 
 
-      {viewState === 'THANK_YOU' && (
-        <div className="w-full max-w-md border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl backdrop-blur-md italic font-sans">
-          <div className="border-b border-slate-900 pb-5 mb-6 flex items-center gap-3 not-italic font-mono">
-            <CheckCircle size={24} className="text-green-500 shrink-0" />
-            <div>
-              <h2 className="text-xs font-black text-white uppercase tracking-widest leading-none">// NODE TRANSMISSION SUCCESSFUL</h2>
-              <span className="text-[9px] text-zinc-500 tracking-wider block mt-1 uppercase">QUADRANT METRICS PARSED</span>
-            </div>
-          </div>
+      {viewState === 'THANK_YOU' && ( 
+        <div className="w-full max-w-md border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl backdrop-blur-md italic font-sans"> 
+          <div className="border-b border-slate-900 pb-5 mb-6 flex items-center gap-3 not-italic font-mono"> 
+            <CheckCircle size={24} className="text-green-500 shrink-0" /> 
+            <div> 
+              <h2 className="text-xs font-black text-white uppercase tracking-widest leading-none">// NODE TRANSMISSION SUCCESSFUL</h2> 
+              <span className="text-[9px] text-zinc-500 tracking-wider block mt-1 uppercase">QUADRANT METRICS PARSED</span> 
+            </div> 
+          </div> 
 
-          <div className="space-y-6 not-italic font-sans normal-case text-sm text-slate-300 font-normal leading-relaxed">
-            <p>
-              Thank you for completing your assigned forensic assessment track. Your infrastructure insights have been safely aggregated into the core corporation matrix pipeline at BMR Solutions.
-            </p>
-            
-            <div className="border-t border-slate-900 pt-5 mt-4 text-xs text-slate-400 font-mono uppercase tracking-wide space-y-1">
-              <span className="block text-[10px] text-slate-500 font-black">// ADDITIONAL INQUIRIES</span>
-              <p className="normal-case font-sans font-normal text-slate-300">
-                If you have any questions regarding your team's structural data alignment mapping, please reach out to your designated supervisor or contact our advisory desk at:
-              </p>
-              <a 
-                href="mailto:hello@bmrsolutions.com" 
-                className="block text-red-500 font-bold hover:text-white transition-colors text-xs lowercase mt-2 tracking-normal"
-              >
-                hello@bmrsolutions.com
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+          <div className="space-y-6 not-italic font-sans normal-case text-sm text-slate-300 font-normal leading-relaxed"> 
+            <p> 
+              Thank you for completing your assigned forensic assessment track. Your infrastructure insights have been safely aggregated into the core corporation matrix pipeline at BMR Solutions. 
+            </p> 
+             
+            <div className="border-t border-slate-900 pt-5 mt-4 text-xs text-slate-400 font-mono uppercase tracking-wide space-y-1"> 
+              <span className="block text-[10px] text-slate-500 font-black">// ADDITIONAL INQUIRIES</span> 
+              <p className="normal-case font-sans font-normal text-slate-300"> 
+                If you have any questions regarding your team's structural data alignment mapping, please reach out to your designated supervisor or contact our advisory desk at: 
+              </p> 
+              <a  
+                href="mailto:hello@bmrsolutions.com"  
+                className="block text-red-500 font-bold hover:text-white transition-colors text-xs lowercase mt-2 tracking-normal" 
+              > 
+                hello@bmrsolutions.com 
+              </a> 
+            </div> 
+          </div> 
+        </div> 
+      )} 
 
     </div> 
   ); 
