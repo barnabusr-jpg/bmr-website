@@ -421,7 +421,6 @@ export default function ForensicEngineRoot() {
                       activePillar === p.id ? 'border-red-600 bg-red-950/10' : 'border-slate-800 bg-black hover:border-slate-700' 
                     }`} 
                   >
-                    {/* 🔧 FIXED: Re-added dropped string layout module */}
                     <span className="text-xs font-black text-slate-200 tracking-wider uppercase italic">{p.title}</span>
                   </button> 
                 ))} 
@@ -491,7 +490,7 @@ export default function ForensicEngineRoot() {
                     {completed ? ( 
                       <CheckCircle size={16} className="text-green-500 mt-1" /> 
                     ) : ( 
-                      <div className="w-3 h-3 rounded-full bg-slate-900 border-2 border-red-600 animate-pulse mt-1} /> 
+                      <div className="w-3 h-3 rounded-full bg-slate-900 border-2 border-red-600 animate-pulse mt-1" /> 
                     )} 
                   </div> 
                 ); 
@@ -524,13 +523,15 @@ export default function ForensicEngineRoot() {
                       </button> 
                     )} 
 
-                    <button 
-                      onClick={() => handleLaunchPersonaWizard(persona)} 
-                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${ 
-                        isDone ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white' 
-                      }`} 
-                    > 
-                      {isDone ? 'Override Matrix' : 'Open Posture'} 
+                    <button
+                      onClick={() => handleLaunchPersonaWizard(persona)}
+                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${
+                        isDone
+                          ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800'
+                          : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white'
+                      }`}
+                    >
+                      {isDone ? 'Override Matrix' : 'Open Posture'}
                     </button> 
                   </div> 
                 </div> 
