@@ -118,12 +118,7 @@ export default function ForensicEngineRoot() {
           const rawTech = params.get('tech') || params.get('technical') || params.get('techEmail') || params.get('tech_mgmt') || "";
           const rawMgr  = params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || params.get('ops_mgmt') || "";
 
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
-          const filterIncomingEmail = (val: string): string => { 
-            const cleanVal = decodeURIComponent(val).trim(); 
-            return emailRegex.test(cleanVal) ? cleanVal : ""; 
-          };
-
+          // Uses the pre-existing filterIncomingEmail function declaration securely
           setEmails({ 
             EXECUTIVE: filterIncomingEmail(rawExec), 
             TECH_MGMT: filterIncomingEmail(rawTech), 
