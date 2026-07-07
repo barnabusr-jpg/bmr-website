@@ -1,3 +1,4 @@
+"use client";
 import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
@@ -17,37 +18,33 @@ export default function ForensicDiagnosticWizard({
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
 
-  // 📥 STATE HYDRATION & MOUNT CAPTURE: Restores total survey progress from isolated cache tracks
+  // 📥 TWO-DIMENSIONAL MOUNT HYDRATION
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const emailParam = params.get('email');
       const roleParam = params.get('role');
       
-      if (emailParam) {
-        window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
-      }
-      if (roleParam) {
-        window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
-      }
+      if (emailParam) window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
+      if (roleParam) window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
 
-      // 🔒 NAMESPACE ISOLATION: Pre-populate local state ONLY with answers belonging to this exact track
-      const cachedState = window.sessionStorage.getItem(`bmr_wizard_state_cache_${activePillar}`);
-      if (cachedState) {
+      // 🔒 GRID ISOLATION: Pull ONLY the current pillar's answers for the Quad-Node phase
+      const currentQuadTrackCache = window.sessionStorage.getItem(`quad_cache_${activePillar}`);
+      
+      if (currentQuadTrackCache) {
         try {
-          const parsedCache = JSON.parse(cachedState);
-          setAnswers(parsedCache);
+          setAnswers(JSON.parse(currentQuadTrackCache));
         } catch (err) {
-          console.error("Failed to hydrate historical wizard memory:", err);
+          console.error("Failed to parse track cache:", err);
         }
       } else {
-        // Clear local memory frame state if stepping onto a completely un-started track lane
+        // Keeps the wizard state clean so the clashing 360 question IDs don't trigger auto-complete
         setAnswers({});
       }
     }
-  }, [activePillar]); // Hydrates cleanly whenever changing between framework segments
+  }, [activePillar]);
 
-  // 🔒 STRICT BOUNDARY FILTER: Restricts view to only the active framework lane
+  // 🔒 BOUNDARY FILTER: Filters view to only the active pillar lane (IGF, AVS, or HAI)
   const activeQuestions = useMemo(() => {
     return Object.values(forensicQuestions).filter(
       q => q.pillar === activePillar
@@ -57,42 +54,60 @@ export default function ForensicDiagnosticWizard({
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
     setAnswers(prev => {
       const updated = { ...prev, [questionId]: choiceKey };
-      // 💾 Keep backing cache updated under unique track namespace immediately during click loops
+      // Save directly to this specific pillar's Quad phase pocket
       if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem(`bmr_wizard_state_cache_${activePillar}`, JSON.stringify(updated));
+        window.sessionStorage.setItem(`quad_cache_${activePillar}`, JSON.stringify(updated));
       }
       return updated;
     });
   };
 
-  // 🛰️ MULTI-PILLAR MATRIX COMPILATION BOUNDARY
+  // 🛰️ CROSS-POSTURE COMPILATION EDGE
   const compileActiveNodePosture = () => {
     setIsCompiling(true);
-    
-    let combinedAnswers = {};
+    let fullyCompiledMatrix: Record<string, string> = {};
     
     if (typeof window !== 'undefined') {
       try {
-        // Collect and isolate independent records cleanly across all namespaces
-        const igfCache = JSON.parse(window.sessionStorage.getItem(`bmr_wizard_state_cache_IGF`) || '{}');
-        const avsCache = JSON.parse(window.sessionStorage.getItem(`bmr_wizard_state_cache_AVS`) || '{}');
-        const haiCache = JSON.parse(window.sessionStorage.getItem(`bmr_wizard_state_cache_HAI`) || '{}');
+        // 1. Gather all Phase 1 (360 Deep Dive) caches across the pillars
+        const ddIgf = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_IGF`) || '{}');
+        const ddAvs = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_AVS`) || '{}');
+        const ddHai = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_HAI`) || '{}');
+
+        // 2. Gather all Phase 2 (90 Quad) caches across the pillars
+        const quadIgf = JSON.parse(window.sessionStorage.getItem(`quad_cache_IGF`) || '{}');
+        const quadAvs = JSON.parse(window.sessionStorage.getItem(`quad_cache_AVS`) || '{}');
+        const quadHai = JSON.parse(window.sessionStorage.getItem(`quad_cache_HAI`) || '{}');
         
-        // Merge them cleanly at submission boundary to form the completed 90-question matrix
-        combinedAnswers = { ...igfCache, ...avsCache, ...haiCache, ...answers };
+        // Incorporate current active state answers directly into their tracking layer
+        const fullQuadSet = { 
+          ...quadIgf, 
+          ...quadAvs, 
+          ...quadHai, 
+          ...answers 
+        };
+        const fullDeepDiveSet = { ...ddIgf, ...ddAvs, ...ddHai };
+
+        // 3. Namespace Prefixing: Map inputs safely to separate keys to completely avoid clashing
+        Object.keys(fullDeepDiveSet).forEach(key => {
+          fullyCompiledMatrix[`deepdive_${key}`] = fullDeepDiveSet[key];
+        });
+
+        Object.keys(fullQuadSet).forEach(key => {
+          fullyCompiledMatrix[`quad_${key}`] = fullQuadSet[key];
+        });
+
       } catch (err) {
-        console.error("Cache namespace compilation bypass:", err);
+        console.error("Post-compilation matrix union break:", err);
       }
     }
 
-    // Execute multi-pillar equations simultaneously using the isolated, aggregated payload
-    const computedResults = calculateForensicMetrics(companyName, combinedAnswers);
+    // 4. Pass the dual-namespace object containing all isolated pillars directly to the engine
+    const computedResults = calculateForensicMetrics(companyName, fullyCompiledMatrix);
     
     if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem(
-        `bmr_runtime_${companyName}`, 
-        JSON.stringify(computedResults)
-      );
+      window.sessionStorage.setItem(`bmr_runtime_${companyName}`, JSON.stringify(computedResults));
+      window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(fullyCompiledMatrix));
     }
     
     onCalculated(computedResults);
@@ -135,7 +150,6 @@ export default function ForensicDiagnosticWizard({
       <div className="space-y-10 mb-10">
         {activeQuestions.map((question, index) => (
           <div key={question.id} className="border border-slate-900 bg-slate-950/40 p-8 relative rounded-sm group/card">
-            
             <span className="text-[9px] font-mono text-slate-600 block mb-3 font-black tracking-widest not-italic">
               // TARGET NODE: {question.target_node || 'STAKEHOLDER'} // ID: {question.id}
             </span>
@@ -172,7 +186,6 @@ export default function ForensicDiagnosticWizard({
                 );
               })}
             </div>
-
           </div>
         ))}
       </div>
