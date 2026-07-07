@@ -4,6 +4,7 @@ import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
+import { decompressFromEncodedURIComponent } from 'lz-string';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
@@ -63,6 +64,7 @@ export default function ForensicEngineRoot() {
 
         const params = new URLSearchParams(window.location.search); 
         const authVal = params.get('auth'); 
+        const matrixToken = params.get('matrix');
         const pillarParam = params.get('pillar') as FunnelPillar; 
         const entityParam = params.get('entity') || params.get('org') || params.get('entity_code'); 
         const roleParam = params.get('role') as PersonaKey; 
@@ -70,57 +72,68 @@ export default function ForensicEngineRoot() {
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
         const isParticipantRoute = !!(roleParam && entityParam && pillarParam); 
 
-        if (entityParam) { 
-          const targetCompanyId = entityParam.toUpperCase().replace(/\s+/g, '_'); 
-          const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyId}`); 
+        // 🛰️ DECRYPT COMPRESSED CORE MATRIX INTERCEPTOR
+        let decryptedData: Record<string, any> = {};
+        if (matrixToken) {
+          try {
+            decryptedData = JSON.parse(decompressFromEncodedURIComponent(matrixToken) || '{}');
+          } catch (tokenErr) {
+            console.error("Token structural matrix parsing error:", tokenErr);
+          }
+        }
+
+        // Extract values checking new namespaced structures first, falling back to legacy keys
+        const targetCompanyName = (decryptedData.companyName || entityParam || '').trim().toUpperCase().replace(/\s+/g, '_');
+        const activeSectorStr = String(decryptedData.sector || pillarParam || '').toUpperCase();
+
+        if (targetCompanyName) { 
+          const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`); 
           if (savedSession) { 
             setTriangulation(JSON.parse(savedSession)); 
             if (!roleParam && isAdminAuthenticated) setViewState('HUB'); 
           } 
         } 
 
-        // Strictly avoid evaluation routing collisions by isolating admin configs from parameters-driven user paths
         if (isAdminAuthenticated && !roleParam) { 
           setAuthorizedAdmin(true); 
            
-          const cleanPillar = pillarParam?.toUpperCase(); 
-          if (cleanPillar && ['IGF', 'AVS', 'HAI'].includes(cleanPillar)) { 
-            setActivePillar(cleanPillar as FunnelPillar); 
-          } else { 
-            setActivePillar('IGF'); 
-          } 
+          // 🎯 AUTO-DETECT AND SELECTED TARGET SECTOR NODE
+          if (activeSectorStr.includes('IGF') || activeSectorStr.includes('FINANCE') || activeSectorStr.includes('COMPLIANCE')) {
+            setActivePillar('IGF');
+          } else if (activeSectorStr.includes('AVS') || activeSectorStr.includes('MANUFACTURING') || activeSectorStr.includes('INDUSTRIAL')) {
+            setActivePillar('AVS');
+          } else if (activeSectorStr.includes('HAI') || activeSectorStr.includes('HEALTHCARE') || activeSectorStr.includes('SERVICES')) {
+            setActivePillar('HAI');
+          } else {
+            setActivePillar('IGF');
+          }
 
-          if (entityParam) { 
-            const formattedCode = decodeURIComponent(entityParam) 
-              .trim() 
-              .toUpperCase() 
-              .replace(/\s+/g, '_'); 
-            setCompanyName(formattedCode); 
+          if (targetCompanyName) { 
+            setCompanyName(targetCompanyName); 
           }  
 
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
-          const filterIncomingEmail = (paramKey: string): string => { 
-            const rawVal = params.get(paramKey); 
-            if (!rawVal) return ""; 
-            const cleanVal = decodeURIComponent(rawVal).trim(); 
+          const filterIncomingEmail = (val: string | null): string => { 
+            if (!val) return ""; 
+            const cleanVal = decodeURIComponent(val).trim(); 
             return emailRegex.test(cleanVal) ? cleanVal : ""; 
           }; 
 
           setEmails({ 
-            EXECUTIVE: filterIncomingEmail('exec'), 
-            TECH_MGMT: filterIncomingEmail('tech_mgmt'), 
-            OPS_MGMT: filterIncomingEmail('ops_mgmt'), 
-            SYSTEM_USER: filterIncomingEmail('sys_user') 
+            EXECUTIVE: filterIncomingEmail(decryptedData.execEmail || params.get('exec')), 
+            TECH_MGMT: filterIncomingEmail(decryptedData.techEmail || params.get('tech_mgmt')), 
+            OPS_MGMT: filterIncomingEmail(decryptedData.mgrEmail || params.get('ops_mgmt')), 
+            SYSTEM_USER: filterIncomingEmail(params.get('sys_user')) 
           }); 
 
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
           setActivePillar(['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF'); 
-          setCompanyName(entityParam.toUpperCase().replace(/\s+/g, '_')); 
+          setCompanyName(targetCompanyName); 
           setActivePersona(roleParam); 
 
           setTriangulation(prev => prev || { 
-            companyName: entityParam.toUpperCase().replace(/\s+/g, '_'), 
+            companyName: targetCompanyName, 
             pillar: ['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF', 
             emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }, 
             completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
@@ -261,7 +274,7 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  const allPersonasComplete = triangulation    
+  const allPersonasComplete = triangulation     
     ? Object.values(triangulation.completions).every(status => status === true) 
     : false; 
 
@@ -318,7 +331,7 @@ export default function ForensicEngineRoot() {
     return ( 
       <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white"> 
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl"> 
-                   
+                     
           <div className="border-b border-zinc-900 pb-5 mb-6 flex items-center justify-between"> 
             <div className="flex items-center gap-3"> 
               <Lock size={18} className="text-red-500 shrink-0" /> 
@@ -332,7 +345,7 @@ export default function ForensicEngineRoot() {
           <div className="space-y-6"> 
             <div className="bg-black border border-zinc-900 p-6 rounded-sm"> 
               <span className="font-mono text-[9px] text-zinc-500 block font-black tracking-widest uppercase mb-1">// SYSTEM DETECTED ASSESSMENT SECTOR</span> 
-              <h3 className="font-mono text-sm font-black text-white uppercase tracking-wider mb-2">{getPillarNodeDetails().title}</h3> 
+              <h3 className="font-zinc-500 text-sm font-black text-white uppercase tracking-wider mb-2">{getPillarNodeDetails().title}</h3> 
               <p className="text-sm text-zinc-300 font-sans leading-relaxed tracking-normal font-normal mb-4"> 
                 {getPillarNodeDetails().exposure} 
               </p> 
@@ -352,7 +365,7 @@ export default function ForensicEngineRoot() {
             </div> 
 
             <div className="pt-4 border-t border-zinc-900 font-mono"> 
-              <a           
+              <a             
                 href="/dashboard" 
                 className="w-full bg-zinc-100 text-black text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md" 
               > 
@@ -368,7 +381,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white italic"> 
-               
+                 
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl shadow-black/40 backdrop-blur-md"> 
           <div className="border-b border-slate-900 pb-5 mb-8 flex items-center gap-3"> 
@@ -382,7 +395,7 @@ export default function ForensicEngineRoot() {
           <form onSubmit={handleInitializeTriangulation} className="space-y-6 not-italic font-mono"> 
             <div> 
               <label className="text-[10px] text-slate-500 block font-black tracking-widest uppercase mb-2">// ENTITY ANALYSIS CODE</label> 
-              <input       
+              <input        
                 type="text" 
                 autoComplete="off" 
                 placeholder="E.G., SIGMA_TIER_GLOBAL" 
@@ -407,9 +420,7 @@ export default function ForensicEngineRoot() {
                     className={`w-full p-4 text-left border rounded-xs transition-all flex flex-col justify-center cursor-pointer ${ 
                       activePillar === p.id ? 'border-red-600 bg-red-950/10' : 'border-slate-800 bg-black hover:border-slate-700' 
                     }`} 
-                  > 
-                    <span className="text-xs font-black text-slate-200 tracking-wider uppercase italic">{p.title}</span> 
-                  </button> 
+                  /> 
                 ))} 
               </div> 
             </div> 
@@ -419,7 +430,7 @@ export default function ForensicEngineRoot() {
               {(Object.keys(emails) as PersonaKey[]).map((role) => ( 
                 <div key={role}> 
                   <span className="text-[9px] text-slate-600 block mb-1.5 font-black tracking-widest uppercase">// {role.replace('_', ' ')} ENDPOINT NODE</span> 
-                  <input       
+                  <input        
                     type="email" 
                     placeholder={`e.g., manager@domain.com`} 
                     value={emails[role]} 
@@ -435,7 +446,6 @@ export default function ForensicEngineRoot() {
             )} 
 
             <div className="pt-4 space-y-3"> 
-              {/* 🚀 FIXED SUBMIT LINK TEXT LINE 188: */}
               <button 
                 type="submit" 
                 className="w-full bg-zinc-100 text-black font-sans text-sm font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md italic" 
@@ -525,12 +535,10 @@ export default function ForensicEngineRoot() {
             })} 
           </div> 
 
-          {/* FINAL ENGINE COMPILE ACTION */} 
           <div className="mt-8 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
             <div className="text-left">
               <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK MATRIX DEPENDENCY</span> 
                
-              {/* ⚡ THE ADMINISTRATIVE BYPASS LINK */}
               {!allPersonasComplete && authorizedAdmin && (
                 <button
                   type="button"
@@ -578,7 +586,6 @@ export default function ForensicEngineRoot() {
 
       {viewState === 'COCKPIT' && triangulation && ( 
         <div>
-          {/* Admin Context Return Control Header Strip */}
           <div className="w-full max-w-[1600px] mx-auto mb-4 px-10 no-print flex justify-start">
             <button
               type="button"
