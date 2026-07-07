@@ -7,8 +7,10 @@ import { SectorType } from '@/lib/supabaseAdapter';
 import ForensicCommandCockpit from '@/components/ForensicCommandCockpit';
 
 interface DecodedPayload {
-  org: string;
-  sec: SectorType;
+  org?: string;
+  companyName?: string; // 🛰️ ALIGNED FOR NEW META KEYMAP
+  sec?: SectorType;
+  sector?: string;      // 🛰️ ALIGNED FOR NEW META KEYMAP
   ans: Record<string, any>;
 }
 
@@ -31,7 +33,7 @@ export default function DiagnosticSummaryPage() {
       if (!rawString) throw new Error("NULL_DECOMPRESSION_OUTPUT");
       
       const payload = JSON.parse(rawString) as DecodedPayload;
-      if (!payload.org || !payload.ans) throw new Error("MALFORMED_MATRIX_PAYLOAD");
+      if (!payload.ans) throw new Error("MALFORMED_MATRIX_PAYLOAD");
       
       setHydratedData(payload);
     } catch (err) {
@@ -68,17 +70,16 @@ export default function DiagnosticSummaryPage() {
     }
 
     // 📡 DYNAMIC SLIDER EXTRACTION LAYER
-    // Automatically extracts key survey parameters with robust baseline overrides
-    const dbDecay = parseFloat(flatAnswers.decay_pct) || parseFloat(hydratedData.ans.decay_pct) || 59; 
-    const spend = parseFloat(flatAnswers.ai_spend) || parseFloat(hydratedData.ans.ai_spend) || 7.9;
-    const fteCount = parseInt(flatAnswers.roi_pct) || parseInt(hydratedData.ans.roi_pct) || 76;
-    const complianceIndex = parseFloat(flatAnswers.sfi_score) || parseFloat(hydratedData.ans.sfi_score) || 55;
+    const dbDecay = parseFloat(flatAnswers.decay_pct) || parseFloat(hydratedData.ans?.decay_pct) || 59; 
+    const spend = parseFloat(flatAnswers.ai_spend) || parseFloat(hydratedData.ans?.ai_spend) || 7.9;
+    const fteCount = parseInt(flatAnswers.roi_pct) || parseInt(hydratedData.ans?.roi_pct) || 76;
+    const complianceIndex = parseFloat(flatAnswers.sfi_score) || parseFloat(hydratedData.ans?.sfi_score) || 55;
     
-    // Core run-rate metrics ledger calculations matching your live view schema exactly
     const laborMultiplier = 0.5;
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
     
-    const sectorInput = String(hydratedData.sec || '').toUpperCase().trim();
+    // 🔍 Fallback matching for both payload versions
+    const sectorInput = String(hydratedData.sector || hydratedData.sec || '').toUpperCase().trim();
     let normalizedSector: SectorType = 'SERVICES';
 
     if (sectorInput.includes('HEALTHCARE') || sectorInput.includes('CLINICAL') || sectorInput === 'HEALTH') {
@@ -91,12 +92,11 @@ export default function DiagnosticSummaryPage() {
       normalizedSector = 'SERVICES';
     }
 
-    let sectorInflationMultiplier = 1.5; // Locked performance index for combined structures
-
+    let sectorInflationMultiplier = 1.5;
     const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
 
     return {
-      companyName: hydratedData.org || "END TO END TEST 3 GLOBAL",
+      companyName: hydratedData.companyName || hydratedData.org || "END TO END TEST 3 GLOBAL",
       sector: normalizedSector,
       responses: hydratedData.ans,
       metrics: {
