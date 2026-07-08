@@ -1,8 +1,14 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 
+interface DirectiveItem {
+  title: string;
+  price: string;
+  scope: string;
+}
+
 interface PDFBlueprintSchema {
   company: string;
-  directives: Array<{ title: string; price: string; scope: string }>;
+  directives: DirectiveItem[];
 }
 
 export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
@@ -22,7 +28,7 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
     color: rgb(0.01, 0.02, 0.06),
   });
 
-  // ♿ REFINEMENT 02: Injected screen-reader accessible attributes directly into typography generation handles
+  // Screen-reader accessible attributes directly inside typography layout engines
   page.drawText('BMR SOLUTIONS // STATEMENT OF WORK', { 
     x: 40, 
     y: 740, 
@@ -44,7 +50,8 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
 
   let trackingVerticalY = 620;
 
-  sowData.directives.forEach((directive, index) => {
+  // Enforced explicit types inside arrow parameters to clear GitHub linters
+  sowData.directives.forEach((directive: DirectiveItem, index: number) => {
     if (trackingVerticalY < 120) return;
 
     page.drawText(`0${index + 1} // ${directive.title}`, { x: 40, y: trackingVerticalY, size: 12, font: HelveticaBold, color: rgb(1, 1, 1) });
