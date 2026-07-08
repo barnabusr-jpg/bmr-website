@@ -1,6 +1,7 @@
+"use client";
 import React, { useMemo } from 'react';
 import { SectorType } from '@/lib/supabaseAdapter';
-import { Activity, AlertTriangle, Copy, Check } from 'lucide-react';
+import { Activity, AlertTriangle, Copy, Check, FileText } from 'lucide-react';
 import { compressToEncodedURIComponent } from 'lz-string';
 
 interface CockpitProps {
@@ -14,10 +15,9 @@ interface CockpitProps {
     isTierThreeExposure: boolean;
     regulatoryAlertActive: boolean;
   };
-  responses?: Record<string, any>; // 🚀 Captured from stateless multi-persona user inputs
+  responses?: Record<string, any>; 
 }
 
-// 🌐 MULTI-TENANT COMBINED TRIANGULATION MATRIX DECK
 const PILLAR_REGISTRIES: Record<string, {
   label: string;
   badge: string;
@@ -85,13 +85,11 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
       });
     }
 
-    // Direct fallback layer mapping: If explicit checkboxes were used instead of prefixes
     const sectorString = String(sector || '').toUpperCase();
     if (sectorString.includes('COMPLIANCE') || sectorString.includes('IGF')) active.add('IGF');
     if (sectorString.includes('DEBT') || sectorString.includes('AVS')) active.add('AVS');
     if (sectorString.includes('BIAS') || sectorString.includes('HAI')) active.add('HAI');
 
-    // Ultimate default safe layout anchor if structure evaluates empty
     if (active.size === 0) {
       active.add('AVS');
       active.add('IGF');
@@ -122,17 +120,22 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
     };
   }, [responses]);
 
-  // 🔐 Compress contextual operational parameters into an immutable URL token
-  const magicLink = useMemo(() => {
+  // ⏱️ REFINEMENT 01: Enforces 24-Hour Expiration Inside the Compressed Generator URL Hook 
+  const generatorLink = useMemo(() => {
     if (typeof window === 'undefined' || !responses) return '';
-    const payload = { org: companyName, sec: sector, ans: responses };
+    const payload = { 
+      org: companyName, 
+      sec: sector, 
+      ans: responses,
+      expires: Date.now() + 86400000 
+    };
     const compressed = compressToEncodedURIComponent(JSON.stringify(payload));
-    return `${window.location.origin}/diagnostic/summary?matrix=${compressed}`;
+    return `${window.location.origin}/sow-generator?matrix=${compressed}`;
   }, [companyName, sector, responses]);
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(magicLink);
+      await navigator.clipboard.writeText(generatorLink);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
@@ -161,16 +164,27 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
           </div>
         </div>
         
-        <button
-          type="button"
-          onClick={() => typeof window !== 'undefined' && window.print()}
-          className="bg-zinc-100 text-black text-[10px] font-black px-6 py-2.5 uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all cursor-pointer font-mono shrink-0 leading-none self-start md:self-center"
-        >
-          PRINT SOW DOSSIER (PDF)
-        </button>
+        {/* Top Action Panel Blocks */}
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href={generatorLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-red-600 text-white text-[10px] font-black px-6 py-2.5 uppercase tracking-widest hover:bg-white hover:text-black transition-all cursor-pointer font-mono shrink-0 leading-none inline-flex items-center gap-2 decoration-0"
+          >
+            <FileText size={12} /> OPEN SOW TERMINAL
+          </a>
+          <button
+            type="button"
+            onClick={() => typeof window !== 'undefined' && window.print()}
+            className="bg-zinc-800 text-white border border-slate-700 text-[10px] font-black px-6 py-2.5 uppercase tracking-widest hover:bg-slate-700 transition-all cursor-pointer font-mono shrink-0 leading-none"
+          >
+            PRINT DOSSIER
+          </button>
+        </div>
       </div>
 
-      {/* MATCHING QUAD-STYLE SUMMARY CARDS */}
+      {/* SUMMARY INDEX DISPLAY MODULES */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 italic no-print">
         <div className="bg-slate-950/60 border border-slate-800 p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950">
           <span className="text-[9px] font-mono text-slate-500 font-black tracking-widest uppercase block">// INTEGRITY COMPLIANCE INDEX</span>
@@ -194,10 +208,8 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
         </div>
       </div>
 
-      {/* RECOMMENDED STATEMENT OF WORK COMPONENT CONTAINER */}
+      {/* CORE SPECIFICATION VIEW SHEET */}
       <div className="bg-white text-black p-10 border-l-[16px] border-slate-900 shadow-2xl space-y-6 mb-10 font-sans">
-        
-        {/* Document Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
           <div className="not-italic">
             <span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// ENGAGEMENT_ROADMAP_CONFIGURATION</span>
@@ -210,7 +222,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
           </span>
         </div>
 
-        {/* Narrative Block Segment */}
         <div className="space-y-6 text-sm text-slate-800 leading-relaxed font-sans font-medium normal-case">
           <div>
             <h4 className="font-mono text-xs font-black text-slate-400 uppercase tracking-widest mb-2 italic">// SECTION 01: EXECUTIVE ANALYSIS SUMMARY</h4>
@@ -218,7 +229,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
               Cross-persona triangulation logs identify stacked risk vectors and unmapped operational vulnerabilities across core development pipelines for <strong>{companyName}</strong>. At existing workforce resource parameters, this systemic friction generates an aggregated annual loss run-rate calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>, requiring structural remediation actions.
             </p>
 
-            {/* THE TRIANGULATED CALCULUS MATRIX EQUATION LOG */}
             <div className="bg-[#090d16] border border-slate-900 font-mono p-6 my-8 text-left text-slate-300 shadow-inner rounded-sm not-italic normal-case font-medium">
               <div className="text-[10px] text-red-500 font-black tracking-widest uppercase mb-4">
                 <span>// QUANTITATIVE DEBT VERIFICATION LINEAGE</span>
@@ -235,7 +245,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
               </div>
             </div>
 
-            {/* MULTI-PILLAR COMPREHENSIVE FRACTURE GRID */}
             <div className="my-8 border-t border-b border-slate-200 py-6 not-italic normal-case font-medium">
               <span className="text-[10px] font-mono font-black tracking-widest text-slate-400 block mb-4 uppercase">// IDENTIFIED LOGIC FRACTURES INVENTORY ({detectedPillars.length})</span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -249,7 +258,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
               </div>
             </div>
             
-            {/* Conditional Exposure Warning Alert Box */}
             {metrics.regulatoryAlertActive && (
               <div className="mt-4 border-2 border-red-600/30 bg-red-50 p-6 flex flex-col space-y-2 text-left italic uppercase font-black tracking-tighter">
                 <span className="text-[10px] font-mono font-black text-red-600 tracking-widest block">// SECURE_BRIEFING_ALIGNMENT_ALERT</span>
@@ -263,7 +271,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
             )}
           </div>
 
-          {/* DYNAMIC TRACK INTELLIGENCE READOUT (COGNITIVE LEDGER) */}
           {(aiTelemetryMetrics.showsShadowAiRisk || aiTelemetryMetrics.showsBlackBoxRisk) && (
             <div className="my-10 border-t-2 border-slate-900 pt-6 not-italic normal-case font-medium">
               <div className="flex items-center gap-2 text-red-600 font-mono text-xs font-black uppercase tracking-widest italic mb-4">
@@ -278,7 +285,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
 
           <hr className="border-slate-100" />
 
-          {/*📜 AGGREGATED STANDARDS COMPLIANCE INDEX CROSS-REFERENCE */}
           <div className="bg-slate-50 border border-slate-200 p-6 my-6 font-mono text-xs text-slate-700 not-italic normal-case font-medium">
             <div className="text-[10px] text-black font-black tracking-widest uppercase mb-3">// ARCHITECTURAL CODES & REGULATORY STANDARDS PARITY LOOKUP</div>
             <ul className="space-y-4 list-none p-0 m-0 text-[11px]">
@@ -295,7 +301,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
 
           <hr className="border-slate-100" />
 
-          {/* SOW Milestones Progress Roadmap */}
           <div>
             <h4 className="font-mono text-xs font-black text-slate-400 uppercase tracking-widest mb-3 italic">// SECTION 02: REMEDIATION ROADMAP PROGRESSION</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 italic font-black">
@@ -327,19 +332,19 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
         </div>
       </div>
 
-      {/* STATELESS Magic Link SHARE CARD */}
+      {/* STATELESS SHARE CARD TERMINAL */}
       <div className="bg-slate-950/40 border border-slate-900 p-8 space-y-4 no-print">
         <div>
-          <span className="text-[9px] font-mono text-red-500 font-black tracking-widest block">// IMMUTABLE RETRIEVAL LOG MATRIX TOKEN</span>
-          <h4 className="text-xl font-black uppercase tracking-tight text-white mt-0.5">PERMANENT COCKPIT ROUTING LINK</h4>
+          <span className="text-[9px] font-mono text-red-500 block font-black tracking-widest">// IMMUTABLE STATELESS SOW GENERATOR INDEX TOKEN</span>
+          <h4 className="text-xl font-black uppercase tracking-tight text-white mt-0.5">PERMANENT DEPLOYABLE BLUEPRINT INTERFACE</h4>
           <p className="text-xs font-sans text-slate-400 font-normal normal-case not-italic mt-1 leading-relaxed">
-            This engine processes configurations completely database-free. Copy or bookmark this encrypted URL string token to re-compile this exact 360° metrics analysis view instantly at any date.
+            This engine processes configurations completely database-free. Copy this encrypted URL token to load the interactive SOW Generator workbench containing your exact alignment data at any moment.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch gap-2 font-mono not-italic text-xs">
           <input
             type="text"
-            value={magicLink}
+            value={generatorLink}
             readOnly
             onClick={(e) => (e.target as HTMLInputElement).select()}
             className="flex-1 bg-black border border-slate-800 p-3 text-slate-300 font-mono text-[11px] focus:outline-none focus:border-slate-600 truncate selection:bg-red-950 selection:text-red-400"
@@ -352,7 +357,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
             }`}
           >
             {copied ? <Check size={14} /> : <Copy size={14} />}
-            {copied ? 'COPIED' : 'COPY LEDGER LINK'}
+            {copied ? 'COPIED' : 'COPY SOW BLUEPRINT LINK'}
           </button>
         </div>
       </div>
