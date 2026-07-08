@@ -5,11 +5,17 @@ import { createClient } from '@supabase/supabase-js';
 const SENDGRID_KEY = process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KEY;
 sgMail.setApiKey(SENDGRID_KEY as string);
 
-// 🚀 PRIVILEGED MASTER ADMIN ACCESS INITIALIZATION
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// Helper Engine: Converts "WEDENSDAY_MORNING_TEST" into "Wedensday Morning Test"
+function toSentenceCase(str: string): string {
+  if (!str) return 'Your company';
+  const clean = str.replace(/_/g, ' ').toLowerCase().trim();
+  return clean.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
 
 const ROLE_MAP: Record<string, string> = {
   'executive': 'EXECUTIVE', 
@@ -55,8 +61,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const roles = Object.entries(emails);
     const emailPromises = [];
+    const prettyCompany = toSentenceCase(orgName);
 
-    // 🔄 PURE CODE STATE CHECK AND INGESTION PROTOCOL
     for (const [rawRole, email] of roles) {
       const targetEmail = (email as string).trim().toLowerCase();
       if (!targetEmail) continue;
@@ -73,7 +79,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // Look up if a record for this persona already exists on this specific audit container
       const { data: existingNode, error: checkError } = await supabaseAdmin
         .from('operators')
         .select('id')
@@ -84,19 +89,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       if (checkError) throw checkError;
 
       if (existingNode) {
-        // 🎯 TARGET PATCH: Overwrite the typoed email address field on the exact container ID found
         const { error: updateError } = await supabaseAdmin
           .from('operators')
           .update({
             email: targetEmail,
-            access_code: code, // Issues a fresh secure entry token configuration
-            status: 'pending'  // Resets lane to clear prior submission metrics
+            access_code: code,
+            status: 'pending'
           })
           .eq('id', existingNode.id);
 
         if (updateError) throw updateError;
       } else {
-        // ➕ SAFE INSERTION: Create the structural row container if this is the initial workspace launch setup
         const { error: insertError } = await supabaseAdmin
           .from('operators')
           .insert({
@@ -137,9 +140,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                           Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
                         </p>
                         <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
+                        
                         <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0; text-transform: none;">
-                          Your company leadership recently started a diagnostic project with BMR Solutions. This project is designed to evaluate your technology investments. The goal is to identify operational waste, uncover structural errors, and discover hidden costs within your AI systems.
+                          <strong>${prettyCompany} leadership</strong> recently started a diagnostic project with BMR Solutions. This project is designed to evaluate your technology investments. The goal is to identify operational waste, uncover structural errors, and discover hidden costs within your AI systems.
                         </p>
+                        
                         <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0; text-transform: none;">
                           To complete this system review, we require independent feedback from different departments. You are designated as the representative for the <strong>${standardizedRole} Node</strong>. When you select the verification link below, the system will open your specific questionnaire module. Thank you for your attention and support in this matter.
                         </p>
@@ -169,7 +174,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }));
     }
 
-    // Telemetry Aggregation for Logic Decay Coefficient Matrix Calculations
     const { data: allOperators, error: queryError } = await supabaseAdmin
       .from('operators')
       .select('survey_completed')
@@ -183,7 +187,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const unsubmittedPaths = allOperators.filter((o) => !o.survey_completed).length;
     const logicDecayCoefficient = totalPaths > 0 ? unsubmittedPaths / totalPaths : 0.00;
 
-    // Retrieve Current Raw Diagnostic Metrics via Admin Bypass
     const { data: activeAudit, error: auditFetchError } = await supabaseAdmin
       .from('audits')
       .select('hai_raw_score, avs_raw_score, igf_raw_score, status, compiled_at, decay_pct')

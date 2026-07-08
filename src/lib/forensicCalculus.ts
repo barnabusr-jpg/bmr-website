@@ -5,47 +5,77 @@ interface CalculatedMetrics {
   multiplier: number;
   complianceScore: number;
   annualSalaryLeakage: number;
-  unhedgedLegalExposure: number;
+  forensicInactionLiability: number; 
   isTierThreeExposure: boolean;
   regulatoryAlertActive: boolean;
 }
 
 /**
- * 🧮 OPTIMIZED FORENSIC CALCULUS ENGINE
- * Compounds baseline data point logs using specific macro-coefficients 
- * based on sector, securely clamping scores to maintain presentation credibility.
+ * 🧮 UNIFIED MULTI-PILLAR FORENSIC CALCULUS ENGINE
+ * Dynamically evaluates cross-organizational telemetry metrics (IGF, AVS, HAI)
+ * calibrated strictly to the 4 operational intake sectors and their value drivers.
  */
 export function calculateForensicMetrics(
   companyName: string,
-  responses: Record<string, Record<string, string>> | any, // Handles multi-persona arrays
-  sector: SectorType
+  responses: Record<string, string> | any,
+  explicitSector?: SectorType
 ): CalculatedMetrics {
   
-  // 1. Sector Multiplier Enforcements
-  const sectorMultipliers: Record<SectorType, number> = {
-    FINANCE_HEALTHCARE: 1.85,
-    ENTERPRISE_SAAS: 1.50,
-    INDUSTRIAL_LOGISTICS: 1.25,
-    SERVICES_RETAIL: 1.00,
+  // 1. Resolve Sector Identity (Falls back safely if omitted in the caller signature)
+  const fallbackSector: SectorType = "SERVICES";
+  const sector = explicitSector || responses?.sector || fallbackSector;
+
+  // Aligned perfectly to your 4 intake pillars and their underlying risk multipliers
+  const sectorMultipliers: Record<string, number> = {
+    FINANCE: 1.95,     // Driven by Compliance (SOX / PCI-DSS)
+    HEALTHCARE: 1.85,  // Driven by Liability (HIPAA / Data Conformance)
+    INDUSTRIAL: 1.35,  // Driven by Operations (Pipeline / Rework Tax)
+    SERVICES: 1.00,    // Driven by Labor (Standard Engineering Baselines)
   };
   
   const multiplier = sectorMultipliers[sector] || 1.00;
 
-  // 2. Base Metric Accumulation Algorithms
-  // These placeholders loop through response keys under standard execution
-  let complianceScoreBase = 40; 
-  let salaryLeakageBase = 125000;
-  let legalExposureBase = 5000000;
+  // 2. Extract Cross-Functional Posture Weightings
+  const inputKeys = Object.keys(responses || {});
+  const quadKeys = inputKeys.filter(k => k.startsWith('quad_'));
 
-  // 3. Post-Process Compounding & Protective Clamping
+  // ✨ FIX: Relaxed string inclusion checks to support both hyphenated (AVS-) and underscore namespaces safely
+  const avsAnswers = quadKeys.filter(k => k.toUpperCase().includes('AVS') || responses[k] === 'AVS');
+  const igfAnswers = quadKeys.filter(k => k.toUpperCase().includes('IGF') || responses[k] === 'IGF');
+  const haiAnswers = quadKeys.filter(k => k.toUpperCase().includes('HAI') || responses[k] === 'HAI');
+
+  // 🧠 Dynamic Penalty Accumulation Loops
+  let frictionPenaltyCount = 0;
+  
+  quadKeys.forEach(key => {
+    const answerValue = responses[key];
+    if (answerValue === 'C' || answerValue === 'D') {
+      frictionPenaltyCount += 1.5;
+    } else if (answerValue === 'B') {
+      frictionPenaltyCount += 0.5;
+    }
+  });
+
+  // 3. Mathematical Base Calibration
+  const baseDeficiencyImpact = frictionPenaltyCount * 4.5;
+  const rawComplianceScore = 90 - baseDeficiencyImpact;
+  
+  // Salary Leakage runs off AVS/HAI friction metrics (blended engineering hour impact values)
+  const infrastructureLossWeight = avsAnswers.length + haiAnswers.length;
+  const salaryLeakageBase = 85000 + (infrastructureLossWeight * 15000) + (frictionPenaltyCount * 45000);
+  
+  // Inaction Liability runs heavily off compliance framework exposures (IGF statutory risks)
+  const complianceRiskWeight = igfAnswers.length * 2.0;
+  const legalExposureBase = 450000 + (complianceRiskWeight * 75000) + (frictionPenaltyCount * 115000);
+
+  // 4. Post-Process Compounding & Protective Clamping
   return {
     companyName,
     multiplier,
-    // Safely clamp the final multiplied score between 0 and 100 to prevent visual layout breaking
-    complianceScore: Math.max(0, Math.min(100, complianceScoreBase * multiplier)),
-    annualSalaryLeakage: salaryLeakageBase * multiplier,
-    unhedgedLegalExposure: legalExposureBase * multiplier,
-    isTierThreeExposure: multiplier >= 1.50, // Auto-trigger high-severity SOW copy block
-    regulatoryAlertActive: sector === 'FINANCE_HEALTHCARE',
+    complianceScore: Math.max(15, Math.min(100, Math.round(rawComplianceScore))),
+    annualSalaryLeakage: Math.round(salaryLeakageBase * multiplier),
+    forensicInactionLiability: Math.round(legalExposureBase * multiplier), 
+    isTierThreeExposure: multiplier >= 1.35, 
+    regulatoryAlertActive: sector === 'FINANCE' || sector === 'HEALTHCARE' || igfAnswers.length > 2,
   };
 }

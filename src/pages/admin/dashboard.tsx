@@ -6,6 +6,7 @@ import {
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
   X, Send, CheckCircle, Clock, Search, BellRing, FileText, Monitor
 } from "lucide-react";
+import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
 
 const BMR_IP_SUITE = {
@@ -143,7 +144,7 @@ export default function AdminDashboard() {
   };
 
   const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
-    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey);
+    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey.toUpperCase());
     if (!matchingNode || !matchingNode.email) {
       alert("NUDGE ERROR: RECIPIENT NODE ROUTE NOT IDENTIFIED.");
       return;
@@ -152,7 +153,7 @@ export default function AdminDashboard() {
     setIsUpdating(true);
     try {
       const formattedPayload: Record<string, string> = {};
-      formattedPayload[targetRoleKey] = matchingNode.email;
+      formattedPayload[targetRoleKey.toUpperCase()] = matchingNode.email;
 
       const res = await fetch('/api/dispatch-directives', {
         method: 'POST',
@@ -172,6 +173,28 @@ export default function AdminDashboard() {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleLaunchPersonaWizard = (roleKey: string, auditRecord: any) => {
+    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === roleKey.toUpperCase());
+    
+    let assignedPillar = "AVS";
+    if (roleKey.toUpperCase() === "EXECUTIVE") assignedPillar = "IGF";
+    if (roleKey.toUpperCase() === "MANAGERIAL") assignedPillar = "HAI";
+
+    const matrixPayload = {
+      org: auditRecord.org_name,
+      sec: String(auditRecord.sector || 'INDUSTRIAL').toUpperCase().trim(),
+      ans: {}
+    };
+
+    const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
+    const targetEmail = matchingNode?.email || "barnabusr@gmail.com";
+
+    window.open(
+      `/forensic?matrix=${compressedToken}&pillar=${assignedPillar}&role=${roleKey.toUpperCase()}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&auth=admin_verified_secure`,
+      '_blank'
+    );
   };
 
   const runSynthesis = async (auditId: string) => {
@@ -301,20 +324,18 @@ export default function AdminDashboard() {
                 const activeAudit = data.find(item => item.id === expandedRow);
                 
                 if (activeAudit) {
-                  const entityCode = `${activeAudit.org_name.toUpperCase().replace(/\s+/g, '_')}_GLOBAL`;
-                  const targetPillar = (activeAudit.sfi_score || activeAudit.decay_pct) >= 45 ? "AVS" : "IGF"; 
+                  const sectorTag = String(activeAudit.sector || 'INDUSTRIAL').toUpperCase().trim();
                   
-                  const execNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
-                  const mgrNode  = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
-                  const techNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
+                  const matrixPayload = {
+                    org: activeAudit.org_name,
+                    sec: sectorTag,
+                    ans: {} 
+                  };
 
-                  const execEmail = encodeURIComponent(execNode?.email || "");
-                  const techEmail = encodeURIComponent(techNode?.email || "");
-                  const opsEmail  = encodeURIComponent(mgrNode?.email || "");
-                  const sysEmail  = encodeURIComponent(techNode?.email || ""); 
-
+                  const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
+                  
                   window.open(
-                    `/forensic?entity_code=${encodeURIComponent(entityCode)}&pillar=${targetPillar}&exec=${execEmail}&tech_mgmt=${techEmail}&ops_mgmt=${opsEmail}&sys_user=${sysEmail}&auth=admin_verified_secure`, 
+                    `/forensic?matrix=${compressedToken}&auth=admin_verified_secure`, 
                     '_blank'
                   );
                 } else {
@@ -422,11 +443,9 @@ export default function AdminDashboard() {
                   const spend = parseFloat(audit.ai_spend) || 1.2;
                   const fte = audit.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
                   
-                  // 🔒 UPGRADED FIXED PARAMETER MULTIPLIERS FOR TOTAL WORKFORCE ACCOUNTING
                   const laborMultiplier = 0.5;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   
-                  // 🧠 INTAKE STRATEGY FOCUS MARKUP MATRIX RESOLUTION
                   const sectorKey = (audit.sector || 'services').toLowerCase().trim();
                   let sectorInflationMultiplier = 1.2;
 
@@ -440,7 +459,6 @@ export default function AdminDashboard() {
                     sectorInflationMultiplier = 1.2;
                   }
 
-                  // 📊 HIGH-FIDELITY CORE CALCULUS EQUATION ALIGNMENT
                   const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
                   const totalLeakage = laborTax + exposure;
 
@@ -518,9 +536,7 @@ export default function AdminDashboard() {
                                 <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
                                   <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
                                     <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
-                                    {isDone ? (
-                                      <CheckCircle className="text-green-500" size={14}/>
-                                    ) : (
+                                    {!isDone && (
                                       <div className="flex items-center gap-2">
                                         <button 
                                           type="button"
@@ -537,10 +553,18 @@ export default function AdminDashboard() {
                                     )}
                                   </div>
                                   
-                                  <div className="text-center py-4">
-                                    <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-green-500' : 'text-2xl text-slate-800 animate-pulse'}`}>
-                                      {isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}
-                                    </div>
+                                  <div className="text-center py-4 flex justify-center items-center">
+                                    <button  
+                                      type="button"
+                                      onClick={() => handleLaunchPersonaWizard(role.key, audit)}  
+                                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${  
+                                        isDone 
+                                          ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' 
+                                          : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white'   
+                                      }`} 
+                                    >  
+                                      {isDone ? 'Override Matrix' : 'Open Posture'}  
+                                    </button>
                                   </div>
                                 </div>
                               );
@@ -764,7 +788,9 @@ export default function AdminDashboard() {
                                   type="button" 
                                   onClick={(e) => { 
                                     e.stopPropagation(); 
-                                    window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${exposure + laborTax}&tax=${laborTax}`, '_blank');
+                                    const urlSafeLeakage = Math.round(totalLeakage);
+                                    const urlSafeLaborTax = Math.round(laborTax);
+                                    window.open(`/results/${audit.id}?live_sync=true&decay=${sfi}&spend=${spend}&fte=${fte}&leakage=${urlSafeLeakage}&tax=${urlSafeLaborTax}`, '_blank'); 
                                   }} 
                                   className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"
                                 >
