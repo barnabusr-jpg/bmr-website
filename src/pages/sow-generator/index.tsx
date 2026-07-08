@@ -50,7 +50,7 @@ export default function SOWBuilderStandalone() {
     }
   }, []);
 
-  // 🧠 Knowledge Translation Engine
+  // 🧠 Knowledge Translation Engine - Completely sanitized of mathematical IP derivation metadata
   const activeRemediations = useMemo((): AnomalyRemediationNode[] => {
     if (!diagnosticData || !diagnosticData.ans) return [];
     const entries: AnomalyRemediationNode[] = [];
