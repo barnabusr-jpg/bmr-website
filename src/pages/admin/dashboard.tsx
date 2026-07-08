@@ -560,8 +560,8 @@ export default function AdminDashboard() {
                                       className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${  
                                         isDone 
                                           ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' 
-                                          : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white'  
-                                      }`}  
+                                          : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white'   
+                                      }`} 
                                     >  
                                       {isDone ? 'Override Matrix' : 'Open Posture'}  
                                     </button>
