@@ -1,4 +1,4 @@
-"use client";
+ "use client";
 import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
@@ -24,7 +24,6 @@ function findContradictions(matrix: Record<string, string>) {
 function evaluateProtocolOfAcceptance(matrix: Record<string, string>): string[] {
   const directives: string[] = [];
   
-  // ✨ FIXED: Corrected closure lookup variable token matching reference
   const totalDFlaws = Object.keys(matrix).filter(k => matrix[k] === 'D').length;
   if (totalDFlaws >= 5 || matrix['quad_Q14'] === 'D') {
     directives.push("TIER_03_CRITICAL_FRACTURE_MITIGATION_DIRECTIVE");
@@ -49,7 +48,7 @@ export default function ForensicDiagnosticWizard({
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
   
-  // ✨ NEW STATE LAYER: Tracks the active runtime role locally to trigger dependencies cleanly
+  // ✨ Localized state tracker capturing incoming URL query vectors
   const [activeRole, setActiveRole] = useState<string>('');
 
   // 📥 GLOBAL MOUNT HYDRATION & SECURE PAIRING
@@ -62,7 +61,7 @@ export default function ForensicDiagnosticWizard({
       if (emailParam) window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
       if (roleParam) {
         window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
-        setActiveRole(roleParam); // Force localized state hook update pass
+        setActiveRole(roleParam); 
       } else {
         const cachedRole = window.sessionStorage.getItem('stakeholder_runtime_role');
         if (cachedRole) setActiveRole(cachedRole);
@@ -83,17 +82,22 @@ export default function ForensicDiagnosticWizard({
     }
   }, [activePillar]);
 
-  // 📡 ROLE-BASED DYNAMIC VECTOR ROUTER FILTER
+  // 📡 ROLE-BASED DYNAMIC VECTOR ROUTER FILTER (FIXED COLLISION GATEWAY)
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
+    const normalizedRole = activeRole?.toUpperCase();
 
-    // ✨ FIXED: Depend on activeRole state vector tracking parameters to completely avoid hydration lag
-    if (activeRole === 'TECH_MGMT' || activeRole === 'SYSTEM_USER') {
-      return rawList.filter(q => q.pillar?.toUpperCase() === 'AVS');
-    } else if (activeRole === 'OPS_MGMT') {
-      return rawList.filter(q => q.pillar?.toUpperCase() === 'HAI');
+    if (normalizedRole === 'TECH_MGMT') {
+      return rawList.filter(q => q.pillar?.toUpperCase() === 'AVS' && q.target_node?.toUpperCase() === 'MANAGEMENT');
+    } else if (normalizedRole === 'SYSTEM_USER') {
+      return rawList.filter(q => q.pillar?.toUpperCase() === 'AVS' && q.target_node?.toUpperCase() === 'USER');
+    } else if (normalizedRole === 'OPS_MGMT') {
+      return rawList.filter(q => q.pillar?.toUpperCase() === 'HAI' && q.target_node?.toUpperCase() === 'MANAGEMENT');
+    } else if (normalizedRole === 'EXECUTIVE') {
+      return rawList.filter(q => q.pillar?.toUpperCase() === 'IGF' && q.target_node?.toUpperCase() === 'EXECUTIVE');
     } else {
-      return rawList.filter(q => q.pillar?.toUpperCase() === 'IGF');
+      // Direct framework fallback strip matches
+      return rawList.filter(q => q.pillar?.toUpperCase() === activePillar.toUpperCase());
     }
   }, [activePillar, activeRole]);
 
