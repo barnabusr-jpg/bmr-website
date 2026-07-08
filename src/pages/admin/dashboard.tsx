@@ -6,7 +6,7 @@ import {
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
   X, Send, CheckCircle, Clock, Search, BellRing, FileText, Monitor
 } from "lucide-react";
-import LZString from "lz-string"; // 🛰️ ALIGNED ES6 PRODUCTION PACKAGE IMPORT MODULE
+import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
 
 const BMR_IP_SUITE = {
@@ -296,7 +296,6 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
             
-            {/* 💻 CONSOLIDATED SYNCHRONIZED MATRIX LINK COMPILATION GATEWAY */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -305,7 +304,6 @@ export default function AdminDashboard() {
                 if (activeAudit) {
                   const sectorTag = String(activeAudit.sector || 'INDUSTRIAL').toUpperCase().trim();
                   
-                  // 🔒 CLEAN SLATE STRATEGY: Zero out the response payload to prevent premature UI triggers
                   const matrixPayload = {
                     org: activeAudit.org_name,
                     sec: sectorTag,
@@ -314,7 +312,6 @@ export default function AdminDashboard() {
 
                   const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
                   
-                  // 🛰️ ROUTING PARALYSIS BROKEN: Redirect directly to the input wizard instead of the summary page
                   window.open(
                     `/forensic?matrix=${compressedToken}&auth=admin_verified_secure`, 
                     '_blank'
@@ -759,7 +756,16 @@ export default function AdminDashboard() {
                               </div>
 
                               <div className="space-y-3">
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/results/${audit.id}?live_sync=true&decay=${dbDecay}&spend=${spend}&fte=${fte}&leakage=${exposure + laborTax}&tax=${laborTax}`, '_blank'); }} className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer">
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    const urlSafeLeakage = Math.round(totalLeakage);
+                                    const urlSafeLaborTax = Math.round(laborTax);
+                                    window.open(`/results/${audit.id}?live_sync=true&decay=${sfi}&spend=${spend}&fte=${fte}&leakage=${urlSafeLeakage}&tax=${urlSafeLaborTax}`, '_blank'); 
+                                  }} 
+                                  className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"
+                                >
                                   <Monitor size={18} /> Open Onscreen Ledger
                                 </button>
                                 <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
