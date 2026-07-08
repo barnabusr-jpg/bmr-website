@@ -3,20 +3,17 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
 import { calculateForensicMetrics } from '../lib/forensicCalculus';
-import { compressToEncodedURIComponent } from 'lz-string';
+import { decompressFromEncodedURIComponent } from 'lz-string';
 
 type PillarType = 'IGF' | 'AVS' | 'HAI';
 
-// 🔍 Helper Engine: Detect Cross-Persona Policy Contradictions
 function findContradictions(matrix: Record<string, string>) {
   const contradictions = [];
   
-  // Example Vector 01: Executive Compliance Mandate vs. System User Execution Parity
   if (matrix['deepdive_Q1'] === 'A' && matrix['quad_Q14'] === 'D') {
     contradictions.push("CRITICAL COMPLIANCE MISMATCH: Executive claims formalized policy fencing // System User reports complete oversight vacuum.");
   }
   
-  // Example Vector 02: Managerial Allocation vs. Technical Debt Load Realities
   if (matrix['deepdive_Q5'] === 'A' && matrix['quad_Q32'] === 'D') {
     contradictions.push("ARCHITECTURAL OVERHEAD TAX FLAGGED: Management reports structured debt mitigation budget // Engineering reports active systemic fracture leakage.");
   }
@@ -24,12 +21,11 @@ function findContradictions(matrix: Record<string, string>) {
   return contradictions;
 }
 
-// 🔗 Helper Engine: Evaluate IP Framework Protocol of Acceptance & Directives
 function evaluateProtocolOfAcceptance(matrix: Record<string, string>): string[] {
   const directives: string[] = [];
   
-  // Rule Base Tier 03 Checklist Evaluation
-  const totalDFlaws = Object.keys(matrix).filter(k => matrix[key] === 'D').length;
+  // ✨ FIXED: Corrected closure lookup variable token matching reference
+  const totalDFlaws = Object.keys(matrix).filter(k => matrix[k] === 'D').length;
   if (totalDFlaws >= 5 || matrix['quad_Q14'] === 'D') {
     directives.push("TIER_03_CRITICAL_FRACTURE_MITIGATION_DIRECTIVE");
   } else if (totalDFlaws >= 2) {
@@ -52,6 +48,9 @@ export default function ForensicDiagnosticWizard({
 }) {
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
+  
+  // ✨ NEW STATE LAYER: Tracks the active runtime role locally to trigger dependencies cleanly
+  const [activeRole, setActiveRole] = useState<string>('');
 
   // 📥 GLOBAL MOUNT HYDRATION & SECURE PAIRING
   useEffect(() => {
@@ -61,7 +60,13 @@ export default function ForensicDiagnosticWizard({
       const roleParam = params.get('role');
       
       if (emailParam) window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
-      if (roleParam) window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
+      if (roleParam) {
+        window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
+        setActiveRole(roleParam); // Force localized state hook update pass
+      } else {
+        const cachedRole = window.sessionStorage.getItem('stakeholder_runtime_role');
+        if (cachedRole) setActiveRole(cachedRole);
+      }
 
       const savedAnswers: Record<string, 'A' | 'B' | 'C' | 'D'> = {};
       ['IGF', 'AVS', 'HAI'].forEach(pillar => {
@@ -81,18 +86,16 @@ export default function ForensicDiagnosticWizard({
   // 📡 ROLE-BASED DYNAMIC VECTOR ROUTER FILTER
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
-    const runtimeRole = typeof window !== 'undefined' 
-      ? window.sessionStorage.getItem('stakeholder_runtime_role') 
-      : '';
 
-    if (runtimeRole === 'TECH_MGMT' || runtimeRole === 'SYSTEM_USER') {
+    // ✨ FIXED: Depend on activeRole state vector tracking parameters to completely avoid hydration lag
+    if (activeRole === 'TECH_MGMT' || activeRole === 'SYSTEM_USER') {
       return rawList.filter(q => q.pillar?.toUpperCase() === 'AVS');
-    } else if (runtimeRole === 'OPS_MGMT') {
+    } else if (activeRole === 'OPS_MGMT') {
       return rawList.filter(q => q.pillar?.toUpperCase() === 'HAI');
     } else {
       return rawList.filter(q => q.pillar?.toUpperCase() === 'IGF');
     }
-  }, [activePillar]);
+  }, [activePillar, activeRole]);
 
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
     const targetQuestion = Object.values(forensicQuestions).find(q => q.id === questionId);
@@ -119,24 +122,20 @@ export default function ForensicDiagnosticWizard({
     });
   };
 
-  // 🛰️ CROSS-POSTURE COMPILATION CORE MERGE ENGINE
   const compileActiveNodePosture = () => {
     setIsCompiling(true);
     let fullyCompiledMatrix: Record<string, string> = {};
     
     if (typeof window !== 'undefined') {
       try {
-        // 🔍 1. Load Deep Dive Logs (30 elements)
         const ddIgf = JSON.parse(window.sessionStorage.getItem('deepdive_cache_IGF') || '{}');
         const ddAvs = JSON.parse(window.sessionStorage.getItem('deepdive_cache_AVS') || '{}');
         const ddHai = JSON.parse(window.sessionStorage.getItem('deepdive_cache_HAI') || '{}');
 
-        // 🔍 2. Load Quad-Node Logs (90 elements)
         const quadIgf = JSON.parse(window.sessionStorage.getItem('quad_cache_IGF') || '{}');
         const quadAvs = JSON.parse(window.sessionStorage.getItem('quad_cache_AVS') || '{}');
         const quadHai = JSON.parse(window.sessionStorage.getItem('quad_cache_HAI') || '{}');
         
-        // 🔄 3. Unified Prefix Mapping to eliminate data layer key collision risks
         Object.keys(ddIgf).forEach(k => fullyCompiledMatrix[`deepdive_${k.replace(/^deepdive_/, '')}`] = ddIgf[k]);
         Object.keys(ddAvs).forEach(k => fullyCompiledMatrix[`deepdive_${k.replace(/^deepdive_/, '')}`] = ddAvs[k]);
         Object.keys(ddHai).forEach(k => fullyCompiledMatrix[`deepdive_${k.replace(/^deepdive_/, '')}`] = ddHai[k]);
@@ -145,31 +144,21 @@ export default function ForensicDiagnosticWizard({
         Object.keys(quadAvs).forEach(k => fullyCompiledMatrix[`quad_${k.replace(/^quad_/, '')}`] = quadAvs[k]);
         Object.keys(quadHai).forEach(k => fullyCompiledMatrix[`quad_${k.replace(/^quad_/, '')}`] = quadHai[k]);
 
-        // Inject active runtime answers track safely
         Object.keys(answers).forEach(k => {
           const cleanKey = k.startsWith('quad_') ? k : `quad_${k}`;
           fullyCompiledMatrix[cleanKey] = answers[k];
         });
 
-        // 🧠 4. Execute Asymmetric Cross-Persona Contradiction Scanning Loop
         const contradictions = findContradictions(fullyCompiledMatrix);
         if (contradictions.length > 0) {
           console.warn("[INTEGRITY WARNING] Contradictions cross-validated:", contradictions);
         }
 
-        // 📊 5. Run Weighted Matrix Calculus (Quad answers pass carrying 2x multiplier weight)
         const computedResults = calculateForensicMetrics(companyName, fullyCompiledMatrix, {
           quadWeight: 2,
           deepDiveWeight: 1
         });
 
-        // 🔗 6. Evaluate IP Acceptance Parity and Append Roadmap Descriptors
-        const dynamicRemediationTokens = getPillarNodeDetails();
-        computedResults.activeTargetTitle = dynamicRemediatedRoadmapTitle(runtimeRole, dynamicPillarNode);
-        
-        // 🔒 7. COMPILE STATELESS SHARE LEDGER LINK
-        const compressedToken = decompressFromEncodedURIComponent(JSON.stringify(fullyCompiledMatrix));
-        const cleanOriginBase = `${window.location.origin}/diagnostic/summary`;
         window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(fullyCompiledMatrix));
         window.sessionStorage.setItem(`bmr_runtime_${companyName}`, JSON.stringify(computedResults));
 
