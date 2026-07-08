@@ -144,7 +144,7 @@ export default function AdminDashboard() {
   };
 
   const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
-    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey);
+    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey.toUpperCase());
     if (!matchingNode || !matchingNode.email) {
       alert("NUDGE ERROR: RECIPIENT NODE ROUTE NOT IDENTIFIED.");
       return;
@@ -153,7 +153,7 @@ export default function AdminDashboard() {
     setIsUpdating(true);
     try {
       const formattedPayload: Record<string, string> = {};
-      formattedPayload[targetRoleKey] = matchingNode.email;
+      formattedPayload[targetRoleKey.toUpperCase()] = matchingNode.email;
 
       const res = await fetch('/api/dispatch-directives', {
         method: 'POST',
@@ -173,6 +173,30 @@ export default function AdminDashboard() {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  const handleLaunchPersonaWizard = (roleKey: string, auditRecord: any) => {
+    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === roleKey.toUpperCase());
+    
+    // Fallback default routing values based on core platform directives
+    let assignedPillar = "AVS";
+    if (roleKey.toUpperCase() === "EXECUTIVE") assignedPillar = "IGF";
+    if (roleKey.toUpperCase() === "MANAGERIAL") assignedPillar = "HAI";
+
+    const matrixPayload = {
+      org: auditRecord.org_name,
+      sec: String(auditRecord.sector || 'INDUSTRIAL').toUpperCase().trim(),
+      ans: {}
+    };
+
+    const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
+    const targetEmail = matchingNode?.email || "barnabusr@gmail.com";
+
+    // Direct url structure initialization bypasses multi-email query traps
+    window.open(
+      `/forensic?matrix=${compressedToken}&pillar=${assignedPillar}&role=${roleKey.toUpperCase()}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&auth=admin_verified_secure`,
+      '_blank'
+    );
   };
 
   const runSynthesis = async (auditId: string) => {
@@ -354,7 +378,7 @@ export default function AdminDashboard() {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
+      </AnPresence>
 
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
@@ -514,9 +538,7 @@ export default function AdminDashboard() {
                                 <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
                                   <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
                                     <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
-                                    {isDone ? (
-                                      <CheckCircle className="text-green-500" size={14}/>
-                                    ) : (
+                                    {!isDone && (
                                       <div className="flex items-center gap-2">
                                         <button 
                                           type="button"
@@ -533,10 +555,18 @@ export default function AdminDashboard() {
                                     )}
                                   </div>
                                   
-                                  <div className="text-center py-4">
-                                    <div className={`font-black uppercase tracking-tighter transition-all ${isDone ? 'text-xl text-green-500' : 'text-2xl text-slate-800 animate-pulse'}`}>
-                                      {isDone ? 'DATA_COMPILED' : 'NODE_PENDING'}
-                                    </div>
+                                  <div className="text-center py-4 flex justify-center items-center">
+                                    <button  
+                                      type="button"
+                                      onClick={() => handleLaunchPersonaWizard(role.key, audit)}  
+                                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${  
+                                        isDone 
+                                          ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' 
+                                          : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white'  
+                                      }`}  
+                                    >  
+                                      {isDone ? 'Override Matrix' : 'Open Posture'}  
+                                    </button>
                                   </div>
                                 </div>
                               );
