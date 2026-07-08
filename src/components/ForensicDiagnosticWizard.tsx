@@ -1,4 +1,4 @@
- "use client";
+"use client";
 import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
@@ -21,21 +21,6 @@ function findContradictions(matrix: Record<string, string>) {
   return contradictions;
 }
 
-function evaluateProtocolOfAcceptance(matrix: Record<string, string>): string[] {
-  const directives: string[] = [];
-  
-  const totalDFlaws = Object.keys(matrix).filter(k => matrix[k] === 'D').length;
-  if (totalDFlaws >= 5 || matrix['quad_Q14'] === 'D') {
-    directives.push("TIER_03_CRITICAL_FRACTURE_MITIGATION_DIRECTIVE");
-  } else if (totalDFlaws >= 2) {
-    directives.push("TIER_02_PERFORMANCE_OVERHEAD_OPTIMIZATION_DIRECTIVE");
-  } else {
-    directives.push("TIER_01_STANDARD_HYGIENE_MAINTENANCE_DIRECTIVE");
-  }
-  
-  return directives;
-}
-
 export default function ForensicDiagnosticWizard({ 
   companyName, 
   activePillar,
@@ -47,8 +32,6 @@ export default function ForensicDiagnosticWizard({
 }) {
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
-  
-  // ✨ Localized state tracker capturing incoming URL query vectors
   const [activeRole, setActiveRole] = useState<string>('');
 
   // 📥 GLOBAL MOUNT HYDRATION & SECURE PAIRING
@@ -58,7 +41,10 @@ export default function ForensicDiagnosticWizard({
       const emailParam = params.get('email');
       const roleParam = params.get('role');
       
-      if (emailParam) window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
+      // Force immediate overwrite to stop session leakage across tabs
+      if (emailParam) {
+        window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
+      }
       if (roleParam) {
         window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
         setActiveRole(roleParam); 
@@ -82,23 +68,42 @@ export default function ForensicDiagnosticWizard({
     }
   }, [activePillar]);
 
-  // 📡 ROLE-BASED DYNAMIC VECTOR ROUTER FILTER (FIXED COLLISION GATEWAY)
+  // 📡 RESILIENT ROLE-BASED VECTOR ROUTER FILTER
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
-    const normalizedRole = activeRole?.toUpperCase();
+    const normalizedRole = activeRole?.toUpperCase() || '';
 
-    if (normalizedRole === 'TECH_MGMT') {
-      return rawList.filter(q => q.pillar?.toUpperCase() === 'AVS' && q.target_node?.toUpperCase() === 'MANAGEMENT');
-    } else if (normalizedRole === 'SYSTEM_USER') {
-      return rawList.filter(q => q.pillar?.toUpperCase() === 'AVS' && q.target_node?.toUpperCase() === 'USER');
-    } else if (normalizedRole === 'OPS_MGMT') {
-      return rawList.filter(q => q.pillar?.toUpperCase() === 'HAI' && q.target_node?.toUpperCase() === 'MANAGEMENT');
-    } else if (normalizedRole === 'EXECUTIVE') {
-      return rawList.filter(q => q.pillar?.toUpperCase() === 'IGF' && q.target_node?.toUpperCase() === 'EXECUTIVE');
-    } else {
-      // Direct framework fallback strip matches
+    let filtered = [];
+
+    // Loose matching target nodes to align with database schema variance
+    if (normalizedRole.includes('TECH') || normalizedRole.includes('MGMT')) {
+      filtered = rawList.filter(q => 
+        q.pillar?.toUpperCase() === 'AVS' && 
+        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('MANAGE'))
+      );
+    } else if (normalizedRole.includes('USER') || normalizedRole.includes('SYS')) {
+      filtered = rawList.filter(q => 
+        q.pillar?.toUpperCase() === 'AVS' && 
+        (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('TECH'))
+      );
+    } else if (normalizedRole.includes('OPS')) {
+      filtered = rawList.filter(q => 
+        q.pillar?.toUpperCase() === 'HAI' && 
+        q.target_node?.toUpperCase().includes('MGMT')
+      );
+    } else if (normalizedRole.includes('EXEC')) {
+      filtered = rawList.filter(q => 
+        q.pillar?.toUpperCase() === 'IGF' && 
+        q.target_node?.toUpperCase().includes('EXEC')
+      );
+    }
+
+    // 🛡️ DEFENSIVE FALLBACK BOUNDARY: If explicit sub-filtering results in 0, provide entire pillar array
+    if (filtered.length === 0) {
       return rawList.filter(q => q.pillar?.toUpperCase() === activePillar.toUpperCase());
     }
+
+    return filtered;
   }, [activePillar, activeRole]);
 
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
