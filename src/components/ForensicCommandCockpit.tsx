@@ -69,7 +69,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
   const [copied, setCopied] = React.useState(false);
 
   // 📡 DYNAMIC TRIANGULATION SPECTRUM DETECTOR
-  const detectedPillars = useMemo(() => {
+  const detectedPillars = useMemo((): string[] => {
     const active = new Set<string>();
     
     if (responses && Object.keys(responses).length > 0) {
@@ -120,7 +120,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
     };
   }, [responses]);
 
-  // ⏱️ REFINEMENT 01: Enforces 24-Hour Expiration Inside the Compressed Generator URL Hook 
+  // ⏱️ Enforces 24-Hour Expiration Inside the Compressed Generator URL Hook 
   const generatorLink = useMemo(() => {
     if (typeof window === 'undefined' || !responses) return '';
     const payload = { 
@@ -146,7 +146,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
   return (
     <div className="bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden p-10 max-w-[1600px] mx-auto pb-32">
       
-      {/* HEADER TELEMETRY READOUT (DYNAMIC MULTI-PILLAR BADGING) */}
+      {/* HEADER TELEMETRY READOUT */}
       <div className="flex flex-col md:flex-row md:items-center justify-between bg-black p-6 border border-slate-900 mb-6 no-print gap-4">
         <div className="flex flex-col gap-1.5 flex-1">
           <div className="flex items-center gap-3 shrink-0">
@@ -156,7 +156,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
             </span>
           </div>
           <div className="flex flex-wrap gap-2 mt-1">
-            {detectedPillars.map((p) => (
+            {detectedPillars.map((p: string) => (
               <span key={p} className="bg-red-950/40 border border-red-800 text-red-500 font-mono text-[11px] px-3 py-1 rounded-xs tracking-normal">
                 // {PILLAR_REGISTRIES[p]?.label || p}
               </span>
@@ -164,7 +164,6 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
           </div>
         </div>
         
-        {/* Top Action Panel Blocks */}
         <div className="flex flex-wrap items-center gap-3">
           <a
             href={generatorLink}
@@ -237,7 +236,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
                 <div>
                   <span className="text-slate-400 font-bold block mb-1 text-[11px] uppercase tracking-wider">Active Formula Derivation Rules:</span>
                   <div className="space-y-1.5 font-mono text-[11px] text-yellow-500 bg-black/60 p-4 border border-slate-900 overflow-x-auto whitespace-pre rounded-xs">
-                    {detectedPillars.map((p) => (
+                    {detectedPillars.map((p: string) => (
                       <div key={p}>• {p}: Net Friction Tax Index = (Variance Points × Target Capacity) × Multiplier Index ({metrics.multiplier})</div>
                     ))}
                   </div>
@@ -248,7 +247,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
             <div className="my-8 border-t border-b border-slate-200 py-6 not-italic normal-case font-medium">
               <span className="text-[10px] font-mono font-black tracking-widest text-slate-400 block mb-4 uppercase">// IDENTIFIED LOGIC FRACTURES INVENTORY ({detectedPillars.length})</span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {detectedPillars.map((p) => (
+                {detectedPillars.map((p: string) => (
                   <div key={p} className="border border-slate-200 bg-slate-50/70 p-5 rounded-sm space-y-2">
                     <span className="text-[9px] font-mono text-red-600 font-black tracking-widest block">// EXPOSURE LAYER: {PILLAR_REGISTRIES[p]?.badge}</span>
                     <h5 className="font-sans text-sm font-black text-slate-950 uppercase italic">{PILLAR_REGISTRIES[p]?.riskDossier.title}</h5>
@@ -288,7 +287,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
           <div className="bg-slate-50 border border-slate-200 p-6 my-6 font-mono text-xs text-slate-700 not-italic normal-case font-medium">
             <div className="text-[10px] text-black font-black tracking-widest uppercase mb-3">// ARCHITECTURAL CODES & REGULATORY STANDARDS PARITY LOOKUP</div>
             <ul className="space-y-4 list-none p-0 m-0 text-[11px]">
-              {detectedPillars.flatMap((p) => PILLAR_REGISTRIES[p]?.standards || []).map((std, idx) => (
+              {detectedPillars.flatMap((p: string) => PILLAR_REGISTRIES[p]?.standards || []).map((std, idx: number) => (
                 <li key={idx} className="flex items-start gap-2 border-b border-slate-200/50 pb-2 last:border-0 last:pb-0">
                   <span className="text-red-600 font-bold shrink-0">[NON-COMPLIANT]</span>
                   <div>
