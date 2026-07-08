@@ -178,7 +178,6 @@ export default function AdminDashboard() {
   const handleLaunchPersonaWizard = (roleKey: string, auditRecord: any) => {
     const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === roleKey.toUpperCase());
     
-    // Fallback default routing values based on core platform directives
     let assignedPillar = "AVS";
     if (roleKey.toUpperCase() === "EXECUTIVE") assignedPillar = "IGF";
     if (roleKey.toUpperCase() === "MANAGERIAL") assignedPillar = "HAI";
@@ -192,7 +191,6 @@ export default function AdminDashboard() {
     const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
     const targetEmail = matchingNode?.email || "barnabusr@gmail.com";
 
-    // Direct url structure initialization bypasses multi-email query traps
     window.open(
       `/forensic?matrix=${compressedToken}&pillar=${assignedPillar}&role=${roleKey.toUpperCase()}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&auth=admin_verified_secure`,
       '_blank'
@@ -378,7 +376,7 @@ export default function AdminDashboard() {
             </motion.div>
           </div>
         )}
-      </AnPresence>
+      </AnimatePresence>
 
       <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
         <AnimatePresence mode="wait">
