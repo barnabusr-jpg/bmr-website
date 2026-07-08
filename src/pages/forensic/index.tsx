@@ -54,7 +54,6 @@ export default function ForensicEngineRoot() {
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
       try { 
-        // Force the path to hold a clean origin address to drop trailing admin params
         setBaseSecurePath(`${window.location.origin}${window.location.pathname}`); 
 
         const params = new URLSearchParams(window.location.search); 
@@ -77,7 +76,6 @@ export default function ForensicEngineRoot() {
           }
         }
 
-        // Extract naming conventions with explicit layout fallbacks
         const targetCompanyName = (decryptedData.companyName || decryptedData.org || entityParam || '').trim().toUpperCase().replace(/\s+/g, '_');
         const activeSectorStr = String(decryptedData.sector || decryptedData.sec || pillarParam || '').toUpperCase();
 
@@ -173,7 +171,6 @@ export default function ForensicEngineRoot() {
 
             setEmails(fallbackEmails);
             
-            // Fixed to handle clear uppercase checking criteria
             if (activeSectorStr.includes('AVS') || activeSectorStr.includes('INDUSTRIAL')) {
               setActivePillar('AVS');
             } else if (activeSectorStr.includes('HAI') || activeSectorStr.includes('SERVICES')) {
@@ -511,7 +508,7 @@ export default function ForensicEngineRoot() {
               ))} 
             </div> 
 
-            ={inputError && ( 
+            {inputError && ( 
               <span className="text-[10px] text-red-500 font-mono block font-black uppercase tracking-wider">{inputError}</span> 
             )} 
 
@@ -581,10 +578,10 @@ export default function ForensicEngineRoot() {
                       <button 
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
-                          const subject = `ACTION REQUIRED: Quad-Node Assessment Initialized for ${triangulation.companyName}`; 
-                          // ✨ FIX: Swapped legacy path concatenation with a strict URL string vector to isolate handles
+                          const subject = `ACTION REQUIRED: Secure Diagnostic Gateway Initialized // ${triangulation.companyName.replace(/_/g, ' ')}`; 
                           const cleanOriginBase = `${window.location.origin}${window.location.pathname}`;
-                          const body = `Team,\n\nYour specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the ${triangulation.pillar} Framework Layer for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${cleanOriginBase}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
+                          // ✨ FIXED VENDOR SHIELD: Cleaned narrative structure to drop active framework name exposure leaks completely
+                          const body = `Team,\n\nYour dedicated operational node has been provisioned to evaluate friction boundaries, performance tax indicators, and unhedged operational anomalies for ${triangulation.companyName.replace(/_/g, ' ')}.\n\nPlease access your secure access terminal to record your platform observations.\n\nSecure Diagnostic Access Terminal: ${cleanOriginBase}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
                         className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0" 
@@ -609,7 +606,7 @@ export default function ForensicEngineRoot() {
 
           <div className="mt-8 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
             <div className="text-left"> 
-              <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK MATRIX DEPENDENCY</span> 
+              <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK COCKPIT PIPELINE DEPENDENCY</span> 
                
               {!allPersonasComplete && authorizedAdmin && ( 
                 <button 
@@ -668,9 +665,10 @@ export default function ForensicEngineRoot() {
             </button> 
           </div> 
 
+          {/* ✨ DYNAMIC COCKPIT BINDING: Swapped static fallbacks with clear mapped state criteria */}
           <ForensicCommandCockpit         
             companyName={triangulation.companyName} 
-            sector="SERVICES" 
+            sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'} 
             metrics={alignedCockpitMetrics} 
           /> 
 
@@ -713,6 +711,7 @@ export default function ForensicEngineRoot() {
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                  {/* ✨ DYNAMIC DATA INJECTION: Enforced explicit curly parsing brackets across your overview cards */}
                   <div className="border border-slate-900 bg-black p-5 rounded-sm">
                     <span className="font-mono text-[10px] text-slate-500 block font-black uppercase tracking-wider mb-1">
                       🎯 Integrity Index ({alignedCockpitMetrics.complianceScore}/100)
@@ -724,16 +723,16 @@ export default function ForensicEngineRoot() {
 
                   <div className="border border-slate-900 bg-black p-5 rounded-sm">
                     <span className="font-mono text-[10px] text-yellow-500 block font-black uppercase tracking-wider mb-1">
-                      📊 Rework Overhead Tax ($4,160,000)
+                      📊 Rework Overhead Tax (${alignedCockpitMetrics.annualSalaryLeakage.toLocaleString()})
                     </span>
                     <p className="text-xs text-slate-300 font-sans leading-relaxed font-normal">
-                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to approximately <strong className="text-yellow-500 font-bold">41,600 hours</strong> engineering teams exhaust resolving schema drift, fracturing data lineage, and manual firefighting.
+                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to approximately <strong className="text-yellow-500 font-bold">${(alignedCockpitMetrics.annualSalaryLeakage / 100).toLocaleString()} hours</strong> engineering teams exhaust resolving schema drift, fracturing data lineage, and manual firefighting.
                     </p>
                   </div>
 
                   <div className="border border-slate-900 bg-black p-5 rounded-sm">
                     <span className="font-mono text-[10px] text-red-500 block font-black uppercase tracking-wider mb-1">
-                      ⚠️ Forensic Inaction Liability ($2,070,000)
+                      ⚠️ Forensic Inaction Liability (${alignedCockpitMetrics.unhedgedLegalExposure.toLocaleString()})
                     </span>
                     <p className="text-xs text-slate-300 font-sans leading-relaxed font-normal">
                       Projects total regulatory fines, contract penalties, and losses incurred if endpoints remain unmodified. Weights deficiencies against specific standard framework lookups to justify remediation budgeting.
@@ -760,7 +759,7 @@ export default function ForensicEngineRoot() {
                   <div className="border-t border-slate-900 mt-5 pt-4">
                     <span className="font-mono text-[9px] text-slate-500 block font-black uppercase tracking-wider mb-1">⚠️ Enforcement Triggers & Audit Tracing</span>
                     <p className="text-xs text-slate-400 font-sans normal-case tracking-normal font-normal leading-relaxed">
-                      These flags reveal that active non-compliance records are actively writing to system telemetry logs. During standard framework assessments or external audits, these records shift from benign tech debt into explicit regulatory failures—instantly triggering the $2,070,000 liability matrix.
+                      These flags reveal that active non-compliance records are actively writing to system telemetry logs. During standard framework assessments or external audits, these records shift from benign tech debt into explicit regulatory failures—instantly triggering the custom evaluation liability matrix.
                     </p>
                   </div>
                 </div>
@@ -785,6 +784,7 @@ export default function ForensicEngineRoot() {
             )}
 
             <div className="mt-8 pt-4 border-t border-slate-900 flex justify-between items-center font-mono text-[9px] font-black text-zinc-600 tracking-widest uppercase">
+              {/* ✨ BRAND ALIGNMENT FIX: Standardized copyright labels cleanly across all operational viewport wrappers */}
               <span>BMR SOLUTIONS © 2026 // SYSTEM ADD-ON EXPANSION</span>
               <span>SECURE RUNTIME CONTROL</span>
             </div>
@@ -813,10 +813,10 @@ export default function ForensicEngineRoot() {
                 If you have any questions regarding your team's structural data alignment mapping, please reach out to your designated supervisor or contact our advisory desk at: 
               </p> 
               <a   
-                href="mailto:hello@bmrsolutions.com"   
+                href="mailto:hello@BMRADVISORY.com"   
                 className="block text-red-500 font-bold hover:text-white transition-colors text-xs lowercase mt-2 tracking-normal" 
               > 
-                hello@bmrsolutions.com 
+                hello@bmradvisory.co 
               </a> 
             </div> 
           </div> 
