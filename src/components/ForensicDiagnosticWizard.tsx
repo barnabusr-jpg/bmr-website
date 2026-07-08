@@ -3,8 +3,43 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
 import { calculateForensicMetrics } from '../lib/forensicCalculus';
+import { compressToEncodedURIComponent } from 'lz-string';
 
 type PillarType = 'IGF' | 'AVS' | 'HAI';
+
+// 🔍 Helper Engine: Detect Cross-Persona Policy Contradictions
+function findContradictions(matrix: Record<string, string>) {
+  const contradictions = [];
+  
+  // Example Vector 01: Executive Compliance Mandate vs. System User Execution Parity
+  if (matrix['deepdive_Q1'] === 'A' && matrix['quad_Q14'] === 'D') {
+    contradictions.push("CRITICAL COMPLIANCE MISMATCH: Executive claims formalized policy fencing // System User reports complete oversight vacuum.");
+  }
+  
+  // Example Vector 02: Managerial Allocation vs. Technical Debt Load Realities
+  if (matrix['deepdive_Q5'] === 'A' && matrix['quad_Q32'] === 'D') {
+    contradictions.push("ARCHITECTURAL OVERHEAD TAX FLAGGED: Management reports structured debt mitigation budget // Engineering reports active systemic fracture leakage.");
+  }
+
+  return contradictions;
+}
+
+// 🔗 Helper Engine: Evaluate IP Framework Protocol of Acceptance & Directives
+function evaluateProtocolOfAcceptance(matrix: Record<string, string>): string[] {
+  const directives: string[] = [];
+  
+  // Rule Base Tier 03 Checklist Evaluation
+  const totalDFlaws = Object.keys(matrix).filter(k => matrix[key] === 'D').length;
+  if (totalDFlaws >= 5 || matrix['quad_Q14'] === 'D') {
+    directives.push("TIER_03_CRITICAL_FRACTURE_MITIGATION_DIRECTIVE");
+  } else if (totalDFlaws >= 2) {
+    directives.push("TIER_02_PERFORMANCE_OVERHEAD_OPTIMIZATION_DIRECTIVE");
+  } else {
+    directives.push("TIER_01_STANDARD_HYGIENE_MAINTENANCE_DIRECTIVE");
+  }
+  
+  return directives;
+}
 
 export default function ForensicDiagnosticWizard({ 
   companyName, 
@@ -18,7 +53,7 @@ export default function ForensicDiagnosticWizard({
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
 
-  // 📥 GLOBAL MOUNT HYDRATION
+  // 📥 GLOBAL MOUNT HYDRATION & SECURE PAIRING
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -28,7 +63,6 @@ export default function ForensicDiagnosticWizard({
       if (emailParam) window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
       if (roleParam) window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
 
-      // Restore session logs across all three pillar lanes to allow cross-functional mapping
       const savedAnswers: Record<string, 'A' | 'B' | 'C' | 'D'> = {};
       ['IGF', 'AVS', 'HAI'].forEach(pillar => {
         const cached = window.sessionStorage.getItem(`quad_cache_${pillar.toUpperCase()}`);
@@ -44,21 +78,23 @@ export default function ForensicDiagnosticWizard({
     }
   }, [activePillar]);
 
-  // 📡 CROSS-ORGANIZATIONAL OPEN HORIZON FILTER
-  // Pulls a balanced cross-section from all three vectors to ensure multi-dimensional visibility
+  // 📡 ROLE-BASED DYNAMIC VECTOR ROUTER FILTER
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
-    
-    // Extracts an even distribution from your complete dataset pool with case safety guards
-    const igfSet = rawList.filter(q => q.pillar?.toUpperCase() === 'IGF').slice(0, 3);
-    const avsSet = rawList.filter(q => q.pillar?.toUpperCase() === 'AVS').slice(0, 3);
-    const haiSet = rawList.filter(q => q.pillar?.toUpperCase() === 'HAI').slice(0, 3);
-    
-    return [...igfSet, ...avsSet, ...haiSet];
-  }, []);
+    const runtimeRole = typeof window !== 'undefined' 
+      ? window.sessionStorage.getItem('stakeholder_runtime_role') 
+      : '';
+
+    if (runtimeRole === 'TECH_MGMT' || runtimeRole === 'SYSTEM_USER') {
+      return rawList.filter(q => q.pillar?.toUpperCase() === 'AVS');
+    } else if (runtimeRole === 'OPS_MGMT') {
+      return rawList.filter(q => q.pillar?.toUpperCase() === 'HAI');
+    } else {
+      return rawList.filter(q => q.pillar?.toUpperCase() === 'IGF');
+    }
+  }, [activePillar]);
 
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
-    // Dynamically look up the target question to save it into its designated track cache
     const targetQuestion = Object.values(forensicQuestions).find(q => q.id === questionId);
     const targetPillar = targetQuestion?.pillar || activePillar;
 
@@ -67,13 +103,11 @@ export default function ForensicDiagnosticWizard({
       const updated = { ...prev, [prefixedKey]: choiceKey };
       
       if (typeof window !== 'undefined') {
-        // Isolate the answers belonging strictly to this target pillar group
         const targetPillarAnswers: Record<string, string> = {};
         Object.keys(updated).forEach(key => {
           const cleanId = key.replace(/^quad_/, '');
           const qObj = Object.values(forensicQuestions).find(q => q.id === cleanId);
           
-          // Case-insensitive comparative matching to prevent silent grouping failures
           if (qObj?.pillar?.toUpperCase() === targetPillar.toUpperCase()) {
             targetPillarAnswers[key] = updated[key];
           }
@@ -85,53 +119,65 @@ export default function ForensicDiagnosticWizard({
     });
   };
 
-  // 🛰️ CROSS-POSTURE COMPILATION EDGE
+  // 🛰️ CROSS-POSTURE COMPILATION CORE MERGE ENGINE
   const compileActiveNodePosture = () => {
     setIsCompiling(true);
     let fullyCompiledMatrix: Record<string, string> = {};
     
     if (typeof window !== 'undefined') {
       try {
-        const ddIgf = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_IGF`) || '{}');
-        const ddAvs = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_AVS`) || '{}');
-        const ddHai = JSON.parse(window.sessionStorage.getItem(`deepdive_cache_HAI`) || '{}');
+        // 🔍 1. Load Deep Dive Logs (30 elements)
+        const ddIgf = JSON.parse(window.sessionStorage.getItem('deepdive_cache_IGF') || '{}');
+        const ddAvs = JSON.parse(window.sessionStorage.getItem('deepdive_cache_AVS') || '{}');
+        const ddHai = JSON.parse(window.sessionStorage.getItem('deepdive_cache_HAI') || '{}');
 
-        const quadIgf = JSON.parse(window.sessionStorage.getItem(`quad_cache_IGF`) || '{}');
-        const quadAvs = JSON.parse(window.sessionStorage.getItem(`quad_cache_AVS`) || '{}');
-        const quadHai = JSON.parse(window.sessionStorage.getItem(`quad_cache_HAI`) || '{}');
+        // 🔍 2. Load Quad-Node Logs (90 elements)
+        const quadIgf = JSON.parse(window.sessionStorage.getItem('quad_cache_IGF') || '{}');
+        const quadAvs = JSON.parse(window.sessionStorage.getItem('quad_cache_AVS') || '{}');
+        const quadHai = JSON.parse(window.sessionStorage.getItem('quad_cache_HAI') || '{}');
         
-        const fullQuadSet = { 
-          ...quadIgf, 
-          ...quadAvs, 
-          ...quadHai, 
-          ...answers 
-        };
-        
-        const fullDeepDiveSet = { ...ddIgf, ...ddAvs, ...ddHai };
+        // 🔄 3. Unified Prefix Mapping to eliminate data layer key collision risks
+        Object.keys(ddIgf).forEach(k => fullyCompiledMatrix[`deepdive_${k.replace(/^deepdive_/, '')}`] = ddIgf[k]);
+        Object.keys(ddAvs).forEach(k => fullyCompiledMatrix[`deepdive_${k.replace(/^deepdive_/, '')}`] = ddAvs[k]);
+        Object.keys(ddHai).forEach(k => fullyCompiledMatrix[`deepdive_${k.replace(/^deepdive_/, '')}`] = ddHai[k]);
 
-        Object.keys(fullDeepDiveSet).forEach(key => {
-          const cleanKey = key.startsWith('deepdive_') ? key : `deepdive_${key}`;
-          fullyCompiledMatrix[cleanKey] = fullDeepDiveSet[key];
+        Object.keys(quadIgf).forEach(k => fullyCompiledMatrix[`quad_${k.replace(/^quad_/, '')}`] = quadIgf[k]);
+        Object.keys(quadAvs).forEach(k => fullyCompiledMatrix[`quad_${k.replace(/^quad_/, '')}`] = quadAvs[k]);
+        Object.keys(quadHai).forEach(k => fullyCompiledMatrix[`quad_${k.replace(/^quad_/, '')}`] = quadHai[k]);
+
+        // Inject active runtime answers track safely
+        Object.keys(answers).forEach(k => {
+          const cleanKey = k.startsWith('quad_') ? k : `quad_${k}`;
+          fullyCompiledMatrix[cleanKey] = answers[k];
         });
 
-        Object.keys(fullQuadSet).forEach(key => {
-          const cleanKey = key.startsWith('quad_') ? key : `quad_${key}`;
-          fullyCompiledMatrix[cleanKey] = fullQuadSet[key];
+        // 🧠 4. Execute Asymmetric Cross-Persona Contradiction Scanning Loop
+        const contradictions = findContradictions(fullyCompiledMatrix);
+        if (contradictions.length > 0) {
+          console.warn("[INTEGRITY WARNING] Contradictions cross-validated:", contradictions);
+        }
+
+        // 📊 5. Run Weighted Matrix Calculus (Quad answers pass carrying 2x multiplier weight)
+        const computedResults = calculateForensicMetrics(companyName, fullyCompiledMatrix, {
+          quadWeight: 2,
+          deepDiveWeight: 1
         });
 
+        // 🔗 6. Evaluate IP Acceptance Parity and Append Roadmap Descriptors
+        const dynamicRemediationTokens = getPillarNodeDetails();
+        computedResults.activeTargetTitle = dynamicRemediatedRoadmapTitle(runtimeRole, dynamicPillarNode);
+        
+        // 🔒 7. COMPILE STATELESS SHARE LEDGER LINK
+        const compressedToken = decompressFromEncodedURIComponent(JSON.stringify(fullyCompiledMatrix));
+        const cleanOriginBase = `${window.location.origin}/diagnostic/summary`;
+        window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(fullyCompiledMatrix));
+        window.sessionStorage.setItem(`bmr_runtime_${companyName}`, JSON.stringify(computedResults));
+
+        onCalculated(computedResults);
       } catch (err) {
         console.error("Post-compilation matrix union break:", err);
       }
     }
-
-    const computedResults = calculateForensicMetrics(companyName, fullyCompiledMatrix);
-    
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem(`bmr_runtime_${companyName}`, JSON.stringify(computedResults));
-      window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(fullyCompiledMatrix));
-    }
-    
-    onCalculated(computedResults);
     setIsCompiling(false);
   };
 
@@ -147,11 +193,11 @@ export default function ForensicDiagnosticWizard({
         <div className="flex items-center gap-3">
           <Activity className="text-red-600 animate-pulse shrink-0" size={20} />
           <span className="text-xs font-black uppercase tracking-widest text-white">
-            ENTERPRISE WIDE DIAGNOSTIC // COMBINED 360 TRIANGULATION
+            ENTERPRISE WIDE DIAGNOSTIC // QUAD-NODE MONITOR ROUTING
           </span>
         </div>
         <div className="text-[10px] text-slate-500 tracking-widest font-black shrink-0">
-          TOTAL MIXED SECTOR PROGRESS: {currentStepAnsweredCount} / {currentStepTotal}
+          TOTAL SECTOR PROGRESS: {currentStepAnsweredCount} / {currentStepTotal}
         </div>
       </div>
 
@@ -159,7 +205,7 @@ export default function ForensicDiagnosticWizard({
       <div className="bg-slate-950 border border-slate-900 p-5 mb-8 text-xs text-slate-400 not-italic normal-case font-medium font-sans leading-relaxed flex items-start gap-3 rounded-xs">
         <AlertCircle size={18} className="text-red-600 shrink-0 mt-0.5" />
         <div>
-          This multi-persona triage layer acts as a cross-functional probe, scanning regulatory changes (IGF), structural code infrastructure waste (AVS), and systemic automation drift parameters (HAI) simultaneously.
+          This targeted diagnostic interface captures pipeline vectors sequentially, cross-validating telemetry configurations across independent organizational node viewpoints.
         </div>
       </div>
 
@@ -216,7 +262,7 @@ export default function ForensicDiagnosticWizard({
       <div className="border-t border-slate-900 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono not-italic">
         <div className="text-[10px] text-slate-500 tracking-wider flex items-center gap-2 font-black">
           <Shield size={14} className={isPillarIncomplete ? "text-slate-700" : "text-red-500"} /> 
-          {isPillarIncomplete ? "ALL CHANNELS MANDATORY FOR BALANCED TRIANGULATION" : "COMPREHENSIVE MATRIX VECTOR VALIDATED // READY TO COMPUTE"}
+          {isPillarIncomplete ? "ALL ACTIVE SECTOR OBSERVATIONS MANDATORY TO RESOLVE POSTURE" : "CORE MATRIX VECTOR VALIDATED // READY TO COMPUTE"}
         </div>
         
         <button
