@@ -36,7 +36,7 @@ export default function SOWBuilderStandalone() {
       
       const payload = JSON.parse(decompressed);
 
-      // ⏱️ REFINEMENT 01: Enforce Strict 24-Hour Lifecycle Expiration
+      // ⏱️ Enforce Strict 24-Hour Lifecycle Expiration
       if (payload.expires && Date.now() > payload.expires) {
         setError('SECURITY HANDSHAKE EXCEPTION: This secure link baseline has expired. Please compile a fresh matrix run inside the master cockpit workspace.');
         return;
@@ -104,12 +104,12 @@ export default function SOWBuilderStandalone() {
   // Sync selected list on first payload decryption mount pass
   useEffect(() => {
     if (activeRemediations.length > 0 && selectedDirectives.length === 0) {
-      setSelectedDirectives(activeRemediations.map(r => r.title));
+      setSelectedDirectives(activeRemediations.map((r: AnomalyRemediationNode) => r.title));
     }
-  }, [activeRemediations]);
+  }, [activeRemediations, selectedDirectives.length]);
 
-  const filteredRemediations = useMemo(() => {
-    return activeRemediations.filter(r => selectedDirectives.includes(r.title));
+  const filteredRemediations = useMemo((): AnomalyRemediationNode[] => {
+    return activeRemediations.filter((r: AnomalyRemediationNode) => selectedDirectives.includes(r.title));
   }, [activeRemediations, selectedDirectives]);
 
   const toggleDirective = (title: string) => {
@@ -124,7 +124,7 @@ export default function SOWBuilderStandalone() {
     try {
       const blob = await generatePdf({
         company: (diagnosticData.org || 'TARGET_SPECIFICATION_GLOBAL').replace(/_/g, ' '),
-        directives: filteredRemediations.map(r => ({ title: r.title, price: r.investment_tier, scope: r.scope }))
+        directives: filteredRemediations.map((r: AnomalyRemediationNode) => ({ title: r.title, price: r.investment_tier, scope: r.scope }))
       });
       const downloadUrl = window.URL.createObjectURL(blob);
       const linkAnchor = document.createElement('a');
@@ -178,12 +178,12 @@ export default function SOWBuilderStandalone() {
         {diagnosticData && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
             
-            {/* 🛠️ REFINEMENT 03: Directive Filter Control Panel Sidebar */}
+            {/* Control Panel Sidebar */}
             <div className="lg:col-span-1 border border-slate-900 bg-slate-950/50 p-6 rounded-sm space-y-4 font-mono not-italic text-xs">
               <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black">// CONTROL PANEL</span>
               <h4 className="text-white text-xs font-black uppercase tracking-wider mb-2">Remediation Toggles</h4>
               <div className="space-y-2">
-                {activeRemediations.map((rem) => {
+                {activeRemediations.map((rem: AnomalyRemediationNode) => {
                   const isActive = selectedDirectives.includes(rem.title);
                   return (
                     <button
@@ -223,7 +223,7 @@ export default function SOWBuilderStandalone() {
               )}
 
               <div className="space-y-6">
-                {filteredRemediations.map((anomaly, idx) => (
+                {filteredRemediations.map((anomaly: AnomalyRemediationNode, idx: number) => (
                   <div key={idx} className="border border-slate-900 bg-slate-950/20 p-8 rounded-sm space-y-6">
                     <div className="border-b border-slate-900 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <div>
@@ -249,7 +249,7 @@ export default function SOWBuilderStandalone() {
                           {anomaly.root_cause_technical}
                         </p>
                         <ul className="space-y-2 pt-2">
-                          {anomaly.technical_runbook.map((task, i) => (
+                          {anomaly.technical_runbook.map((task: string, i: number) => (
                             <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-300 leading-relaxed">
                               <span className="text-red-500 font-mono font-black shrink-0 mt-0.5">[{i + 1}]</span>
                               <span>{task}</span>
@@ -269,7 +269,7 @@ export default function SOWBuilderStandalone() {
                           {anomaly.root_cause_operational}
                         </p>
                         <ul className="space-y-2 pt-2">
-                          {anomaly.operational_playbook.map((task, i) => (
+                          {anomaly.operational_playbook.map((task: string, i: number) => (
                             <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-300 leading-relaxed">
                               <span className="text-indigo-400 font-mono font-black shrink-0 mt-0.5">[{i + 1}]</span>
                               <span>{task}</span>
