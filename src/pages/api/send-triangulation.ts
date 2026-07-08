@@ -1,10 +1,10 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-// Helper to clean up formatting for company text presentation
+// ✨ UPDATED: Full title capitalization formatting to align with dispatch-directives behavior
 function toSentenceCase(str: string): string {
-  if (!str) return '';
+  if (!str) return 'Your company';
   const clean = str.replace(/_/g, ' ').toLowerCase().trim();
-  return clean.charAt(0).toUpperCase() + clean.slice(1);
+  return clean.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -30,7 +30,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     SYSTEM_USER: 'Core System Operator (Terminal Execution Node)'
   };
 
-  // 📡 Dynamic Track Resolver Map based on structural multi-tenant criteria
   const roleToPillarMap: Record<string, string> = {
     EXRaw: 'IGF',
     EXECUTIVE: 'IGF',
@@ -47,7 +46,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const targetEmail = (emailAddress as string).toLowerCase().trim();
       const roleName = roleLabels[roleKey] || roleKey;
       
-      // ✨ FIX 01: Derive true track dynamically instead of passing the hardcoded cockpit state
       const dynamicTrack = roleToPillarMap[roleKey] || activePillar;
       
       const diagnosticUrl = `${originUrl}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}`;
