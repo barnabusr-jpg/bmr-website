@@ -1,5 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+// ✨ UPDATED: Full title capitalization formatting to align with dispatch-directives behavior
+function toSentenceCase(str: string): string {
+  if (!str) return 'Your company';
+  const clean = str.replace(/_/g, ' ').toLowerCase().trim();
+  return clean.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
@@ -16,7 +23,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(500).json({ error: 'MISSING_SENDGRID_CREDENTIALS' });
   }
 
-  // 📋 Elevated Premium Vector Labels to give explicit instruction context
   const roleLabels: Record<string, string> = {
     EXECUTIVE: 'Executive Leadership (Strategic Oversight Node)',
     TECH_MGMT: 'Technical Management (Infrastructure & DevOps Node)',
@@ -24,14 +30,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     SYSTEM_USER: 'Core System Operator (Terminal Execution Node)'
   };
 
+  const roleToPillarMap: Record<string, string> = {
+    EXRaw: 'IGF',
+    EXECUTIVE: 'IGF',
+    TECH_MGMT: 'AVS',
+    OPS_MGMT: 'HAI',
+    SYSTEM_USER: 'HAI'
+  };
+
   try {
     const formattedOrg = companyName.toUpperCase().trim();
+    const sentenceCompany = toSentenceCase(companyName);
     
     const mailRequests = Object.entries(endpoints).map(([roleKey, emailAddress]) => {
       const targetEmail = (emailAddress as string).toLowerCase().trim();
       const roleName = roleLabels[roleKey] || roleKey;
       
-      const diagnosticUrl = `${originUrl}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${activePillar}`;
+      const dynamicTrack = roleToPillarMap[roleKey] || activePillar;
+      
+      const diagnosticUrl = `${originUrl}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}`;
 
       const sendgridPayload = {
         personalizations: [
@@ -72,7 +89,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       </div>
 
                       <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
-                        BMR Solutions has initiated a specialized Quad-Node Assessment stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${activePillar} Framework Layer</strong>.
+                        <strong>${sentenceCompany} leadership</strong> recently initiated a specialized Quad-Node Assessment stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${dynamicTrack} Framework Layer</strong>.
                       </p>
                       
                       <div style="background: #090d16; border: 1px solid #1e293b; padding: 32px; margin: 40px 0; text-align: center;">

@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
-import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
+import { decompressFromEncodedURIComponent } from 'lz-string';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
@@ -18,6 +19,7 @@ interface TriangulationState {
 
 export default function ForensicEngineRoot() { 
   const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT' | 'THANK_YOU'>('INTAKE'); 
+  const [dossierTab, setDossierTab] = useState<'METRICS' | 'REMEDIATION'>('METRICS');
   const [companyName, setCompanyName] = useState(''); 
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
@@ -34,13 +36,6 @@ export default function ForensicEngineRoot() {
   const [inputError, setInputError] = useState(''); 
 
   const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic'); 
-
-  const roleLabels: Record<string, string> = { 
-    EXECUTIVE: 'Executive Leadership (Strategic Oversight Node)', 
-    TECH_MGMT: 'Technical Management (Infrastructure & DevOps Node)', 
-    OPS_MGMT: 'Operations Management (Workflow & Process Node)', 
-    SYSTEM_USER: 'Core System Operator (Terminal Execution Node)' 
-  }; 
 
   // 📡 REAL-TIME CROSS-TAB SYNC LISTENER
   useEffect(() => {
@@ -63,6 +58,7 @@ export default function ForensicEngineRoot() {
 
         const params = new URLSearchParams(window.location.search); 
         const authVal = params.get('auth'); 
+        const matrixToken = params.get('matrix');
         const pillarParam = params.get('pillar') as FunnelPillar; 
         const entityParam = params.get('entity') || params.get('org') || params.get('entity_code'); 
         const roleParam = params.get('role') as PersonaKey; 
@@ -70,57 +66,139 @@ export default function ForensicEngineRoot() {
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
         const isParticipantRoute = !!(roleParam && entityParam && pillarParam); 
 
-        if (entityParam) { 
-          const targetCompanyId = entityParam.toUpperCase().replace(/\s+/g, '_'); 
-          const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyId}`); 
+        // 🛰️ DECRYPT COMPRESSED CORE MATRIX INTERCEPTOR
+        let decryptedData: Record<string, any> = {};
+        if (matrixToken) {
+          try {
+            decryptedData = JSON.parse(decompressFromEncodedURIComponent(matrixToken) || '{}');
+          } catch (tokenErr) {
+            console.error("Token structural matrix parsing error:", tokenErr);
+          }
+        }
+
+        const targetCompanyName = (decryptedData.companyName || decryptedData.org || entityParam || '').trim().toUpperCase().replace(/\s+/g, '_');
+        const activeSectorStr = String(decryptedData.sector || decryptedData.sec || pillarParam || '').toUpperCase();
+
+        if (targetCompanyName) { 
+          setCompanyName(targetCompanyName); 
+          const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`); 
           if (savedSession) { 
             setTriangulation(JSON.parse(savedSession)); 
             if (!roleParam && isAdminAuthenticated) setViewState('HUB'); 
           } 
         } 
 
-        // Strictly avoid evaluation routing collisions by isolating admin configs from parameters-driven user paths
         if (isAdminAuthenticated && !roleParam) { 
           setAuthorizedAdmin(true); 
-           
-          const cleanPillar = pillarParam?.toUpperCase(); 
-          if (cleanPillar && ['IGF', 'AVS', 'HAI'].includes(cleanPillar)) { 
-            setActivePillar(cleanPillar as FunnelPillar); 
-          } else { 
-            setActivePillar('IGF'); 
-          } 
-
-          if (entityParam) { 
-            const formattedCode = decodeURIComponent(entityParam) 
-              .trim() 
-              .toUpperCase() 
-              .replace(/\s+/g, '_'); 
-            setCompanyName(formattedCode); 
-          }  
 
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
-          const filterIncomingEmail = (paramKey: string): string => { 
-            const rawVal = params.get(paramKey); 
-            if (!rawVal) return ""; 
-            const cleanVal = decodeURIComponent(rawVal).trim(); 
+          const filterIncomingEmail = (val: string | null): string => { 
+            if (!val) return ""; 
+            const cleanVal = decodeURIComponent(val).trim(); 
             return emailRegex.test(cleanVal) ? cleanVal : ""; 
           }; 
 
-          setEmails({ 
-            EXECUTIVE: filterIncomingEmail('exec'), 
-            TECH_MGMT: filterIncomingEmail('tech_mgmt'), 
-            OPS_MGMT: filterIncomingEmail('ops_mgmt'), 
-            SYSTEM_USER: filterIncomingEmail('sys_user') 
-          }); 
+          // 📡 UNIFIED SOURCE-OF-TRUTH RECOVERY & EARLY-WARNING MATRIX SELECTOR
+          const synchronizeEngineDataMatrix = async () => {
+            const cleanOrgLookup = targetCompanyName.replace(/_GLOBAL$/, '').replace(/_/g, ' ');
+            
+            const { data: activeAudit } = await supabase
+              .from('audits')
+              .select('id, sfi_score, decay_pct, sector')
+              .ilike('org_name', cleanOrgLookup)
+              .maybeSingle();
+
+            let targetCalculatedPillar: FunnelPillar = 'IGF';
+
+            if (activeAudit) {
+              const decay = activeAudit.decay_pct || 24;
+              const sfi = activeAudit.sfi_score || decay;
+              const sectorStr = String(activeAudit.sector || '').toUpperCase();
+
+              if (sfi >= 45) {
+                targetCalculatedPillar = 'AVS'; 
+              } else if (sectorStr.includes('IGF') || sectorStr.includes('FINANCE') || sectorStr.includes('COMPLIANCE')) {
+                targetCalculatedPillar = 'IGF';
+              } else if (sectorStr.includes('AVS') || sectorStr.includes('MANUFACTURING') || sectorStr.includes('INDUSTRIAL')) {
+                targetCalculatedPillar = 'AVS';
+              } else {
+                targetCalculatedPillar = 'HAI'; 
+              }
+
+              setActivePillar(targetCalculatedPillar);
+
+              const { data: databaseNodes } = await supabase
+                .from('operators')
+                .select('persona_type, email')
+                .eq('audit_id', activeAudit.id);
+
+              if (databaseNodes && databaseNodes.length > 0) {
+                const dbExec = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE')?.email || "";
+                const dbTech = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL')?.email || "";
+                const dbMgr  = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL')?.email || "";
+
+                const freshDBEmails = {
+                  EXECUTIVE: filterIncomingEmail(dbExec),
+                  TECH_MGMT: filterIncomingEmail(dbTech),
+                  OPS_MGMT: filterIncomingEmail(dbMgr),
+                  SYSTEM_USER: filterIncomingEmail(dbTech)
+                };
+
+                setEmails(freshDBEmails);
+
+                const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
+                if (saved) {
+                  const parsed = JSON.parse(saved);
+                  parsed.emails = freshDBEmails;
+                  parsed.pillar = targetCalculatedPillar; 
+                  window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
+                }
+                return; 
+              }
+            }
+
+            const rawExec = params.get('exec') || params.get('executive') || params.get('execEmail') || "";
+            const rawTech = params.get('tech_mgmt') || params.get('tech') || params.get('technical') || params.get('techEmail') || "";
+            const rawMgr  = params.get('ops_mgmt') || params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || "";
+            const rawSys  = params.get('sys_user') || rawTech;
+
+            const fallbackEmails = { 
+              EXECUTIVE: filterIncomingEmail(rawExec), 
+              TECH_MGMT: filterIncomingEmail(rawTech), 
+              OPS_MGMT: filterIncomingEmail(rawMgr), 
+              SYSTEM_USER: filterIncomingEmail(rawSys)
+            };
+
+            setEmails(fallbackEmails);
+            
+            if (activeSectorStr.includes('AVS') || activeSectorStr.includes('INDUSTRIAL')) {
+              setActivePillar('AVS');
+            } else if (activeSectorStr.includes('HAI') || activeSectorStr.includes('SERVICES')) {
+              setActivePillar('HAI');
+            } else {
+              setActivePillar('IGF');
+            }
+
+            if (targetCompanyName) {
+              const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
+              if (saved) {
+                const parsed = JSON.parse(saved);
+                parsed.emails = fallbackEmails;
+                window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
+              }
+            }
+          };
+
+          synchronizeEngineDataMatrix();
 
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
           setActivePillar(['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF'); 
-          setCompanyName(entityParam.toUpperCase().replace(/\s+/g, '_')); 
+          setCompanyName(targetCompanyName); 
           setActivePersona(roleParam); 
 
           setTriangulation(prev => prev || { 
-            companyName: entityParam.toUpperCase().replace(/\s+/g, '_'), 
+            companyName: targetCompanyName, 
             pillar: ['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF', 
             emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }, 
             completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
@@ -158,7 +236,7 @@ export default function ForensicEngineRoot() {
       return; 
     } 
     if (!emails.EXECUTIVE || !emails.TECH_MGMT || !emails.OPS_MGMT || !emails.SYSTEM_USER) { 
-      setInputError('DISTRIBUTION ERROR: ALL FOUR PERSISTENT PERSONA EMAIL PATHS MANDATORY'); 
+      setInputError('DISTRIBUTION ERROR: ALL VECTOR PERSISTENT PERSONA EMAIL PATHS MANDATORY'); 
       return; 
     } 
          
@@ -189,7 +267,7 @@ export default function ForensicEngineRoot() {
           companyName: sanitizedInput, 
           activePillar: activePillar, 
           endpoints: emails, 
-          originUrl: baseSecurePath 
+          originUrl: `${window.location.origin}${window.location.pathname}` 
         }), 
       }); 
     } catch (error) { 
@@ -212,7 +290,7 @@ export default function ForensicEngineRoot() {
     if (typeof window !== 'undefined') { 
       window.localStorage.setItem(`bmr_matrix_run_${updatedState.companyName}`, JSON.stringify(updatedState)); 
     } 
-     
+       
     setTriangulation(updatedState); 
 
     try { 
@@ -232,12 +310,12 @@ export default function ForensicEngineRoot() {
         .eq("persona_type", personaToBackendKey); 
 
       const params = new URLSearchParams(window.location.search); 
-      const currentPersonaEmail = params.get('email') || triangulation.emails[activePersona] || params.get('exec') || params.get('tech_mgmt') || params.get('ops_mgmt') || params.get('sys_user'); 
-       
+      const currentPersonaEmail = params.get('email') || triangulation.emails[activePersona]; 
+         
       if (currentPersonaEmail) { 
         updateQuery = updateQuery.eq("email", decodeURIComponent(currentPersonaEmail).trim()); 
       } 
-       
+         
       const { error } = await updateQuery; 
       if (error) throw error; 
 
@@ -250,7 +328,7 @@ export default function ForensicEngineRoot() {
 
     if (typeof window !== 'undefined') { 
       const currentParams = new URLSearchParams(window.location.search); 
-       
+         
       if (currentParams.get('role')) { 
         setViewState('THANK_YOU'); 
       } else { 
@@ -261,7 +339,7 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  const allPersonasComplete = triangulation    
+  const allPersonasComplete = triangulation     
     ? Object.values(triangulation.completions).every(status => status === true) 
     : false; 
 
@@ -318,7 +396,7 @@ export default function ForensicEngineRoot() {
     return ( 
       <div className="bg-black min-h-screen text-zinc-100 flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white"> 
         <div className="w-full max-w-xl border border-zinc-900 bg-zinc-950/30 p-8 text-left rounded-sm shadow-2xl"> 
-                   
+                     
           <div className="border-b border-zinc-900 pb-5 mb-6 flex items-center justify-between"> 
             <div className="flex items-center gap-3"> 
               <Lock size={18} className="text-red-500 shrink-0" /> 
@@ -352,7 +430,7 @@ export default function ForensicEngineRoot() {
             </div> 
 
             <div className="pt-4 border-t border-zinc-900 font-mono"> 
-              <a           
+              <a                     
                 href="/dashboard" 
                 className="w-full bg-zinc-100 text-black text-xs font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md" 
               > 
@@ -368,7 +446,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white italic"> 
-               
+                 
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl shadow-black/40 backdrop-blur-md"> 
           <div className="border-b border-slate-900 pb-5 mb-8 flex items-center gap-3"> 
@@ -382,7 +460,7 @@ export default function ForensicEngineRoot() {
           <form onSubmit={handleInitializeTriangulation} className="space-y-6 not-italic font-mono"> 
             <div> 
               <label className="text-[10px] text-slate-500 block font-black tracking-widest uppercase mb-2">// ENTITY ANALYSIS CODE</label> 
-              <input       
+              <input        
                 type="text" 
                 autoComplete="off" 
                 placeholder="E.G., SIGMA_TIER_GLOBAL" 
@@ -419,7 +497,7 @@ export default function ForensicEngineRoot() {
               {(Object.keys(emails) as PersonaKey[]).map((role) => ( 
                 <div key={role}> 
                   <span className="text-[9px] text-slate-600 block mb-1.5 font-black tracking-widest uppercase">// {role.replace('_', ' ')} ENDPOINT NODE</span> 
-                  <input       
+                  <input        
                     type="email" 
                     placeholder={`e.g., manager@domain.com`} 
                     value={emails[role]} 
@@ -435,7 +513,6 @@ export default function ForensicEngineRoot() {
             )} 
 
             <div className="pt-4 space-y-3"> 
-              {/* 🚀 FIXED SUBMIT LINK TEXT LINE 188: */}
               <button 
                 type="submit" 
                 className="w-full bg-zinc-100 text-black font-sans text-sm font-black py-4 uppercase tracking-widest rounded-sm hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-2 text-center cursor-pointer shadow-md italic" 
@@ -501,8 +578,10 @@ export default function ForensicEngineRoot() {
                       <button 
                         onClick={() => { 
                           const email = triangulation.emails[persona]; 
-                          const subject = `ACTION REQUIRED: Quad-Node Assessment Initialized for ${triangulation.companyName}`; 
-                          const body = `Team,\n\nYour specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the ${triangulation.pillar} Framework Layer for ${triangulation.companyName}.\n\nPlease access your gateway slot to log workspace metrics.\n\nSecure Terminal Link: ${baseSecurePath}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
+                          const subject = `ACTION REQUIRED: Secure Diagnostic Gateway Initialized // ${triangulation.companyName.replace(/_/g, ' ')}`; 
+                          const cleanOriginBase = `${window.location.origin}${window.location.pathname}`;
+                          // ✨ FIXED VENDOR SHIELD: Cleaned narrative structure to drop active framework name exposure leaks completely
+                          const body = `Team,\n\nYour dedicated operational node has been provisioned to evaluate friction boundaries, performance tax indicators, and unhedged operational anomalies for ${triangulation.companyName.replace(/_/g, ' ')}.\n\nPlease access your secure access terminal to record your platform observations.\n\nSecure Diagnostic Access Terminal: ${cleanOriginBase}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
                         className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0" 
@@ -525,26 +604,24 @@ export default function ForensicEngineRoot() {
             })} 
           </div> 
 
-          {/* FINAL ENGINE COMPILE ACTION */} 
           <div className="mt-8 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
-            <div className="text-left">
-              <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK MATRIX DEPENDENCY</span> 
+            <div className="text-left"> 
+              <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK COCKPIT PIPELINE DEPENDENCY</span> 
                
-              {/* ⚡ THE ADMINISTRATIVE BYPASS LINK */}
-              {!allPersonasComplete && authorizedAdmin && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm("CRITICAL OVERRIDE: Force aggregation loop compilation using currently validated data segments?")) {
-                      setViewState('COCKPIT');
-                    }
-                  }}
-                  className="text-[10px] text-red-500 font-mono font-black uppercase tracking-wider hover:text-white transition-colors bg-transparent border-0 p-0 mt-1 cursor-pointer underline block"
-                >
-                  // Force Administrative Override & Compile Partial Matrix
-                </button>
-              )}
-            </div>
+              {!allPersonasComplete && authorizedAdmin && ( 
+                <button 
+                  type="button" 
+                  onClick={() => { 
+                    if (window.confirm("CRITICAL OVERRIDE: Force aggregation loop compilation using currently validated data segments?")) { 
+                      setViewState('COCKPIT'); 
+                    } 
+                  }} 
+                  className="text-[10px] text-red-500 font-mono font-black uppercase tracking-wider hover:text-white transition-colors bg-transparent border-0 p-0 mt-1 cursor-pointer underline block" 
+                > 
+                  // Force Administrative Override & Compile Partial Matrix 
+                </button> 
+              )} 
+            </div> 
 
             <button 
               onClick={() => setViewState('COCKPIT')} 
@@ -563,7 +640,7 @@ export default function ForensicEngineRoot() {
 
       {viewState === 'WIZARD' && triangulation && activePersona && ( 
         <ForensicDiagnosticWizard         
-          companyName={`${triangulation.companyName}::${activePersona}`} 
+          companyName={`${triangulation.companyName}`} 
           activePillar={triangulation.pillar} 
           onCalculated={() => { 
             if (typeof window !== 'undefined') { 
@@ -577,55 +654,174 @@ export default function ForensicEngineRoot() {
       )} 
 
       {viewState === 'COCKPIT' && triangulation && ( 
-        <div>
-          {/* Admin Context Return Control Header Strip */}
-          <div className="w-full max-w-[1600px] mx-auto mb-4 px-10 no-print flex justify-start">
-            <button
-              type="button"
-              onClick={handleSystemReset}
-              className="border border-slate-800 bg-black text-zinc-400 hover:text-white hover:border-red-600 text-xs font-mono font-black px-6 py-3 uppercase tracking-widest transition-all cursor-pointer rounded-xs"
-            >
-              &larr; // Terminate Session & Return to Intake Control
-            </button>
-          </div>
+        <div className="w-full max-w-[1600px] mx-auto text-left"> 
+          <div className="mb-4 px-10 no-print flex justify-start"> 
+            <button 
+              type="button" 
+              onClick={handleSystemReset} 
+              className="border border-slate-800 bg-black text-zinc-400 hover:text-white hover:border-red-600 text-xs font-mono font-black px-6 py-3 uppercase tracking-widest transition-all cursor-pointer rounded-xs" 
+            > 
+              &larr; // Terminate Session & Return to Intake Control 
+            </button> 
+          </div> 
+
+          {/* ✨ DYNAMIC COCKPIT BINDING: Swapped static fallbacks with clear mapped state criteria */}
           <ForensicCommandCockpit         
             companyName={triangulation.companyName} 
-            sector="ENTERPRISE_SAAS"
-            metrics={alignedCockpitMetrics}
+            sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'} 
+            metrics={alignedCockpitMetrics} 
           /> 
-        </div>
+
+          {/* 📋 BMR SOLUTIONS INTERACTIVE DOSSIER ADD-ON LAYER */}
+          <div className="mt-12 mx-10 border border-slate-900 bg-slate-950/40 rounded-sm shadow-xl p-10 backdrop-blur-md not-italic normal-case text-left selection:bg-red-600 selection:text-white">
+            <div className="border-b border-slate-900 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3">
+                <FileText size={22} className="text-red-500 shrink-0" />
+                <div>
+                  <h3 className="text-lg font-mono font-black uppercase tracking-widest text-white leading-none">
+                    BMR SOLUTIONS // EXPLANATORY WALKTHROUGH
+                  </h3>
+                  <span className="text-[10px] font-mono text-zinc-500 block uppercase tracking-wider mt-1">
+                    Companion Leave-Behind Document // Interactive Explanatory Matrix
+                  </span>
+                </div>
+              </div>
+
+              {/* Internal Tab Toggles */}
+              <div className="flex bg-black p-1 border border-slate-900 rounded-xs font-mono text-[10px] font-black uppercase tracking-wider">
+                <button 
+                  onClick={() => setDossierTab('METRICS')}
+                  className={`px-4 py-2 transition-all cursor-pointer rounded-xs ${dossierTab === 'METRICS' ? 'bg-red-950/40 text-red-500 border border-red-900/40' : 'text-zinc-500 hover:text-white'}`}
+                >
+                  01 // Risk Matrix
+                </button>
+                <button 
+                  onClick={() => setDossierTab('REMEDIATION')}
+                  className={`px-4 py-2 transition-all cursor-pointer rounded-xs ${dossierTab === 'REMEDIATION' ? 'bg-red-950/40 text-red-500 border border-red-900/40' : 'text-zinc-500 hover:text-white'}`}
+                >
+                  02 // Alignment Track
+                </button>
+              </div>
+            </div>
+
+            {dossierTab === 'METRICS' && (
+              <div className="space-y-6">
+                <p className="text-sm text-slate-400 font-sans leading-relaxed">
+                  This framework maps live cross-persona triangulation loops to identify stacked risk vectors across core development pipelines for <strong className="text-white font-bold">{companyName.replace(/_/g, ' ')}</strong>. Below is the tactical translation of your active telemetry output layers.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                  {/* ✨ DYNAMIC DATA INJECTION: Enforced explicit curly parsing brackets across your overview cards */}
+                  <div className="border border-slate-900 bg-black p-5 rounded-sm">
+                    <span className="font-mono text-[10px] text-slate-500 block font-black uppercase tracking-wider mb-1">
+                      🎯 Integrity Index ({alignedCockpitMetrics.complianceScore}/100)
+                    </span>
+                    <p className="text-xs text-slate-300 font-sans leading-relaxed font-normal">
+                      Measures the synchronization gap between governance mandate and engineering velocity. A score of {alignedCockpitMetrics.complianceScore} isolates an asymmetric gap where technical environments lack automated policy fences, placing an operational drag on human staff.
+                    </p>
+                  </div>
+
+                  <div className="border border-slate-900 bg-black p-5 rounded-sm">
+                    <span className="font-mono text-[10px] text-yellow-500 block font-black uppercase tracking-wider mb-1">
+                      📊 Rework Overhead Tax (${alignedCockpitMetrics.annualSalaryLeakage.toLocaleString()})
+                    </span>
+                    <p className="text-xs text-slate-300 font-sans leading-relaxed font-normal">
+                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to approximately <strong className="text-yellow-500 font-bold">${(alignedCockpitMetrics.annualSalaryLeakage / 100).toLocaleString()} hours</strong> engineering teams exhaust resolving schema drift, fracturing data lineage, and manual firefighting.
+                    </p>
+                  </div>
+
+                  <div className="border border-slate-900 bg-black p-5 rounded-sm">
+                    <span className="font-mono text-[10px] text-red-500 block font-black uppercase tracking-wider mb-1">
+                      ⚠️ Forensic Inaction Liability (${alignedCockpitMetrics.unhedgedLegalExposure.toLocaleString()})
+                    </span>
+                    <p className="text-xs text-slate-300 font-sans leading-relaxed font-normal">
+                      Projects total regulatory fines, contract penalties, and losses incurred if endpoints remain unmodified. Weights deficiencies against specific standard framework lookups to justify remediation budgeting.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {dossierTab === 'REMEDIATION' && (
+              <div className="space-y-6">
+                <div className="border border-slate-900 bg-black p-6 rounded-sm">
+                  <span className="font-mono text-[10px] text-red-500 block font-black uppercase tracking-widest mb-3">
+                    // ARCHITECTURAL CODES & REGULATORY PARITY LOOKUP
+                  </span>
+                  
+                  <div className="space-y-3 font-mono text-xs uppercase font-black tracking-tight text-zinc-400">
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-500 shrink-0 mt-0.5" /> <span><strong className="text-red-500">[NON-COMPLIANT]</strong> ISO 9001:2015 // Clause 8.5.1: Messaging anomalies create unmapped distribution risk.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-500 shrink-0 mt-0.5" /> <span><strong className="text-red-500">[NON-COMPLIANT]</strong> HL7 FHIR v4 // Data Conformance: Unstructured drift triggers serialization failures.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-500 shrink-0 mt-0.5" /> <span><strong className="text-red-500">[NON-COMPLIANT]</strong> PCI-DSS v4.0 // Req 10.2: Processing delays interrupt automated auditing boundaries.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-500 shrink-0 mt-0.5" /> <span><strong className="text-red-500">[NON-COMPLIANT]</strong> SOX // Section 404: Telemetry friction degrades internal financial assurance data tracking.</span></div>
+                  </div>
+
+                  <div className="border-t border-slate-900 mt-5 pt-4">
+                    <span className="font-mono text-[9px] text-slate-500 block font-black uppercase tracking-wider mb-1">⚠️ Enforcement Triggers & Audit Tracing</span>
+                    <p className="text-xs text-slate-400 font-sans normal-case tracking-normal font-normal leading-relaxed">
+                      These flags reveal that active non-compliance records are actively writing to system telemetry logs. During standard framework assessments or external audits, these records shift from benign tech debt into explicit regulatory failures—instantly triggering the custom evaluation liability matrix.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900/30 border border-slate-900 p-5 rounded-sm">
+                  <span className="font-mono text-[10px] text-slate-400 block font-black uppercase tracking-wider mb-2">// SCHEDULED REMEDIATION PROGRESSION ROADMAP</span>
+                  <p className="text-xs text-slate-300 font-sans leading-relaxed mb-4">
+                    To automate away the manual tracking overheads currently draining resources, the engine has prepared a multi-phased infrastructure mitigation plan:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans text-xs">
+                    <div className="bg-black p-4 border border-slate-900 rounded-xs">
+                      <strong className="text-white block font-bold mb-1">Phase 01 // Pipeline Abstraction Layering</strong>
+                      <p className="text-slate-400 font-normal leading-relaxed">Deploys decoupled adapter protocols to completely insulate backend data transaction structures from continuing schema drift anomalies.</p>
+                    </div>
+                    <div className="bg-black p-4 border border-slate-900 rounded-xs">
+                      <strong className="text-white block font-bold mb-1">Phase 02 // Telemetry Filter Prioritization</strong>
+                      <p className="text-slate-400 font-normal leading-relaxed">Optimizes localized alert tracing rules across the organizational network topology to systematically eliminate alert exhaustion fatigue.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-8 pt-4 border-t border-slate-900 flex justify-between items-center font-mono text-[9px] font-black text-zinc-600 tracking-widest uppercase">
+              {/* ✨ BRAND ALIGNMENT FIX: Standardized copyright labels cleanly across all operational viewport wrappers */}
+              <span>BMR SOLUTIONS © 2026 // SYSTEM ADD-ON EXPANSION</span>
+              <span>SECURE RUNTIME CONTROL</span>
+            </div>
+          </div>
+        </div> 
       )} 
 
-      {viewState === 'THANK_YOU' && (
-        <div className="w-full max-w-md border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl backdrop-blur-md italic font-sans">
-          <div className="border-b border-slate-900 pb-5 mb-6 flex items-center gap-3 not-italic font-mono">
-            <CheckCircle size={24} className="text-green-500 shrink-0" />
-            <div>
-              <h2 className="text-xs font-black text-white uppercase tracking-widest leading-none">// NODE TRANSMISSION SUCCESSFUL</h2>
-              <span className="text-[9px] text-zinc-500 tracking-wider block mt-1 uppercase">QUADRANT METRICS PARSED</span>
-            </div>
-          </div>
+      {viewState === 'THANK_YOU' && ( 
+        <div className="w-full max-w-md border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl backdrop-blur-md italic font-sans"> 
+          <div className="border-b border-slate-900 pb-5 mb-6 flex items-center gap-3 not-italic font-mono"> 
+            <CheckCircle size={24} className="text-green-500 shrink-0" /> 
+            <div> 
+              <h2 className="text-xs font-black text-white uppercase tracking-widest leading-none">// NODE TRANSMISSION SUCCESSFUL</h2> 
+              <span className="text-[9px] text-zinc-500 tracking-wider block mt-1 uppercase">QUADRANT METRICS PARSED</span> 
+            </div> 
+          </div> 
 
-          <div className="space-y-6 not-italic font-sans normal-case text-sm text-slate-300 font-normal leading-relaxed">
-            <p>
-              Thank you for completing your assigned forensic assessment track. Your infrastructure insights have been safely aggregated into the core corporation matrix pipeline at BMR Solutions.
-            </p>
-            
-            <div className="border-t border-slate-900 pt-5 mt-4 text-xs text-slate-400 font-mono uppercase tracking-wide space-y-1">
-              <span className="block text-[10px] text-slate-500 font-black">// ADDITIONAL INQUIRIES</span>
-              <p className="normal-case font-sans font-normal text-slate-300">
-                If you have any questions regarding your team's structural data alignment mapping, please reach out to your designated supervisor or contact our advisory desk at:
-              </p>
-              <a 
-                href="mailto:hello@bmrsolutions.com" 
-                className="block text-red-500 font-bold hover:text-white transition-colors text-xs lowercase mt-2 tracking-normal"
-              >
-                hello@bmrsolutions.com
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
+          <div className="space-y-6 not-italic font-sans normal-case text-sm text-slate-300 font-normal leading-relaxed"> 
+            <p> 
+              Thank you for completing your assigned forensic assessment track. Your infrastructure insights have been safely aggregated into the core corporation matrix pipeline at BMR Solutions. 
+            </p> 
+             
+            <div className="border-t border-slate-900 pt-5 mt-4 text-xs text-slate-400 font-mono uppercase tracking-wide space-y-1"> 
+              <span className="block text-[10px] text-slate-500 font-black">// ADDITIONAL INQUIRIES</span> 
+              <p className="normal-case font-sans font-normal text-slate-300"> 
+                If you have any questions regarding your team's structural data alignment mapping, please reach out to your designated supervisor or contact our advisory desk at: 
+              </p> 
+              <a   
+                href="mailto:hello@BMRADVISORY.com"   
+                className="block text-red-500 font-bold hover:text-white transition-colors text-xs lowercase mt-2 tracking-normal" 
+              > 
+                hello@bmradvisory.co 
+              </a> 
+            </div> 
+          </div> 
+        </div> 
+      )} 
 
     </div> 
   ); 
