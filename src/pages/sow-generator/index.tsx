@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
 import { decompressFromEncodedURIComponent } from 'lz-string';
-import { generatePdf } from '../lib/generatePdf';
+import { generatePdf } from '../../lib/generatePdf';
 import { FileText, Terminal, Briefcase, Download, ShieldAlert, CheckCircle, Eye, EyeOff } from 'lucide-react';
 
 interface AnomalyRemediationNode {
