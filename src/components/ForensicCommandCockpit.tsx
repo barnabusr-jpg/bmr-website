@@ -228,21 +228,7 @@ export default function ForensicCommandCockpit({ companyName, sector, metrics, r
               Cross-persona triangulation logs identify stacked risk vectors and unmapped operational vulnerabilities across core development pipelines for <strong>{companyName}</strong>. At existing workforce resource parameters, this systemic friction generates an aggregated annual loss run-rate calculated at <strong>${metrics.annualSalaryLeakage.toLocaleString(undefined, { maximumFractionDigits: 0 })}</strong>, requiring structural remediation actions.
             </p>
 
-            <div className="bg-[#090d16] border border-slate-900 font-mono p-6 my-8 text-left text-slate-300 shadow-inner rounded-sm not-italic normal-case font-medium">
-              <div className="text-[10px] text-red-500 font-black tracking-widest uppercase mb-4">
-                <span>// QUANTITATIVE DEBT VERIFICATION LINEAGE</span>
-              </div>
-              <div className="text-xs space-y-3 leading-relaxed">
-                <div>
-                  <span className="text-slate-400 font-bold block mb-1 text-[11px] uppercase tracking-wider">Active Formula Derivation Rules:</span>
-                  <div className="space-y-1.5 font-mono text-[11px] text-yellow-500 bg-black/60 p-4 border border-slate-900 overflow-x-auto whitespace-pre rounded-xs">
-                    {detectedPillars.map((p: string) => (
-                      <div key={p}>• {p}: Net Friction Tax Index = (Variance Points × Target Capacity) × Multiplier Index ({metrics.multiplier})</div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* IP Leakage Formula Block Completely Erased From This Section Thread */}
 
             <div className="my-8 border-t border-b border-slate-200 py-6 not-italic normal-case font-medium">
               <span className="text-[10px] font-mono font-black tracking-widest text-slate-400 block mb-4 uppercase">// IDENTIFIED LOGIC FRACTURES INVENTORY ({detectedPillars.length})</span>
