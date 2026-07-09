@@ -85,7 +85,7 @@ export function calculateForensicMetrics(
   const legalExposureBase = 450000 + (complianceRiskWeight * 75000) + (frictionPenaltyCount * 115000);
 
   // -------------------------------------------------------------------------
-  // 📊 QUALITATIVE METADATA ACCUMULATION HOOKS
+  // 📊 QUALITATIVE METADATA ACCUMULATION HOOKS (UPDATED COMPLIANCE PATCH)
   // -------------------------------------------------------------------------
   const evidenceDistribution: Record<EvidenceBasis, number> = { AUDITED_ARTIFACT: 0, DASHBOARD_TELEMETRY: 0, TRIBAL_KNOWLEDGE: 0, COMPLETE_OPACITY: 0 };
   const driverDistribution: Record<FailureDriver, number> = { GOVERNANCE_GAP: 0, ENGINEERING_ARCH: 0, PROCESS_STRAIN: 0, TOOLING_VOID: 0 };
@@ -96,10 +96,20 @@ export function calculateForensicMetrics(
 
   quadKeys.forEach(key => {
     const chosenOptionLetter = responses[key]; 
-    const cleanQuestionId = key.replace(/^quad_/, ''); // Strips out the 'quad_' namespace key prefix
     
-    const questionObject = (forensicQuestions as any)[cleanQuestionId];
-    const pickedChoiceObject = questionObject?.choices?.[chosenOptionLetter];
+    // ✨ FIX: Normalize target formatting tokens completely to isolate hyphen/underscore variations
+    const normalizedTargetId = key
+      .replace(/^quad_/, '')
+      .toUpperCase()
+      .replace(/_/g, '-'); 
+    
+    // Scan static question dictionary array keys for exact character compliance alignment
+    const masterQuestionKey = Object.keys(forensicQuestions).find(
+      k => k.toUpperCase().replace(/_/g, '-') === normalizedTargetId
+    );
+    
+    const questionObject = masterQuestionKey ? forensicQuestions[masterQuestionKey] : null;
+    const pickedChoiceObject = questionObject?.choices?.[chosenOptionLetter as 'A'|'B'|'C'|'D'];
 
     if (questionObject && pickedChoiceObject) {
       const inferred = inferChoiceMetadata({
