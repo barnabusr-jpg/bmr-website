@@ -1,8 +1,14 @@
+// src/pages/sow-generator/index.tsx
+
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { generatePdf } from '../../lib/generatePdf';
-import { FileText, Terminal, Briefcase, Download, ShieldAlert, CheckCircle, Eye, EyeOff } from 'lucide-react';
+import { calculateForensicMetrics } from '../../lib/forensicCalculus';
+import { 
+  FileText, Terminal, Briefcase, Download, ShieldAlert, 
+  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon 
+} from 'lucide-react';
 
 interface AnomalyRemediationNode {
   title: string;
@@ -32,13 +38,11 @@ export default function SOWBuilderStandalone() {
 
     try {
       const decompressed = decompressFromEncodedURIComponent(matrixToken);
-      if (!decompressed) throw new Error("Decompression trace returned null stream.");
+      if (!decompressed) throw new Error("Decompression returned null.");
       
       const payload = JSON.parse(decompressed);
-
-      // ⏱️ Enforce Strict 24-Hour Lifecycle Expiration
       if (payload.expires && Date.now() > payload.expires) {
-        setError('SECURITY HANDSHAKE EXCEPTION: This secure link baseline has expired. Please compile a fresh matrix run inside the master cockpit workspace.');
+        setError('SECURITY HANDSHAKE EXCEPTION: This secure link baseline has expired.');
         return;
       }
 
@@ -46,18 +50,26 @@ export default function SOWBuilderStandalone() {
       setError('');
     } catch (err) {
       console.error(err);
-      setError('SECURITY HANDSHAKE EXCEPTION: Invalid or corrupted magic token array decoded.');
+      setError('SECURITY HANDSHAKE EXCEPTION: Invalid or corrupted matrix token array decoded.');
     }
   }, []);
 
-  // 🧠 Knowledge Translation Engine - Completely sanitized of mathematical IP derivation metadata
+  // 🪐 LIVE QUANT/QUAL ANALYSIS CROSS-TRIANGULATION GATES
+  const forensicAnalytics = useMemo(() => {
+    if (!diagnosticData || !diagnosticData.ans) return null;
+    return calculateForensicMetrics(
+      diagnosticData.org || 'TARGET SPECIFICATION',
+      diagnosticData.ans,
+      diagnosticData.sector
+    );
+  }, [diagnosticData]);
+
   const activeRemediations = useMemo((): AnomalyRemediationNode[] => {
     if (!diagnosticData || !diagnosticData.ans) return [];
     const entries: AnomalyRemediationNode[] = [];
     const answers = diagnosticData.ans;
 
-    // Detect if answers indicate technical pipeline or code debt mutations
-    if (answers['quad_AVS_01'] === 'D' || answers['quad_ED_01'] === '10' || true) {
+    if (answers['quad_AVS-46-TECH'] === 'C' || answers['quad_AVS-46-TECH'] === 'D' || true) {
       entries.push({
         title: "PIPELINE ABSTRACTION LAYER EXTENSION",
         scope: "Architectural Tech Debt Isolation & Adapter Integration",
@@ -77,8 +89,7 @@ export default function SOWBuilderStandalone() {
       });
     }
 
-    // Detect if answers indicate system signal noise or alert fatigue
-    if (answers['quad_HAI_02'] === 'D' || answers['quad_ED_04'] === '10') {
+    if (answers['quad_HAI-68-MGMT'] === 'C' || answers['quad_HAI-68-MGMT'] === 'D') {
       entries.push({
         title: "TELEMETRY SIGNAL RE-FILTERING & ALARM DECOUPLING",
         scope: "Operational Alarm Fatigue Mitigation Runbook",
@@ -101,7 +112,6 @@ export default function SOWBuilderStandalone() {
     return entries;
   }, [diagnosticData]);
 
-  // Sync selected list on first payload decryption mount pass
   useEffect(() => {
     if (activeRemediations.length > 0 && selectedDirectives.length === 0) {
       setSelectedDirectives(activeRemediations.map((r: AnomalyRemediationNode) => r.title));
@@ -113,9 +123,7 @@ export default function SOWBuilderStandalone() {
   }, [activeRemediations, selectedDirectives]);
 
   const toggleDirective = (title: string) => {
-    setSelectedDirectives(prev => 
-      prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]
-    );
+    setSelectedDirectives(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
   };
 
   const handleDownloadPDF = async () => {
@@ -134,7 +142,7 @@ export default function SOWBuilderStandalone() {
       linkAnchor.click();
       linkAnchor.remove();
     } catch (pdfError) {
-      console.error("PDF engine failure:", pdfError);
+      console.error(pdfError);
     }
     setIsGeneratingPdf(false);
   };
@@ -143,7 +151,6 @@ export default function SOWBuilderStandalone() {
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black p-6 md:p-12 selection:bg-red-600 selection:text-white italic">
       <main className="max-w-7xl mx-auto space-y-8">
         
-        {/* Banner Controller */}
         <div className="border-b border-slate-900 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none italic">
@@ -178,7 +185,6 @@ export default function SOWBuilderStandalone() {
         {diagnosticData && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
             
-            {/* Control Panel Sidebar */}
             <div className="lg:col-span-1 border border-slate-900 bg-slate-950/50 p-6 rounded-sm space-y-4 font-mono not-italic text-xs">
               <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black">// CONTROL PANEL</span>
               <h4 className="text-white text-xs font-black uppercase tracking-wider mb-2">Remediation Toggles</h4>
@@ -201,8 +207,8 @@ export default function SOWBuilderStandalone() {
               </div>
             </div>
 
-            {/* Main Active Blueprint Runbook Scope View */}
             <div className="lg:col-span-3 space-y-6">
+              
               <div className="border border-slate-900 bg-slate-950/40 p-6 rounded-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono not-italic text-xs text-zinc-400">
                 <div>
                   <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-1">// COGNITIVE TARGET ENTITY CODE</span>
@@ -215,6 +221,50 @@ export default function SOWBuilderStandalone() {
                   </span>
                 </div>
               </div>
+
+              {/* 🪐 DATA FIDELITY ANNOTATION HUD BANNER VIEW */}
+              {forensicAnalytics && (
+                <div className="border border-slate-900 bg-black/60 p-6 rounded-sm grid grid-cols-1 md:grid-cols-4 gap-6 font-mono not-italic text-xs">
+                  <div className="md:col-span-4 border-b border-slate-900 pb-2 flex items-center gap-2">
+                    <BarChart2 size={14} className="text-red-500" />
+                    <span className="text-white font-black tracking-wider text-[10px]">// FORENSIC EVIDENCE & FIDELITY SPECIFICATIONS</span>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">RELIABILITY INDEX</span>
+                    <div className="flex items-baseline gap-1 mt-1">
+                      <span className={`text-2xl font-sans font-black ${
+                        forensicAnalytics.reliabilityIndex > 70 ? 'text-green-500' : forensicAnalytics.reliabilityIndex > 40 ? 'text-yellow-500' : 'text-red-500'
+                      }`}>{forensicAnalytics.reliabilityIndex}%</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-500 tracking-tight mt-1 uppercase">FROM {forensicAnalytics.sampleSize} STRUCTURAL VECTOR POINTS.</p>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">DOMINANT BASIS</span>
+                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px]">
+                      <Shield size={12} className="text-red-400" />
+                      {forensicAnalytics.dominantBasis?.replace(/_/g, ' ')}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">PRIMARY VECTOR DRIVER</span>
+                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px]">
+                      <Terminal size={12} className="text-red-400" />
+                      {forensicAnalytics.dominantDriver?.replace(/_/g, ' ')}
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">COGNITION POSTURE STATE</span>
+                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px]">
+                      <AwareIcon size={12} className="text-red-400" />
+                      {forensicAnalytics.dominantVisibility}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {filteredRemediations.length === 0 && (
                 <div className="p-12 border border-dashed border-slate-900 text-center text-slate-600 text-sm font-sans not-italic font-medium">
@@ -237,8 +287,6 @@ export default function SOWBuilderStandalone() {
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 not-italic normal-case font-sans tracking-normal font-normal text-sm text-slate-300">
-                      
-                      {/* Technical Layer */}
                       <div className="border border-slate-900 bg-black/40 p-6 rounded-sm space-y-4">
                         <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
                           <Terminal size={16} className="text-red-500" />
@@ -258,7 +306,6 @@ export default function SOWBuilderStandalone() {
                         </ul>
                       </div>
 
-                      {/* Operational Layer */}
                       <div className="border border-slate-900 bg-black/40 p-6 rounded-sm space-y-4">
                         <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
                           <Briefcase size={16} className="text-indigo-400" />
@@ -277,7 +324,6 @@ export default function SOWBuilderStandalone() {
                           ))}
                         </ul>
                       </div>
-
                     </div>
                   </div>
                 ))}
