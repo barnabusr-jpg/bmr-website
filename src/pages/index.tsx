@@ -22,16 +22,16 @@ export default function LandingPage() {
               <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] uppercase">
                 NODE_ACCESS: BMR_SOLUTIONS_FORENSIC_UNIT
               </span>
-              <h1 className="text-7xl md:text-[120px] font-black uppercase tracking-tighter leading-[0.8] mt-6 italic">
+              <h1 className="text-7xl md:text-[100px] font-black uppercase tracking-tighter leading-[0.8] mt-6 italic">
                 RECOVER<br />
                 <span className="text-red-600">WASTED</span><br />
-                AI CAPITAL<br />
-                AT SCALE.
+                ENGINEERING<br />
+                CAPACITY.
               </h1>
             </div>
 
             <p className="text-xl md:text-3xl text-white max-w-2xl leading-tight font-black italic normal-case">
-              We identify hidden risks in autonomous systems before they manifest as legal disasters. Built from over twenty years of leadership, including a decade at Microsoft protecting secure government networks.
+              We isolate systemic pipeline logic fractures before they corrupt your automation runtimes and cascade into organizational liabilities. Built on twenty years of secure infrastructure triage, our stateless framework quantifies your hidden operational friction in minutes.
             </p>
 
             <div className="flex flex-col md:flex-row items-center gap-8 pt-8">
@@ -46,10 +46,10 @@ export default function LandingPage() {
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] tracking-[0.4em] font-black italic uppercase">
                   <Activity size={14} className="animate-pulse text-red-600" />
-                  12 QUERIES // ~3 MINUTE COMPLETION
+                  10 QUERIES // STATELESS TRIANGULATION MATRIX // ~3 MINUTE RUN
                 </div>
                 <p className="text-red-600 font-mono text-[9px] tracking-[0.2em] font-black italic uppercase">
-                  IMMEDIATE_FORENSIC_VERDICT_PROVIDED
+                  IMMEDIATE_RECOVERY_BLUEPRINT_GENERATED // NO_SERVICE_LOOP_REQUIRED
                 </p>
               </div>
             </div>
@@ -66,12 +66,12 @@ export default function LandingPage() {
 
               <div className="space-y-8 border-l-2 border-red-600/30 pl-8">
                 <p className="text-slate-400 text-lg leading-relaxed font-black italic normal-case">
-                  BMR provides forensic tools to terminate "shadow labor." We isolate the manual effort hidden inside automated systems.
+                  Your specialized engineering staff is burning millions on manual, repetitive fire fighting triggered by silent database schema drift and unhedged data transformations. We map the exact financial bleed and hand your team an immutable blueprint to close the leak.
                 </p>
                 
                 <div className="pt-4">
                   <span className="text-white font-black text-2xl italic uppercase tracking-tight">
-                    YOU HAVE <span className="text-red-600 underline decoration-4 underline-offset-8">HIDDEN CAPACITY.</span>
+                    YOU HAVE <span className="text-red-600 underline decoration-4 underline-offset-8">RECOVERABLE VELOCITY.</span>
                   </span>
                 </div>
               </div>
