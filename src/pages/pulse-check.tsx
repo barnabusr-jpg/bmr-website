@@ -192,13 +192,17 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
+          {/* --- AUDIT STEP RENDER --- */}
           {step === 'audit' && (
             <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-12 text-center italic">
               <div className="flex flex-col items-center border-b border-slate-900 pb-10 mb-12">
-                 <h2 className="text-4xl md:text-7xl font-black italic uppercase leading-tight tracking-tighter min-h-[160px]">
-                   {LOCAL_QUESTIONS[currentDimension]?.text}
-                 </h2>
-              </div>
+       {/* FIXED: Removed global uppercase, adjusted to font-bold and normal-case for clear readability */}
+       <h2 className="text-3xl md:text-5xl font-bold normal-case text-slate-100 tracking-tight leading-snug min-h-[160px] max-w-4xl">
+         {LOCAL_QUESTIONS[currentDimension]?.text}
+       </h2>
+    </div>
+
+    {/* Option buttons continue below completely unchanged... */}
 
               <div className="grid grid-cols-1 gap-4">
                 {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
