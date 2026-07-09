@@ -6,23 +6,19 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Banknote, Stethoscope, Factory, ShoppingCart, Activity, ChevronRight } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 
-// 1. THE DATA ENGINE (RE-INSTATED)
 const LOCAL_QUESTIONS = [
-  { id: "RT_01", text: "AI standard operating procedures (SOPs) are documented and followed.", options: [{ label: "Non-existent", weight: 10 }, { label: "Ad-hoc/Manual", weight: 6 }, { label: "Formalized", weight: 4 }, { label: "Automated/Optimized", weight: 2 }] },
-  { id: "RT_02", text: "Our organization has a clear AI ethics and governance framework.", options: [{ label: "No framework", weight: 10 }, { label: "Basic guidelines", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "RT_03", text: "AI roles and responsibilities are clearly defined across teams.", options: [{ label: "Undefined", weight: 10 }, { label: "Informal roles", weight: 6 }, { label: "Dedicated AI team", weight: 4 }, { label: "Cross-functional matrix", weight: 2 }] },
-  { id: "DG_01", text: "Our AI systems directly contribute to measurable business ROI.", options: [{ label: "Not tracked", weight: 10 }, { label: "Anecdotal evidence", weight: 6 }, { label: "Specific KPIs", weight: 4 }, { label: "Direct impact", weight: 2 }] },
-  { id: "DG_02", text: "AI initiatives are aligned with the core strategic vision.", options: [{ label: "Disconnected", weight: 10 }, { label: "Loosely aligned", weight: 6 }, { label: "Integrated", weight: 4 }, { label: "Strategy-driven", weight: 2 }] },
-  { id: "DG_03", text: "We have a budget and resources for AI scaling.", options: [{ label: "No budget", weight: 10 }, { label: "Project-based", weight: 6 }, { label: "Annual budget", weight: 4 }, { label: "Venture-scale", weight: 2 }] },
-  { id: "SA_01", text: "AI vendors are assessed for risk before contract signing.", options: [{ label: "No oversight", weight: 10 }, { label: "Basic checks", weight: 6 }, { label: "Formal audits", weight: 4 }, { label: "Continuous monitoring", weight: 2 }] },
-  { id: "SA_02", text: "Unauthorized AI tool usage is actively monitored and blocked.", options: [{ label: "No monitoring", weight: 10 }, { label: "Reactive", weight: 6 }, { label: "Alerts", weight: 4 }, { label: "Zero-Zero Token", weight: 2 }] },
-  { id: "ED_01", text: "Our data infrastructure can handle real-time AI processing.", options: [{ label: "Legacy", weight: 10 }, { label: "Hybrid", weight: 6 }, { label: "Cloud-native", weight: 4 }, { label: "Edge", weight: 2 }] },
-  { id: "ED_02", text: "We leverage proprietary datasets to train specialized models.", options: [{ label: "Public only", weight: 10 }, { label: "Minimal", weight: 6 }, { label: "Significant", weight: 4 }, { label: "Proprietary", weight: 2 }] },
-  { id: "ED_03", text: "API and model versioning are strictly controlled.", options: [{ label: "Manual", weight: 10 }, { label: "Basic", weight: 6 }, { label: "Automated", weight: 4 }, { label: "MLOps", weight: 2 }] },
-  { id: "ED_04", text: "Computing resources (GPU/Cloud) are managed efficiently.", options: [{ label: "High waste", weight: 10 }, { label: "Partial", weight: 6 }, { label: "Managed", weight: 4 }, { label: "Hyper", weight: 2 }] }
+  { id: "NODE_01_AVS_01", text: "Executive data governance policies mandate strict structural schema contracts for external interface integrations.", options: [{ label: "No oversight present", weight: 10 }, { label: "Ad hoc verification protocols", weight: 6 }, { label: "Formalized schema specifications", weight: 4 }, { label: "Automated continuous validation gates", weight: 2 }] },
+  { id: "NODE_01_AVS_02", text: "Fiduciary risk assessments isolate computational logic drift liabilities prior to deployment sign off.", options: [{ label: "Oversight missing entirely", weight: 10 }, { label: "Informal guidelines deployed", weight: 6 }, { label: "Regular board review validation", weight: 4 }, { label: "Continuous predictive isolation checks", weight: 2 }] },
+  { id: "NODE_01_AVS_03", text: "Organizational balance sheet exposure tracking incorporates potential algorithmic transaction failure markers.", options: [{ label: "Not tracked whatsoever", weight: 10 }, { label: "Reactive accounting protocols", weight: 6 }, { label: "Defined capital allocation models", weight: 4 }, { label: "Real time ledger risk integration", weight: 2 }] },
+  { id: "NODE_02_AVS_01", text: "Data pipeline infrastructure separates untrusted third party payloads via isolated gateway environments.", options: [{ label: "Direct uninsulated streaming profiles", weight: 10 }, { label: "Basic validation parsing proxies", weight: 6 }, { label: "Air gapped staging microservices", weight: 4 }, { label: "Stateless zero trust transformation runtime", weight: 2 }] },
+  { id: "NODE_02_AVS_02", text: "Upstream schema transformations and API configuration modifications trigger automated integration checks.", options: [{ label: "Manual testing dependency cycles", weight: 10 }, { label: "Basic version logging parameters", weight: 6 }, { label: "Automated integration staging suites", weight: 4 }, { label: "Continuous integration regression protection", weight: 2 }] },
+  { id: "NODE_02_AVS_03", text: "Platform runtime components utilize proprietary secure datasets over unverified external information models.", options: [{ label: "Public data dependencies present", weight: 10 }, { label: "Hybrid source clustering frameworks", weight: 6 }, { label: "Validated proprietary training pipelines", weight: 4 }, { label: "Immutable secure data storage", weight: 2 }] },
+  { id: "NODE_02_AVS_04", text: "Engineering alert parameters are structurally insulated to suppress recurring diagnostic telemetry noise.", options: [{ label: "Unfiltered debug streaming active", weight: 10 }, { label: "Basic priority threshold routing", weight: 6 }, { label: "Automated circuit breaker configurations", weight: 4 }, { label: "Hyper converged anomaly resolution matching", weight: 2 }] },
+  { id: "NODE_03_AVS_01", text: "Middle management protocols trace undocumented tribal workflows to maintain baseline operational velocity.", options: [{ label: "Completely unmapped tracking dependencies", weight: 10 }, { label: "Informal operational documentation logs", weight: 6 }, { label: "Centralized process blueprint structures", weight: 4 }, { label: "Continuous runtime task sequence profiling", weight: 2 }] },
+  { id: "NODE_03_AVS_02", text: "Engineering capacity assessments calculate technical rework debt caused by manual infrastructure firefighting.", options: [{ label: "Capacity bleed unmeasured entirely", weight: 10 }, { label: "Anecdotal sprint metric allocations", weight: 6 }, { label: "Defined engineering overhead indexes", weight: 4 }, { label: "Dynamic resource performance calculations", weight: 2 }] },
+  { id: "NODE_03_AVS_03", text: "Emergency operational runbooks exist to guide internal development teams during active processing bottlenecks.", options: [{ label: "No system documentation available", weight: 10 }, { label: "Basic service restoration checksheets", weight: 6 }, { label: "Formal disaster mitigation strategies", weight: 4 }, { label: "Immutable self executing recovery playbooks", weight: 2 }] }
 ];
 
-// ✨ FIX: Standardized IDs to match database tracking constants exactly
 const sectors = [
   { id: "FINANCE", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
   { id: "HEALTHCARE", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
@@ -39,8 +35,6 @@ export default function PulseCheck() {
   const [entityName, setEntityName] = useState("");
   const [email, setEmail] = useState("");
   const [confirmEmail, setConfirmEmail] = useState("");
-  
-  // 2. STATE FOR QUESTIONS (RE-INSTATED)
   const [currentDimension, setCurrentDimension] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
@@ -65,7 +59,7 @@ export default function PulseCheck() {
       const { data: auditData, error: auditError } = await supabase.from('audits').insert([{ 
         org_name: entityName.toUpperCase(),
         lead_email: email.toLowerCase(),
-        sector: sector, // Always maps cleanly to uppercase rules now
+        sector: sector,
         decay_pct: metrics.decay,
         rework_tax: parseFloat(metrics.rework),
         raw_responses: answers,
@@ -198,7 +192,6 @@ export default function PulseCheck() {
             </motion.div>
           )}
 
-          {/* 3. THE AUDIT STEP RENDER (RE-INSTATED) */}
           {step === 'audit' && (
             <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-12 text-center italic">
               <div className="flex flex-col items-center border-b border-slate-900 pb-10 mb-12">
@@ -220,7 +213,6 @@ export default function PulseCheck() {
                         setCurrentDimension(currentDimension + 1);
                       } else {
                         setIsLoading(true);
-                        
                         const metrics = getLiveMetrics();
                         const auditId = await logToDatabase(metrics);
                         
@@ -239,7 +231,6 @@ export default function PulseCheck() {
                           } catch (emailErr) {
                             console.error("Transactional background pipeline email error:", emailErr);
                           }
-
                           window.location.href = `/results/${auditId}`;
                         } else {
                           setIsLoading(false);
