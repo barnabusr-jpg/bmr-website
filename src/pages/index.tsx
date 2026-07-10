@@ -176,7 +176,7 @@ export default function LandingPage() {
               <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 02 // FORENSIC TOOLING</div>
               <h4 className="text-lg font-black text-white italic tracking-tight">360 DEGREE INGESTION AND 90 POINT LOGIC AUDIT</h4>
               <p className="text-xs text-slate-400 font-sans italic normal-case leading-relaxed">
-                Clear technical understanding requires advanced data collection. We combine process mapping with a strict ninety point technical check to trace design errors down to individual system boundaries.
+                Clear technical understanding requires advanced data collection. We combine quantitative numbers from your live software pipelines with a qualitative review of your development habits. This strict ninety point check traces design errors down to individual system boundaries.
               </p>
             </div>
 
