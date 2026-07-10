@@ -2,7 +2,7 @@
 import React from "react"; 
 import Header from "@/components/Header"; 
 import Footer from "@/components/Footer"; 
-import { Shield, Activity, Zap, Scale, Target, AlertCircle, Briefcase } from "lucide-react"; 
+import { Shield, Activity, Zap, Scale, Target, AlertCircle, Briefcase, Lock } from "lucide-react"; 
 
 export default function Methodology() { 
   const nodes = [ 
@@ -19,8 +19,8 @@ export default function Methodology() {
       title: "TECHNICAL NODE", 
       focus: "PIPELINE HARDENING", 
       lens: "FEDERAL ENGINEERING", 
-      description: "We evaluate your data architecture for ingestion blindness. We identify where unannounced third party API mutations and uncontrolled schema transformations break long term data lineage and starve your automated systems.", 
-      metrics: ["Input Fracture Check", "Logic Air Gapping", "System Hardening"] 
+      description: "We evaluate your data architecture for ingestion blindness based entirely on user inputs. We identify where unannounced third party API mutations and uncontrolled schema transformations break long term data lineage.", 
+      metrics: ["Input Fracture Check", "Zero Integration Review", "System Hardening"] 
     }, 
     { 
       id: "NODE_03", 
@@ -33,10 +33,10 @@ export default function Methodology() {
   ]; 
 
   const phases = [ 
-    { step: "01", title: "TRIAGE", detail: "Ten question diagnostic run. Three minute processing window. Localization of primary logic fractures." }, 
-    { step: "02", title: "ANALYSIS", detail: "Cross referencing operational gaps against historical infrastructure collapses to prioritize legal risk vectors." }, 
+    { step: "01", title: "TRIAGE", detail: "Ten question diagnostic run. Three minute processing window. Localization of primary logic fractures based on user responses." }, 
+    { step: "02", title: "ANALYSIS", detail: "Deep ingestion evaluation. We process your answers through a ninety point logic framework to identify organizational liabilities." }, 
     { step: "03", title: "VERDICT", detail: "Clear structural mapping. Direct identification of exactly where the platform framework is bleeding capital." }, 
-    { step: "04", title: "HAND OFF", detail: "Immutable architecture runbook generation. Your development team takes the keys to execute. BMR departs." } 
+    { step: "04", title: "HAND OFF", detail: "The Engineering Master Blueprint delivery. Your development team takes the keys to execute. BMR departs." } 
   ]; 
 
   return ( 
@@ -121,11 +121,11 @@ export default function Methodology() {
         </section> 
 
         {/* --- SECTION III: THE PROCESS --- */} 
-        <section className="mb-40 bg-white text-slate-950 p-10 md:p-24 italic"> 
+        <section className="mb-24 bg-white text-slate-950 p-10 md:p-24 italic"> 
           <div className="max-w-4xl italic text-slate-950"> 
-            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10 uppercase">THE 10 QUERY <span className="text-red-600">FORENSIC TRIAGE.</span></h2> 
+            <h2 className="text-5xl md:text-7xl font-black italic tracking-tighter leading-none mb-10 uppercase">THE TWO PART <span className="text-red-600">UNIFIED AUDIT.</span></h2> 
             <p className="text-lg md:text-xl font-bold text-slate-600 mb-20 normal-case italic leading-snug"> 
-              This is not a generic survey. This is a cold clinical test. We execute ten targeted query paths to isolate high probability infrastructure fractures. We deliver a functional code level remediation report instantly. 
+              This is not a generic survey. This is a targeted evaluation framework. We combine an initial ten question diagnostic run with a deep ninety point logic audit. Our system uncovers systemic architecture vulnerabilities based entirely on your narrative inputs. 
             </p> 
           </div> 
 
@@ -137,6 +137,21 @@ export default function Methodology() {
                 <p className="text-slate-500 text-sm normal-case font-medium leading-relaxed italic">{p.detail}</p> 
               </div> 
             ))} 
+          </div> 
+        </section> 
+
+        {/* --- NEW SECURITY ACCENT: COMPLIANCE HIGHLIGHT --- */} 
+        <section className="mb-40 max-w-7xl mx-auto"> 
+          <div className="bg-slate-950 border-l-4 border-red-600 p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 font-mono text-xs"> 
+            <div className="space-y-2"> 
+              <div className="text-red-500 font-black tracking-widest flex items-center gap-2"> 
+                <Lock size={16} /> ZERO SECURITY FOOTPRINT COMPLIANCE VERIFICATION 
+              </div> 
+              <p className="text-slate-400 normal-case font-sans italic font-medium max-w-4xl"> 
+                Our infrastructure analysis operates independently of your live hardware networks. We do not require active network configurations, we do not view your architectural metadata, and we do not connect to your enterprise data sources. The process relies completely on text input parameters. 
+              </p> 
+            </div> 
+            <span className="text-slate-700 tracking-widest text-[9px] font-black hidden lg:inline">ISOLATED_EVALUATION_PROTOCOL</span> 
           </div> 
         </section> 
 
@@ -153,13 +168,13 @@ export default function Methodology() {
               onClick={() => window.location.href='/pulse-check'}   
               className="group relative bg-red-600 text-white px-12 md:px-24 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl uppercase" 
             > 
-              EXECUTE_STRATEGY 
+              EXECUTE STRATEGY 
               <Target className="absolute -top-4 -right-4 text-white group-hover:text-red-600 transition-all italic" size={32} /> 
             </button> 
              
             <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] tracking-[0.4em] font-black italic uppercase"> 
               <Activity size={14} className="animate-pulse text-red-600 italic" /> 
-              10 QUERIES // STATELESS TRIANGULATION MATRIX // ~3 MINUTE RUN 
+              UNIFIED DIAGNOSTIC TRACK // ZERO SYSTEM CONNECTIONS // NO DATA RISK 
             </div> 
           </div> 
         </section> 
