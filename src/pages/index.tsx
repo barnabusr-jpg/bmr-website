@@ -21,7 +21,7 @@ export default function LandingPage() {
           <div className="lg:col-span-7 space-y-12">
             <div className="border-l-8 border-red-600 pl-10">
               <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] uppercase">
-                NODE_ACCESS: BMR_SOLUTIONS_FORENSIC_UNIT
+                NODE ACCESS: BMR SOLUTIONS FORENSIC UNIT
               </span>
               <h1 className="text-7xl md:text-[100px] font-black uppercase tracking-tighter leading-[0.8] mt-6 italic">
                 RECOVER<br />
@@ -32,7 +32,7 @@ export default function LandingPage() {
             </div>
 
             <p className="text-xl md:text-3xl text-white max-w-2xl leading-tight font-black italic normal-case">
-              We isolate systemic pipeline logic fractures before they corrupt your automation runtimes and cascade into organizational liabilities. Built on twenty years of secure infrastructure triage, our stateless framework quantifies your hidden operational friction in minutes.
+              We find and isolate engineering pipeline mistakes before they break your automated systems. This protects your business from major financial liabilities. Our process is built on twenty years of secure infrastructure experience, and it measures your hidden friction in just a few minutes.
             </p>
 
             <div className="flex flex-col md:flex-row items-center gap-8 pt-8">
@@ -40,17 +40,17 @@ export default function LandingPage() {
                 onClick={() => router.push('/pulse-check')} 
                 className="group relative w-full md:w-auto bg-red-600 text-white px-16 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl border-2 border-red-600"
               >
-                EXECUTE_STRATEGY
+                EXECUTE STRATEGY
                 <Target className="absolute -top-4 -right-4 text-white group-hover:text-red-600 transition-all" size={32} />
               </button>
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] tracking-[0.4em] font-black italic uppercase">
                   <Activity size={14} className="animate-pulse text-red-600" />
-                  10 QUERIES // STATELESS TRIANGULATION MATRIX // ~3 MINUTE RUN
+                  10 QUERIES // STATELESS TRIANGULATION MATRIX // 3 MINUTE RUN
                 </div>
                 <p className="text-red-600 font-mono text-[9px] tracking-[0.2em] font-black italic uppercase">
-                  IMMEDIATE_RECOVERY_BLUEPRINT_GENERATED // NO_SERVICE_LOOP_REQUIRED
+                  IMMEDIATE RECOVERY BLUEPRINT GENERATED // NO SERVICE LOOP REQUIRED
                 </p>
               </div>
             </div>
@@ -67,7 +67,7 @@ export default function LandingPage() {
 
               <div className="space-y-8 border-l-2 border-red-600/30 pl-8">
                 <p className="text-slate-400 text-lg leading-relaxed font-black italic normal-case">
-                  Your specialized engineering staff is burning millions on manual, repetitive fire fighting triggered by silent database schema drift and unhedged data transformations. We map the exact financial bleed and hand your team an immutable blueprint to close the leak.
+                  Your engineering team is spending thousands of dollars on repetitive repairs. This problem happens because of hidden database changes and unmanaged data movements. We trace the exact path of this financial waste and give your team a permanent blueprint to stop the loss.
                 </p>
                 
                 <div className="pt-4">
@@ -80,7 +80,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* --- NEW SECTION 1: THE RE-EDUCATION PARADIGM SHIFT --- */}
+        {/* --- SECTION 1: THE RE-EDUCATION PARADIGM SHIFT --- */}
         <div className="mt-32 pt-20 border-t border-slate-900">
           <div className="max-w-4xl">
             <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] block mb-4">
@@ -90,7 +90,7 @@ export default function LandingPage() {
               THE STRUCTURAL REALITY:<br />A TALE OF <span className="text-red-600">THREE STRATA.</span>
             </h2>
             <p className="text-xl text-slate-400 font-black italic normal-case max-w-3xl leading-relaxed mb-12">
-              Most executives look at engineering waste as an intangible, unavoidable cost of doing business. It isn't. Capital leakage is a structural defect trapped between how you govern your enterprise and how your machines execute code.
+              Many business leaders look at engineering waste as an unavoidable expense. That view is incorrect. Capital loss is a structural flaw that lives between your business rules and your active computer code.
             </p>
           </div>
 
@@ -102,16 +102,16 @@ export default function LandingPage() {
                 <div className="p-3 bg-slate-900 border border-slate-800 text-slate-400"><LayoutGrid size={20} /></div>
                 <div>
                   <h4 className="text-white font-black text-sm tracking-wider">// STRATA 01: STRATEGIC GOVERNANCE [THE C-SUITE VISION]</h4>
-                  <p className="text-slate-500 font-sans italic normal-case mt-0.5">Corporate mandates, statutory frameworks, security policies, and organizational vision metrics.</p>
+                  <p className="text-slate-500 font-sans italic normal-case mt-0.5">This layer holds corporate rules, safety guidelines, and your main business vision goals.</p>
                 </div>
               </div>
-              <span className="text-slate-600 tracking-widest text-[10px] hidden md:inline">SYSTEMS_ALIGNMENT_TRACK</span>
+              <span className="text-slate-600 tracking-widest text-[10px] hidden md:inline">SYSTEMS ALIGNMENT TRACK</span>
             </div>
 
             {/* INTERSECTING CONNECTIVE GAP */}
             <div className="flex items-center gap-4 px-8 py-1 text-red-500">
               <Milestone size={14} />
-              <span className="text-[10px] tracking-[0.3em] font-black">WARNING: THE PROMISE GAP ENCOUNTEREDERED</span>
+              <span className="text-[10px] tracking-[0.3em] font-black">WARNING: THE PROMISE GAP ENCOUNTERED</span>
             </div>
 
             {/* STRATA 2 - THE PROBLEM AREA */}
@@ -123,10 +123,10 @@ export default function LandingPage() {
                 <div className="p-3 bg-red-600/20 border border-red-600 text-red-500"><Layers size={20} /></div>
                 <div>
                   <h4 className="text-red-500 font-black text-sm tracking-wider">// STRATA 02: THE ENGINEERING PIPELINE [THE REWORK TAX ENGINE]</h4>
-                  <p className="text-slate-300 font-sans italic normal-case mt-0.5 max-w-2xl">The hidden translation engine. Where human engineers are forced to manually patch, interpret, and convert corporate policies into raw machine logic due to structural pipeline friction.</p>
+                  <p className="text-slate-300 font-sans italic normal-case mt-0.5 max-w-2xl">This is the hidden middle layer where human engineers must manually fix and translate business rules into software code. This manual work causes massive pipeline friction and wastes your budget.</p>
                 </div>
               </div>
-              <span className="text-red-500 font-black tracking-widest text-[10px] hidden md:inline animate-pulse">CAPITAL_BLEED_DETECTED</span>
+              <span className="text-red-500 font-black tracking-widest text-[10px] hidden md:inline animate-pulse">CAPITAL BLEED DETECTED</span>
             </div>
 
             {/* INTERSECTING CONNECTIVE GAP */}
@@ -141,15 +141,15 @@ export default function LandingPage() {
                 <div className="p-3 bg-slate-900 border border-slate-800 text-slate-400"><Cpu size={20} /></div>
                 <div>
                   <h4 className="text-white font-black text-sm tracking-wider">// STRATA 03: OPERATIONAL RUNTIME [LIVE MACHINE EXECUTION]</h4>
-                  <p className="text-slate-500 font-sans italic normal-case mt-0.5">Active relational databases, automated microservices, streaming ingestion routes, and execution pipelines.</p>
+                  <p className="text-slate-500 font-sans italic normal-case mt-0.5">This layer runs active databases, automated software tools, data streams, and running pipelines.</p>
                 </div>
               </div>
-              <span className="text-slate-600 tracking-widest text-[10px] hidden md:inline">MACHINE_STATE_LOGS</span>
+              <span className="text-slate-600 tracking-widest text-[10px] hidden md:inline">MACHINE STATE LOGS</span>
             </div>
           </div>
         </div>
 
-        {/* --- NEW SECTION 2: THE PARADIGM LEAP (TRINITY DEPLOYMENT) --- */}
+        {/* --- SECTION 2: THE PARADIGM LEAP (TRINITY DEPLOYMENT) --- */}
         <div className="mt-32 pt-20 border-t border-slate-900 bg-gradient-to-b from-slate-950/50 to-transparent p-8 md:p-12 border border-slate-900">
           <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] block mb-4">
             // INTERVENTION STRATEGY FRAMEWORK
@@ -158,7 +158,7 @@ export default function LandingPage() {
             THE LEAP: FROM A DIAGNOSTIC ESTIMATE<br />TO A <span className="text-red-600">FORENSIC INTERVENTION.</span>
           </h3>
           <p className="text-base text-slate-400 font-black italic normal-case max-w-4xl leading-relaxed mb-12">
-            Resolving a structural multi-hundred-thousand-dollar annual liability cannot be achieved via generic monitoring packages or casual surveys. True extraction of hidden debt requires moving past the baseline estimate into a single, high-fidelity intervention built upon three unshakeable pillars:
+            Fixing a large annual budget problem requires more than simple monitoring or basic questions. True recovery requires moving past a basic estimate and starting a complete technical review built on three clear ideas.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -167,16 +167,16 @@ export default function LandingPage() {
               <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 01 // THE VERIFIED MATH</div>
               <h4 className="text-lg font-black text-white italic tracking-tight">THE RUN RATE METRICS LEDGER</h4>
               <p className="text-xs text-slate-400 font-sans italic normal-case leading-relaxed">
-                We eliminate abstract assumptions. By measuring real friction indexes within your second-strata software pipeline, we project an absolute, unblurred financial loss vector showing your precise exposure index.
+                We remove general guesses from the equation. We measure the exact friction points inside your second layer pipeline to show your true financial exposure.
               </p>
             </div>
 
             {/* TRINITY PILLAR 2: THE TOOLING */}
             <div className="border border-slate-900 bg-slate-950/80 p-8 space-y-4">
               <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 02 // FORENSIC TOOLING</div>
-              <h4 className="text-lg font-black text-white italic tracking-tight">360° STREAM INGESTION & 90-POINT LOGIC AUDIT</h4>
+              <h4 className="text-lg font-black text-white italic tracking-tight">360 DEGREE INGESTION AND 90 POINT LOGIC AUDIT</h4>
               <p className="text-xs text-slate-400 font-sans italic normal-case leading-relaxed">
-                Deep architectural clarity requires robust telemetry. We pair full role-based process mapping with a rigid 90-point technical logic stress-test to track drift down to individual schema bounds.
+                Clear technical understanding requires advanced data collection. We combine process mapping with a strict ninety point technical check to trace design errors down to individual system boundaries.
               </p>
             </div>
 
@@ -185,7 +185,7 @@ export default function LandingPage() {
               <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 03 // THE EXECUTIVE SHIELD</div>
               <h4 className="text-lg font-black text-white italic tracking-tight">THE ENGINEERING MASTER BLUEPRINT</h4>
               <p className="text-xs text-slate-400 font-sans italic normal-case leading-relaxed">
-                Technical mapping is meaningless without executive leverage. Your intervention delivers a comprehensive, board-ready blueprint to safeguard operational margins, justify resource restructuring, and protect organizational reputation.
+                Technical measurements are useful only if they give you business leverage. Our review provides a clear blueprint to protect your financial margins, support team updates, and defend your corporate identity.
               </p>
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function LandingPage() {
       >
         <Shield size={18} className="text-slate-800 group-hover:text-red-600 transition-colors" />
         <span className="absolute left-12 top-1/2 -translate-y-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[7px] font-mono py-1.5 px-3 opacity-0 group-hover:opacity-100 transition-all whitespace-nowrap border-l-2 border-red-600 pointer-events-none">
-          SYSTEM_ACCESS_REQUIRED // AUTH_NODE_01
+          SYSTEM ACCESS REQUIRED // AUTH NODE 01
         </span>
       </motion.div>
     </div>
