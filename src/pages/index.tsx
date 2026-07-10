@@ -172,12 +172,22 @@ export default function LandingPage() {
             </div>
 
             {/* TRINITY PILLAR 2: THE TOOLING */}
-            <div className="border border-slate-900 bg-slate-950/80 p-8 space-y-4">
-              <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 02 // FORENSIC TOOLING</div>
-              <h4 className="text-lg font-black text-white italic tracking-tight">360 DEGREE INGESTION AND 90 POINT LOGIC AUDIT</h4>
-              <p className="text-xs text-slate-400 font-sans italic normal-case leading-relaxed">
-                Clear technical understanding requires advanced data collection. We combine quantitative numbers from your live software pipelines with a qualitative review of your development habits. This strict ninety point check traces design errors down to individual system boundaries.
-              </p>
+            <div className="border border-slate-900 bg-slate-950/80 p-8 space-y-4 flex flex-col justify-between h-full">
+              <div className="space-y-4">
+                <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 02 // FORENSIC TOOLING</div>
+                <h4 className="text-lg font-black text-white italic tracking-tight">360 DEGREE INGESTION AND 90 POINT LOGIC AUDIT</h4>
+                <p className="text-xs text-slate-400 font-sans italic normal-case leading-relaxed">
+                  Clear technical understanding requires advanced data collection. We combine quantitative numbers from your live software pipelines with a qualitative review of your development habits. This strict ninety point check traces design errors down to individual system boundaries based entirely on the answers you provide.
+                </p>
+              </div>
+              
+              {/* HIGH-CONTRAST SECURITY HIGHLIGHT */}
+              <div className="mt-4 p-4 bg-slate-900 border-l-4 border-red-600 font-mono text-[10px] tracking-wide text-slate-300 normal-case space-y-1">
+                <span className="text-red-500 font-black block uppercase tracking-widest">// ZERO SECURITY FOOTPRINT COMPLIANCE:</span>
+                <p>
+                  OUR SYSTEM DOES NOT CONNECT TO YOUR INFRASTRUCTURE. WE DO NOT VIEW YOUR ARCHITECTURAL METADATA, AND WE DO NOT TOUCH ANY OF YOUR DATA SOURCES.
+                </p>
+              </div>
             </div>
 
             {/* TRINITY PILLAR 3: THE SHIELD */}
