@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Lock, Unlock, Activity } from "lucide-react";
+import { Lock, Unlock, Activity, Copy, Check } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
@@ -84,6 +84,7 @@ export default function UnifiedResultsPortal() {
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<AuditRecord | null>(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => { 
     setMounted(true); 
@@ -221,6 +222,17 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
+  const handleCopyLinkRecovery = () => {
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    const path = `/diagnostic/forensic?code=${audit?.id || id}`;
+    const fullRecoveryUrl = `${protocol}//${host}${path}`;
+    
+    navigator.clipboard.writeText(fullRecoveryUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2000);
+  };
+
   // 🛡️ CRITICAL GATE: Prevents render math until data arrives
   if (!mounted || loading || !router.isReady || !audit) {
     return (
@@ -250,11 +262,12 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
+        {/* FIX #4: BIND BOTH NARRATIVES TO DATABASE RATHER THAN QUERY FALLBACKS */}
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
             {isPhaseTwoActive 
-              ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
+              ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${Number(audit?.ai_spend || spend).toFixed(1)}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
               : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
             }
           </p>
@@ -305,8 +318,9 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
+            {/* FIX #1: SWAP COMPLETED_AT TO ANCHOR TO PERMANENT HISTORICAL CREATED_AT TIMESTAMP */}
             <RealTimeLossTicker 
-              diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
+              diagnosticCompletedAt={audit.created_at} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
               anomalies={activeAnomaliesList}
               isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
@@ -324,8 +338,8 @@ export default function UnifiedResultsPortal() {
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
+            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass pack}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}` pack}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
 
@@ -361,37 +375,55 @@ export default function UnifiedResultsPortal() {
 
         {/* 🔒 VIEW A: Admin Command Strip */}
         {verifyIsAdminView ? (
-          <div className="pt-6 border-t border-slate-900/60 mt-8">
-            <span className="text-[9px] font-mono text-slate-500 block mb-3 tracking-widest">// ADMINISTRATOR CONTROLS SYSTEM</span>
-            <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
-              <div className="w-full">
-                <button
-                  disabled={!isPaidGateUnlocked}
-                  onClick={(e) => {
-                    if (!isPaidGateUnlocked) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      return;
-                    }
-                    setIsEmailModalOpen(true);
-                  }}
-                  className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
-                    isPaidGateUnlocked
-                      ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
-                      : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none"
-                  }`}
+          <div className="pt-6 border-t border-slate-900/60 mt-8 space-y-6">
+            {/* FIX #2: TELEMETRY ACCESS UTILITY STRIP TO INSTANTLY COPY / MANUALLY RECOVER LOST LINKS */}
+            <div className="bg-slate-950 border-2 border-dashed border-red-600/20 p-6 font-mono text-left">
+              <span className="text-[9px] tracking-widest text-red-500 font-black block uppercase mb-1.5">// ADMINISTRATIVE RECOVERY SYSTEM</span>
+              <p className="text-xs text-slate-400 normal-case mb-4 font-medium font-sans">Use this terminal segment to grab missing intake endpoints directly during a live consultation without deploying a clean notification sequence.</p>
+              <div className="flex items-center gap-4 bg-black border border-slate-900 p-4 justify-between">
+                <span className="text-white text-xs font-black uppercase tracking-tight">Active Core Link Path:</span>
+                <button 
+                  onClick={handleCopyLinkRecovery}
+                  className="bg-red-600 hover:bg-white hover:text-black text-white font-black px-5 py-2 text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer border border-red-600"
                 >
-                  <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
-                  {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
+                  {copiedLink ? <Check size={12} /> : <Copy size={12} />}
+                  {copiedLink ? "COPIED SIGNAL" : "COPY CONFIG ROUTE"}
                 </button>
               </div>
+            </div>
 
-              <button 
-                onClick={fireBriefingSequence}
-                className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-5 uppercase w-full font-black tracking-tight cursor-pointer"
-              >
-                COMPILE PARTIAL ANSWERS
-              </button>
+            <div>
+              <span className="text-[9px] font-mono text-slate-500 block mb-3 tracking-widest">// ADMINISTRATOR CONTROLS SYSTEM</span>
+              <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
+                <div className="w-full">
+                  <button
+                    disabled={!isPaidGateUnlocked}
+                    onClick={(e) => {
+                      if (!isPaidGateUnlocked) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                      }
+                      setIsEmailModalOpen(true);
+                    }}
+                    className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
+                      isPaidGateUnlocked
+                        ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none"
+                    }`}
+                  >
+                    <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
+                    {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
+                  </button>
+                </div>
+
+                <button 
+                  onClick={fireBriefingSequence}
+                  className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-5 uppercase w-full font-black tracking-tight cursor-pointer"
+                >
+                  COMPILE PARTIAL ANSWERS
+                </button>
+              </div>
             </div>
           </div>
         ) : (
