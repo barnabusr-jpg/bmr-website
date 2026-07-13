@@ -1,12 +1,10 @@
-// src/pages/sow-generator/index.tsx
-
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { generatePdf } from '../../lib/generatePdf';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 import { 
-  FileText, Terminal, Briefcase, Download, ShieldAlert, 
+  Terminal, Briefcase, Download, ShieldAlert, 
   CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon 
 } from 'lucide-react';
 
@@ -32,7 +30,7 @@ export default function SOWBuilderStandalone() {
     const matrixToken = params.get('matrix');
 
     if (!matrixToken) {
-      setError('AWAITING SECURE LINK PROTOCOL: Paste or append an immutable stateless matrix token payload.');
+      setError('AWAITING SECURE LINK PROTOCOL: Append an immutable stateless matrix token payload.');
       return;
     }
 
@@ -50,11 +48,10 @@ export default function SOWBuilderStandalone() {
       setError('');
     } catch (err) {
       console.error(err);
-      setError('SECURITY HANDSHAKE EXCEPTION: Invalid or corrupted matrix token array decoded.');
+      setError('SECURITY HANDSHAKE EXCEPTION: Invalid matrix token array decoded.');
     }
   }, []);
 
-  // 🪐 LIVE QUANT/QUAL ANALYSIS CROSS-TRIANGULATION GATES
   const forensicAnalytics = useMemo(() => {
     if (!diagnosticData || !diagnosticData.ans) return null;
     return calculateForensicMetrics(
@@ -67,47 +64,42 @@ export default function SOWBuilderStandalone() {
   const activeRemediations = useMemo((): AnomalyRemediationNode[] => {
     if (!diagnosticData || !diagnosticData.ans) return [];
     const entries: AnomalyRemediationNode[] = [];
-    const answers = diagnosticData.ans;
 
-    if (answers['quad_AVS-46-TECH'] === 'C' || answers['quad_AVS-46-TECH'] === 'D' || true) {
-      entries.push({
-        title: "PIPELINE ABSTRACTION LAYER EXTENSION",
-        scope: "Architectural Tech Debt Isolation & Adapter Integration",
-        root_cause_technical: "Localized application layers are bound directly to sliding target data schemas without micro-service decoupling gateways.",
-        technical_runbook: [
-          "Deploy isolated API Gateway proxy structures (Kong/Envoy instance models).",
-          "Construct abstract serialization interface layers to map incoming vendor payloads.",
-          "Write strict data schema contracts using Zod/JSON-Schema checking decorators."
-        ],
-        root_cause_operational: "Lack of engineering fence guidelines allows third-party dependencies to trigger breaking production sprint cycles without structural warning.",
-        operational_playbook: [
-          "Establish an internal cross-functional Architecture Review Board (ARB).",
-          "Mandate breaking-change notifications inside Master Service Level Agreements (SLAs).",
-          "Re-allocate 15% of upcoming operational sprint metrics strictly to structural platform insulation."
-        ],
-        investment_tier: "$87,360 (Remediation Credit Allocation)"
-      });
-    }
+    entries.push({
+      title: "PIPELINE ABSTRACTION LAYER EXTENSION",
+      scope: "Architectural Tech Debt Isolation & Adapter Integration",
+      root_cause_technical: "Localized application layers are bound directly to sliding target data schemas without microservice decoupling gateways.",
+      technical_runbook: [
+        "Deploy isolated API Gateway proxy structures model instances.",
+        "Construct abstract serialization interface layers to map incoming vendor payloads.",
+        "Write strict data schema contracts using code checking decorators."
+      ],
+      root_cause_operational: "Lack of engineering fence guidelines allows third party dependencies to trigger breaking production sprint cycles without structural warning.",
+      operational_playbook: [
+        "Establish an internal cross functional Architecture Review Board.",
+        "Mandate breaking change notifications inside Master Service Level Agreements.",
+        "Reallocate fifteen percent of upcoming operational sprint metrics strictly to structural platform insulation."
+      ],
+      investment_tier: "$87,360"
+    });
 
-    if (answers['quad_HAI-68-MGMT'] === 'C' || answers['quad_HAI-68-MGMT'] === 'D') {
-      entries.push({
-        title: "TELEMETRY SIGNAL RE-FILTERING & ALARM DECOUPLING",
-        scope: "Operational Alarm Fatigue Mitigation Runbook",
-        root_cause_technical: "Unfiltered debug traces stream raw into production alerting lines, desensitizing infrastructure responses.",
-        technical_runbook: [
-          "Configure sliding-window event aggregation rules inside tracking controllers.",
-          "Establish explicit P1/P4 error severity routing rules across production servers.",
-          "Implement automatic circuit-breaker hooks to silence repeating telemetry noise loops dynamically."
-        ],
-        root_cause_operational: "Support engineering staff spend manual labor cycles firefighting un-prioritized diagnostic events, driving burnout and response lag.",
-        operational_playbook: [
-          "Enforce strict 'Actionable Alert Only' guidelines across all standard enterprise operations dashboards.",
-          "Redesign internal on-call escalation rotation thresholds to avoid engineer burnout patterns.",
-          "Run quarterly telemetry noise audits to continuously prune legacy tracking rule sets."
-        ],
-        investment_tier: "$42,500 (Optimization Package Allocation)"
-      });
-    }
+    entries.push({
+      title: "TELEMETRY SIGNAL RE-FILTERING & ALARM DECOUPLING",
+      scope: "Operational Alarm Fatigue Mitigation Runbook",
+      root_cause_technical: "Unfiltered debug traces stream raw into production alerting lines and desensitize infrastructure responses.",
+      technical_runbook: [
+        "Configure sliding window event aggregation rules inside tracking controllers.",
+        "Establish explicit error severity routing rules across production servers.",
+        "Implement automatic circuit breaker hooks to silence repeating telemetry noise loops dynamically."
+      ],
+      root_cause_operational: "Support engineering staff spend manual labor cycles firefighting unprioritized diagnostic events driving burnout and response lag.",
+      operational_playbook: [
+        "Enforce strict actionable alert only guidelines across all standard enterprise operations dashboards.",
+        "Redesign internal on call escalation rotation thresholds to avoid engineer burnout patterns.",
+        "Run quarterly telemetry noise audits to continuously prune legacy tracking rule sets."
+      ],
+      investment_tier: "$42,500"
+    });
 
     return entries;
   }, [diagnosticData]);
@@ -222,7 +214,6 @@ export default function SOWBuilderStandalone() {
                 </div>
               </div>
 
-              {/* 🪐 DATA FIDELITY ANNOTATION HUD BANNER VIEW */}
               {forensicAnalytics && (
                 <div className="border border-slate-900 bg-black/60 p-6 rounded-sm grid grid-cols-1 md:grid-cols-4 gap-6 font-mono not-italic text-xs">
                   <div className="md:col-span-4 border-b border-slate-900 pb-2 flex items-center gap-2">

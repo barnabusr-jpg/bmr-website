@@ -3,50 +3,50 @@ import React from "react";
 import { useRouter } from 'next/router';
 import { 
   Zap, Shield, Gavel, Wrench, ArrowLeft, 
-  CheckCircle2, Clock, Users, TrendingDown, Target, BarChart3
+  Clock, Users, TrendingDown
 } from "lucide-react";
 
 export default function TacticalProtocolMatrix() {
   const router = useRouter();
   const { id } = router.query;
 
-  // Configuration for the 4-Quadrant Remediations
+  // Configuration for the 4 Quadrant Remediations
   const QUADRANTS: any = {
     IMMEDIATE: { 
       label: "Immediate Remediation", 
       color: "text-red-600", 
       border: "border-red-900/40", 
       icon: Zap, 
-      desc: "High-velocity fixes to stop immediate capital leakage." 
+      desc: "High velocity configuration modifications to halt active capital leakage." 
     },
     STRUCTURAL: { 
       label: "Structural Hardening", 
       color: "text-blue-500", 
       border: "border-blue-900/40", 
       icon: Wrench, 
-      desc: "Core engineering rebuilds to eliminate root-cause drift." 
+      desc: "Core pipeline engineering adjustments to eliminate root cause runtime drift." 
     },
     GOVERNANCE: { 
       label: "Governance Overlay", 
       color: "text-purple-500", 
       border: "border-purple-900/40", 
       icon: Gavel, 
-      desc: "Legal and executive alignment of indemnity protocols." 
+      desc: "Organizational alignment of technical boundaries and data contracts." 
     },
     FORENSIC: { 
       label: "Forensic Continuity", 
       color: "text-green-500", 
       border: "border-green-900/40", 
       icon: Shield, 
-      desc: "Long-term monitoring to prevent future logic fractures." 
+      desc: "Continuous monitoring telemetry to prevent future structural degradation." 
     }
   };
 
   const PROTOCOLS = [
-    { quad: 'IMMEDIATE', title: 'Deploy SIEM Forensic Logging', owner: 'DevOps', days: '3', impact: '40% Risk Reduc.', cost: '$25K' },
-    { quad: 'GOVERNANCE', title: 'Align Executive Indemnity Clauses', owner: 'Legal', days: '14', impact: '25% Risk Reduc.', cost: '$15K' },
-    { quad: 'STRUCTURAL', title: 'Rebuild Hardened Data Pipeline', owner: 'Engineering', days: '30', impact: '30% Risk Reduc.', cost: '$85K' },
-    { quad: 'FORENSIC', title: 'Automate Anomaly Snapshots', owner: 'CTO', days: '90', impact: 'Continuity', cost: '$10K/mo' }
+    { quad: 'IMMEDIATE', title: 'Deploy Input Schema Validation Contracts', owner: 'Engineering', days: '3', impact: '45% Bleed Reduc.', cost: '$14,500' },
+    { quad: 'GOVERNANCE', title: 'Establish Third Party Interface Agreements', owner: 'Product', days: '14', impact: '20% Risk Reduc.', cost: '$12,000' },
+    { quad: 'STRUCTURAL', title: 'Construct Gateway Proxy Abstraction Layers', owner: 'Architecture', days: '30', impact: '35% Drift Reduc.', cost: '$52,500' },
+    { quad: 'FORENSIC', title: 'Automate Telemetry Ingestion Profiling', owner: 'DevOps', days: '60', impact: 'Continuity', cost: '$8,360' }
   ];
 
   return (
@@ -96,10 +96,10 @@ export default function TacticalProtocolMatrix() {
                        <div className="flex flex-col items-end gap-4">
                           <div className="text-right">
                              <div className="text-2xl font-black italic text-white leading-none">{item.cost}</div>
-                             <p className="text-[8px] font-mono text-slate-600 uppercase font-bold mt-1 tracking-widest">Est Fee</p>
+                             <p className="text-[8px] font-mono text-slate-600 uppercase font-bold mt-1 tracking-widest">Resource Cost Value</p>
                           </div>
                           <button className={`text-[10px] font-mono font-black uppercase italic border-b-2 pb-1 ${config.color} border-current w-fit`}>
-                            Authorize Directive
+                            View Action Framework
                           </button>
                        </div>
                     </div>
@@ -113,11 +113,11 @@ export default function TacticalProtocolMatrix() {
         {/* MASTER AUTH BOX */}
         <div className="bg-red-600 p-12 flex flex-col md:flex-row justify-between items-center gap-10">
            <div className="text-left text-black">
-              <h2 className="text-5xl font-black italic uppercase leading-none mb-3">Authorize Master Hardening</h2>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-90 italic text-left">Commence full-spectrum remediation roadmap to reclaim rework tax.</p>
+              <h2 className="text-5xl font-black italic uppercase leading-none mb-3">Export Master Hardening Blueprint</h2>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] opacity-90 italic text-left">Generate full spectrum remediation roadmap dossier for internal team execution.</p>
            </div>
            <button className="bg-black text-white px-16 py-8 font-black uppercase italic text-sm tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all leading-none">
-                APPROVE ALL DIRECTIVES →
+                GENERATE BLUEPRINT DOSSIER →
            </button>
         </div>
       </div>
