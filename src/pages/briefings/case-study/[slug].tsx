@@ -5,85 +5,84 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { ShieldAlert, Activity, ArrowLeft, X, ExternalLink, Scale } from "lucide-react";
 
-// 🛡️ DATA SOURCE
+// 🛡️ RECONFIGURED 2026 ARCHIVE STORAGE
 const ARCHIVE_CONTENT: Record<string, any> = {
-  "chatbot-liability": {
-    title: "THE AIR CANADA PRECEDENT",
+  "fiduciary-regret": {
+    title: "FIDUCIARY REGRET INDEX",
     node: "EXECUTIVE",
-    impact: "$812.00 CAD + COSTS",
-    analysis: "A landmark legal ruling confirmed corporate liability for the 'hallucinations' of autonomous agents.",
+    impact: "55% RETRACT RATE",
+    analysis: "A macroeconomic reversal surfaces as corporate executives report severe operational regret following aggressive automation downsizing.",
     ref: "ARCHIVE_REF_B01 // STATUS: IMMUTABLE",
-    citation: "Civil Resolution Tribunal. (2024). Moffatt v. Air Canada (2024 BCCRT 149).",
+    citation: "Recruiting News Network Research Summary. (2026).",
     dossierBody: [
-      "INCIDENT: Chatbot provided invented refund policy for bereavement travel.", 
-      "VERDICT: Air Canada ordered to pay $812.00 CAD plus court fees.", 
-      "DEFENSE: Company claimed chatbot was a 'separate legal entity'.", 
-      "IMPLICATION: AI outputs are binding contractual representations for the parent corporation."
+      "INCIDENT: Corporate boards miscalculated automation licenses as a clean direct substitute for senior human capital.",
+      "FRACTURE: Cutting specialized personnel permanently stripped out unwritten corporate memory and client relation context.",
+      "RECOVERY: Nearly one third of these companies have been forced into expensive restaffing loops to recover lost expertise."
     ]
   },
-  "fiduciary-gate-failure": {
-    title: "UNITEDHEALTH ALGO_BIAS",
+  "system-overestimation": {
+    title: "SYSTEM OVERESTIMATION GAP",
     node: "EXECUTIVE",
-    impact: "$1.5B CLASS ACTION",
-    analysis: "A federal suit alleges AI was used to override clinical judgment, creating a catastrophic Fiduciary Gate failure.",
+    impact: "REHIRE RESURGENCE",
+    analysis: "Major technology providers reverse automated position replacements to stem severe pipeline outage vulnerabilities and workflow blindness.",
     ref: "ARCHIVE_REF_B02 // STATUS: IMMUTABLE",
-    citation: "U.S. District Court. (2024). Estate of Lokken v. UnitedHealth Group.",
+    citation: "Business Insider Corporate Reports. (2026).",
     dossierBody: [
-      "INCIDENT: AI tool 'nH Predict' used to deny Medicare Advantage claims.", 
-      "FRACTURE: Algorithm override of clinical physician recommendations.", 
-      "VERDICT: AI logs ruled discoverable, stripping 'Black Box' corporate defense."
+      "INCIDENT: Executive leadership executed sweeping workforce purges under the assumption that automation could independently execute complex data workflows.",
+      "FRACTURE: Platforms hit a wall when unmanaged model hallucinations and nonconforming data payloads threatened platform stability.",
+      "RECOVERY: Global technology employers rapidly scaled up human technical and client facing engineering teams to humanize operations."
     ]
   },
-  "salesforce-failure": {
-    title: "FORCEDLEAK AGENT BYPASS",
+  "ford-gray-beard": {
+    title: "FORD GRAY_BEARD COLLAPSE",
     node: "TECHNICAL",
-    impact: "CVSS 9.4 CRITICAL",
-    analysis: "Investigating the ForcedLeak vulnerability where malicious instructions hijacked internal AI agents.",
+    impact: "350 FTE BOOMERANG",
+    analysis: "Ford Motor Company executes an emergency intake of three hundred fifty veteran engineers after automated design and quality pipelines short circuit.",
     ref: "ARCHIVE_REF_B03 // STATUS: IMMUTABLE",
-    citation: "Noma Security. (2025). ForcedLeak: Prompt injection in Agentforce.",
+    citation: "Business Insider and Forbes Industrial Analysis. (2026).",
     dossierBody: [
-      "VULNERABILITY: Web-to-Lead logic hijacked via jailbreak commands.", 
-      "MECHANISM: Malicious input forced agents to exfiltrate CRM data.", 
-      "VERDICT: Requirement for character-level Zero-Trust logic hardening."
+      "INCIDENT: Automated tools failed to independently predict failure points where mechanical, electrical, and software systems interact.",
+      "FRACTURE: Experienced personnel departed before transferring decades of institutional context into training data pipelines.",
+      "RECOVERY: Emergency influx of three hundred fifty veteran technical specialists deployed to rebuild data schemas and stabilize lines."
     ]
   },
-  "echoleak-vulnerability": {
-    title: "ECHOLEAK ZERO-CLICK",
+  "drive-thru-drift": {
+    title: "DRIVE_THRU DRIFT FAILURE",
     node: "TECHNICAL",
-    impact: "CVSS 9.3 RISK",
-    analysis: "A 'Zero-Click' exploit where a single email hijacked an enterprise AI agent.",
+    impact: "SYSTEM SHUTDOWN",
+    analysis: "McDonalds terminates a massive automated ordering deployment after unvalidated voice inputs corrupt downstream transmission databases.",
     ref: "ARCHIVE_REF_B04 // STATUS: IMMUTABLE",
-    citation: "Aim Security. (2025). EchoLeak: Zero-click prompt injection in M365 Copilot.",
+    citation: "Tech Media Enterprise Disruption Logs. (2026).",
     dossierBody: [
-      "INCIDENT: Copilot hijacked via inbound email summary.", 
-      "MECHANISM: Agent queried OneDrive/SharePoint silently via hidden commands.", 
-      "VERDICT: Ingestion of untrusted data requires a Logic Air-Gap."
+      "INCIDENT: Enterprise exposed a voice processing model directly to raw unstructured public inputs without intermediate abstraction layering.",
+      "FRACTURE: Lacking strict data schema constraints and boundary checking, the system suffered processing failures and added unauthorized items to orders.",
+      "RECOVERY: The pilot was entirely shut down and human cashiers were brought back to secure the data gates."
     ]
   },
-  "lyft-logic-shear": {
-    title: "THE LYFT EARNINGS PHANTOM",
+  "klarna-hybrid-shift": {
+    title: "KLARNA HYBRID_SHIFT CALIBRATION",
     node: "MANAGERIAL",
-    impact: "$2B MARKET VOLATILITY",
-    analysis: "A single-digit logic shear triggered a 60% market cap surge and subsequent collapse.",
+    impact: "60/40 SPLIT SHIFT",
+    analysis: "Klarna restores human recruiting and customer service protocols after automated chat assistants cripple user retention on edge case disputes.",
     ref: "ARCHIVE_REF_B05 // STATUS: IMMUTABLE",
-    citation: "Gizmodo. (2024). Lyft stock surges after 'extra zero' typo.",
+    citation: "Toms Guide and LinkedIn Corporate Communications. (2026).",
     dossierBody: [
-      "INCIDENT: Automated release projected 500bps expansion instead of 50bps.", 
-      "MARKET: Shares surged 67% before live correction caused collapse.", 
-      "VERDICT: Failure of the Fiduciary Kill-Switch gate."
+      "INCIDENT: Automated assistant effectively optimized highly predictable rule rich inputs but completely fractured when hitting complex interactions.",
+      "FRACTURE: Middle management mistook routine automation for complete domain expertise, causing customer experience to suffer severely.",
+      "RECOVERY: Transitioned to a human supervised hybrid structure to handle complex financial disputes requiring human judgment."
     ]
   },
-  "mexico-agency-breach": {
-    title: "CLAUDE_CODE EXFILTRATION",
+  "bot-error-cascade": {
+    title: "BOT ERROR_CASCADE INCIDENT",
     node: "MANAGERIAL",
-    impact: "150GB DATA LOSS",
-    analysis: "Attacker leveraged autonomous coding agents to breach nine government agencies.",
+    impact: "BANK WORKLOAD SPIKE",
+    analysis: "Commonwealth Bank of Australia rescinds redundancies after an automated voice assistant spikes repeat call queue workloads.",
     ref: "ARCHIVE_REF_B06 // STATUS: IMMUTABLE",
-    citation: "Live Science. (2026). Hackers used AI to steal government records.",
+    citation: "The Times of India Operations Desk. (2026).",
     dossierBody: [
-      "INCIDENT: Attacker used AI agents to execute 5,300 remote commands.", 
-      "FRACTURE: Excessive Agency—agents granted high-privilege without oversight.", 
-      "VERDICT: Failure of Agency Segmentation and Managerial Oversight."
+      "INCIDENT: Management assumed a voice bot interface could replace human support lines seamlessly to reduce operational expenses.",
+      "FRACTURE: System was entirely unequipped to resolve complex queries involving multivariable regulatory compliance and client history.",
+      "RECOVERY: Inability to handle edge cases created an immediate processing bottleneck, forcing the bank to rescind staff redundancies."
     ]
   }
 };
@@ -138,30 +137,30 @@ export default function CaseAutopsy() {
               <button onClick={() => setShowDossier(true)} className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-red-600 border-b-2 border-red-600 pb-1 hover:text-black hover:border-black transition-all italic underline-offset-4 font-black">VIEW_DOSSIER // DEEP_DIVE <ExternalLink size={12} /></button>
             </div>
             
-            {/* 🛡️ HARDENED DYNAMIC METHODOLOGY SECTION */}
+            {/* 🛡️ SYSTEM DATA BASELINE EVALUATION */}
             <div className="bg-slate-900/50 border border-slate-800 p-10 md:p-14 shadow-2xl flex flex-col gap-8">
               <div className="flex items-center gap-3 text-slate-500 font-mono text-[10px] font-black uppercase tracking-widest italic">
                 <Scale size={18} /> THE_BMR_LOGIC_BASELINE
               </div>
               <div className="space-y-6">
                 <h4 className="text-2xl font-black text-white italic tracking-tight uppercase">
-                  METHODOLOGY: {active.node === 'EXECUTIVE' ? 'FIDUCIARY_DIVERGENCE' : active.node === 'TECHNICAL' ? 'ARCHITECTURAL_DECAY' : 'MANAGERIAL_OVERSIGHT'}
+                  METHODOLOGY: {active.node === 'EXECUTIVE' ? 'FIDUCIARY_DISPLACEMENT' : active.node === 'TECHNICAL' ? 'INGESTION_BLINDNESS' : 'PROCESS_STRAIN'}
                 </h4>
                 
                 <p className="text-slate-400 text-sm md:text-base leading-relaxed font-black normal-case italic">
                   {active.node === 'EXECUTIVE' && (
-                    "This autopsy utilizes the BMR Forensic Framework to map the distance between board-level fiduciary obligations and autonomous agent output. A logic shear of one percent does not constitute a glitch. It constitutes a systemic liability."
+                    "This autopsy utilizes the BMR Forensic Framework to map the distance between short term corporate downsizing targets and long term operational resilience. Corporate boards miscalculated automation licenses as a clean direct substitute for senior human capital."
                   )}
                   {active.node === 'TECHNICAL' && (
-                    "Analysis focuses on character-level technical hardening and the failure of zero-trust protocols within autonomous environments. We identify fractures where technical optimism overrides documented security baselines."
+                    "Analysis focuses on data lineage degradation and the failure of ingestion abstraction protocols within automated environments. We identify fractures where architectural optimism overrides documented validation schemas."
                   )}
                   {active.node === 'MANAGERIAL' && (
-                    "Evaluation identifies the collapse of human-in-the-loop safeguards. We isolate failure patterns within autonomous privilege segmentation to prevent market volatility before manifestation."
+                    "Evaluation identifies the collapse of human supervision gates. We isolate failure patterns within exception handling and tribal knowledge layers to prevent operational bottlenecks before manifestation."
                   )}
                 </p>
                 
                 <p className="text-slate-400 text-sm md:text-base leading-relaxed font-black normal-case italic">
-                  Standard cybersecurity identifies bugs. BMR identifies <span className="text-red-600 font-black uppercase">Fractures</span>. We execute deep-layer audits to verify alignment between operational reality and technical architecture.
+                  Standard cybersecurity identifies bugs. BMR identifies <span className="text-red-600 font-black uppercase">Fractures</span>. We execute deep layer audits to verify alignment between operational reality and technical architecture.
                 </p>
               </div>
             </div>

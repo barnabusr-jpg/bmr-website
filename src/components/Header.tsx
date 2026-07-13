@@ -10,7 +10,7 @@ export default function Header() {
 
   const navLinks = [ 
     { name: 'THE_FRAMEWORK', href: '/methodology' }, 
-    { name: 'EVIDENCE_VAULT', href: '/briefings' },
+    { name: 'BRIEFING_VAULT', href: '/briefings' },
   ]; 
 
   return ( 

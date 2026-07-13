@@ -10,22 +10,22 @@ export default function EvidenceVault() {
     {
       node: "EXECUTIVE",
       cases: [
-        { id: "CASE_01", title: "EXECUTIVE VARIANCE", slug: "chatbot-liability", summary: "The Air Canada Precedent regarding autonomous agent liability." },
-        { id: "CASE_04", title: "FIDUCIARY SHEAR", slug: "fiduciary-gate-failure", summary: "UnitedHealth Fiduciary Failure and algorithmic supplantation." },
+        { id: "CASE_01", title: "FIDUCIARY REGRET", slug: "fiduciary-regret", summary: "Analysis of corporate operational setbacks following aggressive automated workforce downsizing." },
+        { id: "CASE_04", title: "SYSTEM OVERESTIMATION", slug: "system-overestimation", summary: "Technology providers reverse rapid position reductions to patch severe system outage vulnerabilities." },
       ]
     },
     {
       node: "TECHNICAL",
       cases: [
-        { id: "CASE_02", title: "FORCEDLEAK AGENT", slug: "salesforce-failure", summary: "Investigating Agentforce exfiltration bypass vulnerabilities." },
-        { id: "CASE_05", title: "ZERO-CLICK DRIFT", slug: "echoleak-vulnerability", summary: "Copilot M365 exfiltration via untrusted data ingestion." },
+        { id: "CASE_02", title: "FORD GRAY_BEARD", slug: "ford-gray-beard", summary: "Emergency deployment of three hundred fifty veteran engineers to manually reconstruct broken design pipelines." },
+        { id: "CASE_05", title: "DRIVE_THRU DRIFT", slug: "drive-thru-drift", summary: "Termination of automated lane trials after uninsulated raw voice data corrupts transactional menus." },
       ]
     },
     {
       node: "MANAGERIAL",
       cases: [
-        { id: "CASE_03", title: "LOGIC SHEAR", slug: "lyft-logic-shear", summary: "Lyft $2B market volatility triggered by automated reporting error." },
-        { id: "CASE_06", title: "EXCESSIVE AGENCY", slug: "mexico-agency-breach", summary: "Mexico 150GB government breach via autonomous coding overreach." }
+        { id: "CASE_03", title: "KLARNA HYBRID_SHIFT", slug: "klarna-hybrid-shift", summary: "Restructuring of customer service protocols after automated deployment fractures retention metrics." },
+        { id: "CASE_06", title: "BOT ERROR_CASCADE", slug: "bot-error-cascade", summary: "Rescinded staff redundancies following call queue volume surges caused by voice bot limitations." }
       ]
     }
   ];
@@ -39,17 +39,13 @@ export default function EvidenceVault() {
         <div className="flex flex-col md:flex-row justify-between items-end mb-24 border-b-2 border-slate-900 pb-12 italic">
           <div className="border-l-4 border-red-600 pl-8 font-black italic">
             <h1 className="text-6xl md:text-9xl font-black uppercase tracking-tighter leading-none italic">
-              EVIDENCE <br /><span className="text-red-600 italic">VAULT.</span>
+              BRIEFING <br /><span className="text-red-600 italic">VAULT.</span>
             </h1>
           </div>
           <Lock className="text-slate-900 opacity-20 hidden md:block mb-4" size={120} />
         </div>
 
-        {/* 🛡️ COLUMN LOCK PROTECTION:
-            This creates 3 vertical columns. Cases stack inside these columns.
-            Mobile: Stacks the columns (Executive first, then Technical, then Managerial).
-            Desktop: Displays 3 distinct vertical silos.
-        */}
+        {/* --- THREE COLUMN SILO GRID --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 italic items-start">
           {categories.map((cat) => (
             <div key={cat.node} className="flex flex-col gap-8 italic">
