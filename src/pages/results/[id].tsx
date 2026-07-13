@@ -262,7 +262,7 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
-        {/* FIX #4: BIND BOTH NARRATIVES TO DATABASE RATHER THAN QUERY FALLBACKS */}
+        {/* FIX #4: DIRECTLY SYNC BOTH TEXT LABELS EXCLUSIVELY TO REALTIME TABLE STATE */}
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
@@ -318,7 +318,7 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
-            {/* FIX #1: SWAP COMPLETED_AT TO ANCHOR TO PERMANENT HISTORICAL CREATED_AT TIMESTAMP */}
+            {/* FIX #1: STABILIZE VELOCITY BY BINDING TICKER TO PERMANENT HISTORICAL CREATED_AT TIMESTAMP */}
             <RealTimeLossTicker 
               diagnosticCompletedAt={audit.created_at} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
@@ -338,8 +338,8 @@ export default function UnifiedResultsPortal() {
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass pack}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}` pack}>SYSTEMIC OPERATIONAL DRAG TAX</span>
+            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
 
@@ -373,10 +373,11 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* 🔒 VIEW A: Admin Command Strip */}
-        {verifyIsAdminView ? (
+        {/* Admin Command Strip Container */}
+        {verifyIsAdminView && (
           <div className="pt-6 border-t border-slate-900/60 mt-8 space-y-6">
-            {/* FIX #2: TELEMETRY ACCESS UTILITY STRIP TO INSTANTLY COPY / MANUALLY RECOVER LOST LINKS */}
+            
+            {/* FIX #2: LINK RECOVERY & ON-SCREEN TELEMETRY DISPATCH STRIP */}
             <div className="bg-slate-950 border-2 border-dashed border-red-600/20 p-6 font-mono text-left">
               <span className="text-[9px] tracking-widest text-red-500 font-black block uppercase mb-1.5">// ADMINISTRATIVE RECOVERY SYSTEM</span>
               <p className="text-xs text-slate-400 normal-case mb-4 font-medium font-sans">Use this terminal segment to grab missing intake endpoints directly during a live consultation without deploying a clean notification sequence.</p>
@@ -392,6 +393,45 @@ export default function UnifiedResultsPortal() {
               </div>
             </div>
 
+            {/* FIX #3: SECURE LIVE CONSULTATION PLAYBOOK SCRIPT DISPATCH OVERLAY */}
+            <div className="bg-slate-950 border border-slate-900 p-8 font-mono text-left">
+              <div className="border-b border-slate-900 pb-3 mb-6">
+                <span className="text-[9px] tracking-widest text-amber-500 font-black block uppercase">// LIVE CONSULTATION PLAYBOOK DISPATCH</span>
+                <h4 className="text-lg font-black text-white italic tracking-tight mt-1">CORE PERSONA DISCOVERY LENSES</h4>
+                <p className="text-[11px] text-slate-500 normal-case font-sans mt-1">Execute these hard-targeted diagnostic vectors at the tail-end of Call 1 immediately following the presentation of the primary System Verdict.</p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans text-xs normal-case font-medium">
+                {/* Lens 1 */}
+                <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
+                  <span className="text-[9px] font-mono tracking-widest text-red-500 font-black block uppercase">// 1. THE STRATEGIC LENS (C-SUITE / BOARD LIABILITY)</span>
+                  <div className="space-y-2 text-slate-300">
+                    <p><strong>Q1:</strong> "When you look at your annual automation expenditure, what percentage of that capital do you estimate is currently leaking into repetitive, unbudgeted maintenance cycles?"</p>
+                    <p className="pt-2 border-t border-slate-900/50"><strong>Q2:</strong> "If an automated data transformation or pipeline failure causes an unhedged operational exposure today, how long does it take for that risk to surface at the board or executive governance layer?"</p>
+                  </div>
+                </div>
+
+                {/* Lens 2 */}
+                <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
+                  <span className="text-[9px] font-mono tracking-widest text-blue-400 font-black block uppercase">// 2. THE PIPELINE ENGINEERING LENS (DARRYL / INFRASTRUCTURE)</span>
+                  <div className="space-y-2 text-slate-300">
+                    <p><strong>Q1:</strong> "How frequently do unannounced third-party API mutations or silent schema transformations break your downstream data integrity? Is it a daily firefight or an intermittent weekly drift?"</p>
+                    <p className="pt-2 border-t border-slate-900/50"><strong>Q2:</strong> "What is your primary data ingestion framework right now—are you relying on event-driven streaming runtimes, or scheduled cloud-bucket batch pipelines?"</p>
+                  </div>
+                </div>
+
+                {/* Lens 3 */}
+                <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
+                  <span className="text-[9px] font-mono tracking-widest text-purple-400 font-black block uppercase">// 3. THE OPERATIONAL MANAGEMENT LENS (TEAM SHADOW LABOR)</span>
+                  <div className="space-y-2 text-slate-300">
+                    <p><strong>Q1:</strong> "What percentage of your core engineering team's capacity is being burned on 'shadow labor'—meaning they are manually repeating repairs and nursing broken integrations instead of building new velocity?"</p>
+                    <p className="pt-2 border-t border-slate-900/50"><strong>Q2:</strong> "When a critical structural fracture happens, do your teams have documented, immutable recovery runbooks, or are you heavily reliant on undocumented tribal knowledge to patch the system?"</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Core Action Strip */}
             <div>
               <span className="text-[9px] font-mono text-slate-500 block mb-3 tracking-widest">// ADMINISTRATOR CONTROLS SYSTEM</span>
               <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
@@ -426,17 +466,17 @@ export default function UnifiedResultsPortal() {
               </div>
             </div>
           </div>
-        ) : (
+        )}
+
+        {!verifyIsAdminView && !isPhaseTwoActive && (
           /* 🌐 VIEW B: Public Customer Landing Call-To-Action */
-          !isPhaseTwoActive && (
-            <div 
-              className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
-              onClick={fireBriefingSequence}
-            >
-              <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
-              <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
-            </div>
-          )
+          <div 
+            className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
+            onClick={fireBriefingSequence}
+          >
+            <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
+            <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
+          </div>
         )}
       </main>
     </div>
