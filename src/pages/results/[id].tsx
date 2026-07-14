@@ -222,6 +222,14 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
+  // 🛰️ DYNAMIC TRIANGULATION CALIBRATION TARGET LINK ROUTER (30-MINUTE CALIBRATION BLOCK)
+  const fireTriangulationCalibrationSequence = () => {
+    const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
+    const baseCalibrationUrl = "https://calendly.com/hello-bmradvisory/systems-triangulation-calibration";
+    const specializedUrl = clientEmail ? `${baseCalibrationUrl}?email=${clientEmail}` : baseCalibrationUrl;
+    window.open(specializedUrl, "_blank");
+  };
+
   // 🛡️ CRITICAL GATE: Prevents render math until data arrives
   if (!mounted || loading || !router.isReady || !audit) {
     return (
@@ -251,7 +259,7 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
-        {/* FIX #4: DIRECTLY SYNC BOTH TEXT LABELS EXCLUSIVELY TO REALTIME TABLE STATE */}
+        {/* DIRECT SYNC BOTH TEXT LABELS EXCLUSIVELY TO REALTIME TABLE STATE */}
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
@@ -261,6 +269,32 @@ export default function UnifiedResultsPortal() {
             }
           </p>
         </div>
+
+        {/* 🛰️ REAL-TIME TRIANGULATION PROGRESS GATE */}
+        {audit?.status?.toUpperCase() === 'TRIANGULATION_ACTIVE' && (
+          <div className="bg-slate-950 border border-amber-600/30 p-6 font-mono text-left space-y-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span className="text-[10px] tracking-widest text-amber-500 font-black uppercase">
+                // ACTIVE SYSTEM TRIANGULATION DETECTED
+              </span>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans normal-case">
+              <p className="text-xs text-slate-300 max-w-3xl font-medium leading-relaxed">
+                Your telemetry tracks are currently processing. Please remind your team operators to review their email folders and complete their configuration inputs. You must select the calendar connection terminal to lock in your verification review session now.
+              </p>
+              <button 
+                onClick={fireTriangulationCalibrationSequence}
+                className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-[10px] font-mono tracking-widest px-5 py-3 uppercase font-black shrink-0 self-start md:self-auto cursor-pointer transition-all"
+              >
+                Lock Calibration Date
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className={`bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
@@ -307,7 +341,6 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
-            {/* FIX #1: STABILIZE VELOCITY BY BINDING TICKER TO PERMANENT HISTORICAL CREATED_AT TIMESTAMP */}
             <RealTimeLossTicker 
               diagnosticCompletedAt={audit.created_at} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
@@ -366,7 +399,7 @@ export default function UnifiedResultsPortal() {
         {verifyIsAdminView && (
           <div className="pt-6 border-t border-slate-900/60 mt-8 space-y-6">
             
-            {/* FIX #2: AUTOMATED DIAGNOSTIC RETRANSMISSION ENGINE */}
+            {/* AUTOMATED DIAGNOSTIC RETRANSMISSION ENGINE */}
             <div className="bg-slate-950 border-2 border-dashed border-red-600/20 p-6 font-mono text-left">
               <span className="text-[9px] tracking-widest text-red-500 font-black block uppercase mb-1.5">// ADMINISTRATIVE RECOVERY SYSTEM</span>
               <p className="text-xs text-slate-400 normal-case mb-4 font-medium font-sans">Automatically re-transmit the secure access link to the target stakeholder's inbox without leaving the workspace presentation.</p>
@@ -387,7 +420,7 @@ export default function UnifiedResultsPortal() {
                         body: JSON.stringify({ auditId: audit?.id || id }),
                       });
                       if (!res.ok) throw new Error();
-                      setCopiedLink(true); // Re-uses our temporary feedback state
+                      setCopiedLink(true); 
                       setTimeout(() => setCopiedLink(false), 3000);
                     } catch (err) {
                       alert("METRIC EXCEPTION: Re-transmission pathway obstructed.");
@@ -405,7 +438,7 @@ export default function UnifiedResultsPortal() {
               </div>
             </div>
 
-            {/* FIX #3: SECURE LIVE CONSULTATION PLAYBOOK SCRIPT DISPATCH OVERLAY */}
+            {/* SECURE LIVE CONSULTATION PLAYBOOK SCRIPT DISPATCH OVERLAY */}
             <div className="bg-slate-950 border border-slate-900 p-8 font-mono text-left">
               <div className="border-b border-slate-900 pb-3 mb-6">
                 <span className="text-[9px] tracking-widest text-amber-500 font-black block uppercase">// LIVE CONSULTATION PLAYBOOK DISPATCH</span>
@@ -493,4 +526,4 @@ export default function UnifiedResultsPortal() {
       </main>
     </div>
   );
-}
+}Committ verbiage
