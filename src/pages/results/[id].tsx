@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Lock, Unlock, Activity, Copy, Check } from "lucide-react";
+import { Lock, Unlock, Activity, Check } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
@@ -222,17 +222,6 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
-  const handleCopyLinkRecovery = () => {
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    const path = `/diagnostic/forensic?code=${audit?.id || id}`;
-    const fullRecoveryUrl = `${protocol}//${host}${path}`;
-    
-    navigator.clipboard.writeText(fullRecoveryUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
-  };
-
   // 🛡️ CRITICAL GATE: Prevents render math until data arrives
   if (!mounted || loading || !router.isReady || !audit) {
     return (
@@ -377,18 +366,41 @@ export default function UnifiedResultsPortal() {
         {verifyIsAdminView && (
           <div className="pt-6 border-t border-slate-900/60 mt-8 space-y-6">
             
-            {/* FIX #2: LINK RECOVERY & ON-SCREEN TELEMETRY DISPATCH STRIP */}
+            {/* FIX #2: AUTOMATED DIAGNOSTIC RETRANSMISSION ENGINE */}
             <div className="bg-slate-950 border-2 border-dashed border-red-600/20 p-6 font-mono text-left">
               <span className="text-[9px] tracking-widest text-red-500 font-black block uppercase mb-1.5">// ADMINISTRATIVE RECOVERY SYSTEM</span>
-              <p className="text-xs text-slate-400 normal-case mb-4 font-medium font-sans">Use this terminal segment to grab missing intake endpoints directly during a live consultation without deploying a clean notification sequence.</p>
-              <div className="flex items-center gap-4 bg-black border border-slate-900 p-4 justify-between">
-                <span className="text-white text-xs font-black uppercase tracking-tight">Active Core Link Path:</span>
+              <p className="text-xs text-slate-400 normal-case mb-4 font-medium font-sans">Automatically re-transmit the secure access link to the target stakeholder's inbox without leaving the workspace presentation.</p>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-black border border-slate-900 p-4 justify-between">
+                <div className="flex flex-col">
+                  <span className="text-white text-xs font-black uppercase tracking-tight">Registered Recipient Email:</span>
+                  <span className="text-slate-500 font-mono text-xs lowercase select-all break-all tracking-tight font-bold mt-1">
+                    {audit?.lead_email || "No email bound to dossier state."}
+                  </span>
+                </div>
                 <button 
-                  onClick={handleCopyLinkRecovery}
-                  className="bg-red-600 hover:bg-white hover:text-black text-white font-black px-5 py-2 text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer border border-red-600"
+                  disabled={!audit?.lead_email}
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/resend-verdict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ auditId: audit?.id || id }),
+                      });
+                      if (!res.ok) throw new Error();
+                      setCopiedLink(true); // Re-uses our temporary feedback state
+                      setTimeout(() => setCopiedLink(false), 3000);
+                    } catch (err) {
+                      alert("METRIC EXCEPTION: Re-transmission pathway obstructed.");
+                    }
+                  }}
+                  className={`font-black px-5 py-3 text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer border shrink-0 ${
+                    copiedLink 
+                      ? "bg-green-600 border-green-600 text-white" 
+                      : "bg-red-600 border-red-600 text-white hover:bg-white hover:text-black"
+                  } ${!audit?.lead_email ? "opacity-30 cursor-not-allowed pointer-events-none" : ""}`}
                 >
-                  {copiedLink ? <Check size={12} /> : <Copy size={12} />}
-                  {copiedLink ? "COPIED SIGNAL" : "COPY CONFIG ROUTE"}
+                  {copiedLink ? <Check size={12} /> : <Activity size={12} className={copiedLink ? "" : "animate-pulse"} />}
+                  {copiedLink ? "EMAIL SENT SUCCESSFULLY" : "AUTO-RESEND LINK"}
                 </button>
               </div>
             </div>
