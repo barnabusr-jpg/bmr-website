@@ -173,8 +173,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     <p style="font-size: 10px; color: #475569; border-top: 1px solid #1e293b; padding-top: 20px;">
                       Confidential System Transmission // Secure Infrastructure Validation Link
                     </p>
-                    
-                  </div>
+      
                 </td>
               </tr>
             </table>
