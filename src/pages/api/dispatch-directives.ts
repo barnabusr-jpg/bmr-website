@@ -10,9 +10,9 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Helper Engine: Converts "WEDENSDAY_MORNING_TEST" into "Wedensday Morning Test"
+// Helper Engine: Converts organization names into clear title case formats
 function toSentenceCase(str: string): string {
-  if (!str) return 'Your company';
+  if (!str) return 'Your Organization';
   const clean = str.replace(/_/g, ' ').toLowerCase().trim();
   return clean.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
@@ -118,60 +118,125 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
-      emailPromises.push(sgMail.send({
-        to: targetEmail,
-        from: {
-          name: "BMR SOLUTIONS",
-          email: FROM_EMAIL
-        },
-        subject: `ACTION REQUIRED: ${standardizedRole} Forensic Node Authorized // ${orgName}`,
-        html: `
-          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
-            <tr>
-              <td align="center" style="padding: 40px 20px;">
-                <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-transform: uppercase;">
-                  <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                    <tr>
-                      <td align="left" style="text-align: left;">
-                        <h2 style="color: #dc2626; font-family: monospace; font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 1px;">
-                          BMR Solutions // Systems Audit Engine
-                        </h2>
-                        <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase;">
-                          Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
-                        </p>
-                        <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
-                        
-                        <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0; text-transform: none;">
-                          <strong>${prettyCompany} leadership</strong> recently started a diagnostic project with BMR Solutions. This project is designed to evaluate your technology investments. The goal is to identify operational waste, uncover structural errors, and discover hidden costs within your AI systems.
-                        </p>
-                        
-                        <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0; text-transform: none;">
-                          To complete this system review, we require independent feedback from different departments. You are designated as the representative for the <strong>${standardizedRole} Node</strong>. When you select the verification link below, the system will open your specific questionnaire module. Thank you for your attention and support in this matter.
-                        </p>
-                        <p style="font-family: monospace; line-height: 1.6; font-size: 14px; color: #ffffff; margin: 0 0 30px 0;">
-                          Your personal access code is: <span style="color: #dc2626; font-weight: bold;">${code}</span>
-                        </p>
-                        <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 30px; margin-bottom: 40px;">
-                          <tr>
-                            <td align="left">
-                              <a href="${diagnosticLink}" target="_blank" style="background: #dc2626; color: #ffffff; padding: 18px 30px; text-decoration: none; font-weight: bold; display: inline-block; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; border: 1px solid #dc2626;">
-                                Open Diagnostic Module →
-                              </a>
-                            </td>
-                          </tr>
-                        </table>
-                        <p style="font-family: monospace; font-size: 10px; color: #475569; margin: 40px 0 0 0; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: uppercase;">
-                          Confidential // BMR Solutions Stakeholder Secure Connection
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
-                </div>
-              </td>
-            </tr>
-          </table>
-        `
-      }));
+      if (standardizedRole === 'EXECUTIVE') {
+        // DISPATCH ONE: High Impact Consolidated Executive Calibration Email Flow
+        emailPromises.push(sgMail.send({
+          to: targetEmail,
+          from: {
+            name: "BMR SOLUTIONS",
+            email: FROM_EMAIL
+          },
+          subject: `ACTION REQUIRED: Triangulation Protocol Initialization // ${orgName}`,
+          html: `
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
+              <tr>
+                <td align="center" style="padding: 40px 20px;">
+                  <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-transform: uppercase;">
+                    
+                    <h2 style="color: #dc2626; font-size: 18px; font-weight: 900; margin: 0 0 5px 0;">BMR Solutions // Diagnostic Node Dispatch</h2>
+                    <p style="font-size: 10px; color: #64748b; margin: 0 0 20px 0;">Target System: ${orgName}</p>
+                    
+                    <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
+                    
+                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
+                      We have successfully initialized the three hundred and sixty degree triangulation protocol for your organization. This process requires inputs from three distinct layers of your team.
+                    </p>
+
+                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
+                      We have sent separate diagnostic tracks to your managerial and engineering operators. Please instruct those leads to check their email folders for their direct links. Because automated security filters can redirect these links, ask them to inspect their spam folders.
+                    </p>
+
+                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 25px 0; font-family: sans-serif;">
+                      To proceed, you must complete your setup process using the two secure system links below:
+                    </p>
+
+                    <!-- STEP 1: Executive Assessment Track -->
+                    <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 20px; text-align: left;">
+                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 1: Complete Your Diagnostic Track</p>
+                      <a href="${diagnosticLink}" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
+                        Open Executive Assessment Track →
+                      </a>
+                    </div>
+
+                    <!-- STEP 2: Calendar Booking -->
+                    <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
+                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 2: Secure Calibration Date</p>
+                      <a href="https://calendly.com/hello-bmradvisory/systems-triangulation-calibration" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
+                        Lock Calibration Session on Calendar →
+                      </a>
+                    </div>
+
+                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
+                      Your chosen calibration date will establish the timeline for your operators to submit their telemetry. We look forward to analyzing your custom systems map.
+                    </p>
+                    
+                    <p style="font-size: 10px; color: #475569; border-top: 1px solid #1e293b; padding-top: 20px;">
+                      Confidential System Transmission // Secure Infrastructure Validation Link
+                    </p>
+                    
+                  </div>
+                </td>
+              </tr>
+            </table>
+          `
+        }));
+      } else {
+        // DISPATCH TWO: Standalone Standard Operator Notification Assets
+        emailPromises.push(sgMail.send({
+          to: targetEmail,
+          from: {
+            name: "BMR SOLUTIONS",
+            email: FROM_EMAIL
+          },
+          subject: `ACTION REQUIRED: ${standardizedRole} Forensic Node Authorized // ${orgName}`,
+          html: `
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
+              <tr>
+                <td align="center" style="padding: 40px 20px;">
+                  <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-transform: uppercase;">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                      <tr>
+                        <td align="left" style="text-align: left;">
+                          <h2 style="color: #dc2626; font-family: monospace; font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 1px;">
+                            BMR Solutions // Systems Audit Engine
+                          </h2>
+                          <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase;">
+                            Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
+                          </p>
+                          <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
+                          
+                          <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0; text-transform: none;">
+                            <strong>${prettyCompany} leadership</strong> recently started a diagnostic project with BMR Solutions. This project is designed to evaluate your technology investments. The goal is to identify operational waste, uncover structural errors, and discover hidden costs within your AI systems.
+                          </p>
+                          
+                          <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0; text-transform: none;">
+                            To complete this system review, we require independent feedback from different departments. You are designated as the representative for the <strong>${standardizedRole} Node</strong>. When you select the verification link below, the system will open your specific questionnaire module. Thank you for your attention and support in this matter.
+                          </p>
+                          <p style="font-family: monospace; line-height: 1.6; font-size: 14px; color: #ffffff; margin: 0 0 30px 0;">
+                            Your personal access code is: <span style="color: #dc2626; font-weight: bold;">${code}</span>
+                          </p>
+                          <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 30px; margin-bottom: 40px;">
+                            <tr>
+                              <td align="left">
+                                <a href="${diagnosticLink}" target="_blank" style="background: #dc2626; color: #ffffff; padding: 18px 30px; text-decoration: none; font-weight: bold; display: inline-block; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; border: 1px solid #dc2626;">
+                                  Open Diagnostic Module →
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+                          <p style="font-family: monospace; font-size: 10px; color: #475569; margin: 40px 0 0 0; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: uppercase;">
+                            Confidential // BMR Solutions Stakeholder Secure Connection
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          `
+        }));
+      }
     }
 
     const { data: allOperators, error: queryError } = await supabaseAdmin
