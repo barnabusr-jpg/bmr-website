@@ -36,14 +36,20 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    // Robust date fallback: If created_at is missing or invalid, use 2 hours ago as a baseline
+    // 🛡️ CRITICAL ADMIN FALLBACK:
+    // If the database has an empty or invalid "created_at" timestamp,
+    // establish a fallback anchor of 2 hours ago to ensure the counter ticks immediately.
     let baselineAnchorTime = Date.now() - (120 * 60 * 1000); 
     
-    if (diagnosticCompletedAt && !isNaN(Date.parse(diagnosticCompletedAt))) {
-      baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
+    if (diagnosticCompletedAt) {
+      const parsedDate = Date.parse(diagnosticCompletedAt);
+      if (!isNaN(parsedDate)) {
+        baselineAnchorTime = parsedDate;
+      }
     }
 
-    const validExposure = exposure && !isNaN(exposure) ? exposure : 0;
+    // Fallback exposure calculation: Ensure we never compute with 0 or NaN values
+    const validExposure = exposure && !isNaN(exposure) && exposure > 0 ? exposure : 280000;
     const lossPerSecond = (validExposure / 31536000) * severityVelocityMultiplier;
 
     let animationFrameId: number;
@@ -246,10 +252,20 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
-  // 🛰️ DYNAMIC TRIANGULATION CALIBRATION TARGET LINK ROUTER (30-MINUTE CALIBRATION BLOCK)
+  // 🛰️ DYNAMIC TRIANGULATION / QUAD-NODE CALIBRATION TARGET LINK ROUTER
   const fireTriangulationCalibrationSequence = () => {
     const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
-    const baseCalibrationUrl = "https://calendly.com/hello-bmradvisory/systems-triangulation-calibration";
+    
+    // Checks both url queries and database states to verify if this is a Quad-Node session
+    const isQuadNode = 
+      router.query.type?.toString().toLowerCase() === 'quad' || 
+      audit?.audit_type?.toString().toLowerCase() === 'quad' ||
+      audit?.status?.toUpperCase() === 'QUAD_ACTIVE';
+
+    const baseCalibrationUrl = isQuadNode
+      ? "https://calendly.com/hello-bmradvisory/quad-node-calibration"
+      : "https://calendly.com/hello-bmradvisory/systems-triangulation-calibration";
+
     const specializedUrl = clientEmail ? `${baseCalibrationUrl}?email=${clientEmail}` : baseCalibrationUrl;
     window.open(specializedUrl, "_blank");
   };
