@@ -139,41 +139,58 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
                     
                     <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      We have successfully initialized the three hundred and sixty degree triangulation protocol for your organization. This process requires inputs from three distinct layers of your team.
+                      The 360-degree triangulation protocol for your organization is underway.
                     </p>
 
                     <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      We have sent separate diagnostic tracks to your managerial and engineering operators. Please instruct those leads to check their email folders for their direct links. Because automated security filters can redirect these links, ask them to inspect their spam folders.
+                      Invitation emails have been sent to the designated recipients. These messages may be routed to spam or junk folders, so please ensure you and your team check for an email from BMR Solutions.
                     </p>
 
                     <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 25px 0; font-family: sans-serif;">
-                      To proceed, you must complete your setup process using the two secure system links below:
+                      To keep the process moving, please complete the following steps:
                     </p>
 
-                    <!-- STEP 1: Executive Assessment Track -->
+                    <!-- STEP 1: Find your email -->
                     <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 20px; text-align: left;">
-                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 1: Complete Your Diagnostic Track</p>
+                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 1: Find your email</p>
+                      <p style="margin: 0 0 15px 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
+                        Use the provided link to begin your strategic assessment module.
+                      </p>
                       <a href="${diagnosticLink}" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
                         Open Executive Assessment Track →
                       </a>
                     </div>
 
-                    <!-- STEP 2: Calendar Booking -->
+                    <!-- STEP 2: Remind your team -->
                     <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
-                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 2: Secure Calibration Date</p>
+                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 2: Remind your team</p>
+                      <p style="margin: 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
+                        Check all email folders, including spam, for their direct links and to complete their assessments promptly.
+                      </p>
+                    </div>
+
+                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
+                      Please use the secure link below to schedule your calibration follow-up meeting:
+                    </p>
+
+                    <!-- STEP 3: Calibration Scheduling Link -->
+                    <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
                       <a href="https://calendly.com/hello-bmradvisory/systems-triangulation-calibration" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
-                        Lock Calibration Session on Calendar →
+                        Schedule Calibration Meeting →
                       </a>
                     </div>
 
                     <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      Your chosen calibration date will establish the timeline for your operators to submit their telemetry. We look forward to analyzing your custom systems map.
+                      Looking forward to analyzing your custom systems map.
                     </p>
                     
-                    <p style="font-size: 10px; color: #475569; border-top: 1px solid #1e293b; padding-top: 20px;">
-                      Confidential System Transmission // Secure Infrastructure Validation Link
+                    <p style="font-size: 11px; color: #475569; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: none; font-family: sans-serif;">
+                      Sincerely,<br/>
+                      Barnabus<br/>
+                      <strong>BMR Solutions</strong>
                     </p>
-      
+                    
+                  </div>
                 </td>
               </tr>
             </table>
