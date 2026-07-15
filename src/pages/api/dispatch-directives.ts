@@ -186,7 +186,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     
                     <p style="font-size: 11px; color: #475569; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: none; font-family: sans-serif;">
                       Sincerely,<br/>
-                      Barnabus<br/>
                       <strong>BMR Solutions</strong>
                     </p>
                     
