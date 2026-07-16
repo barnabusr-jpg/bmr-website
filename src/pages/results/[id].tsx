@@ -6,7 +6,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
 interface LossTickerProps { 
-  diagnosticCompletedAt: string; 
+  diagnosticCompletedAt: string | null | undefined; 
   exposure: number;
   anomalies: Array<{ severity: string }>;
   isArchived: boolean; 
@@ -20,7 +20,7 @@ function RealTimeLossTicker({
   isArchived
 }: LossTickerProps) {
   const displayRef = useRef<HTMLDivElement>(null);
-  const frozenLossRef = useRef<number | null>(null);
+  const runningTotalRef = useRef<number>(0);
 
   // Compute velocity multiplier based on telemetry anomalies
   const severityVelocityMultiplier = useMemo(() => {
@@ -35,46 +35,29 @@ function RealTimeLossTicker({
     return multiplier;
   }, [anomalies]);
 
-  // Keep a stable, lazy fallback baseline locally inside this instance to prevent shifting on re-mounts
-  const fallbackAnchor = useRef<number | null>(null);
-
   useEffect(() => {
-    // 🛡️ IMMUTABLE TIMELINE ANCHOR PROTOCOL:
-    // Ensure the baseline start time matches the database record's creation date exactly, 
-    // eliminating any dynamic sliding windows that cause the timer to restart on page changes.
-    let baselineAnchorTime: number;
-
-    if (diagnosticCompletedAt) {
-      const parsedDate = new Date(diagnosticCompletedAt).getTime();
-      if (!isNaN(parsedDate) && parsedDate > 0) {
-        baselineAnchorTime = parsedDate;
-      } else {
-        if (!fallbackAnchor.current) {
-          fallbackAnchor.current = Date.now() - (120 * 60 * 1000);
-        }
-        baselineAnchorTime = fallbackAnchor.current;
-      }
-    } else {
-      if (!fallbackAnchor.current) {
-        fallbackAnchor.current = Date.now() - (120 * 60 * 1000);
-      }
-      baselineAnchorTime = fallbackAnchor.current;
-    }
-
-    // Fallback exposure calculation: Ensure we never compute with 0 or NaN values
+    // Determine a solid historical base timestamp string from the database row
+    const targetTimestamp = diagnosticCompletedAt || new Date("2026-07-15T12:00:00.000Z").toISOString();
+    const baselineAnchorTime = new Date(targetTimestamp).getTime();
+    
+    // Calculate values cleanly
     const validExposure = exposure && !isNaN(exposure) && exposure > 0 ? exposure : 280000;
     const lossPerSecond = (validExposure / 31536000) * severityVelocityMultiplier;
 
-    let animationFrameId: number;
+    // 🔒 ANCHOR FIX: Calculate exactly how much loss accumulated *historically* 
+    // up to the exact moment this file instance was opened.
+    const initialAccumulatedLoss = Math.max(0, (Date.now() - baselineAnchorTime) / 1000) * lossPerSecond;
+    
+    // Assign that accumulated value to our persistent state ref so it never resets down to $0.00
+    runningTotalRef.current = initialAccumulatedLoss;
 
-    const updateTicker = () => {
+    let animationFrameId: number;
+    let lastTimestamp = performance.now();
+
+    const updateTicker = (now: number) => {
       if (isArchived) {
-        if (frozenLossRef.current === null) {
-          const elapsed = Math.max(0, (Date.now() - baselineAnchorTime) / 1000);
-          frozenLossRef.current = elapsed * lossPerSecond;
-        }
         if (displayRef.current) {
-          displayRef.current.textContent = `$${frozenLossRef.current.toLocaleString(undefined, {
+          displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2,
           })}`;
@@ -82,14 +65,17 @@ function RealTimeLossTicker({
         return;
       }
 
-      // Reset archive anchor
-      frozenLossRef.current = null;
+      // Progressively increment total count using high-performance frame deltas 
+      // instead of checking dynamic system clocks
+      const deltaSeconds = (now - lastTimestamp) / 1000;
+      lastTimestamp = now;
 
-      const elapsedSeconds = Math.max(0, (Date.now() - baselineAnchorTime) / 1000);
-      const dynamicAccumulatedLoss = elapsedSeconds * lossPerSecond;
+      if (deltaSeconds > 0 && deltaSeconds < 1) {
+        runningTotalRef.current += deltaSeconds * lossPerSecond;
+      }
 
       if (displayRef.current) {
-        displayRef.current.textContent = `$${dynamicAccumulatedLoss.toLocaleString(undefined, {
+        displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2,
         })}`;
@@ -98,9 +84,7 @@ function RealTimeLossTicker({
       animationFrameId = requestAnimationFrame(updateTicker);
     };
 
-    // Initialize high-velocity loop
     animationFrameId = requestAnimationFrame(updateTicker);
-
     return () => cancelAnimationFrame(animationFrameId);
   }, [diagnosticCompletedAt, exposure, severityVelocityMultiplier, isArchived]);
 
@@ -207,7 +191,6 @@ export default function UnifiedResultsPortal() {
 
   // 📝 CLEANED PLACEHOLDER TEXT DATA STRINGS WITH ROBUST BASELINE FALLBACKS
   const genericAnomalies: AnomalyNode[] = useMemo(() => {
-    // Falls back to a safe layout baseline value of $180k if metrics evaluate to zero during staging previews
     const pool = metrics.totalLaborTaxPool > 0 ? metrics.totalLaborTaxPool : 180000;
     
     return [
@@ -265,11 +248,9 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
-  // 🛰️ DYNAMIC TRIANGULATION / QUAD-NODE CALIBRATION TARGET LINK ROUTER
   const fireTriangulationCalibrationSequence = () => {
     const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
     
-    // Checks both url queries and database states to verify if this is a Quad-Node session
     const isQuadNode = 
       router.query.type?.toString().toLowerCase() === 'quad' || 
       audit?.audit_type?.toString().toLowerCase() === 'quad' ||
@@ -283,7 +264,6 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
-  // 🛡️ CRITICAL GATE: Prevents render math until data arrives
   if (!mounted || loading || !router.isReady || !audit) {
     return (
       <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
@@ -307,7 +287,6 @@ export default function UnifiedResultsPortal() {
         {isPhaseTwoActive && (
           <button 
             onClick={() => {
-              // Appends all current active router query overrides directly to the PDF generation compiler URL
               const queryParams = new URLSearchParams(window.location.search);
               if (!queryParams.has("id") && id) {
                 queryParams.set("id", id as string);
@@ -322,7 +301,6 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
-        {/* DIRECT SYNC BOTH TEXT LABELS EXCLUSIVELY TO REALTIME TABLE STATE */}
         <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
@@ -333,7 +311,6 @@ export default function UnifiedResultsPortal() {
           </p>
         </div>
 
-        {/* 🛰️ REAL-TIME TRIANGULATION PROGRESS GATE */}
         {audit?.status?.toUpperCase() === 'TRIANGULATION_ACTIVE' && (
           <div className="bg-slate-950 border border-amber-600/30 p-6 font-mono text-left space-y-4 shadow-xl">
             <div className="flex items-center gap-3">
@@ -405,10 +382,10 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             <RealTimeLossTicker 
-              diagnosticCompletedAt={audit?.created_at || audit?.diagnostic_completed_at || new Date().toISOString()} 
+              diagnosticCompletedAt={audit?.created_at} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
               anomalies={activeAnomaliesList}
-              isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
+              isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
             />
             <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
               {audit?.status?.toUpperCase() === 'ARCHIVED' ? "// METRIC LOCKED // ARCHIVED VALUE" : "// REAL TIME LOSS SINCE VERDICT LOCK"}
@@ -464,8 +441,6 @@ export default function UnifiedResultsPortal() {
         {/* Admin Command Strip Container */}
         {verifyIsAdminView && (
           <div className="pt-6 border-t border-slate-900/60 mt-8 space-y-6">
-            
-            {/* AUTOMATED DIAGNOSTIC RETRANSMISSION ENGINE */}
             <div className="bg-slate-950 border-2 border-dashed border-red-600/20 p-6 font-mono text-left">
               <span className="text-[9px] tracking-widest text-red-500 font-black block uppercase mb-1.5">// ADMINISTRATIVE RECOVERY SYSTEM</span>
               <p className="text-xs text-slate-400 normal-case mb-4 font-medium font-sans">Automatically re-transmit the secure access link to the target stakeholder's inbox without leaving the workspace presentation.</p>
@@ -504,7 +479,6 @@ export default function UnifiedResultsPortal() {
               </div>
             </div>
 
-            {/* SECURE LIVE CONSULTATION PLAYBOOK SCRIPT DISPATCH OVERLAY */}
             <div className="bg-slate-950 border border-slate-900 p-8 font-mono text-left">
               <div className="border-b border-slate-900 pb-3 mb-6">
                 <span className="text-[9px] tracking-widest text-amber-500 font-black block uppercase">// LIVE CONSULTATION PLAYBOOK DISPATCH</span>
@@ -513,7 +487,6 @@ export default function UnifiedResultsPortal() {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans text-xs normal-case font-medium">
-                {/* Lens 1 */}
                 <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
                   <span className="text-[9px] font-mono tracking-widest text-red-500 font-black block uppercase">// 1. THE STRATEGIC LENS (C-SUITE / BOARD LIABILITY)</span>
                   <div className="space-y-2 text-slate-300">
@@ -522,7 +495,6 @@ export default function UnifiedResultsPortal() {
                   </div>
                 </div>
 
-                {/* Lens 2 */}
                 <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
                   <span className="text-[9px] font-mono tracking-widest text-blue-400 font-black block uppercase">// 2. THE PIPELINE ENGINEERING LENS (DARRYL / INFRASTRUCTURE)</span>
                   <div className="space-y-2 text-slate-300">
@@ -531,7 +503,6 @@ export default function UnifiedResultsPortal() {
                   </div>
                 </div>
 
-                {/* Lens 3 */}
                 <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
                   <span className="text-[9px] font-mono tracking-widest text-purple-400 font-black block uppercase">// 3. THE OPERATIONAL MANAGEMENT LENS (TEAM SHADOW LABOR)</span>
                   <div className="space-y-2 text-slate-300">
@@ -542,7 +513,6 @@ export default function UnifiedResultsPortal() {
               </div>
             </div>
 
-            {/* Core Action Strip */}
             <div>
               <span className="text-[9px] font-mono text-slate-500 block mb-3 tracking-widest">// ADMINISTRATOR CONTROLS SYSTEM</span>
               <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
@@ -580,7 +550,6 @@ export default function UnifiedResultsPortal() {
         )}
 
         {!verifyIsAdminView && !isPhaseTwoActive && (
-          /* 🌐 VIEW B: Public Customer Landing Call-To-Action */
           <div 
             className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
             onClick={fireBriefingSequence}
