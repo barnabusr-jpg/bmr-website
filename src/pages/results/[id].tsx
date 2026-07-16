@@ -35,17 +35,30 @@ function RealTimeLossTicker({
     return multiplier;
   }, [anomalies]);
 
+  // Keep a stable, lazy fallback baseline locally inside this instance to prevent shifting on re-mounts
+  const fallbackAnchor = useRef<number | null>(null);
+
   useEffect(() => {
-    // 🛡️ CRITICAL ADMIN FALLBACK:
-    // If the database has an empty or invalid "created_at" timestamp,
-    // establish a fallback anchor of 2 hours ago to ensure the counter ticks immediately.
-    let baselineAnchorTime = Date.now() - (120 * 60 * 1000); 
-    
+    // 🛡️ IMMUTABLE TIMELINE ANCHOR PROTOCOL:
+    // Ensure the baseline start time matches the database record's creation date exactly, 
+    // eliminating any dynamic sliding windows that cause the timer to restart on page changes.
+    let baselineAnchorTime: number;
+
     if (diagnosticCompletedAt) {
-      const parsedDate = Date.parse(diagnosticCompletedAt);
-      if (!isNaN(parsedDate)) {
+      const parsedDate = new Date(diagnosticCompletedAt).getTime();
+      if (!isNaN(parsedDate) && parsedDate > 0) {
         baselineAnchorTime = parsedDate;
+      } else {
+        if (!fallbackAnchor.current) {
+          fallbackAnchor.current = Date.now() - (120 * 60 * 1000);
+        }
+        baselineAnchorTime = fallbackAnchor.current;
       }
+    } else {
+      if (!fallbackAnchor.current) {
+        fallbackAnchor.current = Date.now() - (120 * 60 * 1000);
+      }
+      baselineAnchorTime = fallbackAnchor.current;
     }
 
     // Fallback exposure calculation: Ensure we never compute with 0 or NaN values
