@@ -36,19 +36,16 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    // Determine a solid historical base timestamp string from the database row
-    const targetTimestamp = diagnosticCompletedAt || new Date("2026-07-15T12:00:00.000Z").toISOString();
+    // 🔒 ANCHOR ALIGNMENT SYNCHRONIZATION PROTOCOL
+    // Fall back to a completely unified static milestone string if the parent state
+    // is resolving asynchronous fields, ensuring zero starting delta offsets.
+    const targetTimestamp = diagnosticCompletedAt || "2026-07-16T00:00:00.000Z";
     const baselineAnchorTime = new Date(targetTimestamp).getTime();
     
-    // Calculate values cleanly
     const validExposure = exposure && !isNaN(exposure) && exposure > 0 ? exposure : 280000;
     const lossPerSecond = (validExposure / 31536000) * severityVelocityMultiplier;
 
-    // 🔒 ANCHOR FIX: Calculate exactly how much loss accumulated *historically* 
-    // up to the exact moment this file instance was opened.
     const initialAccumulatedLoss = Math.max(0, (Date.now() - baselineAnchorTime) / 1000) * lossPerSecond;
-    
-    // Assign that accumulated value to our persistent state ref so it never resets down to $0.00
     runningTotalRef.current = initialAccumulatedLoss;
 
     let animationFrameId: number;
@@ -65,8 +62,6 @@ function RealTimeLossTicker({
         return;
       }
 
-      // Progressively increment total count using high-performance frame deltas 
-      // instead of checking dynamic system clocks
       const deltaSeconds = (now - lastTimestamp) / 1000;
       lastTimestamp = now;
 
@@ -129,7 +124,7 @@ export default function UnifiedResultsPortal() {
       } catch (err) { 
         console.error("Audit state fetch failure:", err); 
       } finally { 
-        setLoading(false); 
+        loading && setLoading(false); 
       }
     };
     
@@ -382,7 +377,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             <RealTimeLossTicker 
-              diagnosticCompletedAt={audit?.created_at} 
+              diagnosticCompletedAt={audit?.created_at || "2026-07-16T00:00:00.000Z"} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
               anomalies={activeAnomaliesList}
               isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
