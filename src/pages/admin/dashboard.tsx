@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  X, Send, CheckCircle, Clock, Search, BellRing, FileText, Monitor
+  X, Send, CheckCircle, Clock, Search, BellRing, FileText, Monitor, ExternalLink
 } from "lucide-react";
 import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
@@ -312,9 +312,13 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden">
       <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 backdrop-blur-md border-b border-slate-900 z-50 px-10 flex items-center justify-between">
-        <div className="flex items-center gap-8">
-          <div className="flex items-center gap-3 shrink-0"><Activity className="text-red-600 animate-pulse" size={20} /><span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">FORENSIC COMMAND</span></div>
-          <div className="flex gap-1 bg-slate-900 p-1 shrink-0">
+        <div className="flex items-center gap-8 w-full justify-between">
+          <div className="flex items-center gap-3 shrink-0">
+            <Activity className="text-red-600 animate-pulse" size={20} />
+            <span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">FORENSIC COMMAND</span>
+          </div>
+          
+          <div className="flex items-center gap-3 shrink-0 bg-slate-900 p-1">
             <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
             
@@ -350,6 +354,19 @@ export default function AdminDashboard() {
             >
               Configure Quad-Node Engine
             </button>
+
+            {/* 🛰️ TELEMETRY GATE: DYNAMIC LINK BACK TO LIVE RESULTS */}
+            {expandedRow && (
+              <a
+                href={`/results/${expandedRow}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-red-600 hover:bg-white hover:text-black border border-red-500 text-white text-[10px] font-mono tracking-widest px-6 py-2.5 uppercase font-black shrink-0 transition-all flex items-center gap-2 animate-pulse"
+              >
+                <ExternalLink size={12} />
+                View Live Results
+              </a>
+            )}
           </div>
         </div>
       </nav>
