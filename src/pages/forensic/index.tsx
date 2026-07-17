@@ -382,10 +382,14 @@ export default function ForensicEngineRoot() {
     // Combine all survey responses from different stakeholder nodes into a clean calculus map
     const consolidatedResponses: Record<string, string> = {};
     Object.values(triangulation.responses).forEach(personaAnswers => {
-      Object.assign(consolidconsolidatedResponses, personaAnswers);
+      Object.assign(consolidatedResponses, personaAnswers);
     });
 
-    const calculated = calculateForensicMetrics(triangulation.companyName, consolidatedResponses, activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE');
+    const calculated = calculateForensicMetrics(
+      triangulation.companyName, 
+      consolidatedResponses, 
+      activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE'
+    );
 
     return { 
       multiplier: calculated.multiplier, 
@@ -604,7 +608,9 @@ export default function ForensicEngineRoot() {
 
                     <button 
                       onClick={() => handleLaunchPersonaWizard(persona)} 
-                      className="px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer bg-zinc-100 text-black hover:bg-red-600 hover:text-white" 
+                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${ 
+                        isDone ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white' 
+                      }`} 
                     > 
                       {isDone ? 'Override Matrix' : 'Open Posture'} 
                     </button> 
