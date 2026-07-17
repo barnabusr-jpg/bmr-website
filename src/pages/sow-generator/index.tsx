@@ -163,10 +163,10 @@ export default function SOWBuilderStandalone() {
     // Dynamically scale pricing based on Process Waste Tax to guarantee unique outputs per team
     const baseTaxPool = metrics.totalLaborTaxPool > 0 ? metrics.totalLaborTaxPool : 180000;
     
-    // Phase 1 investment scales dynamically (e.g., ~2.1% of Rework Overhead)
-    const dynamicPrice1 = Math.round((baseTaxPool * 0.021) / 10) * 10;
-    // Phase 2 investment scales dynamically (e.g., ~1.02% of Rework Overhead)
-    const dynamicPrice2 = Math.round((baseTaxPool * 0.0102) / 10) * 10;
+    // ⚙️ COMMERCIAL PRICING ENGINE MULTIPLIERS
+    // Adjusted percentages to scale raw values beautifully into enterprise-grade advisory ranges
+    const dynamicPrice1 = Math.round((baseTaxPool * 0.027) / 10) * 10;
+    const dynamicPrice2 = Math.round((baseTaxPool * 0.0132) / 10) * 10;
 
     const formattedPrice1 = `$${dynamicPrice1.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
     const formattedPrice2 = `$${dynamicPrice2.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
