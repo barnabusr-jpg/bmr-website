@@ -5,6 +5,7 @@ import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
 import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { decompressFromEncodedURIComponent } from 'lz-string';
+import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
@@ -328,7 +329,7 @@ export default function ForensicEngineRoot() {
 
     if (typeof window !== 'undefined') { 
       const currentParams = new URLSearchParams(window.location.search); 
-         
+          
       if (currentParams.get('role')) { 
         setViewState('THANK_YOU'); 
       } else { 
@@ -339,7 +340,7 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  const allPersonasComplete = triangulation     
+  const allPersonasComplete = triangulation      
     ? Object.values(triangulation.completions).every(status => status === true) 
     : false; 
 
@@ -372,17 +373,29 @@ export default function ForensicEngineRoot() {
     }; 
   }; 
 
+  // 🧮 DECOUPLED MATRIX ATTACHMENT: Calculate real user inputs dynamically
   const alignedCockpitMetrics = useMemo(() => { 
-    const isAVS = activePillar === 'AVS'; 
+    if (!triangulation) {
+      return { multiplier: 1.0, complianceScore: 100, annualSalaryLeakage: 0, unhedgedLegalExposure: 0, isTierThreeExposure: false, regulatoryAlertActive: false };
+    }
+
+    // Combine all survey responses from different stakeholder nodes into a clean calculus map
+    const consolidatedResponses: Record<string, string> = {};
+    Object.values(triangulation.responses).forEach(personaAnswers => {
+      Object.assign(consolidconsolidatedResponses, personaAnswers);
+    });
+
+    const calculated = calculateForensicMetrics(triangulation.companyName, consolidatedResponses, activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE');
+
     return { 
-      multiplier: isAVS ? 1.25 : 1.00, 
-      complianceScore: isAVS ? 64 : 85, 
-      annualSalaryLeakage: isAVS ? 4160000 : 87360, 
-      unhedgedLegalExposure: isAVS ? 2070000 : 248400, 
-      isTierThreeExposure: isAVS, 
-      regulatoryAlertActive: true 
+      multiplier: calculated.multiplier, 
+      complianceScore: calculated.complianceScore, 
+      annualSalaryLeakage: calculated.annualSalaryLeakage, 
+      unhedgedLegalExposure: calculated.forensicInactionLiability, 
+      isTierThreeExposure: calculated.isTierThreeExposure, 
+      regulatoryAlertActive: calculated.regulatoryAlertActive 
     }; 
-  }, [activePillar]); 
+  }, [triangulation, activePillar]); 
 
   if (authorizedAdmin === null) { 
     return ( 
@@ -478,7 +491,7 @@ export default function ForensicEngineRoot() {
                   { id: 'AVS', title: 'Technical Debt & Rework Tax (AVS)' }, 
                   { id: 'HAI', title: 'Automation Bias & Fatigue (HAI)' } 
                 ].map((p) => ( 
-                  <button 
+                  <button  
                     key={p.id} 
                     type="button" 
                     onClick={() => setActivePillar(p.id as FunnelPillar)} 
@@ -580,7 +593,6 @@ export default function ForensicEngineRoot() {
                           const email = triangulation.emails[persona]; 
                           const subject = `ACTION REQUIRED: Secure Diagnostic Gateway Initialized // ${triangulation.companyName.replace(/_/g, ' ')}`; 
                           const cleanOriginBase = `${window.location.origin}${window.location.pathname}`;
-                          // ✨ FIXED VENDOR SHIELD: Cleaned narrative structure to drop active framework name exposure leaks completely
                           const body = `Team,\n\nYour dedicated operational node has been provisioned to evaluate friction boundaries, performance tax indicators, and unhedged operational anomalies for ${triangulation.companyName.replace(/_/g, ' ')}.\n\nPlease access your secure access terminal to record your platform observations.\n\nSecure Diagnostic Access Terminal: ${cleanOriginBase}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
                           window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
                         }} 
@@ -592,9 +604,7 @@ export default function ForensicEngineRoot() {
 
                     <button 
                       onClick={() => handleLaunchPersonaWizard(persona)} 
-                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${ 
-                        isDone ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white' 
-                      }`} 
+                      className="px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer bg-zinc-100 text-black hover:bg-red-600 hover:text-white" 
                     > 
                       {isDone ? 'Override Matrix' : 'Open Posture'} 
                     </button> 
@@ -665,14 +675,12 @@ export default function ForensicEngineRoot() {
             </button> 
           </div> 
 
-          {/* ✨ DYNAMIC COCKPIT BINDING: Swapped static fallbacks with clear mapped state criteria */}
           <ForensicCommandCockpit         
             companyName={triangulation.companyName} 
             sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'} 
             metrics={alignedCockpitMetrics} 
           /> 
 
-          {/* 📋 BMR SOLUTIONS INTERACTIVE DOSSIER ADD-ON LAYER */}
           <div className="mt-12 mx-10 border border-slate-900 bg-slate-950/40 rounded-sm shadow-xl p-10 backdrop-blur-md not-italic normal-case text-left selection:bg-red-600 selection:text-white">
             <div className="border-b border-slate-900 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
@@ -687,7 +695,6 @@ export default function ForensicEngineRoot() {
                 </div>
               </div>
 
-              {/* Internal Tab Toggles */}
               <div className="flex bg-black p-1 border border-slate-900 rounded-xs font-mono text-[10px] font-black uppercase tracking-wider">
                 <button 
                   onClick={() => setDossierTab('METRICS')}
@@ -711,7 +718,6 @@ export default function ForensicEngineRoot() {
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                  {/* ✨ DYNAMIC DATA INJECTION: Enforced explicit curly parsing brackets across your overview cards */}
                   <div className="border border-slate-900 bg-black p-5 rounded-sm">
                     <span className="font-mono text-[10px] text-slate-500 block font-black uppercase tracking-wider mb-1">
                       🎯 Integrity Index ({alignedCockpitMetrics.complianceScore}/100)
@@ -784,45 +790,12 @@ export default function ForensicEngineRoot() {
             )}
 
             <div className="mt-8 pt-4 border-t border-slate-900 flex justify-between items-center font-mono text-[9px] font-black text-zinc-600 tracking-widest uppercase">
-              {/* ✨ BRAND ALIGNMENT FIX: Standardized copyright labels cleanly across all operational viewport wrappers */}
               <span>BMR SOLUTIONS © 2026 // SYSTEM ADD-ON EXPANSION</span>
               <span>SECURE RUNTIME CONTROL</span>
             </div>
           </div>
         </div> 
       )} 
-
-      {viewState === 'THANK_YOU' && ( 
-        <div className="w-full max-w-md border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl backdrop-blur-md italic font-sans"> 
-          <div className="border-b border-slate-900 pb-5 mb-6 flex items-center gap-3 not-italic font-mono"> 
-            <CheckCircle size={24} className="text-green-500 shrink-0" /> 
-            <div> 
-              <h2 className="text-xs font-black text-white uppercase tracking-widest leading-none">// NODE TRANSMISSION SUCCESSFUL</h2> 
-              <span className="text-[9px] text-zinc-500 tracking-wider block mt-1 uppercase">QUADRANT METRICS PARSED</span> 
-            </div> 
-          </div> 
-
-          <div className="space-y-6 not-italic font-sans normal-case text-sm text-slate-300 font-normal leading-relaxed"> 
-            <p> 
-              Thank you for completing your assigned forensic assessment track. Your infrastructure insights have been safely aggregated into the core corporation matrix pipeline at BMR Solutions. 
-            </p> 
-             
-            <div className="border-t border-slate-900 pt-5 mt-4 text-xs text-slate-400 font-mono uppercase tracking-wide space-y-1"> 
-              <span className="block text-[10px] text-slate-500 font-black">// ADDITIONAL INQUIRIES</span> 
-              <p className="normal-case font-sans font-normal text-slate-300"> 
-                If you have any questions regarding your team's structural data alignment mapping, please reach out to your designated supervisor or contact our advisory desk at: 
-              </p> 
-              <a   
-                href="mailto:hello@BMRADVISORY.com"   
-                className="block text-red-500 font-bold hover:text-white transition-colors text-xs lowercase mt-2 tracking-normal" 
-              > 
-                hello@bmradvisory.co 
-              </a> 
-            </div> 
-          </div> 
-        </div> 
-      )} 
-
     </div> 
   ); 
 }
