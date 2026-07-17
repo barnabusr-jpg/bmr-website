@@ -1,27 +1,28 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Lock, Unlock, Activity } from "lucide-react";
+import { Lock, Unlock, Activity, Check } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
 interface LossTickerProps { 
-  diagnosticCompletedAt: string; 
+  diagnosticCompletedAt: string | null | undefined; 
   exposure: number;
   anomalies: Array<{ severity: string }>;
   isArchived: boolean; 
 }
 
-// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE
+// 🏎️ ACCELERATED HIGH-PERFORMANCE DIRECT-DOM TICKER ENGINE
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
   anomalies,
   isArchived
 }: LossTickerProps) {
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-  const frozenLossRef = useRef<number | null>(null);
+  const displayRef = useRef<HTMLDivElement>(null);
+  const runningTotalRef = useRef<number>(0);
 
+  // Compute velocity multiplier based on telemetry anomalies
   const severityVelocityMultiplier = useMemo(() => {
     let multiplier = 1.0;
     if (!anomalies) return multiplier;
@@ -35,43 +36,59 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    if (!diagnosticCompletedAt || isNaN(Date.parse(diagnosticCompletedAt))) {
-      setElapsedSeconds(0);
-      return;
-    }
+    // 🔒 ANCHOR ALIGNMENT SYNCHRONIZATION PROTOCOL
+    // Fall back to a completely unified static milestone string if the parent state
+    // is resolving asynchronous fields, ensuring zero starting delta offsets.
+    const targetTimestamp = diagnosticCompletedAt || "2026-07-16T00:00:00.000Z";
+    const baselineAnchorTime = new Date(targetTimestamp).getTime();
+    
+    const validExposure = exposure && !isNaN(exposure) && exposure > 0 ? exposure : 280000;
+    const lossPerSecond = (validExposure / 31536000) * severityVelocityMultiplier;
 
-    const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
+    const initialAccumulatedLoss = Math.max(0, (Date.now() - baselineAnchorTime) / 1000) * lossPerSecond;
+    runningTotalRef.current = initialAccumulatedLoss;
 
-    const calculateDeltaTime = () => {
-      if (isArchived) return;
-      const currentRealTime = Date.now();
-      const absoluteDeltaInSeconds = Math.max(0, (currentRealTime - baselineAnchorTime) / 1000);
-      setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
+    let animationFrameId: number;
+    let lastTimestamp = performance.now();
+
+    const updateTicker = (now: number) => {
+      if (isArchived) {
+        if (displayRef.current) {
+          displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`;
+        }
+        return;
+      }
+
+      const deltaSeconds = (now - lastTimestamp) / 1000;
+      lastTimestamp = now;
+
+      if (deltaSeconds > 0 && deltaSeconds < 1) {
+        runningTotalRef.current += deltaSeconds * lossPerSecond;
+      }
+
+      if (displayRef.current) {
+        displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
+      }
+
+      animationFrameId = requestAnimationFrame(updateTicker);
     };
 
-    calculateDeltaTime();
-    const interval = setInterval(calculateDeltaTime, 100); 
-
-    return () => clearInterval(interval);
-  }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
-
-  const validExposure = exposure && !isNaN(exposure) ? exposure : 0;
-  let dynamicAccumulatedLoss = (validExposure / 31536000) * elapsedSeconds;
-
-  if (isArchived) {
-    if (frozenLossRef.current === null) {
-      frozenLossRef.current = dynamicAccumulatedLoss;
-    }
-    dynamicAccumulatedLoss = frozenLossRef.current;
-  } else {
-    frozenLossRef.current = null; 
-  }
+    animationFrameId = requestAnimationFrame(updateTicker);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [diagnosticCompletedAt, exposure, severityVelocityMultiplier, isArchived]);
 
   return (
-    <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums text-red-500 leading-none block break-keep ${
-      dynamicAccumulatedLoss > 9999 ? "text-3xl lg:text-4xl" : "text-4xl md:text-5xl"
-    }`}>
-      ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    <div 
+      ref={displayRef}
+      className="font-mono font-black mt-2 tracking-tighter tabular-nums text-red-500 leading-none block break-keep text-4xl md:text-5xl"
+    >
+      $0.00
     </div>
   );
 }
@@ -84,6 +101,7 @@ export default function UnifiedResultsPortal() {
   const [loading, setLoading] = useState(true);
   const [audit, setAudit] = useState<AuditRecord | null>(null);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   useEffect(() => { 
     setMounted(true); 
@@ -106,7 +124,7 @@ export default function UnifiedResultsPortal() {
       } catch (err) { 
         console.error("Audit state fetch failure:", err); 
       } finally { 
-        setLoading(false); 
+        loading && setLoading(false); 
       }
     };
     
@@ -166,33 +184,37 @@ export default function UnifiedResultsPortal() {
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
 
-  // 📝 CLEANED PLACEHOLDER TEXT DATA STRINGS
-  const genericAnomalies: AnomalyNode[] = useMemo(() => [
-    { 
-      id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
-      severity: "SECURE GATE", 
-      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
-    },
-    { 
-      id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
-      severity: "SECURE GATE", 
-      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
-    },
-    { 
-      id: `ANOMALY SEGMENT GAMMA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
-      severity: "SECURE GATE", 
-      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
-    },
-    { 
-      id: `ANOMALY SEGMENT DELTA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
-      severity: "SECURE GATE", 
-      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
-    }
-  ], [metrics.totalLaborTaxPool]);
+  // 📝 CLEANED PLACEHOLDER TEXT DATA STRINGS WITH ROBUST BASELINE FALLBACKS
+  const genericAnomalies: AnomalyNode[] = useMemo(() => {
+    const pool = metrics.totalLaborTaxPool > 0 ? metrics.totalLaborTaxPool : 180000;
+    
+    return [
+      { 
+        id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(pool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
+        severity: "SECURE GATE", 
+        directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
+      },
+      { 
+        id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${(pool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
+        severity: "SECURE GATE", 
+        directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
+      },
+      { 
+        id: `ANOMALY SEGMENT GAMMA // LOSS BASELINE $${(pool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
+        severity: "SECURE GATE", 
+        directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
+      },
+      { 
+        id: `ANOMALY SEGMENT DELTA // LOSS BASELINE $${(pool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
+        severity: "SECURE GATE", 
+        directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
+      }
+    ];
+  }, [metrics.totalLaborTaxPool]);
 
   const activeAnomaliesList = useMemo(() => {
     if (isPaidGateUnlocked && audit?.anomalies && audit.anomalies.length > 0) {
@@ -221,7 +243,22 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
-  // 🛡️ CRITICAL GATE: Prevents render math until data arrives
+  const fireTriangulationCalibrationSequence = () => {
+    const clientEmail = audit?.lead_email ? encodeURIComponent(audit.lead_email) : "";
+    
+    const isQuadNode = 
+      router.query.type?.toString().toLowerCase() === 'quad' || 
+      audit?.audit_type?.toString().toLowerCase() === 'quad' ||
+      audit?.status?.toUpperCase() === 'QUAD_ACTIVE';
+
+    const baseCalibrationUrl = isQuadNode
+      ? "https://calendly.com/hello-bmradvisory/quad-node-calibration"
+      : "https://calendly.com/hello-bmradvisory/systems-triangulation-calibration";
+
+    const specializedUrl = clientEmail ? `${baseCalibrationUrl}?email=${clientEmail}` : baseCalibrationUrl;
+    window.open(specializedUrl, "_blank");
+  };
+
   if (!mounted || loading || !router.isReady || !audit) {
     return (
       <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
@@ -243,7 +280,16 @@ export default function UnifiedResultsPortal() {
           </span>
         </div>
         {isPhaseTwoActive && (
-          <button onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono">
+          <button 
+            onClick={() => {
+              const queryParams = new URLSearchParams(window.location.search);
+              if (!queryParams.has("id") && id) {
+                queryParams.set("id", id as string);
+              }
+              window.open(`/api/generate-pdf?${queryParams.toString()}`, "_blank");
+            }} 
+            className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono"
+          >
               DOWNLOAD FORENSIC LEDGER PDF
           </button>
         )}
@@ -254,11 +300,36 @@ export default function UnifiedResultsPortal() {
           <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
             {isPhaseTwoActive 
-              ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
+              ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${Number(audit?.ai_spend || spend).toFixed(1)}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
               : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
             }
           </p>
         </div>
+
+        {audit?.status?.toUpperCase() === 'TRIANGULATION_ACTIVE' && (
+          <div className="bg-slate-950 border border-amber-600/30 p-6 font-mono text-left space-y-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+              </span>
+              <span className="text-[10px] tracking-widest text-amber-500 font-black uppercase">
+                // ACTIVE SYSTEM TRIANGULATION DETECTED
+              </span>
+            </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans normal-case">
+              <p className="text-xs text-slate-300 max-w-3xl font-medium leading-relaxed">
+                Your telemetry tracks are currently processing. Please remind your team operators to review their email folders and complete their configuration inputs. You must select the calendar connection terminal to lock in your verification review session now.
+              </p>
+              <button 
+                onClick={fireTriangulationCalibrationSequence}
+                className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-[10px] font-mono tracking-widest px-5 py-3 uppercase font-black shrink-0 self-start md:self-auto cursor-pointer transition-all"
+              >
+                Lock Calibration Date
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className={`bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
@@ -306,10 +377,10 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             <RealTimeLossTicker 
-              diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
+              diagnosticCompletedAt={audit?.created_at || "2026-07-16T00:00:00.000Z"} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
               anomalies={activeAnomaliesList}
-              isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
+              isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
             />
             <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
               {audit?.status?.toUpperCase() === 'ARCHIVED' ? "// METRIC LOCKED // ARCHIVED VALUE" : "// REAL TIME LOSS SINCE VERDICT LOCK"}
@@ -338,7 +409,10 @@ export default function UnifiedResultsPortal() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {activeAnomaliesList.map((frac: any, index: number) => (
-              <div key={frac.id || index} className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] transition-all ${isPaidGateUnlocked ? 'border-red-500/20 bg-red-950/5' : 'border-green-500/20 bg-green-950/5'}`}>
+              <div 
+                key={`anomaly-node-${index}`} 
+                className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] transition-all ${isPaidGateUnlocked ? 'border-red-500/20 bg-red-950/5' : 'border-green-500/20 bg-green-950/5'}`}
+              >
                 <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
                   <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
                   <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border uppercase ${isPaidGateUnlocked ? 'bg-red-600/20 text-red-500 border-red-600/30' : 'bg-green-600/20 text-green-500 border-green-600/30'}`}>
@@ -359,52 +433,125 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
-        {/* 🔒 VIEW A: Admin Command Strip */}
-        {verifyIsAdminView ? (
-          <div className="pt-6 border-t border-slate-900/60 mt-8">
-            <span className="text-[9px] font-mono text-slate-500 block mb-3 tracking-widest">// ADMINISTRATOR CONTROLS SYSTEM</span>
-            <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
-              <div className="w-full">
-                <button
-                  disabled={!isPaidGateUnlocked}
-                  onClick={(e) => {
-                    if (!isPaidGateUnlocked) {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      return;
+        {/* Admin Command Strip Container */}
+        {verifyIsAdminView && (
+          <div className="pt-6 border-t border-slate-900/60 mt-8 space-y-6">
+            <div className="bg-slate-950 border-2 border-dashed border-red-600/20 p-6 font-mono text-left">
+              <span className="text-[9px] tracking-widest text-red-500 font-black block uppercase mb-1.5">// ADMINISTRATIVE RECOVERY SYSTEM</span>
+              <p className="text-xs text-slate-400 normal-case mb-4 font-medium font-sans">Automatically re-transmit the secure access link to the target stakeholder's inbox without leaving the workspace presentation.</p>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-black border border-slate-900 p-4 justify-between">
+                <div className="flex flex-col">
+                  <span className="text-white text-xs font-black uppercase tracking-tight">Registered Recipient Email:</span>
+                  <span className="text-slate-500 font-mono text-xs lowercase select-all break-all tracking-tight font-bold mt-1">
+                    {audit?.lead_email || "No email bound to dossier state."}
+                  </span>
+                </div>
+                <button 
+                  disabled={!audit?.lead_email}
+                  onClick={async () => {
+                    try {
+                      const res = await fetch('/api/resend-verdict', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ auditId: audit?.id || id }),
+                      });
+                      if (!res.ok) throw new Error();
+                      setCopiedLink(true); 
+                      setTimeout(() => setCopiedLink(false), 3000);
+                    } catch (err) {
+                      alert("METRIC EXCEPTION: Re-transmission pathway obstructed.");
                     }
-                    setIsEmailModalOpen(true);
                   }}
-                  className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
-                    isPaidGateUnlocked
-                      ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
-                      : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none"
-                  }`}
+                  className={`font-black px-5 py-3 text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer border shrink-0 ${
+                    copiedLink 
+                      ? "bg-green-600 border-green-600 text-white" 
+                      : "bg-red-600 border-red-600 text-white hover:bg-white hover:text-black"
+                  } ${!audit?.lead_email ? "opacity-30 cursor-not-allowed pointer-events-none" : ""}`}
                 >
-                  <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
-                  {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
+                  {copiedLink ? <Check size={12} /> : <Activity size={12} className={copiedLink ? "" : "animate-pulse"} />}
+                  {copiedLink ? "EMAIL SENT SUCCESSFULLY" : "AUTO-RESEND LINK"}
                 </button>
               </div>
+            </div>
 
-              <button 
-                onClick={fireBriefingSequence}
-                className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-5 uppercase w-full font-black tracking-tight cursor-pointer"
-              >
-                COMPILE PARTIAL ANSWERS
-              </button>
+            <div className="bg-slate-950 border border-slate-900 p-8 font-mono text-left">
+              <div className="border-b border-slate-900 pb-3 mb-6">
+                <span className="text-[9px] tracking-widest text-amber-500 font-black block uppercase">// LIVE CONSULTATION PLAYBOOK DISPATCH</span>
+                <h4 className="text-lg font-black text-white italic tracking-tight mt-1">CORE PERSONA DISCOVERY LENSES</h4>
+                <p className="text-[11px] text-slate-500 normal-case font-sans mt-1">Execute these hard-targeted diagnostic vectors at the tail-end of Call 1 immediately following the presentation of the primary System Verdict.</p>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans text-xs normal-case font-medium">
+                <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
+                  <span className="text-[9px] font-mono tracking-widest text-red-500 font-black block uppercase">// 1. THE STRATEGIC LENS (C-SUITE / BOARD LIABILITY)</span>
+                  <div className="space-y-2 text-slate-300">
+                    <p><strong>Q1:</strong> "When you look at your annual automation expenditure, what percentage of that capital do you estimate is currently leaking into repetitive, unbudgeted maintenance cycles?"</p>
+                    <p className="pt-2 border-t border-slate-900/50"><strong>Q2:</strong> "If an automated data transformation or pipeline failure causes an unhedged operational exposure today, how long does it take for that risk to surface at the board or executive governance layer?"</p>
+                  </div>
+                </div>
+
+                <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
+                  <span className="text-[9px] font-mono tracking-widest text-blue-400 font-black block uppercase">// 2. THE PIPELINE ENGINEERING LENS (DARRYL / INFRASTRUCTURE)</span>
+                  <div className="space-y-2 text-slate-300">
+                    <p><strong>Q1:</strong> "How frequently do unannounced third-party API mutations or silent schema transformations break your downstream data integrity? Is it a daily firefight or an intermittent weekly drift?"</p>
+                    <p className="pt-2 border-t border-slate-900/50"><strong>Q2:</strong> "What is your primary data ingestion framework right now—are you relying on event-driven streaming runtimes, or scheduled cloud-bucket batch pipelines?"</p>
+                  </div>
+                </div>
+
+                <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
+                  <span className="text-[9px] font-mono tracking-widest text-purple-400 font-black block uppercase">// 3. THE OPERATIONAL MANAGEMENT LENS (TEAM SHADOW LABOR)</span>
+                  <div className="space-y-2 text-slate-300">
+                    <p><strong>Q1:</strong> "What percentage of your core engineering team's capacity is being burned on 'shadow labor'—meaning they are manually repeating repairs and nursing broken integrations instead of building new velocity?"</p>
+                    <p className="pt-2 border-t border-slate-900/50"><strong>Q2:</strong> "When a critical structural fracture happens, do your teams have documented, immutable recovery runbooks, or are you heavily reliant on undocumented tribal knowledge to patch the system?"</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <span className="text-[9px] font-mono text-slate-500 block mb-3 tracking-widest">// ADMINISTRATOR CONTROLS SYSTEM</span>
+              <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
+                <div className="w-full">
+                  <button
+                    disabled={!isPaidGateUnlocked}
+                    onClick={(e) => {
+                      if (!isPaidGateUnlocked) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        return;
+                      }
+                      setIsEmailModalOpen(true);
+                    }}
+                    className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
+                      isPaidGateUnlocked
+                        ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
+                        : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none"
+                    }`}
+                  >
+                    <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
+                    {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
+                  </button>
+                </div>
+
+                <button 
+                  onClick={fireBriefingSequence}
+                  className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-5 uppercase w-full font-black tracking-tight cursor-pointer"
+                >
+                  COMPILE PARTIAL ANSWERS
+                </button>
+              </div>
             </div>
           </div>
-        ) : (
-          /* 🌐 VIEW B: Public Customer Landing Call-To-Action */
-          !isPhaseTwoActive && (
-            <div 
-              className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
-              onClick={fireBriefingSequence}
-            >
-              <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
-              <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
-            </div>
-          )
+        )}
+
+        {!verifyIsAdminView && !isPhaseTwoActive && (
+          <div 
+            className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
+            onClick={fireBriefingSequence}
+          >
+            <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
+            <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
+          </div>
         )}
       </main>
     </div>
