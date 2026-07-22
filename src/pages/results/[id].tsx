@@ -4,6 +4,7 @@ import { useRouter } from "next/router";
 import { Lock, Unlock, Activity, Check } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
+import { GovernanceSupplementView } from "@/components/GovernanceSupplementView";
 
 interface LossTickerProps { 
   diagnosticCompletedAt: string | null | undefined; 
@@ -432,6 +433,9 @@ export default function UnifiedResultsPortal() {
             ))}
           </div>
         </div>
+
+        {/* 🛡️ GOVERNANCE & COMPLIANCE SUPPLEMENT DIRECTIVE BLOCK */}
+        <GovernanceSupplementView />
 
         {/* Admin Command Strip Container */}
         {verifyIsAdminView && (
