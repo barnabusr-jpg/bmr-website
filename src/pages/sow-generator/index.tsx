@@ -6,8 +6,9 @@ import { generatePdf } from '../../lib/generatePdf';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 import { 
   Terminal, Briefcase, Download, ShieldAlert, 
-  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon 
+  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText
 } from 'lucide-react';
+import { GovernanceSupplementView } from '../GovernanceSupplementView';
 
 interface AnomalyRemediationNode {
   title: string;
@@ -34,6 +35,7 @@ export default function SOWBuilderStandalone() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [selectedDirectives, setSelectedDirectives] = useState<string[]>([]);
   const [urlParams, setUrlParams] = useState<Record<string, string>>({});
+  const [includeGovernance, setIncludeGovernance] = useState(true);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -283,25 +285,43 @@ export default function SOWBuilderStandalone() {
         {diagnosticData && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
             
-            <div className="lg:col-span-1 border border-slate-900 bg-slate-950/50 p-6 rounded-sm space-y-4 font-mono not-italic text-xs">
-              <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black">// CONTROL PANEL</span>
-              <h4 className="text-white text-xs font-black uppercase tracking-wider mb-2">Remediation Toggles</h4>
-              <div className="space-y-2">
-                {activeRemediations.map((rem: AnomalyRemediationNode) => {
-                  const isActive = selectedDirectives.includes(rem.title);
-                  return (
-                    <button
-                      key={rem.title}
-                      onClick={() => toggleDirective(rem.title)}
-                      className={`w-full text-left p-3 border rounded-xs font-mono font-bold tracking-tight text-[11px] transition-all flex items-center justify-between cursor-pointer ${
-                        isActive ? 'border-red-600 bg-red-950/10 text-white' : 'border-slate-900 bg-black text-slate-500'
-                      }`}
-                    >
-                      <span className="truncate pr-2">{rem.title}</span>
-                      {isActive ? <Eye size={12} className="text-red-500" /> : <EyeOff size={12} />}
-                    </button>
-                  );
-                })}
+            <div className="lg:col-span-1 border border-slate-900 bg-slate-950/50 p-6 rounded-sm space-y-6 font-mono not-italic text-xs">
+              <div>
+                <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-1">// CONTROL PANEL</span>
+                <h4 className="text-white text-xs font-black uppercase tracking-wider mb-3">Remediation Toggles</h4>
+                <div className="space-y-2">
+                  {activeRemediations.map((rem: AnomalyRemediationNode) => {
+                    const isActive = selectedDirectives.includes(rem.title);
+                    return (
+                      <button
+                        key={rem.title}
+                        onClick={() => toggleDirective(rem.title)}
+                        className={`w-full text-left p-3 border rounded-xs font-mono font-bold tracking-tight text-[11px] transition-all flex items-center justify-between cursor-pointer ${
+                          isActive ? 'border-red-600 bg-red-950/10 text-white' : 'border-slate-900 bg-black text-slate-500'
+                        }`}
+                      >
+                        <span className="truncate pr-2">{rem.title}</span>
+                        {isActive ? <Eye size={12} className="text-red-500" /> : <EyeOff size={12} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 🛡️ GOVERNANCE SUPPLEMENT TOGGLE */}
+              <div className="border-t border-slate-900 pt-4">
+                <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-2">// DIRECTIVE OVERLAYS</span>
+                <button
+                  onClick={() => setIncludeGovernance(prev => !prev)}
+                  className={`w-full text-left p-3 border rounded-xs font-mono font-bold tracking-tight text-[11px] transition-all flex items-center justify-between cursor-pointer ${
+                    includeGovernance ? 'border-amber-600/60 bg-amber-950/10 text-amber-400' : 'border-slate-900 bg-black text-slate-500'
+                  }`}
+                >
+                  <span className="truncate pr-2 flex items-center gap-1.5">
+                    <FileText size={12} /> GOVERNANCE SUPPLEMENT
+                  </span>
+                  {includeGovernance ? <CheckCircle size={12} className="text-amber-400" /> : <EyeOff size={12} />}
+                </button>
               </div>
             </div>
 
@@ -424,6 +444,9 @@ export default function SOWBuilderStandalone() {
                     </div>
                   </div>
                 ))}
+
+                {/* 🛡️ GOVERNANCE & COMPLIANCE SUPPLEMENT DISPLAY LAYER */}
+                {includeGovernance && <GovernanceSupplementView />}
               </div>
             </div>
           </div>
