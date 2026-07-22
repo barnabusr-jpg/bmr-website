@@ -8,7 +8,7 @@ import {
   Terminal, Briefcase, Download, ShieldAlert, 
   CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText
 } from 'lucide-react';
-import { GovernanceSupplementView } from '../GovernanceSupplementView';
+import { GovernanceSupplementView } from '@/components/GovernanceSupplementView';
 
 interface AnomalyRemediationNode {
   title: string;
