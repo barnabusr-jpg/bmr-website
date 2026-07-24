@@ -85,7 +85,7 @@ function RealTimeLossTicker({
   return (
     <div 
       ref={displayRef}
-      className="font-mono font-black mt-2 tracking-tighter tabular-nums text-red-500 leading-none block break-keep text-4xl md:text-5xl"
+      className="font-mono font-black mt-2 tracking-tighter tabular-nums text-red-500 leading-none block break-keep text-3xl sm:text-4xl md:text-5xl"
     >
       $0.00
     </div>
@@ -260,9 +260,9 @@ export default function UnifiedResultsPortal() {
 
   if (!mounted || loading || !router.isReady || !audit) {
     return (
-      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
+      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black p-4">
         <Activity className="animate-spin mb-4" size={48} />
-        <p className="font-mono text-xs uppercase tracking-[0.4em]">DECRYPTING SECURE VAULT METRICS...</p>
+        <p className="font-mono text-xs uppercase tracking-[0.3em] sm:tracking-[0.4em] text-center">DECRYPTING SECURE VAULT METRICS...</p>
       </div>
     );
   }
@@ -271,10 +271,10 @@ export default function UnifiedResultsPortal() {
 
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden text-left uppercase italic font-black">
-      <nav className="h-28 bg-black/40 backdrop-blur-md border-b border-slate-900/60 px-6 md:px-12 flex items-center justify-between">
+      <nav className="h-24 sm:h-28 bg-black/40 backdrop-blur-md border-b border-slate-900/60 px-4 sm:px-6 md:px-12 flex items-center justify-between">
         <div>
-          <div className="text-white text-xl tracking-tighter italic">BMR<span className={accentColorClass}>SOLUTIONS</span></div>
-          <span className={`text-[8px] font-mono uppercase tracking-[0.3em] italic block mt-0.5 ${accentColorClass}`}>
+          <div className="text-white text-lg sm:text-xl tracking-tighter italic">BMR<span className={accentColorClass}>SOLUTIONS</span></div>
+          <span className={`text-[7px] sm:text-[8px] font-mono uppercase tracking-[0.2em] sm:tracking-[0.3em] italic block mt-0.5 ${accentColorClass}`}>
             {isPhaseTwoActive ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
           </span>
         </div>
@@ -287,29 +287,29 @@ export default function UnifiedResultsPortal() {
               }
               window.open(`/api/generate-pdf?${queryParams.toString()}`, "_blank");
             }} 
-            className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono cursor-pointer transition-all"
+            className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-[10px] sm:text-xs px-3 sm:px-5 py-2.5 sm:py-3 font-mono cursor-pointer transition-all"
           >
-              DOWNLOAD FORENSIC LEDGER PDF
+              DOWNLOAD PDF
           </button>
         )}
       </nav>
 
-      <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
-        <div className="border-l-2 border-red-600/80 pl-4 py-1 space-y-1.5">
-          <span className="text-red-500 font-mono text-[9px] tracking-[0.3em] block font-black">// CLOSING THE PROMISE GAP™ // PRE-AUTOMATION CONTROL PLANE</span>
+      <main className="max-w-7xl mx-auto pt-8 sm:pt-12 md:pt-16 px-4 sm:px-6 md:px-12 pb-24 sm:pb-32 space-y-8 sm:space-y-12">
+        <div className="border-l-2 border-red-600/80 pl-3 sm:pl-4 py-1 space-y-1.5">
+          <span className="text-red-500 font-mono text-[8px] sm:text-[9px] tracking-[0.2em] sm:tracking-[0.3em] block font-black">// CLOSING THE PROMISE GAP™ // PRE-AUTOMATION CONTROL PLANE</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
             BMR Solutions evaluates the operational barriers causing enterprise AI to fail silently in production. Operational metrics are currently calibrated to your footprint of ${Number(audit?.ai_spend || spend).toFixed(1)}M annual software allocations across {metrics.fteCount} FTE resources.
           </p>
         </div>
 
         {audit?.status?.toUpperCase() === 'TRIANGULATION_ACTIVE' && (
-          <div className="bg-slate-950 border border-amber-600/30 p-6 font-mono text-left space-y-4 shadow-xl">
+          <div className="bg-slate-950 border border-amber-600/30 p-4 sm:p-6 font-mono text-left space-y-4 shadow-xl">
             <div className="flex items-center gap-3">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
               </span>
-              <span className="text-[10px] tracking-widest text-amber-500 font-black uppercase">
+              <span className="text-[9px] sm:text-[10px] tracking-widest text-amber-500 font-black uppercase">
                 // ACTIVE SYSTEM TRIANGULATION DETECTED
               </span>
             </div>
@@ -319,7 +319,7 @@ export default function UnifiedResultsPortal() {
               </p>
               <button 
                 onClick={fireTriangulationCalibrationSequence}
-                className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-[10px] font-mono tracking-widest px-5 py-3 uppercase font-black shrink-0 self-start md:self-auto cursor-pointer transition-all"
+                className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-[10px] font-mono tracking-widest px-4 sm:px-5 py-2.5 sm:py-3 uppercase font-black shrink-0 self-start md:self-auto cursor-pointer transition-all w-full sm:w-auto text-center"
               >
                 Lock Calibration Date
               </button>
@@ -327,42 +327,36 @@ export default function UnifiedResultsPortal() {
           </div>
         )}
 
-        <div className={`bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
-          <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
+        <div className={`bg-white text-black p-5 sm:p-8 md:p-14 border-l-[8px] sm:border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
+          <div className="md:col-span-7 flex flex-col justify-between space-y-6 sm:space-y-10">
             <div>
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none md:leading-none text-black break-words">
+              <h1 className="text-3xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none md:leading-none text-black break-words">
                 {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
               </h1>
-              <p className="text-[10px] md:text-[11px] font-mono text-slate-400 tracking-widest mt-2.5">
+              <p className="text-[9px] sm:text-[11px] font-mono text-slate-400 tracking-widest mt-2">
                 TARGET IDENTIFIER // {audit?.org_name || "EVALUATION CLIENT SYSTEM"}
               </p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 pt-4 sm:pt-8 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
-                <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>LOGIC DECAY COEFFICIENT</span>
-                </div>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  DECAY INDEX: <span className={`${accentColorClass} text-base`}>{dbDecay}%</span>
+                <span className={`text-[8px] sm:text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>LOGIC DECAY COEFFICIENT</span>
+                <p className="text-xs font-black mt-1 sm:mt-2 leading-tight text-slate-900">
+                  DECAY INDEX: <span className={`${accentColorClass} text-sm sm:text-base`}>{dbDecay}%</span>
                 </p>
               </div>
 
               <div className="flex flex-col justify-between">
-                <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>PROCESS WASTE TAX</span>
-                </div>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  LIABILITY TOTAL: <span className={`${accentColorClass} font-mono text-sm`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                <span className={`text-[8px] sm:text-[9px] font-mono block tracking-wider uppercase ${accentColorClass} leading-tight`}>PROCESS WASTE TAX</span>
+                <p className="text-xs font-black mt-1 sm:mt-2 leading-tight text-slate-900">
+                  LIABILITY: <span className={`${accentColorClass} font-mono text-xs sm:text-sm`}>${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                 </p>
               </div>
 
               <div className="flex flex-col justify-between">
-                <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>PROJECTED ANNUAL EXPOSURE</span>
-                </div>
-                <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                <span className={`text-[8px] sm:text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>PROJECTED ANNUAL EXPOSURE</span>
+                <p className="text-xs font-black mt-1 sm:mt-2 leading-tight text-slate-900">
+                  TOTAL RISK: <span className={`${accentColorClass} font-mono text-xs sm:text-sm`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                 </p>
               </div>
             </div>
@@ -370,58 +364,58 @@ export default function UnifiedResultsPortal() {
           
           <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-200/80" />
           
-          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
-            <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
+          <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-2 md:pt-0 shrink-0">
+            <span className="text-[9px] sm:text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             <RealTimeLossTicker 
               diagnosticCompletedAt={audit?.created_at || "2026-07-16T00:00:00.000Z"} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
               anomalies={activeAnomaliesList}
               isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
             />
-            <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
+            <span className="text-[8px] sm:text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
               {audit?.status?.toUpperCase() === 'ARCHIVED' ? "// METRIC LOCKED // ARCHIVED VALUE" : "// REAL TIME LOSS SINCE VERDICT LOCK"}
             </span>
           </div>
         </div>
 
         {/* METRICS SPLIT CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+          <div className="bg-[#050b18] border border-slate-900 p-8 sm:p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 shadow-xl">
+            <div className="text-4xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className="text-[9px] sm:text-[10px] font-mono text-slate-500 tracking-[0.2em] sm:tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
-          <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
+          <div className="bg-[#050b18] border border-slate-900 p-8 sm:p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-3 sm:space-y-4 shadow-xl">
+            <div className={`text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className={`text-[9px] sm:text-[10px] font-mono tracking-[0.2em] sm:tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
 
         {/* ANOMALIES CHART INDEX */}
-        <div className="pt-8 text-left">
-          <div className="border-b border-slate-900 pb-4 mb-8">
-            <span className="text-[10px] font-mono text-slate-500 tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</span>
-            <h3 className="text-3xl font-black tracking-tighter mt-1 text-white">IDENTIFIED SYSTEMIC ANOMALIES</h3>
+        <div className="pt-4 sm:pt-8 text-left">
+          <div className="border-b border-slate-900 pb-4 mb-6 sm:mb-8">
+            <span className="text-[9px] sm:text-[10px] font-mono text-slate-500 tracking-widest block">// DETECTED VULNERABILITY LOCATIONS</span>
+            <h3 className="text-2xl sm:text-3xl font-black tracking-tighter mt-1 text-white">IDENTIFIED SYSTEMIC ANOMALIES</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
             {activeAnomaliesList.map((frac: any, index: number) => (
               <div 
                 key={`anomaly-node-${index}`} 
-                className={`border p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[280px] transition-all ${isPaidGateUnlocked ? 'border-red-500/20 bg-red-950/5' : 'border-green-500/20 bg-green-950/5'}`}
+                className={`border p-5 sm:p-8 bg-slate-950/60 flex flex-col justify-between relative min-h-[260px] sm:min-h-[280px] transition-all ${isPaidGateUnlocked ? 'border-red-500/20 bg-red-950/5' : 'border-green-500/20 bg-green-950/5'}`}
               >
-                <div className="flex justify-between items-center border-b border-slate-900 pb-4 font-mono">
-                  <span className="text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
-                  <span className={`text-[9px] tracking-widest px-2.5 py-0.5 flex items-center gap-1.5 border uppercase ${isPaidGateUnlocked ? 'bg-red-600/20 text-red-500 border-red-600/30' : 'bg-green-600/20 text-green-500 border-green-600/30'}`}>
+                <div className="flex justify-between items-center border-b border-slate-900 pb-3 font-mono">
+                  <span className="text-[9px] sm:text-[10px] text-slate-500 tracking-widest">// INDEX NODE FR-0{index + 1}</span>
+                  <span className={`text-[8px] sm:text-[9px] tracking-widest px-2 sm:px-2.5 py-0.5 flex items-center gap-1 border uppercase ${isPaidGateUnlocked ? 'bg-red-600/20 text-red-500 border-red-600/30' : 'bg-green-600/20 text-green-500 border-green-600/30'}`}>
                     {isPaidGateUnlocked ? <Unlock size={10} /> : <Lock size={10} />} 
                     {isPaidGateUnlocked ? frac.severity : "SECURE GATE"}
                   </span>
                 </div>
-                <div className="my-6 space-y-2">
-                  <h4 className="text-xl font-black text-white font-mono">{String(frac.id || 'ANOMALY DETECTED')}</h4>
+                <div className="my-4 sm:my-6 space-y-2">
+                  <h4 className="text-lg sm:text-xl font-black text-white font-mono break-words">{String(frac.id || 'ANOMALY DETECTED')}</h4>
                   <p className="text-xs font-mono text-slate-300 font-normal leading-relaxed normal-case">{frac.description}</p>
                 </div>
-                <div className="border-t border-slate-900 pt-4 font-mono">
-                  <div className="text-[9px] text-slate-600 tracking-widest mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
+                <div className="border-t border-slate-900 pt-3 sm:pt-4 font-mono">
+                  <div className="text-[8px] sm:text-[9px] text-slate-600 tracking-widest mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
                   <div className={`text-xs font-sans tracking-wide font-medium normal-case ${accentColorClass}`}>{frac.directive}</div>
                 </div>
               </div>
@@ -435,11 +429,11 @@ export default function UnifiedResultsPortal() {
         {/* Admin Command Strip Container */}
         {verifyIsAdminView && (
           <div className="pt-6 border-t border-slate-900/60 mt-8 space-y-6">
-            <div className="bg-slate-950 border-2 border-dashed border-red-600/20 p-6 font-mono text-left">
+            <div className="bg-slate-950 border-2 border-dashed border-red-600/20 p-4 sm:p-6 font-mono text-left">
               <span className="text-[9px] tracking-widest text-red-500 font-black block uppercase mb-1.5">// ADMINISTRATIVE RECOVERY SYSTEM</span>
               <p className="text-xs text-slate-400 normal-case mb-4 font-medium font-sans">Automatically re-transmit the secure access link to the target stakeholder's inbox without leaving the workspace presentation.</p>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 bg-black border border-slate-900 p-4 justify-between">
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full sm:w-auto">
                   <span className="text-white text-xs font-black uppercase tracking-tight">Registered Recipient Email:</span>
                   <span className="text-slate-500 font-mono text-xs lowercase select-all break-all tracking-tight font-bold mt-1">
                     {audit?.lead_email || "No email bound to dossier state."}
@@ -461,7 +455,7 @@ export default function UnifiedResultsPortal() {
                       alert("METRIC EXCEPTION: Re-transmission pathway obstructed.");
                     }
                   }}
-                  className={`font-black px-5 py-3 text-[10px] uppercase tracking-widest flex items-center gap-2 transition-all cursor-pointer border shrink-0 ${
+                  className={`font-black px-5 py-3 text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer border shrink-0 w-full sm:w-auto ${
                     copiedLink 
                       ? "bg-green-600 border-green-600 text-white" 
                       : "bg-red-600 border-red-600 text-white hover:bg-white hover:text-black"
@@ -473,15 +467,15 @@ export default function UnifiedResultsPortal() {
               </div>
             </div>
 
-            <div className="bg-slate-950 border border-slate-900 p-8 font-mono text-left">
+            <div className="bg-slate-950 border border-slate-900 p-5 sm:p-8 font-mono text-left">
               <div className="border-b border-slate-900 pb-3 mb-6">
                 <span className="text-[9px] tracking-widest text-amber-500 font-black block uppercase">// LIVE CONSULTATION PLAYBOOK DISPATCH</span>
-                <h4 className="text-lg font-black text-white italic tracking-tight mt-1">CORE PERSONA DISCOVERY LENSES</h4>
+                <h4 className="text-base sm:text-lg font-black text-white italic tracking-tight mt-1">CORE PERSONA DISCOVERY LENSES</h4>
                 <p className="text-[11px] text-slate-500 normal-case font-sans mt-1">Execute these hard-targeted diagnostic vectors at the tail-end of Call 1 immediately following the presentation of the primary System Verdict.</p>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 font-sans text-xs normal-case font-medium">
-                <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
+                <div className="border border-slate-900 bg-black/40 p-4 sm:p-5 space-y-3">
                   <span className="text-[9px] font-mono tracking-widest text-red-500 font-black block uppercase">// 1. THE STRATEGIC LENS (C-SUITE / BOARD LIABILITY)</span>
                   <div className="space-y-2 text-slate-300">
                     <p><strong>Q1:</strong> "When you look at your annual automation expenditure, what percentage of that capital do you estimate is currently leaking into repetitive, unbudgeted maintenance cycles?"</p>
@@ -489,7 +483,7 @@ export default function UnifiedResultsPortal() {
                   </div>
                 </div>
 
-                <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
+                <div className="border border-slate-900 bg-black/40 p-4 sm:p-5 space-y-3">
                   <span className="text-[9px] font-mono tracking-widest text-blue-400 font-black block uppercase">// 2. THE PIPELINE ENGINEERING LENS (DARRYL / INFRASTRUCTURE)</span>
                   <div className="space-y-2 text-slate-300">
                     <p><strong>Q1:</strong> "How frequently do unannounced third-party API mutations or silent schema transformations break your downstream data integrity? Is it a daily firefight or an intermittent weekly drift?"</p>
@@ -497,7 +491,7 @@ export default function UnifiedResultsPortal() {
                   </div>
                 </div>
 
-                <div className="border border-slate-900 bg-black/40 p-5 space-y-3">
+                <div className="border border-slate-900 bg-black/40 p-4 sm:p-5 space-y-3">
                   <span className="text-[9px] font-mono tracking-widest text-purple-400 font-black block uppercase">// 3. THE OPERATIONAL MANAGEMENT LENS (TEAM SHADOW LABOR)</span>
                   <div className="space-y-2 text-slate-300">
                     <p><strong>Q1:</strong> "What percentage of your core engineering team's capacity is being burned on 'shadow labor'—meaning they are manually repeating repairs and nursing broken integrations instead of building new velocity?"</p>
@@ -521,7 +515,7 @@ export default function UnifiedResultsPortal() {
                       }
                       setIsEmailModalOpen(true);
                     }}
-                    className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-5 border uppercase transition-all duration-300 w-full ${
+                    className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-4 sm:p-5 border uppercase transition-all duration-300 w-full ${
                       isPaidGateUnlocked
                         ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-lg shadow-red-950/20"
                         : "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed opacity-50 pointer-events-none select-none"
@@ -534,7 +528,7 @@ export default function UnifiedResultsPortal() {
 
                 <button 
                   onClick={fireBriefingSequence}
-                  className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-5 uppercase w-full font-black tracking-tight cursor-pointer"
+                  className="bg-amber-600 hover:bg-amber-700 text-black border border-amber-500 text-xs font-mono tracking-wider p-4 sm:p-5 uppercase w-full font-black tracking-tight cursor-pointer"
                 >
                   COMPILE PARTIAL ANSWERS
                 </button>
@@ -545,11 +539,11 @@ export default function UnifiedResultsPortal() {
 
         {!verifyIsAdminView && !isPhaseTwoActive && (
           <div 
-            className="bg-white text-black p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[16px] shadow-2xl text-center mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
+            className="bg-white text-black p-6 sm:p-10 md:p-14 flex flex-col items-center justify-center group cursor-pointer border-l-[12px] sm:border-l-[16px] shadow-2xl text-center mt-8 sm:mt-12 hover:bg-slate-50 transition-all duration-300 border-green-600" 
             onClick={fireBriefingSequence}
           >
-            <h4 className="text-black text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
-            <p className="text-slate-500 text-[10px] font-black tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
+            <h4 className="text-black text-xl sm:text-2xl md:text-3xl font-black transition-colors group-hover:text-green-600">INITIALIZE DIAGNOSTIC BRIEFING</h4>
+            <p className="text-slate-500 text-[9px] sm:text-[10px] font-black tracking-[0.2em] sm:tracking-[0.25em] mt-2">[ CLICK TO ENGAGE WORKSHOP CONFIGURATOR & CONFIRM RECONSTRUCTION RUN ]</p>
           </div>
         )}
       </main>
