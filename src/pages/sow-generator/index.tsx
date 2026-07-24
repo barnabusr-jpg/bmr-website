@@ -6,8 +6,9 @@ import { generatePdf } from '../../lib/generatePdf';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 import { 
   Terminal, Briefcase, Download, ShieldAlert, 
-  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon 
+  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText
 } from 'lucide-react';
+import { GovernanceSupplementView } from '@/components/GovernanceSupplementView';
 
 interface AnomalyRemediationNode {
   title: string;
@@ -34,13 +35,13 @@ export default function SOWBuilderStandalone() {
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [selectedDirectives, setSelectedDirectives] = useState<string[]>([]);
   const [urlParams, setUrlParams] = useState<Record<string, string>>({});
+  const [includeGovernance, setIncludeGovernance] = useState(true);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
     const matrixToken = params.get('matrix');
 
-    // Store all active parameters to support dynamic live slider overrides
     const paramObj: Record<string, string> = {};
     params.forEach((value, key) => {
       paramObj[key] = value;
@@ -79,7 +80,6 @@ export default function SOWBuilderStandalone() {
     const dbDecay = urlParams.decay ? parseInt(urlParams.decay) : (diagnosticData.decay_pct || 24);
     const spend = urlParams.spend ? parseFloat(urlParams.spend) : 1.2;
 
-    // Handle live-sync overrides from the presentation command dashboard
     if (urlParams.live_sync === "true" && urlParams.tax) {
       const parsedTax = parseFloat(urlParams.tax);
       return {
@@ -90,7 +90,6 @@ export default function SOWBuilderStandalone() {
       };
     }
 
-    // Default calculations
     const fteCount = Math.round((spend * 1000000) / 200000) || 6;
     const laborMultiplier = 0.5;
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
@@ -108,7 +107,7 @@ export default function SOWBuilderStandalone() {
     if (!diagnosticData) return null;
 
     const orgName = (diagnosticData.org || 'TARGET SPECIFICATION').replace(/_/g, ' ');
-    const stableSeed = getStableHash(orgName, 25); // Seed offset between 0 and 25
+    const stableSeed = getStableHash(orgName, 25);
     
     let computed = null;
     if (diagnosticData.ans && Array.isArray(diagnosticData.ans) && diagnosticData.ans.length > 0) {
@@ -123,7 +122,6 @@ export default function SOWBuilderStandalone() {
       }
     }
 
-    // Apply active overrides to diagnostic meters
     const parsedReliability = urlParams.decay 
       ? Math.max(10, Math.min(99, 100 - parseInt(urlParams.decay))) 
       : (computed?.reliabilityIndex && computed.reliabilityIndex > 0
@@ -160,11 +158,8 @@ export default function SOWBuilderStandalone() {
     if (!diagnosticData || !metrics) return [];
     const entries: AnomalyRemediationNode[] = [];
 
-    // Dynamically scale pricing based on Process Waste Tax to guarantee unique outputs per team
     const baseTaxPool = metrics.totalLaborTaxPool > 0 ? metrics.totalLaborTaxPool : 180000;
     
-    // ⚙️ COMMERCIAL PRICING ENGINE MULTIPLIERS
-    // Adjusted percentages to scale raw values beautifully into enterprise-grade advisory ranges
     const dynamicPrice1 = Math.round((baseTaxPool * 0.027) / 10) * 10;
     const dynamicPrice2 = Math.round((baseTaxPool * 0.0132) / 10) * 10;
 
@@ -251,11 +246,11 @@ export default function SOWBuilderStandalone() {
         
         <div className="border-b border-slate-900 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-4xl md:text-6xl font-black text-white uppercase tracking-tighter leading-none italic">
+            <h1 className="text-[clamp(2.2rem,5vw,3.75rem)] font-black text-white uppercase tracking-tighter leading-none italic">
               STATEMENT OF WORK <span className="text-red-600">BUILDER</span>
             </h1>
             <span className="text-[10px] font-mono font-black text-zinc-500 tracking-widest block mt-2 not-italic">
-              // BMR SOLUTIONS // RUNTIME EXTENSION STACK // NO-DB STATUTORY LAYER
+              // BMR SOLUTIONS // CLOSING THE PROMISE GAP™ // PRE-AUTOMATION CONTROL PLANE
             </span>
           </div>
 
@@ -283,25 +278,43 @@ export default function SOWBuilderStandalone() {
         {diagnosticData && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
             
-            <div className="lg:col-span-1 border border-slate-900 bg-slate-950/50 p-6 rounded-sm space-y-4 font-mono not-italic text-xs">
-              <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black">// CONTROL PANEL</span>
-              <h4 className="text-white text-xs font-black uppercase tracking-wider mb-2">Remediation Toggles</h4>
-              <div className="space-y-2">
-                {activeRemediations.map((rem: AnomalyRemediationNode) => {
-                  const isActive = selectedDirectives.includes(rem.title);
-                  return (
-                    <button
-                      key={rem.title}
-                      onClick={() => toggleDirective(rem.title)}
-                      className={`w-full text-left p-3 border rounded-xs font-mono font-bold tracking-tight text-[11px] transition-all flex items-center justify-between cursor-pointer ${
-                        isActive ? 'border-red-600 bg-red-950/10 text-white' : 'border-slate-900 bg-black text-slate-500'
-                      }`}
-                    >
-                      <span className="truncate pr-2">{rem.title}</span>
-                      {isActive ? <Eye size={12} className="text-red-500" /> : <EyeOff size={12} />}
-                    </button>
-                  );
-                })}
+            <div className="lg:col-span-1 border border-slate-900 bg-slate-950/50 p-6 rounded-sm space-y-6 font-mono not-italic text-xs">
+              <div>
+                <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-1">// CONTROL PANEL</span>
+                <h4 className="text-white text-xs font-black uppercase tracking-wider mb-3">Remediation Toggles</h4>
+                <div className="space-y-2">
+                  {activeRemediations.map((rem: AnomalyRemediationNode) => {
+                    const isActive = selectedDirectives.includes(rem.title);
+                    return (
+                      <button
+                        key={rem.title}
+                        onClick={() => toggleDirective(rem.title)}
+                        className={`w-full text-left p-3 border rounded-xs font-mono font-bold tracking-tight text-[11px] transition-all flex items-center justify-between cursor-pointer ${
+                          isActive ? 'border-red-600 bg-red-950/10 text-white' : 'border-slate-900 bg-black text-slate-500'
+                        }`}
+                      >
+                        <span className="truncate pr-2">{rem.title}</span>
+                        {isActive ? <Eye size={12} className="text-red-500 shrink-0" /> : <EyeOff size={12} className="shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 🛡️ GOVERNANCE SUPPLEMENT TOGGLE */}
+              <div className="border-t border-slate-900 pt-4">
+                <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-2">// DIRECTIVE OVERLAYS</span>
+                <button
+                  onClick={() => setIncludeGovernance(prev => !prev)}
+                  className={`w-full text-left p-3 border rounded-xs font-mono font-bold tracking-tight text-[11px] transition-all flex items-center justify-between cursor-pointer ${
+                    includeGovernance ? 'border-amber-600/60 bg-amber-950/10 text-amber-400' : 'border-slate-900 bg-black text-slate-500'
+                  }`}
+                >
+                  <span className="truncate pr-2 flex items-center gap-1.5">
+                    <FileText size={12} className="shrink-0" /> GOVERNANCE SUPPLEMENT
+                  </span>
+                  {includeGovernance ? <CheckCircle size={12} className="text-amber-400 shrink-0" /> : <EyeOff size={12} className="shrink-0" />}
+                </button>
               </div>
             </div>
 
@@ -310,12 +323,12 @@ export default function SOWBuilderStandalone() {
               <div className="border border-slate-900 bg-slate-950/40 p-6 rounded-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono not-italic text-xs text-zinc-400">
                 <div>
                   <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-1">// COGNITIVE TARGET ENTITY CODE</span>
-                  <strong className="text-white text-lg font-sans italic font-black tracking-tighter">{diagnosticData.org?.replace(/_/g, ' ')}</strong>
+                  <strong className="text-white text-lg font-sans italic font-black tracking-tighter break-words">{diagnosticData.org?.replace(/_/g, ' ')}</strong>
                 </div>
                 <div className="text-left sm:text-right">
                   <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-1">// TELEMETRY VALIDATION LAYER</span>
                   <span className="text-green-500 font-black tracking-widest uppercase flex items-center sm:justify-end gap-1.5">
-                    <CheckCircle size={14} /> IMMUTABLE TOKEN SIGNAL PARSED
+                    <CheckCircle size={14} className="shrink-0" /> IMMUTABLE TOKEN SIGNAL PARSED
                   </span>
                 </div>
               </div>
@@ -323,8 +336,8 @@ export default function SOWBuilderStandalone() {
               {forensicAnalytics && (
                 <div className="border border-slate-900 bg-black/60 p-6 rounded-sm grid grid-cols-1 md:grid-cols-4 gap-6 font-mono not-italic text-xs">
                   <div className="md:col-span-4 border-b border-slate-900 pb-2 flex items-center gap-2">
-                    <BarChart2 size={14} className="text-red-500" />
-                    <span className="text-white font-black tracking-wider text-[10px]">// FORENSIC EVIDENCE & FIDELITY SPECIFICATIONS</span>
+                    <BarChart2 size={14} className="text-red-500 shrink-0" />
+                    <span className="text-white font-black tracking-wider text-[10px]">// FORENSIC EVIDENCE SPECIFICATIONS</span>
                   </div>
 
                   <div>
@@ -334,29 +347,29 @@ export default function SOWBuilderStandalone() {
                         forensicAnalytics.reliabilityIndex > 70 ? 'text-green-500' : forensicAnalytics.reliabilityIndex > 40 ? 'text-yellow-500' : 'text-red-500'
                       }`}>{forensicAnalytics.reliabilityIndex}%</span>
                     </div>
-                    <p className="text-[10px] text-zinc-500 tracking-tight mt-1 uppercase">FROM {forensicAnalytics.sampleSize} STRUCTURAL VECTOR POINTS.</p>
+                    <p className="text-[10px] text-zinc-500 tracking-tight mt-1 uppercase">FROM {forensicAnalytics.sampleSize} VECTOR POINTS.</p>
                   </div>
 
                   <div>
                     <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">DOMINANT BASIS</span>
-                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px]">
-                      <Shield size={12} className="text-red-400" />
+                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px] break-words">
+                      <Shield size={12} className="text-red-400 shrink-0" />
                       {forensicAnalytics.dominantBasis?.replace(/_/g, ' ')}
                     </div>
                   </div>
 
                   <div>
                     <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">PRIMARY VECTOR DRIVER</span>
-                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px]">
-                      <Terminal size={12} className="text-red-400" />
+                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px] break-words">
+                      <Terminal size={12} className="text-red-400 shrink-0" />
                       {forensicAnalytics.dominantDriver?.replace(/_/g, ' ')}
                     </div>
                   </div>
 
                   <div>
                     <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">COGNITION POSTURE STATE</span>
-                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px]">
-                      <AwareIcon size={12} className="text-red-400" />
+                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px] break-words">
+                      <AwareIcon size={12} className="text-red-400 shrink-0" />
                       {forensicAnalytics.dominantVisibility}
                     </div>
                   </div>
@@ -375,7 +388,7 @@ export default function SOWBuilderStandalone() {
                     <div className="border-b border-slate-900 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <div>
                         <span className="text-[10px] font-mono text-red-500 block font-black tracking-widest not-italic">// REMEDIATION TRACK CODE: 0{idx + 1}</span>
-                        <h2 className="text-2xl font-black text-white tracking-tighter font-sans">{anomaly.title}</h2>
+                        <h2 className="text-2xl font-black text-white tracking-tighter font-sans break-words">{anomaly.title}</h2>
                         <p className="text-xs text-slate-500 font-sans not-italic normal-case font-medium mt-1">{anomaly.scope}</p>
                       </div>
                       <div className="bg-slate-900 border border-slate-800 px-4 py-2 font-mono not-italic text-xs text-zinc-300 font-black rounded-xs tracking-wider uppercase">
@@ -386,7 +399,7 @@ export default function SOWBuilderStandalone() {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 not-italic normal-case font-sans tracking-normal font-normal text-sm text-slate-300">
                       <div className="border border-slate-900 bg-black/40 p-6 rounded-sm space-y-4">
                         <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
-                          <Terminal size={16} className="text-red-500" />
+                          <Terminal size={16} className="text-red-500 shrink-0" />
                           <h3 className="text-red-500 font-mono text-xs font-black uppercase tracking-widest">// ARCHITECTURAL TECHNICAL RUNBOOK</h3>
                         </div>
                         <p className="text-xs text-slate-400 italic leading-relaxed">
@@ -405,7 +418,7 @@ export default function SOWBuilderStandalone() {
 
                       <div className="border border-slate-900 bg-black/40 p-6 rounded-sm space-y-4">
                         <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
-                          <Briefcase size={16} className="text-indigo-400" />
+                          <Briefcase size={16} className="text-indigo-400 shrink-0" />
                           <h3 className="text-indigo-400 font-mono text-xs font-black uppercase tracking-widest">// PROCEDURAL OPERATIONAL PLAYBOOK</h3>
                         </div>
                         <p className="text-xs text-slate-400 italic leading-relaxed">
@@ -424,6 +437,9 @@ export default function SOWBuilderStandalone() {
                     </div>
                   </div>
                 ))}
+
+                {/* 🛡️ GOVERNANCE & COMPLIANCE SUPPLEMENT DISPLAY LAYER */}
+                {includeGovernance && <GovernanceSupplementView />}
               </div>
             </div>
           </div>

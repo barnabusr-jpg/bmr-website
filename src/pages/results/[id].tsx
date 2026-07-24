@@ -1,9 +1,10 @@
 "use client";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import { Lock, Unlock, Activity, Check } from "lucide-react";
+import { Lock, Unlock, Activity, Check, ShieldAlert } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
+import { GovernanceSupplementView } from "@/components/GovernanceSupplementView";
 
 interface LossTickerProps { 
   diagnosticCompletedAt: string | null | undefined; 
@@ -37,8 +38,6 @@ function RealTimeLossTicker({
 
   useEffect(() => {
     // 🔒 ANCHOR ALIGNMENT SYNCHRONIZATION PROTOCOL
-    // Fall back to a completely unified static milestone string if the parent state
-    // is resolving asynchronous fields, ensuring zero starting delta offsets.
     const targetTimestamp = diagnosticCompletedAt || "2026-07-16T00:00:00.000Z";
     const baselineAnchorTime = new Date(targetTimestamp).getTime();
     
@@ -86,7 +85,7 @@ function RealTimeLossTicker({
   return (
     <div 
       ref={displayRef}
-      className="font-mono font-black mt-2 tracking-tighter tabular-nums text-red-500 leading-none block break-keep text-4xl md:text-5xl"
+      className="font-mono font-black mt-2 tracking-tighter tabular-nums text-red-500 leading-none block break-keep text-[clamp(2rem,5vw,3.25rem)]"
     >
       $0.00
     </div>
@@ -261,9 +260,9 @@ export default function UnifiedResultsPortal() {
 
   if (!mounted || loading || !router.isReady || !audit) {
     return (
-      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
+      <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black p-4">
         <Activity className="animate-spin mb-4" size={48} />
-        <p className="font-mono text-xs uppercase tracking-[0.4em]">DECRYPTING SECURE VAULT METRICS...</p>
+        <p className="font-mono text-xs uppercase tracking-[0.4em] text-center">DECRYPTING SECURE VAULT METRICS...</p>
       </div>
     );
   }
@@ -288,7 +287,7 @@ export default function UnifiedResultsPortal() {
               }
               window.open(`/api/generate-pdf?${queryParams.toString()}`, "_blank");
             }} 
-            className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono"
+            className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono cursor-pointer transition-all"
           >
               DOWNLOAD FORENSIC LEDGER PDF
           </button>
@@ -296,14 +295,27 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
-        <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
-          <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
+        <div className="border-l-2 border-red-600/80 pl-4 py-1 space-y-1.5">
+          <span className="text-red-500 font-mono text-[9px] tracking-[0.3em] block font-black">// CLOSING THE PROMISE GAP™ // PRE-AUTOMATION CONTROL PLANE</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
-            {isPhaseTwoActive 
-              ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${Number(audit?.ai_spend || spend).toFixed(1)}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
-              : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
-            }
+            BMR Solutions evaluates the operational barriers causing enterprise AI to fail silently in production. Operational metrics are currently calibrated to your footprint of ${Number(audit?.ai_spend || spend).toFixed(1)}M annual software allocations across {metrics.fteCount} FTE resources.
           </p>
+        </div>
+
+        {/* --- THE INFRASTRUCTURE INVERSION METHODOLOGY NOTE --- */}
+        <div className="bg-slate-950 border-l-4 border-amber-500 p-5 sm:p-6 font-mono text-xs text-left space-y-2 italic shadow-xl">
+          <div className="flex items-center gap-2 text-amber-500 font-black tracking-widest text-[10px] uppercase">
+            <ShieldAlert size={14} className="shrink-0" />
+            // METHODOLOGY ANALYSIS: THE INFRASTRUCTURE INVERSION
+          </div>
+          
+          <p className="text-slate-300 text-xs font-sans normal-case italic font-normal leading-relaxed">
+            <strong className="text-white font-bold">The Infrastructure Inversion:</strong> Enterprise research establishes that AI automation initiatives outpace Infrastructure as Code (IaC) investments by nearly 2:1. Attempting to deploy autonomous workspace agents without Git-based, version-controlled parameters directly accelerates the <span className="text-white font-bold underline decoration-amber-500/50">Promise Gap™</span>. BMR’s Tracks 01 & 02 translate analog operational chaos into version-aligned directives and deployment gates prior to runtime execution.
+          </p>
+          
+          <div className="pt-2 text-[8px] text-slate-500 tracking-widest uppercase font-mono">
+            VERIFIED TELEMETRY ANCHOR // FLEET IT RESEARCH BENCHMARK // 500+ IT LEADERS AUDITED
+          </div>
         </div>
 
         {audit?.status?.toUpperCase() === 'TRIANGULATION_ACTIVE' && (
@@ -331,10 +343,10 @@ export default function UnifiedResultsPortal() {
           </div>
         )}
 
-        <div className={`bg-white text-black p-8 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
+        <div className={`bg-white text-black p-6 sm:p-10 md:p-14 border-l-[12px] md:border-l-[16px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-2xl relative ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-8 md:space-y-10">
             <div>
-              <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-none md:leading-none text-black break-words">
+              <h1 className="text-[clamp(2rem,5.5vw,4.5rem)] font-black tracking-tighter leading-none text-black break-words">
                 {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
               </h1>
               <p className="text-[10px] md:text-[11px] font-mono text-slate-400 tracking-widest mt-2.5">
@@ -390,12 +402,12 @@ export default function UnifiedResultsPortal() {
 
         {/* METRICS SPLIT CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+          <div className="bg-[#050b18] border border-slate-900 p-10 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
+            <div className="text-[clamp(2.5rem,6vw,4.5rem)] font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
           </div>
-          <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
-            <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+          <div className="bg-[#050b18] border border-slate-900 p-10 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
+            <div className={`text-[clamp(2.5rem,6vw,4.5rem)] font-black tracking-tighter font-mono ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
             <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
           </div>
         </div>
@@ -421,7 +433,7 @@ export default function UnifiedResultsPortal() {
                   </span>
                 </div>
                 <div className="my-6 space-y-2">
-                  <h4 className="text-xl font-black text-white font-mono">{String(frac.id || 'ANOMALY DETECTED')}</h4>
+                  <h4 className="text-xl font-black text-white font-mono break-words">{String(frac.id || 'ANOMALY DETECTED')}</h4>
                   <p className="text-xs font-mono text-slate-300 font-normal leading-relaxed normal-case">{frac.description}</p>
                 </div>
                 <div className="border-t border-slate-900 pt-4 font-mono">
@@ -432,6 +444,9 @@ export default function UnifiedResultsPortal() {
             ))}
           </div>
         </div>
+
+        {/* 🛡️ GOVERNANCE & COMPLIANCE SUPPLEMENT DIRECTIVE BLOCK */}
+        <GovernanceSupplementView />
 
         {/* Admin Command Strip Container */}
         {verifyIsAdminView && (
