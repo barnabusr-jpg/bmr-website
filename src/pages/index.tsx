@@ -21,24 +21,24 @@ export default function LandingPage() {
           <div className="lg:col-span-7 space-y-12">
             <div className="border-l-8 border-red-600 pl-10">
               <span className="text-red-600 font-mono text-[11px] font-black tracking-[0.4em] uppercase">
-                NODE ACCESS: BMR SOLUTIONS FORENSIC UNIT
+                NODE ACCESS: BMR SOLUTIONS PRE-AUTOMATION CONTROL PLANE
               </span>
-              <h1 className="text-7xl md:text-[100px] font-black uppercase tracking-tighter leading-[0.8] mt-6 italic">
-                RECOVER<br />
-                <span className="text-red-600">WASTED</span><br />
-                ENGINEERING<br />
-                CAPACITY.
+              <h1 className="text-6xl sm:text-7xl md:text-[90px] font-black uppercase tracking-tighter leading-[0.85] mt-6 italic">
+                CLOSE THE<br />
+                <span className="text-red-600">PROMISE GAP™.</span><br />
+                MAKE AI EXECUTION<br />
+                DETERMINISTIC.
               </h1>
             </div>
 
-            <p className="text-xl md:text-3xl text-white max-w-2xl leading-tight font-black italic normal-case">
-              We find and isolate engineering pipeline mistakes before they break your automated systems. This protects your business from major financial liabilities. Our process is built on twenty years of secure infrastructure experience, and it measures your hidden friction in just a few minutes.
+            <p className="text-xl md:text-2xl text-slate-200 max-w-2xl leading-relaxed font-black italic normal-case">
+              Enterprises were promised that AI agents and workspace Copilots would unlock unprecedented velocity. Instead, leadership faces the Promise Gap™: the expanding rift between AI ambition and the operational reality of silent failures, schema drift, and unbudgeted developer rework. We diagnose the root causes of execution failure, quantify your Process Waste Tax, and output machine-readable directives and deployment gates your team can execute immediately.
             </p>
 
-            <div className="flex flex-col md:flex-row items-center gap-8 pt-8">
+            <div className="flex flex-col md:flex-row items-center gap-8 pt-4">
               <button 
                 onClick={() => router.push('/pulse-check')} 
-                className="group relative w-full md:w-auto bg-red-600 text-white px-16 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl border-2 border-red-600"
+                className="group relative w-full md:w-auto bg-red-600 text-white px-16 py-8 text-2xl font-black italic tracking-[0.3em] hover:bg-white hover:text-red-600 transition-all shadow-2xl border-2 border-red-600 cursor-pointer"
               >
                 EXECUTE STRATEGY
                 <Target className="absolute -top-4 -right-4 text-white group-hover:text-red-600 transition-all" size={32} />
@@ -62,12 +62,12 @@ export default function LandingPage() {
               <div className="absolute -top-1 -right-1 w-24 h-24 border-t-4 border-r-4 border-red-600 opacity-20 group-hover:opacity-100 transition-all" />
               
               <h2 className="text-6xl font-black text-red-600 italic tracking-tighter leading-none mb-10">
-                THE<br />REWORK<br />TAX.
+                THE<br />PROCESS<br />WASTE TAX.
               </h2>
 
               <div className="space-y-8 border-l-2 border-red-600/30 pl-8">
                 <p className="text-slate-400 text-lg leading-relaxed font-black italic normal-case">
-                  Your engineering team is spending thousands of dollars on repetitive repairs. This problem happens because of hidden database changes and unmanaged data movements. We trace the exact path of this financial waste and give your team a permanent blueprint to stop the loss.
+                  Your engineering team is spending thousands of dollars firefighting repetitive repairs. This financial drag happens when AI and automated systems run over drifting schemas, unmapped data workflows, and noisy telemetry layers. We trace the exact path of this capital waste and deliver a machine-readable blueprint to halt the loss.
                 </p>
                 
                 <div className="pt-4">
@@ -90,7 +90,7 @@ export default function LandingPage() {
               THE STRUCTURAL REALITY:<br />A TALE OF <span className="text-red-600">THREE STRATA.</span>
             </h2>
             <p className="text-xl text-slate-400 font-black italic normal-case max-w-3xl leading-relaxed mb-12">
-              Many business leaders look at engineering waste as an unavoidable expense. That view is incorrect. Capital loss is a structural flaw that lives between your business rules and your active computer code.
+              Many business leaders view engineering waste and AI brittleness as unavoidable costs. That view is incorrect. Capital loss is a structural flaw that lives in the unmapped middle layer between executive intent and active runtime execution.
             </p>
           </div>
 
@@ -102,7 +102,7 @@ export default function LandingPage() {
                 <div className="p-3 bg-slate-900 border border-slate-800 text-slate-400"><LayoutGrid size={20} /></div>
                 <div>
                   <h4 className="text-white font-black text-sm tracking-wider">// STRATA 01: STRATEGIC GOVERNANCE [THE C-SUITE VISION]</h4>
-                  <p className="text-slate-500 font-sans italic normal-case mt-0.5">This layer holds corporate rules, safety guidelines, and your main business vision goals.</p>
+                  <p className="text-slate-500 font-sans italic normal-case mt-0.5">This layer holds corporate policy, safety parameters, and board-level AI productivity objectives.</p>
                 </div>
               </div>
               <span className="text-slate-600 tracking-widest text-[10px] hidden md:inline">SYSTEMS ALIGNMENT TRACK</span>
@@ -111,7 +111,7 @@ export default function LandingPage() {
             {/* INTERSECTING CONNECTIVE GAP */}
             <div className="flex items-center gap-4 px-8 py-1 text-red-500">
               <Milestone size={14} />
-              <span className="text-[10px] tracking-[0.3em] font-black">WARNING: THE PROMISE GAP ENCOUNTERED</span>
+              <span className="text-[10px] tracking-[0.3em] font-black">WARNING: THE PROMISE GAP™ ENCOUNTERED</span>
             </div>
 
             {/* STRATA 2 - THE PROBLEM AREA */}
@@ -123,7 +123,7 @@ export default function LandingPage() {
                 <div className="p-3 bg-red-600/20 border border-red-600 text-red-500"><Layers size={20} /></div>
                 <div>
                   <h4 className="text-red-500 font-black text-sm tracking-wider">// STRATA 02: THE ENGINEERING PIPELINE [THE REWORK TAX ENGINE]</h4>
-                  <p className="text-slate-300 font-sans italic normal-case mt-0.5 max-w-2xl">This is the hidden middle layer where human engineers must manually fix and translate business rules into software code. This manual work causes massive pipeline friction and wastes your budget.</p>
+                  <p className="text-slate-300 font-sans italic normal-case mt-0.5 max-w-2xl">This is the unmapped middle layer where engineers must manually translate business logic into code while nursing drifting schemas. This manual friction triggers silent agent failures and drains senior engineering capacity.</p>
                 </div>
               </div>
               <span className="text-red-500 font-black tracking-widest text-[10px] hidden md:inline animate-pulse">CAPITAL BLEED DETECTED</span>
@@ -141,7 +141,7 @@ export default function LandingPage() {
                 <div className="p-3 bg-slate-900 border border-slate-800 text-slate-400"><Cpu size={20} /></div>
                 <div>
                   <h4 className="text-white font-black text-sm tracking-wider">// STRATA 03: OPERATIONAL RUNTIME [LIVE MACHINE EXECUTION]</h4>
-                  <p className="text-slate-500 font-sans italic normal-case mt-0.5">This layer runs active databases, automated software tools, data streams, and running pipelines.</p>
+                  <p className="text-slate-500 font-sans italic normal-case mt-0.5">This layer executes live databases, automated pipelines, vector search layers, and autonomous agents.</p>
                 </div>
               </div>
               <span className="text-slate-600 tracking-widest text-[10px] hidden md:inline">MACHINE STATE LOGS</span>
@@ -158,26 +158,26 @@ export default function LandingPage() {
             THE LEAP: FROM A DIAGNOSTIC ESTIMATE<br />TO A <span className="text-red-600">FORENSIC INTERVENTION.</span>
           </h3>
           <p className="text-base text-slate-400 font-black italic normal-case max-w-4xl leading-relaxed mb-12">
-            Fixing a large annual budget problem requires more than simple monitoring or basic questions. True recovery requires moving past a basic estimate and starting a complete technical review built on three clear ideas.
+            Closing the Promise Gap™ requires more than basic monitoring or surface-level dashboards. True recovery demands moving past passive logging to deploy machine-readable directives built on three foundational pillars.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* TRINITY PILLAR 1: THE MATH */}
             <div className="border border-slate-900 bg-slate-950/80 p-8 space-y-4">
-              <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 01 // THE VERIFIED MATH</div>
-              <h4 className="text-lg font-black text-white italic tracking-tight">THE RUN RATE METRICS LEDGER</h4>
+              <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 01 // QUANTIFY THE TAX</div>
+              <h4 className="text-lg font-black text-white italic tracking-tight">THE PROCESS WASTE TAX LEDGER</h4>
               <p className="text-xs text-slate-400 font-sans italic normal-case leading-relaxed">
-                We remove general guesses from the equation. We measure the exact friction points inside your second layer pipeline to show your true financial exposure.
+                We eliminate guesswork. We calculate the exact financial exposure and hidden labor tax resulting from drifting data pipelines, unmapped logic, and validation fatigue.
               </p>
             </div>
 
             {/* TRINITY PILLAR 2: THE TOOLING */}
             <div className="border border-slate-900 bg-slate-950/80 p-8 space-y-4 flex flex-col justify-between h-full">
               <div className="space-y-4">
-                <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 02 // FORENSIC TOOLING</div>
-                <h4 className="text-lg font-black text-white italic tracking-tight">360 DEGREE INGESTION AND 90 POINT LOGIC AUDIT</h4>
+                <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 02 // MACHINE-READABLE DIRECTIVES</div>
+                <h4 className="text-lg font-black text-white italic tracking-tight">TRACKS 01 & 02 RUNBOOKS</h4>
                 <p className="text-xs text-slate-400 font-sans italic normal-case leading-relaxed">
-                  Clear technical understanding requires advanced data collection. We combine quantitative numbers from your live software pipelines with a qualitative review of your development habits. This strict ninety point check traces design errors down to individual system boundaries based entirely on the answers you provide.
+                  We convert engineering reality into code-enforced requirements. Track 01 isolates pipeline abstraction and schema mutation drift, while Track 02 suppresses telemetry noise and validation fatigue.
                 </p>
               </div>
               
@@ -185,17 +185,17 @@ export default function LandingPage() {
               <div className="mt-4 p-4 bg-slate-900 border-l-4 border-red-600 font-mono text-[10px] tracking-wide text-slate-300 normal-case space-y-1">
                 <span className="text-red-500 font-black block uppercase tracking-widest">// ZERO SECURITY FOOTPRINT COMPLIANCE:</span>
                 <p>
-                  OUR SYSTEM DOES NOT CONNECT TO YOUR INFRASTRUCTURE. WE DO NOT VIEW YOUR ARCHITECTURAL METADATA, AND WE DO NOT TOUCH ANY OF YOUR DATA SOURCES.
+                  OUR SYSTEM DOES NOT CONNECT TO YOUR INFRASTRUCTURE. WE DO NOT VIEW YOUR ARCHITECTURAL METADATA, AND WE DO NOT TOUCH ANY OF YOUR CONFIDENTIAL DATA SOURCES.
                 </p>
               </div>
             </div>
 
             {/* TRINITY PILLAR 3: THE SHIELD */}
             <div className="border border-slate-900 bg-slate-950/80 p-8 space-y-4">
-              <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 03 // THE EXECUTIVE SHIELD</div>
-              <h4 className="text-lg font-black text-white italic tracking-tight">THE ENGINEERING MASTER BLUEPRINT</h4>
+              <div className="text-red-600 font-mono text-xs font-black tracking-widest">// 03 // DEPLOYMENT GATES</div>
+              <h4 className="text-lg font-black text-white italic tracking-tight">THE GOVERNANCE & COMPLIANCE SUPPLEMENT</h4>
               <p className="text-xs text-slate-400 font-sans italic normal-case leading-relaxed">
-                Technical measurements are useful only if they give you business leverage. Our review provides a clear blueprint to protect your financial margins, support team updates, and defend your corporate identity.
+                We establish non-negotiable prerequisites before automation scales. We output evidence-backed proof targets and gate criteria so agents never execute unverified actions or access over-shared data.
               </p>
             </div>
           </div>
