@@ -38,8 +38,6 @@ function RealTimeLossTicker({
 
   useEffect(() => {
     // 🔒 ANCHOR ALIGNMENT SYNCHRONIZATION PROTOCOL
-    // Fall back to a completely unified static milestone string if the parent state
-    // is resolving asynchronous fields, ensuring zero starting delta offsets.
     const targetTimestamp = diagnosticCompletedAt || "2026-07-16T00:00:00.000Z";
     const baselineAnchorTime = new Date(targetTimestamp).getTime();
     
@@ -289,7 +287,7 @@ export default function UnifiedResultsPortal() {
               }
               window.open(`/api/generate-pdf?${queryParams.toString()}`, "_blank");
             }} 
-            className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono"
+            className="flex items-center gap-2 bg-slate-950 hover:bg-white hover:text-black border border-slate-800 text-xs px-5 py-3 font-mono cursor-pointer transition-all"
           >
               DOWNLOAD FORENSIC LEDGER PDF
           </button>
@@ -297,13 +295,10 @@ export default function UnifiedResultsPortal() {
       </nav>
 
       <main className="max-w-7xl mx-auto pt-12 md:pt-16 px-6 md:px-12 pb-32 space-y-12">
-        <div className="border-l-2 border-slate-800 pl-4 py-1 space-y-1">
-          <span className="text-slate-500 font-mono text-[9px] tracking-[0.3em] block">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
+        <div className="border-l-2 border-red-600/80 pl-4 py-1 space-y-1.5">
+          <span className="text-red-500 font-mono text-[9px] tracking-[0.3em] block font-black">// CLOSING THE PROMISE GAP™ // PRE-AUTOMATION CONTROL PLANE</span>
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
-            {isPhaseTwoActive 
-              ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${Number(audit?.ai_spend || spend).toFixed(1)}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
-              : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
-            }
+            BMR Solutions evaluates the operational barriers causing enterprise AI to fail silently in production. Operational metrics are currently calibrated to your footprint of ${Number(audit?.ai_spend || spend).toFixed(1)}M annual software allocations across {metrics.fteCount} FTE resources.
           </p>
         </div>
 
