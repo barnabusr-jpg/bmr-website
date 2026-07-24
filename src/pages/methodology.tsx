@@ -2,7 +2,7 @@
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Shield, Activity, Zap, Scale, Target, AlertCircle, Briefcase, Lock } from "lucide-react";
+import { Shield, Activity, Zap, Scale, Target, AlertCircle, Briefcase, Lock, ShieldAlert } from "lucide-react";
 
 export default function Methodology() {
   const nodes = [
@@ -123,6 +123,24 @@ export default function Methodology() {
                 </div>
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* --- THE INFRASTRUCTURE INVERSION METHODOLOGY BANNER --- */}
+        <section className="mb-20 sm:mb-24 max-w-7xl mx-auto">
+          <div className="bg-slate-950 border-l-4 border-amber-500 p-6 sm:p-8 font-mono text-xs text-left space-y-3 italic shadow-2xl">
+            <div className="flex items-center gap-2 text-amber-500 font-black tracking-widest text-xs uppercase">
+              <ShieldAlert size={16} className="shrink-0" />
+              // METHODOLOGY ANALYSIS: THE INFRASTRUCTURE INVERSION
+            </div>
+            
+            <p className="text-slate-300 text-xs sm:text-sm font-sans normal-case italic font-normal leading-relaxed max-w-5xl">
+              <strong className="text-white font-bold">The Infrastructure Inversion:</strong> Enterprise research establishes that AI automation initiatives outpace Infrastructure as Code (IaC) investments by nearly 2:1. Attempting to deploy autonomous workspace agents without Git-based, version-controlled parameters directly accelerates the <span className="text-white font-bold underline decoration-amber-500/50">Promise Gap™</span>. BMR’s Tracks 01 & 02 translate analog operational chaos into version-aligned directives and deployment gates prior to runtime execution.
+            </p>
+            
+            <div className="pt-2 text-[9px] text-slate-500 tracking-widest uppercase font-mono">
+              VERIFIED TELEMETRY ANCHOR // FLEET IT RESEARCH BENCHMARK // 500+ ENTERPRISE IT LEADS AUDITED
+            </div>
           </div>
         </section>
 
