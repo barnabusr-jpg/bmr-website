@@ -3,7 +3,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Activity, Target, Shield, LayoutGrid, Layers, Cpu, Milestone } from 'lucide-react';
+import { Activity, Target, Shield, LayoutGrid, Layers, Cpu, Milestone, ShieldAlert } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LandingPage() {
@@ -146,6 +146,45 @@ export default function LandingPage() {
               </div>
               <span className="text-slate-600 tracking-widest text-[9px] sm:text-[10px] hidden md:inline shrink-0">MACHINE STATE LOGS</span>
             </div>
+          </div>
+        </div>
+
+        {/* --- INDUSTRY DISCONNECT: THE PERSISTENT IaC DEFICIT CALLOUT --- */}
+        <div className="mt-20 sm:mt-28 border border-slate-900 bg-slate-950 p-6 sm:p-10 relative overflow-hidden italic">
+          <div className="absolute top-0 right-0 bg-red-600 text-slate-950 font-mono text-[9px] font-black px-4 py-1 tracking-widest uppercase">
+            INDUSTRY BENCHMARK TELEMETRY
+          </div>
+
+          <div className="max-w-3xl space-y-3 mb-8">
+            <span className="text-red-600 font-mono text-[9px] sm:text-[10px] font-black tracking-[0.3em] uppercase block">
+              // THE INFRASTRUCTURE INVERSION
+            </span>
+            <h3 className="text-2xl sm:text-4xl font-black italic tracking-tighter uppercase text-white leading-none">
+              THE PERSISTENT <span className="text-red-600">IaC DEFICIT.</span>
+            </h3>
+            <p className="text-slate-400 text-xs sm:text-sm font-sans italic normal-case leading-relaxed">
+              Industry benchmarks across 500+ IT organizations reveal why autonomous agents fail silently in production: enterprise AI priorities outpace machine-readable infrastructure guardrails by nearly two-to-one. Attempting to scale automation without version-controlled rules exposes systems to massive unverified execution risk.
+            </p>
+          </div>
+
+          {/* SPLIT METRIC DISPLAY */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono">
+            <div className="border border-slate-900 bg-black/60 p-5 space-y-1">
+              <span className="text-slate-500 text-[9px] tracking-widest font-black uppercase block">// TOP ENTERPRISE PRIORITY</span>
+              <div className="text-3xl sm:text-4xl font-black text-white tracking-tighter">46.5%</div>
+              <p className="text-[11px] text-slate-400 normal-case font-sans italic">Prioritizing AI-Driven Automation</p>
+            </div>
+
+            <div className="border border-red-900/40 bg-red-950/10 p-5 space-y-1">
+              <span className="text-red-500 text-[9px] tracking-widest font-black uppercase block">// CRITICAL MISSING FOUNDATION</span>
+              <div className="text-3xl sm:text-4xl font-black text-red-500 tracking-tighter">29.6%</div>
+              <p className="text-[11px] text-slate-300 normal-case font-sans italic">Prioritizing Infrastructure as Code (IaC)</p>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-slate-900/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 font-mono text-[9px] text-slate-500 uppercase tracking-widest">
+            <span>SOURCE: FLEET IT RESEARCH BENCHMARK // 500+ ENTERPRISE IT LEADS</span>
+            <span className="text-red-500 font-bold">// THE PROMISE GAP™ ACCELERATOR</span>
           </div>
         </div>
 
