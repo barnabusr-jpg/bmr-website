@@ -42,7 +42,6 @@ export default function SOWBuilderStandalone() {
     const params = new URLSearchParams(window.location.search);
     const matrixToken = params.get('matrix');
 
-    // Store all active parameters to support dynamic live slider overrides
     const paramObj: Record<string, string> = {};
     params.forEach((value, key) => {
       paramObj[key] = value;
@@ -81,7 +80,6 @@ export default function SOWBuilderStandalone() {
     const dbDecay = urlParams.decay ? parseInt(urlParams.decay) : (diagnosticData.decay_pct || 24);
     const spend = urlParams.spend ? parseFloat(urlParams.spend) : 1.2;
 
-    // Handle live-sync overrides from the presentation command dashboard
     if (urlParams.live_sync === "true" && urlParams.tax) {
       const parsedTax = parseFloat(urlParams.tax);
       return {
@@ -92,7 +90,6 @@ export default function SOWBuilderStandalone() {
       };
     }
 
-    // Default calculations
     const fteCount = Math.round((spend * 1000000) / 200000) || 6;
     const laborMultiplier = 0.5;
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
@@ -110,7 +107,7 @@ export default function SOWBuilderStandalone() {
     if (!diagnosticData) return null;
 
     const orgName = (diagnosticData.org || 'TARGET SPECIFICATION').replace(/_/g, ' ');
-    const stableSeed = getStableHash(orgName, 25); // Seed offset between 0 and 25
+    const stableSeed = getStableHash(orgName, 25);
     
     let computed = null;
     if (diagnosticData.ans && Array.isArray(diagnosticData.ans) && diagnosticData.ans.length > 0) {
@@ -125,7 +122,6 @@ export default function SOWBuilderStandalone() {
       }
     }
 
-    // Apply active overrides to diagnostic meters
     const parsedReliability = urlParams.decay 
       ? Math.max(10, Math.min(99, 100 - parseInt(urlParams.decay))) 
       : (computed?.reliabilityIndex && computed.reliabilityIndex > 0
@@ -162,11 +158,8 @@ export default function SOWBuilderStandalone() {
     if (!diagnosticData || !metrics) return [];
     const entries: AnomalyRemediationNode[] = [];
 
-    // Dynamically scale pricing based on Process Waste Tax to guarantee unique outputs per team
     const baseTaxPool = metrics.totalLaborTaxPool > 0 ? metrics.totalLaborTaxPool : 180000;
     
-    // ⚙️ COMMERCIAL PRICING ENGINE MULTIPLIERS
-    // Adjusted percentages to scale raw values beautifully into enterprise-grade advisory ranges
     const dynamicPrice1 = Math.round((baseTaxPool * 0.027) / 10) * 10;
     const dynamicPrice2 = Math.round((baseTaxPool * 0.0132) / 10) * 10;
 
@@ -257,7 +250,7 @@ export default function SOWBuilderStandalone() {
               STATEMENT OF WORK <span className="text-red-600">BUILDER</span>
             </h1>
             <span className="text-[10px] font-mono font-black text-zinc-500 tracking-widest block mt-2 not-italic">
-              // BMR SOLUTIONS // RUNTIME EXTENSION STACK // NO-DB STATUTORY LAYER
+              // BMR SOLUTIONS // CLOSING THE PROMISE GAP™ // PRE-AUTOMATION CONTROL PLANE
             </span>
           </div>
 
