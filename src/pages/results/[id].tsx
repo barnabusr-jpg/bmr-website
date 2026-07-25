@@ -30,13 +30,29 @@ function RealTimeLossTicker({ diagnosticCompletedAt, exposure, anomalies, isArch
   }, [anomalies]);
 
   useEffect(() => {
-    const targetTimestamp = diagnosticCompletedAt || "2026-07-16T00:00:00.000Z";
-    const baselineAnchorTime = new Date(targetTimestamp).getTime();
+    // 🛑 1. Guard against unhydrated state to prevent false resets
+    if (!diagnosticCompletedAt) return;
+
+    const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
+    if (isNaN(baselineAnchorTime)) return;
+
     const validExposure = exposure && !isNaN(exposure) && exposure > 0 ? exposure : 280000;
     const lossPerSecond = (validExposure / 31536000) * severityVelocityMultiplier;
 
-    const initialAccumulatedLoss = Math.max(0, (Date.now() - baselineAnchorTime) / 1000) * lossPerSecond;
+    // 🎯 2. Compute exact historical loss accrued from audit creation to this exact millisecond
+    const now = Date.now();
+    const elapsedSeconds = Math.max(0, (now - baselineAnchorTime) / 1000);
+    const initialAccumulatedLoss = elapsedSeconds * lossPerSecond;
+    
     runningTotalRef.current = initialAccumulatedLoss;
+
+    // ⚡ 3. Immediately render initial dollar value to the DOM
+    if (displayRef.current) {
+      displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
 
     let animationFrameId: number;
     let lastTimestamp = performance.now();
@@ -240,7 +256,7 @@ export default function InitialPrescreenPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             <RealTimeLossTicker 
-              diagnosticCompletedAt={audit?.created_at || "2026-07-16T00:00:00.000Z"} 
+              diagnosticCompletedAt={audit?.created_at} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
               anomalies={genericAnomalies}
               isArchived={false}
