@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
+import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
 import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { decompressFromEncodedURIComponent } from 'lz-string';
@@ -340,7 +341,7 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  const allPersonasComplete = triangulation      
+  const allPersonasComplete = triangulation       
     ? Object.values(triangulation.completions).every(status => status === true) 
     : false; 
 
@@ -400,6 +401,22 @@ export default function ForensicEngineRoot() {
       regulatoryAlertActive: calculated.regulatoryAlertActive 
     }; 
   }, [triangulation, activePillar]); 
+
+  // 🛡️ PROPS FOR GOVERNANCE SUPPLEMENT
+  const governanceMetrics = useMemo(() => ({
+    totalLaborTaxPool: alignedCockpitMetrics.annualSalaryLeakage,
+    exposure: alignedCockpitMetrics.unhedgedLegalExposure,
+    decay: 24,
+    spend: 1.2
+  }), [alignedCockpitMetrics]);
+
+  const governanceAnalytics = useMemo(() => ({
+    reliabilityIndex: alignedCockpitMetrics.complianceScore,
+    dominantBasis: "TECHNICAL_DEBT_AVS",
+    dominantDriver: "PIPELINE_DRIFT",
+    dominantVisibility: "PARTIAL",
+    sampleSize: 10000
+  }), [alignedCockpitMetrics.complianceScore]);
 
   if (authorizedAdmin === null) { 
     return ( 
@@ -463,7 +480,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white italic"> 
-                 
+                  
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl shadow-black/40 backdrop-blur-md"> 
           <div className="border-b border-slate-900 pb-5 mb-8 flex items-center gap-3"> 
@@ -623,7 +640,7 @@ export default function ForensicEngineRoot() {
           <div className="mt-8 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
             <div className="text-left"> 
               <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK COCKPIT PIPELINE DEPENDENCY</span> 
-               
+                
               {!allPersonasComplete && authorizedAdmin && ( 
                 <button 
                   type="button" 
@@ -686,6 +703,15 @@ export default function ForensicEngineRoot() {
             sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'} 
             metrics={alignedCockpitMetrics} 
           /> 
+
+          {/* 👈 GOVERNANCE & COMPLIANCE SUPPLEMENT INTEGRATION */}
+          <div className="mx-10 my-8">
+            <GovernanceSupplementView
+              metrics={governanceMetrics}
+              forensicAnalytics={governanceAnalytics}
+              orgName={triangulation.companyName.replace(/_/g, ' ')}
+            />
+          </div>
 
           <div className="mt-12 mx-10 border border-slate-900 bg-slate-950/40 rounded-sm shadow-xl p-10 backdrop-blur-md not-italic normal-case text-left selection:bg-red-600 selection:text-white">
             <div className="border-b border-slate-900 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
