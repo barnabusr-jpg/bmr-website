@@ -439,7 +439,13 @@ export default function SOWBuilderStandalone() {
                 ))}
 
                 {/* 🛡️ GOVERNANCE & COMPLIANCE SUPPLEMENT DISPLAY LAYER */}
-                {includeGovernance && <GovernanceSupplementView />}
+{includeGovernance && (
+  <GovernanceSupplementView 
+    metrics={metrics}
+    forensicAnalytics={forensicAnalytics}
+    orgName={diagnosticData?.org?.replace(/_/g, ' ')}
+  />
+)}
               </div>
             </div>
           </div>
