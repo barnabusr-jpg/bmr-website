@@ -12,7 +12,7 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
-// 🏎️ REPAIRED REAL-TIME EROSION TICKER ENGINE
+// 🏎️ ACCELERATED HIGH-PERFORMANCE DIRECT-DOM TICKER ENGINE (PERSISTENT STATE)
 function RealTimeLossTicker({ diagnosticCompletedAt, exposure, anomalies, isArchived }: LossTickerProps) {
   const displayRef = useRef<HTMLDivElement>(null);
   const runningTotalRef = useRef<number>(0);
@@ -30,13 +30,26 @@ function RealTimeLossTicker({ diagnosticCompletedAt, exposure, anomalies, isArch
   }, [anomalies]);
 
   useEffect(() => {
+    // 🔒 ANCHOR ALIGNMENT SYNCHRONIZATION PROTOCOL
     const targetTimestamp = diagnosticCompletedAt || "2026-07-16T00:00:00.000Z";
     const baselineAnchorTime = new Date(targetTimestamp).getTime();
+    
     const validExposure = exposure && !isNaN(exposure) && exposure > 0 ? exposure : 280000;
     const lossPerSecond = (validExposure / 31536000) * severityVelocityMultiplier;
 
-    const initialAccumulatedLoss = Math.max(0, (Date.now() - baselineAnchorTime) / 1000) * lossPerSecond;
+    // 🎯 CALCULATE ACCUMULATED LOSS FROM AUDIT CREATION TO RIGHT NOW
+    const elapsedSecondsSinceLock = Math.max(0, (Date.now() - baselineAnchorTime) / 1000);
+    const initialAccumulatedLoss = elapsedSecondsSinceLock * lossPerSecond;
+    
     runningTotalRef.current = initialAccumulatedLoss;
+
+    // Render immediate value prior to first animation frame to prevent $0.00 flash
+    if (displayRef.current) {
+      displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
 
     let animationFrameId: number;
     let lastTimestamp = performance.now();
@@ -44,10 +57,14 @@ function RealTimeLossTicker({ diagnosticCompletedAt, exposure, anomalies, isArch
     const updateTicker = (now: number) => {
       if (isArchived) {
         if (displayRef.current) {
-          displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`;
         }
         return;
       }
+
       const deltaSeconds = (now - lastTimestamp) / 1000;
       lastTimestamp = now;
 
@@ -56,7 +73,10 @@ function RealTimeLossTicker({ diagnosticCompletedAt, exposure, anomalies, isArch
       }
 
       if (displayRef.current) {
-        displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        displayRef.current.textContent = `$${runningTotalRef.current.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}`;
       }
 
       animationFrameId = requestAnimationFrame(updateTicker);
