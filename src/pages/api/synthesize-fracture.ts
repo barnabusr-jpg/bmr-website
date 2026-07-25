@@ -32,24 +32,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // 2. Multi-Pillar Core Vector Engine Execution
-      // Generate a structured Systemic Friction Index using authentic calculation metrics
       const completedCount = operators.filter(o => o.survey_completed).length;
       const baselineVariance = completedCount * 12;
       const computedSFI = Math.min(Math.floor(Math.random() * (76 - 54 + 1)) + 54 + baselineVariance, 100);
 
-      // 3. Populate dynamic presentational fractures for table row array mapping
+      // 3. Populate dynamic presentational fractures (C-Suite / Pre-Automation AI Aligned)
       const compiledFractures = [
         { 
-          id: "SHADOW_INFRASTRUCTURE", 
+          id: "UNMAPPED_SCHEMA_DRIFT", 
           severity: "CRITICAL", 
-          description: "Multi-node validation verification parameters uncover data pipelines interfacing with unmapped secondary API endpoints.", 
-          directive: "Execute network packet discovery loops and systematically terminate un-anchored external access tokens." 
+          description: "Unstructured third-party software updates and sliding target schemas inject context noise into model ingestion layers.", 
+          directive: "Deploy Track 01 Ingestion Contracts and isolate vendor data payloads before LLM context windows." 
         },
         { 
-          id: "GOVERNANCE_VOID", 
+          id: "VALIDATION_FATIGUE_NODE", 
           severity: "HIGH", 
-          description: "Absence of cross-departmental policy constraints allows system assets to run unchecked across unsecured staging servers.", 
-          directive: "Deploy structural gateway constraints and instantiate programmatic enterprise ledger guards." 
+          description: "Absence of automated sensitivity labeling and human-in-the-loop escalation gates exposes operational runtimes to unhedged DLP risk.", 
+          directive: "Instantiate Track 02 Telemetry Filters and enforce Purview DLP deployment gates before scaling agents." 
         }
       ];
 
@@ -76,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     }
 
     // =========================================================================
-    // 💾 DUAL-MODE ROUTE GATEWAY: PHASE 1 ORGANIC LEAD INGESTION (LEGACY)
+    // 💾 DUAL-MODE ROUTE GATEWAY: PHASE 1 ORGANIC LEAD INGESTION
     // =========================================================================
     if (!orgName || !sector || !answers || !Array.isArray(answers)) {
       return res.status(400).json({ error: "INVALID_PAYLOAD // MISSING_REQUIRED_FIELDS" });
@@ -89,22 +88,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const generatedFractures = answers
       .filter((ans) => ans.selectedOptionWeight >= 6)
       .map((ans) => {
-        let idString = "LOGIC_FRAGMENTATION";
-        let descriptionText = "System architectures exhibit critical logic divergence, introducing major administrative rework lags.";
-        let directiveText = "Initialize full-scale pipeline compartmentalization and audit core compliance run times.";
+        let idString = "UNMAPPED_SCHEMA_DRIFT";
+        let descriptionText = "Sliding API data contracts and unstructured vendor payloads introduce operational friction prior to AI ingestion.";
+        let directiveText = "Deploy Track 01 Ingestion Contracts and isolate vendor data payloads before model context windows.";
 
         if (ans.category === "governance") {
-          idString = "GOVERNANCE_VOID";
-          descriptionText = "Absence of structured policy frameworks allows un-vetted system assets to process sensitive operations untracked.";
-          directiveText = "Deploy structural gateway constraints and instantiate programmatic enterprise ledger guards.";
+          idString = "VALIDATION_FATIGUE_NODE";
+          descriptionText = "Absence of automated sensitivity labeling and clear human-in-the-loop gates allows unmonitored workflows to process untracked.";
+          directiveText = "Instantiate Track 02 Telemetry Filters and enforce Purview DLP deployment gates before scaling agents.";
         } else if (ans.category === "shadow_ai" || ans.category === "security") {
-          idString = "SHADOW_INFRASTRUCTURE";
-          descriptionText = "Data pipelines interface with unmapped API endpoints, leaking structural intellectual asset equity over unsecured servers.";
-          directiveText = "Execute network packet discovery loops and systematically terminate un-anchored external access tokens.";
+          idString = "CONTEXT_WINDOW_NOISE";
+          descriptionText = "Unfiltered telemetry traces stream raw into production pipelines, triggering alert exhaustion and masking operational errors.";
+          directiveText = "Configure sliding window event aggregation and circuit breaker hooks to suppress background noise.";
         } else if (ans.category === "workforce" || ans.category === "tribal") {
-          idString = "EXPERTISE_DEBT";
-          descriptionText = "Critical workflow dependencies sit locked behind individual human capital nodes, elevating single-point failure vectors.";
-          directiveText = "Deconstruct operational execution files into programmatic playbooks to break human friction loops.";
+          idString = "SHADOW_REWORK_TAX";
+          descriptionText = "Critical workflow stabilization relies on manual developer firefighting, creating a persistent Process Waste Tax.";
+          directiveText = "Deconstruct manual firefighting loops into machine-readable runbooks to restore workforce velocity.";
         }
 
         return {
