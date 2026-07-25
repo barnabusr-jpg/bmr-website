@@ -71,12 +71,11 @@ export default function SOWBuilderStandalone() {
     }
   }, []);
 
-  // 🧮 DYNAMIC METRICS PARSER (SUPPORTING OVERRIDES)
+  // 🧮 DYNAMIC METRICS PARSER
   const metrics = useMemo(() => {
     if (!diagnosticData) return null;
 
     const orgName = (diagnosticData.org || 'TARGET SPECIFICATION').replace(/_/g, ' ');
-    const stableSeed = getStableHash(orgName, 25);
     const dbDecay = urlParams.decay ? parseInt(urlParams.decay) : (diagnosticData.decay_pct || 24);
     const spend = urlParams.spend ? parseFloat(urlParams.spend) : 1.2;
 
@@ -128,78 +127,54 @@ export default function SOWBuilderStandalone() {
         ? computed.reliabilityIndex
         : (62 + stableSeed));
 
-    const parsedBasis = computed?.dominantBasis && computed.dominantBasis !== 'NONE'
-      ? computed.dominantBasis
-      : (stableSeed % 2 === 0 ? 'SYSTEMIC_FRICTION' : 'SHADOW_LABOR');
-
-    const parsedDriver = computed?.dominantDriver && computed.dominantDriver !== 'NONE'
-      ? computed.dominantDriver
-      : (stableSeed % 2 === 0 ? 'API_SCHEMA_MUTATION' : 'MANUAL_INTEGRATION_FIREFIGHTS');
-
-    const parsedVisibility = computed?.dominantVisibility && computed.dominantVisibility !== 'NONE'
-      ? computed.dominantVisibility
-      : 'DEGRADED VELOCITY STRAIN';
-
-    const parsedSampleSize = computed?.sampleSize && computed.sampleSize > 0
-      ? computed.sampleSize
-      : (30 + Math.round(stableSeed / 2));
-
     return {
       reliabilityIndex: parsedReliability,
-      dominantBasis: parsedBasis,
-      dominantDriver: parsedDriver,
-      dominantVisibility: parsedVisibility,
-      sampleSize: parsedSampleSize
+      dominantBasis: 'SYSTEMIC FRICTION',
+      dominantDriver: 'API SCHEMA MUTATION',
+      dominantVisibility: 'DEGRADED VELOCITY STRAIN',
+      sampleSize: 32
     };
   }, [diagnosticData, urlParams]);
 
-  // 🛠️ DYNAMIC REMEDIATION TIERS (FORMULA-BASED AND LINKED TO LIVE SLIDERS)
+  // 🛠️ PRE-AUTOMATION AI READINESS TRACKS (NON-TECHNICAL & C-SUITE ALIGNED)
   const activeRemediations = useMemo((): AnomalyRemediationNode[] => {
     if (!diagnosticData || !metrics) return [];
     const entries: AnomalyRemediationNode[] = [];
 
-    const baseTaxPool = metrics.totalLaborTaxPool > 0 ? metrics.totalLaborTaxPool : 180000;
-    
-    const dynamicPrice1 = Math.round((baseTaxPool * 0.027) / 10) * 10;
-    const dynamicPrice2 = Math.round((baseTaxPool * 0.0132) / 10) * 10;
-
-    const formattedPrice1 = `$${dynamicPrice1.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-    const formattedPrice2 = `$${dynamicPrice2.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-
     entries.push({
-      title: "PIPELINE ABSTRACTION LAYER EXTENSION",
-      scope: "Architectural Tech Debt Isolation & Adapter Integration",
-      root_cause_technical: "Localized application layers are bound directly to sliding target data schemas without microservice decoupling gateways.",
+      title: "PIPELINE HARDENING & SCHEMA DRIFT INSULATION",
+      scope: "Pre-Automation Data Foundation & Context Isolation",
+      root_cause_technical: "Unmapped third-party software updates and schema shifts inject unstructured noise directly into internal application interfaces.",
       technical_runbook: [
-        "Deploy isolated API Gateway proxy structures model instances.",
-        "Construct abstract serialization interface layers to map incoming vendor payloads.",
-        "Write strict data schema contracts using code checking decorators."
+        "AI Context Isolation: Deploy interface gateways to sanitize third-party data payloads before hitting internal AI context stores.",
+        "Machine-Readable Ingestion Contracts: Enforce code-level validation rules so automated agents never receive corrupted or unexpected input schemas.",
+        "Integration SLA Enforcement: Establish mandatory breaking-change notification requirements inside vendor service agreements."
       ],
-      root_cause_operational: "Lack of engineering fence guidelines allows third party dependencies to trigger breaking production sprint cycles without structural warning.",
+      root_cause_operational: "Lack of pre-automation guardrails allows third-party vendor updates to trigger silent workflow breakdowns without structural warning.",
       operational_playbook: [
-        "Establish an internal cross functional Architecture Review Board.",
-        "Mandate breaking change notifications inside Master Service Level Agreements.",
-        "Reallocate fifteen percent of upcoming operational sprint metrics strictly to structural platform insulation."
+        "Establish an internal AI & Architecture Steering Committee.",
+        "Mandate breaking-change notification requirements inside Vendor Service Level Agreements.",
+        "Reallocate fifteen percent of operational capacity strictly to platform insulation and data guardrails."
       ],
-      investment_tier: formattedPrice1
+      investment_tier: "CRITICAL PRIORITY // PHASE 01"
     });
 
     entries.push({
-      title: "TELEMETRY SIGNAL RE-FILTERING & ALARM DECOUPLING",
-      scope: "Operational Alarm Fatigue Mitigation Runbook",
-      root_cause_technical: "Unfiltered debug traces stream raw into production alerting lines and desensitize infrastructure responses.",
+      title: "TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION",
+      scope: "Automation Telemetry Control & Validation Fatigue Suppression",
+      root_cause_technical: "Unfiltered operational alert noise floods production monitoring channels, desensitizing infrastructure responses and obscuring critical system signals.",
       technical_runbook: [
-        "Configure sliding window event aggregation rules inside tracking controllers.",
-        "Establish explicit error severity routing rules across production servers.",
-        "Implement automatic circuit breaker hooks to silence repeating telemetry noise loops dynamically."
+        "Telemetry Noise Suppression: Configure sliding window aggregation rules to silence repeating background traces and eliminate alert exhaustion.",
+        "Human-in-the-Loop Thresholds: Define explicit escalation boundaries for when an automated workflow must pause and request managerial sign-off.",
+        "Systemic Noise Audits: Implement automatic filtering hooks to continuously prune legacy tracking rule sets."
       ],
-      root_cause_operational: "Support engineering staff spend manual labor cycles firefighting unprioritized diagnostic events driving burnout and response lag.",
+      root_cause_operational: "Support and engineering staff exhaust manual labor cycles firefighting unprioritized operational alerts, driving burnout and response lag.",
       operational_playbook: [
-        "Enforce strict actionable alert only guidelines across all standard enterprise operations dashboards.",
-        "Redesign internal on call escalation rotation thresholds to avoid engineer burnout patterns.",
-        "Run quarterly telemetry noise audits to continuously prune legacy tracking rule sets."
+        "Enforce strict actionable-alert guidelines across all operational and executive dashboards.",
+        "Redesign internal on-call escalation rotation thresholds to eliminate team burnout patterns.",
+        "Eliminate tribal workflows by establishing version-aligned operational runbooks."
       ],
-      investment_tier: formattedPrice2
+      investment_tier: "HIGH PRIORITY // PHASE 02"
     });
 
     return entries;
@@ -260,7 +235,7 @@ export default function SOWBuilderStandalone() {
               disabled={isGeneratingPdf || filteredRemediations.length === 0}
               className="bg-red-600 text-white font-sans font-black px-6 py-4 rounded-xs text-xs tracking-widest flex items-center gap-2 hover:bg-white hover:text-black transition-all disabled:opacity-30 cursor-pointer shadow-lg border-none"
             >
-              <Download size={14} /> {isGeneratingPdf ? "GENERATING SOW..." : "EXPORT SOW DOCUMENT (PDF)"}
+              <Download size={14} /> {isGeneratingPdf ? "GENERATING SOW..." : "EXPORT SOW DOSSIER (PDF)"}
             </button>
           )}
         </div>
@@ -341,7 +316,7 @@ export default function SOWBuilderStandalone() {
                   </div>
 
                   <div>
-                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">RELIABILITY INDEX</span>
+                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">AI READINESS INDEX</span>
                     <div className="flex items-baseline gap-1 mt-1">
                       <span className={`text-2xl font-sans font-black ${
                         forensicAnalytics.reliabilityIndex > 70 ? 'text-green-500' : forensicAnalytics.reliabilityIndex > 40 ? 'text-yellow-500' : 'text-red-500'
@@ -351,10 +326,10 @@ export default function SOWBuilderStandalone() {
                   </div>
 
                   <div>
-                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">DOMINANT BASIS</span>
+                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">DOMINANT RISK BASIS</span>
                     <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px] break-words">
                       <Shield size={12} className="text-red-400 shrink-0" />
-                      {forensicAnalytics.dominantBasis?.replace(/_/g, ' ')}
+                      {forensicAnalytics.dominantBasis}
                     </div>
                   </div>
 
@@ -362,7 +337,7 @@ export default function SOWBuilderStandalone() {
                     <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">PRIMARY VECTOR DRIVER</span>
                     <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px] break-words">
                       <Terminal size={12} className="text-red-400 shrink-0" />
-                      {forensicAnalytics.dominantDriver?.replace(/_/g, ' ')}
+                      {forensicAnalytics.dominantDriver}
                     </div>
                   </div>
 
@@ -391,7 +366,7 @@ export default function SOWBuilderStandalone() {
                         <h2 className="text-2xl font-black text-white tracking-tighter font-sans break-words">{anomaly.title}</h2>
                         <p className="text-xs text-slate-500 font-sans not-italic normal-case font-medium mt-1">{anomaly.scope}</p>
                       </div>
-                      <div className="bg-slate-900 border border-slate-800 px-4 py-2 font-mono not-italic text-xs text-zinc-300 font-black rounded-xs tracking-wider uppercase">
+                      <div className="bg-red-950/60 border border-red-600/40 text-red-400 font-mono not-italic text-xs px-4 py-2 font-black rounded-xs tracking-wider uppercase">
                         {anomaly.investment_tier}
                       </div>
                     </div>
@@ -400,7 +375,7 @@ export default function SOWBuilderStandalone() {
                       <div className="border border-slate-900 bg-black/40 p-6 rounded-sm space-y-4">
                         <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
                           <Terminal size={16} className="text-red-500 shrink-0" />
-                          <h3 className="text-red-500 font-mono text-xs font-black uppercase tracking-widest">// ARCHITECTURAL TECHNICAL RUNBOOK</h3>
+                          <h3 className="text-red-500 font-mono text-xs font-black uppercase tracking-widest">// OPERATIONAL GOVERNANCE DIRECTIVES</h3>
                         </div>
                         <p className="text-xs text-slate-400 italic leading-relaxed">
                           <strong className="text-slate-300 block font-bold uppercase tracking-wide text-[10px] font-mono not-italic text-red-500/80 mb-1">Root Cause Profile:</strong> 
@@ -419,7 +394,7 @@ export default function SOWBuilderStandalone() {
                       <div className="border border-slate-900 bg-black/40 p-6 rounded-sm space-y-4">
                         <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
                           <Briefcase size={16} className="text-indigo-400 shrink-0" />
-                          <h3 className="text-indigo-400 font-mono text-xs font-black uppercase tracking-widest">// PROCEDURAL OPERATIONAL PLAYBOOK</h3>
+                          <h3 className="text-indigo-400 font-mono text-xs font-black uppercase tracking-widest">// EXECUTIVE RISK SAFEGUARDS</h3>
                         </div>
                         <p className="text-xs text-slate-400 italic leading-relaxed">
                           <strong className="text-slate-300 block font-bold uppercase tracking-wide text-[10px] font-mono not-italic text-indigo-400/80 mb-1">Structural Governance Gap:</strong> 
@@ -439,13 +414,13 @@ export default function SOWBuilderStandalone() {
                 ))}
 
                 {/* 🛡️ GOVERNANCE & COMPLIANCE SUPPLEMENT DISPLAY LAYER */}
-{includeGovernance && (
-  <GovernanceSupplementView 
-    metrics={metrics}
-    forensicAnalytics={forensicAnalytics}
-    orgName={diagnosticData?.org?.replace(/_/g, ' ')}
-  />
-)}
+                {includeGovernance && (
+                  <GovernanceSupplementView 
+                    metrics={metrics}
+                    forensicAnalytics={forensicAnalytics}
+                    orgName={diagnosticData?.org?.replace(/_/g, ' ')}
+                  />
+                )}
               </div>
             </div>
           </div>
