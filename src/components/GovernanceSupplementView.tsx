@@ -1,176 +1,125 @@
-import React from 'react';
+"use client";
+import React, { useMemo } from 'react';
+import { ShieldCheck, Lock, FileCheck, Layers, Cpu, AlertTriangle } from 'lucide-react';
 
-export const GovernanceSupplementView: React.FC = () => {
+interface GovernanceSupplementProps {
+  metrics?: {
+    totalLaborTaxPool: number;
+    exposure: number;
+    decay: number;
+    spend: number;
+  } | null;
+  forensicAnalytics?: {
+    reliabilityIndex: number;
+    dominantBasis: string;
+    dominantDriver: string;
+    dominantVisibility: string;
+    sampleSize: number;
+  } | null;
+  orgName?: string;
+}
+
+export function GovernanceSupplementView({ 
+  metrics, 
+  forensicAnalytics, 
+  orgName = "TARGET SPECIFICATION" 
+}: GovernanceSupplementProps) {
+
+  // 🧮 DYNAMIC GOVERNANCE TARGETS CALCULATED FROM QUAD MATRIX RESULTS
+  const governanceCalibrations = useMemo(() => {
+    const taxPool = metrics?.totalLaborTaxPool || 180000;
+    const reliability = forensicAnalytics?.reliabilityIndex || 65;
+    const decay = metrics?.decay || 24;
+
+    // Control parameters indexed dynamically to Quad Forensic Output
+    const dlpRiskAllowance = Math.round((taxPool * 0.12) / 1000) * 1000;
+    const apiInvalidationThreshold = Math.max(1, Math.round((100 - reliability) / 5));
+    const processDriftTolerance = (decay * 0.45).toFixed(1);
+
+    return {
+      dlpRiskAllowance: `$${dlpRiskAllowance.toLocaleString()}`,
+      apiInvalidationThreshold: `${apiInvalidationThreshold} Mutations / 10k Calls`,
+      processDriftTolerance: `${processDriftTolerance}%`,
+      signOffTier: taxPool > 250000 ? "EXECUTIVE BOARD LEVEL (CISO / CTO)" : "PLATFORM STEERCO"
+    };
+  }, [metrics, forensicAnalytics]);
+
   return (
-    <div className="w-full bg-slate-950 border border-slate-800 rounded-xs p-6 font-mono text-slate-200 mt-6 not-italic">
+    <div className="border border-amber-900/60 bg-amber-950/10 p-8 md:p-10 rounded-sm space-y-8 font-sans not-italic text-slate-300 mt-8">
       
-      {/* Header with Strict Scope Disclaimer & Applicability Micro-Block */}
-      <div className="border-b border-slate-800 pb-4 mb-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-bold text-amber-400 tracking-wider">
-              // GOVERNANCE & COMPLIANCE SUPPLEMENT
-            </h3>
-            <p className="text-xs font-semibold text-slate-400 mt-0.5">
-              REQUIRED OPERATIONAL PREREQUISITES (CLIENT RESPONSIBILITY)
-            </p>
-          </div>
-          <span className="text-[10px] text-amber-400/90 bg-amber-950/40 px-2.5 py-1 rounded-xs border border-amber-800/60 font-semibold self-start sm:self-auto uppercase tracking-wider">
-            NON-DELIVERABLE DIRECTIVE BOUNDARY
-          </span>
+      {/* HEADER SECTION */}
+      <div className="border-b border-amber-900/60 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <span className="text-[10px] font-mono text-amber-500 font-black tracking-widest block">// POST-QUAD GOVERNANCE CONTROL PLANE</span>
+          <h3 className="text-2xl font-black text-white tracking-tighter uppercase italic mt-1">
+            GOVERNANCE & COMPLIANCE SUPPLEMENT
+          </h3>
+          <p className="text-xs text-amber-400/80 font-mono mt-1">
+            ENTITY: {orgName} // SIGN-OFF TIER: {governanceCalibrations.signOffTier}
+          </p>
         </div>
-
-        {/* Disclaimer Paragraphs */}
-        <div className="space-y-2 mt-3 text-xs text-slate-400 leading-relaxed font-sans normal-case">
-          <p>
-            <strong className="text-slate-300 font-mono uppercase text-[11px]">Scope Boundary Notice:</strong> BMR Solutions generates evidence-backed technical requirements and deployment gates. BMR does not configure, enforce, or attest to tenant settings; execution, tenant configuration, and administrative sign-offs remain the explicit responsibility of the Client (or Client-designated administrators).
-          </p>
-          <p className="text-[11px] text-slate-400 bg-slate-900/60 p-2.5 rounded-xs border border-slate-800/60 font-mono">
-            <strong className="text-amber-400/90 uppercase">// APPLICABILITY:</strong> This supplement applies when workspace tools or autonomous agents are granted access to indexing, search, or automated ingestion/production execution pipelines.
-          </p>
+        <div className="bg-amber-950/40 border border-amber-600/40 px-4 py-2 font-mono text-xs text-amber-400 font-black rounded-xs tracking-wider uppercase flex items-center gap-2">
+          <ShieldCheck size={16} /> QUAD CALIBRATED
         </div>
       </div>
 
-      {/* Grid Layout: Prerequisites & Proof Targets vs. Control Targets */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        
-        {/* SECTION A: Sign-Off Checklist & Proof Targets */}
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-xs p-4">
-          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <span className="text-amber-400">SECTION A</span> — REQUIRED SIGN-OFF CHECKLIST
-          </h4>
-          
-          <div className="space-y-3.5 font-sans normal-case">
-            {/* Item 1 */}
-            <div className="border-b border-slate-800/50 pb-2.5">
-              <div className="text-xs font-bold text-slate-200 flex items-center gap-2 font-mono uppercase">
-                <span className="text-amber-400">[ ]</span> Executive Metric Alignment
-              </div>
-              <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                Approve single-source-of-truth metric definitions across Finance, Sales, and Operations.
-              </p>
-              <div className="text-[10px] text-emerald-400/90 font-mono font-medium mt-1 bg-emerald-950/30 px-2 py-0.5 rounded-xs inline-block border border-emerald-900/40 uppercase">
-                Proof Target: Signed Metric Charter / Approval Record (Retain for Audit)
-              </div>
-            </div>
-
-            {/* Item 2 */}
-            <div className="border-b border-slate-800/50 pb-2.5">
-              <div className="text-xs font-bold text-slate-200 flex items-center gap-2 font-mono uppercase">
-                <span className="text-amber-400">[ ]</span> Access Entitlement Review
-              </div>
-              <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                Prune broad directory permissions (e.g., SharePoint/OneDrive) prior to agent indexing.
-              </p>
-              <div className="text-[10px] text-emerald-400/90 font-mono font-medium mt-1 bg-emerald-950/30 px-2 py-0.5 rounded-xs inline-block border border-emerald-900/40 uppercase">
-                Proof Target: Permission Review Export + Before/After Scan Summary (Retain for Audit)
-              </div>
-            </div>
-
-            {/* Item 3 */}
-            <div>
-              <div className="text-xs font-bold text-slate-200 flex items-center gap-2 font-mono uppercase">
-                <span className="text-amber-400">[ ]</span> Policy Boundary Confirmation
-              </div>
-              <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                Confirm rules for PII handling, prompt logging, retention, and third-party API data isolation.
-              </p>
-              <div className="text-[10px] text-emerald-400/90 font-mono font-medium mt-1 bg-emerald-950/30 px-2 py-0.5 rounded-xs inline-block border border-emerald-900/40 uppercase">
-                Proof Target: Enabled Policy Rule Set + Tenant Configuration Export (Retain for Audit)
-              </div>
-            </div>
+      {/* SECTION A: EXECUTIVE SIGN-OFF CHECKLIST */}
+      <div className="space-y-4">
+        <h4 className="text-xs font-mono font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
+          <FileCheck size={14} /> SECTION A // EXECUTIVE SIGN-OFF & DEPLOYMENT GATES
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-mono text-xs">
+          <div className="border border-amber-900/40 bg-black/50 p-4 rounded-xs">
+            <span className="text-[9px] text-zinc-500 block">DLP RISK EXPOSURE CEILING</span>
+            <strong className="text-white text-base block mt-1">{governanceCalibrations.dlpRiskAllowance}</strong>
+            <span className="text-[9px] text-amber-500/80 block mt-1">Gated under Purview policies</span>
+          </div>
+          <div className="border border-amber-900/40 bg-black/50 p-4 rounded-xs">
+            <span className="text-[9px] text-zinc-500 block">API SCHEMA MUTATION GATE</span>
+            <strong className="text-white text-base block mt-1">{governanceCalibrations.apiInvalidationThreshold}</strong>
+            <span className="text-[9px] text-amber-500/80 block mt-1">Circuit breaker trigger point</span>
+          </div>
+          <div className="border border-amber-900/40 bg-black/50 p-4 rounded-xs">
+            <span className="text-[9px] text-zinc-500 block">MAX PROCESS DRIFT TOLERANCE</span>
+            <strong className="text-white text-base block mt-1">{governanceCalibrations.processDriftTolerance}</strong>
+            <span className="text-[9px] text-amber-500/80 block mt-1">Indexed to {metrics?.decay || 24}% Decay</span>
           </div>
         </div>
-
-        {/* SECTION B: System Control Targets & Logging Baseline */}
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-xs p-4 flex flex-col justify-between">
-          <div>
-            <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-              <span className="text-amber-400">SECTION B</span> — SYSTEM CONTROL TARGETS
-            </h4>
-            
-            <div className="space-y-2.5 font-sans normal-case">
-              <div className="bg-slate-950/60 p-2.5 rounded-xs border border-slate-800/80">
-                <div className="text-xs font-bold text-slate-200 font-mono uppercase">
-                  Control Target 01: Microsoft Purview / DLP
-                </div>
-                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                  Configure real-time prompt-blocking for Sensitive Information Types (SITs) at runtime.
-                </p>
-              </div>
-
-              <div className="bg-slate-950/60 p-2.5 rounded-xs border border-slate-800/80">
-                <div className="text-xs font-bold text-slate-200 font-mono uppercase">
-                  Control Target 02: Ingestion Contract Enforcement
-                </div>
-                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                  Mandate YAML schema contract validation across all active API ingestion boundaries.
-                </p>
-              </div>
-
-              <div className="bg-slate-950/60 p-2.5 rounded-xs border border-slate-800/80">
-                <div className="text-xs font-bold text-slate-200 font-mono uppercase">
-                  Control Target 03: Entra ID Access Review Cadence
-                </div>
-                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                  Establish an automated quarterly entitlement audit cadence to prevent privilege accumulation.
-                </p>
-              </div>
-
-              {/* Minimum Logging Baseline Requirement */}
-              <div className="bg-slate-950/60 p-2.5 rounded-xs border border-amber-900/40">
-                <div className="text-xs font-bold text-amber-400/90 font-mono uppercase">
-                  Control Target 04: Minimum Logging Baseline
-                </div>
-                <p className="text-[11px] text-slate-400 mt-0.5 leading-relaxed">
-                  Retain agent/tool access logs and policy-block event telemetry per enterprise compliance policy.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
       </div>
 
-      {/* SECTION C: Deployment Gates with Failure Behaviors */}
-      <div className="bg-slate-900/80 border border-slate-800 p-4 rounded-xs space-y-3">
-        <div className="text-xs font-bold text-amber-400 tracking-wider">
-          // SECTION C — DEPLOYMENT GATES & FAILURE BEHAVIORS
+      {/* SECTION B: SYSTEM CONTROL TARGETS */}
+      <div className="space-y-4 pt-2 border-t border-amber-900/40">
+        <h4 className="text-xs font-mono font-black text-amber-500 uppercase tracking-widest flex items-center gap-2">
+          <Layers size={14} /> SECTION B // PURVIEW & API INGESTION CONTRACTS
+        </h4>
+        <ul className="space-y-2 font-mono text-xs text-zinc-300">
+          <li className="flex items-start gap-2 border border-slate-900 bg-black/40 p-3 rounded-xs">
+            <Lock size={14} className="text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-white block uppercase">Ingestion Contract Gate (Purview / DLP)</strong>
+              Enforces automated sensitivity labeling across all downstream AI model context stores before data ingestion.
+            </div>
+          </li>
+          <li className="flex items-start gap-2 border border-slate-900 bg-black/40 p-3 rounded-xs">
+            <Cpu size={14} className="text-amber-500 shrink-0 mt-0.5" />
+            <div>
+              <strong className="text-white block uppercase">Microservice Adapter Decoupling</strong>
+              Isolates sliding third-party API data payloads through abstract serialization interfaces to prevent runtime sprint degradation.
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      {/* SECTION C: FAILURE BEHAVIOR DIRECTIVES */}
+      <div className="space-y-2 pt-2 border-t border-amber-900/40 font-mono text-[11px] text-zinc-400">
+        <div className="flex items-center gap-2 text-amber-500 font-black">
+          <AlertTriangle size={14} /> FAILURE & RECOVERY BEHAVIOR PROTOCOL
         </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-          <div className="bg-slate-950 p-3 rounded-xs border border-slate-800 flex flex-col justify-between">
-            <div>
-              <strong className="text-amber-400 block mb-1 uppercase">Gate 01: Access Review Passed</strong>
-              <p className="text-[11px] text-slate-400 font-sans normal-case">Pre-indexing requirement.</p>
-            </div>
-            <p className="text-[10px] text-red-400/90 mt-2 font-mono font-medium bg-red-950/30 p-1.5 rounded-xs border border-red-900/30 uppercase leading-normal">
-              Failure Behavior: If not passed, workspace indexing and agent search must be disabled.
-            </p>
-          </div>
-
-          <div className="bg-slate-950 p-3 rounded-xs border border-slate-800 flex flex-col justify-between">
-            <div>
-              <strong className="text-amber-400 block mb-1 uppercase">Gate 02: Contracts Verified</strong>
-              <p className="text-[11px] text-slate-400 font-sans normal-case">Pre-automation requirement.</p>
-            </div>
-            <p className="text-[10px] text-red-400/90 mt-2 font-mono font-medium bg-red-950/30 p-1.5 rounded-xs border border-red-900/30 uppercase leading-normal">
-              Failure Behavior: If not passed, live production pipeline automation must be constrained.
-            </p>
-          </div>
-
-          <div className="bg-slate-950 p-3 rounded-xs border border-slate-800 flex flex-col justify-between">
-            <div>
-              <strong className="text-amber-400 block mb-1 uppercase">Gate 03: Quarterly Recertification</strong>
-              <p className="text-[11px] text-slate-400 font-sans normal-case">Pre-privilege scale requirement.</p>
-            </div>
-            <p className="text-[10px] text-red-400/90 mt-2 font-mono font-medium bg-red-950/30 p-1.5 rounded-xs border border-red-900/30 uppercase leading-normal">
-              Failure Behavior: If not passed, agent privilege scaling and access expansion must halt.
-            </p>
-          </div>
-        </div>
+        <p className="normal-case leading-relaxed">
+          In the event that operational drift exceeds the calibrated threshold of <span className="text-white font-bold">{governanceCalibrations.processDriftTolerance}</span> or an API schema mutation triggers a circuit break, automated fallback runbooks will halt unverified batch operations and alert the designated steerco.
+        </p>
       </div>
 
     </div>
   );
-};
+}
