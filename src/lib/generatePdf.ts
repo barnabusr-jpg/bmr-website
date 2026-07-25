@@ -28,7 +28,7 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
     color: rgb(0.01, 0.02, 0.06),
   });
 
-  // Screen-reader accessible attributes directly inside typography layout engines
+  // Header Subtitle: Pre-Automation Control Plane Alignment
   page.drawText('BMR SOLUTIONS // STATEMENT OF WORK', { 
     x: 40, 
     y: 740, 
@@ -37,8 +37,21 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
     color: rgb(0.86, 0.15, 0.15)
   });
   
-  page.drawText('Remediation Engagement Specification Runbook', { x: 40, y: 722, size: 12, font: Helvetica, color: rgb(0.6, 0.6, 0.6) });
-  page.drawText(`CLIENT TARGET ENTITY: ${sowData.company}`, { x: 40, y: 680, size: 15, font: HelveticaBold, color: rgb(1, 1, 1) });
+  page.drawText('Pre-Automation AI Control Plane & Executive Directives', { 
+    x: 40, 
+    y: 722, 
+    size: 12, 
+    font: Helvetica, 
+    color: rgb(0.6, 0.6, 0.6) 
+  });
+  
+  page.drawText(`CLIENT TARGET ENTITY: ${sowData.company}`, { 
+    x: 40, 
+    y: 680, 
+    size: 15, 
+    font: HelveticaBold, 
+    color: rgb(1, 1, 1) 
+  });
   
   page.drawRectangle({
     x: 40,
@@ -50,22 +63,45 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
 
   let trackingVerticalY = 620;
 
-  // Enforced explicit types inside arrow parameters to clear GitHub linters
   sowData.directives.forEach((directive: DirectiveItem, index: number) => {
     if (trackingVerticalY < 120) return;
 
-    page.drawText(`0${index + 1} // ${directive.title}`, { x: 40, y: trackingVerticalY, size: 12, font: HelveticaBold, color: rgb(1, 1, 1) });
+    page.drawText(`0${index + 1} // ${directive.title}`, { 
+      x: 40, 
+      y: trackingVerticalY, 
+      size: 12, 
+      font: HelveticaBold, 
+      color: rgb(1, 1, 1) 
+    });
     trackingVerticalY -= 18;
 
-    page.drawText(`Scope Framework Focus: ${directive.scope}`, { x: 50, y: trackingVerticalY, size: 10, font: Helvetica, color: rgb(0.5, 0.5, 0.5) });
+    page.drawText(`Scope Framework Focus: ${directive.scope}`, { 
+      x: 50, 
+      y: trackingVerticalY, 
+      size: 10, 
+      font: Helvetica, 
+      color: rgb(0.5, 0.5, 0.5) 
+    });
     trackingVerticalY -= 16;
 
-    page.drawText(`Remediation Allocation Tax: ${directive.price}`, { x: 50, y: trackingVerticalY, size: 10, font: CourierBold, color: rgb(0.86, 0.15, 0.15) });
+    page.drawText(`Implementation Priority: ${directive.price}`, { 
+      x: 50, 
+      y: trackingVerticalY, 
+      size: 10, 
+      font: CourierBold, 
+      color: rgb(0.86, 0.15, 0.15) 
+    });
     trackingVerticalY -= 35; 
   });
 
   page.drawRectangle({ x: 40, y: 60, width: 520, height: 1, color: rgb(0.1, 0.15, 0.25) });
-  page.drawText('BMR SOLUTIONS © 2026 // CONFIDENTIALITY MATRIX ENFORCED', { x: 40, y: 40, size: 8, font: CourierBold, color: rgb(0.3, 0.3, 0.4) });
+  page.drawText('BMR SOLUTIONS © 2026 // CONFIDENTIALITY MATRIX ENFORCED // CLOSING THE PROMISE GAP™', { 
+    x: 40, 
+    y: 40, 
+    size: 8, 
+    font: CourierBold, 
+    color: rgb(0.3, 0.3, 0.4) 
+  });
 
   const pdfBytes = await pdfDoc.save();
   return new Blob([pdfBytes], { type: 'application/pdf' });
