@@ -147,7 +147,7 @@ export default function UnifiedResultsPortal() {
   }, [live_sync, querySpend, audit?.ai_spend]);
 
   const isPhaseTwoActive = useMemo(() => {
-    return !!audit?.is_released || unblurred === "true" || audit?.status?.toUpperCase() === 'PAID' || audit?.status?.toUpperCase() === 'COMPLETED';
+  return !!audit?.is_released || unblurred === "true" || audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.is_released, unblurred, audit?.status]);
 
   const isPaidGateUnlocked = useMemo(() => {
