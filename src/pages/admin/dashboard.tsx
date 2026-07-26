@@ -11,15 +11,15 @@ import { supabase } from "@/lib/supabaseClient";
 
 const BMR_IP_SUITE = {
   directives: [
-    { id: "DIR_01", label: "IMMEDIATE HARDENING", price: "$45K - $75K", description: "The engine identifies where capital is leaking right now.", color: "text-red-600" },
-    { id: "DIR_02", label: "STRUCTURAL ALIGNMENT", price: "$150K", description: "The system rebuilds the logic that connects your operational layers.", color: "text-blue-500" },
-    { id: "DIR_03", label: "GOVERNANCE OVERLAY", price: "$25K/MO", description: "Developing new organizational rule sets to protect leadership.", color: "text-purple-500" },
-    { id: "DIR_04", label: "FORENSIC CONTINUITY", description: "Monitoring structural health through specialized reporting cadence.", color: "text-green-500" }
+    { id: "DIR_01", label: "PIPELINE HARDENING & SCHEMA DRIFT INSULATION", price: "PHASE 01", description: "Establishes standardized ingestion contracts to isolate vendor schema drift and prevent model hallucinations.", color: "text-red-600" },
+    { id: "DIR_02", label: "TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION", price: "PHASE 02", description: "Suppresses alert fatigue and enforces human-in-the-loop oversight gates.", color: "text-blue-500" },
+    { id: "DIR_03", label: "GOVERNANCE SUPPLEMENT", price: "BOARD GATE", description: "Enforces Purview DLP policies and API mutation circuit breakers.", color: "text-amber-500" },
+    { id: "DIR_04", label: "PROMISE GAP™ AUDIT", price: "CONTINUOUS", description: "Continuous verification of machine-readable data guardrails.", color: "text-green-500" }
   ],
   services: [
-    { tier: "TIER_01", title: "DRIFT DIAGNOSTICS", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of AI deployments." },
-    { tier: "TIER_02", title: "STRUCTURAL HARDENING", icon: <Shield size={24} />, description: "Re-engineering human-in-the-loop protocols." },
-    { tier: "TIER_03", title: "LOGIC RECONSTRUCTION", icon: <Hammer size={24} />, description: "Structural recovery for systems in active collapse." }
+    { tier: "TIER_01", title: "AI READINESS DIAGNOSTIC", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of pre-automation infrastructure." },
+    { tier: "TIER_02", title: "PIPELINE HARDENING", icon: <Shield size={24} />, description: "Constructing machine-readable data contracts and SLA gates." },
+    { tier: "TIER_03", title: "PRE-AUTOMATION CONTROL PLANE", icon: <Hammer size={24} />, description: "Complete architectural preparation for safe enterprise AI scaling." }
   ]
 };
 
@@ -479,10 +479,10 @@ export default function AdminDashboard() {
                   const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
                   const totalLeakage = laborTax + exposure;
 
-                  let playbookHeadline = "BALANCED INFRASTRUCTURE STATE";
-                  let playbookNarrative = "Operational alignment metrics indicate standard operational velocity. Cross-functional communication tracks are solid, and system parameters are matching organizational intent.";
+                  let playbookHeadline = "BALANCED PRE-AUTOMATION FOUNDATION";
+                  let playbookNarrative = "Operational alignment metrics indicate standard system readiness. Interface parameters match baseline stability thresholds required for automation.";
                   let playbookPitch = "Deploy routine baseline optimization filters to preserve ongoing alignment tracks.";
-                  let targetTier = "TIER_01 // DRIFT DIAGNOSTICS";
+                  let targetTier = "TRACK_01 // PIPELINE HARDENING";
 
                   const cleanStatus = (audit.status || "").toUpperCase();
                   
@@ -490,22 +490,22 @@ export default function AdminDashboard() {
                     playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
                     playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
                     playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
-                    targetTier = "TIER_02 // MULTI-NODE TRIANGULATION";
+                    targetTier = "TRACK_02 // MULTI-NODE TRIANGULATION";
                   } else if (cleanStatus === "ARCHIVED") {
                     playbookHeadline = "RECORD DEACTIVATED // HISTORICAL STORAGE";
                     playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing telemetry channels are hard-locked.";
                     playbookPitch = "System metrics are now preserved for permanent historical reference compliance logs.";
                     targetTier = "ARCHIVED VAULT CONTENT";
                   } else if (sfi >= 45) {
-                    playbookHeadline = "HIGH ASYMMETRIC TRANSLATION STRAIN";
-                    playbookNarrative = `An elevated Systemic Friction score of ${sfi} indicates an Asymmetric Translation Gap. Your strategic and operational leaders have built excellent structural frameworks, but a lack of specialized automation infrastructure forces engineering teams to manage edge-cases manually. The team is hyper-capable, but they are absorbing systemic friction at the cost of baseline engineering velocity.`;
-                    playbookPitch = "Introduce permanent automated structural layers to bridge technical execution with corporate governance, removing the manual tax on your staff.";
-                    targetTier = "TIER_03 // LOGIC RECONSTRUCTION";
+                    playbookHeadline = "PROMISE GAP™ ENCOUNTERED // PRE-AUTOMATION IMPEDANCE";
+                    playbookNarrative = `An elevated AI Readiness Gap of ${100 - sfi}% (${sfi}% Friction) reveals a persistent Infrastructure as Code (IaC) deficit. While executive strategy emphasizes AI velocity, the underlying engineering pipeline lacks machine-readable guardrails—forcing senior developers to manually nurse drifting schemas rather than scaling automated runtimes.`;
+                    playbookPitch = "Deploy machine-readable directives and ingestion contracts to close the Promise Gap™ before scaling autonomous agents.";
+                    targetTier = "TRACK_01 & 02 // PRE-AUTOMATION CONTROL PLANE";
                   } else if (sfi >= 0) {
                     playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
-                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrations inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Both leadership and engineering tracks are functioning well, but the manual hand-offs between them require modern structural hardening.`;
+                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrated inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Modernizing these hand-offs is required before scaling AI agents.`;
                     playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
-                    targetTier = "TIER_02 // STRUCTURAL HARDENING";
+                    targetTier = "TRACK_02 // TELEMETRY DECOUPLING";
                   }
 
                   return (
@@ -524,7 +524,7 @@ export default function AdminDashboard() {
                         <div className="col-span-4 text-center font-black italic text-xs tracking-[0.2em] font-mono flex items-center justify-center gap-3">
                           {sfi >= 45 && cleanStatus !== "ARCHIVED" && (
                             <span className="bg-red-600/10 text-red-500 border border-red-600/30 px-3 py-1 text-[9px] font-mono tracking-widest uppercase block font-black animate-pulse shrink-0">
-                              ⚠️ CRITICAL EXPOSURE ALERT
+                              ⚠️ PROMISE GAP EXPOSURE DETECTED
                             </span>
                           )}
                           <span className="text-white">
@@ -571,16 +571,16 @@ export default function AdminDashboard() {
                                   </div>
                                   
                                   <div className="text-center py-4 flex justify-center items-center">
-                                    <button  
+                                    <button   
                                       type="button"
-                                      onClick={() => handleLaunchPersonaWizard(role.key, audit)}  
-                                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${  
+                                      onClick={() => handleLaunchPersonaWizard(role.key, audit)}   
+                                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${   
                                         isDone 
                                           ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' 
                                           : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white'   
                                       }`} 
-                                    >  
-                                      {isDone ? 'Override Matrix' : 'Open Posture'}  
+                                    >   
+                                      {isDone ? 'Override Matrix' : 'Open Posture'}   
                                     </button>
                                   </div>
                                 </div>
@@ -620,14 +620,15 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
+                          {/* ⚡ UPDATED LEDGER METRICS LABELS */}
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
                             <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
                               <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
                               <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
-                                <div className="flex justify-between"><span className="text-slate-600">SYSTEMIC_FRICTION_INDEX:</span><span className="text-red-500 font-black">{sfi} / 100 SFI</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">AI_READINESS_GAP:</span><span className="text-red-500 font-black">{100 - sfi} / 100 ({sfi}% FRICTION)</span></div>
                                 <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">ANNUAL_REWORK_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">FORENSIC_INACTION_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">PROCESS_WASTE_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-600">UNHEDGED_PROMISE_GAP_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                                 <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                               </div>
                             </div>
@@ -649,6 +650,7 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
+                          {/* ⚡ UPDATED FRACTURES TABLE */}
                           {realFractures.length > 0 && (
                             <div className="border border-slate-900 bg-slate-950 p-6 space-y-4 mb-8">
                               <div className="text-[10px] font-mono text-red-500 font-black tracking-widest uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
@@ -677,6 +679,7 @@ export default function AdminDashboard() {
                             </div>
                           )}
 
+                          {/* ⚡ UPDATED STATEMENT OF WORK CARDS */}
                           <div className="bg-white text-black p-8 border-l-[16px] border-slate-900 shadow-2xl space-y-6 mb-10 font-sans">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
                               <div>
@@ -686,24 +689,30 @@ export default function AdminDashboard() {
                               <span className="text-[10px] font-mono text-slate-400 font-black tracking-wider uppercase">{targetTier}</span>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                              {realFractures.length === 0 ? (
-                                <div className="col-span-3 text-center py-6 font-mono text-xs text-slate-400 uppercase tracking-widest">No active structural fractures found. Standard baseline optimizations apply.</div>
-                              ) : (
-                                realFractures.slice(0, 3).map((frac: any, index: number) => (
-                                  <div key={frac.id} className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
-                                    <div className="space-y-1">
-                                      <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase">
-                                        <span>PHASE 0{index + 1}</span>
-                                        <span className="text-red-600 font-black uppercase">{frac.severity} RISK</span>
-                                      </div>
-                                      <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">{frac.directive.replace("Implement ", "")} Integration</h5>
-                                      <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Targeting system recovery through deployment of core blueprint protocols: {frac.recovery || 'PROPRIETARY STRUCTURAL ANCHOR'}.</p>
-                                    </div>
-                                    <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">0{index + 1}</div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                              <div className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
+                                <div className="space-y-1">
+                                  <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase">
+                                    <span>PHASE 01</span>
+                                    <span className="text-red-600 font-black uppercase">CRITICAL PRIORITY</span>
                                   </div>
-                                ))
-                              )}
+                                  <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">TRACK 01 // PIPELINE HARDENING & SCHEMA DRIFT INSULATION</h5>
+                                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Prevents model hallucinations and silent pipeline breaks caused by third-party API mutations.</p>
+                                </div>
+                                <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">01</div>
+                              </div>
+
+                              <div className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
+                                <div className="space-y-1">
+                                  <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase">
+                                    <span>PHASE 02</span>
+                                    <span className="text-amber-600 font-black uppercase">HIGH PRIORITY</span>
+                                  </div>
+                                  <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">TRACK 02 // TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION</h5>
+                                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Suppresses alert desensitization and ensures executives only sign off on critical exceptions.</p>
+                                </div>
+                                <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">02</div>
+                              </div>
                             </div>
                           </div>
                           

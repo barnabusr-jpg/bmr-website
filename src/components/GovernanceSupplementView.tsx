@@ -50,7 +50,7 @@ export function GovernanceSupplementView({
       {/* HEADER SECTION */}
       <div className="border-b border-amber-900/60 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <span className="text-[10px] font-mono text-amber-500 font-black tracking-widest block">// POST-QUAD GOVERNANCE CONTROL PLANE</span>
+          <span className="text-[10px] font-mono text-amber-500 font-black tracking-widest block">// PRE-AUTOMATION AI CONTROL PLANE</span>
           <h3 className="text-2xl font-black text-white tracking-tighter uppercase italic mt-1">
             GOVERNANCE & COMPLIANCE SUPPLEMENT
           </h3>
@@ -72,7 +72,7 @@ export function GovernanceSupplementView({
           <div className="border border-amber-900/40 bg-black/50 p-4 rounded-xs">
             <span className="text-[9px] text-zinc-500 block">DLP RISK EXPOSURE CEILING</span>
             <strong className="text-white text-base block mt-1">{governanceCalibrations.dlpRiskAllowance}</strong>
-            <span className="text-[9px] text-amber-500/80 block mt-1">Gated under Purview policies</span>
+            <span className="text-[9px] text-amber-500/80 block mt-1">Gated under Purview sensitivity policies</span>
           </div>
           <div className="border border-amber-900/40 bg-black/50 p-4 rounded-xs">
             <span className="text-[9px] text-zinc-500 block">API SCHEMA MUTATION GATE</span>
@@ -82,7 +82,9 @@ export function GovernanceSupplementView({
           <div className="border border-amber-900/40 bg-black/50 p-4 rounded-xs">
             <span className="text-[9px] text-zinc-500 block">MAX PROCESS DRIFT TOLERANCE</span>
             <strong className="text-white text-base block mt-1">{governanceCalibrations.processDriftTolerance}</strong>
-            <span className="text-[9px] text-amber-500/80 block mt-1">Indexed to {metrics?.decay || 24}% Decay</span>
+            <span className="text-[9px] text-amber-500/80 block mt-1">
+              Indexed to {100 - (metrics?.decay || 24)}% AI Readiness Gap
+            </span>
           </div>
         </div>
       </div>
@@ -104,7 +106,7 @@ export function GovernanceSupplementView({
             <Cpu size={14} className="text-amber-500 shrink-0 mt-0.5" />
             <div>
               <strong className="text-white block uppercase">Microservice Adapter Decoupling</strong>
-              Isolates sliding third-party API data payloads through abstract serialization interfaces to prevent runtime sprint degradation.
+              Isolates sliding third-party API data payloads through abstract serialization interfaces to prevent runtime model degradation.
             </div>
           </li>
         </ul>
@@ -116,7 +118,7 @@ export function GovernanceSupplementView({
           <AlertTriangle size={14} /> FAILURE & RECOVERY BEHAVIOR PROTOCOL
         </div>
         <p className="normal-case leading-relaxed">
-          In the event that operational drift exceeds the calibrated threshold of <span className="text-white font-bold">{governanceCalibrations.processDriftTolerance}</span> or an API schema mutation triggers a circuit break, automated fallback runbooks will halt unverified batch operations and alert the designated steerco.
+          In the event that operational drift exceeds the calibrated threshold of <span className="text-white font-bold">{governanceCalibrations.processDriftTolerance}</span> or an API schema mutation triggers a circuit break, automated fallback runbooks will halt unverified agent operations and trigger immediate steerco escalation.
         </p>
       </div>
 
