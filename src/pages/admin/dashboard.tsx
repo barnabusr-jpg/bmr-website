@@ -239,7 +239,7 @@ export default function AdminDashboard() {
       await fetchLedger();
     } catch (err) {
       console.error("ACCESS TOGGLE ERR ->", err);
-    } font-mono {
+    } finally {
       setIsUpdating(false);
     }
   };
