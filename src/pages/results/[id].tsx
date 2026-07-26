@@ -143,7 +143,7 @@ export default function UnifiedResultsPortal() {
     return audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.status]);
 
-  // 🧮 METRICS CALCULATION (BRIDGES URL PARAMS AND DIRECT DB REWORK TAX)
+  // 🧮 UNTOUCHED ORIGINAL METRICS CALCULATION LOGIC
   const metrics = useMemo(() => {
     // Option A: Active live sync override from URL query parameters
     if (live_sync === "true" && leakage && tax) {
@@ -157,7 +157,7 @@ export default function UnifiedResultsPortal() {
       };
     }
 
-    // Option B: Direct Database Read & Fallback Calculations
+    // Option B: Direct Database Read & Fallback Calculations (Original)
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
     
     // Check if a calibrated rework_tax was saved directly to the database row
@@ -185,27 +185,27 @@ export default function UnifiedResultsPortal() {
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
       id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
+      description: "Pre-automation diagnostic verified. Detailed context isolation and schema drift vectors are locked under intake security protocols.", 
       severity: "SECURE GATE", 
-      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
+      directive: "Schedule your executive data briefing to unlock complete pre-automation vectors." 
     },
     { 
       id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
+      description: "Pre-automation diagnostic verified. Detailed context isolation and schema drift vectors are locked under intake security protocols.", 
       severity: "SECURE GATE", 
-      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
+      directive: "Schedule your executive data briefing to unlock complete pre-automation vectors." 
     },
     { 
       id: `ANOMALY SEGMENT GAMMA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
+      description: "Pre-automation diagnostic verified. Detailed context isolation and schema drift vectors are locked under intake security protocols.", 
       severity: "SECURE GATE", 
-      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
+      directive: "Schedule your executive data briefing to unlock complete pre-automation vectors." 
     },
     { 
       id: `ANOMALY SEGMENT DELTA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Diagnostic scan parameters verified. Detailed root cause analytics and process map variations are fully compiled and locked under initial intake protocols.", 
+      description: "Pre-automation diagnostic verified. Detailed context isolation and schema drift vectors are locked under intake security protocols.", 
       severity: "SECURE GATE", 
-      directive: "Schedule your forensic data briefing to unlock complete segment vectors." 
+      directive: "Schedule your executive data briefing to unlock complete pre-automation vectors." 
     }
   ], [metrics.totalLaborTaxPool]);
 
@@ -254,7 +254,7 @@ export default function UnifiedResultsPortal() {
         <div>
           <div className="text-white text-xl tracking-tighter italic">BMR<span className={accentColorClass}>SOLUTIONS</span></div>
           <span className={`text-[8px] font-mono uppercase tracking-[0.3em] italic block mt-0.5 ${accentColorClass}`}>
-            {isPhaseTwoActive ? "PORTAL MODE // PARTNER SYSTEM REALITY" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
+            {isPhaseTwoActive ? "PORTAL MODE // PRE-AUTOMATION CONTROL PLANE" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
           </span>
         </div>
         {isPhaseTwoActive && (
@@ -270,7 +270,7 @@ export default function UnifiedResultsPortal() {
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
             {isPhaseTwoActive 
               ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
-              : `Metrics are currently generated using proportional standard model assumptions indexed to your captured Logic Decay Coefficient of ${dbDecay}%. Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
+              : `Metrics are currently generated using proportional standard model assumptions indexed to your captured AI Readiness Gap of ${100 - dbDecay}% (${dbDecay}% Friction). Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
             }
           </p>
         </div>
@@ -289,10 +289,10 @@ export default function UnifiedResultsPortal() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 md:pt-8 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>LOGIC DECAY COEFFICIENT</span>
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>AI READINESS GAP</span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  DECAY INDEX: <span className={`${accentColorClass} text-base`}>{dbDecay}%</span>
+                  READINESS: <span className={`${accentColorClass} text-base`}>{100 - dbDecay}%</span>
                 </p>
               </div>
 
@@ -307,7 +307,7 @@ export default function UnifiedResultsPortal() {
 
               <div className="flex flex-col justify-between">
                 <div className="min-h-[28px] sm:min-h-[36px] flex items-end">
-                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>PROJECTED ANNUAL EXPOSURE</span>
+                  <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>UNHEDGED PROMISE GAP EXPOSURE</span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
                   TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
@@ -336,11 +336,11 @@ export default function UnifiedResultsPortal() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
             <div className="text-5xl md:text-7xl font-black text-white tracking-tighter font-mono">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">VALIDATED REWORK LIABILITY TAX</span>
+            <span className="text-[10px] font-mono text-slate-500 tracking-[0.25em] block">REWORK & SCHEMA DRIFT TAX</span>
           </div>
           <div className="bg-[#050b18] border border-slate-900 p-12 md:p-16 flex flex-col items-center justify-center text-center space-y-4 shadow-xl">
             <div className={`text-5xl md:text-7xl font-black tracking-tighter font-mono ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>SYSTEMIC OPERATIONAL DRAG TAX</span>
+            <span className={`text-[10px] font-mono tracking-[0.25em] block ${accentColorClass}`}>VALIDATION & TELEMETRY FATIGUE TAX</span>
           </div>
         </div>
 

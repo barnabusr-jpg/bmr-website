@@ -3,7 +3,6 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
 import { calculateForensicMetrics } from '../lib/forensicCalculus';
-import { decompressFromEncodedURIComponent } from 'lz-string';
 
 type PillarType = 'IGF' | 'AVS' | 'HAI';
 
@@ -11,11 +10,11 @@ function findContradictions(matrix: Record<string, string>) {
   const contradictions = [];
   
   if (matrix['deepdive_Q1'] === 'A' && matrix['quad_Q14'] === 'D') {
-    contradictions.push("CRITICAL COMPLIANCE MISMATCH: Executive claims formalized policy fencing // System User reports complete oversight vacuum.");
+    contradictions.push("CRITICAL GOVERNANCE MISMATCH: Executive reports formalized AI policy gates // Operational leads report unmonitored context ingestion.");
   }
   
   if (matrix['deepdive_Q5'] === 'A' && matrix['quad_Q32'] === 'D') {
-    contradictions.push("ARCHITECTURAL OVERHEAD TAX FLAGGED: Management reports structured debt mitigation budget // Engineering reports active systemic fracture leakage.");
+    contradictions.push("PRE-AUTOMATION FRICTION FLAGGED: Management reports structured integration budgeting // Technical team reports unhedged schema drift.");
   }
 
   return contradictions;
@@ -41,7 +40,6 @@ export default function ForensicDiagnosticWizard({
       const emailParam = params.get('email');
       const roleParam = params.get('role');
       
-      // Force immediate overwrite to stop session leakage across tabs
       if (emailParam) {
         window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
       }
@@ -68,14 +66,13 @@ export default function ForensicDiagnosticWizard({
     }
   }, [activePillar]);
 
-  // 📡 RESILIENT ROLE-BASED VECTOR ROUTER FILTER
+  // 📡 ROLE-BASED VECTOR ROUTER FILTER
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
     const normalizedRole = activeRole?.toUpperCase() || '';
 
     let filtered = [];
 
-    // Loose matching target nodes to align with database schema variance
     if (normalizedRole.includes('TECH') || normalizedRole.includes('MGMT')) {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
@@ -98,7 +95,6 @@ export default function ForensicDiagnosticWizard({
       );
     }
 
-    // 🛡️ DEFENSIVE FALLBACK BOUNDARY: If explicit sub-filtering results in 0, provide entire pillar array
     if (filtered.length === 0) {
       return rawList.filter(q => q.pillar?.toUpperCase() === activePillar.toUpperCase());
     }
@@ -191,11 +187,11 @@ export default function ForensicDiagnosticWizard({
         <div className="flex items-center gap-3">
           <Activity className="text-red-600 animate-pulse shrink-0" size={20} />
           <span className="text-xs font-black uppercase tracking-widest text-white">
-            ENTERPRISE WIDE DIAGNOSTIC // QUAD-NODE MONITOR ROUTING
+            PRE-AUTOMATION DIAGNOSTIC // STAKEHOLDER NODE VECTOR ROUTING
           </span>
         </div>
         <div className="text-[10px] text-slate-500 tracking-widest font-black shrink-0">
-          TOTAL SECTOR PROGRESS: {currentStepAnsweredCount} / {currentStepTotal}
+          SECTOR READINESS PROGRESS: {currentStepAnsweredCount} / {currentStepTotal}
         </div>
       </div>
 
@@ -203,7 +199,7 @@ export default function ForensicDiagnosticWizard({
       <div className="bg-slate-950 border border-slate-900 p-5 mb-8 text-xs text-slate-400 not-italic normal-case font-medium font-sans leading-relaxed flex items-start gap-3 rounded-xs">
         <AlertCircle size={18} className="text-red-600 shrink-0 mt-0.5" />
         <div>
-          This targeted diagnostic interface captures pipeline vectors sequentially, cross-validating telemetry configurations across independent organizational node viewpoints.
+          This pre-automation diagnostic evaluates pipeline readiness, schema stability, and operational friction to establish machine-readable guardrails prior to scaling AI deployments.
         </div>
       </div>
 
@@ -260,7 +256,7 @@ export default function ForensicDiagnosticWizard({
       <div className="border-t border-slate-900 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono not-italic">
         <div className="text-[10px] text-slate-500 tracking-wider flex items-center gap-2 font-black">
           <Shield size={14} className={isPillarIncomplete ? "text-slate-700" : "text-red-500"} /> 
-          {isPillarIncomplete ? "ALL ACTIVE SECTOR OBSERVATIONS MANDATORY TO RESOLVE POSTURE" : "CORE MATRIX VECTOR VALIDATED // READY TO COMPUTE"}
+          {isPillarIncomplete ? "ALL ACTIVE SECTOR OBSERVATIONS MANDATORY TO RESOLVE POSTURE" : "PRE-AUTOMATION VECTORS VALIDATED // READY TO COMPUTE"}
         </div>
         
         <button
@@ -273,7 +269,7 @@ export default function ForensicDiagnosticWizard({
               : 'bg-white text-black hover:bg-red-600 hover:text-white shadow-lg'
           }`}
         >
-          {isCompiling ? "COMPILING SYSTEM LOGS..." : "Save & Close Node Posture"} 
+          {isCompiling ? "COMPILING VECTOR LOGS..." : "Save & Close Node Posture"} 
           <ChevronRight size={14} />
         </button>
       </div>

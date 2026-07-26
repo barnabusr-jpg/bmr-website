@@ -2,7 +2,8 @@
 import React, { useState, useEffect, useMemo } from 'react'; 
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
-import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight } from 'lucide-react'; 
+import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight, Loader2 } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
@@ -24,6 +25,7 @@ export default function ForensicEngineRoot() {
   const [companyName, setCompanyName] = useState(''); 
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
+  const [sendingNudgeRole, setSendingNudgeRole] = useState<PersonaKey | null>(null);
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({ 
     EXECUTIVE: '', 
@@ -276,6 +278,39 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
+  // ✅ BACKGROUND API NUDGE DISPATCHER (REPLACES MAILTO POPUP)
+  const handleTriggerNudge = async (persona: PersonaKey) => {
+    if (!triangulation) return;
+    const email = triangulation.emails[persona];
+    if (!email) return;
+
+    try {
+      setSendingNudgeRole(persona);
+      const res = await fetch('/api/send-triangulation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyName: triangulation.companyName,
+          activePillar: triangulation.pillar,
+          endpoints: { [persona]: email },
+          isNudge: true,
+          originUrl: `${window.location.origin}${window.location.pathname}`
+        })
+      });
+
+      if (res.ok) {
+        alert(`Nudge dispatched silently to ${persona.replace('_', ' ')} (${email}).`);
+      } else {
+        alert("Failed to send nudge email via BMR platform.");
+      }
+    } catch (err) {
+      console.error("Nudge API exception:", err);
+      alert("Error sending nudge via API.");
+    } finally {
+      setSendingNudgeRole(null);
+    }
+  };
+
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
     setActivePersona(persona); 
     setViewState('WIZARD'); 
@@ -340,7 +375,7 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  const allPersonasComplete = triangulation      
+  const allPersonasComplete = triangulation       
     ? Object.values(triangulation.completions).every(status => status === true) 
     : false; 
 
@@ -400,6 +435,22 @@ export default function ForensicEngineRoot() {
       regulatoryAlertActive: calculated.regulatoryAlertActive 
     }; 
   }, [triangulation, activePillar]); 
+
+  // 🛡️ PROPS FOR GOVERNANCE SUPPLEMENT
+  const governanceMetrics = useMemo(() => ({
+    totalLaborTaxPool: alignedCockpitMetrics.annualSalaryLeakage,
+    exposure: alignedCockpitMetrics.unhedgedLegalExposure,
+    decay: 24,
+    spend: 1.2
+  }), [alignedCockpitMetrics]);
+
+  const governanceAnalytics = useMemo(() => ({
+    reliabilityIndex: alignedCockpitMetrics.complianceScore,
+    dominantBasis: "TECHNICAL_DEBT_AVS",
+    dominantDriver: "PIPELINE_DRIFT",
+    dominantVisibility: "PARTIAL",
+    sampleSize: 10000
+  }), [alignedCockpitMetrics.complianceScore]);
 
   if (authorizedAdmin === null) { 
     return ( 
@@ -463,7 +514,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden flex flex-col justify-center items-center py-12 px-4 selection:bg-red-600 selection:text-white italic"> 
-                 
+                  
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-900 bg-slate-950/40 p-10 text-left rounded-sm shadow-2xl shadow-black/40 backdrop-blur-md"> 
           <div className="border-b border-slate-900 pb-5 mb-8 flex items-center gap-3"> 
@@ -593,16 +644,20 @@ export default function ForensicEngineRoot() {
                   <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end"> 
                     {!isDone && ( 
                       <button 
-                        onClick={() => { 
-                          const email = triangulation.emails[persona]; 
-                          const subject = `ACTION REQUIRED: Secure Diagnostic Gateway Initialized // ${triangulation.companyName.replace(/_/g, ' ')}`; 
-                          const cleanOriginBase = `${window.location.origin}${window.location.pathname}`;
-                          const body = `Team,\n\nYour dedicated operational node has been provisioned to evaluate friction boundaries, performance tax indicators, and unhedged operational anomalies for ${triangulation.companyName.replace(/_/g, ' ')}.\n\nPlease access your secure access terminal to record your platform observations.\n\nSecure Diagnostic Access Terminal: ${cleanOriginBase}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
-                          window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
-                        }} 
-                        className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0" 
+                        onClick={() => handleTriggerNudge(persona)} 
+                        disabled={sendingNudgeRole === persona}
+                        className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0 disabled:opacity-50" 
                       > 
-                        <Mail size={12}/> Trigger Nudge 
+                        {sendingNudgeRole === persona ? (
+                          <>
+                            <Loader2 size={12} className="animate-spin text-red-500" />
+                            Dispatching...
+                          </>
+                        ) : (
+                          <>
+                            <Mail size={12}/> Trigger Nudge 
+                          </>
+                        )}
                       </button> 
                     )} 
 
@@ -623,7 +678,7 @@ export default function ForensicEngineRoot() {
           <div className="mt-8 pt-6 border-t border-zinc-900 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
             <div className="text-left"> 
               <span className="text-[9px] text-zinc-600 uppercase tracking-widest font-black block">// SECURE GATEWAY UNLOCK COCKPIT PIPELINE DEPENDENCY</span> 
-               
+                
               {!allPersonasComplete && authorizedAdmin && ( 
                 <button 
                   type="button" 
@@ -686,6 +741,15 @@ export default function ForensicEngineRoot() {
             sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'} 
             metrics={alignedCockpitMetrics} 
           /> 
+
+          {/* 👈 GOVERNANCE & COMPLIANCE SUPPLEMENT INTEGRATION */}
+          <div className="mx-10 my-8">
+            <GovernanceSupplementView
+              metrics={governanceMetrics}
+              forensicAnalytics={governanceAnalytics}
+              orgName={triangulation.companyName.replace(/_/g, ' ')}
+            />
+          </div>
 
           <div className="mt-12 mx-10 border border-slate-900 bg-slate-950/40 rounded-sm shadow-xl p-10 backdrop-blur-md not-italic normal-case text-left selection:bg-red-600 selection:text-white">
             <div className="border-b border-slate-900 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">

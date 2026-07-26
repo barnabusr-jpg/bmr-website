@@ -7,16 +7,106 @@ import { Banknote, Stethoscope, Factory, ShoppingCart, Activity, ChevronRight } 
 import { supabase } from "@/lib/supabaseClient";
 
 const LOCAL_QUESTIONS = [
-  { id: "NODE_01_AVS_01", text: "Executive data governance policies mandate strict structural schema contracts for external interface integrations.", options: [{ label: "No oversight present", weight: 10 }, { label: "Ad hoc verification protocols", weight: 6 }, { label: "Formalized schema specifications", weight: 4 }, { label: "Automated continuous validation gates", weight: 2 }] },
-  { id: "NODE_01_AVS_02", text: "Fiduciary risk assessments isolate computational logic drift liabilities prior to deployment sign off.", options: [{ label: "Oversight missing entirely", weight: 10 }, { label: "Informal guidelines deployed", weight: 6 }, { label: "Regular board review validation", weight: 4 }, { label: "Continuous predictive isolation checks", weight: 2 }] },
-  { id: "NODE_01_AVS_03", text: "Organizational balance sheet exposure tracking incorporates potential algorithmic transaction failure markers.", options: [{ label: "Not tracked whatsoever", weight: 10 }, { label: "Reactive accounting protocols", weight: 6 }, { label: "Defined capital allocation models", weight: 4 }, { label: "Real time ledger risk integration", weight: 2 }] },
-  { id: "NODE_02_AVS_01", text: "Data pipeline infrastructure separates untrusted third party payloads via isolated gateway environments.", options: [{ label: "Direct uninsulated streaming profiles", weight: 10 }, { label: "Basic validation parsing proxies", weight: 6 }, { label: "Air gapped staging microservices", weight: 4 }, { label: "Stateless zero trust transformation runtime", weight: 2 }] },
-  { id: "NODE_02_AVS_02", text: "Upstream schema transformations and API configuration modifications trigger automated integration checks.", options: [{ label: "Manual testing dependency cycles", weight: 10 }, { label: "Basic version logging parameters", weight: 6 }, { label: "Automated integration staging suites", weight: 4 }, { label: "Continuous integration regression protection", weight: 2 }] },
-  { id: "NODE_02_AVS_03", text: "Platform runtime components utilize proprietary secure datasets over unverified external information models.", options: [{ label: "Public data dependencies present", weight: 10 }, { label: "Hybrid source clustering frameworks", weight: 6 }, { label: "Validated proprietary training pipelines", weight: 4 }, { label: "Immutable secure data storage", weight: 2 }] },
-  { id: "NODE_02_AVS_04", text: "Engineering alert parameters are structurally insulated to suppress recurring diagnostic telemetry noise.", options: [{ label: "Unfiltered debug streaming active", weight: 10 }, { label: "Basic priority threshold routing", weight: 6 }, { label: "Automated circuit breaker configurations", weight: 4 }, { label: "Hyper converged anomaly resolution matching", weight: 2 }] },
-  { id: "NODE_03_AVS_01", text: "Middle management protocols trace undocumented tribal workflows to maintain baseline operational velocity.", options: [{ label: "Completely unmapped tracking dependencies", weight: 10 }, { label: "Informal operational documentation logs", weight: 6 }, { label: "Centralized process blueprint structures", weight: 4 }, { label: "Continuous runtime task sequence profiling", weight: 2 }] },
-  { id: "NODE_03_AVS_02", text: "Engineering capacity assessments calculate technical rework debt caused by manual infrastructure firefighting.", options: [{ label: "Capacity bleed unmeasured entirely", weight: 10 }, { label: "Anecdotal sprint metric allocations", weight: 6 }, { label: "Defined engineering overhead indexes", weight: 4 }, { label: "Dynamic resource performance calculations", weight: 2 }] },
-  { id: "NODE_03_AVS_03", text: "Emergency operational runbooks exist to guide internal development teams during active processing bottlenecks.", options: [{ label: "No system documentation available", weight: 10 }, { label: "Basic service restoration checksheets", weight: 6 }, { label: "Formal disaster mitigation strategies", weight: 4 }, { label: "Immutable self executing recovery playbooks", weight: 2 }] }
+  { 
+    id: "NODE_01_AVS_01", 
+    text: "Executive data governance policies mandate strict machine-readable schema contracts before third-party data is ingested into AI model context stores.", 
+    options: [
+      { label: "No context guardrails or schema contracts present", weight: 10 }, 
+      { label: "Ad-hoc developer parsing scripts", weight: 6 }, 
+      { label: "Formalized third-party schema specifications", weight: 4 }, 
+      { label: "Automated continuous validation & ingestion gates", weight: 2 }
+    ] 
+  },
+  { 
+    id: "NODE_01_AVS_02", 
+    text: "Fiduciary risk assessments isolate third-party model context and schema drift liabilities prior to deployment sign-off.", 
+    options: [
+      { label: "AI drift risks unmonitored entirely", weight: 10 }, 
+      { label: "Informal testing guidelines deployed", weight: 6 }, 
+      { label: "Regular board and steerco review gates", weight: 4 }, 
+      { label: "Continuous predictive context isolation checks", weight: 2 }
+    ] 
+  },
+  { 
+    id: "NODE_01_AVS_03", 
+    text: "Organizational risk models quantify financial exposure generated by unhedged AI model errors and hallucination risks.", 
+    options: [
+      { label: "Model failure costs not tracked", weight: 10 }, 
+      { label: "Reactive post-incident accounting", weight: 6 }, 
+      { label: "Defined risk allowance capital budgets", weight: 4 }, 
+      { label: "Real-time ledger and Promise Gap™ integration", weight: 2 }
+    ] 
+  },
+  { 
+    id: "NODE_02_AVS_02", 
+    text: "Upstream vendor API updates and schema mutations trigger automated integration testing before model context ingestion.", 
+    options: [
+      { label: "Manual debugging during outage cycles", weight: 10 }, 
+      { label: "Basic version logging and alerts", weight: 6 }, 
+      { label: "Automated staging validation suites", weight: 4 }, 
+      { label: "Continuous integration & circuit breaker protection", weight: 2 }
+    ] 
+  },
+  { 
+    id: "NODE_02_AVS_01", 
+    text: "Data pipeline infrastructure insulates automated agent runtimes from unstructured third-party payloads via isolated proxies.", 
+    options: [
+      { label: "Direct, uninsulated payload feeds", weight: 10 }, 
+      { label: "Basic validation parsing proxies", weight: 6 }, 
+      { label: "Isolated staging microservices", weight: 4 }, 
+      { label: "Stateless zero-trust context isolation gateways", weight: 2 }
+    ] 
+  },
+  { 
+    id: "NODE_02_AVS_03", 
+    text: "Autonomous AI application layers depend strictly on verified proprietary context stores over public external sources.", 
+    options: [
+      { label: "Unverified external dependencies active", weight: 10 }, 
+      { label: "Hybrid data source clustering", weight: 4 }, 
+      { label: "Validated proprietary training pipelines", weight: 4 }, 
+      { label: "Immutable Purview-governed context stores", weight: 2 }
+    ] 
+  },
+  { 
+    id: "NODE_02_AVS_04", 
+    text: "Engineering alert channels filter low-priority telemetry noise to suppress validation fatigue and desensitization.", 
+    options: [
+      { label: "Unfiltered alert noise floods teams", weight: 10 }, 
+      { label: "Basic priority threshold routing", weight: 6 }, 
+      { label: "Automated alert aggregation rules", weight: 4 }, 
+      { label: "Actionable-only escalation & circuit breakers", weight: 2 }
+    ] 
+  },
+  { 
+    id: "NODE_03_AVS_01", 
+    text: "Operational management relies on undocumented tribal workflows to reconcile broken data hand-offs between systems.", 
+    options: [
+      { label: "Completely unmapped, tribal workflows", weight: 10 }, 
+      { label: "Informal operational runbook notes", weight: 6 }, 
+      { label: "Centralized process blueprint archives", weight: 4 }, 
+      { label: "Continuous machine-readable task profiling", weight: 2 }
+    ] 
+  },
+  { 
+    id: "NODE_03_AVS_02", 
+    text: "Engineering capacity assessments calculate the Process Waste Tax (sprint hours lost) spent firefighting broken vendor APIs.", 
+    options: [
+      { label: "Capacity bleed unmeasured entirely", weight: 10 }, 
+      { label: "Anecdotal sprint metric estimation", weight: 6 }, 
+      { label: "Defined engineering rework tracking indexes", weight: 4 }, 
+      { label: "Dynamic resource waste calculations", weight: 2 }
+    ] 
+  },
+  { 
+    id: "NODE_03_AVS_03", 
+    text: "Version-controlled operational runbooks exist to guide teams when automated agent workflows breach drift thresholds.", 
+    options: [
+      { label: "No operational runbooks available", weight: 10 }, 
+      { label: "Basic service restoration guides", weight: 6 }, 
+      { label: "Formal human-in-the-loop escalation protocols", weight: 4 }, 
+      { label: "Automated self-executing fallback playbooks", weight: 2 }
+    ] 
+  }
 ];
 
 const sectors = [
@@ -184,7 +274,7 @@ export default function PulseCheck() {
                 </div>
                 <div className="pt-6">
                   <button disabled={!validateIntake()} onClick={() => setStep("audit")}
-                    className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-2xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all border-2 border-red-600 flex items-center justify-center">
+                    className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-2xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all border-2 border-red-600 flex items-center justify-center cursor-pointer">
                     INITIALIZE INTAKE
                   </button>
                 </div>
@@ -196,19 +286,19 @@ export default function PulseCheck() {
           {step === 'audit' && (
             <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-12 text-center italic">
               <div className="flex flex-col items-center border-b border-slate-900 pb-10 mb-12">
-       {/* FIXED: Removed global uppercase, adjusted to font-bold and normal-case for clear readability */}
-       <h2 className="text-3xl md:text-5xl font-bold normal-case text-slate-100 tracking-tight leading-snug min-h-[160px] max-w-4xl">
-         {LOCAL_QUESTIONS[currentDimension]?.text}
-       </h2>
-    </div>
-
-    {/* Option buttons continue below completely unchanged... */}
+                <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block mb-2 not-italic">
+                  // PRE-AUTOMATION DIAGNOSTIC QUESTION 0{currentDimension + 1} OF 10
+                </span>
+                <h2 className="text-2xl md:text-4xl font-bold normal-case text-slate-100 tracking-tight leading-snug min-h-[120px] max-w-4xl not-italic">
+                  {LOCAL_QUESTIONS[currentDimension]?.text}
+                </h2>
+              </div>
 
               <div className="grid grid-cols-1 gap-4">
                 {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
                   <button 
                     key={i} 
-                    className="p-8 border-2 border-slate-900 bg-slate-950/50 hover:border-red-600 transition-all text-left uppercase font-black text-xl md:text-2xl flex justify-between items-center group"
+                    className="p-6 md:p-8 border-2 border-slate-900 bg-slate-950/50 hover:border-red-600 transition-all text-left font-bold text-lg md:text-xl flex justify-between items-center group cursor-pointer not-italic normal-case text-slate-200"
                     onClick={async () => {
                       const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                       setAnswers(updatedAnswers);
@@ -242,8 +332,8 @@ export default function PulseCheck() {
                       }
                     }}
                   >
-                    {opt.label}
-                    <ChevronRight size={32} className="opacity-0 group-hover:opacity-100 transition-all text-red-600 shrink-0" />
+                    <span>{opt.label}</span>
+                    <ChevronRight size={28} className="opacity-0 group-hover:opacity-100 transition-all text-red-600 shrink-0" />
                   </button>
                 ))}
               </div>

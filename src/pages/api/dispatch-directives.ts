@@ -119,42 +119,42 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
       if (standardizedRole === 'EXECUTIVE') {
-        // DISPATCH ONE: High Impact Consolidated Executive Calibration Email Flow
+        // DISPATCH ONE: High Impact Executive Alignment Email Flow
         emailPromises.push(sgMail.send({
           to: targetEmail,
           from: {
             name: "BMR SOLUTIONS",
             email: FROM_EMAIL
           },
-          subject: `ACTION REQUIRED: Triangulation Protocol Initialization // ${orgName}`,
+          subject: `ACTION REQUIRED: Pre-Automation Diagnostic Access // ${orgName}`,
           html: `
             <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
               <tr>
                 <td align="center" style="padding: 40px 20px;">
                   <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-transform: uppercase;">
                     
-                    <h2 style="color: #dc2626; font-size: 18px; font-weight: 900; margin: 0 0 5px 0;">BMR Solutions // Diagnostic Node Dispatch</h2>
+                    <h2 style="color: #dc2626; font-size: 18px; font-weight: 900; margin: 0 0 5px 0;">BMR Solutions // Pre-Automation Control Plane</h2>
                     <p style="font-size: 10px; color: #64748b; margin: 0 0 20px 0;">Target System: ${orgName}</p>
                     
                     <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
                     
                     <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      The 360-degree triangulation protocol for your organization is underway.
+                      The pre-automation AI readiness diagnostic for your organization is underway to evaluate operational friction, schema stability, and risk guardrails prior to scaling autonomous agents.
                     </p>
 
                     <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      Invitation emails have been sent to the designated recipients. These messages may be routed to spam or junk folders, so please ensure you and your team check for an email from BMR Solutions.
+                      Invitation emails have been dispatched to designated stakeholder nodes. Please ensure your leadership and engineering leads review their inbox to complete their respective assessment tracks.
                     </p>
 
                     <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 25px 0; font-family: sans-serif;">
-                      To keep the process moving, please complete the following steps:
+                      To execute your diagnostic module, please follow the steps below:
                     </p>
 
                     <!-- STEP 1: Find your email -->
                     <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 20px; text-align: left;">
-                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 1: Find your email</p>
+                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 1: Execute Assessment</p>
                       <p style="margin: 0 0 15px 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
-                        Use the provided link to begin your strategic assessment module.
+                        Access your secure link to begin your strategic executive assessment module.
                       </p>
                       <a href="${diagnosticLink}" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
                         Open Executive Assessment Track →
@@ -163,14 +163,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
                     <!-- STEP 2: Remind your team -->
                     <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
-                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 2: Remind your team</p>
+                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 2: Stakeholder Alignment</p>
                       <p style="margin: 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
-                        Check all email folders, including spam, for their direct links and to complete their assessments promptly.
+                        Notify your managerial and technical leads to verify their direct links and complete their node evaluations promptly.
                       </p>
                     </div>
 
                     <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      Please use the secure link below to schedule your calibration follow-up meeting:
+                      Use the secure link below to schedule your diagnostic calibration briefing:
                     </p>
 
                     <!-- STEP 3: Calibration Scheduling Link -->
@@ -181,7 +181,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     </div>
 
                     <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      Looking forward to analyzing your custom systems map.
+                      We look forward to building your Pre-Automation Control Plane.
                     </p>
                     
                     <p style="font-size: 11px; color: #475569; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: none; font-family: sans-serif;">
@@ -196,14 +196,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `
         }));
       } else {
-        // DISPATCH TWO: Standalone Standard Operator Notification Assets
+        // DISPATCH TWO: Stakeholder Node Notification
         emailPromises.push(sgMail.send({
           to: targetEmail,
           from: {
             name: "BMR SOLUTIONS",
             email: FROM_EMAIL
           },
-          subject: `ACTION REQUIRED: ${standardizedRole} Forensic Node Authorized // ${orgName}`,
+          subject: `ACTION REQUIRED: ${standardizedRole} AI Readiness Node Authorized // ${orgName}`,
           html: `
             <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
               <tr>
@@ -213,7 +213,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       <tr>
                         <td align="left" style="text-align: left;">
                           <h2 style="color: #dc2626; font-family: monospace; font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 1px;">
-                            BMR Solutions // Systems Audit Engine
+                            BMR Solutions // Pre-Automation Engine
                           </h2>
                           <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase;">
                             Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
@@ -221,11 +221,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                           <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
                           
                           <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0; text-transform: none;">
-                            <strong>${prettyCompany} leadership</strong> recently started a diagnostic project with BMR Solutions. This project is designed to evaluate your technology investments. The goal is to identify operational waste, uncover structural errors, and discover hidden costs within your AI systems.
+                            <strong>${prettyCompany} leadership</strong> has initiated a pre-automation diagnostic with BMR Solutions. This review evaluates system readiness, schema stability, and operational friction prior to scaling AI models and automated agent workflows.
                           </p>
                           
                           <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0; text-transform: none;">
-                            To complete this system review, we require independent feedback from different departments. You are designated as the representative for the <strong>${standardizedRole} Node</strong>. When you select the verification link below, the system will open your specific questionnaire module. Thank you for your attention and support in this matter.
+                            To complete this assessment, we require independent feedback across key operational tiers. You are designated as the stakeholder representative for the <strong>${standardizedRole} Node</strong>. Select the link below to access your diagnostic module.
                           </p>
                           <p style="font-family: monospace; line-height: 1.6; font-size: 14px; color: #ffffff; margin: 0 0 30px 0;">
                             Your personal access code is: <span style="color: #dc2626; font-weight: bold;">${code}</span>
@@ -240,7 +240,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             </tr>
                           </table>
                           <p style="font-family: monospace; font-size: 10px; color: #475569; margin: 40px 0 0 0; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: uppercase;">
-                            Confidential // BMR Solutions Stakeholder Secure Connection
+                            Confidential // BMR Solutions Pre-Automation Gateway
                           </p>
                         </td>
                       </tr>
@@ -281,22 +281,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const adjustedAVS = Number(activeAudit.avs_raw_score || 0) * (1 - logicDecayCoefficient);
     const adjustedIGF = Number(activeAudit.igf_raw_score || 0) * (1 - logicDecayCoefficient);
 
-    let recommendedService = 'GOVERNANCE ADVISORY';
+    let recommendedService = 'PRE-AUTOMATION GOVERNANCE';
     let targetNode = 'EXECUTIVE';
-    let speciesIdentifier = 'Continuous Monitoring / Fiduciary Layer';
+    let speciesIdentifier = 'Continuous Verification / DLP Guardrails';
 
     if (adjustedHAI < adjustedAVS && adjustedHAI < adjustedIGF && adjustedHAI < 55.00) {
-      recommendedService = 'Cognitive Fidelity Audit';
+      recommendedService = 'Oversight Decoupling Audit';
       targetNode = 'MANAGERIAL';
-      speciesIdentifier = 'Privilege Decay / Agency Overreach';
+      speciesIdentifier = 'Validation Fatigue / Alert Exhaustion';
     } else if (adjustedAVS < adjustedHAI && adjustedAVS < adjustedIGF && adjustedAVS < 55.00) {
-      recommendedService = 'Value Leakage Diagnostic';
+      recommendedService = 'Pipeline Hardening Diagnostic';
       targetNode = 'TECHNICAL';
-      speciesIdentifier = 'Input Technical Decay';
+      speciesIdentifier = 'Schema Drift / Ingestion Instability';
     } else if (adjustedIGF < 55.00) {
-      recommendedService = 'Decision-Chain Reconstruction';
+      recommendedService = 'Pre-Automation Control Plane';
       targetNode = 'EXECUTIVE';
-      speciesIdentifier = 'Expectation Continuity Fracture';
+      speciesIdentifier = 'Promise Gap™ Alignment Deficit';
     }
 
     const cleanSystemTimestamp = new Date().toISOString();

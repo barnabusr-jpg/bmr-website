@@ -1,6 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-// ✨ UPDATED: Full title capitalization formatting to align with dispatch-directives behavior
 function toSentenceCase(str: string): string {
   if (!str) return 'Your company';
   const clean = str.replace(/_/g, ' ').toLowerCase().trim();
@@ -12,9 +11,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   }
 
-  const { endpoints, companyName, activePillar, originUrl } = req.body;
+  const { endpoints, companyName, activePillar, originUrl, isNudge } = req.body;
 
-  if (!endpoints || !companyName || !activePillar) {
+  if (!endpoints || !companyName) {
     return res.status(400).json({ error: 'MISSING_REQUIRED_PARAMETERS' });
   }
 
@@ -31,7 +30,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   };
 
   const roleToPillarMap: Record<string, string> = {
-    EXRaw: 'IGF',
     EXECUTIVE: 'IGF',
     TECH_MGMT: 'AVS',
     OPS_MGMT: 'HAI',
@@ -41,20 +39,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const formattedOrg = companyName.toUpperCase().trim();
     const sentenceCompany = toSentenceCase(companyName);
+    const targetPillar = activePillar || 'AVS';
     
     const mailRequests = Object.entries(endpoints).map(([roleKey, emailAddress]) => {
+      if (!emailAddress || typeof emailAddress !== 'string') return null;
+
       const targetEmail = (emailAddress as string).toLowerCase().trim();
       const roleName = roleLabels[roleKey] || roleKey;
-      
-      const dynamicTrack = roleToPillarMap[roleKey] || activePillar;
+      const dynamicTrack = roleToPillarMap[roleKey] || targetPillar;
       
       const diagnosticUrl = `${originUrl}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}`;
 
-      // Initialize the email html content string
       let emailHtmlValue = '';
 
-      if (roleKey === 'EXECUTIVE') {
-        // DISPATCH ONE: Consolidated Multi-Node Quad Executive Integration Flow
+      if (roleKey === 'EXECUTIVE' && !isNudge) {
+        // DISPATCH ONE: Executive Consolidated View (Initial Launch)
         emailHtmlValue = `
           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
             <tr>
@@ -71,47 +70,35 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   </p>
 
                   <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                    Invitation emails have been sent to the designated recipients. These messages may be routed to spam or junk folders, so please ensure you and your team check for an email from BMR Solutions.
-                  </p>
-
-                  <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 25px 0; font-family: sans-serif;">
-                    To keep the process moving, please complete the following steps:
+                    Invitation signals have been dispatched to designated stakeholders to isolate Pre-Automation AI friction and schema drift liabilities.
                   </p>
 
                   <!-- STEP 1: Find your email -->
                   <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 20px; text-align: left;">
-                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 1: Find your email</p>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 1: Complete Executive Assessment</p>
                     <p style="margin: 0 0 15px 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
-                      Use the provided link to begin your strategic assessment module.
+                      Use the direct access terminal below to complete your strategic posture evaluation.
                     </p>
                     <a href="${diagnosticUrl}" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
-                      Open Executive Assessment Track →
+                      Open Executive Assessment Track &rarr;
                     </a>
                   </div>
 
                   <!-- STEP 2: Remind your team -->
                   <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
-                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 2: Remind your team</p>
+                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 2: Track Team Completions</p>
                     <p style="margin: 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
-                      Check all email folders, including spam, for their direct links and to complete their assessments promptly.
+                      Ensure your technical and operational team leads access their respective node links to enable 360-degree triangulation.
                     </p>
                   </div>
-
-                  <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                    Please use the secure link below to schedule your calibration follow-up meeting:
-                  </p>
 
                   <!-- STEP 3: Calibration Scheduling Link -->
                   <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
                     <a href="https://calendly.com/hello-bmradvisory/quad-node-calibration" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
-                      Schedule Calibration Meeting →
+                      Schedule Quad-Node Calibration Meeting &rarr;
                     </a>
                   </div>
 
-                  <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                    Looking forward to analyzing your custom systems map.
-                  </p>
-                  
                   <p style="font-size: 11px; color: #475569; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: none; font-family: sans-serif;">
                     Sincerely,<br/>
                     <strong>BMR Solutions</strong>
@@ -123,7 +110,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </table>
         `;
       } else {
-        // DISPATCH TWO: Standalone Standard Operator Notification Assets for Technical, Operations, and System Users
+        // DISPATCH TWO: Operator Assessment / Targeted Nudge Notification
         emailHtmlValue = `
           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <tr>
@@ -132,7 +119,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   
                   <div style="margin-bottom: 40px; border-left: 4px solid #dc2626; padding-left: 16px;">
                     <h2 style="color: #ffffff; font-weight: 900; font-style: italic; text-transform: uppercase; margin: 0; letter-spacing: 2px; font-size: 20px; line-height: 1.3;">
-                      // Quad-Node Assessment Initialized
+                      ${isNudge ? '// REMINDER: Diagnostic Access Required' : '// Quad-Node Assessment Initialized'}
                     </h2>
                     <p style="color: #64748b; font-family: monospace; font-size: 11px; margin: 6px 0 0 0; letter-spacing: 0.1em; font-weight: bold;">
                       TARGET ENTITY // ${formattedOrg}
@@ -141,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   
                   <div style="background-color: #0f172a; border-left: 4px solid #dc2626; padding: 24px; margin-bottom: 32px; box-sizing: border-box;">
                     <span style="color: #ef4444; font-family: monospace; font-size: 10px; font-weight: 900; letter-spacing: 0.2em; display: block; margin-bottom: 6px;">
-                      // ASSIGNED VECTOR
+                      // ASSIGNED VECTOR NODE
                     </span>
                     <span style="color: #ffffff; font-size: 15px; font-weight: 900; letter-spacing: -0.01em; text-transform: uppercase; line-height: 1.4; display: block;">
                       ${roleName.toUpperCase()}
@@ -149,7 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   </div>
 
                   <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
-                    <strong>${sentenceCompany} leadership</strong> recently initiated a specialized Quad-Node Assessment stream for <strong>${formattedOrg}</strong>. Your specific structural perspective has been mapped to isolate friction, systemic inefficiencies, and risk anomalies within the <strong>${dynamicTrack} Framework Layer</strong>.
+                    <strong>${sentenceCompany} leadership</strong> has provisioned a specialized Quad-Node Assessment stream for <strong>${formattedOrg}</strong>. Your operational perspective is required to evaluate friction boundaries, schema drift, and validation fatigue within the <strong>${dynamicTrack} Framework Layer</strong>.
                   </p>
                   
                   <div style="background: #090d16; border: 1px solid #1e293b; padding: 32px; margin: 40px 0; text-align: center;">
@@ -162,7 +149,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   </div>
 
                   <p style="font-size: 11px; color: #475569; line-height: 1.8; text-transform: uppercase; font-weight: bold; font-family: monospace; border-top: 1px solid #0f172a; padding-top: 20px; margin: 40px 0 0 0;">
-                    CONFIDENTIALITY NOTICE: This entry link is uniquely customized for your operational assignment. Do not forward this telemetry signal.
+                    CONFIDENTIALITY NOTICE: This terminal entry link is uniquely customized for your operational assignment. Do not forward this access token.
                   </p>
 
                 </div>
@@ -172,11 +159,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         `;
       }
 
+      const subjectLine = isNudge
+        ? `REMINDER: Action Required: Quad-Node Assessment Gateway // ${formattedOrg}`
+        : `ACTION REQUIRED: Quad-Node Assessment Initialized // ${formattedOrg}`;
+
       const sendgridPayload = {
         personalizations: [
           {
             to: [{ email: targetEmail }],
-            subject: `ACTION REQUIRED: Quad-Node Assessment Initialized // ${formattedOrg}`
+            subject: subjectLine
           }
         ],
         from: {
@@ -201,15 +192,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     });
 
-    const outcomes = await Promise.all(mailRequests);
-    const failedDispatch = outcomes.find(res => !res.ok);
+    const activeRequests = mailRequests.filter(Boolean);
+    const outcomes = await Promise.all(activeRequests);
+    const failedDispatch = outcomes.find(res => res && !res.ok);
 
     if (failedDispatch) {
       const errDetails = await failedDispatch.text();
-      return res.status(500).json({ error: 'PARTIAL_OR_TOTAL_SENDGRID_FRACTURE', details: errDetails });
+      return res.status(500).json({ error: 'SENDGRID_DISPATCH_FRACTURE', details: errDetails });
     }
 
-    return res.status(200).json({ success: true, status: 'BATCH_DISPATCH_COMPLETE' });
+    return res.status(200).json({ success: true, status: isNudge ? 'NUDGE_DISPATCH_COMPLETE' : 'BATCH_DISPATCH_COMPLETE' });
 
   } catch (err: any) {
     return res.status(500).json({ error: 'SERVER_MATRIX_EXCEPTION', message: err.message });
