@@ -11,10 +11,10 @@ import { supabase } from "@/lib/supabaseClient";
 
 const BMR_IP_SUITE = {
   directives: [
-    { id: "DIR_01", label: "PRE-AUTOMATION INSULATION", price: "PHASE 01", description: "Establishes standardized ingestion contracts to isolate vendor schema drift.", color: "text-red-600" },
-    { id: "DIR_02", label: "TELEMETRY DECOUPLING", price: "PHASE 02", description: "Suppresses alert fatigue and enforces human-in-the-loop oversight gates.", color: "text-blue-500" },
+    { id: "DIR_01", label: "PIPELINE HARDENING & SCHEMA DRIFT INSULATION", price: "PHASE 01", description: "Establishes standardized ingestion contracts to isolate vendor schema drift and prevent model hallucinations.", color: "text-red-600" },
+    { id: "DIR_02", label: "TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION", price: "PHASE 02", description: "Suppresses alert fatigue and enforces human-in-the-loop oversight gates.", color: "text-blue-500" },
     { id: "DIR_03", label: "GOVERNANCE SUPPLEMENT", price: "BOARD GATE", description: "Enforces Purview DLP policies and API mutation circuit breakers.", color: "text-amber-500" },
-    { id: "DIR_04", label: "PROMISE GAP™ AUDIT", description: "Continuous verification of infrastructure-as-code guardrails.", color: "text-green-500" }
+    { id: "DIR_04", label: "PROMISE GAP™ AUDIT", price: "CONTINUOUS", description: "Continuous verification of machine-readable data guardrails.", color: "text-green-500" }
   ],
   services: [
     { tier: "TIER_01", title: "AI READINESS DIAGNOSTIC", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of pre-automation infrastructure." },
@@ -239,7 +239,7 @@ export default function AdminDashboard() {
       await fetchLedger();
     } catch (err) {
       console.error("ACCESS TOGGLE ERR ->", err);
-    } finally {
+    } font-mono {
       setIsUpdating(false);
     }
   };
@@ -479,7 +479,6 @@ export default function AdminDashboard() {
                   const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
                   const totalLeakage = laborTax + exposure;
 
-                  {/* ⚡ OVERHAULED C-SUITE BRIEFING SCRIPT & SOW MAP */}
                   let playbookHeadline = "BALANCED PRE-AUTOMATION FOUNDATION";
                   let playbookNarrative = "Operational alignment metrics indicate standard system readiness. Interface parameters match baseline stability thresholds required for automation.";
                   let playbookPitch = "Deploy routine baseline optimization filters to preserve ongoing alignment tracks.";
@@ -698,7 +697,7 @@ export default function AdminDashboard() {
                                     <span className="text-red-600 font-black uppercase">CRITICAL PRIORITY</span>
                                   </div>
                                   <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">TRACK 01 // PIPELINE HARDENING & SCHEMA DRIFT INSULATION</h5>
-                                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Establishes pre-automation data foundation, context isolation, and vendor integration SLAs.</p>
+                                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Prevents model hallucinations and silent pipeline breaks caused by third-party API mutations.</p>
                                 </div>
                                 <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">01</div>
                               </div>
@@ -710,7 +709,7 @@ export default function AdminDashboard() {
                                     <span className="text-amber-600 font-black uppercase">HIGH PRIORITY</span>
                                   </div>
                                   <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">TRACK 02 // TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION</h5>
-                                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Suppresses validation fatigue and institutes board-level human-in-the-loop escalation guardrails.</p>
+                                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Suppresses alert desensitization and ensures executives only sign off on critical exceptions.</p>
                                 </div>
                                 <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">02</div>
                               </div>
