@@ -19,7 +19,7 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
   const Helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const CourierBold = await pdfDoc.embedFont(StandardFonts.CourierBold);
 
-  // Structural Canvas Background Base Wrapper
+  // Canvas Base Wrapper (Dark Executive Theme)
   page.drawRectangle({
     x: 0,
     y: 0,
@@ -45,59 +45,94 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
     color: rgb(0.6, 0.6, 0.6) 
   });
   
-  page.drawText(`CLIENT TARGET ENTITY: ${sowData.company}`, { 
+  page.drawText(`CLIENT TARGET ENTITY: ${sowData.company.toUpperCase()}`, { 
     x: 40, 
     y: 680, 
-    size: 15, 
+    size: 14, 
     font: HelveticaBold, 
     color: rgb(1, 1, 1) 
   });
-  
+
+  // Top Divider Line
   page.drawRectangle({
     x: 40,
-    y: 660,
+    y: 665,
     width: 520,
     height: 1,
     color: rgb(0.1, 0.15, 0.25),
   });
 
-  let trackingVerticalY = 620;
+  // 🏆 EXECUTIVE SUMMARY BOX (PRE-AUTOMATION BADGE)
+  page.drawRectangle({
+    x: 40,
+    y: 595,
+    width: 520,
+    height: 55,
+    color: rgb(0.04, 0.08, 0.18),
+    borderColor: rgb(0.86, 0.15, 0.15),
+    borderWidth: 1,
+  });
 
+  page.drawText('EXECUTIVE SUMMARY // PRE-AUTOMATION AI CONTROL PLANE', {
+    x: 55,
+    y: 632,
+    size: 9,
+    font: CourierBold,
+    color: rgb(0.86, 0.15, 0.15),
+  });
+
+  page.drawText('Establishes machine-readable ingestion contracts and telemetry filters prior to autonomous agent scale.', {
+    x: 55,
+    y: 610,
+    size: 9,
+    font: Helvetica,
+    color: rgb(0.8, 0.8, 0.8),
+  });
+
+  let trackingVerticalY = 550;
+
+  // Directives Iteration Loop
   sowData.directives.forEach((directive: DirectiveItem, index: number) => {
     if (trackingVerticalY < 120) return;
 
+    // Track Title
     page.drawText(`0${index + 1} // ${directive.title}`, { 
       x: 40, 
       y: trackingVerticalY, 
-      size: 12, 
+      size: 11, 
       font: HelveticaBold, 
       color: rgb(1, 1, 1) 
     });
     trackingVerticalY -= 18;
 
+    // Scope Framework Description
     page.drawText(`Scope Framework Focus: ${directive.scope}`, { 
-      x: 50, 
+      x: 55, 
       y: trackingVerticalY, 
-      size: 10, 
+      size: 9, 
       font: Helvetica, 
-      color: rgb(0.5, 0.5, 0.5) 
+      color: rgb(0.6, 0.6, 0.6) 
     });
     trackingVerticalY -= 16;
 
+    // Colored Priority Badge Text
     page.drawText(`Implementation Priority: ${directive.price}`, { 
-      x: 50, 
+      x: 55, 
       y: trackingVerticalY, 
-      size: 10, 
+      size: 9, 
       font: CourierBold, 
       color: rgb(0.86, 0.15, 0.15) 
     });
     trackingVerticalY -= 35; 
   });
 
+  // Footer Divider & Security Stamp
   page.drawRectangle({ x: 40, y: 60, width: 520, height: 1, color: rgb(0.1, 0.15, 0.25) });
-  page.drawText('BMR SOLUTIONS © 2026 // CONFIDENTIALITY MATRIX ENFORCED // CLOSING THE PROMISE GAP™', { 
+  
+  const currentYear = new Date().getFullYear();
+  page.drawText(`BMR SOLUTIONS © ${currentYear} // CONFIDENTIALITY MATRIX ENFORCED // CLOSING THE PROMISE GAP™`, { 
     x: 40, 
-    y: 40, 
+    y: 42, 
     size: 8, 
     font: CourierBold, 
     color: rgb(0.3, 0.3, 0.4) 
