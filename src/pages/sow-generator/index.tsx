@@ -6,13 +6,14 @@ import { generatePdf } from '../../lib/generatePdf';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 import { 
   Terminal, Briefcase, Download, ShieldAlert, 
-  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText
+  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText, Copy, Share2
 } from 'lucide-react';
 import { GovernanceSupplementView } from '@/components/GovernanceSupplementView';
 
 interface AnomalyRemediationNode {
   title: string;
   scope: string;
+  business_impact: string;
   root_cause_technical: string;
   technical_runbook: string[];
   root_cause_operational: string;
@@ -36,6 +37,7 @@ export default function SOWBuilderStandalone() {
   const [selectedDirectives, setSelectedDirectives] = useState<string[]>([]);
   const [urlParams, setUrlParams] = useState<Record<string, string>>({});
   const [includeGovernance, setIncludeGovernance] = useState(true);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -129,14 +131,14 @@ export default function SOWBuilderStandalone() {
 
     return {
       reliabilityIndex: parsedReliability,
-      dominantBasis: 'SYSTEMIC FRICTION',
-      dominantDriver: 'API SCHEMA MUTATION',
-      dominantVisibility: 'DEGRADED VELOCITY STRAIN',
+      dominantBasis: 'SCHEMA INSTABILITY',
+      dominantDriver: 'THIRD-PARTY API MUTATION',
+      dominantVisibility: 'UNHEDGED PROMISE GAP',
       sampleSize: 32
     };
   }, [diagnosticData, urlParams]);
 
-  // 🛠️ PRE-AUTOMATION AI READINESS TRACKS (NON-TECHNICAL & C-SUITE ALIGNED)
+  // 🛠️ PRE-AUTOMATION AI READINESS TRACKS (ACTION-FIRST & C-SUITE ALIGNED)
   const activeRemediations = useMemo((): AnomalyRemediationNode[] => {
     if (!diagnosticData || !metrics) return [];
     const entries: AnomalyRemediationNode[] = [];
@@ -144,17 +146,18 @@ export default function SOWBuilderStandalone() {
     entries.push({
       title: "PIPELINE HARDENING & SCHEMA DRIFT INSULATION",
       scope: "Pre-Automation Data Foundation & Context Isolation",
+      business_impact: "Prevents model hallucinations and silent pipeline breaks caused by third-party API mutations.",
       root_cause_technical: "Unmapped third-party software updates and schema shifts inject unstructured noise directly into internal application interfaces.",
       technical_runbook: [
-        "AI Context Isolation: Deploy interface gateways to sanitize third-party data payloads before hitting internal AI context stores.",
-        "Machine-Readable Ingestion Contracts: Enforce code-level validation rules so automated agents never receive corrupted or unexpected input schemas.",
-        "Integration SLA Enforcement: Establish mandatory breaking-change notification requirements inside vendor service agreements."
+        "Context Isolation Gate: Deploy interface proxies to sanitize third-party data payloads before model ingestion.",
+        "Ingestion Contracts: Enforce code-level validation rules so automated agents never receive corrupted schemas.",
+        "Integration SLA Enforcement: Contractually mandate breaking-change notification windows in all vendor service agreements."
       ],
       root_cause_operational: "Lack of pre-automation guardrails allows third-party vendor updates to trigger silent workflow breakdowns without structural warning.",
       operational_playbook: [
-        "Establish an internal AI & Architecture Steering Committee.",
-        "Mandate breaking-change notification requirements inside Vendor Service Level Agreements.",
-        "Reallocate fifteen percent of operational capacity strictly to platform insulation and data guardrails."
+        "Architecture Governance Board: Establish an internal AI Steering Committee to review third-party schema changes before deployment.",
+        "SLA Contract Updates: Insert mandatory breaking-change notification requirements into Master Service Agreements.",
+        "Capacity Reallocation: Mandate reallocating 15% of operational sprint metrics strictly to platform insulation."
       ],
       investment_tier: "CRITICAL PRIORITY // PHASE 01"
     });
@@ -162,17 +165,18 @@ export default function SOWBuilderStandalone() {
     entries.push({
       title: "TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION",
       scope: "Automation Telemetry Control & Validation Fatigue Suppression",
-      root_cause_technical: "Unfiltered operational alert noise floods production monitoring channels, desensitizing infrastructure responses and obscuring critical system signals.",
+      business_impact: "Suppresses alert desensitization and ensures executives only sign off on critical exceptions.",
+      root_cause_technical: "Unfiltered operational alert noise floods monitoring channels, desensitizing infrastructure responses and masking critical signals.",
       technical_runbook: [
         "Telemetry Noise Suppression: Configure sliding window aggregation rules to silence repeating background traces and eliminate alert exhaustion.",
-        "Human-in-the-Loop Thresholds: Define explicit escalation boundaries for when an automated workflow must pause and request managerial sign-off.",
+        "Human-in-the-Loop Thresholds: Define explicit escalation boundaries where automated workflows pause and request managerial sign-off.",
         "Systemic Noise Audits: Implement automatic filtering hooks to continuously prune legacy tracking rule sets."
       ],
-      root_cause_operational: "Support and engineering staff exhaust manual labor cycles firefighting unprioritized operational alerts, driving burnout and response lag.",
+      root_cause_operational: "Engineering staff exhaust manual labor cycles firefighting unprioritized operational alerts, driving burnout and response lag.",
       operational_playbook: [
-        "Enforce strict actionable-alert guidelines across all operational and executive dashboards.",
-        "Redesign internal on-call escalation rotation thresholds to eliminate team burnout patterns.",
-        "Eliminate tribal workflows by establishing version-aligned operational runbooks."
+        "Actionable Alert Standards: Enforce strict actionable-alert guidelines across all executive and operational dashboards.",
+        "On-Call Rotation Redesign: Restructure internal escalation rotation thresholds to eliminate team burnout patterns.",
+        "Eliminate Tribal Workflows: Replace undocumented firefighting loops with version-controlled operational runbooks."
       ],
       investment_tier: "HIGH PRIORITY // PHASE 02"
     });
@@ -192,6 +196,14 @@ export default function SOWBuilderStandalone() {
 
   const toggleDirective = (title: string) => {
     setSelectedDirectives(prev => prev.includes(title) ? prev.filter(t => t !== title) : [...prev, title]);
+  };
+
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2500);
+    }
   };
 
   const handleDownloadPDF = async () => {
@@ -230,13 +242,23 @@ export default function SOWBuilderStandalone() {
           </div>
 
           {diagnosticData && (
-            <button
-              onClick={handleDownloadPDF}
-              disabled={isGeneratingPdf || filteredRemediations.length === 0}
-              className="bg-red-600 text-white font-sans font-black px-6 py-4 rounded-xs text-xs tracking-widest flex items-center gap-2 hover:bg-white hover:text-black transition-all disabled:opacity-30 cursor-pointer shadow-lg border-none"
-            >
-              <Download size={14} /> {isGeneratingPdf ? "GENERATING SOW..." : "EXPORT SOW DOSSIER (PDF)"}
-            </button>
+            <div className="flex flex-col sm:flex-row items-stretch gap-3">
+              <button
+                onClick={handleCopyLink}
+                className="bg-slate-900 text-slate-300 border border-slate-800 font-mono font-black px-5 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-black transition-all cursor-pointer shadow-md"
+              >
+                {linkCopied ? <CheckCircle size={14} className="text-green-500 shrink-0" /> : <Share2 size={14} className="shrink-0" />}
+                {linkCopied ? "LINK COPIED TO CLIPBOARD" : "COPY SHAREABLE SOW LINK"}
+              </button>
+
+              <button
+                onClick={handleDownloadPDF}
+                disabled={isGeneratingPdf || filteredRemediations.length === 0}
+                className="bg-red-600 text-white font-sans font-black px-6 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-black transition-all disabled:opacity-30 cursor-pointer shadow-lg border-none"
+              >
+                <Download size={14} /> {isGeneratingPdf ? "GENERATING SOW..." : "EXPORT SOW DOSSIER (PDF)"}
+              </button>
+            </div>
           )}
         </div>
 
@@ -366,9 +388,15 @@ export default function SOWBuilderStandalone() {
                         <h2 className="text-2xl font-black text-white tracking-tighter font-sans break-words">{anomaly.title}</h2>
                         <p className="text-xs text-slate-500 font-sans not-italic normal-case font-medium mt-1">{anomaly.scope}</p>
                       </div>
-                      <div className="bg-red-950/60 border border-red-600/40 text-red-400 font-mono not-italic text-xs px-4 py-2 font-black rounded-xs tracking-wider uppercase">
+                      <div className="bg-red-950/60 border border-red-600/40 text-red-400 font-mono not-italic text-xs px-4 py-2 font-black rounded-xs tracking-wider uppercase shrink-0">
                         {anomaly.investment_tier}
                       </div>
+                    </div>
+
+                    {/* 🏆 BUSINESS IMPACT BANNER */}
+                    <div className="bg-red-950/20 border border-red-600/30 p-4 rounded-xs font-sans not-italic normal-case">
+                      <span className="text-[9px] font-mono font-black text-red-500 uppercase tracking-widest block mb-0.5">// EXECUTIVE BUSINESS IMPACT:</span>
+                      <p className="text-xs text-slate-200 font-medium leading-relaxed">{anomaly.business_impact}</p>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 not-italic normal-case font-sans tracking-normal font-normal text-sm text-slate-300">
@@ -381,13 +409,25 @@ export default function SOWBuilderStandalone() {
                           <strong className="text-slate-300 block font-bold uppercase tracking-wide text-[10px] font-mono not-italic text-red-500/80 mb-1">Root Cause Profile:</strong> 
                           {anomaly.root_cause_technical}
                         </p>
-                        <ul className="space-y-2 pt-2">
-                          {anomaly.technical_runbook.map((task: string, i: number) => (
-                            <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-300 leading-relaxed">
-                              <span className="text-red-500 font-mono font-black shrink-0 mt-0.5">[{i + 1}]</span>
-                              <span>{task}</span>
-                            </li>
-                          ))}
+                        <ul className="space-y-3 pt-2">
+                          {anomaly.technical_runbook.map((task: string, i: number) => {
+                            const [title, description] = task.split(': ');
+                            return (
+                              <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-300 leading-relaxed">
+                                <span className="text-red-500 font-mono font-black shrink-0 mt-0.5">[{i + 1}]</span>
+                                <div>
+                                  {description ? (
+                                    <>
+                                      <strong className="text-white font-bold">{title}: </strong>
+                                      <span>{description}</span>
+                                    </>
+                                  ) : (
+                                    <span>{task}</span>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
 
@@ -400,13 +440,25 @@ export default function SOWBuilderStandalone() {
                           <strong className="text-slate-300 block font-bold uppercase tracking-wide text-[10px] font-mono not-italic text-indigo-400/80 mb-1">Structural Governance Gap:</strong> 
                           {anomaly.root_cause_operational}
                         </p>
-                        <ul className="space-y-2 pt-2">
-                          {anomaly.operational_playbook.map((task: string, i: number) => (
-                            <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-300 leading-relaxed">
-                              <span className="text-indigo-400 font-mono font-black shrink-0 mt-0.5">[{i + 1}]</span>
-                              <span>{task}</span>
-                            </li>
-                          ))}
+                        <ul className="space-y-3 pt-2">
+                          {anomaly.operational_playbook.map((task: string, i: number) => {
+                            const [title, description] = task.split(': ');
+                            return (
+                              <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-300 leading-relaxed">
+                                <span className="text-indigo-400 font-mono font-black shrink-0 mt-0.5">[{i + 1}]</span>
+                                <div>
+                                  {description ? (
+                                    <>
+                                      <strong className="text-white font-bold">{title}: </strong>
+                                      <span>{description}</span>
+                                    </>
+                                  ) : (
+                                    <span>{task}</span>
+                                  )}
+                                </div>
+                              </li>
+                            );
+                          })}
                         </ul>
                       </div>
                     </div>
