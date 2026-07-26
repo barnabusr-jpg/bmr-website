@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Shield, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight, Loader2 } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
@@ -25,6 +25,7 @@ export default function ForensicEngineRoot() {
   const [companyName, setCompanyName] = useState(''); 
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
+  const [sendingNudgeRole, setSendingNudgeRole] = useState<PersonaKey | null>(null);
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({ 
     EXECUTIVE: '', 
@@ -276,6 +277,39 @@ export default function ForensicEngineRoot() {
       console.error("BACKGROUND AUTOMATION HANDLER DISPATCH EXCEPTION:", error); 
     } 
   }; 
+
+  // ✅ BACKGROUND API NUDGE DISPATCHER (REPLACES MAILTO POPUP)
+  const handleTriggerNudge = async (persona: PersonaKey) => {
+    if (!triangulation) return;
+    const email = triangulation.emails[persona];
+    if (!email) return;
+
+    try {
+      setSendingNudgeRole(persona);
+      const res = await fetch('/api/send-triangulation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          companyName: triangulation.companyName,
+          activePillar: triangulation.pillar,
+          endpoints: { [persona]: email },
+          isNudge: true,
+          originUrl: `${window.location.origin}${window.location.pathname}`
+        })
+      });
+
+      if (res.ok) {
+        alert(`Nudge dispatched silently to ${persona.replace('_', ' ')} (${email}).`);
+      } else {
+        alert("Failed to send nudge email via BMR platform.");
+      }
+    } catch (err) {
+      console.error("Nudge API exception:", err);
+      alert("Error sending nudge via API.");
+    } finally {
+      setSendingNudgeRole(null);
+    }
+  };
 
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
     setActivePersona(persona); 
@@ -610,16 +644,20 @@ export default function ForensicEngineRoot() {
                   <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end"> 
                     {!isDone && ( 
                       <button 
-                        onClick={() => { 
-                          const email = triangulation.emails[persona]; 
-                          const subject = `ACTION REQUIRED: Secure Diagnostic Gateway Initialized // ${triangulation.companyName.replace(/_/g, ' ')}`; 
-                          const cleanOriginBase = `${window.location.origin}${window.location.pathname}`;
-                          const body = `Team,\n\nYour dedicated operational node has been provisioned to evaluate friction boundaries, performance tax indicators, and unhedged operational anomalies for ${triangulation.companyName.replace(/_/g, ' ')}.\n\nPlease access your secure access terminal to record your platform observations.\n\nSecure Diagnostic Access Terminal: ${cleanOriginBase}?pillar=${triangulation.pillar}&role=${persona}&org=${encodeURIComponent(triangulation.companyName)}&email=${encodeURIComponent(email)}`; 
-                          window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`; 
-                        }} 
-                        className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0" 
+                        onClick={() => handleTriggerNudge(persona)} 
+                        disabled={sendingNudgeRole === persona}
+                        className="text-[10px] text-zinc-500 font-black hover:text-red-500 transition-colors uppercase tracking-widest flex items-center gap-1.5 cursor-pointer bg-transparent border-0 disabled:opacity-50" 
                       > 
-                        <Mail size={12}/> Trigger Nudge 
+                        {sendingNudgeRole === persona ? (
+                          <>
+                            <Loader2 size={12} className="animate-spin text-red-500" />
+                            Dispatching...
+                          </>
+                        ) : (
+                          <>
+                            <Mail size={12}/> Trigger Nudge 
+                          </>
+                        )}
                       </button> 
                     )} 
 
