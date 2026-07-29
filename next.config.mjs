@@ -7,7 +7,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // ⚡ VERCEL SERVERLESS EXPORT: Opt-out Puppeteer & Chromium binaries from Webpack compilation
   serverExternalPackages: [
     "puppeteer-core",
     "@sparticuz/chromium-min",
