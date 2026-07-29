@@ -1,12 +1,17 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
-import puppeteer from "puppeteer";
+import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium-min";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Remote pack URL for @sparticuz/chromium-min v123.0.0
+const CHROMIUM_PACK_URL =
+  "https://github.com/Sparticuz/chromium/releases/download/v123.0.0/chromium-v123.0.0-pack.tar";
 
 export default async function handler(
   req: NextApiRequest,
@@ -41,7 +46,6 @@ export default async function handler(
   const dbDecay = audit.decay_pct || 24;
   const sfiScore = audit.sfi_score || dbDecay;
   const readinessGap = 100 - sfiScore;
-  const fractures = audit.fractures || [];
 
   const fteNum = parseInt(liveFte, 10);
   const spendNum = parseFloat(liveSpend);
@@ -49,7 +53,7 @@ export default async function handler(
   const laborTax = tax
     ? parseInt(tax as string, 10)
     : Math.round((dbDecay / 100) * 0.5 * (fteNum * 160000 * 1.3));
-    
+
   const sectorInflation = 1.2;
   const exposure = Math.round(
     0.22 * (dbDecay / 25) * (spendNum * 1000000) * sectorInflation
@@ -273,13 +277,18 @@ export default async function handler(
     </html>
   `;
 
-  // 4. Puppeteer PDF Generation
+  // 4. Serverless Browser Launch with @sparticuz/chromium-min
   try {
-    const browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-    const page = await browser.newPage();
+    const executablePath = await chromium.executablePath(CHROMIUM_PACK_URL);
 
+    const browser = await puppeteer.launch({
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: executablePath,
+      headless: chromium.headless,
+    });
+
+    const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
 
     const pdfBuffer = await page.pdf({
@@ -298,6 +307,8 @@ export default async function handler(
     return res.status(200).send(pdfBuffer);
   } catch (err: any) {
     console.error("PDF generation failed:", err);
-    return res.status(500).json({ error: "PDF Generation Failed", details: err.message });
+    return res
+      .status(500)
+      .json({ error: "PDF Generation Failed", details: err.message });
   }
 }
