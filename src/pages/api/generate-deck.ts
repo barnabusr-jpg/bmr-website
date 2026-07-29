@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { createClient } from "@supabase/supabase-js";
 
 // Vercel Serverless Function Configuration
 export const config = {
@@ -9,11 +8,6 @@ export const config = {
   },
 };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
@@ -22,33 +16,15 @@ export default async function handler(
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { id, spend, fte, leakage, tax } = req.query;
+  const { org, decay, spend, fte, leakage, tax } = req.query;
 
-  if (!id || typeof id !== "string") {
-    return res.status(400).json({ error: "Missing audit identifier" });
-  }
+  // Extract values directly from stateless URL params with safe fallbacks
+  const orgName = (org as string) || "TARGET ENTITY";
+  const dbDecay = parseInt((decay as string) || "24", 10);
+  const readinessGap = 100 - dbDecay;
 
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
-  const liveSpend = (spend as string) || "2.5";
-  const liveFte = (fte as string) || "50";
-
-  // Query audit record from Supabase
-  const { data: audit, error } = await supabase
-    .from("audits")
-    .select("*")
-    .eq("id", id)
-    .single();
-
-  if (error || !audit) {
-    return res.status(404).json({ error: "Audit record not found" });
-  }
-
-  // Parse metrics
-  const orgName = audit.org_name || "TARGET ENTITY";
-  const dbDecay = audit.decay_pct || 24;
-  const sfiScore = audit.sfi_score || dbDecay;
-  const readinessGap = 100 - sfiScore;
+  const liveSpend = (spend as string) || "1.2";
+  const liveFte = (fte as string) || "6";
 
   const fteNum = parseInt(liveFte, 10);
   const spendNum = parseFloat(liveSpend);
@@ -267,7 +243,6 @@ export default async function handler(
     </html>
   `;
 
-  // Serverless execution with dynamic require
   try {
     /* eslint-disable @typescript-eslint/no-var-requires */
     const puppeteer = require("puppeteer-core");
