@@ -227,7 +227,7 @@ export default function SOWBuilderStandalone() {
     setIsGeneratingPdf(false);
   };
 
-  // ⚡ GENERATE 16:9 EXECUTIVE DECK HANDLER (100% STATELESS)
+  // ⚡ GENERATE 16:9 EXECUTIVE DECK HANDLER (STATELESS)
   const handleGenerateExecutiveDeck = () => {
     if (!diagnosticData || !metrics) return;
     
@@ -268,7 +268,7 @@ export default function SOWBuilderStandalone() {
                 {linkCopied ? "LINK COPIED" : "SHARE SOW LINK"}
               </button>
 
-              {/* ⚡ GENERATE 16:9 EXECUTIVE DECK BUTTON (STATELESS) */}
+              {/* ⚡ GENERATE 16:9 EXECUTIVE DECK BUTTON */}
               <button
                 onClick={handleGenerateExecutiveDeck}
                 className="bg-slate-900 hover:bg-red-600 text-white border border-red-600/50 font-sans font-black px-5 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg"
