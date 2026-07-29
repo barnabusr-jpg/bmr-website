@@ -227,18 +227,19 @@ export default function SOWBuilderStandalone() {
     setIsGeneratingPdf(false);
   };
 
-  // ⚡ GENERATE 16:9 EXECUTIVE DECK HANDLER
+  // ⚡ GENERATE 16:9 EXECUTIVE DECK HANDLER (100% STATELESS)
   const handleGenerateExecutiveDeck = () => {
     if (!diagnosticData || !metrics) return;
     
-    const auditId = urlParams.id || urlParams.auditId || diagnosticData.id || "sample-audit";
+    const orgVal = encodeURIComponent((diagnosticData.org || "TARGET SPECIFICATION").replace(/_/g, ' '));
+    const decayVal = metrics.decay || 24;
     const spendVal = metrics.spend || 1.2;
     const fteVal = Math.round((spendVal * 1000000) / 200000) || 6;
     const laborTaxVal = Math.round(metrics.totalLaborTaxPool);
     const leakageVal = Math.round(metrics.totalLaborTaxPool + metrics.exposure);
 
     window.open(
-      `/api/generate-deck?id=${auditId}&spend=${spendVal}&fte=${fteVal}&leakage=${leakageVal}&tax=${laborTaxVal}`,
+      `/api/generate-deck?org=${orgVal}&decay=${decayVal}&spend=${spendVal}&fte=${fteVal}&leakage=${leakageVal}&tax=${laborTaxVal}`,
       '_blank'
     );
   };
@@ -267,7 +268,7 @@ export default function SOWBuilderStandalone() {
                 {linkCopied ? "LINK COPIED" : "SHARE SOW LINK"}
               </button>
 
-              {/* ⚡ GENERATE 16:9 EXECUTIVE DECK BUTTON */}
+              {/* ⚡ GENERATE 16:9 EXECUTIVE DECK BUTTON (STATELESS) */}
               <button
                 onClick={handleGenerateExecutiveDeck}
                 className="bg-slate-900 hover:bg-red-600 text-white border border-red-600/50 font-sans font-black px-5 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg"
