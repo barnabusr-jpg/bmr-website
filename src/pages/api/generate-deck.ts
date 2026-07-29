@@ -1,11 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
-import puppeteer from "puppeteer-core";
-import chromium from "@sparticuz/chromium-min";
 
-// ⚡ VERCEL SERVERLESS TIMEOUT OVERRIDE (Allows up to 60s for Chromium binary load)
+// Vercel Serverless Function Config
 export const config = {
   maxDuration: 60,
+  api: {
+    bodyParser: false,
+  },
 };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -14,7 +15,6 @@ const supabaseKey =
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Remote pack URL for @sparticuz/chromium-min v123.0.0
 const CHROMIUM_PACK_URL =
   "https://github.com/Sparticuz/chromium/releases/download/v123.0.0/chromium-v123.0.0-pack.tar";
 
@@ -35,7 +35,7 @@ export default async function handler(
   const liveSpend = (spend as string) || "2.5";
   const liveFte = (fte as string) || "50";
 
-  // 1. Query audit record from Supabase
+  // Query audit record from Supabase
   const { data: audit, error } = await supabase
     .from("audits")
     .select("*")
@@ -46,7 +46,7 @@ export default async function handler(
     return res.status(404).json({ error: "Audit record not found" });
   }
 
-  // 2. Parse metrics & variables
+  // Parse metrics
   const orgName = audit.org_name || "TARGET ENTITY";
   const dbDecay = audit.decay_pct || 24;
   const sfiScore = audit.sfi_score || dbDecay;
@@ -67,17 +67,14 @@ export default async function handler(
     ? parseInt(leakage as string, 10)
     : laborTax + exposure;
 
-  // 3. Render 16:9 Landscape HTML Template
+  // 16:9 Widescreen Presentation HTML Template
   const htmlContent = `
     <!DOCTYPE html>
     <html>
       <head>
         <meta charset="utf-8" />
         <style>
-          @page {
-            size: 1920px 1080px;
-            margin: 0;
-          }
+          @page { size: 1920px 1080px; margin: 0; }
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
             font-family: 'Courier New', Courier, monospace;
@@ -134,8 +131,7 @@ export default async function handler(
         </style>
       </head>
       <body>
-
-        <!-- SLIDE 1: FINANCIAL & COMPLIANCE RISK AUDIT -->
+        <!-- SLIDE 1: FINANCIAL AUDIT -->
         <div class="slide">
           <div class="header">
             <div>
@@ -144,7 +140,6 @@ export default async function handler(
             </div>
             <div style="font-size: 16px; color: #64748b;">SLIDE 01 // CFO BRIEFING</div>
           </div>
-
           <div class="grid-3">
             <div class="card">
               <div class="metric-label">INTEGRITY COMPLIANCE INDEX</div>
@@ -162,7 +157,6 @@ export default async function handler(
               <div style="font-size: 12px; color: #ef4444; margin-top: 12px;">UNHEDGED REGULATORY FINE EXPOSURE</div>
             </div>
           </div>
-
           <div class="card">
             <div class="metric-label" style="color: #ef4444;">REGULATORY NON-COMPLIANCE MATCHES DETECTED</div>
             <table class="table">
@@ -177,13 +171,12 @@ export default async function handler(
               </tbody>
             </table>
           </div>
-
           <div class="footer-box">
             <strong style="color: #ef4444;">EXECUTIVE SUMMARY:</strong> Uninsulated pipelines generate an annual loss run-rate of <strong>$${totalLeakage.toLocaleString()}</strong> across ${liveFte} FTE resources, exposing ${orgName} to $${exposure.toLocaleString()} in unhedged compliance liabilities.
           </div>
         </div>
 
-        <!-- SLIDE 2: IDENTIFIED LOGIC FRACTURES -->
+        <!-- SLIDE 2: LOGIC FRACTURES -->
         <div class="slide">
           <div class="header">
             <div>
@@ -192,7 +185,6 @@ export default async function handler(
             </div>
             <div style="font-size: 16px; color: #64748b;">SLIDE 02 // CTO BRIEFING</div>
           </div>
-
           <div class="grid-2">
             <div class="card card-danger">
               <div class="metric-label" style="color: #ef4444;">FRACTURE 01 // CRITICAL PRIORITY</div>
@@ -204,7 +196,6 @@ export default async function handler(
                 REQUIRED DIRECTIVE: DEPLOY TRACK 01 INGESTION CONTRACTS
               </div>
             </div>
-
             <div class="card">
               <div class="metric-label" style="color: #eab308;">FRACTURE 02 // HIGH PRIORITY</div>
               <div style="font-size: 28px; color: #ffffff; margin: 16px 0;">VALIDATION FATIGUE NODE</div>
@@ -216,13 +207,12 @@ export default async function handler(
               </div>
             </div>
           </div>
-
           <div class="footer-box">
             <strong style="color: #ef4444;">OPERATIONAL IMPACT:</strong> Senior platform developers are currently trapped in manual firefighting loops. Modernizing these hand-offs is required prior to scaling autonomous AI agents.
           </div>
         </div>
 
-        <!-- SLIDE 3: STATEMENT OF WORK & CONTROL PLANE -->
+        <!-- SLIDE 3: STATEMENT OF WORK -->
         <div class="slide">
           <div class="header">
             <div>
@@ -231,7 +221,6 @@ export default async function handler(
             </div>
             <div style="font-size: 16px; color: #64748b;">SLIDE 03 // CEO & STEERCO BRIEFING</div>
           </div>
-
           <div class="grid-2">
             <div class="card">
               <div class="metric-label" style="color: #ef4444;">PHASE 01 // CRITICAL PRIORITY</div>
@@ -240,7 +229,6 @@ export default async function handler(
                 Constructs machine-readable data contracts and SLA gates to prevent model hallucinations and silent pipeline breaks.
               </p>
             </div>
-
             <div class="card">
               <div class="metric-label" style="color: #3b82f6;">PHASE 02 // HIGH PRIORITY</div>
               <div style="font-size: 24px; color: #ffffff; margin: 12px 0;">TRACK 02 // TELEMETRY DECOUPLING</div>
@@ -249,7 +237,6 @@ export default async function handler(
               </p>
             </div>
           </div>
-
           <div class="card">
             <div class="metric-label" style="color: #eab308;">PRE-AUTOMATION AI CONTROL PLANE GATES</div>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 16px;">
@@ -267,7 +254,6 @@ export default async function handler(
               </div>
             </div>
           </div>
-
           <div class="footer-box" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
               <strong style="color: #ef4444;">DECISION PROTOCOL:</strong> Attach this Dossier to MSA and execute Track 01 Sprint.
@@ -277,13 +263,15 @@ export default async function handler(
             </div>
           </div>
         </div>
-
       </body>
     </html>
   `;
 
-  // 4. Serverless Browser Launch with @sparticuz/chromium-min
+  // Dynamic Serverless Execution (Bypasses Webpack Build Bundling)
   try {
+    const puppeteer = require("puppeteer-core");
+    const chromium = require("@sparticuz/chromium-min");
+
     const executablePath = await chromium.executablePath(CHROMIUM_PACK_URL);
 
     const browser = await puppeteer.launch({
