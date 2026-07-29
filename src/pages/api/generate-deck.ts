@@ -1,7 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { createClient } from "@supabase/supabase-js";
 
-// Vercel Serverless Function Config
+// Vercel Serverless Function Configuration
 export const config = {
   maxDuration: 60,
   api: {
@@ -13,7 +13,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 const CHROMIUM_PACK_URL =
   "https://github.com/Sparticuz/chromium/releases/download/v123.0.0/chromium-v123.0.0-pack.tar";
@@ -32,10 +31,12 @@ export default async function handler(
     return res.status(400).json({ error: "Missing audit identifier" });
   }
 
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
   const liveSpend = (spend as string) || "2.5";
   const liveFte = (fte as string) || "50";
 
-  // Query audit record from Supabase
+  // 1. Query audit record
   const { data: audit, error } = await supabase
     .from("audits")
     .select("*")
@@ -46,7 +47,7 @@ export default async function handler(
     return res.status(404).json({ error: "Audit record not found" });
   }
 
-  // Parse metrics
+  // 2. Metrics calculation
   const orgName = audit.org_name || "TARGET ENTITY";
   const dbDecay = audit.decay_pct || 24;
   const sfiScore = audit.sfi_score || dbDecay;
@@ -67,7 +68,7 @@ export default async function handler(
     ? parseInt(leakage as string, 10)
     : laborTax + exposure;
 
-  // 16:9 Widescreen Presentation HTML Template
+  // 3. Render 16:9 Presentation HTML
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -131,7 +132,8 @@ export default async function handler(
         </style>
       </head>
       <body>
-        <!-- SLIDE 1: FINANCIAL AUDIT -->
+
+        <!-- SLIDE 1 -->
         <div class="slide">
           <div class="header">
             <div>
@@ -176,7 +178,7 @@ export default async function handler(
           </div>
         </div>
 
-        <!-- SLIDE 2: LOGIC FRACTURES -->
+        <!-- SLIDE 2 -->
         <div class="slide">
           <div class="header">
             <div>
@@ -212,7 +214,7 @@ export default async function handler(
           </div>
         </div>
 
-        <!-- SLIDE 3: STATEMENT OF WORK -->
+        <!-- SLIDE 3 -->
         <div class="slide">
           <div class="header">
             <div>
@@ -263,12 +265,14 @@ export default async function handler(
             </div>
           </div>
         </div>
+
       </body>
     </html>
   `;
 
-  // Dynamic Serverless Execution (Bypasses Webpack Build Bundling)
+  // Dynamic Requires for Runtime Isolation
   try {
+    /* eslint-disable @typescript-eslint/no-var-requires */
     const puppeteer = require("puppeteer-core");
     const chromium = require("@sparticuz/chromium-min");
 
