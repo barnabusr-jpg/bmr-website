@@ -3,6 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 import puppeteer from "puppeteer-core";
 import chromium from "@sparticuz/chromium-min";
 
+// ⚡ VERCEL SERVERLESS TIMEOUT OVERRIDE (Allows up to 60s for Chromium binary load)
+export const config = {
+  maxDuration: 60,
+};
+
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
