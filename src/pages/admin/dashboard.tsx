@@ -795,6 +795,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                             
+                            {/* ⚡ INTERNAL ASSET EXPORTS & DUAL-EXPORT ACTION BUTTONS */}
                             <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
                               <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
                               
@@ -810,6 +811,7 @@ export default function AdminDashboard() {
                               </div>
 
                               <div className="space-y-3">
+                                {/* OPEN ONSCREEN LEDGER */}
                                 <button 
                                   type="button" 
                                   onClick={(e) => { 
@@ -822,7 +824,34 @@ export default function AdminDashboard() {
                                 >
                                   <Monitor size={18} /> Open Onscreen Ledger
                                 </button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
+
+                                {/* ⚡ NEW: GENERATE 16:9 EXECUTIVE BUSINESS CASE DECK */}
+                                <button 
+                                  type="button" 
+                                  disabled={cleanStatus === "ARCHIVED"} 
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    const urlSafeLeakage = Math.round(totalLeakage);
+                                    const urlSafeLaborTax = Math.round(laborTax);
+                                    window.open(`/api/generate-deck?id=${audit.id}&spend=${spend}&fte=${fte}&leakage=${urlSafeLeakage}&tax=${urlSafeLaborTax}`, '_blank'); 
+                                  }} 
+                                  className="w-full bg-red-600 text-white px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer disabled:opacity-20"
+                                >
+                                  <Monitor size={16} /> GENERATE EXECUTIVE DECK (16:9 PDF)
+                                </button>
+
+                                {/* PRINT FORENSIC LEDGER (PORTRAIT SOW) */}
+                                <button 
+                                  type="button" 
+                                  disabled={cleanStatus === "ARCHIVED"}
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); 
+                                    window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); 
+                                  }} 
+                                  className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer disabled:opacity-20"
+                                >
+                                  <FileText size={16} /> PRINT FORENSIC LEDGER (SOW)
+                                </button>
                               </div>
                             </div>
                           </div>
