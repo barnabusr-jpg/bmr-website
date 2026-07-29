@@ -6,7 +6,7 @@ import { generatePdf } from '../../lib/generatePdf';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 import { 
   Terminal, Briefcase, Download, ShieldAlert, 
-  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText, Copy, Share2
+  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText, Copy, Share2, Monitor
 } from 'lucide-react';
 import { GovernanceSupplementView } from '@/components/GovernanceSupplementView';
 
@@ -227,11 +227,27 @@ export default function SOWBuilderStandalone() {
     setIsGeneratingPdf(false);
   };
 
+  // ⚡ GENERATE 16:9 EXECUTIVE DECK HANDLER
+  const handleGenerateExecutiveDeck = () => {
+    if (!diagnosticData || !metrics) return;
+    
+    const auditId = urlParams.id || urlParams.auditId || diagnosticData.id || "sample-audit";
+    const spendVal = metrics.spend || 1.2;
+    const fteVal = Math.round((spendVal * 1000000) / 200000) || 6;
+    const laborTaxVal = Math.round(metrics.totalLaborTaxPool);
+    const leakageVal = Math.round(metrics.totalLaborTaxPool + metrics.exposure);
+
+    window.open(
+      `/api/generate-deck?id=${auditId}&spend=${spendVal}&fte=${fteVal}&leakage=${leakageVal}&tax=${laborTaxVal}`,
+      '_blank'
+    );
+  };
+
   return (
     <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black p-6 md:p-12 selection:bg-red-600 selection:text-white italic">
       <main className="max-w-7xl mx-auto space-y-8">
         
-        <div className="border-b border-slate-900 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="border-b border-slate-900 pb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div>
             <h1 className="text-[clamp(2.2rem,5vw,3.75rem)] font-black text-white uppercase tracking-tighter leading-none italic">
               STATEMENT OF WORK <span className="text-red-600">BUILDER</span>
@@ -242,13 +258,21 @@ export default function SOWBuilderStandalone() {
           </div>
 
           {diagnosticData && (
-            <div className="flex flex-col sm:flex-row items-stretch gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full lg:w-auto">
               <button
                 onClick={handleCopyLink}
-                className="bg-slate-900 text-slate-300 border border-slate-800 font-mono font-black px-5 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-black transition-all cursor-pointer shadow-md"
+                className="bg-slate-900 text-slate-300 border border-slate-800 font-mono font-black px-4 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-black transition-all cursor-pointer shadow-md"
               >
                 {linkCopied ? <CheckCircle size={14} className="text-green-500 shrink-0" /> : <Share2 size={14} className="shrink-0" />}
-                {linkCopied ? "LINK COPIED TO CLIPBOARD" : "COPY SHAREABLE SOW LINK"}
+                {linkCopied ? "LINK COPIED" : "SHARE SOW LINK"}
+              </button>
+
+              {/* ⚡ GENERATE 16:9 EXECUTIVE DECK BUTTON */}
+              <button
+                onClick={handleGenerateExecutiveDeck}
+                className="bg-slate-900 hover:bg-red-600 text-white border border-red-600/50 font-sans font-black px-5 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg"
+              >
+                <Monitor size={14} /> GENERATE EXECUTIVE DECK (16:9 PDF)
               </button>
 
               <button
