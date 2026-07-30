@@ -9,6 +9,30 @@ import {
 import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
 
+// 🏢 CANONICAL SECTOR RISK MULTIPLIERS (Indexed to 4-Card Strategy Intake UI)
+const SECTOR_MULTIPLIERS: Record<string, number> = {
+  // Option 1: Finance / Compliance
+  FINANCE: 1.35,
+  FINANCIAL_SERVICES: 1.35,
+  COMPLIANCE: 1.35,
+
+  // Option 2: Healthcare / Liability
+  HEALTHCARE: 1.40,
+  LIABILITY: 1.40,
+
+  // Option 3: Industrial / Operations
+  INDUSTRIAL: 1.15,
+  MANUFACTURING: 1.15,
+  OPERATIONS: 1.15,
+
+  // Option 4: Services / Labor
+  SERVICES: 1.20,
+  LABOR: 1.20,
+
+  // Standard Fallback
+  DEFAULT: 1.28
+};
+
 const BMR_IP_SUITE = {
   directives: [
     { id: "DIR_01", label: "PIPELINE HARDENING & SCHEMA DRIFT INSULATION", price: "PHASE 01", description: "Establishes standardized ingestion contracts to isolate vendor schema drift and prevent model hallucinations.", color: "text-red-600" },
@@ -463,18 +487,9 @@ export default function AdminDashboard() {
                   const laborMultiplier = 0.5;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   
-                  const sectorKey = (audit.sector || 'services').toLowerCase().trim();
-                  let sectorInflationMultiplier = 1.2;
-
-                  if (sectorKey === 'finance' || sectorKey === 'compliance') {
-                    sectorInflationMultiplier = 1.5;
-                  } else if (sectorKey === 'manufacturing' || sectorKey === 'industrial' || sectorKey === 'operations') {
-                    sectorInflationMultiplier = 1.5; 
-                  } else if (sectorKey === 'healthcare' || sectorKey === 'liability') {
-                    sectorInflationMultiplier = 1.3;
-                  } else if (sectorKey === 'services' || sectorKey === 'labor') {
-                    sectorInflationMultiplier = 1.2;
-                  }
+                  // ⚡ STANDARDIZED SECTOR MULTIPLIER (Matches Strategy Intake UI & Results Portal)
+                  const rawSectorKey = String(audit.sector || 'SERVICES').toUpperCase().trim().replace(/\s+/g, '_');
+                  const sectorInflationMultiplier = SECTOR_MULTIPLIERS[rawSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
 
                   const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
                   const totalLeakage = laborTax + exposure;
@@ -816,7 +831,8 @@ export default function AdminDashboard() {
                                     e.stopPropagation(); 
                                     const urlSafeLeakage = Math.round(totalLeakage);
                                     const urlSafeLaborTax = Math.round(laborTax);
-                                    window.open(`/results/${audit.id}?live_sync=true&decay=${sfi}&spend=${spend}&fte=${fte}&leakage=${urlSafeLeakage}&tax=${urlSafeLaborTax}`, '_blank'); 
+                                    const activeSector = encodeURIComponent(audit.sector || 'SERVICES');
+                                    window.open(`/results/${audit.id}?live_sync=true&decay=${sfi}&spend=${spend}&fte=${fte}&leakage=${urlSafeLeakage}&tax=${urlSafeLaborTax}&sector=${activeSector}`, '_blank'); 
                                   }} 
                                   className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"
                                 >
