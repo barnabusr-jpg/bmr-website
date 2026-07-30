@@ -143,19 +143,19 @@ export default function UnifiedResultsPortal() {
     return audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.status]);
 
-  // 🧮 UNIFIED & CALIBRATED METRICS CALCULATION LOGIC
+  // 🧮 UNIFIED & DYNAMIC METRICS CALCULATION ENGINE
   const metrics = useMemo(() => {
-    // 1. Resolve FTE count (Uses database audit value or fallback based on spend)
+    // 1. Resolve FTE count dynamically (Database value or standard payroll factor)
     const fteCount = audit?.roi_pct 
       ? audit.roi_pct 
-      : Math.round((spend * 1000000) / 200000) || 20;
+      : Math.round((spend * 1000000) / 200000) || 6;
 
-    // 2. Base Labor Tax Pool (Unweighted by Sector to prevent artificial labor inflation)
+    // 2. Pure Labor Waste Tax (Unweighted by Sector to maintain payroll reality)
     // Formula: (Decay % / 100) * 0.5 friction * (FTEs * $160k base * 1.3 burdened multiplier)
     const baseLaborTaxPool = (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
 
-    // 3. Sector-Weighted Exposure (Sector multiplier applies ONLY to regulatory/risk exposure)
-    const sectorRiskMultiplier = (audit as any)?.sector_multiplier || 1.2;
+    // 3. Sector-Weighted Risk Exposure (Sector risk applies strictly to liability exposure)
+    const sectorRiskMultiplier = (audit as any)?.sector_multiplier || 1.28;
     const baseExposure = 0.22 * (dbDecay / 25) * (spend * 1000000) * sectorRiskMultiplier;
 
     let totalLaborTaxPool = baseLaborTaxPool;
@@ -170,13 +170,6 @@ export default function UnifiedResultsPortal() {
       totalLaborTaxPool = parsedTax < 1000 ? parsedTax * 1000000 : parsedTax;
       const totalLeakage = parsedLeakage < 1000 ? parsedLeakage * 1000000 : parsedLeakage;
       totalExposure = Math.max(0, totalLeakage - totalLaborTaxPool);
-    } 
-    // Option B: Database record override fallback
-    else if ((audit as any)?.rework_tax && (audit as any).rework_tax > 0) {
-      totalLaborTaxPool = (audit as any).rework_tax * 1000000;
-      if ((audit as any)?.exposure && (audit as any).exposure > 0) {
-        totalExposure = (audit as any).exposure * 1000000;
-      }
     }
 
     return {
@@ -186,7 +179,7 @@ export default function UnifiedResultsPortal() {
       operationalDragTax: totalLaborTaxPool * 0.40, // 40% = Validation / Telemetry Fatigue
       exposure: totalExposure                       // Sector-weighted unhedged risk
     };
-  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.rework_tax, (audit as any)?.exposure, (audit as any)?.sector_multiplier, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector_multiplier, live_sync, leakage, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
@@ -280,7 +273,7 @@ export default function UnifiedResultsPortal() {
           <p className="text-slate-300 font-sans text-xs leading-relaxed font-black normal-case max-w-4xl">
             {isPhaseTwoActive 
               ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
-              : `Metrics are currently generated using proportional standard model assumptions indexed to your captured AI Readiness Gap of ${100 - dbDecay}% (${dbDecay}% Friction). Specific workforce calibration parameters are held inside terminal status using system defaults of $1.2M annual software allocations across an ecosystem of 6 FTE resources.`
+              : `Metrics are currently generated using proportional standard model assumptions indexed to your captured AI Readiness Gap of ${100 - dbDecay}% (${dbDecay}% Friction). Specific workforce calibration parameters are held inside terminal status using system defaults of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.`
             }
           </p>
         </div>
