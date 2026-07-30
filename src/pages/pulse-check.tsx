@@ -144,28 +144,34 @@ export default function PulseCheck() {
 
   const logToDatabase = async (metrics: any) => {
     try {
-      const { data: ent } = await supabase.from('entities').upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' }).select().single();
+      const { data: ent } = await supabase
+        .from('entities')
+        .upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' })
+        .select()
+        .single();
       
-      const nowIso = new Date().toISOString();
-      const { data: auditData, error: auditError } = await supabase.from('audits').insert([{ 
-        org_name: entityName.toUpperCase(),
-        lead_email: email.toLowerCase(),
-        sector: sector,
-        decay_pct: metrics.decay,
-        rework_tax: parseFloat(metrics.rework),
-        raw_responses: answers,
-        status: 'COMPLETED',
-        roi_pct: 6,
-        ai_spend: 1.2,
-        created_at: nowIso,
-        completed_at: nowIso
-      }]).select('id').single();
+      // 💡 REMOVED created_at / completed_at TO PREVENT SUPABASE PGRST204 SCHEMA ERROR
+      const { data: auditData, error: auditError } = await supabase
+        .from('audits')
+        .insert([{ 
+          org_name: entityName.toUpperCase(),
+          lead_email: email.toLowerCase().trim(),
+          sector: sector,
+          decay_pct: metrics.decay,
+          rework_tax: parseFloat(metrics.rework),
+          raw_responses: answers,
+          status: 'COMPLETED',
+          roi_pct: 6,
+          ai_spend: 1.2
+        }])
+        .select('id')
+        .single();
 
       if (auditError) throw auditError;
 
       await supabase.from('operators').upsert({ 
-        email: email.toLowerCase(), 
-        full_name: operatorName.toUpperCase(), 
+        email: email.toLowerCase().trim(), 
+        full_name: operatorName.toUpperCase().trim(), 
         entity_id: ent?.id,
         audit_id: auditData.id,
         persona_type: selectedLens,
@@ -290,7 +296,7 @@ export default function PulseCheck() {
             <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-12 text-center italic">
               <div className="flex flex-col items-center border-b border-slate-900 pb-10 mb-12">
                 
-                {/* ⚡ CLEAN DYNAMIC 2-DIGIT PADDING ("01 OF 10" THROUGH "10 OF 10") */}
+                {/* ⚡ CLEAN 2-DIGIT QUESTION HEADER PADDING */}
                 <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block mb-2 not-italic">
                   // PRE-AUTOMATION DIAGNOSTIC QUESTION {String(currentDimension + 1).padStart(2, '0')} OF {LOCAL_QUESTIONS.length}
                 </span>
@@ -317,23 +323,23 @@ export default function PulseCheck() {
                         const auditId = await logToDatabase(metrics);
                         
                         if (auditId) {
-                          try {
-                            await fetch('/api/send-vault-link', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({
-                                email: email.toLowerCase().trim(),
-                                orgName: entityName.toUpperCase().trim(),
-                                auditId: auditId,
-                                userName: operatorName.trim()
-                              })
-                            });
-                          } catch (emailErr) {
-                            console.error("Transactional background pipeline email error:", emailErr);
-                          }
+                          // Background non-blocking trigger for transactional vault link
+                          fetch('/api/send-vault-link', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              email: email.toLowerCase().trim(),
+                              orgName: entityName.toUpperCase().trim(),
+                              auditId: auditId,
+                              userName: operatorName.trim()
+                            })
+                          }).catch(err => console.error("Vault link non-critical email warning:", err));
+
+                          // Direct browser redirect to Efficiency Verdict portal
                           window.location.href = `/results/${auditId}`;
                         } else {
                           setIsLoading(false);
+                          alert("DATABASE TRANSMISSION INTERRUPTION: Check connection and try submitting option again.");
                         }
                       }
                     }}
