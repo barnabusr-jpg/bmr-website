@@ -9,23 +9,27 @@ import {
 import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🏢 STANDARDIZED DYNAMIC SECTOR RISK MULTIPLIERS
+// 🏢 CANONICAL SECTOR RISK MULTIPLIERS (Indexed to 4-Card Strategy Intake UI)
 const SECTOR_MULTIPLIERS: Record<string, number> = {
-  FINANCIAL_SERVICES: 1.35,
+  // Option 1: Finance / Compliance
   FINANCE: 1.35,
+  FINANCIAL_SERVICES: 1.35,
   COMPLIANCE: 1.35,
+
+  // Option 2: Healthcare / Liability
   HEALTHCARE: 1.40,
   LIABILITY: 1.40,
-  TECHNOLOGY: 1.20,
-  TECH: 1.20,
-  MANUFACTURING: 1.15,
+
+  // Option 3: Industrial / Operations
   INDUSTRIAL: 1.15,
+  MANUFACTURING: 1.15,
   OPERATIONS: 1.15,
-  RETAIL: 1.10,
-  DEFENSE: 1.45,
-  INSURANCE: 1.35,
+
+  // Option 4: Services / Labor
   SERVICES: 1.20,
   LABOR: 1.20,
+
+  // Standard Fallback
   DEFAULT: 1.28
 };
 
@@ -158,7 +162,7 @@ export default function AdminDashboard() {
       fetchLedger();
     } catch (err: any) { 
       alert(err.message); 
-    } fontally { 
+    } finally { 
       setIsUpdating(false); 
     }
   };
@@ -483,7 +487,7 @@ export default function AdminDashboard() {
                   const laborMultiplier = 0.5;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   
-                  // ⚡ STANDARDIZED SECTOR MULTIPLIER (Matches Results Portal)
+                  // ⚡ STANDARDIZED SECTOR MULTIPLIER (Matches Strategy Intake UI & Results Portal)
                   const rawSectorKey = String(audit.sector || 'SERVICES').toUpperCase().trim().replace(/\s+/g, '_');
                   const sectorInflationMultiplier = SECTOR_MULTIPLIERS[rawSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
 
