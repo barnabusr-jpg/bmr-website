@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from "next";
+import path from "path";
 
 // Vercel Serverless Function Configuration
 export const config = {
@@ -248,7 +249,16 @@ export default async function handler(
     const puppeteer = require("puppeteer-core");
     const chromium = require("@sparticuz/chromium");
 
+    if (typeof chromium.setGraphicsMode === "function") {
+      chromium.setGraphicsMode(false);
+    }
+
     const executablePath = await chromium.executablePath();
+
+    const execDir = path.dirname(executablePath);
+    if (execDir) {
+      process.env.LD_LIBRARY_PATH = `${execDir}:${process.env.LD_LIBRARY_PATH || ""}`;
+    }
 
     const browser = await puppeteer.launch({
       args: chromium.args,
