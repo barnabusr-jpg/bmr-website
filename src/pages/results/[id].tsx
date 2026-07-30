@@ -135,7 +135,7 @@ export default function UnifiedResultsPortal() {
         if (data) setAudit(data as AuditRecord);
       } catch (err) { 
         console.error("Audit state fetch failure:", err); 
-      } font-mono { 
+      } finally { 
         setLoading(false); 
       }
     };
