@@ -143,40 +143,50 @@ export default function UnifiedResultsPortal() {
     return audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.status]);
 
-  // 🧮 UNTOUCHED ORIGINAL METRICS CALCULATION LOGIC
+  // 🧮 UNIFIED & CALIBRATED METRICS CALCULATION LOGIC
   const metrics = useMemo(() => {
-    // Option A: Active live sync override from URL query parameters
+    // 1. Resolve FTE count (Uses database audit value or fallback based on spend)
+    const fteCount = audit?.roi_pct 
+      ? audit.roi_pct 
+      : Math.round((spend * 1000000) / 200000) || 20;
+
+    // 2. Base Labor Tax Pool (Unweighted by Sector to prevent artificial labor inflation)
+    // Formula: (Decay % / 100) * 0.5 friction * (FTEs * $160k base * 1.3 burdened multiplier)
+    const baseLaborTaxPool = (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
+
+    // 3. Sector-Weighted Exposure (Sector multiplier applies ONLY to regulatory/risk exposure)
+    const sectorRiskMultiplier = (audit as any)?.sector_multiplier || 1.2;
+    const baseExposure = 0.22 * (dbDecay / 25) * (spend * 1000000) * sectorRiskMultiplier;
+
+    let totalLaborTaxPool = baseLaborTaxPool;
+    let totalExposure = baseExposure;
+
+    // Option A: Active live sync override from URL query parameters (Admin Workshop Mode)
     if (live_sync === "true" && leakage && tax) {
       const parsedTax = parseFloat(tax as string);
-      return {
-        fteCount: audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6,
-        totalLaborTaxPool: parsedTax,
-        internalReworkTax: parsedTax * 0.60,
-        operationalDragTax: parsedTax * 0.40,
-        exposure: parseFloat(leakage as string) - parsedTax
-      };
-    }
+      const parsedLeakage = parseFloat(leakage as string);
 
-    // Option B: Direct Database Read & Fallback Calculations (Original)
-    const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
-    
-    // Check if a calibrated rework_tax was saved directly to the database row
-    const totalLaborTaxPool = (audit as any)?.rework_tax && (audit as any).rework_tax > 0 
-      ? ((audit as any).rework_tax * 1000000) 
-      : (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
-    
-    const totalExposure = (audit as any)?.exposure && (audit as any).exposure > 0
-      ? ((audit as any).exposure * 1000000)
-      : (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15;
+      // Standardize input if values passed as raw numbers vs millions
+      totalLaborTaxPool = parsedTax < 1000 ? parsedTax * 1000000 : parsedTax;
+      const totalLeakage = parsedLeakage < 1000 ? parsedLeakage * 1000000 : parsedLeakage;
+      totalExposure = Math.max(0, totalLeakage - totalLaborTaxPool);
+    } 
+    // Option B: Database record override fallback
+    else if ((audit as any)?.rework_tax && (audit as any).rework_tax > 0) {
+      totalLaborTaxPool = (audit as any).rework_tax * 1000000;
+      if ((audit as any)?.exposure && (audit as any).exposure > 0) {
+        totalExposure = (audit as any).exposure * 1000000;
+      }
+    }
 
     return {
       fteCount,
       totalLaborTaxPool,
-      internalReworkTax: totalLaborTaxPool * 0.60,
-      operationalDragTax: totalLaborTaxPool * 0.40,
-      exposure: totalExposure
+      internalReworkTax: totalLaborTaxPool * 0.60, // 60% = Schema Drift / Ingestion
+      operationalDragTax: totalLaborTaxPool * 0.40, // 40% = Validation / Telemetry Fatigue
+      exposure: totalExposure                       // Sector-weighted unhedged risk
     };
-  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.rework_tax, (audit as any)?.exposure, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.rework_tax, (audit as any)?.exposure, (audit as any)?.sector_multiplier, live_sync, leakage, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
