@@ -36,7 +36,7 @@ const SECTOR_MULTIPLIERS: Record<string, number> = {
   DEFAULT: 1.28
 };
 
-// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE (HARD-FORCED INTERVAL TICKER)
+// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE (CONTINUOUS LIVE TICKER)
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -46,7 +46,7 @@ function RealTimeLossTicker({
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(10);
   const frozenLossRef = useRef<number | null>(null);
   
-  // 💡 Anchor baseline locked 10 seconds prior to initial mount
+  // Anchor baseline initialized to 10 seconds ago
   const anchorTimeRef = useRef<number>(Date.now() - 10000);
 
   const severityVelocityMultiplier = useMemo(() => {
@@ -62,9 +62,9 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    // Override anchor time if valid DB timestamp exists
+    // Override anchor time if valid DB timestamp exists and is in the past
     let parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
-    if (!isNaN(parsed) && parsed > 0) {
+    if (!isNaN(parsed) && parsed > 0 && parsed < Date.now()) {
       anchorTimeRef.current = parsed;
     }
 
@@ -78,7 +78,7 @@ function RealTimeLossTicker({
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
 
-  // 🛡️ HARD-FORCED EXPOSURE VALUE ($462,528 FALLBACK IF PROP IS 0 OR NAN)
+  // 🛡️ Ensure valid non-zero exposure ($462,528 fallback if prop is 0/null/NaN)
   const safeExposure = useMemo(() => {
     const parsed = Number(exposure);
     return (!isNaN(parsed) && parsed > 0) ? parsed : 462528;
@@ -86,7 +86,7 @@ function RealTimeLossTicker({
 
   let dynamicAccumulatedLoss = (safeExposure / 31536000) * elapsedSeconds;
 
-  // Guarantee visible progression even if base math drops to 0
+  // Guarantee visible progression
   if (dynamicAccumulatedLoss <= 0) {
     dynamicAccumulatedLoss = 0.05 + (elapsedSeconds * 0.01);
   }
@@ -280,6 +280,10 @@ export default function UnifiedResultsPortal() {
 
   const verifyIsAdminView = String(router.query.live_sync).toLowerCase() === "true";
 
+  // Calculate clean exposure sum with non-zero fallback
+  const calculatedExposureSum = metrics.exposure + metrics.totalLaborTaxPool;
+  const safeExposureSum = calculatedExposureSum > 0 ? calculatedExposureSum : 462528;
+
   return (
     <div className="min-h-screen bg-[#020617] text-white font-sans overflow-x-hidden text-left uppercase italic font-black">
       <nav className="h-28 bg-black/40 backdrop-blur-md border-b border-slate-900/60 px-6 md:px-12 flex items-center justify-between">
@@ -342,7 +346,7 @@ export default function UnifiedResultsPortal() {
                   <span className={`text-[9px] font-mono block tracking-wider uppercase ${accentColorClass}`}>UNHEDGED PROMISE GAP EXPOSURE</span>
                 </div>
                 <p className="text-xs font-black mt-2 leading-tight text-slate-900">
-                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${(metrics.exposure + metrics.totalLaborTaxPool).toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
+                  TOTAL CAPITAL RISK: <span className={`${accentColorClass} font-mono text-sm`}>${safeExposureSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}.</span>
                 </p>
               </div>
             </div>
@@ -353,10 +357,10 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* 🏎️ HARD-FORCED ANCHORED TICKER CALL */}
+            {/* 🏎️ SAFE TICKER CALL WITH COMPILED_AT & NON-ZERO FALLBACK */}
             <RealTimeLossTicker 
-              diagnosticCompletedAt={(audit as any)?.completed_at || audit?.created_at || (audit as any)?.updated_at} 
-              exposure={metrics.exposure + metrics.totalLaborTaxPool} 
+              diagnosticCompletedAt={(audit as any)?.compiled_at || audit?.created_at || (audit as any)?.updated_at} 
+              exposure={safeExposureSum} 
               anomalies={activeAnomaliesList}
               isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
             />
