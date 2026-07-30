@@ -6,23 +6,33 @@ import { supabase } from "@/lib/supabaseClient";
 import { AnomalyNode, AuditRecord } from "@/types/database.types";
 
 interface LossTickerProps { 
-  diagnosticCompletedAt: string; 
+  diagnosticCompletedAt?: string; 
   exposure: number;
   anomalies: Array<{ severity: string }>;
   isArchived: boolean; 
 }
 
-// 🏢 DYNAMIC SECTOR RISK MULTIPLIERS
+// 🏢 CANONICAL SECTOR RISK MULTIPLIERS (Indexed to 4-Card Strategy Intake UI)
 const SECTOR_MULTIPLIERS: Record<string, number> = {
-  FINANCIAL_SERVICES: 1.35,
+  // Option 1: Finance / Compliance
   FINANCE: 1.35,
+  FINANCIAL_SERVICES: 1.35,
+  COMPLIANCE: 1.35,
+
+  // Option 2: Healthcare / Liability
   HEALTHCARE: 1.40,
-  TECHNOLOGY: 1.20,
-  TECH: 1.20,
+  LIABILITY: 1.40,
+
+  // Option 3: Industrial / Operations
+  INDUSTRIAL: 1.15,
   MANUFACTURING: 1.15,
-  RETAIL: 1.10,
-  DEFENSE: 1.45,
-  INSURANCE: 1.35,
+  OPERATIONS: 1.15,
+
+  // Option 4: Services / Labor
+  SERVICES: 1.20,
+  LABOR: 1.20,
+
+  // Standard Fallback
   DEFAULT: 1.28
 };
 
@@ -49,11 +59,13 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
+    // Require valid DB creation timestamp to prevent zero-resets
     if (!diagnosticCompletedAt || isNaN(Date.parse(diagnosticCompletedAt))) {
       setElapsedSeconds(0);
       return;
     }
 
+    // Anchor strictly to DB creation time
     const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
 
     const calculateDeltaTime = () => {
@@ -165,36 +177,30 @@ export default function UnifiedResultsPortal() {
       : Math.round((spend * 1000000) / 200000) || 6;
 
     // 2. Pure Labor Waste Tax (Unweighted by Sector to maintain payroll reality)
-    // Formula: (Decay % / 100) * 0.5 friction * (FTEs * $160k base * 1.3 burdened multiplier)
     const baseLaborTaxPool = (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
 
-    // 3. Resolve Dynamic Sector Risk Multiplier (Reacts live to user/URL selection or database audit state)
+    // 3. Resolve Dynamic Sector Risk Multiplier
     const selectedSectorKey = (
       (querySector as string) || 
       (audit as any)?.sector || 
-      "DEFAULT"
-    ).toUpperCase().replace(/\s+/g, "_");
+      "SERVICES"
+    ).toUpperCase().trim().replace(/\s+/g, "_");
 
     const activeSectorMultiplier = 
       (audit as any)?.sector_multiplier && (audit as any).sector_multiplier > 0
         ? (audit as any).sector_multiplier
         : SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
 
-    // 4. Sector-Weighted Risk Exposure (Sector risk applies strictly to liability exposure)
-    const baseExposure = 0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier;
-
+    // 4. Sector-Weighted Risk Exposure
     let totalLaborTaxPool = baseLaborTaxPool;
-    let totalExposure = baseExposure;
+    let totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
 
-    // Option A: Active live sync override from URL query parameters (Admin Workshop Mode)
-    if (live_sync === "true" && leakage && tax) {
+    // Option A: Active live sync override handling
+    if (live_sync === "true" && tax) {
       const parsedTax = parseFloat(tax as string);
-      const parsedLeakage = parseFloat(leakage as string);
-
-      // Standardize input if values passed as raw numbers vs millions
       totalLaborTaxPool = parsedTax < 1000 ? parsedTax * 1000000 : parsedTax;
-      const totalLeakage = parsedLeakage < 1000 ? parsedLeakage * 1000000 : parsedLeakage;
-      totalExposure = Math.max(0, totalLeakage - totalLaborTaxPool);
+      // Force exact formula match for 100% parity across views
+      totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
     }
 
     return {
@@ -205,7 +211,7 @@ export default function UnifiedResultsPortal() {
       operationalDragTax: totalLaborTaxPool * 0.40, // 40% = Validation / Telemetry Fatigue
       exposure: totalExposure                       // Dynamic sector-weighted risk
     };
-  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector, (audit as any)?.sector_multiplier, querySector, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector, (audit as any)?.sector_multiplier, querySector, live_sync, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
@@ -350,7 +356,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             <RealTimeLossTicker 
-              diagnosticCompletedAt={audit.completed_at || audit.updated_at || new Date().toISOString()} 
+              diagnosticCompletedAt={audit.completed_at || audit.created_at} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
               anomalies={activeAnomaliesList}
               isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
