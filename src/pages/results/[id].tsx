@@ -46,8 +46,8 @@ function RealTimeLossTicker({
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
   const frozenLossRef = useRef<number | null>(null);
   
-  // 💡 Safe fallback: if DB date isn't loaded yet, anchor to component mount time (5s offset)
-  const mountTimeRef = useRef<number>(Date.now() - 5000); 
+  // 💡 PERSISTENT ANCHOR REF: Keeps timer baseline locked across async Supabase re-renders
+  const anchorTimeRef = useRef<number | null>(null);
 
   const severityVelocityMultiplier = useMemo(() => {
     let multiplier = 1.0;
@@ -62,18 +62,21 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    // 1. Try parsing DB timestamp safely
-    let parsedAnchor = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
-    
-    // 2. Fallback to persistent mount time if DB date string is missing, invalid, or undefined
-    const finalAnchorTime = !isNaN(parsedAnchor) && parsedAnchor > 0 
-      ? parsedAnchor 
-      : mountTimeRef.current;
+    // 1. Initialize anchor time only ONCE on mount or when valid DB timestamp arrives
+    if (anchorTimeRef.current === null || diagnosticCompletedAt) {
+      let parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
+      if (!isNaN(parsed) && parsed > 0) {
+        anchorTimeRef.current = parsed;
+      } else if (anchorTimeRef.current === null) {
+        // Fallback: start 10 seconds ago so loss ticker immediately animates
+        anchorTimeRef.current = Date.now() - 10000;
+      }
+    }
 
     const calculateDeltaTime = () => {
-      if (isArchived) return;
+      if (isArchived || !anchorTimeRef.current) return;
       const currentRealTime = Date.now();
-      const absoluteDeltaInSeconds = Math.max(0.1, (currentRealTime - finalAnchorTime) / 1000);
+      const absoluteDeltaInSeconds = Math.max(0.1, (currentRealTime - anchorTimeRef.current) / 1000);
       setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
     };
 
@@ -83,10 +86,13 @@ function RealTimeLossTicker({
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
 
-  // 3. Ensure exposure is non-zero so loss always accumulates ($462,528 fallback)
-  const validExposure = exposure && !isNaN(exposure) && exposure > 0 ? exposure : 462528;
-  
-  let dynamicAccumulatedLoss = (validExposure / 31536000) * elapsedSeconds;
+  // 2. Ensure exposure numeric integrity ($462,528 baseline if zero/uncomputed)
+  const safeExposure = useMemo(() => {
+    const num = Number(exposure);
+    return (!isNaN(num) && num > 0) ? num : 462528;
+  }, [exposure]);
+
+  let dynamicAccumulatedLoss = (safeExposure / 31536000) * elapsedSeconds;
 
   if (isArchived) {
     if (frozenLossRef.current === null) {
