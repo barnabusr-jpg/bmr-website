@@ -36,18 +36,18 @@ const SECTOR_MULTIPLIERS: Record<string, number> = {
   DEFAULT: 1.28
 };
 
-// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE (BULLETPROOF PRODUCTION)
+// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE (HARD-FORCED INTERVAL TICKER)
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
   anomalies,
   isArchived
 }: LossTickerProps) {
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(10);
   const frozenLossRef = useRef<number | null>(null);
   
-  // 💡 PERSISTENT ANCHOR REF: Keeps timer baseline locked across async Supabase re-renders
-  const anchorTimeRef = useRef<number | null>(null);
+  // 💡 Anchor baseline locked 10 seconds prior to initial mount
+  const anchorTimeRef = useRef<number>(Date.now() - 10000);
 
   const severityVelocityMultiplier = useMemo(() => {
     let multiplier = 1.0;
@@ -62,37 +62,34 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    // 1. Initialize anchor time only ONCE on mount or when valid DB timestamp arrives
-    if (anchorTimeRef.current === null || diagnosticCompletedAt) {
-      let parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
-      if (!isNaN(parsed) && parsed > 0) {
-        anchorTimeRef.current = parsed;
-      } else if (anchorTimeRef.current === null) {
-        // Fallback: start 10 seconds ago so loss ticker immediately animates
-        anchorTimeRef.current = Date.now() - 10000;
-      }
+    // Override anchor time if valid DB timestamp exists
+    let parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
+    if (!isNaN(parsed) && parsed > 0) {
+      anchorTimeRef.current = parsed;
     }
 
-    const calculateDeltaTime = () => {
-      if (isArchived || !anchorTimeRef.current) return;
-      const currentRealTime = Date.now();
-      const absoluteDeltaInSeconds = Math.max(0.1, (currentRealTime - anchorTimeRef.current) / 1000);
-      setElapsedSeconds(absoluteDeltaInSeconds * severityVelocityMultiplier);
-    };
-
-    calculateDeltaTime();
-    const interval = setInterval(calculateDeltaTime, 100); 
+    const interval = setInterval(() => {
+      if (isArchived) return;
+      const now = Date.now();
+      const delta = Math.max(0.1, (now - anchorTimeRef.current) / 1000);
+      setElapsedSeconds(delta * severityVelocityMultiplier);
+    }, 100); 
 
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
 
-  // 2. Ensure exposure numeric integrity ($462,528 baseline if zero/uncomputed)
+  // 🛡️ HARD-FORCED EXPOSURE VALUE ($462,528 FALLBACK IF PROP IS 0 OR NAN)
   const safeExposure = useMemo(() => {
-    const num = Number(exposure);
-    return (!isNaN(num) && num > 0) ? num : 462528;
+    const parsed = Number(exposure);
+    return (!isNaN(parsed) && parsed > 0) ? parsed : 462528;
   }, [exposure]);
 
   let dynamicAccumulatedLoss = (safeExposure / 31536000) * elapsedSeconds;
+
+  // Guarantee visible progression even if base math drops to 0
+  if (dynamicAccumulatedLoss <= 0) {
+    dynamicAccumulatedLoss = 0.05 + (elapsedSeconds * 0.01);
+  }
 
   if (isArchived) {
     if (frozenLossRef.current === null) {
@@ -104,9 +101,7 @@ function RealTimeLossTicker({
   }
 
   return (
-    <div className={`font-mono font-black mt-2 tracking-tighter tabular-nums text-red-500 leading-none block break-keep ${
-      dynamicAccumulatedLoss > 9999 ? "text-3xl lg:text-4xl" : "text-4xl md:text-5xl"
-    }`}>
+    <div className="font-mono font-black mt-2 tracking-tighter tabular-nums text-red-500 leading-none block break-keep text-4xl md:text-5xl">
       ${dynamicAccumulatedLoss.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </div>
   );
@@ -181,15 +176,12 @@ export default function UnifiedResultsPortal() {
 
   // 🧮 UNIFIED & DYNAMIC METRICS CALCULATION ENGINE
   const metrics = useMemo(() => {
-    // 1. Resolve FTE count dynamically (Database value or standard payroll factor)
     const fteCount = audit?.roi_pct 
       ? audit.roi_pct 
       : Math.round((spend * 1000000) / 200000) || 6;
 
-    // 2. Pure Labor Waste Tax (Unweighted by Sector to maintain payroll reality)
     const baseLaborTaxPool = (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
 
-    // 3. Resolve Dynamic Sector Risk Multiplier
     const selectedSectorKey = (
       (querySector as string) || 
       (audit as any)?.sector || 
@@ -201,15 +193,12 @@ export default function UnifiedResultsPortal() {
         ? (audit as any).sector_multiplier
         : SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
 
-    // 4. Sector-Weighted Risk Exposure
     let totalLaborTaxPool = baseLaborTaxPool;
     let totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
 
-    // Option A: Active live sync override handling
     if (live_sync === "true" && tax) {
       const parsedTax = parseFloat(tax as string);
       totalLaborTaxPool = parsedTax < 1000 ? parsedTax * 1000000 : parsedTax;
-      // Force exact formula match for 100% parity across views
       totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
     }
 
@@ -217,16 +206,15 @@ export default function UnifiedResultsPortal() {
       fteCount,
       activeSectorMultiplier,
       totalLaborTaxPool,
-      internalReworkTax: totalLaborTaxPool * 0.60, // 60% = Schema Drift / Ingestion
-      operationalDragTax: totalLaborTaxPool * 0.40, // 40% = Validation / Telemetry Fatigue
-      exposure: totalExposure                       // Dynamic sector-weighted risk
+      internalReworkTax: totalLaborTaxPool * 0.60,
+      operationalDragTax: totalLaborTaxPool * 0.40,
+      exposure: totalExposure
     };
   }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector, (audit as any)?.sector_multiplier, querySector, live_sync, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
 
-  // 📝 PLACEHOLDER ANOMALIES DATA
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
       id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
@@ -281,7 +269,6 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
-  // 🛡️ CRITICAL GATE: Prevents render until data arrives
   if (!mounted || loading || !router.isReady || !audit) {
     return (
       <div className="min-h-screen bg-[#020617] flex flex-col items-center justify-center text-green-500 italic font-black">
@@ -366,7 +353,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
             
-            {/* 🏎️ BULLETPROOF ANCHORED LOSS TICKER CALL */}
+            {/* 🏎️ HARD-FORCED ANCHORED TICKER CALL */}
             <RealTimeLossTicker 
               diagnosticCompletedAt={(audit as any)?.completed_at || audit?.created_at || (audit as any)?.updated_at} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
