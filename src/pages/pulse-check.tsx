@@ -146,6 +146,7 @@ export default function PulseCheck() {
     try {
       const { data: ent } = await supabase.from('entities').upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' }).select().single();
       
+      const nowIso = new Date().toISOString();
       const { data: auditData, error: auditError } = await supabase.from('audits').insert([{ 
         org_name: entityName.toUpperCase(),
         lead_email: email.toLowerCase(),
@@ -155,7 +156,9 @@ export default function PulseCheck() {
         raw_responses: answers,
         status: 'COMPLETED',
         roi_pct: 6,
-        ai_spend: 1.2
+        ai_spend: 1.2,
+        created_at: nowIso,
+        completed_at: nowIso
       }]).select('id').single();
 
       if (auditError) throw auditError;
@@ -286,9 +289,12 @@ export default function PulseCheck() {
           {step === 'audit' && (
             <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-12 text-center italic">
               <div className="flex flex-col items-center border-b border-slate-900 pb-10 mb-12">
+                
+                {/* ⚡ CLEAN DYNAMIC 2-DIGIT PADDING ("01 OF 10" THROUGH "10 OF 10") */}
                 <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block mb-2 not-italic">
-                  // PRE-AUTOMATION DIAGNOSTIC QUESTION 0{currentDimension + 1} OF 10
+                  // PRE-AUTOMATION DIAGNOSTIC QUESTION {String(currentDimension + 1).padStart(2, '0')} OF {LOCAL_QUESTIONS.length}
                 </span>
+                
                 <h2 className="text-2xl md:text-4xl font-bold normal-case text-slate-100 tracking-tight leading-snug min-h-[120px] max-w-4xl not-italic">
                   {LOCAL_QUESTIONS[currentDimension]?.text}
                 </h2>

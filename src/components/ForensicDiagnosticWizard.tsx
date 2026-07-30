@@ -190,8 +190,10 @@ export default function ForensicDiagnosticWizard({
             PRE-AUTOMATION DIAGNOSTIC // STAKEHOLDER NODE VECTOR ROUTING
           </span>
         </div>
+        
+        {/* ⚡ CLEAN 2-DIGIT INDEX PADDING */}
         <div className="text-[10px] text-slate-500 tracking-widest font-black shrink-0">
-          SECTOR READINESS PROGRESS: {currentStepAnsweredCount} / {currentStepTotal}
+          SECTOR READINESS PROGRESS: {String(currentStepAnsweredCount).padStart(2, '0')} / {String(currentStepTotal).padStart(2, '0')}
         </div>
       </div>
 
@@ -211,12 +213,14 @@ export default function ForensicDiagnosticWizard({
           
           return (
             <div key={question.id} className="border border-slate-900 bg-slate-950/40 p-8 relative rounded-sm group/card">
-              <span className="text-[9px] font-mono text-slate-600 block mb-3 font-black tracking-widest not-italic">
-                // SEGMENT LAYER: {question.pillar} // TARGET NODE: {question.target_node || 'STAKEHOLDER'} // ID: {question.id}
+              
+              {/* ⚡ CLEAN 2-DIGIT QUESTION HEADER PADDING (e.g., "01 OF 10" THROUGH "10 OF 10") */}
+              <span className="text-[9px] font-mono text-red-500 block mb-3 font-black tracking-widest not-italic">
+                // PRE-AUTOMATION DIAGNOSTIC QUESTION {String(index + 1).padStart(2, '0')} OF {String(activeQuestions.length).padStart(2, '0')}
               </span>
 
               <p className="text-2xl md:text-3xl text-white uppercase leading-tight tracking-tighter font-black mb-6 font-sans">
-                {index + 1}. {question.symptomatic_scenario}
+                {question.symptomatic_scenario}
               </p>
               
               <div className="grid grid-cols-1 gap-3 mt-6 font-mono not-italic text-sm">

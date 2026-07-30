@@ -59,14 +59,9 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    // Require valid DB creation timestamp to prevent zero-resets
-    if (!diagnosticCompletedAt || isNaN(Date.parse(diagnosticCompletedAt))) {
-      setElapsedSeconds(0);
-      return;
-    }
-
-    // Anchor strictly to DB creation time
-    const baselineAnchorTime = new Date(diagnosticCompletedAt).getTime();
+    // 🕒 Safely parse historical DB timestamp string to prevent zero-resets or NaN freeze
+    const parsedTime = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
+    const baselineAnchorTime = isNaN(parsedTime) ? Date.now() : parsedTime;
 
     const calculateDeltaTime = () => {
       if (isArchived) return;
@@ -355,12 +350,15 @@ export default function UnifiedResultsPortal() {
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] lg:min-w-[290px] shrink-0 md:pr-4">
             <span className="text-[10px] font-mono text-slate-400 tracking-widest uppercase block whitespace-nowrap">// CAPITAL EROSION VELOCITY</span>
+            
+            {/* 🏎️ SAFE ANCHORED LOSS TICKER CALL */}
             <RealTimeLossTicker 
-              diagnosticCompletedAt={audit.completed_at || audit.created_at} 
+              diagnosticCompletedAt={audit.completed_at || audit.created_at || audit.updated_at} 
               exposure={metrics.exposure + metrics.totalLaborTaxPool} 
               anomalies={activeAnomaliesList}
               isArchived={audit.status?.toUpperCase() === 'ARCHIVED'}
             />
+            
             <span className="text-[9px] font-mono text-slate-400 block tracking-wider uppercase mt-1.5 whitespace-nowrap">
               {audit?.status?.toUpperCase() === 'ARCHIVED' ? "// METRIC LOCKED // ARCHIVED VALUE" : "// REAL TIME LOSS SINCE VERDICT LOCK"}
             </span>
