@@ -12,6 +12,20 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
+// 🏢 DYNAMIC SECTOR RISK MULTIPLIERS
+const SECTOR_MULTIPLIERS: Record<string, number> = {
+  FINANCIAL_SERVICES: 1.35,
+  FINANCE: 1.35,
+  HEALTHCARE: 1.40,
+  TECHNOLOGY: 1.20,
+  TECH: 1.20,
+  MANUFACTURING: 1.15,
+  RETAIL: 1.10,
+  DEFENSE: 1.45,
+  INSURANCE: 1.35,
+  DEFAULT: 1.28
+};
+
 // 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
@@ -78,7 +92,7 @@ function RealTimeLossTicker({
 
 export default function UnifiedResultsPortal() {
   const router = useRouter();
-  const { id, live_sync, unblurred, decay, spend: querySpend, leakage, tax } = router.query;
+  const { id, live_sync, unblurred, decay, spend: querySpend, leakage, tax, sector: querySector } = router.query;
 
   const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -154,9 +168,20 @@ export default function UnifiedResultsPortal() {
     // Formula: (Decay % / 100) * 0.5 friction * (FTEs * $160k base * 1.3 burdened multiplier)
     const baseLaborTaxPool = (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
 
-    // 3. Sector-Weighted Risk Exposure (Sector risk applies strictly to liability exposure)
-    const sectorRiskMultiplier = (audit as any)?.sector_multiplier || 1.28;
-    const baseExposure = 0.22 * (dbDecay / 25) * (spend * 1000000) * sectorRiskMultiplier;
+    // 3. Resolve Dynamic Sector Risk Multiplier (Reacts live to user/URL selection or database audit state)
+    const selectedSectorKey = (
+      (querySector as string) || 
+      (audit as any)?.sector || 
+      "DEFAULT"
+    ).toUpperCase().replace(/\s+/g, "_");
+
+    const activeSectorMultiplier = 
+      (audit as any)?.sector_multiplier && (audit as any).sector_multiplier > 0
+        ? (audit as any).sector_multiplier
+        : SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
+
+    // 4. Sector-Weighted Risk Exposure (Sector risk applies strictly to liability exposure)
+    const baseExposure = 0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier;
 
     let totalLaborTaxPool = baseLaborTaxPool;
     let totalExposure = baseExposure;
@@ -174,12 +199,13 @@ export default function UnifiedResultsPortal() {
 
     return {
       fteCount,
+      activeSectorMultiplier,
       totalLaborTaxPool,
       internalReworkTax: totalLaborTaxPool * 0.60, // 60% = Schema Drift / Ingestion
       operationalDragTax: totalLaborTaxPool * 0.40, // 40% = Validation / Telemetry Fatigue
-      exposure: totalExposure                       // Sector-weighted unhedged risk
+      exposure: totalExposure                       // Dynamic sector-weighted risk
     };
-  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector_multiplier, live_sync, leakage, tax]);
+  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector, (audit as any)?.sector_multiplier, querySector, live_sync, leakage, tax]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-green-500"; 
   const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-green-600"; 
