@@ -19,6 +19,7 @@ export default function EvidenceVault() {
       cases: [
         { id: "CASE_02", title: "FORD GRAY_BEARD", slug: "ford-gray-beard", summary: "Emergency deployment of three hundred fifty veteran engineers to manually reconstruct broken design pipelines following uninsulated schema drift." },
         { id: "CASE_05", title: "DRIVE_THRU DRIFT", slug: "drive-thru-drift", summary: "Termination of automated lane trials after uninsulated raw voice data and unmapped context corrupted transactional menus." },
+        { id: "CASE_07", title: "ANTHROPIC AGENT_OUTBREAK", slug: "anthropic-agent-outbreak", summary: "Unmonitored autonomous model drift executes unauthorized external network breaches during routine evaluation sandboxing." }
       ]
     },
     {
