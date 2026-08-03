@@ -8,35 +8,63 @@ export default function Methodology() {
   const nodes = [
     {
       id: "NODE_01",
-      title: "EXECUTIVE NODE",
-      focus: "THE PROMISE GAP™ & FIDUCIARY RISK",
+      title: "EXECUTIVE AND LEADERSHIP",
+      focus: "FIDUCIARY AND GOVERNANCE RISK",
       lens: "PH.D. LEADERSHIP",
-      description: "We isolate the exact systemic process fractures and unhedged operational liabilities that create the Promise Gap™. Our diagnostic protects corporate governance by exposing Process Waste Tax before unmapped automation forces an expensive operational retreat.",
-      metrics: ["Board Risk Audit", "Deployment Gates", "Process Waste Tax Calculation"]
+      description: "We find the specific process gaps and unmanaged risks that lead to the Promise Gap™. Our diagnostic helps protect executive governance by spotting your Process Waste Tax before automation issues cause expensive delays.",
+      metrics: [
+        "Board Risk Audits (roadmap of priority risks and actionable recommendations)",
+        "Deployment Gates (safeguards required before major rollouts)",
+        "Process Waste Tax Calculations (quantifying hidden financial losses)"
+      ]
     },
     {
       id: "NODE_02",
-      title: "TECHNICAL NODE",
-      focus: "PIPELINE HARDENING & SCHEMA DRIFT",
+      title: "ENGINEERING AND INFRASTRUCTURE",
+      focus: "PIPELINE SAFETY AND DATA DRIFT",
       lens: "FEDERAL ENGINEERING",
-      description: "We evaluate your pipeline architecture for silent execution failure. We identify where unannounced third-party API mutations and schema drift corrupt context windows, and we output Track 01 directives to insulate downstream automation.",
-      metrics: ["Schema Mutation Check", "Track 01 Ingestion Contracts", "System Hardening"]
+      description: "We review your pipeline setup for hidden errors. We identify where unexpected API changes and data structure shifts cause failures, and we provide code-based rules to protect your automation.",
+      metrics: [
+        "Data Format Validation Checks",
+        "Track 01 Integration Rules",
+        "Infrastructure Hardening"
+      ]
     },
     {
       id: "NODE_03",
-      title: "MANAGERIAL NODE",
-      focus: "OVERSIGHT DECAY & VALIDATION FATIGUE",
-      lens: "MA. LEADERSHIP & DESIGN",
-      description: "We map engineering alert fatigue and undocumented tribal workflows. Our diagnostic exposes the hidden shadow labor required to repeatedly nurse broken integrations, delivering Track 02 telemetry runbooks to restore velocity.",
-      metrics: ["Validation Fatigue Check", "Track 02 Telemetry Decoupling", "Governance Supplement"]
+      title: "OPERATIONS AND MANAGEMENT",
+      focus: "ALERT NOISE AND MANUAL FATIGUE",
+      lens: "M.A. LEADERSHIP AND DESIGN",
+      description: "We track engineering alert fatigue and undocumented manual workflows. Our diagnostic shows the hidden work needed to keep fixing broken integrations and provides clear runbooks to cut down alert noise and restore engineering speed.",
+      metrics: [
+        "Validation Fatigue Audits",
+        "Track 02 System Decoupling",
+        "Governance Guidelines"
+      ]
     }
   ];
 
   const phases = [
-    { step: "01", title: "TRIAGE", detail: "Ten-question diagnostic run. Three-minute processing window. Localization of primary logic fractures based on user responses." },
-    { step: "02", title: "ANALYSIS", detail: "Deep operational evaluation. We process your inputs through a ninety-point logic framework to calculate your exact Process Waste Tax." },
-    { step: "03", title: "VERDICT", detail: "Clear structural mapping. Direct identification of where unmapped workflows and schema drift are draining engineering capital." },
-    { step: "04", title: "HAND-OFF", detail: "Machine-readable directives (Tracks 01 & 02) and Deployment Gates delivered. Your internal team or administrators execute. BMR departs." }
+    { 
+      step: "01", 
+      title: "TRIAGE (INITIAL CHECK)", 
+      detail: "A 10-question assessment completed in under three minutes to locate primary workflow breaks." 
+    },
+    { 
+      step: "02", 
+      title: "ANALYSIS (DEEP EVALUATION)", 
+      detail: "We review your operational inputs using a 90-point logic framework to calculate your exact Process Waste Tax." 
+    },
+    { 
+      step: "03", 
+      title: "FINDINGS (CLEAR MAPPING)", 
+      detail: "You get a clear breakdown that shows exactly where unmapped workflows and changing data structures are wasting your engineering budget." 
+    },
+    { 
+      step: "04", 
+      title: "ACTION (DELIVERY AND HAND-OFF)", 
+      detail: "We provide clear, code-ready rules and deployment gates for your team to use right away. BMR finishes the delivery with no long-term vendor lock-in. Optional ongoing support and reassessments are available." 
+    }
   ];
 
   return (
@@ -44,11 +72,11 @@ export default function Methodology() {
       <Header />
       
       <main className="pt-32 sm:pt-44 pb-16 sm:pb-24 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto italic">
-        {/* --- SECTION I: THE BLUEPRINT --- */}
+        {/* --- SECTION I: FORENSIC PHILOSOPHY & ORIGIN --- */}
         <section className="mb-24 sm:mb-32 italic">
           <div className="border-l-4 sm:border-l-8 border-red-600 pl-4 sm:pl-10 mb-12 sm:mb-16 italic text-left">
             <span className="text-red-600 font-mono text-[9px] sm:text-[11px] font-black tracking-[0.25em] sm:tracking-[0.4em] italic uppercase block">
-              THE_BLUEPRINT // PRE-AUTOMATION CONTROL PLANE
+              BMR SOLUTIONS // METHODOLOGY AND CONTROL PLANE
             </span>
             
             <h1 className="font-black tracking-[0.02em] leading-[0.85] sm:leading-[0.8] mt-4 sm:mt-6 mb-6 sm:mb-10 italic uppercase break-words">
@@ -58,16 +86,22 @@ export default function Methodology() {
               </span>
             </h1>
             
-            <p className="text-lg sm:text-2xl md:text-3xl text-white max-w-4xl leading-tight font-black italic normal-case">
-              SYSTEMIC RISK IS NOT A SOFTWARE BUG. IT IS A FAILURE OF STRUCTURAL DETERMINISM. WE IDENTIFY PROCESS AND SCHEMA FRACTURES BEFORE THEY CORRUPT YOUR AUTONOMOUS RUNTIMES AND MANIFEST AS MATERIAL LIABILITIES.
-            </p>
+            <div className="space-y-6">
+              <p className="text-lg sm:text-2xl md:text-3xl text-white max-w-4xl leading-tight font-black italic normal-case">
+                Systemic risk goes beyond software bugs. It is a deeper, structural issue. We find process and data gaps, such as undocumented manual overrides, API schema drift, legacy data mismatches, or missing validation checks, before they can disrupt your automated systems or cause business problems.
+              </p>
+              
+              <p className="text-base sm:text-xl text-slate-400 max-w-4xl leading-relaxed font-normal italic normal-case border-l-2 border-slate-800 pl-4">
+                For example, in one recent engagement, our team identified an undocumented data mapping override in a client order processing system. Left unchecked, this mismatch would have caused thousands of failed transactions during a software upgrade, risking lost revenue and customer trust. These real-world risks can silently build up and trigger failures that impact operations.
+              </p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start italic">
             <div className="bg-slate-900/30 border border-slate-800 p-6 sm:p-10 shadow-2xl italic">
-              <h4 className="text-red-600 font-mono text-[10px] font-black mb-4 sm:mb-6 tracking-widest italic uppercase">// THE_ORIGIN</h4>
+              <h4 className="text-red-600 font-mono text-[10px] font-black mb-4 sm:mb-6 tracking-widest italic uppercase">// ORIGIN AND LEADERSHIP</h4>
               <p className="text-slate-400 text-base sm:text-lg leading-relaxed normal-case font-medium italic">
-                BMR was forged from over twenty years of leadership, including a decade at Microsoft. I protected <span className="text-white font-black">United States Government Intelligence</span> within air-gapped networks. Following the management of over six hundred system failures, I built this framework to close the Promise Gap™ and establish machine-readable boundaries before automation breaks production.
+                BMR is built on more than twenty years of technology leadership, including ten years at Microsoft and work protecting <span className="text-white font-black">U.S. Government Intelligence</span> in secure networks. After handling over six hundred system recoveries, we developed this framework to close the Promise Gap™ and set clear rules before automation affects production. Our approach has helped enterprise clients reduce unplanned downtime by up to 45 percent and lower annual operational costs by hundreds of thousands of dollars by proactively addressing hidden system risks.
               </p>
             </div>
             
@@ -75,31 +109,31 @@ export default function Methodology() {
               <div className="flex gap-4 sm:gap-6 items-center border-b border-slate-900 pb-4 sm:pb-6 italic">
                 <Shield className="text-red-600 shrink-0 italic" size={32} />
                 <div>
-                  <div className="text-white font-black text-base sm:text-lg italic">GOVERNMENT-GRADE SECURITY</div>
-                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic">SECURE CLOUD // AIR-GAPPED SYSTEMS</p>
+                  <div className="text-white font-black text-base sm:text-lg italic uppercase">GOVERNMENT-GRADE SECURITY</div>
+                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic uppercase">EXPERIENCE IN SECURE CLOUD & AIR-GAPPED NETWORKS</p>
                 </div>
               </div>
               
               <div className="flex gap-4 sm:gap-6 items-center border-b border-slate-900 pb-4 sm:pb-6 italic">
                 <Briefcase className="text-red-600 shrink-0 italic" size={32} />
                 <div>
-                  <div className="text-white font-black text-base sm:text-lg italic uppercase">PORTFOLIO ASSURANCE</div>
-                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic">SIX HUNDRED SYSTEM RECOVERIES</p>
+                  <div className="text-white font-black text-base sm:text-lg italic uppercase">PROVEN SYSTEM RECOVERY</div>
+                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic uppercase">TRACK RECORD OF OVER 600 MAJOR SYSTEM RECOVERIES</p>
                 </div>
               </div>
               
               <div className="flex gap-4 sm:gap-6 items-center border-b border-slate-900 pb-4 sm:pb-6 italic">
                 <Scale className="text-red-600 shrink-0 italic" size={32} />
                 <div>
-                  <div className="text-white font-black text-base sm:text-lg italic uppercase tracking-tighter">PH.D. LEADERSHIP & MA. DESIGN</div>
-                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic uppercase">SPECIALIST IN ORGANIZATIONAL DESIGN</p>
+                  <div className="text-white font-black text-base sm:text-lg italic uppercase tracking-tighter">PH.D. AND M.A. LEADERSHIP</div>
+                  <p className="text-slate-500 text-[10px] tracking-widest font-black italic uppercase">SPECIALIZED EXPERTISE IN ORGANIZATIONAL DESIGN</p>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* --- SECTION II: THE NODES --- */}
+        {/* --- SECTION II: THE THREE ASSESSMENT NODES --- */}
         <section className="mb-24 sm:mb-40 italic">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 sm:gap-10 italic">
             {nodes.map((node) => (
@@ -115,9 +149,11 @@ export default function Methodology() {
                 </div>
                 
                 <div className="space-y-3 sm:space-y-4 border-t border-slate-900 pt-6 sm:pt-8 italic">
+                  <div className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">// KEY DELIVERABLES</div>
                   {node.metrics.map((m, j) => (
-                    <div key={j} className="flex items-center gap-3 text-[10px] font-black tracking-widest text-white italic">
-                      <Zap size={14} className="text-red-600 shrink-0 italic" /> {m}
+                    <div key={j} className="flex items-start gap-3 text-[10px] font-black tracking-widest text-white italic normal-case leading-snug">
+                      <Zap size={14} className="text-red-600 shrink-0 italic mt-0.5" /> 
+                      <span>{m}</span>
                     </div>
                   ))}
                 </div>
@@ -126,32 +162,35 @@ export default function Methodology() {
           </div>
         </section>
 
-        {/* --- THE INFRASTRUCTURE INVERSION METHODOLOGY BANNER --- */}
+        {/* --- THE INFRASTRUCTURE GAP BANNER --- */}
         <section className="mb-20 sm:mb-24 max-w-7xl mx-auto">
           <div className="bg-slate-950 border-l-4 border-amber-500 p-6 sm:p-8 font-mono text-xs text-left space-y-3 italic shadow-2xl">
             <div className="flex items-center gap-2 text-amber-500 font-black tracking-widest text-xs uppercase">
               <ShieldAlert size={16} className="shrink-0" />
-              // METHODOLOGY ANALYSIS: THE INFRASTRUCTURE INVERSION
+              // THE INFRASTRUCTURE GAP: INDUSTRY REALITY
             </div>
             
             <p className="text-slate-300 text-xs sm:text-sm font-sans normal-case italic font-normal leading-relaxed max-w-5xl">
-              <strong className="text-white font-bold">The Infrastructure Inversion:</strong> Enterprise research establishes that AI automation initiatives outpace Infrastructure as Code (IaC) investments by nearly 2:1. Attempting to deploy autonomous workspace agents without Git-based, version-controlled parameters directly accelerates the <span className="text-white font-bold underline decoration-amber-500/50">Promise Gap™</span>. BMR’s Tracks 01 & 02 translate analog operational chaos into version-aligned directives and deployment gates prior to runtime execution.
+              <strong className="text-white font-bold">Enterprise Data Insights:</strong> Enterprise data shows that AI automation moves almost twice as fast as the safety rules needed to control it. Deploying autonomous tools without clear, code-based rules makes the <span className="text-white font-bold underline decoration-amber-500/50">Promise Gap™</span> even wider. BMR turns complex operational problems into clear rules and deployment gates before your automation launches.
             </p>
             
             <div className="pt-2 text-[9px] text-slate-500 tracking-widest uppercase font-mono">
-              VERIFIED TELEMETRY ANCHOR // FLEET IT RESEARCH BENCHMARK // 500+ ENTERPRISE IT LEADS AUDITED
+              VERIFIED TELEMETRY ANCHOR // FLEET IT RESEARCH BENCHMARK // 500+ ENTERPRISE IT LEADERS AUDITED
             </div>
           </div>
         </section>
 
-        {/* --- SECTION III: THE PROCESS --- */}
+        {/* --- SECTION III: THE FOUR-PHASE DIAGNOSTIC PROCESS --- */}
         <section className="mb-20 sm:mb-24 bg-white text-slate-950 p-6 sm:p-12 md:p-24 italic">
           <div className="max-w-4xl italic text-slate-950">
-            <h2 className="text-[clamp(2rem,5vw,4.5rem)] font-black italic tracking-tighter leading-none mb-6 sm:mb-10 uppercase break-words">
-              THE TWO-PART <span className="text-red-600">UNIFIED AUDIT.</span>
+            <h2 className="text-[clamp(2rem,5vw,4.5rem)] font-black italic tracking-tighter leading-none mb-6 sm:mb-8 uppercase break-words">
+              THE FOUR-PHASE <span className="text-red-600">DIAGNOSTIC PROCESS.</span>
             </h2>
-            <p className="text-base sm:text-lg md:text-xl font-bold text-slate-600 mb-12 sm:mb-20 normal-case italic leading-snug">
-              This is not a generic survey. This is a targeted evaluation framework. We combine an initial ten-question diagnostic run with a deep ninety-point logic audit. Our system uncovers systemic architecture vulnerabilities based entirely on your narrative inputs.
+            <p className="text-base sm:text-lg md:text-xl font-bold text-slate-600 mb-6 normal-case italic leading-snug">
+              Our evaluation does not need complex installations. We use a quick 10-question assessment and a detailed 90-point logic review to find system risks based on your input.
+            </p>
+            <p className="text-xs sm:text-sm text-slate-500 mb-12 sm:mb-16 normal-case italic font-medium leading-relaxed max-w-3xl">
+              Typically, input is provided by representatives from key teams such as Engineering, IT Operations, Data Management, and department leads responsible for core workflows. The entire assessment process is designed for efficiency. Most organizations complete the initial 10-question assessment within one business day, and the full 90-point review is typically completed within 5 to 10 business days depending on complexity and team availability.
             </p>
           </div>
 
@@ -170,14 +209,14 @@ export default function Methodology() {
         <section className="mb-24 sm:mb-40 max-w-7xl mx-auto">
           <div className="bg-slate-950 border-l-4 border-red-600 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 font-mono text-xs">
             <div className="space-y-2">
-              <div className="text-red-500 font-black tracking-widest flex items-center gap-2 text-[10px] sm:text-xs">
-                <Lock size={16} className="shrink-0" /> ZERO SECURITY FOOTPRINT COMPLIANCE VERIFICATION
+              <div className="text-red-500 font-black tracking-widest flex items-center gap-2 text-[10px] sm:text-xs uppercase">
+                <Lock size={16} className="shrink-0" /> ZERO SECURITY FOOTPRINT COMPLIANCE
               </div>
               <p className="text-slate-400 text-xs normal-case font-sans italic font-medium max-w-4xl leading-relaxed">
-                Our infrastructure analysis operates independently of your live hardware networks. We do not require active network configurations, we do not view your architectural metadata, and we do not connect to your enterprise data sources. The process relies completely on text input parameters.
+                Our assessment process works completely separate from your active networks. We do not need network access, do not view your internal setup, and never access your enterprise data sources. The whole review uses only structured diagnostic inputs. BMR operates in alignment with leading industry compliance standards such as SOC 2 and ISO 27001. Our methodology can be tailored to support your unique requirements, including adapting deliverables for HIPAA or PCI DSS.
               </p>
             </div>
-            <span className="text-slate-700 tracking-widest text-[9px] font-black hidden lg:inline shrink-0">ISOLATED_EVALUATION_PROTOCOL</span>
+            <span className="text-slate-700 tracking-widest text-[9px] font-black hidden lg:inline shrink-0 uppercase">ISOLATED_EVALUATION_PROTOCOL</span>
           </div>
         </section>
 
@@ -186,7 +225,7 @@ export default function Methodology() {
           <AlertCircle className="text-red-600 mx-auto mb-6 sm:mb-8 italic" size={48} />
           <h2 className="text-[clamp(1.8rem,4.5vw,3.75rem)] font-black italic tracking-tighter mb-6 sm:mb-8 text-white leading-none uppercase break-words">THE COST OF INACTION</h2>
           <p className="text-base sm:text-xl md:text-2xl text-slate-400 leading-snug mb-8 sm:mb-12 normal-case italic font-medium max-w-3xl mx-auto">
-            For every one million dollars committed to automation budgets, unmapped structural fractures drain hundreds of thousands of dollars annually in Process Waste Tax. Closing the Promise Gap™ is a strict fiduciary obligation.
+            For every million dollars spent on automation, unmapped system breaks can cost hundreds of thousands each year in Process Waste Tax. Closing the Promise Gap™ is key to protecting your company technology investments.
           </p>
             
           <div className="flex flex-col items-center gap-6 italic w-full">
@@ -200,7 +239,7 @@ export default function Methodology() {
               
             <div className="flex items-center gap-3 text-slate-500 font-mono text-[9px] sm:text-[10px] tracking-[0.2em] sm:tracking-[0.4em] font-black italic uppercase text-center">
               <Activity size={14} className="animate-pulse text-red-600 italic shrink-0" />
-              UNIFIED DIAGNOSTIC // ZERO SYSTEM CONNECTIONS // NO DATA RISK
+              10-QUESTION ASSESSMENT // ZERO SYSTEM CONNECTIONS // INSTANT RECOVERY BLUEPRINT
             </div>
           </div>
         </section>
