@@ -110,10 +110,10 @@ const LOCAL_QUESTIONS = [
 ];
 
 const sectors = [
-  { id: "FINANCE", label: "FINANCE", risk: "COMPLIANCE", icon: <Banknote size={24} /> },
-  { id: "HEALTHCARE", label: "HEALTHCARE", risk: "LIABILITY", icon: <Stethoscope size={24} /> },
-  { id: "INDUSTRIAL", label: "INDUSTRIAL", risk: "OPERATIONS", icon: <Factory size={24} /> },
-  { id: "SERVICES", label: "SERVICES", risk: "LABOR", icon: <ShoppingCart size={24} /> }
+  { id: "FINANCE", label: "FINANCE", risk: "COMPLIANCE RISK", icon: <Banknote size={24} /> },
+  { id: "HEALTHCARE", label: "HEALTHCARE", risk: "LIABILITY RISK", icon: <Stethoscope size={24} /> },
+  { id: "INDUSTRIAL", label: "INDUSTRIAL", risk: "OPERATIONS RISK", icon: <Factory size={24} /> },
+  { id: "SERVICES", label: "SERVICES", risk: "LABOR RISK", icon: <ShoppingCart size={24} /> }
 ];
 
 export default function PulseCheck() {
@@ -150,7 +150,6 @@ export default function PulseCheck() {
         .select()
         .single();
       
-      // 💡 REMOVED created_at / completed_at TO PREVENT SUPABASE PGRST204 SCHEMA ERROR
       const { data: auditData, error: auditError } = await supabase
         .from('audits')
         .insert([{ 
@@ -188,55 +187,61 @@ export default function PulseCheck() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white selection:bg-red-600/30 font-sans italic overflow-x-hidden uppercase font-black relative flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-red-100 selection:text-red-900 overflow-x-hidden relative flex flex-col">
       <Header />
       
-      <main className="flex-grow flex flex-col items-center justify-center py-40 px-6 relative text-center">
+      <main className="flex-grow flex flex-col items-center justify-center py-32 sm:py-40 px-4 sm:px-6 relative text-center">
         <AnimatePresence mode="wait">
           
           {isLoading && (
-            <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/90 z-[9999] flex flex-col items-center justify-center text-red-600">
-              <Activity className="animate-spin mb-4" size={64} />
-              <p className="font-black uppercase tracking-[0.5em] text-sm italic">SYNTHESIZING_STRATEGY_DATA...</p>
+            <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-[9999] flex flex-col items-center justify-center text-white">
+              <Activity className="animate-spin mb-4 text-red-500" size={56} />
+              <p className="font-mono uppercase tracking-widest text-xs font-bold text-slate-200">SYNTHESIZING DIAGNOSTIC DATA...</p>
             </motion.div>
           )}
 
           {step === 'triage' && (
-            <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-5xl space-y-16">
-              <div className="border-b border-slate-900 pb-12 flex flex-col items-center">
-                <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter leading-none text-white italic">
-                  STRATEGY <span className="text-red-600">INTAKE</span>
+            <motion.div key="triage" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-5xl space-y-12">
+              <div className="border-b border-slate-200 pb-8 flex flex-col items-center">
+                <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-2">
+                  PRE-AUTOMATION DIAGNOSTIC MATRIX
+                </span>
+                <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tight text-slate-950 leading-none">
+                  STRATEGY <span className="text-red-700">INTAKE.</span>
                 </h1>
 
                 <motion.div 
                   animate={{ opacity: [1, 0.4, 1] }} 
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                  className="flex items-center gap-4 mt-8 text-red-600"
+                  className="flex items-center gap-3 mt-6 text-red-700"
                 >
-                   <div className="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,1)]" />
-                   <p className="text-[10px] font-mono uppercase tracking-[0.5em] font-bold">
+                   <div className="w-2.5 h-2.5 rounded-full bg-red-700 shadow-sm" />
+                   <p className="text-xs font-mono uppercase tracking-widest font-bold">
                      {selectedLens ? `STATUS: FOCUS LOCKED [${selectedLens}] // SELECT SECTOR` : "STATUS: AWAITING FOCUS SELECTION"}
                    </p>
                 </motion.div>
               </div>
 
+              {/* Lens Selection Grid */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
                 {['EXECUTIVE', 'MANAGERIAL', 'TECHNICAL'].map((node) => (
                   <button key={node} onClick={() => setSelectedLens(node)}
-                    className={`p-10 border-2 flex flex-col items-center justify-center gap-4 transition-all min-h-[180px] ${selectedLens === node ? 'bg-red-600 border-red-600 text-white shadow-2xl scale-105' : 'bg-slate-950 border-slate-900 text-slate-700 hover:border-slate-500'}`}>
-                    <span className="font-black italic text-xl tracking-[0.1em] uppercase">{node}</span>
+                    className={`p-8 border rounded-sm flex flex-col items-center justify-center gap-3 transition-all cursor-pointer ${selectedLens === node ? 'bg-slate-950 border-slate-950 text-white shadow-md scale-105' : 'bg-white border-slate-200 text-slate-700 hover:border-red-700'}`}>
+                    <span className="font-bold text-lg tracking-wider uppercase">{node}</span>
+                    <span className="text-[10px] font-mono text-slate-400 uppercase">NODE LENS</span>
                   </button>
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full pt-10">
+              {/* Sector Selection Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 w-full pt-4">
                 {sectors.map((s) => (
                   <button key={s.id} disabled={!selectedLens} onClick={() => { setSector(s.id); setStep("intake"); }}
-                    className="p-10 bg-slate-950/50 border-2 border-slate-900 hover:border-red-600 transition-all text-center flex flex-col items-center justify-between h-64 group disabled:opacity-20">
-                    <div className="text-red-600 group-hover:scale-110 transition-transform mb-4">{s.icon}</div>
+                    className="p-8 bg-white border border-slate-200 hover:border-red-700 transition-all text-center flex flex-col items-center justify-between h-56 group disabled:opacity-30 rounded-sm shadow-sm cursor-pointer">
+                    <div className="text-red-700 group-hover:scale-110 transition-transform mb-2">{s.icon}</div>
                     <div>
-                      <h3 className="text-3xl font-black uppercase italic text-white tracking-tighter leading-none">{s.label}</h3>
-                      <p className="text-[11px] font-mono font-bold text-red-600 uppercase tracking-widest mt-2 italic">{s.risk}</p>
+                      <h3 className="text-xl font-bold uppercase tracking-tight text-slate-950">{s.label}</h3>
+                      <p className="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider mt-1">{s.risk}</p>
                     </div>
                   </button>
                 ))}
@@ -245,46 +250,49 @@ export default function PulseCheck() {
           )}
 
           {step === 'intake' && (
-            <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-4xl space-y-12 italic text-center">
-              <div className="border-b border-slate-900 pb-10 flex flex-col items-center">
-                <h2 className="text-6xl md:text-8xl font-black uppercase tracking-tighter text-white leading-none italic">
-                  ENTITY <span className="text-red-600 italic">REGISTRATION</span>
+            <motion.div key="intake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="w-full max-w-3xl space-y-10 text-center">
+              <div className="border-b border-slate-200 pb-8 flex flex-col items-center">
+                <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-2">
+                  AUTHENTICATION NODE
+                </span>
+                <h2 className="text-4xl sm:text-5xl font-black uppercase tracking-tight text-slate-950 leading-none">
+                  ENTITY <span className="text-red-700">REGISTRATION.</span>
                 </h2>
                 <motion.div 
                   animate={{ opacity: [1, 0.4, 1] }} 
                   transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-                  className="flex items-center gap-4 mt-8 text-red-600"
+                  className="flex items-center gap-3 mt-4 text-red-700"
                 >
-                   <div className="w-3 h-3 rounded-full bg-red-600 shadow-[0_0_15px_rgba(220,38,38,1)]" />
-                   <p className="text-[10px] font-mono uppercase tracking-[0.5em] font-bold">
+                   <div className="w-2.5 h-2.5 rounded-full bg-red-700 shadow-sm" />
+                   <p className="text-xs font-mono uppercase tracking-widest font-bold">
                      {validateIntake() ? "VALIDATION COMPLETE // INITIALIZE INTAKE" : "STATUS: PROVIDE ENTITY DETAILS"}
                    </p>
                 </motion.div>
               </div>
 
-              <div className="bg-slate-950 border border-slate-900 p-12 space-y-12 shadow-2xl text-left">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Full Name</label>
-                    <input placeholder="ENTER NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+              <div className="bg-white border border-slate-200 p-8 sm:p-10 space-y-8 shadow-sm rounded-sm text-left">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-slate-500 uppercase tracking-wider font-bold">Full Name</label>
+                    <input placeholder="ENTER NAME" value={operatorName} onChange={(e) => setOperatorName(e.target.value)} className="bg-slate-50 border border-slate-300 p-4 text-slate-900 w-full uppercase font-mono focus:border-red-700 outline-none transition-colors text-base font-semibold rounded-sm" />
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Organization</label>
-                    <input placeholder="ENTER COMPANY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-slate-500 uppercase tracking-wider font-bold">Organization</label>
+                    <input placeholder="ENTER COMPANY" value={entityName} onChange={(e) => setEntityName(e.target.value)} className="bg-slate-50 border border-slate-300 p-4 text-slate-900 w-full uppercase font-mono focus:border-red-700 outline-none transition-colors text-base font-semibold rounded-sm" />
                   </div>
-                  <div className="space-y-3 relative">
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Business Email</label>
-                    <input placeholder="USER@COMPANY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-slate-500 uppercase tracking-wider font-bold">Business Email</label>
+                    <input placeholder="USER@COMPANY.COM" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-slate-50 border border-slate-300 p-4 text-slate-900 w-full uppercase font-mono focus:border-red-700 outline-none transition-colors text-base font-semibold rounded-sm" />
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-[11px] font-mono text-slate-500 uppercase tracking-[0.3em] font-black italic">Verify Email</label>
-                    <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-black border-b-2 border-slate-800 p-6 text-white w-full uppercase font-mono focus:border-red-600 outline-none transition-colors text-xl font-bold" />
+                  <div className="space-y-2">
+                    <label className="text-xs font-mono text-slate-500 uppercase tracking-wider font-bold">Verify Email</label>
+                    <input placeholder="CONFIRM EMAIL" value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} className="bg-slate-50 border border-slate-300 p-4 text-slate-900 w-full uppercase font-mono focus:border-red-700 outline-none transition-colors text-base font-semibold rounded-sm" />
                   </div>
                 </div>
-                <div className="pt-6">
+                <div className="pt-4">
                   <button disabled={!validateIntake()} onClick={() => setStep("audit")}
-                    className="w-full py-8 font-black uppercase italic bg-red-600 text-white disabled:opacity-10 text-2xl tracking-[0.2em] hover:bg-white hover:text-red-600 transition-all border-2 border-red-600 flex items-center justify-center cursor-pointer">
-                    INITIALIZE INTAKE
+                    className="w-full py-5 font-bold uppercase tracking-wider bg-slate-950 text-white disabled:opacity-30 text-lg hover:bg-red-700 transition-all border border-slate-950 flex items-center justify-center cursor-pointer rounded-sm shadow-sm">
+                    INITIALIZE DIAGNOSTIC INTAKE
                   </button>
                 </div>
               </div>
@@ -293,15 +301,13 @@ export default function PulseCheck() {
 
           {/* --- AUDIT STEP RENDER --- */}
           {step === 'audit' && (
-            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-5xl space-y-12 text-center italic">
-              <div className="flex flex-col items-center border-b border-slate-900 pb-10 mb-12">
-                
-                {/* ⚡ CLEAN 2-DIGIT QUESTION HEADER PADDING */}
-                <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block mb-2 not-italic">
-                  // PRE-AUTOMATION DIAGNOSTIC QUESTION {String(currentDimension + 1).padStart(2, '0')} OF {LOCAL_QUESTIONS.length}
+            <motion.div key="audit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-4xl space-y-8 text-center">
+              <div className="flex flex-col items-center border-b border-slate-200 pb-8 mb-8">
+                <span className="text-xs font-mono font-bold text-red-700 tracking-wider block mb-3 uppercase">
+                  // QUESTION {String(currentDimension + 1).padStart(2, '0')} OF {LOCAL_QUESTIONS.length}
                 </span>
                 
-                <h2 className="text-2xl md:text-4xl font-bold normal-case text-slate-100 tracking-tight leading-snug min-h-[120px] max-w-4xl not-italic">
+                <h2 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-relaxed min-h-[90px] max-w-3xl">
                   {LOCAL_QUESTIONS[currentDimension]?.text}
                 </h2>
               </div>
@@ -310,7 +316,7 @@ export default function PulseCheck() {
                 {LOCAL_QUESTIONS[currentDimension]?.options.map((opt, i) => (
                   <button 
                     key={i} 
-                    className="p-6 md:p-8 border-2 border-slate-900 bg-slate-950/50 hover:border-red-600 transition-all text-left font-bold text-lg md:text-xl flex justify-between items-center group cursor-pointer not-italic normal-case text-slate-200"
+                    className="p-6 border border-slate-200 bg-white hover:border-red-700 hover:bg-slate-50 transition-all text-left font-semibold text-base sm:text-lg flex justify-between items-center group cursor-pointer text-slate-800 rounded-sm shadow-sm"
                     onClick={async () => {
                       const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
                       setAnswers(updatedAnswers);
@@ -323,7 +329,6 @@ export default function PulseCheck() {
                         const auditId = await logToDatabase(metrics);
                         
                         if (auditId) {
-                          // Background non-blocking trigger for transactional vault link
                           fetch('/api/send-vault-link', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -333,9 +338,8 @@ export default function PulseCheck() {
                               auditId: auditId,
                               userName: operatorName.trim()
                             })
-                          }).catch(err => console.error("Vault link non-critical email warning:", err));
+                          }).catch(err => console.error("Vault link warning:", err));
 
-                          // Direct browser redirect to Efficiency Verdict portal
                           window.location.href = `/results/${auditId}`;
                         } else {
                           setIsLoading(false);
@@ -345,7 +349,7 @@ export default function PulseCheck() {
                     }}
                   >
                     <span>{opt.label}</span>
-                    <ChevronRight size={28} className="opacity-0 group-hover:opacity-100 transition-all text-red-600 shrink-0" />
+                    <ChevronRight size={24} className="opacity-0 group-hover:opacity-100 transition-all text-red-700 shrink-0" />
                   </button>
                 ))}
               </div>
