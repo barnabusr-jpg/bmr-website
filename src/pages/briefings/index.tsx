@@ -70,21 +70,21 @@ export default function EvidenceVault() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white font-sans selection:bg-red-950 selection:text-red-200 overflow-x-hidden">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-red-100 selection:text-red-900 overflow-x-hidden">
       <Header />
       
       <main className="pt-32 sm:pt-44 pb-16 sm:pb-24 px-4 sm:px-6 md:px-12 max-w-[1600px] mx-auto text-left">
         {/* --- HEADER --- */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 sm:mb-16 border-b border-slate-800/80 pb-8 sm:pb-12 gap-4">
-          <div className="border-l-4 border-red-600 pl-4 sm:pl-8">
-            <span className="text-red-500 font-mono text-xs font-semibold tracking-widest uppercase block mb-2">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 sm:mb-16 border-b border-slate-200 pb-8 sm:pb-12 gap-4">
+          <div className="border-l-4 border-red-700 pl-4 sm:pl-8">
+            <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-2">
               EVIDENCE & CASE AUTOPSIES
             </span>
-            <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-black uppercase tracking-tight leading-none text-white">
-              BRIEFING <span className="text-red-500">VAULT.</span>
+            <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-black uppercase tracking-tight leading-none text-slate-950">
+              BRIEFING <span className="text-red-700">VAULT.</span>
             </h1>
           </div>
-          <Lock className="text-slate-800 opacity-40 hidden md:block mb-2 shrink-0" size={80} />
+          <Lock className="text-slate-300 hidden md:block mb-2 shrink-0" size={80} />
         </div>
 
         {/* --- THREE-COLUMN SILO GRID --- */}
@@ -92,34 +92,34 @@ export default function EvidenceVault() {
           {categories.map((cat) => (
             <div key={cat.node} className="flex flex-col gap-6">
               {/* Node Identifier Header */}
-              <div className="text-slate-400 font-mono text-xs tracking-widest uppercase border-b border-slate-800/80 pb-3 font-semibold flex items-center justify-between">
+              <div className="text-slate-600 font-mono text-xs tracking-widest uppercase border-b border-slate-200 pb-3 font-bold flex items-center justify-between">
                 <span>{cat.label}</span>
-                <span className="text-red-500 text-[10px]">// ACTIVE</span>
+                <span className="text-red-700 text-[10px]">// ACTIVE</span>
               </div>
 
               {/* Case Cards */}
               {cat.cases.map((item) => (
                 <Link key={item.slug} href={`/briefings/case-study/${item.slug}`} className="group no-underline block w-full">
-                  <div className="bg-slate-900/40 border border-slate-800/80 p-6 sm:p-8 relative overflow-hidden hover:border-red-500/80 hover:bg-slate-900/80 transition-all shadow-lg rounded-sm flex flex-col justify-between min-h-[320px]">
-                    <ShieldAlert className="absolute top-6 right-6 text-red-500 opacity-5 group-hover:opacity-15 transition-opacity pointer-events-none" size={96} />
+                  <div className="bg-white border border-slate-200 p-6 sm:p-8 relative overflow-hidden hover:border-red-700 transition-all shadow-sm rounded-sm flex flex-col justify-between min-h-[300px]">
+                    <ShieldAlert className="absolute top-6 right-6 text-slate-200 group-hover:text-red-100 transition-colors pointer-events-none" size={96} />
                     
                     <div className="relative z-10 w-full space-y-4">
-                      <div className="font-mono text-[11px] text-red-500 font-medium tracking-wider uppercase">
-                        FILE REF: {item.id} <span className="text-slate-500">| {cat.node} NODE</span>
+                      <div className="font-mono text-[11px] text-red-700 font-bold tracking-wider uppercase">
+                        FILE REF: {item.id} <span className="text-slate-400">| {cat.node} NODE</span>
                       </div>
                       
-                      <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-white group-hover:text-red-400 transition-colors leading-tight">
+                      <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-tight text-slate-950 group-hover:text-red-700 transition-colors leading-tight">
                         {item.title}
                       </h2>
                       
-                      <p className="text-sm sm:text-base text-slate-300 font-sans normal-case leading-relaxed border-l-2 border-slate-800 pl-4">
+                      <p className="text-sm sm:text-base text-slate-700 font-sans normal-case leading-relaxed border-l-2 border-slate-200 pl-4">
                         {item.summary}
                       </p>
                     </div>
 
-                    <div className="inline-flex items-center gap-2 text-red-500 font-mono font-semibold uppercase text-xs tracking-wider group-hover:text-white transition-colors mt-8">
+                    <div className="inline-flex items-center gap-2 text-slate-950 font-mono font-bold uppercase text-xs tracking-wider group-hover:text-red-700 transition-colors mt-8">
                       <span>ACCESS CASE AUTOPSY</span>
-                      <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform shrink-0" />
+                      <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform shrink-0 text-red-700" />
                     </div>
                   </div>
                 </Link>
