@@ -1,32 +1,41 @@
 "use client";
-import React, { useMemo } from 'react';
-import { ShieldCheck, CheckCircle2, ArrowDownRight, FileText, Lock, Award } from 'lucide-react';
+import React, { useMemo, useEffect, useState } from 'react';
+import { ShieldCheck, CheckCircle2, ArrowDownRight, Award, Lock } from 'lucide-react';
 
 interface CertificateProps {
-  companyName: string;
-  initialMetrics: {
+  companyName?: string;
+  initialMetrics?: {
     complianceScore: number;
     annualSalaryLeakage: number;
     unhedgedLegalExposure: number;
   };
-  verifiedMetrics: {
+  verifiedMetrics?: {
     complianceScore: number;
     annualSalaryLeakage: number;
     unhedgedLegalExposure: number;
   };
   clearedPillars?: string[];
-  auditDate?: string;
 }
 
 export function VerificationCertificateView({
   companyName = "TARGET SPECIFICATION",
-  initialMetrics,
-  verifiedMetrics,
-  clearedPillars = ["IGF", "AVS", "HAI"],
-  auditDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  initialMetrics = {
+    complianceScore: 62,
+    annualSalaryLeakage: 114750,
+    unhedgedLegalExposure: 607500
+  },
+  verifiedMetrics = {
+    complianceScore: 92,
+    annualSalaryLeakage: 18200,
+    unhedgedLegalExposure: 45000
+  }
 }: CertificateProps) {
+  const [formattedDate, setFormattedDate] = useState<string>("AUG 04, 2026");
 
-  // Calculate Verified Realized Savings
+  useEffect(() => {
+    setFormattedDate(new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+  }, []);
+
   const calculations = useMemo(() => {
     const taxSaved = Math.max(0, initialMetrics.annualSalaryLeakage - verifiedMetrics.annualSalaryLeakage);
     const exposureReduced = Math.max(0, initialMetrics.unhedgedLegalExposure - verifiedMetrics.unhedgedLegalExposure);
@@ -36,7 +45,6 @@ export function VerificationCertificateView({
       taxSaved,
       exposureReduced,
       readinessGain,
-      // Deterministic certificate hash based on metrics
       certificateHash: `CERT-${Math.abs(initialMetrics.annualSalaryLeakage ^ verifiedMetrics.annualSalaryLeakage).toString(16).toUpperCase()}-VERIFIED`
     };
   }, [initialMetrics, verifiedMetrics]);
@@ -44,7 +52,7 @@ export function VerificationCertificateView({
   return (
     <div className="bg-white text-slate-900 border-2 border-slate-900 p-8 md:p-12 rounded-lg shadow-md space-y-8 font-sans max-w-[1200px] mx-auto text-left">
       
-      {/* CERTIFICATE HEADER */}
+      {/* HEADER */}
       <div className="border-b-2 border-slate-900 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <div className="flex items-center gap-2 text-emerald-700 font-mono text-xs font-bold uppercase tracking-wider mb-1">
@@ -54,7 +62,7 @@ export function VerificationCertificateView({
             Control Plane Attestation: {companyName}
           </h2>
           <p className="text-xs text-slate-500 font-mono mt-1">
-            Issued: {auditDate} // Certificate Ref: {calculations.certificateHash}
+            Issued: {formattedDate} // Certificate Ref: {calculations.certificateHash}
           </p>
         </div>
         <div className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-2 font-mono text-xs font-bold rounded-md flex items-center gap-2 uppercase shrink-0">
@@ -62,14 +70,13 @@ export function VerificationCertificateView({
         </div>
       </div>
 
-      {/* SUMMARY DELTA BANNER (THE CEO PROOF BOARD) */}
+      {/* DELTA METRICS */}
       <div>
         <span className="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider block mb-3">
           // Section 01 // Verified Value Realization Delta ($T_0$ vs $T_1$)
         </span>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
           
-          {/* Delta 1: Process Waste */}
           <div className="border border-slate-200 bg-slate-50 p-5 rounded-md space-y-2">
             <span className="text-[10px] font-mono text-slate-500 font-bold uppercase block">Process Waste Tax Reduction</span>
             <div className="flex items-baseline gap-2">
@@ -85,7 +92,6 @@ export function VerificationCertificateView({
             </div>
           </div>
 
-          {/* Delta 2: Promise Gap Exposure */}
           <div className="border border-slate-200 bg-slate-50 p-5 rounded-md space-y-2">
             <span className="text-[10px] font-mono text-slate-500 font-bold uppercase block">Promise Gap™ Risk Mitigated</span>
             <div className="flex items-baseline gap-2">
@@ -101,7 +107,6 @@ export function VerificationCertificateView({
             </div>
           </div>
 
-          {/* Delta 3: Readiness Score */}
           <div className="border border-slate-200 bg-slate-50 p-5 rounded-md space-y-2">
             <span className="text-[10px] font-mono text-slate-500 font-bold uppercase block">AI Readiness Score Improvement</span>
             <div className="flex items-baseline gap-2">
@@ -120,7 +125,7 @@ export function VerificationCertificateView({
         </div>
       </div>
 
-      {/* AUDITED CONTROL GATES */}
+      {/* VERIFIED GATES */}
       <div className="space-y-3">
         <span className="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider block">
           // Section 02 // Verified Architectural Gates Audit
@@ -149,7 +154,7 @@ export function VerificationCertificateView({
         </div>
       </div>
 
-      {/* ATTESTATION SIGN-OFF FOOTER */}
+      {/* FOOTER */}
       <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs">
         <div className="space-y-1">
           <p className="font-bold text-slate-900 font-mono text-[11px]">INDEPENDENT CONTROL PLANE AUDIT ATTESTATION</p>
