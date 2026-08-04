@@ -9,7 +9,7 @@ import {
 import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
 
-// 🏢 CANONICAL SECTOR RISK MULTIPLIERS (Indexed to 4-Card Strategy Intake UI)
+// CANONICAL SECTOR RISK MULTIPLIERS (Indexed to 4-Card Strategy Intake UI)
 const SECTOR_MULTIPLIERS: Record<string, number> = {
   // Option 1: Finance / Compliance
   FINANCE: 1.35,
@@ -36,9 +36,9 @@ const SECTOR_MULTIPLIERS: Record<string, number> = {
 const BMR_IP_SUITE = {
   directives: [
     { id: "DIR_01", label: "PIPELINE HARDENING & SCHEMA DRIFT INSULATION", price: "PHASE 01", description: "Establishes standardized ingestion contracts to isolate vendor schema drift and prevent model hallucinations.", color: "text-red-600" },
-    { id: "DIR_02", label: "TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION", price: "PHASE 02", description: "Suppresses alert fatigue and enforces human-in-the-loop oversight gates.", color: "text-blue-500" },
-    { id: "DIR_03", label: "GOVERNANCE SUPPLEMENT", price: "BOARD GATE", description: "Enforces Purview DLP policies and API mutation circuit breakers.", color: "text-amber-500" },
-    { id: "DIR_04", label: "PROMISE GAP™ AUDIT", price: "CONTINUOUS", description: "Continuous verification of machine-readable data guardrails.", color: "text-green-500" }
+    { id: "DIR_02", label: "TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION", price: "PHASE 02", description: "Suppresses alert fatigue and enforces human-in-the-loop oversight gates.", color: "text-slate-900" },
+    { id: "DIR_03", label: "GOVERNANCE SUPPLEMENT", price: "BOARD GATE", description: "Enforces Purview DLP policies and API mutation circuit breakers.", color: "text-amber-700" },
+    { id: "DIR_04", label: "PROMISE GAP™ AUDIT", price: "CONTINUOUS", description: "Continuous verification of machine-readable data guardrails.", color: "text-emerald-700" }
   ],
   services: [
     { tier: "TIER_01", title: "AI READINESS DIAGNOSTIC", icon: <ZoomIn size={24} />, description: "High-fidelity forensic audit of pre-automation infrastructure." },
@@ -317,15 +317,15 @@ export default function AdminDashboard() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#020617] flex items-center justify-center p-4">
-        <form onSubmit={handleSignIn} className="bg-slate-950 border-2 border-red-600/20 p-16 max-w-md w-full text-center shadow-2xl relative italic">
-          <Key className="text-red-600 mx-auto mb-10 animate-pulse" size={64} />
-          <p className="text-slate-500 font-mono text-[9px] uppercase tracking-[0.4em] mb-6 font-black italic">ALPHA 7 CLEARANCE REQUIRED</p>
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <form onSubmit={handleSignIn} className="bg-white border border-slate-200 p-12 max-w-md w-full text-center shadow-sm rounded-lg relative">
+          <Key className="text-slate-900 mx-auto mb-6 animate-pulse" size={48} />
+          <p className="text-slate-500 font-mono text-xs uppercase tracking-wider mb-6 font-bold">ADMIN CLEARANCE REQUIRED</p>
           <div className="space-y-4">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR EMAIL" className="w-full bg-black border border-slate-800 p-4 text-center text-white font-mono outline-none focus:border-red-600 italic uppercase" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE PASSKEY" className="w-full bg-black border border-slate-800 p-4 text-center text-red-600 font-black outline-none tracking-[0.5em] text-xl focus:border-red-600" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR EMAIL" className="w-full bg-slate-50 border border-slate-200 p-3 text-center text-slate-900 font-mono outline-none focus:border-slate-900 rounded text-xs" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE PASSKEY" className="w-full bg-slate-50 border border-slate-200 p-3 text-center text-slate-900 font-mono font-bold outline-none tracking-widest text-lg focus:border-slate-900 rounded" />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-red-600 text-white py-6 mt-8 font-black uppercase italic tracking-widest hover:bg-white hover:text-red-600 transition-all italic leading-none">
+          <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white py-4 mt-6 font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors rounded text-xs">
             {loading ? "VERIFYING..." : "INITIALIZE COMMAND"}
           </button>
         </form>
@@ -334,17 +334,21 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 font-sans tracking-tighter text-left italic uppercase font-black overflow-x-hidden">
-      <nav className="fixed top-0 left-0 right-0 h-24 bg-black/90 backdrop-blur-md border-b border-slate-900 z-50 px-10 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans text-left antialiased overflow-x-hidden">
+      {/* TOP DECK ACCENT BAR */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-slate-900 z-[60]" />
+
+      {/* NAVIGATION HEADER */}
+      <nav className="fixed top-1 left-0 right-0 h-20 bg-white border-b border-slate-200 z-50 px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-8 w-full justify-between">
           <div className="flex items-center gap-3 shrink-0">
-            <Activity className="text-red-600 animate-pulse" size={20} />
-            <span className="text-white font-black uppercase italic tracking-[0.1em] text-sm font-mono">FORENSIC COMMAND</span>
+            <Activity className="text-slate-900 animate-pulse" size={20} />
+            <span className="text-slate-900 font-bold uppercase tracking-tight text-sm font-mono">FORENSIC COMMAND</span>
           </div>
           
-          <div className="flex items-center gap-3 shrink-0 bg-slate-900 p-1">
-            <button onClick={() => setActiveTab('ledger')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'ledger' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>Ledger</button>
-            <button onClick={() => setActiveTab('frameworks')} className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'frameworks' ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}>IP Framework</button>
+          <div className="flex items-center gap-3 shrink-0 bg-slate-100 p-1 rounded-lg">
+            <button onClick={() => setActiveTab('ledger')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Ledger</button>
+            <button onClick={() => setActiveTab('frameworks')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'frameworks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>IP Framework</button>
             
             <button 
               onClick={(e) => {
@@ -370,22 +374,22 @@ export default function AdminDashboard() {
                   alert("ATTENTION: Please expand an active ledger row below to prime the configuration matrix before initializing the engine.");
                 }
               }}
-              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest transition-all border cursor-pointer ${
+              className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded border transition-colors cursor-pointer ${
                 expandedRow 
-                  ? 'text-red-500 border-red-900/40 bg-red-950/10 animate-pulse' 
-                  : 'text-slate-500 border-slate-800 bg-transparent hover:text-slate-300'
+                  ? 'text-red-700 border-red-200 bg-red-50' 
+                  : 'text-slate-600 border-slate-300 bg-white hover:text-slate-900'
               }`}
             >
               Configure Quad-Node Engine
             </button>
 
-            {/* 🛰️ TELEMETRY GATE: DYNAMIC LINK BACK TO LIVE RESULTS */}
+            {/* TELEMETRY GATE: LINK TO LIVE RESULTS */}
             {expandedRow && (
               <a
                 href={`/results/${expandedRow}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-red-600 hover:bg-white hover:text-black border border-red-500 text-white text-[10px] font-mono tracking-widest px-6 py-2.5 uppercase font-black shrink-0 transition-all flex items-center gap-2 animate-pulse"
+                className="bg-slate-900 hover:bg-slate-800 text-white text-xs font-mono tracking-wider px-5 py-1.5 uppercase font-bold shrink-0 transition-colors flex items-center gap-2 rounded shadow-sm"
               >
                 <ExternalLink size={12} />
                 View Live Results
@@ -395,22 +399,23 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
+      {/* STAKEHOLDER EMAIL MODAL */}
       <AnimatePresence>
         {selectedAudit && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="bg-slate-950 border-2 border-red-600 p-12 max-w-xl w-full relative italic select-text">
-              <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-500 hover:text-white cursor-pointer"><X size={24}/></button>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white border border-slate-200 p-10 max-w-xl w-full relative shadow-lg rounded-lg select-text">
+              <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 cursor-pointer"><X size={20}/></button>
               
-              <h2 className="text-4xl font-black uppercase italic text-white mb-2 tracking-tighter text-left leading-none">ASSIGN STAKEHOLDER EMAILS</h2>
-              <p className="text-[10px] text-slate-500 font-mono mt-1 tracking-wider">PROVISIONING ASSOCIATION NODES FOR: {selectedAudit.org_name}</p>
+              <h2 className="text-2xl font-bold uppercase text-slate-900 mb-1 tracking-tight">Assign Stakeholder Emails</h2>
+              <p className="text-xs text-slate-500 font-mono tracking-wider">Provisioning association nodes for: {selectedAudit.org_name}</p>
               
-              <div className="space-y-4 mt-10 text-left">
-                <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
-                <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-900 border-2 border-slate-800 p-5 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic" />
+              <div className="space-y-3 mt-8 text-left">
+                <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 uppercase font-mono text-xs focus:border-slate-900 outline-none rounded" />
+                <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 uppercase font-mono text-xs focus:border-slate-900 outline-none rounded" />
+                <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 uppercase font-mono text-xs focus:border-slate-900 outline-none rounded" />
                 
-                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-red-600 text-white py-6 mt-4 font-black uppercase italic text-xs tracking-widest flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all cursor-pointer">
-                  {isUpdating ? <Activity className="animate-spin" /> : <Send size={18} />} 
+                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-slate-900 text-white py-4 mt-4 font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer rounded shadow-sm">
+                  {isUpdating ? <Activity className="animate-spin" /> : <Send size={16} />} 
                   {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
                 </button>
               </div>
@@ -419,40 +424,43 @@ export default function AdminDashboard() {
         )}
       </AnimatePresence>
 
-      <main className="pt-40 px-10 max-w-[1600px] mx-auto pb-32 italic">
+      {/* MAIN CONTAINER */}
+      <main className="pt-32 px-8 max-w-[1600px] mx-auto pb-24">
         <AnimatePresence mode="wait">
           {activeTab === 'ledger' ? (
-            <motion.div key="ledger" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
+            <motion.div key="ledger" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="space-y-6">
               
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8 italic">
+              {/* SUMMARY STAT CARDS */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {[
-                  { label: "TOTAL ASSETS INGESTED", value: totalCount, color: "border-slate-800 text-white" },
-                  { label: "ACTIVE TRIANGULATIONS", value: data.filter(d => d.status?.toUpperCase().includes("TRIANGULATION") || d.status?.toUpperCase().includes("TRIANGULATING")).length, color: "border-yellow-600/30 text-yellow-500" },
-                  { label: "PROPOSED SOW DOSSIERS SENT", value: data.filter(d => d.sow_sent === true).length, color: "border-blue-600/30 text-blue-400" },
-                  { label: "CLOSED/REVENUE REALIZED", value: data.filter(d => d.is_paid === true).length, color: "border-emerald-600/30 text-emerald-500" }
+                  { label: "TOTAL ASSETS INGESTED", value: totalCount, color: "border-slate-200 text-slate-900" },
+                  { label: "ACTIVE TRIANGULATIONS", value: data.filter(d => d.status?.toUpperCase().includes("TRIANGULATION") || d.status?.toUpperCase().includes("TRIANGULATING")).length, color: "border-amber-200 text-amber-800" },
+                  { label: "PROPOSED SOW DOSSIERS SENT", value: data.filter(d => d.sow_sent === true).length, color: "border-blue-200 text-blue-800" },
+                  { label: "CLOSED/REVENUE REALIZED", value: data.filter(d => d.is_paid === true).length, color: "border-emerald-200 text-emerald-800" }
                 ].map((stat) => (
-                  <div key={stat.label} className={`bg-slate-950/60 border p-6 flex flex-col justify-between min-h-[110px] relative transition-all hover:bg-slate-950 ${stat.color.split(" ")[0]}`}>
-                    <span className="text-[9px] font-mono text-slate-500 font-black tracking-widest uppercase block">// {stat.label}</span>
-                    <div className={`text-4xl font-black italic tracking-tighter mt-4 leading-none ${stat.color.split(" ")[1]}`}>
+                  <div key={stat.label} className={`bg-white border p-5 flex flex-col justify-between min-h-[100px] rounded-lg shadow-sm ${stat.color.split(" ")[0]}`}>
+                    <span className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase block">// {stat.label}</span>
+                    <div className={`text-3xl font-extrabold tracking-tight mt-2 leading-none ${stat.color.split(" ")[1]}`}>
                       {stat.value.toString().padStart(2, '0')}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between bg-slate-950 p-4 border border-slate-900">
+              {/* SEARCH & FILTERS BAR */}
+              <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between bg-white p-4 border border-slate-200 rounded-lg shadow-sm">
                 <div className="relative flex-1">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
                   <input 
                     type="text" 
                     value={searchTerm} 
                     onChange={(e) => setSearchTerm(e.target.value)} 
-                    placeholder="PARSE BY COMPANY IDENTITY OR LEAD SIGNAL EMAIL..." 
-                    className="w-full bg-black border border-slate-800 pl-12 pr-4 py-4 text-white uppercase font-mono text-xs focus:border-red-600 outline-none italic placeholder:text-slate-600"
+                    placeholder="Search by organization or lead email..." 
+                    className="w-full bg-slate-50 border border-slate-200 pl-11 pr-4 py-3 text-slate-900 font-mono text-xs focus:border-slate-900 outline-none rounded placeholder:text-slate-400"
                   />
                 </div>
                 
-                <div className="flex bg-black border border-slate-800 p-1 gap-1 overflow-x-auto shrink-0">
+                <div className="flex bg-slate-100 p-1 gap-1 overflow-x-auto shrink-0 rounded-lg">
                   {([
                     { label: "All Assets", value: "ALL" },
                     { label: "Initial Leads", value: "LEAD" },
@@ -462,7 +470,7 @@ export default function AdminDashboard() {
                     <button 
                       key={tab.value} 
                       onClick={() => setStatusFilter(tab.value)}
-                      className={`px-4 py-2 font-mono text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${statusFilter === tab.value ? 'bg-red-600 text-white' : 'text-slate-500 hover:text-white'}`}
+                      className={`px-4 py-2 font-mono text-[10px] font-bold uppercase tracking-wider transition-colors rounded ${statusFilter === tab.value ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                     >
                       {tab.label}
                     </button>
@@ -470,8 +478,9 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
+              {/* LEDGER ENTRIES LIST */}
               {data.length === 0 ? (
-                <div className="text-center p-20 border border-dashed border-slate-900 font-mono text-xs text-slate-600 uppercase tracking-widest">
+                <div className="text-center p-16 border border-dashed border-slate-300 rounded-lg bg-white font-mono text-xs text-slate-500 uppercase tracking-wider">
                   No corresponding forensic ledger entries located inside this category index.
                 </div>
               ) : (
@@ -487,14 +496,13 @@ export default function AdminDashboard() {
                   const laborMultiplier = 0.5;
                   const laborTax = (dbDecay / 100) * laborMultiplier * (fte * 160000 * 1.3);
                   
-                  // ⚡ STANDARDIZED SECTOR MULTIPLIER (Matches Strategy Intake UI & Results Portal)
                   const rawSectorKey = String(audit.sector || 'SERVICES').toUpperCase().trim().replace(/\s+/g, '_');
                   const sectorInflationMultiplier = SECTOR_MULTIPLIERS[rawSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
 
                   const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
                   const totalLeakage = laborTax + exposure;
 
-                  let playbookHeadline = "BALANCED PRE-AUTOMATION FOUNDATION";
+                  let playbookHeadline = "Balanced Pre-Automation Foundation";
                   let playbookNarrative = "Operational alignment metrics indicate standard system readiness. Interface parameters match baseline stability thresholds required for automation.";
                   let playbookPitch = "Deploy routine baseline optimization filters to preserve ongoing alignment tracks.";
                   let targetTier = "TRACK_01 // PIPELINE HARDENING";
@@ -502,47 +510,47 @@ export default function AdminDashboard() {
                   const cleanStatus = (audit.status || "").toUpperCase();
                   
                   if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) {
-                    playbookHeadline = "PENDING SYSTEM ANALYSIS NODE RECONSTRUCTION";
-                    playbookNarrative = "Multi-node operational telemetry validation parameters are matching initial baseline presets, or require structural evaluation. Click the gold executive engine switch below to compile results or force structural contradiction synthesis.";
+                    playbookHeadline = "Pending Multi-Node Triangulation";
+                    playbookNarrative = "Multi-node operational telemetry validation parameters match initial baseline presets or require structural evaluation. Click the Quad-Node switch to compile results or synthesize findings.";
                     playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
                     targetTier = "TRACK_02 // MULTI-NODE TRIANGULATION";
                   } else if (cleanStatus === "ARCHIVED") {
-                    playbookHeadline = "RECORD DEACTIVATED // HISTORICAL STORAGE";
+                    playbookHeadline = "Record Deactivated // Historical Storage";
                     playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing telemetry channels are hard-locked.";
-                    playbookPitch = "System metrics are now preserved for permanent historical reference compliance logs.";
+                    playbookPitch = "System metrics are preserved for permanent historical reference compliance logs.";
                     targetTier = "ARCHIVED VAULT CONTENT";
                   } else if (sfi >= 45) {
-                    playbookHeadline = "PROMISE GAP™ ENCOUNTERED // PRE-AUTOMATION IMPEDANCE";
+                    playbookHeadline = "The Promise Gap™ Encountered // Pre-Automation Impedance";
                     playbookNarrative = `An elevated AI Readiness Gap of ${100 - sfi}% (${sfi}% Friction) reveals a persistent Infrastructure as Code (IaC) deficit. While executive strategy emphasizes AI velocity, the underlying engineering pipeline lacks machine-readable guardrails—forcing senior developers to manually nurse drifting schemas rather than scaling automated runtimes.`;
-                    playbookPitch = "Deploy machine-readable directives and ingestion contracts to close the Promise Gap™ before scaling autonomous agents.";
+                    playbookPitch = "Deploy machine-readable directives and ingestion contracts to close The Promise Gap™ before scaling autonomous agents.";
                     targetTier = "TRACK_01 & 02 // PRE-AUTOMATION CONTROL PLANE";
                   } else if (sfi >= 0) {
-                    playbookHeadline = "OPERATIONAL ABSORPTION MAXIMA";
+                    playbookHeadline = "Operational Absorption Maxima";
                     playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrated inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Modernizing these hand-offs is required before scaling AI agents.`;
                     playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
                     targetTier = "TRACK_02 // TELEMETRY DECOUPLING";
                   }
 
                   return (
-                    <div key={audit.id} className="border border-slate-900 bg-slate-950/40 hover:border-red-600/30 transition-all overflow-hidden italic text-white">
-                      <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-8 cursor-pointer group">
-                        <div className="col-span-6 flex items-center gap-6">
-                          <div className="bg-slate-900 p-4 border border-slate-800 shrink-0 italic">
-                            <Building2 size={24} className={cleanStatus.includes("COMPLETE") ? "text-green-500" : "text-red-600"} />
+                    <div key={audit.id} className="border border-slate-200 bg-white hover:border-slate-300 transition-all rounded-lg shadow-sm overflow-hidden text-slate-900">
+                      <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-6 cursor-pointer group">
+                        <div className="col-span-6 flex items-center gap-4">
+                          <div className="bg-slate-100 p-3 border border-slate-200 rounded shrink-0">
+                            <Building2 size={20} className={cleanStatus.includes("COMPLETE") ? "text-emerald-700" : "text-slate-700"} />
                           </div>
                           <div>
-                            <div className="font-black text-white uppercase text-4xl italic tracking-tighter leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
-                            <div className="text-[10px] text-slate-600 font-mono mt-2 uppercase tracking-widest font-black italic break-all">LEAD_RECORD_NODE</div>
+                            <div className="font-bold text-slate-900 text-2xl tracking-tight leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
+                            <div className="text-[10px] text-slate-500 font-mono mt-1 uppercase tracking-wider font-semibold">LEAD_RECORD_NODE</div>
                           </div>
                         </div>
                         
-                        <div className="col-span-4 text-center font-black italic text-xs tracking-[0.2em] font-mono flex items-center justify-center gap-3">
+                        <div className="col-span-4 text-center font-bold text-xs font-mono flex items-center justify-center gap-3">
                           {sfi >= 45 && cleanStatus !== "ARCHIVED" && (
-                            <span className="bg-red-600/10 text-red-500 border border-red-600/30 px-3 py-1 text-[9px] font-mono tracking-widest uppercase block font-black animate-pulse shrink-0">
-                              ⚠️ PROMISE GAP EXPOSURE DETECTED
+                            <span className="bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase font-bold rounded shrink-0">
+                              ⚠️ PROMISE GAP™ EXPOSURE
                             </span>
                           )}
-                          <span className="text-white">
+                          <span className="text-slate-800">
                             {cleanStatus.includes("COMPLETE") && 'RESULT PUBLISHED'}
                             {cleanStatus === 'LEAD' && 'LEAD CAPTURED'}
                             {cleanStatus === 'ARCHIVED' && '📁 ARCHIVED INACTIVE'}
@@ -550,12 +558,13 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                         
-                        <div className="col-span-2 flex justify-end text-slate-800 group-hover:text-red-600 transition-colors italic">{expandedRow === audit.id ? <ChevronUp size={28} /> : <ChevronDown size={28} />}</div>
+                        <div className="col-span-2 flex justify-end text-slate-400 group-hover:text-slate-900 transition-colors">{expandedRow === audit.id ? <ChevronUp size={24} /> : <ChevronDown size={24} />}</div>
                       </div>
                       
                       {expandedRow === audit.id && (
-                        <div className="p-10 pt-0 border-t border-slate-900/50 bg-black/20 italic text-left select-text">
-                          <div className="grid grid-cols-3 gap-6 pt-10 mb-8 italic">
+                        <div className="p-8 pt-0 border-t border-slate-100 bg-slate-50/50 text-left select-text">
+                          {/* STAKEHOLDER TRACK CARDS */}
+                          <div className="grid grid-cols-3 gap-4 pt-6 mb-6">
                             {[
                               { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
                               { label: 'MANAGERIAL TRACK', key: 'MANAGERIAL' },
@@ -565,9 +574,9 @@ export default function AdminDashboard() {
                               const isDone = node?.survey_completed === true || node?.status?.toLowerCase() === 'completed';
                               
                               return (
-                                <div key={role.label} className="border-2 border-slate-900 p-6 bg-slate-950/40 relative min-h-[140px] flex flex-col justify-between italic group/node">
-                                  <div className="flex justify-between items-start w-full border-b border-slate-900/40 pb-2">
-                                    <span className="text-[9px] font-mono text-slate-600 font-black tracking-widest uppercase">{role.label}</span>
+                                <div key={role.label} className="border border-slate-200 p-5 bg-white rounded-lg relative min-h-[120px] flex flex-col justify-between shadow-sm group/node">
+                                  <div className="flex justify-between items-start w-full border-b border-slate-100 pb-2">
+                                    <span className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase">{role.label}</span>
                                     {!isDone && (
                                       <div className="flex items-center gap-2">
                                         <button 
@@ -576,23 +585,23 @@ export default function AdminDashboard() {
                                           title="Fire Email Reminder Nudge" 
                                           disabled={isUpdating || cleanStatus === "ARCHIVED"}
                                           onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
-                                          className="text-red-500 hover:text-white transition-all cursor-pointer opacity-40 group-hover/node:opacity-100 disabled:opacity-10"
+                                          className="text-slate-600 hover:text-slate-900 transition-colors cursor-pointer disabled:opacity-20"
                                         >
-                                          <BellRing size={12} className={cleanStatus === "ARCHIVED" ? "" : "animate-bounce"} />
+                                          <BellRing size={12} />
                                         </button>
-                                        <Clock className="text-slate-700" size={14}/>
+                                        <Clock className="text-slate-400" size={12}/>
                                       </div>
                                     )}
                                   </div>
                                   
-                                  <div className="text-center py-4 flex justify-center items-center">
+                                  <div className="text-center py-2 flex justify-center items-center">
                                     <button   
                                       type="button"
                                       onClick={() => handleLaunchPersonaWizard(role.key, audit)}   
-                                      className={`px-5 py-2.5 text-[10px] uppercase tracking-widest font-black rounded-xs transition-all flex items-center gap-2 cursor-pointer ${   
+                                      className={`px-4 py-2 text-xs uppercase tracking-wider font-bold rounded transition-colors flex items-center gap-2 cursor-pointer ${   
                                         isDone 
-                                          ? 'bg-slate-900 text-slate-500 hover:text-white border border-slate-800' 
-                                          : 'bg-zinc-100 text-black hover:bg-red-600 hover:text-white'   
+                                          ? 'bg-slate-100 text-slate-600 border border-slate-200 hover:text-slate-900' 
+                                          : 'bg-slate-900 text-white hover:bg-slate-800'   
                                       }`} 
                                     >   
                                       {isDone ? 'Override Matrix' : 'Open Posture'}   
@@ -603,89 +612,90 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          <div className="border border-slate-900 bg-slate-950 p-6 mb-8 space-y-6">
-                            <span className="text-[10px] text-slate-500 font-black tracking-widest uppercase block">// REAL-TIME PRESENTATION CALIBRATION STRIPS</span>
+                          {/* CALIBRATION SLIDERS */}
+                          <div className="border border-slate-200 bg-white p-6 rounded-lg shadow-sm mb-6 space-y-4">
+                            <span className="text-[10px] text-slate-500 font-bold font-mono tracking-wider uppercase block">// REAL-TIME PRESENTATION CALIBRATION STRIPS</span>
                             
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs font-mono">
                                   <span className="text-slate-500">ANNUAL SYSTEM SOFTWARE SPEND:</span>
-                                  <span className="text-red-500 font-black">${spend.toFixed(1)}M</span>
+                                  <span className="text-slate-900 font-bold">${spend.toFixed(1)}M</span>
                                 </div>
                                 <input 
                                   type="range" min="0.1" max="25.0" step="0.1" value={spend}
                                   disabled={cleanStatus === "ARCHIVED"}
                                   onChange={(e) => handleLiveSliderChange(audit.id, "ai_spend", parseFloat(e.target.value))}
-                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer disabled:opacity-40"
+                                  className="w-full accent-slate-900 bg-slate-200 h-1.5 cursor-pointer disabled:opacity-40 rounded"
                                 />
                               </div>
 
                               <div className="space-y-2">
                                 <div className="flex justify-between text-xs font-mono">
                                   <span className="text-slate-500">IMPACTED WORKFORCE SCALE (FTES):</span>
-                                  <span className="text-red-500 font-black">{fte} PEOPLE</span>
+                                  <span className="text-slate-900 font-bold">{fte} PEOPLE</span>
                                 </div>
                                 <input 
                                   type="range" min="1" max="250" step="1" value={fte}
                                   disabled={cleanStatus === "ARCHIVED"}
                                   onChange={(e) => handleLiveSliderChange(audit.id, "roi_pct", parseInt(e.target.value))}
-                                  className="w-full accent-red-600 bg-slate-900 h-1.5 cursor-pointer disabled:opacity-40"
+                                  className="w-full accent-slate-900 bg-slate-200 h-1.5 cursor-pointer disabled:opacity-40 rounded"
                                 />
                               </div>
                             </div>
                           </div>
 
-                          {/* ⚡ UPDATED LEDGER METRICS LABELS */}
-                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-                            <div className="lg:col-span-5 border border-slate-900 bg-slate-950 p-6 space-y-4 font-mono">
-                              <div className="text-[10px] text-slate-500 font-black tracking-widest uppercase">// RUN_RATE_METRICS_LEDGER</div>
-                              <div className="space-y-3 pt-2 border-t border-slate-900 text-xs">
-                                <div className="flex justify-between"><span className="text-slate-600">AI_READINESS_GAP:</span><span className="text-red-500 font-black">{100 - sfi} / 100 ({sfi}% FRICTION)</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">ACTIVE_LOGIC_FRACTURES:</span><span className="text-white font-black">{realFractures.length} VARIANCE_NODES</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">PROCESS_WASTE_TAX:</span><span className="text-white font-black">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                <div className="flex justify-between"><span className="text-slate-600">UNHEDGED_PROMISE_GAP_EXPOSURE:</span><span className="text-white font-black">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
-                                <div className="flex justify-between border-t border-slate-900 pt-2 text-sm"><span className="text-slate-400 font-black">TOTAL EXPENSE LEAKAGE:</span><span className="text-red-600 font-black">${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                          {/* RUN RATE & SCRIPT CARDS */}
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                            <div className="lg:col-span-5 border border-slate-200 bg-white p-6 rounded-lg shadow-sm space-y-3 font-mono">
+                              <div className="text-[10px] text-slate-500 font-bold tracking-wider uppercase">// RUN_RATE_METRICS_LEDGER</div>
+                              <div className="space-y-2.5 pt-2 border-t border-slate-100 text-xs">
+                                <div className="flex justify-between"><span className="text-slate-500">AI Readiness Gap:</span><span className="text-slate-900 font-bold">{100 - sfi}% Readiness</span></div>
+                                <div className="flex justify-between"><span className="text-slate-500">Active Logic Fractures:</span><span className="text-slate-900 font-bold">{realFractures.length} Variance Nodes</span></div>
+                                <div className="flex justify-between"><span className="text-slate-500">Process Waste Tax:</span><span className="text-slate-900 font-bold">${laborTax.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between"><span className="text-slate-500">Total Promise Gap™ Exposure:</span><span className="text-slate-900 font-bold">${exposure.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
+                                <div className="flex justify-between border-t border-slate-100 pt-2 text-sm"><span className="text-slate-700 font-bold">Total Capital Exposure:</span><span className="text-red-700 font-bold">${totalLeakage.toLocaleString(undefined, {maximumFractionDigits:0})}</span></div>
                               </div>
                             </div>
 
-                            <div className={`lg:col-span-7 border-2 p-6 flex flex-col justify-between space-y-4 ${
-                              cleanStatus === "ARCHIVED" ? "border-slate-800 bg-slate-900/5" : "border-red-900/60 bg-red-950/5"
+                            <div className={`lg:col-span-7 border p-6 rounded-lg shadow-sm flex flex-col justify-between space-y-4 ${
+                              cleanStatus === "ARCHIVED" ? "border-slate-200 bg-slate-50" : "border-slate-200 bg-white"
                             }`}>
                               <div className="space-y-2">
-                                <span className="text-[10px] font-mono font-black text-red-500 tracking-widest block">// SECURE_BRIEFING_ALIGNMENT_SCRIPT</span>
-                                <div className="text-2xl font-black italic tracking-tighter text-white uppercase">{playbookHeadline}</div>
-                                <p className="text-xs leading-relaxed font-sans text-slate-300 normal-case font-normal border-l-2 border-red-600 pl-4 py-1">
+                                <span className="text-[10px] font-mono font-bold text-slate-500 tracking-wider block uppercase">// EXECUTIVE_BRIEFING_SCRIPT</span>
+                                <div className="text-xl font-bold tracking-tight text-slate-900">{playbookHeadline}</div>
+                                <p className="text-xs leading-relaxed text-slate-600 border-l-2 border-slate-900 pl-3 py-0.5">
                                   {playbookNarrative}
                                 </p>
                               </div>
-                              <div className="bg-black/40 border border-slate-900 p-4 font-sans normal-case text-xs text-slate-400 font-medium">
-                                <strong className="text-white uppercase tracking-wider block text-[10px] font-mono font-black text-red-500 mb-1">// COLLABORATIVE_CLOSING_ANCHOR:</strong>
+                              <div className="bg-slate-50 border border-slate-200 p-3.5 rounded text-xs text-slate-700 font-medium">
+                                <strong className="text-slate-900 uppercase tracking-wider block text-[10px] font-mono font-bold mb-1">// RECOMMENDED_CLOSING_ANCHOR:</strong>
                                 "{playbookPitch}"
                               </div>
                             </div>
                           </div>
 
-                          {/* ⚡ UPDATED FRACTURES TABLE */}
+                          {/* FRACTURES TABLE */}
                           {realFractures.length > 0 && (
-                            <div className="border border-slate-900 bg-slate-950 p-6 space-y-4 mb-8">
-                              <div className="text-[10px] font-mono text-red-500 font-black tracking-widest uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
+                            <div className="border border-slate-200 bg-white p-6 rounded-lg shadow-sm space-y-3 mb-6">
+                              <div className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
                               <div className="overflow-x-auto">
-                                <table className="w-full text-left font-mono text-[11px] border-collapse">
+                                <table className="w-full text-left font-mono text-xs border-collapse">
                                   <thead>
-                                    <tr className="border-b border-slate-900 text-slate-500 font-black">
+                                    <tr className="border-b border-slate-200 text-slate-500 font-bold">
                                       <th className="pb-2 w-1/6">FRACTURE_ID</th>
                                       <th className="pb-2 w-1/12">SEVERITY</th>
-                                      <th className="pb-2 w-1/2">TRIANGULATED_REALITY_DESCRIPTION</th>
-                                      <th className="pb-2 w-1/4">REQUIRED_IP_DIRECTIVE</th>
+                                      <th className="pb-2 w-1/2">DESCRIPTION</th>
+                                      <th className="pb-2 w-1/4">REQUIRED_DIRECTIVE</th>
                                     </tr>
                                   </thead>
-                                  <tbody className="divide-y divide-slate-900/50 text-white font-medium">
+                                  <tbody className="divide-y divide-slate-100 text-slate-800 font-medium">
                                     {realFractures.map((frac: any) => (
-                                      <tr key={frac.id} className="hover:bg-white/5 transition-all">
-                                        <td className="py-3 text-slate-400 font-black">{frac.id}</td>
-                                        <td className={`py-3 font-black ${frac.severity === 'CRITICAL' ? 'text-red-500' : 'text-yellow-600'}`}>{frac.severity}</td>
-                                        <td className="py-3 pr-4 normal-case font-sans text-slate-300 font-normal leading-relaxed">{frac.description}</td>
-                                        <td className="py-3 text-red-400 font-black uppercase italic">{frac.directive}</td>
+                                      <tr key={frac.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="py-2.5 text-slate-500 font-bold">{frac.id}</td>
+                                        <td className={`py-2.5 font-bold ${frac.severity === 'CRITICAL' ? 'text-red-700' : 'text-amber-700'}`}>{frac.severity}</td>
+                                        <td className="py-2.5 pr-4 text-slate-700 leading-relaxed font-sans">{frac.description}</td>
+                                        <td className="py-2.5 text-slate-900 font-bold uppercase">{frac.directive}</td>
                                       </tr>
                                     ))}
                                   </tbody>
@@ -694,48 +704,49 @@ export default function AdminDashboard() {
                             </div>
                           )}
 
-                          {/* ⚡ UPDATED STATEMENT OF WORK CARDS */}
-                          <div className="bg-white text-black p-8 border-l-[16px] border-slate-900 shadow-2xl space-y-6 mb-10 font-sans">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-4 gap-2">
+                          {/* RECOMMENDED STATEMENT OF WORK */}
+                          <div className="bg-white text-slate-900 p-6 border-l-8 border-slate-900 border-y border-r border-slate-200 rounded-r-lg shadow-sm space-y-4 mb-6">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-3 gap-2">
                               <div>
-                                <span className="text-xs font-mono tracking-widest text-red-600 font-black uppercase">// ENGAGEMENT_ROADMAP_CONFIGURATION</span>
-                                <h3 className="text-2xl font-black uppercase italic tracking-tighter text-black leading-none mt-1">RECOMMENDED STATEMENT OF WORK</h3>
+                                <span className="text-[10px] font-mono tracking-wider text-slate-500 font-bold uppercase block">// ENGAGEMENT_ROADMAP_CONFIGURATION</span>
+                                <h3 className="text-xl font-bold tracking-tight text-slate-900 mt-0.5">RECOMMENDED STATEMENT OF WORK</h3>
                               </div>
-                              <span className="text-[10px] font-mono text-slate-400 font-black tracking-wider uppercase">{targetTier}</span>
+                              <span className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase">{targetTier}</span>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                              <div className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                              <div className="flex flex-col justify-between border border-slate-200 bg-slate-50 p-4 rounded space-y-2 relative">
                                 <div className="space-y-1">
-                                  <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase">
+                                  <div className="flex justify-between items-center font-mono text-[9px] text-slate-500 font-bold uppercase">
                                     <span>PHASE 01</span>
-                                    <span className="text-red-600 font-black uppercase">CRITICAL PRIORITY</span>
+                                    <span className="text-red-700 font-bold">CRITICAL PRIORITY</span>
                                   </div>
-                                  <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">TRACK 01 // PIPELINE HARDENING & SCHEMA DRIFT INSULATION</h5>
-                                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Prevents model hallucinations and silent pipeline breaks caused by third-party API mutations.</p>
+                                  <h5 className="text-xs font-bold uppercase tracking-tight text-slate-900">TRACK 01 // PIPELINE HARDENING & SCHEMA DRIFT INSULATION</h5>
+                                  <p className="text-xs leading-relaxed text-slate-600 font-normal">Prevents model hallucinations and silent pipeline breaks caused by third-party API mutations.</p>
                                 </div>
-                                <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">01</div>
+                                <div className="font-mono text-lg font-bold text-slate-300 absolute bottom-1 right-2 select-none">01</div>
                               </div>
 
-                              <div className="flex flex-col justify-between border border-slate-100 bg-slate-50/60 p-5 space-y-3 relative">
+                              <div className="flex flex-col justify-between border border-slate-200 bg-slate-50 p-4 rounded space-y-2 relative">
                                 <div className="space-y-1">
-                                  <div className="flex justify-between items-center font-mono text-[9px] text-slate-400 font-black uppercase">
+                                  <div className="flex justify-between items-center font-mono text-[9px] text-slate-500 font-bold uppercase">
                                     <span>PHASE 02</span>
-                                    <span className="text-amber-600 font-black uppercase">HIGH PRIORITY</span>
+                                    <span className="text-amber-700 font-bold">HIGH PRIORITY</span>
                                   </div>
-                                  <h5 className="text-sm font-black italic uppercase tracking-tight text-slate-900">TRACK 02 // TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION</h5>
-                                  <p className="text-[11px] leading-relaxed text-slate-500 font-medium font-sans normal-case">Suppresses alert desensitization and ensures executives only sign off on critical exceptions.</p>
+                                  <h5 className="text-xs font-bold uppercase tracking-tight text-slate-900">TRACK 02 // TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION</h5>
+                                  <p className="text-xs leading-relaxed text-slate-600 font-normal">Suppresses alert desensitization and ensures executives only sign off on critical exceptions.</p>
                                 </div>
-                                <div className="font-mono text-xl font-black text-slate-200/60 absolute bottom-1 right-2 select-none">02</div>
+                                <div className="font-mono text-lg font-bold text-slate-300 absolute bottom-1 right-2 select-none">02</div>
                               </div>
                             </div>
                           </div>
                           
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-900 pt-8 italic text-left">
-                            <div className="space-y-4">
-                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">PHASE GATEWAY CONTROLS</span>
+                          {/* CONTROL BUTTONS */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-200 pt-6">
+                            <div className="space-y-3">
+                              <span className="text-[10px] font-mono text-slate-500 block tracking-wider uppercase font-bold">PHASE GATEWAY CONTROLS</span>
                               
-                              <div className="flex gap-3 mb-2 p-2 bg-black/40 border border-slate-900 font-mono text-[9px] font-black uppercase tracking-wider w-full">
+                              <div className="flex gap-2 p-1.5 bg-slate-100 border border-slate-200 rounded font-mono text-[10px] font-bold uppercase tracking-wider w-full">
                                 <button 
                                   type="button"
                                   onClick={async (e) => {
@@ -744,9 +755,9 @@ export default function AdminDashboard() {
                                     await supabase.from('audits').update({ sow_sent: updatedState }).eq('id', audit.id);
                                     fetchLedger();
                                   }}
-                                  className={`flex-1 py-2 border transition-all ${audit.sow_sent ? 'bg-blue-600 text-white border-blue-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                  className={`flex-1 py-1.5 border rounded transition-colors ${audit.sow_sent ? 'bg-blue-700 text-white border-blue-700' : 'text-slate-600 border-slate-300 hover:text-slate-900 bg-white'}`}
                                 >
-                                  MARK SOW SENT: {audit.sow_sent ? "✔ TRUE" : "✘ FALSE"}
+                                  Mark SOW Sent: {audit.sow_sent ? "✔ True" : "✘ False"}
                                 </button>
                                 
                                 <button 
@@ -757,9 +768,9 @@ export default function AdminDashboard() {
                                     await supabase.from('audits').update({ is_paid: updatedState }).eq('id', audit.id);
                                     fetchLedger();
                                   }}
-                                  className={`flex-1 py-2 border transition-all ${audit.is_paid ? 'bg-emerald-600 text-white border-emerald-500' : 'text-slate-500 border-slate-800 hover:text-white'}`}
+                                  className={`flex-1 py-1.5 border rounded transition-colors ${audit.is_paid ? 'bg-emerald-700 text-white border-emerald-700' : 'text-slate-600 border-slate-300 hover:text-slate-900 bg-white'}`}
                                 >
-                                  MARK PAID: {audit.is_paid ? "✔ PAID" : "✘ PENDING"}
+                                  Mark Paid: {audit.is_paid ? "✔ Paid" : "✘ Pending"}
                                 </button>
 
                                 <button 
@@ -791,40 +802,40 @@ export default function AdminDashboard() {
                                       setIsUpdating(false);
                                     }
                                   }}
-                                  className={`flex-1 py-2 border transition-all cursor-pointer ${
+                                  className={`flex-1 py-1.5 border rounded transition-colors cursor-pointer ${
                                     cleanStatus === 'ARCHIVED' 
-                                      ? 'bg-red-950 text-red-500 border-red-900/60 font-black tracking-widest' 
-                                      : 'text-slate-500 border-slate-800 hover:text-red-500 hover:border-red-900/40'
+                                      ? 'bg-red-100 text-red-800 border-red-300 font-bold' 
+                                      : 'text-slate-600 border-slate-300 hover:text-red-700 bg-white'
                                   }`}
                                 >
-                                  FILE STATUS: {cleanStatus === 'ARCHIVED' ? "🔒 ARCHIVED" : "📁 ARCHIVE RECORD"}
+                                  File Status: {cleanStatus === 'ARCHIVED' ? "🔒 Archived" : "📁 Archive Record"}
                                 </button>
                               </div>
 
-                              <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="flex-1 space-y-3">
-                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-red-600 text-white px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer disabled:opacity-20"><Mail size={14} /> Launch 360 Deep Dive</button>
-                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-yellow-600 text-black px-6 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all flex items-center justify-center gap-2 shadow-md italic font-black cursor-pointer disabled:opacity-20"><Zap size={14} /> COMPILE PARTIAL ANSWERS</button>
+                              <div className="flex flex-col sm:flex-row gap-3">
+                                <div className="flex-1 space-y-2">
+                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-slate-900 text-white px-4 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer disabled:opacity-20"><Mail size={14} /> Launch 360 Deep Dive</button>
+                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-amber-600 text-white px-4 py-3 font-bold uppercase text-xs tracking-wider hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer disabled:opacity-20"><Zap size={14} /> Export Preliminary Findings</button>
                                 </div>
-                                <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-10 py-5 font-black uppercase text-[10px] tracking-widest transition-all shadow-xl flex flex-col items-center justify-center gap-3 border cursor-pointer disabled:opacity-20 ${clientHasAccess ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700' : 'bg-red-600 text-white border-red-500 hover:bg-white hover:text-red-600'}`}><Shield size={18} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
+                                <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-6 py-4 font-bold uppercase text-xs tracking-wider transition-colors shadow-sm rounded flex flex-col items-center justify-center gap-2 border cursor-pointer disabled:opacity-20 ${clientHasAccess ? 'bg-emerald-700 text-white border-emerald-700 hover:bg-emerald-800' : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'}`}><Shield size={16} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
                               </div>
                             </div>
                             
-                            <div className="space-y-4 md:border-l md:border-slate-900 md:pl-12">
-                              <span className="text-[9px] font-mono text-slate-600 block tracking-widest uppercase font-black">INTERNAL ASSET EXPORTS</span>
+                            <div className="space-y-3 md:border-l md:border-slate-200 md:pl-8">
+                              <span className="text-[10px] font-mono text-slate-500 block tracking-wider uppercase font-bold">INTERNAL ASSET EXPORTS</span>
                               
-                              <div className="w-full space-y-1 mb-2">
+                              <div className="w-full mb-2">
                                 <input 
                                   type="text"
                                   disabled={cleanStatus === "ARCHIVED"}
                                   value={dossierNotes[audit.id] || ""}
                                   onChange={(e) => setDossierNotes({ ...dossierNotes, [audit.id]: e.target.value })}
-                                  placeholder="APPEND CUSTOM DOSSIER ANNOTATION NOTE..."
-                                  className="w-full bg-black border border-slate-900 p-3 text-[10px] font-mono font-black italic uppercase text-slate-300 focus:border-red-600 outline-none placeholder:text-slate-700 tracking-wider disabled:opacity-30"
+                                  placeholder="Append custom dossier annotation note..."
+                                  className="w-full bg-white border border-slate-200 p-2.5 text-xs font-mono text-slate-900 focus:border-slate-900 outline-none placeholder:text-slate-400 rounded disabled:opacity-30"
                                 />
                               </div>
 
-                              <div className="space-y-3">
+                              <div className="space-y-2">
                                 <button 
                                   type="button" 
                                   onClick={(e) => { 
@@ -834,11 +845,11 @@ export default function AdminDashboard() {
                                     const activeSector = encodeURIComponent(audit.sector || 'SERVICES');
                                     window.open(`/results/${audit.id}?live_sync=true&decay=${sfi}&spend=${spend}&fte=${fte}&leakage=${urlSafeLeakage}&tax=${urlSafeLaborTax}&sector=${activeSector}`, '_blank'); 
                                   }} 
-                                  className="w-full bg-slate-950 border border-red-600/30 text-red-600 px-10 py-5 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-xl italic font-black cursor-pointer"
+                                  className="w-full bg-white border border-slate-300 text-slate-900 px-6 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer"
                                 >
-                                  <Monitor size={18} /> Open Onscreen Ledger
+                                  <Monitor size={16} /> Open Onscreen Ledger
                                 </button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-white text-black px-8 py-4 font-black uppercase text-[10px] tracking-widest hover:bg-red-600 hover:text-white transition-all flex items-center justify-center gap-3 shadow-md italic font-black cursor-pointer"><FileText size={16} /> PRINT FORENSIC LEDGER (PDF)</button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-slate-900 text-white px-6 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer"><FileText size={16} /> Print SteerCo Dossier (PDF)</button>
                               </div>
                             </div>
                           </div>
@@ -850,15 +861,16 @@ export default function AdminDashboard() {
                 })
               )}
 
+              {/* PAGINATION */}
               {totalCount > ROWS_PER_PAGE && (
-                <div className="flex items-center justify-between bg-slate-950 p-6 border border-slate-900 text-slate-500 font-mono text-[10px] uppercase tracking-wider mt-4">
+                <div className="flex items-center justify-between bg-white p-4 border border-slate-200 text-slate-500 font-mono text-xs uppercase tracking-wider rounded-lg shadow-sm mt-4">
                   <div>SHOWING {currentPage * ROWS_PER_PAGE + 1} - {Math.min((currentPage + 1) * ROWS_PER_PAGE, totalCount)} OF {totalCount} ACTIVE RECORDS</div>
                   <div className="flex gap-2">
                     <button 
                       type="button"
                       disabled={currentPage === 0}
                       onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                      className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black cursor-pointer"
+                      className="px-4 py-1.5 border border-slate-300 hover:border-slate-900 disabled:opacity-30 transition-colors text-slate-900 font-bold rounded cursor-pointer"
                     >
                       PREV
                     </button>
@@ -866,7 +878,7 @@ export default function AdminDashboard() {
                       type="button"
                       disabled={(currentPage + 1) * ROWS_PER_PAGE >= totalCount}
                       onClick={() => setCurrentPage(p => p + 1)}
-                      className="px-4 py-2 border border-slate-800 hover:border-white disabled:opacity-20 disabled:hover:border-slate-800 transition-all text-white font-black cursor-pointer"
+                      className="px-4 py-1.5 border border-slate-300 hover:border-slate-900 disabled:opacity-30 transition-colors text-slate-900 font-bold rounded cursor-pointer"
                     >
                       NEXT
                     </button>
@@ -875,35 +887,35 @@ export default function AdminDashboard() {
               )}
             </motion.div>
           ) : (
-            <motion.div key="frameworks" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12 md:space-y-20 italic">
-              <section className="italic">
-                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Public Service Mapping</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 italic font-black">
+            <motion.div key="frameworks" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }} className="space-y-12">
+              <section>
+                <h3 className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-6 border-b border-slate-200 pb-3 font-bold">Public Service Mapping</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 font-bold">
                   {BMR_IP_SUITE.services.map((s) => (
-                    <div key={s.tier} className="p-8 border border-slate-800 bg-slate-900/20 italic">
-                      <div className="text-red-600 mb-6 italic">{s.icon}</div>
-                      <span className="text-[8px] font-mono text-slate-500 uppercase tracking-widest italic font-black">{s.tier}</span>
-                      <h4 className="text-xl md:text-2xl font-black italic uppercase text-white mt-2 mb-4 italic">{s.title}</h4>
-                      <p className="text-[10px] text-slate-400 uppercase font-bold leading-relaxed italic normal-case">{s.description}</p>
+                    <div key={s.tier} className="p-6 border border-slate-200 bg-white rounded-lg shadow-sm">
+                      <div className="text-slate-900 mb-4">{s.icon}</div>
+                      <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold">{s.tier}</span>
+                      <h4 className="text-lg font-bold uppercase text-slate-900 mt-1 mb-2">{s.title}</h4>
+                      <p className="text-xs text-slate-600 font-normal leading-relaxed">{s.description}</p>
                     </div>
                   ))}
                 </div>
               </section>
 
-              <section className="italic">
-                <h3 className="text-[10px] font-mono text-slate-600 uppercase tracking-[0.5em] mb-10 border-b border-slate-900 pb-4 italic font-black">Proprietary Directives</h3>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 italic font-black">
+              <section>
+                <h3 className="text-xs font-mono text-slate-500 uppercase tracking-widest mb-6 border-b border-slate-200 pb-3 font-bold">Proprietary Directives</h3>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-bold">
                   {BMR_IP_SUITE.directives.map((d) => (
-                    <div key={d.id} className="p-12 border-2 border-slate-900 bg-slate-950 hover:border-red-600 transition-all group relative overflow-hidden italic">
-                      <div className="absolute top-0 right-0 p-4 opacity-10 italic"><Binary className={d.color} size={32} /></div>
-                      <div className="flex flex-col sm:flex-row justify-between items-start mb-10 italic">
-                        <div className="space-y-2 italic">
-                          <span className={`text-[9px] font-mono font-black tracking-widest ${d.color} italic font-black`}>PROTOCOL // {d.id}</span>
-                          <h2 className="text-4xl font-black italic uppercase tracking-tighter text-white italic">{d.label}</h2>
+                    <div key={d.id} className="p-8 border border-slate-200 bg-white hover:border-slate-400 transition-colors rounded-lg shadow-sm relative overflow-hidden">
+                      <div className="absolute top-0 right-0 p-4 opacity-10"><Binary className={d.color} size={32} /></div>
+                      <div className="flex flex-col sm:flex-row justify-between items-start mb-6">
+                        <div className="space-y-1">
+                          <span className={`text-[10px] font-mono font-bold tracking-wider ${d.color}`}>PROTOCOL // {d.id}</span>
+                          <h2 className="text-2xl font-bold uppercase tracking-tight text-slate-900">{d.label}</h2>
                         </div>
-                        {d.price && <div className="bg-red-600 text-white px-4 py-2 text-[10px] font-black italic tracking-widest italic font-black">{d.price}</div>}
+                        {d.price && <div className="bg-slate-900 text-white px-3 py-1 text-xs font-bold tracking-wider rounded">{d.price}</div>}
                       </div>
-                      <p className="text-xl text-slate-400 italic leading-relaxed mb-8 border-l-2 border-slate-800 pl-8 font-medium normal-case">{d.description}</p>
+                      <p className="text-sm text-slate-600 leading-relaxed border-l-2 border-slate-200 pl-4 font-normal">{d.description}</p>
                     </div>
                   ))}
                 </div>
