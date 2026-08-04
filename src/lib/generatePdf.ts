@@ -19,13 +19,13 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
   const Helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const CourierBold = await pdfDoc.embedFont(StandardFonts.CourierBold);
 
-  // Canvas Base Wrapper (Dark Executive Theme)
+  // Canvas Base Wrapper (Executive Light Theme - Slate 50)
   page.drawRectangle({
     x: 0,
     y: 0,
     width: 600,
     height: 800,
-    color: rgb(0.01, 0.02, 0.06),
+    color: rgb(0.97, 0.98, 0.99),
   });
 
   // Header Subtitle: Pre-Automation Control Plane Alignment
@@ -34,23 +34,23 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
     y: 740, 
     size: 10, 
     font: CourierBold, 
-    color: rgb(0.86, 0.15, 0.15)
+    color: rgb(0.06, 0.09, 0.16) // Slate 900
   });
   
-  page.drawText('Pre-Automation AI Control Plane & Executive Directives', { 
+  page.drawText('Pre-Automation AI Control Plane & Governance Directives', { 
     x: 40, 
     y: 722, 
-    size: 12, 
+    size: 11, 
     font: Helvetica, 
-    color: rgb(0.6, 0.6, 0.6) 
+    color: rgb(0.39, 0.45, 0.55) // Slate 500
   });
   
-  page.drawText(`CLIENT TARGET ENTITY: ${sowData.company.toUpperCase()}`, { 
+  page.drawText(`CLIENT TARGET: ${sowData.company.trim()}`, { 
     x: 40, 
     y: 680, 
     size: 14, 
     font: HelveticaBold, 
-    color: rgb(1, 1, 1) 
+    color: rgb(0.06, 0.09, 0.16) // Slate 900
   });
 
   // Top Divider Line
@@ -59,34 +59,43 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
     y: 665,
     width: 520,
     height: 1,
-    color: rgb(0.1, 0.15, 0.25),
+    color: rgb(0.88, 0.91, 0.94), // Slate 200
   });
 
-  // 🏆 EXECUTIVE SUMMARY BOX (PRE-AUTOMATION BADGE)
+  // EXECUTIVE SUMMARY BOX (White Card with Dark Accent Line)
   page.drawRectangle({
     x: 40,
     y: 595,
     width: 520,
     height: 55,
-    color: rgb(0.04, 0.08, 0.18),
-    borderColor: rgb(0.86, 0.15, 0.15),
+    color: rgb(1, 1, 1),
+    borderColor: rgb(0.88, 0.91, 0.94),
     borderWidth: 1,
   });
 
-  page.drawText('EXECUTIVE SUMMARY // PRE-AUTOMATION AI CONTROL PLANE', {
-    x: 55,
-    y: 632,
-    size: 9,
-    font: CourierBold,
-    color: rgb(0.86, 0.15, 0.15),
+  // Left Accent Bar
+  page.drawRectangle({
+    x: 40,
+    y: 595,
+    width: 4,
+    height: 55,
+    color: rgb(0.06, 0.09, 0.16),
   });
 
-  page.drawText('Establishes machine-readable ingestion contracts and telemetry filters prior to autonomous agent scale.', {
+  page.drawText('EXECUTIVE SUMMARY // PRE-AUTOMATION CONTROL PLANE', {
+    x: 55,
+    y: 630,
+    size: 9,
+    font: CourierBold,
+    color: rgb(0.06, 0.09, 0.16),
+  });
+
+  page.drawText('Establishes machine-readable ingestion contracts and telemetry filters prior to scaling autonomous agents.', {
     x: 55,
     y: 610,
     size: 9,
     font: Helvetica,
-    color: rgb(0.8, 0.8, 0.8),
+    color: rgb(0.2, 0.25, 0.33),
   });
 
   let trackingVerticalY = 550;
@@ -95,47 +104,57 @@ export async function generatePdf(sowData: PDFBlueprintSchema): Promise<Blob> {
   sowData.directives.forEach((directive: DirectiveItem, index: number) => {
     if (trackingVerticalY < 120) return;
 
+    // Track Card Background
+    page.drawRectangle({
+      x: 40,
+      y: trackingVerticalY - 55,
+      width: 520,
+      height: 65,
+      color: rgb(1, 1, 1),
+      borderColor: rgb(0.88, 0.91, 0.94),
+      borderWidth: 1,
+    });
+
     // Track Title
-    page.drawText(`0${index + 1} // ${directive.title}`, { 
-      x: 40, 
-      y: trackingVerticalY, 
+    page.drawText(`Scope 0${index + 1} // ${directive.title}`, { 
+      x: 52, 
+      y: trackingVerticalY - 12, 
       size: 11, 
       font: HelveticaBold, 
-      color: rgb(1, 1, 1) 
+      color: rgb(0.06, 0.09, 0.16) 
     });
-    trackingVerticalY -= 18;
 
-    // Scope Framework Description
-    page.drawText(`Scope Framework Focus: ${directive.scope}`, { 
-      x: 55, 
-      y: trackingVerticalY, 
+    // Scope Description
+    page.drawText(`Focus Area: ${directive.scope}`, { 
+      x: 52, 
+      y: trackingVerticalY - 28, 
       size: 9, 
       font: Helvetica, 
-      color: rgb(0.6, 0.6, 0.6) 
+      color: rgb(0.39, 0.45, 0.55) 
     });
-    trackingVerticalY -= 16;
 
-    // Colored Priority Badge Text
-    page.drawText(`Implementation Priority: ${directive.price}`, { 
-      x: 55, 
-      y: trackingVerticalY, 
-      size: 9, 
+    // Priority Badge Text
+    page.drawText(`Alignment Status: ${directive.price}`, { 
+      x: 52, 
+      y: trackingVerticalY - 44, 
+      size: 8, 
       font: CourierBold, 
       color: rgb(0.86, 0.15, 0.15) 
     });
-    trackingVerticalY -= 35; 
+
+    trackingVerticalY -= 80; 
   });
 
   // Footer Divider & Security Stamp
-  page.drawRectangle({ x: 40, y: 60, width: 520, height: 1, color: rgb(0.1, 0.15, 0.25) });
+  page.drawRectangle({ x: 40, y: 60, width: 520, height: 1, color: rgb(0.88, 0.91, 0.94) });
   
   const currentYear = new Date().getFullYear();
-  page.drawText(`BMR SOLUTIONS © ${currentYear} // CONFIDENTIALITY MATRIX ENFORCED // CLOSING THE PROMISE GAP™`, { 
+  page.drawText(`BMR SOLUTIONS © ${currentYear} // CONFIDENTIAL // CLOSING THE PROMISE GAP™`, { 
     x: 40, 
     y: 42, 
     size: 8, 
     font: CourierBold, 
-    color: rgb(0.3, 0.3, 0.4) 
+    color: rgb(0.58, 0.64, 0.72) 
   });
 
   const pdfBytes = await pdfDoc.save();
