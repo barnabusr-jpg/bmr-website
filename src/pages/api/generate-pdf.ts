@@ -73,62 +73,70 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { 
-            background-color: #020617; 
-            color: #ffffff; 
-            font-family: monospace; 
-            padding: 50px; 
+            background-color: #f8fafc; 
+            color: #0f172a; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            padding: 40px; 
             margin: 0; 
-            text-transform: uppercase; 
-            font-style: italic;
-            font-weight: 900;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           .container { max-width: 900px; margin: 0 auto; }
-          .header-box { border-bottom: 2px solid ${brandHexAccent}; padding-bottom: 20px; margin-bottom: 40px; }
-          .title-brand { font-size: 24px; font-weight: 900; letter-spacing: -1px; }
+          .top-bar { height: 4px; background-color: #0f172a; width: 100%; margin-bottom: 24px; }
+          .header-box { border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 32px; }
+          .title-brand { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a; }
           .title-brand span { color: ${brandHexAccent}; }
-          .subtitle { font-size: 10px; color: #64748b; letter-spacing: 3px; margin-top: 5px; }
+          .subtitle { font-family: monospace; font-size: 10px; color: #64748b; letter-spacing: 1.5px; margin-top: 4px; text-transform: uppercase; }
           
           .placard { 
             background-color: #ffffff; 
-            color: #000000; 
-            padding: 35px; 
-            border-left: 12px solid ${brandHexAccent}; 
-            margin-bottom: 40px; 
+            color: #0f172a; 
+            padding: 30px; 
+            border-left: 8px solid ${brandHexAccent}; 
+            border-top: 1px solid #e2e8f0;
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            border-radius: 0 4px 4px 0;
+            margin-bottom: 32px; 
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           }
           .placard-left { text-align: left; }
-          .placard h2 { margin: 0 0 15px 0; font-size: 32px; font-weight: 900; letter-spacing: -1px; }
-          .metrics-grid { display: flex; gap: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+          .placard h2 { margin: 0 0 8px 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a; }
+          .org-label { font-family: monospace; font-size: 10px; color: #64748b; margin-bottom: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+          .metrics-grid { display: flex; gap: 32px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
           .metric-cell { text-align: left; }
-          .cell-label { font-size: 9px; color: #64748b; font-weight: bold; }
-          .cell-value { font-size: 14px; font-weight: 900; color: #000000; margin-top: 4px; }
+          .cell-label { font-family: monospace; font-size: 9px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+          .cell-value { font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 4px; }
           .cell-value span { color: ${brandHexAccent}; }
           
-          .placard-right { text-align: right; min-width: 240px; }
-          .erosion-label { font-size: 9px; color: #64748b; font-weight: bold; display: block; margin-bottom: 4px; }
-          .erosion-val { font-size: 32px; color: ${brandHexAccent}; font-weight: 900; tracking: -1px; }
+          .placard-right { text-align: right; min-width: 220px; }
+          .erosion-label { font-family: monospace; font-size: 9px; color: #64748b; font-weight: 700; display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+          .erosion-val { font-family: monospace; font-size: 28px; color: ${brandHexAccent}; font-weight: 800; letter-spacing: -0.5px; }
 
-          .section-title { font-size: 14px; color: #64748b; border-bottom: 1px solid #1e293b; padding-bottom: 8px; margin-bottom: 20px; letter-spacing: 2px; text-align: left; }
-          .anomaly-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-          .node-card { border: 1px solid #1e293b; background-color: rgba(5, 11, 24, 0.6); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; min-height: 240px; }
-          .node-top { border-bottom: 1px solid #1e293b; padding-bottom: 10px; margin-bottom: 12px; font-size: 10px; color: #475569; text-align: left; }
-          .node-top span { float: right; background-color: rgba(220, 38, 38, 0.1); color: ${brandHexAccent}; padding: 1px 6px; font-size: 9px; border: 1px solid rgba(220, 38, 38, 0.2); }
-          .node-title { font-size: 16px; font-weight: 900; color: #ffffff; margin-bottom: 8px; text-align: left; }
-          .node-desc { font-family: monospace; font-size: 11px; color: #94a3b8; text-transform: uppercase; line-height: 1.5; margin-bottom: 15px; text-align: left; }
-          .directive-label { font-size: 8px; color: #475569; margin-bottom: 2px; text-align: left; }
-          .directive-val { font-size: 11px; font-weight: 900; color: ${brandHexAccent}; text-align: left; }
-          .footer-text { font-size: 9px; color: #334155; text-align: center; margin-top: 60px; letter-spacing: 2px; }
+          .section-title { font-family: monospace; font-size: 11px; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 20px; letter-spacing: 1.5px; text-align: left; text-transform: uppercase; font-weight: 700; }
+          .anomaly-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+          .node-card { border: 1px solid #e2e8f0; background-color: #ffffff; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+          .node-top { font-family: monospace; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px; font-size: 9px; color: #64748b; text-align: left; text-transform: uppercase; }
+          .node-top span { float: right; background-color: #fef2f2; color: ${brandHexAccent}; padding: 2px 6px; font-size: 8px; font-weight: 700; border: 1px solid #fecaca; border-radius: 2px; }
+          .node-title { font-family: monospace; font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 8px; text-align: left; }
+          .node-desc { font-size: 11px; color: #475569; line-height: 1.5; margin-bottom: 16px; text-align: left; }
+          .directive-label { font-family: monospace; font-size: 8px; color: #64748b; margin-bottom: 2px; text-align: left; text-transform: uppercase; font-weight: 700; }
+          .directive-val { font-size: 11px; font-weight: 600; color: #0f172a; text-align: left; }
+          .footer-text { font-family: monospace; font-size: 9px; color: #94a3b8; text-align: center; margin-top: 48px; letter-spacing: 1px; text-transform: uppercase; }
           
           @media print {
-            body { padding: 0; background-color: #020617; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body { padding: 20px; background-color: #ffffff; }
             .container { max-width: 100%; }
+            .node-card, .placard { box-shadow: none; }
           }
         </style>
       </head>
       <body>
         <div class="container">
+          <div class="top-bar"></div>
           <div class="header-box">
             <div class="title-brand">BMR<span>SOLUTIONS</span></div>
             <div class="subtitle">FORENSIC SYSTEM DECAY LEDGER // DIAGNOSTIC PHASE 1</div>
@@ -137,19 +145,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           <div class="placard">
             <div class="placard-left">
               <h2>EFFICIENCY VERDICT</h2>
-              <div style="font-size: 10px; color: #94a3b8; margin-bottom: 20px; font-weight: bold;">ORGANIZATION BASELINE: ${orgName}</div>
+              <div class="org-label">ORGANIZATION BASELINE: ${orgName}</div>
               <div class="metrics-grid">
                 <div class="metric-cell">
                   <div class="cell-label">LOGIC DECAY COEFFICIENT</div>
                   <div class="cell-value"><span>${dbDecay}%</span> DECAY RATE</div>
                 </div>
                 <div class="metric-cell">
-                  <div class="metric-cell-pad" style="width: 20px; display: inline-block;" />
-                  <div class="cell-label">PROCESS WASTE TAX</div>
+                  <div class="cell-label">PROCESS WASTE TAX™</div>
                   <div class="cell-value"><span>$${totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> LIAB</div>
                 </div>
                 <div class="metric-cell">
-                  <div class="metric-cell-pad" style="width: 20px; display: inline-block;" />
                   <div class="cell-label">PROJECTED ANNUAL EXPOSURE</div>
                   <div class="cell-value"><span>$${exposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span> RISK</div>
                 </div>
