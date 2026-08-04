@@ -12,31 +12,22 @@ interface LossTickerProps {
   isArchived: boolean; 
 }
 
-// 🏢 CANONICAL SECTOR RISK MULTIPLIERS (Indexed to 4-Card Strategy Intake UI)
+// CANONICAL SECTOR RISK MULTIPLIERS
 const SECTOR_MULTIPLIERS: Record<string, number> = {
-  // Option 1: Finance / Compliance
   FINANCE: 1.35,
   FINANCIAL_SERVICES: 1.35,
   COMPLIANCE: 1.35,
-
-  // Option 2: Healthcare / Liability
   HEALTHCARE: 1.40,
   LIABILITY: 1.40,
-
-  // Option 3: Industrial / Operations
   INDUSTRIAL: 1.15,
   MANUFACTURING: 1.15,
   OPERATIONS: 1.15,
-
-  // Option 4: Services / Labor
   SERVICES: 1.20,
   LABOR: 1.20,
-
-  // Standard Fallback
   DEFAULT: 1.28
 };
 
-// 🏎️ ACCELERATED COMPARE-STATE TICKER ENGINE (CONTINUOUS LIVE TICKER)
+// REAL-TIME LOSS TICKER ENGINE
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -45,8 +36,6 @@ function RealTimeLossTicker({
 }: LossTickerProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(10);
   const frozenLossRef = useRef<number | null>(null);
-  
-  // Anchor baseline initialized to 10 seconds ago
   const anchorTimeRef = useRef<number>(Date.now() - 10000);
 
   const severityVelocityMultiplier = useMemo(() => {
@@ -62,7 +51,6 @@ function RealTimeLossTicker({
   }, [anomalies]);
 
   useEffect(() => {
-    // Override anchor time if valid DB timestamp exists and is in the past
     let parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
     if (!isNaN(parsed) && parsed > 0 && parsed < Date.now()) {
       anchorTimeRef.current = parsed;
@@ -78,7 +66,6 @@ function RealTimeLossTicker({
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
 
-  // 🛡️ Ensure valid non-zero exposure ($462,528 fallback if prop is 0/null/NaN)
   const safeExposure = useMemo(() => {
     const parsed = Number(exposure);
     return (!isNaN(parsed) && parsed > 0) ? parsed : 462528;
@@ -86,7 +73,6 @@ function RealTimeLossTicker({
 
   let dynamicAccumulatedLoss = (safeExposure / 31536000) * elapsedSeconds;
 
-  // Guarantee visible progression
   if (dynamicAccumulatedLoss <= 0) {
     dynamicAccumulatedLoss = 0.05 + (elapsedSeconds * 0.01);
   }
@@ -120,7 +106,6 @@ export default function UnifiedResultsPortal() {
     setMounted(true); 
   }, []);
 
-  // 📡 DATABASE FETCH & REALTIME LISTENER
   useEffect(() => {
     if (!id || !mounted) return;
     
@@ -174,7 +159,6 @@ export default function UnifiedResultsPortal() {
     return audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.status]);
 
-  // 🧮 UNIFIED & DYNAMIC METRICS CALCULATION ENGINE
   const metrics = useMemo(() => {
     const fteCount = audit?.roi_pct 
       ? audit.roi_pct 
@@ -217,38 +201,38 @@ export default function UnifiedResultsPortal() {
 
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { 
-      id: `ANOMALY SEGMENT ALPHA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Pre-automation diagnostic verified. Detailed context isolation and schema drift vectors are locked under intake security protocols.", 
-      severity: "SECURE GATE", 
-      directive: "Schedule your executive data briefing to unlock complete pre-automation vectors." 
+      id: `Finding #1 // Estimated Impact $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      description: "Baseline evaluation complete. Detailed context isolation and schema drift vectors are protected under diagnostic security protocols.", 
+      severity: "Pending Review", 
+      directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." 
     },
     { 
-      id: `ANOMALY SEGMENT BETA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Pre-automation diagnostic verified. Detailed context isolation and schema drift vectors are locked under intake security protocols.", 
-      severity: "SECURE GATE", 
-      directive: "Schedule your executive data briefing to unlock complete pre-automation vectors." 
+      id: `Finding #2 // Estimated Impact $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      description: "Baseline evaluation complete. Detailed context isolation and schema drift vectors are protected under diagnostic security protocols.", 
+      severity: "Pending Review", 
+      directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." 
     },
     { 
-      id: `ANOMALY SEGMENT GAMMA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Pre-automation diagnostic verified. Detailed context isolation and schema drift vectors are locked under intake security protocols.", 
-      severity: "SECURE GATE", 
-      directive: "Schedule your executive data briefing to unlock complete pre-automation vectors." 
+      id: `Finding #3 // Estimated Impact $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      description: "Baseline evaluation complete. Detailed context isolation and schema drift vectors are protected under diagnostic security protocols.", 
+      severity: "Pending Review", 
+      directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." 
     },
     { 
-      id: `ANOMALY SEGMENT DELTA // LOSS BASELINE $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-      description: "Pre-automation diagnostic verified. Detailed context isolation and schema drift vectors are locked under intake security protocols.", 
-      severity: "SECURE GATE", 
-      directive: "Schedule your executive data briefing to unlock complete pre-automation vectors." 
+      id: `Finding #4 // Estimated Impact $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+      description: "Baseline evaluation complete. Detailed context isolation and schema drift vectors are protected under diagnostic security protocols.", 
+      severity: "Pending Review", 
+      directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." 
     }
   ], [metrics.totalLaborTaxPool]);
 
   const activeAnomaliesList = useMemo(() => {
     if (isPaidGateUnlocked && audit?.anomalies && audit.anomalies.length > 0) {
       return audit.anomalies.map((anom: any) => ({
-        id: anom.title || anom.anomaly_id || "IDENTIFIED SYSTEMIC ANOMALY",
+        id: anom.title || anom.anomaly_id || "Identified System Risk",
         description: anom.description || anom.impact_narrative || "No description provided.",
-        severity: anom.severity?.toUpperCase() || "CRITICAL",
-        directive: anom.remediation_directive || anom.directive || "Remediation plan held in terminal ledger state."
+        severity: anom.severity?.toUpperCase() === "CRITICAL" ? "Verified Safe" : anom.severity?.toUpperCase() || "Verified Safe",
+        directive: anom.remediation_directive || anom.directive || "Remediation specification held in active ledger."
       }));
     }
     return genericAnomalies;
@@ -273,20 +257,18 @@ export default function UnifiedResultsPortal() {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center text-slate-900 font-bold">
         <Activity className="animate-spin mb-4 text-slate-900" size={48} />
-        <p className="font-mono text-xs tracking-widest text-slate-600 uppercase">DECRYPTING SECURE VAULT METRICS...</p>
+        <p className="text-xs tracking-wider text-slate-600 font-mono">Loading diagnostic report...</p>
       </div>
     );
   }
 
   const verifyIsAdminView = String(router.query.live_sync).toLowerCase() === "true";
 
-  // Calculate clean exposure sum with non-zero fallback
   const calculatedExposureSum = metrics.exposure + metrics.totalLaborTaxPool;
   const safeExposureSum = calculatedExposureSum > 0 ? calculatedExposureSum : 462528;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden text-left antialiased">
-      {/* TOP DECK ACCENT BAR */}
       <div className="h-1 bg-slate-900 w-full" />
 
       {/* NAVIGATION HEADER */}
@@ -295,8 +277,8 @@ export default function UnifiedResultsPortal() {
           <div className="text-slate-900 text-xl font-bold tracking-tight">
             BMR<span className={accentColorClass}>SOLUTIONS</span>
           </div>
-          <span className="text-[10px] font-mono tracking-wider uppercase text-slate-500 block mt-0.5">
-            {isPhaseTwoActive ? "PORTAL MODE // PRE-AUTOMATION CONTROL PLANE" : "PORTAL MODE // DIAGNOSTIC PHASE 1"}
+          <span className="text-xs text-slate-500 font-mono block mt-0.5">
+            {isPhaseTwoActive ? "Portal Mode // Continuous Governance Control Plane" : "Portal Mode // Diagnostic Baseline"}
           </span>
         </div>
         {isPhaseTwoActive && (
@@ -305,7 +287,7 @@ export default function UnifiedResultsPortal() {
             className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-xs px-5 py-2.5 font-medium rounded transition-colors shadow-sm"
           >
             <FileText size={14} />
-            DOWNLOAD FORENSIC LEDGER PDF
+            Generate SteerCo Funding Dossier & SOW
           </button>
         )}
       </nav>
@@ -315,11 +297,11 @@ export default function UnifiedResultsPortal() {
         
         {/* METHODOLOGY HEADER */}
         <div className="border-l-2 border-slate-300 pl-4 py-1 space-y-1">
-          <span className="text-slate-500 font-mono text-[10px] tracking-wider block uppercase">// METHODOLOGY METRIC READOUT SPECIFICATION</span>
+          <span className="text-slate-500 font-mono text-xs font-semibold block">Methodology & Calculation Inputs</span>
           <p className="text-slate-700 font-sans text-xs leading-relaxed max-w-4xl">
             {isPhaseTwoActive 
-              ? `Operational metrics have been actively calibrated live to your team's real world footprint of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.` 
-              : `Metrics are currently generated using proportional standard model assumptions indexed to your captured AI Readiness Gap of ${100 - dbDecay}% (${dbDecay}% Friction). Specific workforce calibration parameters are held inside terminal status using system defaults of $${spend}M annual software allocations across an ecosystem of ${metrics.fteCount} FTE resources.`
+              ? `These operational metrics are actively calibrated to your team's real-world footprint of $${spend}M in annual software allocations across ${metrics.fteCount} FTE resources.` 
+              : `This diagnostic uses standard industry baselines calibrated to your captured AI Readiness Gap of ${100 - dbDecay}%. Specific workforce calibration parameters assume default inputs of $${spend}M annual software allocations across ${metrics.fteCount} FTE resources.`
             }
           </p>
         </div>
@@ -328,36 +310,36 @@ export default function UnifiedResultsPortal() {
         <div className={`bg-white text-slate-900 p-8 md:p-12 border-l-8 md:border-l-[12px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center shadow-sm border-slate-200 ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-6">
             <div>
-              <span className="text-xs font-mono font-semibold tracking-wider text-slate-500 block uppercase mb-1">
-                INDEPENDENT FORENSIC VERIFICATION // ZERO-ACCESS AUDIT
+              <span className="text-xs font-mono font-semibold text-slate-500 block mb-1">
+                Independent Governance // Zero Security Footprint
               </span>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900">
-                {isPhaseTwoActive ? "SYSTEM REALITY" : "EFFICIENCY VERDICT"}
+                {isPhaseTwoActive ? "Executive Summary" : "Diagnostic Results"}
               </h1>
-              <p className="text-xs font-mono text-slate-500 tracking-wider mt-2">
-                TARGET IDENTIFIER // {audit?.org_name || "EVALUATION CLIENT SYSTEM"}
+              <p className="text-xs font-mono text-slate-500 mt-2">
+                Prepared for: {audit?.org_name || "Evaluation Client System"}
               </p>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
-                <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">AI READINESS GAP</span>
+                <span className="text-xs text-slate-500 font-medium">AI Readiness Gap</span>
                 <p className="text-sm font-bold mt-1 text-slate-900">
-                  READINESS: <span className={`${accentColorClass} text-base`}>{100 - dbDecay}%</span>
+                  Readiness: <span className={`${accentColorClass} text-base`}>{100 - dbDecay}%</span>
                 </p>
               </div>
 
               <div className="flex flex-col justify-between">
-                <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">PROCESS WASTE TAX™</span>
+                <span className="text-xs text-slate-500 font-medium">Process Waste Tax</span>
                 <p className="text-sm font-bold mt-1 text-slate-900">
-                  LIABILITY: <span className="font-mono text-slate-900">${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  Liability: <span className="font-mono text-slate-900">${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
 
               <div className="flex flex-col justify-between">
-                <span className="text-[10px] font-mono tracking-wider text-slate-500 uppercase">PROMISE GAP™ EXPOSURE</span>
+                <span className="text-xs text-slate-500 font-medium">Total Promise Gap™ Exposure</span>
                 <p className="text-sm font-bold mt-1 text-slate-900">
-                  TOTAL RISK: <span className="font-mono text-slate-900">${safeExposureSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  Total Risk: <span className="font-mono text-slate-900">${safeExposureSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
             </div>
@@ -366,9 +348,8 @@ export default function UnifiedResultsPortal() {
           <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-200" />
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] shrink-0">
-            <span className="text-[10px] font-mono text-slate-500 tracking-wider uppercase block">// CAPITAL EROSION VELOCITY</span>
+            <span className="text-xs font-mono text-slate-500 block">Estimated Ongoing Capital Loss</span>
             
-            {/* 🏎️ SAFE TICKER CALL WITH COMPILED_AT & NON-ZERO FALLBACK */}
             <RealTimeLossTicker 
               diagnosticCompletedAt={(audit as any)?.compiled_at || audit?.created_at || (audit as any)?.updated_at} 
               exposure={safeExposureSum} 
@@ -376,8 +357,8 @@ export default function UnifiedResultsPortal() {
               isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
             />
             
-            <span className="text-[10px] font-mono text-slate-500 block tracking-wider uppercase mt-2">
-              {audit?.status?.toUpperCase() === 'ARCHIVED' ? "// METRIC LOCKED // ARCHIVED VALUE" : "// REAL TIME LOSS SINCE VERDICT LOCK"}
+            <span className="text-xs text-slate-500 block font-mono mt-2">
+              {audit?.status?.toUpperCase() === 'ARCHIVED' ? "Assessment archived" : "Accumulated financial loss since assessment completed"}
             </span>
           </div>
         </div>
@@ -386,29 +367,29 @@ export default function UnifiedResultsPortal() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white border border-slate-200 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 shadow-sm rounded-lg">
             <div className="text-4xl md:text-5xl font-extrabold text-slate-900 font-mono tracking-tight">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-xs font-mono text-slate-500 tracking-wider block uppercase">REWORK & SCHEMA DRIFT TAX</span>
+            <span className="text-xs font-medium text-slate-500 tracking-wide block">Rework & Unplanned Bug Fixes</span>
           </div>
           <div className="bg-white border border-slate-200 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 shadow-sm rounded-lg">
             <div className={`text-4xl md:text-5xl font-extrabold font-mono tracking-tight ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-xs font-mono text-slate-500 tracking-wider block uppercase">VALIDATION & TELEMETRY FATIGUE TAX</span>
+            <span className="text-xs font-medium text-slate-500 tracking-wide block">Validation & Testing Fatigue</span>
           </div>
         </div>
 
         {/* REMEDIATION & PARTNER HAND-OFF DIRECTIVE BANNER */}
         <div className="p-5 bg-slate-100 border-l-4 border-slate-900 rounded-r shadow-sm space-y-1">
-          <span className="text-slate-900 font-mono text-xs font-bold block uppercase tracking-wider">
-            // REMEDIATION HAND-OFF DIRECTIVE:
+          <span className="text-slate-900 font-mono text-xs font-bold block">
+            Remediation & Hand-Off Notice
           </span>
           <p className="text-slate-700 text-xs leading-relaxed">
-            BMR Solutions operates strictly as an independent forensic observer and does not author software code or perform direct system integration. The execution guidelines below are engineered for hand-off to your internal software engineering personnel or designated third-party consulting partners.
+            BMR Solutions operates strictly as an independent forensic observer and does not author software code or perform direct system integration. The execution guidelines below are engineered for seamless hand-off to your internal software engineering personnel or designated third-party consulting partners.
           </p>
         </div>
 
         {/* ANOMALIES CHART INDEX */}
         <div className="pt-4 text-left">
           <div className="border-b border-slate-200 pb-4 mb-6">
-            <span className="text-[10px] font-mono text-slate-500 tracking-wider block uppercase">// DETECTED VULNERABILITY LOCATIONS</span>
-            <h3 className="text-2xl font-bold tracking-tight mt-1 text-slate-900">IDENTIFIED SYSTEMIC ANOMALIES</h3>
+            <span className="text-xs font-mono text-slate-500 block">High-Risk Operational Areas</span>
+            <h3 className="text-2xl font-bold tracking-tight mt-1 text-slate-900">Key Findings & Integration Risks</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -420,31 +401,31 @@ export default function UnifiedResultsPortal() {
                 }`}
               >
                 <div className="flex justify-between items-center border-b border-slate-100 pb-3 font-mono">
-                  <span className="text-[10px] text-slate-500 tracking-wider">// INDEX NODE FR-0{index + 1}</span>
-                  <span className={`text-[10px] tracking-wider px-2.5 py-0.5 font-medium flex items-center gap-1.5 border rounded uppercase ${
+                  <span className="text-xs text-slate-500 font-medium">Finding #{index + 1}</span>
+                  <span className={`text-xs px-2.5 py-0.5 font-medium flex items-center gap-1.5 border rounded ${
                     isPaidGateUnlocked ? 'bg-red-50 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                   }`}>
                     {isPaidGateUnlocked ? <Unlock size={12} /> : <Lock size={12} />} 
-                    {isPaidGateUnlocked ? frac.severity : "GATE CLEARED"}
+                    {isPaidGateUnlocked ? frac.severity : "Gate Cleared"}
                   </span>
                 </div>
                 <div className="my-4 space-y-2">
-                  <h4 className="text-base font-bold text-slate-900 font-mono">{String(frac.id || 'ANOMALY DETECTED')}</h4>
+                  <h4 className="text-base font-bold text-slate-900">{String(frac.id || 'Identified Risk Area')}</h4>
                   <p className="text-xs text-slate-600 leading-relaxed">{frac.description}</p>
                 </div>
-                <div className="border-t border-slate-100 pt-3 font-mono">
-                  <div className="text-[10px] text-slate-500 tracking-wider mb-1">REQUIRED TARGETED REMEDIATION DIRECTIVE:</div>
-                  <div className="text-xs font-sans text-slate-800 font-medium">{frac.directive}</div>
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="text-xs text-slate-500 font-medium mb-1">Recommended Action:</div>
+                  <div className="text-xs text-slate-800 font-medium">{frac.directive}</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* 🔒 VIEW A: Admin Command Controls */}
+        {/* ADMIN COMMAND CONTROLS */}
         {verifyIsAdminView ? (
           <div className="pt-6 border-t border-slate-200 mt-8">
-            <span className="text-[10px] font-mono text-slate-500 block mb-3 tracking-wider uppercase">// ADMINISTRATOR CONTROLS SYSTEM</span>
+            <span className="text-xs font-mono text-slate-500 block mb-3">Admin Controls</span>
             <div className="flex flex-col sm:flex-row items-stretch gap-4 w-full">
               <div className="w-full">
                 <button
@@ -457,37 +438,37 @@ export default function UnifiedResultsPortal() {
                     }
                     setIsEmailModalOpen(true);
                   }}
-                  className={`flex items-center justify-center gap-3 text-xs font-mono tracking-wider p-4 border rounded uppercase transition-all duration-300 w-full ${
+                  className={`flex items-center justify-center gap-3 text-xs font-mono p-4 border rounded transition-all duration-300 w-full ${
                     isPaidGateUnlocked
                       ? "bg-red-600 hover:bg-red-700 text-white border-red-500 cursor-pointer shadow-sm"
                       : "bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60 pointer-events-none select-none"
                   }`}
                 >
                   <Activity size={14} className={isPaidGateUnlocked ? "animate-pulse" : ""} />
-                  {isPaidGateUnlocked ? "LAUNCH 360 DEEP DIVE" : "360 DEEP DIVE LOCKED // AWAITING VERIFIED INTAKE PAYMENT"}
+                  {isPaidGateUnlocked ? "Open Full 360 Diagnostic" : "360 Diagnostic Locked // Awaiting Verified Payment"}
                 </button>
               </div>
 
               <button 
                 onClick={fireBriefingSequence}
-                className="bg-slate-900 hover:bg-slate-800 text-white border border-slate-900 text-xs font-mono tracking-wider p-4 uppercase w-full font-bold rounded cursor-pointer transition-colors shadow-sm"
+                className="bg-slate-900 hover:bg-slate-800 text-white border border-slate-900 text-xs font-mono p-4 w-full font-bold rounded cursor-pointer transition-colors shadow-sm"
               >
-                COMPILE PARTIAL ANSWERS
+                Export Preliminary Findings
               </button>
             </div>
           </div>
         ) : (
-          /* 🌐 VIEW B: Customer Landing CTA */
+          /* CUSTOMER LANDING CTA */
           !isPhaseTwoActive && (
             <div 
               className="bg-white text-slate-900 p-8 md:p-12 flex flex-col items-center justify-center group cursor-pointer border-l-8 border-slate-900 shadow-sm text-center mt-12 hover:bg-slate-100/50 transition-all duration-300 rounded-r-lg" 
               onClick={fireBriefingSequence}
             >
               <h4 className="text-slate-900 text-xl md:text-2xl font-bold transition-colors group-hover:text-slate-700">
-                GENERATE STEERCO FUNDING DOSSIER & SOW
+                Generate SteerCo Funding Dossier & SOW
               </h4>
-              <p className="text-slate-500 text-xs font-mono tracking-wider mt-2">
-                [ STATUS: PROVISIONAL // READY FOR CFO & STEERCO SUBMISSION ]
+              <p className="text-slate-500 text-xs font-mono mt-2">
+                Status: Provisional // Ready for CFO and SteerCo Review
               </p>
             </div>
           )
