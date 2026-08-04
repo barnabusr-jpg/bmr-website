@@ -18,7 +18,7 @@ interface CertificateProps {
 }
 
 export function VerificationCertificateView({
-  companyName = "TARGET SPECIFICATION",
+  companyName = "Target Organization",
   initialMetrics = {
     complianceScore: 62,
     annualSalaryLeakage: 114750,
@@ -30,7 +30,7 @@ export function VerificationCertificateView({
     unhedgedLegalExposure: 45000
   }
 }: CertificateProps) {
-  const [formattedDate, setFormattedDate] = useState<string>("AUG 04, 2026");
+  const [formattedDate, setFormattedDate] = useState<string>("Aug 4, 2026");
 
   useEffect(() => {
     setFormattedDate(new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
@@ -73,7 +73,7 @@ export function VerificationCertificateView({
       {/* DELTA METRICS */}
       <div>
         <span className="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider block mb-3">
-          // Section 01 // Verified Value Realization Delta ($T_0$ vs $T_1$)
+          // Section 01 // Verified Value Realization Delta (T0 Baseline vs T1 Post-Audit)
         </span>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-sans">
           
