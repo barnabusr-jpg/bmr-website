@@ -1,6 +1,6 @@
 "use client";
 import React, { useMemo, useEffect, useState } from 'react';
-import { ShieldCheck, CheckCircle2, ArrowDownRight, Award, Lock } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, ArrowDownRight, Award, Lock, Building2 } from 'lucide-react';
 
 interface CertificateProps {
   companyName?: string;
@@ -50,8 +50,23 @@ export function VerificationCertificateView({
   }, [initialMetrics, verifiedMetrics]);
 
   return (
-    <div className="bg-white text-slate-900 border-2 border-slate-900 p-8 md:p-12 rounded-lg shadow-md space-y-8 font-sans max-w-[1200px] mx-auto text-left">
+    <div className="bg-white text-slate-900 border-2 border-slate-900 p-8 md:p-12 rounded-lg shadow-md space-y-8 font-sans max-w-[1200px] mx-auto text-left relative overflow-hidden">
       
+      {/* ISSUING AUTHORITY WATERMARK / BADGE */}
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+        <div className="flex items-center gap-2">
+          <div className="bg-slate-900 text-white font-mono text-xs font-black px-2.5 py-1 rounded tracking-wider">
+            BMR SOLUTIONS
+          </div>
+          <span className="text-xs font-mono text-slate-500 font-bold uppercase tracking-wider">
+            // Independent Forensic Governance Unit
+          </span>
+        </div>
+        <div className="text-[10px] font-mono text-slate-400 uppercase tracking-widest hidden sm:block">
+          Official Attestation Document
+        </div>
+      </div>
+
       {/* HEADER */}
       <div className="border-b-2 border-slate-900 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
@@ -154,12 +169,14 @@ export function VerificationCertificateView({
         </div>
       </div>
 
-      {/* FOOTER */}
+      {/* FOOTER WITH ISSUING ENTITY ATTESTATION */}
       <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-xs">
         <div className="space-y-1">
-          <p className="font-bold text-slate-900 font-mono text-[11px]">INDEPENDENT CONTROL PLANE AUDIT ATTESTATION</p>
+          <p className="font-bold text-slate-900 font-mono text-[11px] flex items-center gap-1.5">
+            <Building2 size={13} className="text-slate-700" /> ISSUED BY BMR SOLUTIONS // INDEPENDENT GOVERNANCE UNIT
+          </p>
           <p className="text-slate-500 text-[11px] leading-relaxed">
-            This certificate verifies that the target organization has remediated identified pipeline fractures and meets Tier 01 Pre-Automation deployment standards.
+            This certificate attests that BMR Solutions has independently audited the target organization's digital architecture, verified the remediation of identified pipeline fractures, and confirmed Tier 01 Pre-Automation deployment compliance.
           </p>
         </div>
         <div className="flex items-center gap-2 text-slate-400 font-mono text-[10px] shrink-0">
