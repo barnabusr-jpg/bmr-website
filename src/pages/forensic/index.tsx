@@ -305,7 +305,7 @@ export default function ForensicEngineRoot() {
     } catch (err) {
       console.error("Nudge API exception:", err);
       alert("Error sending notification via API.");
-    } font-sans {
+    } finally {
       setSendingNudgeRole(null);
     }
   };
