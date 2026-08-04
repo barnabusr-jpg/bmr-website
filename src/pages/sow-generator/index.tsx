@@ -6,7 +6,7 @@ import { generatePdf } from '../../lib/generatePdf';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 import { 
   Terminal, Briefcase, Download, ShieldAlert, 
-  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText, Copy, Share2, Monitor
+  CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText, Share2, Monitor
 } from 'lucide-react';
 import { GovernanceSupplementView } from '@/components/GovernanceSupplementView';
 
@@ -21,7 +21,7 @@ interface AnomalyRemediationNode {
   investment_tier: string;
 }
 
-// 🛡️ SECURITY HASH SEED GENERATOR FOR SELF-HEALING TELEMETRY
+// 🛡️ SECURITY HASH SEED GENERATOR FOR TELEMETRY RECOVERY
 const getStableHash = (str: string, max: number = 100): number => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -51,7 +51,7 @@ export default function SOWBuilderStandalone() {
     setUrlParams(paramObj);
 
     if (!matrixToken) {
-      setError('AWAITING SECURE LINK PROTOCOL: Append an immutable stateless matrix token payload.');
+      setError('Awaiting valid diagnostic parameter token to load Statement of Work.');
       return;
     }
 
@@ -61,7 +61,7 @@ export default function SOWBuilderStandalone() {
       
       const payload = JSON.parse(decompressed);
       if (payload.expires && Date.now() > payload.expires) {
-        setError('SECURITY HANDSHAKE EXCEPTION: This secure link baseline has expired.');
+        setError('The access token for this diagnostic payload has expired.');
         return;
       }
 
@@ -69,7 +69,7 @@ export default function SOWBuilderStandalone() {
       setError('');
     } catch (err) {
       console.error(err);
-      setError('SECURITY HANDSHAKE EXCEPTION: Invalid matrix token array decoded.');
+      setError('Invalid or corrupted matrix token payload received.');
     }
   }, []);
 
@@ -77,7 +77,7 @@ export default function SOWBuilderStandalone() {
   const metrics = useMemo(() => {
     if (!diagnosticData) return null;
 
-    const orgName = (diagnosticData.org || 'TARGET SPECIFICATION').replace(/_/g, ' ');
+    const orgName = (diagnosticData.org || 'Target Organization').replace(/_/g, ' ');
     const dbDecay = urlParams.decay ? parseInt(urlParams.decay) : (diagnosticData.decay_pct || 24);
     const spend = urlParams.spend ? parseFloat(urlParams.spend) : 1.2;
 
@@ -103,23 +103,23 @@ export default function SOWBuilderStandalone() {
     };
   }, [diagnosticData, urlParams]);
 
-  // 📡 SELF-HEALING METRIC PARSER & DYNAMIC ESTIMATION PROTOCOL
+  // 📡 METRIC PARSER & ESTIMATION PROTOCOL
   const forensicAnalytics = useMemo(() => {
     if (!diagnosticData) return null;
 
-    const orgName = (diagnosticData.org || 'TARGET SPECIFICATION').replace(/_/g, ' ');
+    const orgName = (diagnosticData.org || 'Target Organization').replace(/_/g, ' ');
     const stableSeed = getStableHash(orgName, 25);
     
     let computed = null;
     if (diagnosticData.ans && Array.isArray(diagnosticData.ans) && diagnosticData.ans.length > 0) {
       try {
         computed = calculateForensicMetrics(
-          diagnosticData.org || 'TARGET SPECIFICATION',
+          diagnosticData.org || 'Target Organization',
           diagnosticData.ans,
           diagnosticData.sector
         );
       } catch (err) {
-        console.warn("Forensic calculus engine exception, applying recovery fallback.", err);
+        console.warn("Calculus engine exception, applying recovery fallback.", err);
       }
     }
 
@@ -131,20 +131,20 @@ export default function SOWBuilderStandalone() {
 
     return {
       reliabilityIndex: parsedReliability,
-      dominantBasis: 'SCHEMA INSTABILITY',
-      dominantDriver: 'THIRD-PARTY API MUTATION',
-      dominantVisibility: 'UNHEDGED PROMISE GAP',
+      dominantBasis: 'Schema Instability',
+      dominantDriver: 'Third-Party API Mutation',
+      dominantVisibility: 'The Promise Gap™ Risk',
       sampleSize: 32
     };
   }, [diagnosticData, urlParams]);
 
-  // 🛠️ PRE-AUTOMATION AI READINESS TRACKS (ACTION-FIRST & C-SUITE ALIGNED)
+  // 🛠️ PRE-AUTOMATION AI READINESS TRACKS
   const activeRemediations = useMemo((): AnomalyRemediationNode[] => {
     if (!diagnosticData || !metrics) return [];
     const entries: AnomalyRemediationNode[] = [];
 
     entries.push({
-      title: "PIPELINE HARDENING & SCHEMA DRIFT INSULATION",
+      title: "Track 01: Pipeline Hardening & Schema Drift Insulation",
       scope: "Pre-Automation Data Foundation & Context Isolation",
       business_impact: "Prevents model hallucinations and silent pipeline breaks caused by third-party API mutations.",
       root_cause_technical: "Unmapped third-party software updates and schema shifts inject unstructured noise directly into internal application interfaces.",
@@ -159,11 +159,11 @@ export default function SOWBuilderStandalone() {
         "SLA Contract Updates: Insert mandatory breaking-change notification requirements into Master Service Agreements.",
         "Capacity Reallocation: Mandate reallocating 15% of operational sprint metrics strictly to platform insulation."
       ],
-      investment_tier: "CRITICAL PRIORITY // PHASE 01"
+      investment_tier: "Phase 01 Alignment"
     });
 
     entries.push({
-      title: "TELEMETRY DECOUPLING & OVERSIGHT OPTIMIZATION",
+      title: "Track 02: Telemetry Decoupling & Oversight Optimization",
       scope: "Automation Telemetry Control & Validation Fatigue Suppression",
       business_impact: "Suppresses alert desensitization and ensures executives only sign off on critical exceptions.",
       root_cause_technical: "Unfiltered operational alert noise floods monitoring channels, desensitizing infrastructure responses and masking critical signals.",
@@ -178,7 +178,7 @@ export default function SOWBuilderStandalone() {
         "On-Call Rotation Redesign: Restructure internal escalation rotation thresholds to eliminate team burnout patterns.",
         "Eliminate Tribal Workflows: Replace undocumented firefighting loops with version-controlled operational runbooks."
       ],
-      investment_tier: "HIGH PRIORITY // PHASE 02"
+      investment_tier: "Phase 02 Alignment"
     });
 
     return entries;
@@ -211,7 +211,7 @@ export default function SOWBuilderStandalone() {
     setIsGeneratingPdf(true);
     try {
       const blob = await generatePdf({
-        company: (diagnosticData.org || 'TARGET_SPECIFICATION_GLOBAL').replace(/_/g, ' '),
+        company: (diagnosticData.org || 'Target Organization').replace(/_/g, ' '),
         directives: filteredRemediations.map((r: AnomalyRemediationNode) => ({ title: r.title, price: r.investment_tier, scope: r.scope }))
       });
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -227,11 +227,10 @@ export default function SOWBuilderStandalone() {
     setIsGeneratingPdf(false);
   };
 
-  // ⚡ GENERATE 16:9 EXECUTIVE DECK HANDLER (STATELESS)
   const handleGenerateExecutiveDeck = () => {
     if (!diagnosticData || !metrics) return;
     
-    const orgVal = encodeURIComponent((diagnosticData.org || "TARGET SPECIFICATION").replace(/_/g, ' '));
+    const orgVal = encodeURIComponent((diagnosticData.org || "Target Organization").replace(/_/g, ' '));
     const decayVal = metrics.decay || 24;
     const spendVal = metrics.spend || 1.2;
     const fteVal = Math.round((spendVal * 1000000) / 200000) || 6;
@@ -245,16 +244,16 @@ export default function SOWBuilderStandalone() {
   };
 
   return (
-    <div className="bg-[#020617] min-h-screen text-slate-200 font-sans tracking-tighter text-left uppercase font-black p-6 md:p-12 selection:bg-red-600 selection:text-white italic">
+    <div className="bg-slate-50 min-h-screen text-slate-900 font-sans p-6 md:p-12 text-left">
       <main className="max-w-7xl mx-auto space-y-8">
         
-        <div className="border-b border-slate-900 pb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <div className="border-b border-slate-200 pb-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div>
-            <h1 className="text-[clamp(2.2rem,5vw,3.75rem)] font-black text-white uppercase tracking-tighter leading-none italic">
-              STATEMENT OF WORK <span className="text-red-600">BUILDER</span>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+              Statement of Work <span className="text-slate-500 font-normal">Builder</span>
             </h1>
-            <span className="text-[10px] font-mono font-black text-zinc-500 tracking-widest block mt-2 not-italic">
-              // BMR SOLUTIONS // CLOSING THE PROMISE GAP™ // PRE-AUTOMATION CONTROL PLANE
+            <span className="text-xs font-mono font-medium text-slate-500 tracking-wider block mt-2">
+              BMR Solutions // Closing The Promise Gap™ // Pre-Automation Control Plane
             </span>
           </div>
 
@@ -262,36 +261,35 @@ export default function SOWBuilderStandalone() {
             <div className="flex flex-col sm:flex-row items-stretch gap-3 w-full lg:w-auto">
               <button
                 onClick={handleCopyLink}
-                className="bg-slate-900 text-slate-300 border border-slate-800 font-mono font-black px-4 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-black transition-all cursor-pointer shadow-md"
+                className="bg-white text-slate-700 border border-slate-200 font-mono font-bold px-4 py-3 rounded-md text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-slate-50 transition-colors cursor-pointer shadow-sm"
               >
-                {linkCopied ? <CheckCircle size={14} className="text-green-500 shrink-0" /> : <Share2 size={14} className="shrink-0" />}
-                {linkCopied ? "LINK COPIED" : "SHARE SOW LINK"}
+                {linkCopied ? <CheckCircle size={14} className="text-emerald-600 shrink-0" /> : <Share2 size={14} className="shrink-0" />}
+                {linkCopied ? "Link Copied" : "Share SOW Link"}
               </button>
 
-              {/* ⚡ GENERATE 16:9 EXECUTIVE DECK BUTTON */}
               <button
                 onClick={handleGenerateExecutiveDeck}
-                className="bg-slate-900 hover:bg-red-600 text-white border border-red-600/50 font-sans font-black px-5 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg"
+                className="bg-slate-900 hover:bg-slate-800 text-white font-sans font-bold px-5 py-3 rounded-md text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-sm"
               >
-                <Monitor size={14} /> GENERATE EXECUTIVE DECK (16:9 PDF)
+                <Monitor size={14} /> Executive Deck (16:9 PDF)
               </button>
 
               <button
                 onClick={handleDownloadPDF}
                 disabled={isGeneratingPdf || filteredRemediations.length === 0}
-                className="bg-red-600 text-white font-sans font-black px-6 py-4 rounded-xs text-xs tracking-widest flex items-center justify-center gap-2 hover:bg-white hover:text-black transition-all disabled:opacity-30 cursor-pointer shadow-lg border-none"
+                className="bg-slate-900 text-white font-sans font-bold px-6 py-3 rounded-md text-xs uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer shadow-sm border-none"
               >
-                <Download size={14} /> {isGeneratingPdf ? "GENERATING SOW..." : "EXPORT SOW DOSSIER (PDF)"}
+                <Download size={14} /> {isGeneratingPdf ? "Generating SOW..." : "Export SOW Dossier (PDF)"}
               </button>
             </div>
           )}
         </div>
 
         {error && (
-          <div className="border border-red-900 bg-red-950/10 p-6 flex items-start gap-3 not-italic text-slate-400 font-sans text-sm tracking-normal font-normal normal-case rounded-sm">
-            <ShieldAlert size={20} className="text-red-600 shrink-0" />
+          <div className="border border-slate-200 bg-white p-6 flex items-start gap-3 text-slate-600 text-sm font-sans rounded-md shadow-sm">
+            <ShieldAlert size={20} className="text-amber-600 shrink-0 mt-0.5" />
             <div>
-              <p className="font-mono uppercase font-black text-xs text-red-500 tracking-wider mb-1">System Awaiting Matrix Payload Verification</p>
+              <p className="font-mono uppercase font-bold text-xs text-slate-900 tracking-wider mb-1">Diagnostic Payload Verification Required</p>
               {error}
             </div>
           </div>
@@ -300,10 +298,10 @@ export default function SOWBuilderStandalone() {
         {diagnosticData && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
             
-            <div className="lg:col-span-1 border border-slate-900 bg-slate-950/50 p-6 rounded-sm space-y-6 font-mono not-italic text-xs">
+            <div className="lg:col-span-1 border border-slate-200 bg-white p-6 rounded-lg shadow-sm space-y-6 text-xs">
               <div>
-                <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-1">// CONTROL PANEL</span>
-                <h4 className="text-white text-xs font-black uppercase tracking-wider mb-3">Remediation Toggles</h4>
+                <span className="text-[10px] font-mono block text-slate-500 uppercase tracking-wider font-bold mb-1">// SOW Control Panel</span>
+                <h4 className="text-slate-900 text-xs font-bold uppercase tracking-wider mb-3">Remediation Tracks</h4>
                 <div className="space-y-2">
                   {activeRemediations.map((rem: AnomalyRemediationNode) => {
                     const isActive = selectedDirectives.includes(rem.title);
@@ -311,87 +309,86 @@ export default function SOWBuilderStandalone() {
                       <button
                         key={rem.title}
                         onClick={() => toggleDirective(rem.title)}
-                        className={`w-full text-left p-3 border rounded-xs font-mono font-bold tracking-tight text-[11px] transition-all flex items-center justify-between cursor-pointer ${
-                          isActive ? 'border-red-600 bg-red-950/10 text-white' : 'border-slate-900 bg-black text-slate-500'
+                        className={`w-full text-left p-3 border rounded-md font-mono font-bold tracking-tight text-xs transition-all flex items-center justify-between cursor-pointer ${
+                          isActive ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
                         }`}
                       >
                         <span className="truncate pr-2">{rem.title}</span>
-                        {isActive ? <Eye size={12} className="text-red-500 shrink-0" /> : <EyeOff size={12} className="shrink-0" />}
+                        {isActive ? <Eye size={12} className="text-emerald-400 shrink-0" /> : <EyeOff size={12} className="shrink-0" />}
                       </button>
                     );
                   })}
                 </div>
               </div>
 
-              {/* 🛡️ GOVERNANCE SUPPLEMENT TOGGLE */}
-              <div className="border-t border-slate-900 pt-4">
-                <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-2">// DIRECTIVE OVERLAYS</span>
+              <div className="border-t border-slate-100 pt-4">
+                <span className="text-[10px] font-mono block text-slate-500 uppercase tracking-wider font-bold mb-2">// Governance Supplement</span>
                 <button
                   onClick={() => setIncludeGovernance(prev => !prev)}
-                  className={`w-full text-left p-3 border rounded-xs font-mono font-bold tracking-tight text-[11px] transition-all flex items-center justify-between cursor-pointer ${
-                    includeGovernance ? 'border-amber-600/60 bg-amber-950/10 text-amber-400' : 'border-slate-900 bg-black text-slate-500'
+                  className={`w-full text-left p-3 border rounded-md font-mono font-bold tracking-tight text-xs transition-all flex items-center justify-between cursor-pointer ${
+                    includeGovernance ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-200 bg-slate-50 text-slate-600 hover:border-slate-300'
                   }`}
                 >
                   <span className="truncate pr-2 flex items-center gap-1.5">
-                    <FileText size={12} className="shrink-0" /> GOVERNANCE SUPPLEMENT
+                    <FileText size={12} className="shrink-0" /> Governance Supplement
                   </span>
-                  {includeGovernance ? <CheckCircle size={12} className="text-amber-400 shrink-0" /> : <EyeOff size={12} className="shrink-0" />}
+                  {includeGovernance ? <CheckCircle size={12} className="text-emerald-400 shrink-0" /> : <EyeOff size={12} className="shrink-0" />}
                 </button>
               </div>
             </div>
 
             <div className="lg:col-span-3 space-y-6">
               
-              <div className="border border-slate-900 bg-slate-950/40 p-6 rounded-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono not-italic text-xs text-zinc-400">
+              <div className="border border-slate-200 bg-white p-6 rounded-lg shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs text-slate-600">
                 <div>
-                  <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-1">// COGNITIVE TARGET ENTITY CODE</span>
-                  <strong className="text-white text-lg font-sans italic font-black tracking-tighter break-words">{diagnosticData.org?.replace(/_/g, ' ')}</strong>
+                  <span className="text-[10px] block text-slate-500 uppercase tracking-wider font-bold mb-1">// Target Organization</span>
+                  <strong className="text-slate-900 text-lg font-sans font-bold tracking-tight break-words">{diagnosticData.org?.replace(/_/g, ' ')}</strong>
                 </div>
                 <div className="text-left sm:text-right">
-                  <span className="text-[9px] block text-slate-600 uppercase tracking-widest font-black mb-1">// TELEMETRY VALIDATION LAYER</span>
-                  <span className="text-green-500 font-black tracking-widest uppercase flex items-center sm:justify-end gap-1.5">
-                    <CheckCircle size={14} className="shrink-0" /> IMMUTABLE TOKEN SIGNAL PARSED
+                  <span className="text-[10px] block text-slate-500 uppercase tracking-wider font-bold mb-1">// Status</span>
+                  <span className="text-emerald-700 font-bold tracking-wider uppercase flex items-center sm:justify-end gap-1.5">
+                    <CheckCircle size={14} className="shrink-0" /> Diagnostic Token Validated
                   </span>
                 </div>
               </div>
 
               {forensicAnalytics && (
-                <div className="border border-slate-900 bg-black/60 p-6 rounded-sm grid grid-cols-1 md:grid-cols-4 gap-6 font-mono not-italic text-xs">
-                  <div className="md:col-span-4 border-b border-slate-900 pb-2 flex items-center gap-2">
-                    <BarChart2 size={14} className="text-red-500 shrink-0" />
-                    <span className="text-white font-black tracking-wider text-[10px]">// FORENSIC EVIDENCE SPECIFICATIONS</span>
+                <div className="border border-slate-200 bg-white p-6 rounded-lg shadow-sm grid grid-cols-1 md:grid-cols-4 gap-6 font-mono text-xs">
+                  <div className="md:col-span-4 border-b border-slate-100 pb-2 flex items-center gap-2">
+                    <BarChart2 size={14} className="text-slate-900 shrink-0" />
+                    <span className="text-slate-900 font-bold tracking-wider text-[11px] uppercase">// Diagnostic Findings Summary</span>
                   </div>
 
                   <div>
-                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">AI READINESS INDEX</span>
+                    <span className="text-slate-500 block text-[10px] font-bold uppercase tracking-wider">AI Readiness Index</span>
                     <div className="flex items-baseline gap-1 mt-1">
-                      <span className={`text-2xl font-sans font-black ${
-                        forensicAnalytics.reliabilityIndex > 70 ? 'text-green-500' : forensicAnalytics.reliabilityIndex > 40 ? 'text-yellow-500' : 'text-red-500'
+                      <span className={`text-2xl font-sans font-bold ${
+                        forensicAnalytics.reliabilityIndex > 70 ? 'text-emerald-600' : forensicAnalytics.reliabilityIndex > 40 ? 'text-amber-600' : 'text-red-600'
                       }`}>{forensicAnalytics.reliabilityIndex}%</span>
                     </div>
-                    <p className="text-[10px] text-zinc-500 tracking-tight mt-1 uppercase">FROM {forensicAnalytics.sampleSize} VECTOR POINTS.</p>
+                    <p className="text-[10px] text-slate-400 tracking-tight mt-1 uppercase">Sample Size: {forensicAnalytics.sampleSize} Points</p>
                   </div>
 
                   <div>
-                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">DOMINANT RISK BASIS</span>
-                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px] break-words">
-                      <Shield size={12} className="text-red-400 shrink-0" />
+                    <span className="text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Primary Risk Basis</span>
+                    <div className="flex items-center gap-1.5 mt-2 text-slate-900 font-bold tracking-tight text-xs break-words">
+                      <Shield size={12} className="text-slate-700 shrink-0" />
                       {forensicAnalytics.dominantBasis}
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">PRIMARY VECTOR DRIVER</span>
-                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px] break-words">
-                      <Terminal size={12} className="text-red-400 shrink-0" />
+                    <span className="text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Primary Vector Driver</span>
+                    <div className="flex items-center gap-1.5 mt-2 text-slate-900 font-bold tracking-tight text-xs break-words">
+                      <Terminal size={12} className="text-slate-700 shrink-0" />
                       {forensicAnalytics.dominantDriver}
                     </div>
                   </div>
 
                   <div>
-                    <span className="text-slate-600 block text-[9px] font-black uppercase tracking-widest">COGNITION POSTURE STATE</span>
-                    <div className="flex items-center gap-1.5 mt-2 text-white font-black tracking-tight text-[11px] break-words">
-                      <AwareIcon size={12} className="text-red-400 shrink-0" />
+                    <span className="text-slate-500 block text-[10px] font-bold uppercase tracking-wider">Operational Risk State</span>
+                    <div className="flex items-center gap-1.5 mt-2 text-slate-900 font-bold tracking-tight text-xs break-words">
+                      <AwareIcon size={12} className="text-slate-700 shrink-0" />
                       {forensicAnalytics.dominantVisibility}
                     </div>
                   </div>
@@ -399,51 +396,50 @@ export default function SOWBuilderStandalone() {
               )}
 
               {filteredRemediations.length === 0 && (
-                <div className="p-12 border border-dashed border-slate-900 text-center text-slate-600 text-sm font-sans not-italic font-medium">
-                  No execution tracks selected. Toggle items in the left control panel to build scope parameters.
+                <div className="p-12 border border-dashed border-slate-200 text-center text-slate-500 text-sm font-sans font-medium rounded-lg bg-white">
+                  No remediation tracks selected. Select options in the left control panel to build the SOW scope.
                 </div>
               )}
 
               <div className="space-y-6">
                 {filteredRemediations.map((anomaly: AnomalyRemediationNode, idx: number) => (
-                  <div key={idx} className="border border-slate-900 bg-slate-950/20 p-8 rounded-sm space-y-6">
-                    <div className="border-b border-slate-900 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                  <div key={idx} className="border border-slate-200 bg-white p-6 md:p-8 rounded-lg shadow-sm space-y-6">
+                    <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <div>
-                        <span className="text-[10px] font-mono text-red-500 block font-black tracking-widest not-italic">// REMEDIATION TRACK CODE: 0{idx + 1}</span>
-                        <h2 className="text-2xl font-black text-white tracking-tighter font-sans break-words">{anomaly.title}</h2>
-                        <p className="text-xs text-slate-500 font-sans not-italic normal-case font-medium mt-1">{anomaly.scope}</p>
+                        <span className="text-[10px] font-mono text-slate-500 block font-bold tracking-wider uppercase mb-1">// Remediation Scope 0{idx + 1}</span>
+                        <h2 className="text-xl md:text-2xl font-bold text-slate-900 tracking-tight font-sans break-words">{anomaly.title}</h2>
+                        <p className="text-xs text-slate-500 font-sans font-medium mt-1">{anomaly.scope}</p>
                       </div>
-                      <div className="bg-red-950/60 border border-red-600/40 text-red-400 font-mono not-italic text-xs px-4 py-2 font-black rounded-xs tracking-wider uppercase shrink-0">
+                      <div className="bg-slate-100 border border-slate-200 text-slate-900 font-mono text-xs px-3.5 py-1.5 font-bold rounded-md tracking-wider uppercase shrink-0">
                         {anomaly.investment_tier}
                       </div>
                     </div>
 
-                    {/* 🏆 BUSINESS IMPACT BANNER */}
-                    <div className="bg-red-950/20 border border-red-600/30 p-4 rounded-xs font-sans not-italic normal-case">
-                      <span className="text-[9px] font-mono font-black text-red-500 uppercase tracking-widest block mb-0.5">// EXECUTIVE BUSINESS IMPACT:</span>
-                      <p className="text-xs text-slate-200 font-medium leading-relaxed">{anomaly.business_impact}</p>
+                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-md font-sans">
+                      <span className="text-[10px] font-mono font-bold text-slate-700 uppercase tracking-wider block mb-1">// Executive Business Impact:</span>
+                      <p className="text-xs text-slate-700 font-medium leading-relaxed">{anomaly.business_impact}</p>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 not-italic normal-case font-sans tracking-normal font-normal text-sm text-slate-300">
-                      <div className="border border-slate-900 bg-black/40 p-6 rounded-sm space-y-4">
-                        <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
-                          <Terminal size={16} className="text-red-500 shrink-0" />
-                          <h3 className="text-red-500 font-mono text-xs font-black uppercase tracking-widest">// OPERATIONAL GOVERNANCE DIRECTIVES</h3>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-sans text-sm text-slate-700">
+                      <div className="border border-slate-200 bg-slate-50/50 p-5 rounded-md space-y-4">
+                        <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                          <Terminal size={16} className="text-slate-900 shrink-0" />
+                          <h3 className="text-slate-900 font-mono text-xs font-bold uppercase tracking-wider">// Technical Execution Plan</h3>
                         </div>
-                        <p className="text-xs text-slate-400 italic leading-relaxed">
-                          <strong className="text-slate-300 block font-bold uppercase tracking-wide text-[10px] font-mono not-italic text-red-500/80 mb-1">Root Cause Profile:</strong> 
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          <strong className="text-slate-900 block font-bold uppercase tracking-wide text-[10px] font-mono mb-1">Root Cause Profile:</strong> 
                           {anomaly.root_cause_technical}
                         </p>
                         <ul className="space-y-3 pt-2">
                           {anomaly.technical_runbook.map((task: string, i: number) => {
                             const [title, description] = task.split(': ');
                             return (
-                              <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-300 leading-relaxed">
-                                <span className="text-red-500 font-mono font-black shrink-0 mt-0.5">[{i + 1}]</span>
+                              <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-700 leading-relaxed">
+                                <span className="text-slate-900 font-mono font-bold shrink-0 mt-0.5">[{i + 1}]</span>
                                 <div>
                                   {description ? (
                                     <>
-                                      <strong className="text-white font-bold">{title}: </strong>
+                                      <strong className="text-slate-900 font-bold">{title}: </strong>
                                       <span>{description}</span>
                                     </>
                                   ) : (
@@ -456,25 +452,25 @@ export default function SOWBuilderStandalone() {
                         </ul>
                       </div>
 
-                      <div className="border border-slate-900 bg-black/40 p-6 rounded-sm space-y-4">
-                        <div className="flex items-center gap-2 border-b border-slate-900 pb-2">
-                          <Briefcase size={16} className="text-indigo-400 shrink-0" />
-                          <h3 className="text-indigo-400 font-mono text-xs font-black uppercase tracking-widest">// EXECUTIVE RISK SAFEGUARDS</h3>
+                      <div className="border border-slate-200 bg-slate-50/50 p-5 rounded-md space-y-4">
+                        <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                          <Briefcase size={16} className="text-slate-900 shrink-0" />
+                          <h3 className="text-slate-900 font-mono text-xs font-bold uppercase tracking-wider">// Operational Governance Directives</h3>
                         </div>
-                        <p className="text-xs text-slate-400 italic leading-relaxed">
-                          <strong className="text-slate-300 block font-bold uppercase tracking-wide text-[10px] font-mono not-italic text-indigo-400/80 mb-1">Structural Governance Gap:</strong> 
+                        <p className="text-xs text-slate-600 leading-relaxed">
+                          <strong className="text-slate-900 block font-bold uppercase tracking-wide text-[10px] font-mono mb-1">Governance Deficit:</strong> 
                           {anomaly.root_cause_operational}
                         </p>
                         <ul className="space-y-3 pt-2">
                           {anomaly.operational_playbook.map((task: string, i: number) => {
                             const [title, description] = task.split(': ');
                             return (
-                              <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-300 leading-relaxed">
-                                <span className="text-indigo-400 font-mono font-black shrink-0 mt-0.5">[{i + 1}]</span>
+                              <li key={i} className="flex gap-2 items-start text-xs font-medium text-slate-700 leading-relaxed">
+                                <span className="text-slate-900 font-mono font-bold shrink-0 mt-0.5">[{i + 1}]</span>
                                 <div>
                                   {description ? (
                                     <>
-                                      <strong className="text-white font-bold">{title}: </strong>
+                                      <strong className="text-slate-900 font-bold">{title}: </strong>
                                       <span>{description}</span>
                                     </>
                                   ) : (
@@ -490,7 +486,6 @@ export default function SOWBuilderStandalone() {
                   </div>
                 ))}
 
-                {/* 🛡️ GOVERNANCE & COMPLIANCE SUPPLEMENT DISPLAY LAYER */}
                 {includeGovernance && (
                   <GovernanceSupplementView 
                     metrics={metrics}
