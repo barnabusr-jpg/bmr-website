@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 
-// 🛡️ SECURITY HANDSHAKE - Unified with BMR_SENDGRID_KEY
-sgMail.setApiKey(process.env.BMR_SENDGRID_KEY || '');
+// Security Handshake - Unified with BMR_SENDGRID_KEY
+sgMail.setApiKey(process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KEY || '');
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
@@ -12,56 +12,63 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   const { name, email, organization, reworkTax, role } = req.body;
 
-  // 🗓️ Standardized Calendly (Ensures consistency for the briefing)
-  const calendlyUrl = `https://calendly.com/bmr-solutions/forensic-review?name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}&utm_campaign=${encodeURIComponent(organization)}`;
+  const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co';
+  const prettyCompany = organization || 'Your Organization';
+  const formattedRole = role || 'Executive';
+
+  // Standardized Calendly Link
+  const calendlyUrl = `https://calendly.com/hello-bmradvisory/forensic-review?name=${encodeURIComponent(name || '')}&email=${encodeURIComponent(email || '')}&utm_campaign=${encodeURIComponent(prettyCompany)}`;
 
   const msg = {
     to: email,
     bcc: 'hello@bmradvisory.co', 
-    from: 'BMR Solutions <hello@bmradvisory.co>',
-    subject: `Your Audit Results: ${organization}`, 
+    from: `BMR Solutions <${FROM_EMAIL}>`,
+    subject: `SteerCo Diagnostic Summary // ${prettyCompany}`, 
     html: `
-      <div style="font-family: sans-serif; max-width: 600px; background-color: #ffffff; color: #020617; padding: 40px; border-top: 4px solid #dc2626; margin: 20px auto; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
-        <h2 style="text-transform: uppercase; font-weight: 900; font-size: 22px; color: #dc2626; margin-bottom: 20px; letter-spacing: -0.5px;">
-          Your Forensic Audit is Complete
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; background-color: #ffffff; color: #0f172a; padding: 40px; border-top: 6px solid #0f172a; margin: 20px auto; border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; border-radius: 6px;">
+        
+        <h2 style="font-weight: 800; font-size: 20px; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.5px;">
+          Diagnostic Report Available
         </h2>
         
-        <p style="font-size: 16px; line-height: 1.6;">Hello ${name.split(' ')[0] || 'there'},</p>
+        <p style="font-size: 11px; font-family: monospace; color: #64748b; font-weight: 600; margin: 0 0 24px 0; text-transform: uppercase;">
+          Prepared for: ${prettyCompany} | Track: ${formattedRole}
+        </p>
+
+        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
         
-        <p style="font-size: 16px; line-height: 1.6;">
-          We have finished analyzing the data for <strong>${organization}</strong>. By looking at your business through the <strong>${role} Lens</strong>, we have identified specific areas where your operations are losing efficiency.
+        <p style="font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 16px;">
+          Hello ${name?.split(' ')[0] || 'there'},
         </p>
         
-        <p style="font-size: 16px; line-height: 1.6;">
-          Our analysis shows that hidden friction in your workflow is creating a "Rework Tax." This means your team is likely losing significant time and money fixing avoidable mistakes or dealing with confusing processes.
+        <p style="font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 16px;">
+          We have finalized the initial risk analysis for <strong>${prettyCompany}</strong> evaluating your pre-automation AI readiness, schema stability, and operational friction.
         </p>
         
-        <div style="background-color: #f8fafc; padding: 30px; margin: 30px 0; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626;">
-          <p style="font-size: 12px; text-transform: uppercase; color: #64748b; margin: 0; font-weight: bold; letter-spacing: 1px;">Estimated Yearly Waste:</p>
-          <p style="font-size: 28px; font-weight: 900; margin: 10px 0; color: #020617;">
+        <div style="background-color: #f8fafc; padding: 24px; margin: 24px 0; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; border-radius: 4px;">
+          <p style="font-size: 11px; font-family: monospace; text-transform: uppercase; color: #64748b; margin: 0; font-weight: 700;">
+            Estimated Annual Capital Exposure:
+          </p>
+          <p style="font-size: 28px; font-weight: 800; margin: 8px 0; color: #0f172a;">
             $${reworkTax} Million
           </p>
-          <p style="font-size: 13px; color: #475569; margin: 0;">
-            This represents capital that is being "taxed" by inefficient systems.
+          <p style="font-size: 12px; color: #475569; margin: 0; line-height: 1.5;">
+            Reflects internal Process Waste Tax and total Promise Gap™ risk across uninsulated engineering pipelines.
           </p>
         </div>
 
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-          I have attached your <strong>Forensic Briefing PDF</strong> to this email. It highlights the highest-risk zones in your current setup. 
-        </p>
-        
-        <p style="font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-          I have opened up a few spots on my calendar this week to walk you through these results and show you a roadmap to stop this waste. You can grab 15 minutes below.
+        <p style="font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 24px;">
+          Your provisional diagnostic results have been compiled and are ready for board and CFO review to serve as your executive funding request.
         </p>
 
-        <div style="text-align: center; margin-bottom: 20px;">
-          <a href="${calendlyUrl}" style="background-color: #dc2626; color: #ffffff; padding: 20px 40px; text-decoration: none; font-weight: bold; text-transform: uppercase; font-size: 14px; display: inline-block; border-radius: 4px; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.2);">
-            Schedule Your Result Review →
+        <div style="margin-bottom: 32px;">
+          <a href="${calendlyUrl}" style="background-color: #0f172a; color: #ffffff; padding: 14px 28px; text-decoration: none; font-weight: 700; text-transform: uppercase; font-size: 12px; display: inline-block; border-radius: 4px; letter-spacing: 1px;">
+            Schedule Executive Review Briefing →
           </a>
         </div>
         
-        <p style="font-size: 10px; color: #94a3b8; margin-top: 50px; text-align: center; text-transform: uppercase; letter-spacing: 1px;">
-          BMR SOLUTIONS // SECURE AUDIT DISPATCH // CONFIDENTIAL
+        <p style="font-size: 11px; font-family: monospace; color: #94a3b8; margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 20px; text-transform: uppercase;">
+          Confidential // BMR Solutions Independent Governance
         </p>
       </div>`
   };

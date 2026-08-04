@@ -20,7 +20,7 @@ export default async function handler(
   const { org, decay, spend, fte, leakage, tax } = req.query;
 
   // Extract values directly from stateless URL params with safe fallbacks
-  const orgName = (org as string) || "TARGET ENTITY";
+  const orgName = (org as string) || "Evaluation Client System";
   const dbDecay = parseInt((decay as string) || "24", 10);
   const readinessGap = 100 - dbDecay;
 
@@ -42,7 +42,7 @@ export default async function handler(
     ? parseInt(leakage as string, 10)
     : laborTax + exposure;
 
-  // 16:9 Presentation HTML Template
+  // 16:9 Executive Light Presentation HTML Template
   const htmlContent = `
     <!DOCTYPE html>
     <html>
@@ -52,12 +52,11 @@ export default async function handler(
           @page { size: 1920px 1080px; margin: 0; }
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body {
-            font-family: 'Courier New', Courier, monospace;
-            background-color: #020617;
-            color: #f8fafc;
-            text-transform: uppercase;
-            font-style: italic;
-            font-weight: 900;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
           .slide {
             width: 1920px;
@@ -67,41 +66,44 @@ export default async function handler(
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            background: #020617;
-            border: 10px solid #0f172a;
+            background: #f8fafc;
+            border-top: 12px solid #0f172a;
             position: relative;
           }
           .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            border-bottom: 2px solid #1e293b;
+            border-bottom: 2px solid #e2e8f0;
             padding-bottom: 24px;
           }
-          .title { font-size: 48px; color: #ffffff; letter-spacing: -2px; }
-          .subtitle { font-size: 18px; color: #ef4444; margin-top: 8px; }
-          .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; margin: 40px 0; }
-          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 40px 0; }
+          .title { font-size: 42px; font-weight: 800; color: #0f172a; letter-spacing: -1px; }
+          .subtitle { font-size: 16px; font-weight: 600; color: #dc2626; margin-top: 6px; font-family: monospace; }
+          .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin: 32px 0; }
+          .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 32px 0; }
           .card {
-            background: #090d16;
-            border: 2px solid #1e293b;
-            padding: 40px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 36px;
+            border-radius: 8px;
             position: relative;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
           }
-          .card-danger { border-color: #991b1b; background: #180505; }
-          .metric-label { font-size: 14px; color: #64748b; margin-bottom: 12px; }
-          .metric-val { font-size: 64px; color: #ef4444; letter-spacing: -3px; line-height: 1; }
-          .table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 16px; }
-          .table th { text-align: left; color: #64748b; padding-bottom: 12px; border-bottom: 1px solid #1e293b; }
-          .table td { padding: 16px 0; border-bottom: 1px solid #0f172a; color: #cbd5e1; }
-          .non-compliant { color: #ef4444; font-weight: bold; }
+          .card-danger { border-left: 8px solid #dc2626; }
+          .metric-label { font-size: 14px; font-weight: 700; color: #64748b; margin-bottom: 12px; font-family: monospace; }
+          .metric-val { font-size: 56px; font-weight: 800; color: #0f172a; letter-spacing: -2px; line-height: 1; }
+          .table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 15px; }
+          .table th { text-align: left; color: #64748b; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; font-family: monospace; font-size: 13px; }
+          .table td { padding: 14px 0; border-bottom: 1px solid #f1f5f9; color: #334155; font-weight: 500; }
+          .non-compliant { color: #dc2626; font-weight: 700; font-family: monospace; }
           .footer-box {
-            background: #000000;
-            border-left: 8px solid #dc2626;
+            background: #ffffff;
+            border-left: 8px solid #0f172a;
+            border: 1px solid #e2e8f0;
             padding: 24px;
-            font-size: 18px;
-            color: #94a3b8;
-            font-style: normal;
+            font-size: 16px;
+            color: #475569;
+            border-radius: 6px;
           }
         </style>
       </head>
@@ -111,44 +113,44 @@ export default async function handler(
         <div class="slide">
           <div class="header">
             <div>
-              <div class="title">TARGET STRATEGIC VERDICT DOSSIER</div>
-              <div class="subtitle">EXECUTIVE FINANCIAL & REGULATORY AUDIT // ENTITY: ${orgName}</div>
+              <div class="title">Executive Diagnostic Dossier</div>
+              <div class="subtitle">STEERCO FUNDING & RISK AUDIT // ASSESSMENT FOR: ${orgName}</div>
             </div>
-            <div style="font-size: 16px; color: #64748b;">SLIDE 01 // CFO BRIEFING</div>
+            <div style="font-size: 14px; font-weight: 700; color: #64748b; font-family: monospace;">SLIDE 01 // CFO BRIEFING</div>
           </div>
           <div class="grid-3">
             <div class="card">
-              <div class="metric-label">INTEGRITY COMPLIANCE INDEX</div>
-              <div class="metric-val" style="color: #eab308;">${readinessGap}/100</div>
-              <div style="font-size: 12px; color: #64748b; margin-top: 12px;">CRITICAL RISK THRESHOLD ENCOUNTERED</div>
+              <div class="metric-label">AI READINESS GAP</div>
+              <div class="metric-val" style="color: #dc2626;">${readinessGap}%</div>
+              <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 12px;">READINESS RATING</div>
             </div>
             <div class="card">
-              <div class="metric-label">AGGREGATED REWORK TAX</div>
+              <div class="metric-label">PROCESS WASTE TAX</div>
               <div class="metric-val">$${laborTax.toLocaleString()}</div>
-              <div style="font-size: 12px; color: #64748b; margin-top: 12px;">ANNUAL DEVELOPER CAPACITY LOST</div>
+              <div style="font-size: 12px; font-weight: 600; color: #64748b; margin-top: 12px;">ANNUAL REWORK LIABILITY</div>
             </div>
             <div class="card card-danger">
-              <div class="metric-label">FORENSIC INACTION LIABILITY</div>
+              <div class="metric-label">TOTAL PROMISE GAP™ EXPOSURE</div>
               <div class="metric-val">$${exposure.toLocaleString()}</div>
-              <div style="font-size: 12px; color: #ef4444; margin-top: 12px;">UNHEDGED REGULATORY FINE EXPOSURE</div>
+              <div style="font-size: 12px; font-weight: 600; color: #dc2626; margin-top: 12px;">CAPITAL RISK EXPOSURE</div>
             </div>
           </div>
           <div class="card">
-            <div class="metric-label" style="color: #ef4444;">REGULATORY NON-COMPLIANCE MATCHES DETECTED</div>
+            <div class="metric-label" style="color: #0f172a;">COMPLIANCE & GOVERNANCE ALIGNMENT</div>
             <table class="table">
               <thead>
                 <tr><th>STANDARD</th><th>CLAUSE / REQUIREMENT</th><th>SYSTEM IMPACT</th><th>STATUS</th></tr>
               </thead>
               <tbody>
-                <tr><td>ISO 9001:2015</td><td>Clause 8.5.1</td><td>Uncontrolled schema alterations in messaging queues</td><td class="non-compliant">[NON-COMPLIANT]</td></tr>
-                <tr><td>HL7 FHIR v4</td><td>Data Exchange Conformance</td><td>Unstructured schema drift breaking transaction lineage</td><td class="non-compliant">[NON-COMPLIANT]</td></tr>
-                <tr><td>PCI-DSS v4.0</td><td>Requirement 10.2</td><td>Telemetry saturation breaking real-time audit logs</td><td class="non-compliant">[NON-COMPLIANT]</td></tr>
-                <tr><td>SOX Act</td><td>Section 404</td><td>Unmapped risk vectors in financial reporting controls</td><td class="non-compliant">[NON-COMPLIANT]</td></tr>
+                <tr><td>ISO 9001:2015</td><td>Clause 8.5.1</td><td>Uncontrolled schema alterations in messaging queues</td><td class="non-compliant">PENDING REVIEW</td></tr>
+                <tr><td>HL7 FHIR v4</td><td>Data Exchange Conformance</td><td>Unstructured schema drift breaking transaction lineage</td><td class="non-compliant">PENDING REVIEW</td></tr>
+                <tr><td>PCI-DSS v4.0</td><td>Requirement 10.2</td><td>Telemetry saturation breaking real-time audit logs</td><td class="non-compliant">PENDING REVIEW</td></tr>
+                <tr><td>SOX Act</td><td>Section 404</td><td>Unmapped risk vectors in financial reporting controls</td><td class="non-compliant">PENDING REVIEW</td></tr>
               </tbody>
             </table>
           </div>
           <div class="footer-box">
-            <strong style="color: #ef4444;">EXECUTIVE SUMMARY:</strong> Uninsulated pipelines generate an annual loss run-rate of <strong>$${totalLeakage.toLocaleString()}</strong> across ${liveFte} FTE resources, exposing ${orgName} to $${exposure.toLocaleString()} in unhedged compliance liabilities.
+            <strong style="color: #0f172a;">EXECUTIVE SUMMARY:</strong> Uninsulated data pipelines generate an estimated annual loss run-rate of <strong>$${totalLeakage.toLocaleString()}</strong> across ${liveFte} FTE resources, creating $${exposure.toLocaleString()} in unhedged enterprise exposure for ${orgName}.
           </div>
         </div>
 
@@ -156,35 +158,35 @@ export default async function handler(
         <div class="slide">
           <div class="header">
             <div>
-              <div class="title">IDENTIFIED LOGIC FRACTURES</div>
+              <div class="title">Key Findings & Integration Risks</div>
               <div class="subtitle">SYSTEMIC BOTTLENECK MAPPING // OPERATIONAL ROOT CAUSE</div>
             </div>
-            <div style="font-size: 16px; color: #64748b;">SLIDE 02 // CTO BRIEFING</div>
+            <div style="font-size: 14px; font-weight: 700; color: #64748b; font-family: monospace;">SLIDE 02 // TECHNICAL BRIEFING</div>
           </div>
           <div class="grid-2">
             <div class="card card-danger">
-              <div class="metric-label" style="color: #ef4444;">FRACTURE 01 // CRITICAL PRIORITY</div>
-              <div style="font-size: 28px; color: #ffffff; margin: 16px 0;">UNMAPPED SCHEMA DRIFT</div>
-              <p style="font-size: 16px; color: #cbd5e1; font-style: normal; line-height: 1.6;">
-                Unstructured third-party updates inject context noise directly into model ingestion layers, forcing senior developers to manually nurse broken interfaces.
+              <div class="metric-label" style="color: #dc2626;">FINDING #1 // CRITICAL PRIORITY</div>
+              <div style="font-size: 26px; font-weight: 800; color: #0f172a; margin: 16px 0;">Unmapped Schema Drift</div>
+              <p style="font-size: 16px; color: #475569; line-height: 1.6;">
+                Unstructured third-party updates inject context noise directly into model ingestion layers, forcing senior developers to manually manage broken interfaces.
               </p>
-              <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #991b1b; color: #ef4444; font-size: 14px;">
-                REQUIRED DIRECTIVE: DEPLOY TRACK 01 INGESTION CONTRACTS
+              <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #f1f5f9; color: #dc2626; font-size: 14px; font-weight: 700; font-family: monospace;">
+                RECOMMENDED ACTION: Deploy Track 01 ingestion contracts and schema bounds.
               </div>
             </div>
             <div class="card">
-              <div class="metric-label" style="color: #eab308;">FRACTURE 02 // HIGH PRIORITY</div>
-              <div style="font-size: 28px; color: #ffffff; margin: 16px 0;">VALIDATION FATIGUE NODE</div>
-              <p style="font-size: 16px; color: #cbd5e1; font-style: normal; line-height: 1.6;">
+              <div class="metric-label" style="color: #d97706;">FINDING #2 // HIGH PRIORITY</div>
+              <div style="font-size: 26px; font-weight: 800; color: #0f172a; margin: 16px 0;">Validation Fatigue Node</div>
+              <p style="font-size: 16px; color: #475569; line-height: 1.6;">
                 Absence of automated sensitivity labeling exposes operational runtimes to DLP risk while flooding engineers with unprioritized alert noise.
               </p>
-              <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #1e293b; color: #3b82f6; font-size: 14px;">
-                REQUIRED DIRECTIVE: INSTANTIATE TRACK 02 TELEMETRY FILTERS
+              <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #f1f5f9; color: #0f172a; font-size: 14px; font-weight: 700; font-family: monospace;">
+                RECOMMENDED ACTION: Instantiate Track 02 telemetry filters and oversight controls.
               </div>
             </div>
           </div>
           <div class="footer-box">
-            <strong style="color: #ef4444;">OPERATIONAL IMPACT:</strong> Senior platform developers are currently trapped in manual firefighting loops. Modernizing these hand-offs is required prior to scaling autonomous AI agents.
+            <strong style="color: #0f172a;">OPERATIONAL IMPACT:</strong> Engineering resources are allocated to manual maintenance rather than scaling core platform functionality. Modernizing these hand-offs is recommended prior to expanding AI automation.
           </div>
         </div>
 
@@ -192,50 +194,50 @@ export default async function handler(
         <div class="slide">
           <div class="header">
             <div>
-              <div class="title">RECOMMENDED STATEMENT OF WORK</div>
+              <div class="title">Recommended Statement of Work</div>
               <div class="subtitle">PRE-AUTOMATION CONTROL PLANE & REMEDIATION ROADMAP</div>
             </div>
-            <div style="font-size: 16px; color: #64748b;">SLIDE 03 // CEO & STEERCO BRIEFING</div>
+            <div style="font-size: 14px; font-weight: 700; color: #64748b; font-family: monospace;">SLIDE 03 // CEO & STEERCO BRIEFING</div>
           </div>
           <div class="grid-2">
             <div class="card">
-              <div class="metric-label" style="color: #ef4444;">PHASE 01 // CRITICAL PRIORITY</div>
-              <div style="font-size: 24px; color: #ffffff; margin: 12px 0;">TRACK 01 // PIPELINE HARDENING</div>
-              <p style="font-size: 14px; color: #94a3b8; font-style: normal; line-height: 1.5;">
+              <div class="metric-label" style="color: #dc2626;">PHASE 01 // CRITICAL PRIORITY</div>
+              <div style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 12px 0;">Track 01 // Pipeline Hardening</div>
+              <p style="font-size: 15px; color: #475569; line-height: 1.5;">
                 Constructs machine-readable data contracts and SLA gates to prevent model hallucinations and silent pipeline breaks.
               </p>
             </div>
             <div class="card">
-              <div class="metric-label" style="color: #3b82f6;">PHASE 02 // HIGH PRIORITY</div>
-              <div style="font-size: 24px; color: #ffffff; margin: 12px 0;">TRACK 02 // TELEMETRY DECOUPLING</div>
-              <p style="font-size: 14px; color: #94a3b8; font-style: normal; line-height: 1.5;">
+              <div class="metric-label" style="color: #2563eb;">PHASE 02 // HIGH PRIORITY</div>
+              <div style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 12px 0;">Track 02 // Telemetry Decoupling</div>
+              <p style="font-size: 15px; color: #475569; line-height: 1.5;">
                 Suppresses alert desensitization and ensures executive sign-off is restricted strictly to critical exception boundaries.
               </p>
             </div>
           </div>
           <div class="card">
-            <div class="metric-label" style="color: #eab308;">PRE-AUTOMATION AI CONTROL PLANE GATES</div>
+            <div class="metric-label" style="color: #0f172a;">PRE-AUTOMATION CONTROL PLANE GATES</div>
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 16px;">
               <div>
-                <div style="font-size: 12px; color: #64748b;">DLP RISK CEILING</div>
-                <div style="font-size: 28px; color: #ffffff;">$18,000</div>
+                <div style="font-size: 12px; color: #64748b; font-family: monospace;">DLP RISK CEILING</div>
+                <div style="font-size: 28px; font-weight: 800; color: #0f172a;">$18,000</div>
               </div>
               <div>
-                <div style="font-size: 12px; color: #64748b;">SCHEMA MUTATION GATE</div>
-                <div style="font-size: 28px; color: #ffffff;">4 / 10K CALLS</div>
+                <div style="font-size: 12px; color: #64748b; font-family: monospace;">SCHEMA MUTATION GATE</div>
+                <div style="font-size: 28px; font-weight: 800; color: #0f172a;">4 / 10K Calls</div>
               </div>
               <div>
-                <div style="font-size: 12px; color: #64748b;">MAX DRIFT TOLERANCE</div>
-                <div style="font-size: 28px; color: #ffffff;">10.8%</div>
+                <div style="font-size: 12px; color: #64748b; font-family: monospace;">MAX DRIFT TOLERANCE</div>
+                <div style="font-size: 28px; font-weight: 800; color: #0f172a;">10.8%</div>
               </div>
             </div>
           </div>
           <div class="footer-box" style="display: flex; justify-content: space-between; align-items: center;">
             <div>
-              <strong style="color: #ef4444;">DECISION PROTOCOL:</strong> Attach this Dossier to MSA and execute Track 01 Sprint.
+              <strong style="color: #0f172a;">DECISION DIRECTIVE:</strong> Attach this Dossier to the Master Services Agreement and authorize the Track 01 SOW.
             </div>
-            <div style="background: #dc2626; color: #ffffff; padding: 12px 24px; font-size: 14px;">
-              APPROVED FOR EXECUTION
+            <div style="background: #0f172a; color: #ffffff; padding: 12px 24px; font-size: 14px; font-weight: 700; border-radius: 4px; font-family: monospace;">
+              READY FOR STEERCO SUBMISSION
             </div>
           </div>
         </div>
@@ -285,7 +287,7 @@ export default async function handler(
     );
     return res.status(200).send(pdfBuffer);
   } catch (err: any) {
-    console.error("PDF generation failed:", err);
+    console.error("PDF deck generation failed:", err);
     return res
       .status(500)
       .json({ error: "PDF Generation Failed", details: err.message });
