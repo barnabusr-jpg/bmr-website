@@ -21,7 +21,7 @@ interface AnomalyRemediationNode {
   investment_tier: string;
 }
 
-// 🛡️ SECURITY HASH SEED GENERATOR FOR TELEMETRY RECOVERY
+// SECURITY HASH SEED GENERATOR FOR TELEMETRY RECOVERY
 const getStableHash = (str: string, max: number = 100): number => {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -73,7 +73,7 @@ export default function SOWBuilderStandalone() {
     }
   }, []);
 
-  // 🧮 DYNAMIC METRICS PARSER
+  // DYNAMIC METRICS PARSER
   const metrics = useMemo(() => {
     if (!diagnosticData) return null;
 
@@ -103,7 +103,7 @@ export default function SOWBuilderStandalone() {
     };
   }, [diagnosticData, urlParams]);
 
-  // 📡 METRIC PARSER & ESTIMATION PROTOCOL
+  // METRIC PARSER & ESTIMATION PROTOCOL
   const forensicAnalytics = useMemo(() => {
     if (!diagnosticData) return null;
 
@@ -133,12 +133,12 @@ export default function SOWBuilderStandalone() {
       reliabilityIndex: parsedReliability,
       dominantBasis: 'Schema Instability',
       dominantDriver: 'Third-Party API Mutation',
-      dominantVisibility: 'The Promise Gap™ Risk',
+      dominantVisibility: 'The Promise Gap(TM) Risk',
       sampleSize: 32
     };
   }, [diagnosticData, urlParams]);
 
-  // 🛠️ PRE-AUTOMATION AI READINESS TRACKS
+  // PRE-AUTOMATION AI READINESS TRACKS
   const activeRemediations = useMemo((): AnomalyRemediationNode[] => {
     if (!diagnosticData || !metrics) return [];
     const entries: AnomalyRemediationNode[] = [];
@@ -253,7 +253,7 @@ export default function SOWBuilderStandalone() {
               Statement of Work <span className="text-slate-500 font-normal">Builder</span>
             </h1>
             <span className="text-xs font-mono font-medium text-slate-500 tracking-wider block mt-2">
-              BMR Solutions // Closing The Promise Gap™ // Pre-Automation Control Plane
+              BMR Solutions // Closing The Promise Gap(TM) // Pre-Automation Control Plane
             </span>
           </div>
 
@@ -427,7 +427,7 @@ export default function SOWBuilderStandalone() {
                           <h3 className="text-slate-900 font-mono text-xs font-bold uppercase tracking-wider">// Technical Execution Plan</h3>
                         </div>
                         <p className="text-xs text-slate-600 leading-relaxed">
-                          <strong className="text-slate-900 block font-bold uppercase tracking-wide text-[10px] font-mono mb-1">Root Cause Profile:</strong> 
+                          <strong className="text-slate-900 block font-bold uppercase tracking-wide text-[10px] font-mono mb-1">Root Cause Profile:</strong>
                           {anomaly.root_cause_technical}
                         </p>
                         <ul className="space-y-3 pt-2">
@@ -458,7 +458,7 @@ export default function SOWBuilderStandalone() {
                           <h3 className="text-slate-900 font-mono text-xs font-bold uppercase tracking-wider">// Operational Governance Directives</h3>
                         </div>
                         <p className="text-xs text-slate-600 leading-relaxed">
-                          <strong className="text-slate-900 block font-bold uppercase tracking-wide text-[10px] font-mono mb-1">Governance Deficit:</strong> 
+                          <strong className="text-slate-900 block font-bold uppercase tracking-wide text-[10px] font-mono mb-1">Governance Deficit:</strong>
                           {anomaly.root_cause_operational}
                         </p>
                         <ul className="space-y-3 pt-2">
