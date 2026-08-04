@@ -180,50 +180,48 @@ export default function ForensicDiagnosticWizard({
   const isPillarIncomplete = currentStepAnsweredCount < currentStepTotal;
 
   return (
-    <div className="bg-[#020617] text-slate-200 font-sans tracking-tighter text-left uppercase font-black overflow-x-hidden p-10 max-w-4xl mx-auto my-12 border border-slate-900 shadow-2xl backdrop-blur-md italic">
+    <div className="bg-slate-50 text-slate-900 font-sans text-left antialiased p-8 md:p-12 max-w-4xl mx-auto my-12 border border-slate-200 shadow-sm rounded-lg">
       
       {/* Structural Progression Control Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-900 pb-4 mb-8 gap-4 no-print font-mono not-italic">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4 mb-8 gap-4 font-mono">
         <div className="flex items-center gap-3">
-          <Activity className="text-red-600 animate-pulse shrink-0" size={20} />
-          <span className="text-xs font-black uppercase tracking-widest text-white">
-            PRE-AUTOMATION DIAGNOSTIC // STAKEHOLDER NODE VECTOR ROUTING
+          <Activity className="text-slate-900 animate-pulse shrink-0" size={18} />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
+            PRE-AUTOMATION DIAGNOSTIC // STAKEHOLDER NODE ROUTING
           </span>
         </div>
         
-        {/* ⚡ CLEAN 2-DIGIT INDEX PADDING */}
-        <div className="text-[10px] text-slate-500 tracking-widest font-black shrink-0">
+        <div className="text-xs text-slate-500 font-bold tracking-wider shrink-0">
           SECTOR READINESS PROGRESS: {String(currentStepAnsweredCount).padStart(2, '0')} / {String(currentStepTotal).padStart(2, '0')}
         </div>
       </div>
 
       {/* Narrative Context Alert Header */}
-      <div className="bg-slate-950 border border-slate-900 p-5 mb-8 text-xs text-slate-400 not-italic normal-case font-medium font-sans leading-relaxed flex items-start gap-3 rounded-xs">
-        <AlertCircle size={18} className="text-red-600 shrink-0 mt-0.5" />
+      <div className="bg-white border border-slate-200 p-5 mb-8 text-xs text-slate-600 leading-relaxed flex items-start gap-3 rounded shadow-sm">
+        <AlertCircle size={18} className="text-slate-900 shrink-0 mt-0.5" />
         <div>
           This pre-automation diagnostic evaluates pipeline readiness, schema stability, and operational friction to establish machine-readable guardrails prior to scaling AI deployments.
         </div>
       </div>
 
       {/* Scenario Ingestion Loop */}
-      <div className="space-y-10 mb-10">
+      <div className="space-y-8 mb-10">
         {activeQuestions.map((question, index) => {
           const targetKey = `quad_${question.id}`;
           const currentSelection = answers[targetKey] || answers[question.id];
           
           return (
-            <div key={question.id} className="border border-slate-900 bg-slate-950/40 p-8 relative rounded-sm group/card">
+            <div key={question.id} className="border border-slate-200 bg-white p-6 md:p-8 relative rounded-lg shadow-sm group/card">
               
-              {/* ⚡ CLEAN 2-DIGIT QUESTION HEADER PADDING (e.g., "01 OF 10" THROUGH "10 OF 10") */}
-              <span className="text-[9px] font-mono text-red-500 block mb-3 font-black tracking-widest not-italic">
-                // PRE-AUTOMATION DIAGNOSTIC QUESTION {String(index + 1).padStart(2, '0')} OF {String(activeQuestions.length).padStart(2, '0')}
+              <span className="text-xs font-mono text-slate-500 block mb-3 font-semibold tracking-wider">
+                Question {String(index + 1).padStart(2, '0')} of {String(activeQuestions.length).padStart(2, '0')}
               </span>
 
-              <p className="text-2xl md:text-3xl text-white uppercase leading-tight tracking-tighter font-black mb-6 font-sans">
+              <p className="text-xl md:text-2xl text-slate-900 font-bold tracking-tight mb-6">
                 {question.symptomatic_scenario}
               </p>
               
-              <div className="grid grid-cols-1 gap-3 mt-6 font-mono not-italic text-sm">
+              <div className="grid grid-cols-1 gap-3 font-sans text-sm">
                 {(Object.keys(question.choices) as Array<'A' | 'B' | 'C' | 'D'>).map((key) => {
                   const choice = question.choices[key];
                   const isSelected = currentSelection === key;
@@ -231,19 +229,22 @@ export default function ForensicDiagnosticWizard({
                     <div 
                       key={key}
                       onClick={() => handleSelectOption(question.id, key)}
-                      className="border p-5 cursor-pointer transition-all flex items-start gap-4 rounded-xs border-slate-800 text-slate-400 hover:border-slate-600 hover:bg-slate-900/30"
-                      style={isSelected ? { backgroundColor: 'rgba(153, 27, 27, 0.1)', borderColor: '#dc2626', color: '#ffffff' } : {}}
-                    >
-                      <span className={`text-xs font-black px-3 py-1 border shrink-0 transition-all rounded-xs ${
+                      className={`border p-4 cursor-pointer transition-colors flex items-start gap-4 rounded ${
                         isSelected 
-                          ? 'bg-red-600 text-white border-red-500' 
-                          : 'bg-slate-900 text-slate-500 border-slate-800 group-hover/card:text-slate-300'
+                          ? 'border-slate-900 bg-slate-900 text-white' 
+                          : 'border-slate-200 bg-slate-50/50 text-slate-700 hover:border-slate-300 hover:bg-slate-100/60'
+                      }`}
+                    >
+                      <span className={`text-xs font-bold px-3 py-1 border shrink-0 transition-colors rounded ${
+                        isSelected 
+                          ? 'bg-white text-slate-900 border-white font-mono' 
+                          : 'bg-white text-slate-600 border-slate-200 font-mono'
                       }`}>
                         {key}
                       </span>
 
-                      <p className={`leading-relaxed font-sans normal-case text-sm font-semibold pt-0.5 transition-colors ${
-                        isSelected ? 'text-white' : 'text-slate-400'
+                      <p className={`leading-relaxed text-sm font-medium pt-0.5 transition-colors ${
+                        isSelected ? 'text-white' : 'text-slate-700'
                       }`}>
                         {choice.text}
                       </p>
@@ -257,20 +258,20 @@ export default function ForensicDiagnosticWizard({
       </div>
 
       {/* Bottom Pipeline Status Controller */}
-      <div className="border-t border-slate-900 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono not-italic">
-        <div className="text-[10px] text-slate-500 tracking-wider flex items-center gap-2 font-black">
-          <Shield size={14} className={isPillarIncomplete ? "text-slate-700" : "text-red-500"} /> 
-          {isPillarIncomplete ? "ALL ACTIVE SECTOR OBSERVATIONS MANDATORY TO RESOLVE POSTURE" : "PRE-AUTOMATION VECTORS VALIDATED // READY TO COMPUTE"}
+      <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono">
+        <div className="text-xs text-slate-500 tracking-wider flex items-center gap-2 font-bold">
+          <Shield size={14} className={isPillarIncomplete ? "text-slate-400" : "text-slate-900"} /> 
+          {isPillarIncomplete ? "ALL ACTIVE SECTOR OBSERVATIONS REQUIRED TO RESOLVE POSTURE" : "PRE-AUTOMATION VECTORS VALIDATED // READY TO COMPUTE"}
         </div>
         
         <button
           type="button"
           disabled={isPillarIncomplete || isCompiling}
           onClick={compileActiveNodePosture}
-          className={`w-full sm:w-auto px-8 py-4 font-sans font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 transition-all italic rounded-sm shadow-md ${
+          className={`w-full sm:w-auto px-8 py-3.5 font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors rounded shadow-sm ${
             isPillarIncomplete 
-              ? 'bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed' 
-              : 'bg-white text-black hover:bg-red-600 hover:text-white shadow-lg'
+              ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' 
+              : 'bg-slate-900 text-white hover:bg-slate-800'
           }`}
         >
           {isCompiling ? "COMPILING VECTOR LOGS..." : "Save & Close Node Posture"} 

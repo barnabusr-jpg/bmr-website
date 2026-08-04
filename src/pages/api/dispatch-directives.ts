@@ -116,77 +116,66 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (insertError) throw insertError;
       }
 
-      const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
+      const diagnosticLink = `${BASE_URL}/diagnostic?code=${code}`;
 
       if (standardizedRole === 'EXECUTIVE') {
-        // DISPATCH ONE: High Impact Executive Alignment Email Flow
+        // DISPATCH ONE: Executive Alignment Email Template (Light Executive Theme)
         emailPromises.push(sgMail.send({
           to: targetEmail,
           from: {
-            name: "BMR SOLUTIONS",
+            name: "BMR Solutions",
             email: FROM_EMAIL
           },
-          subject: `ACTION REQUIRED: Pre-Automation Diagnostic Access // ${orgName}`,
+          subject: `ACTION REQUIRED: Pre-Automation Diagnostic Access // ${prettyCompany}`,
           html: `
-            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
               <tr>
                 <td align="center" style="padding: 40px 20px;">
-                  <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-transform: uppercase;">
+                  <div style="max-width: 600px; width: 100%; background: #ffffff; color: #0f172a; padding: 40px; border: 1px solid #e2e8f0; border-top: 6px solid #0f172a; border-radius: 6px; box-sizing: border-box;">
                     
-                    <h2 style="color: #dc2626; font-size: 18px; font-weight: 900; margin: 0 0 5px 0;">BMR Solutions // Pre-Automation Control Plane</h2>
-                    <p style="font-size: 10px; color: #64748b; margin: 0 0 20px 0;">Target System: ${orgName}</p>
+                    <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px;">BMR Solutions // Executive Diagnostic</h2>
+                    <p style="font-size: 11px; font-family: monospace; color: #64748b; margin: 0 0 24px 0; font-weight: 600;">Target Organization: ${prettyCompany}</p>
                     
-                    <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
+                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
                     
-                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      The pre-automation AI readiness diagnostic for your organization is underway to evaluate operational friction, schema stability, and risk guardrails prior to scaling autonomous agents.
+                    <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 16px 0;">
+                      The pre-automation AI readiness diagnostic for <strong>${prettyCompany}</strong> is underway to evaluate operational friction, schema stability, and risk guardrails prior to scaling autonomous agents.
                     </p>
 
-                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      Invitation emails have been dispatched to designated stakeholder nodes. Please ensure your leadership and engineering leads review their inbox to complete their respective assessment tracks.
+                    <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 24px 0;">
+                      Invitation links have been dispatched to designated leadership and engineering stakeholders. Please ensure your team reviews their inbox to complete their respective assessment modules.
                     </p>
 
-                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 25px 0; font-family: sans-serif;">
-                      To execute your diagnostic module, please follow the steps below:
-                    </p>
-
-                    <!-- STEP 1: Find your email -->
-                    <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 20px; text-align: left;">
-                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 1: Execute Assessment</p>
-                      <p style="margin: 0 0 15px 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
-                        Access your secure link to begin your strategic executive assessment module.
+                    <!-- STEP 1: Assessment Link -->
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 20px; margin-bottom: 16px; border-radius: 4px; text-align: left;">
+                      <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 1: Complete Executive Assessment</p>
+                      <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">
+                        Access your secure link to begin your executive assessment module:
                       </p>
-                      <a href="${diagnosticLink}" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
+                      <a href="${diagnosticLink}" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
                         Open Executive Assessment Track →
                       </a>
                     </div>
 
-                    <!-- STEP 2: Remind your team -->
-                    <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
-                      <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 2: Stakeholder Alignment</p>
-                      <p style="margin: 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
+                    <!-- STEP 2: Stakeholder Alignment -->
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
+                      <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 2: Stakeholder Alignment</p>
+                      <p style="margin: 0; font-size: 13px; color: #475569;">
                         Notify your managerial and technical leads to verify their direct links and complete their node evaluations promptly.
                       </p>
                     </div>
 
-                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      Use the secure link below to schedule your diagnostic calibration briefing:
-                    </p>
-
                     <!-- STEP 3: Calibration Scheduling Link -->
-                    <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
-                      <a href="https://calendly.com/hello-bmradvisory/systems-triangulation-calibration" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
-                        Schedule Calibration Meeting →
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
+                      <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing</p>
+                      <a href="https://calendly.com/hello-bmradvisory/forensic-briefing" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
+                        Schedule Executive Calibration Briefing →
                       </a>
                     </div>
 
-                    <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                      We look forward to building your Pre-Automation Control Plane.
-                    </p>
-                    
-                    <p style="font-size: 11px; color: #475569; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: none; font-family: sans-serif;">
+                    <p style="font-size: 12px; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 24px;">
                       Sincerely,<br/>
-                      <strong>BMR Solutions</strong>
+                      <strong style="color: #0f172a;">BMR Solutions Independent Advisory</strong>
                     </p>
                     
                   </div>
@@ -196,55 +185,51 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `
         }));
       } else {
-        // DISPATCH TWO: Stakeholder Node Notification
+        // DISPATCH TWO: Stakeholder Node Notification Template (Light Executive Theme)
         emailPromises.push(sgMail.send({
           to: targetEmail,
           from: {
-            name: "BMR SOLUTIONS",
+            name: "BMR Solutions",
             email: FROM_EMAIL
           },
-          subject: `ACTION REQUIRED: ${standardizedRole} AI Readiness Node Authorized // ${orgName}`,
+          subject: `ACTION REQUIRED: ${standardizedRole} Track Assessment Authorized // ${prettyCompany}`,
           html: `
-            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
+            <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
               <tr>
                 <td align="center" style="padding: 40px 20px;">
-                  <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-transform: uppercase;">
-                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
-                      <tr>
-                        <td align="left" style="text-align: left;">
-                          <h2 style="color: #dc2626; font-family: monospace; font-size: 20px; font-weight: 900; text-transform: uppercase; margin: 0 0 5px 0; letter-spacing: 1px;">
-                            BMR Solutions // Pre-Automation Engine
-                          </h2>
-                          <p style="font-family: monospace; font-size: 10px; color: #64748b; margin: 0 0 20px 0; text-transform: uppercase;">
-                            Company Name: ${orgName} | Role Assignment: ${standardizedRole} NODE
-                          </p>
-                          <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
-                          
-                          <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 15px 0; text-transform: none;">
-                            <strong>${prettyCompany} leadership</strong> has initiated a pre-automation diagnostic with BMR Solutions. This review evaluates system readiness, schema stability, and operational friction prior to scaling AI models and automated agent workflows.
-                          </p>
-                          
-                          <p style="font-family: monospace; line-height: 1.6; font-size: 13px; color: #94a3b8; margin: 0 0 25px 0; text-transform: none;">
-                            To complete this assessment, we require independent feedback across key operational tiers. You are designated as the stakeholder representative for the <strong>${standardizedRole} Node</strong>. Select the link below to access your diagnostic module.
-                          </p>
-                          <p style="font-family: monospace; line-height: 1.6; font-size: 14px; color: #ffffff; margin: 0 0 30px 0;">
-                            Your personal access code is: <span style="color: #dc2626; font-weight: bold;">${code}</span>
-                          </p>
-                          <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 30px; margin-bottom: 40px;">
-                            <tr>
-                              <td align="left">
-                                <a href="${diagnosticLink}" target="_blank" style="background: #dc2626; color: #ffffff; padding: 18px 30px; text-decoration: none; font-weight: bold; display: inline-block; text-transform: uppercase; font-size: 12px; letter-spacing: 2px; border: 1px solid #dc2626;">
-                                  Open Diagnostic Module →
-                                </a>
-                              </td>
-                            </tr>
-                          </table>
-                          <p style="font-family: monospace; font-size: 10px; color: #475569; margin: 40px 0 0 0; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: uppercase;">
-                            Confidential // BMR Solutions Pre-Automation Gateway
-                          </p>
-                        </td>
-                      </tr>
-                    </table>
+                  <div style="max-width: 600px; width: 100%; background: #ffffff; color: #0f172a; padding: 40px; border: 1px solid #e2e8f0; border-top: 6px solid #0f172a; border-radius: 6px; box-sizing: border-box;">
+                    
+                    <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px;">
+                      BMR Solutions // Operational Assessment
+                    </h2>
+                    <p style="font-size: 11px; font-family: monospace; color: #64748b; margin: 0 0 20px 0; font-weight: 600;">
+                      Organization: ${prettyCompany} | Track: ${standardizedRole} NODE
+                    </p>
+                    
+                    <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
+                    
+                    <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 16px 0;">
+                      Leadership at <strong>${prettyCompany}</strong> has initiated a pre-automation diagnostic with BMR Solutions. This review evaluates system readiness, schema stability, and operational friction prior to scaling AI models and automated workflows.
+                    </p>
+                    
+                    <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 24px 0;">
+                      You are designated as the stakeholder representative for the <strong>${standardizedRole} Track</strong>. Select the button below to access your secure assessment module.
+                    </p>
+                    
+                    <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; margin-bottom: 28px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #475569;">
+                      Access Code: <span style="color: #dc2626; font-weight: 800;">${code}</span>
+                    </div>
+
+                    <div style="margin-bottom: 32px;">
+                      <a href="${diagnosticLink}" target="_blank" style="background: #0f172a; color: #ffffff; padding: 14px 28px; text-decoration: none; font-weight: 700; display: inline-block; font-size: 12px; letter-spacing: 1px; border-radius: 4px; text-transform: uppercase;">
+                        Open Diagnostic Track →
+                      </a>
+                    </div>
+                    
+                    <p style="font-size: 11px; font-family: monospace; color: #94a3b8; margin: 32px 0 0 0; border-top: 1px solid #f1f5f9; padding-top: 20px; text-transform: uppercase;">
+                      Confidential // BMR Solutions Independent Governance
+                    </p>
+
                   </div>
                 </td>
               </tr>

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { FORENSIC_MATRIX } from '@/lib/forensicMatrix';
-import { Lock, CheckCircle, ShieldAlert } from 'lucide-react';
+import { Lock, CheckCircle, ShieldAlert, Activity, ArrowRight } from 'lucide-react';
 
 export default function ForensicDiagnostic() {
   const [step, setStep] = useState("loading");
@@ -26,7 +26,7 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 1. Fetch operator: Selecting explicit columns to protect structural stability
+      // 1. Fetch operator
       const { data: op, error: opError } = await supabase
         .from('operators')
         .select('id, audit_id, access_code, status, persona_type')
@@ -39,7 +39,7 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 2. Fetch parent audit: Explicitly target safe structural columns
+      // 2. Fetch parent audit
       const { data: audit, error: auditError } = await supabase
         .from('audits')
         .select('status, org_name, id')
@@ -49,7 +49,7 @@ export default function ForensicDiagnostic() {
       // SECURITY: Check if already completed
       if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
         console.log("NODE_ACCESS: Link is deactivated or already completed.");
-        setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
+        setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
         setStep("finalized");
         return;
       }
@@ -82,13 +82,12 @@ export default function ForensicDiagnostic() {
   }, []);
 
   const submitResults = async (finalAnswers: any) => {
-    // 🛡️ Double-click prevention thread lock
     if (step === "submitting" || step === "done") return;
     
     setStep("submitting");
 
     try {
-      // Step 1: Save data natively to the database table layout
+      // Step 1: Save data natively to database
       const { error: updateError } = await supabase
         .from('operators')
         .update({
@@ -99,7 +98,6 @@ export default function ForensicDiagnostic() {
         .eq('id', operator.id); 
 
       if (updateError) throw new Error(`Operator record save rejected: ${updateError.message}`);
-      console.log("OPERATOR_NODE_SECURED // EVALUATING CO-DEPENDENT NETWORK TRACKS");
 
       // Step 2: Fetch all sibling operator entries linked to this audit row
       const { data: siblingOperators, error: fetchError } = await supabase
@@ -115,7 +113,6 @@ export default function ForensicDiagnostic() {
       const managerialTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && o.status === 'completed');
       const executiveTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && o.status === 'completed');
 
-      // Initialize base parent update payload state
       const auditPayload: any = {
         has_technical: !!technicalTrack,
         has_managerial: !!managerialTrack,
@@ -123,35 +120,32 @@ export default function ForensicDiagnostic() {
         updated_at: new Date().toISOString()
       };
 
-      // Step 4: 🔥 AUTOMATED MULTI-TRACK COMPILATION SYSTEM
-      // Evaluates if this payload completes the requirements matrix to fire auto-triangulation calculations
+      // Step 4: AUTOMATED MULTI-TRACK COMPILATION SYSTEM
       if (technicalTrack && managerialTrack && executiveTrack) {
         console.log("QUAD-NODE MATRIX BALANCED // RUNNING INTEGRATED CALCULUS RUNTIME");
 
-        // Construct mock anomaly dataset mapping structural variance intersections
         const computedAnomalies = [
           {
-            anomaly_id: "INDEX NODE FR-01",
-            title: "AUTOMATED ARCHITECTURE DISCREPANCY",
+            anomaly_id: "Finding #1",
+            title: "Automated Architecture Discrepancy",
             description: "Systemic workflow variances compiled automatically across aligned operational tracks.",
             severity: "CRITICAL",
             remediation_directive: "Optimize process vectors to stabilize data flow dynamics."
           },
           {
-            anomaly_id: "INDEX NODE FR-02",
-            title: "STRATEGIC ALIGNMENT LEAKAGE",
-            description: "Cross-track validation indicates a high risk profile in human-in-the-loop dependencies.",
+            anomaly_id: "Finding #2",
+            title: "Strategic Alignment Leakage",
+            description: "Cross-track validation indicates elevated risk in human-in-the-loop dependencies.",
             severity: "HIGH",
             remediation_directive: "Deploy automated tracking filters to mitigate processing waste."
           }
         ];
 
-        // Hydrate payload targets to process calculations automatically
         auditPayload.anomalies = computedAnomalies;
         auditPayload.status = 'COMPLETED';
       }
 
-      // Step 5: Execute master update pass to update parent audit row variables
+      // Step 5: Execute master update pass on parent audit row
       const { error: auditUpdateError } = await supabase
         .from('audits')
         .update(auditPayload)
@@ -159,12 +153,11 @@ export default function ForensicDiagnostic() {
 
       if (auditUpdateError) throw new Error(`Master ledger update rejected: ${auditUpdateError.message}`);
 
-      console.log("SURVEY_SUBMITTED_SUCCESSFULLY // INTEGRATED MATRIX UPDATED");
       setStep("done");
 
     } catch (err: any) {
-      console.error("SUBMIT_ERROR: Failed transactional database sync sequence.", err.message);
-      alert(`SIGNAL_LOST: ${err.message}`);
+      console.error("SUBMIT_ERROR: Transaction failed.", err.message);
+      alert(`Submission Error: ${err.message}`);
       setStep("diagnostic");
     }
   };
@@ -184,59 +177,153 @@ export default function ForensicDiagnostic() {
     }
   };
 
+  // Helper to convert snake_case evidence tags to human-readable text
+  const formatEvidenceLabel = (rawTag: string) => {
+    return rawTag
+      .toLowerCase()
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   // ========================================================================
-  // 🛡️ RE-ENGINEERED TOP-LEVEL CONTROL GATES (THE FLASH LOOP LOCKOUT)
+  // CONTROL GATES (EXECUTIVE LIGHT UI)
   // ========================================================================
-  if (step === "loading") return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono animate-pulse uppercase tracking-[0.3em]">Handshake_Initializing...</div>;
-  if (step === "invalid") return <div className="min-h-screen bg-black flex items-center justify-center p-12 text-center text-white font-mono uppercase tracking-widest"><ShieldAlert className="mb-4 text-red-600 mx-auto" size={48} /> Unauthorized_Node</div>;
-  if (step === "finalized") return <div className="min-h-screen bg-black flex items-center justify-center p-16 text-center text-slate-500 font-mono uppercase tracking-widest border-2 border-red-900/10"><Lock className="mr-4 text-red-600 inline" /> NODE_SECURED: LINK_DEACTIVATED</div>;
-  
-  if (step === "submitting") return <div className="min-h-screen bg-black flex items-center justify-center text-center py-20 font-mono font-black animate-pulse text-red-600 uppercase italic tracking-widest leading-none">Syncing_Ledger...</div>;
-  if (step === "done") return (
-    <div className="min-h-screen bg-black text-white p-12 font-mono flex items-center justify-center">
-      <div className="max-w-2xl w-full border border-red-900/30 p-16 bg-slate-950 shadow-2xl text-center py-10 animate-in zoom-in duration-500">
-        <CheckCircle className="mx-auto text-red-600 mb-6" size={48} />
-        <div className="font-black italic text-red-600 uppercase tracking-widest text-3xl">Segment_Secured</div>
-        <p className="text-slate-500 mt-4 text-[10px] uppercase tracking-widest">Forensic data packet transmitted.</p>
+  if (step === "loading") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+        <div className="flex items-center gap-3 text-slate-900 font-mono text-xs uppercase tracking-wider font-bold">
+          <Activity className="animate-spin text-slate-900" size={18} />
+          Initializing Diagnostic Access...
+        </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  if (step === "invalid") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+        <div className="bg-white border border-slate-200 p-12 max-w-md w-full text-center shadow-sm rounded-lg">
+          <ShieldAlert className="mb-4 text-slate-900 mx-auto" size={48} />
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Unauthorized Access</h2>
+          <p className="text-xs text-slate-500 font-mono">The diagnostic code provided is missing or invalid.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "finalized") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+        <div className="bg-white border border-slate-200 p-12 max-w-md w-full text-center shadow-sm rounded-lg">
+          <Lock className="mb-4 text-slate-900 mx-auto" size={48} />
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Diagnostic Complete</h2>
+          <p className="text-xs text-slate-500 font-mono">This assessment link has already been completed and deactivated.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "submitting") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+        <div className="flex items-center gap-3 text-slate-900 font-mono text-xs uppercase tracking-wider font-bold">
+          <Activity className="animate-spin text-slate-900" size={18} />
+          Submitting Diagnostic Findings...
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "done") {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900 p-6 font-sans flex items-center justify-center">
+        <div className="max-w-md w-full border border-slate-200 p-10 bg-white shadow-sm rounded-lg text-center">
+          <CheckCircle className="mx-auto text-emerald-700 mb-4" size={48} />
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">Section Complete</h2>
+          <p className="text-xs text-slate-500 font-mono">Your diagnostic input has been securely recorded and synced to the master assessment matrix.</p>
+        </div>
+      </div>
+    );
+  }
 
   if (step === "diagnostic" && (!questions || !questions[currentIndex])) {
-    return <div className="min-h-screen bg-black flex items-center justify-center text-red-600 font-mono italic animate-pulse">Syncing_Protocol_Questions...</div>;
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
+        <div className="flex items-center gap-3 text-slate-900 font-mono text-xs uppercase tracking-wider font-bold">
+          <Activity className="animate-spin text-slate-900" size={18} />
+          Loading Assessment Questions...
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-12 font-mono flex items-center justify-center">
-      <div className="max-w-2xl w-full border border-red-900/30 p-16 bg-slate-950 shadow-2xl relative">
-        <div className="text-[10px] text-red-600 mb-10 tracking-[0.3em] font-black uppercase border-b border-red-900/20 pb-4 leading-none">
-          NODE_AUTHORIZED: {operator?.persona_type} // TARGET: {operator?.org_name}
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-6 md:p-12 flex items-center justify-center">
+      <div className="max-w-2xl w-full border border-slate-200 p-8 md:p-12 bg-white shadow-sm rounded-lg relative">
+        <div className="text-xs font-mono text-slate-500 mb-8 font-bold uppercase tracking-wider border-b border-slate-100 pb-3 flex justify-between items-center">
+          <span>Target: {operator?.org_name}</span>
+          <span className="bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded font-mono">{operator?.persona_type} Track</span>
         </div>
         
         {step === "intro" && (
-          <div className="animate-in fade-in duration-700">
-            <h1 className="text-4xl font-black italic mb-8 uppercase tracking-tighter leading-none">Protocol_Initialized</h1>
-            <p className="mb-10 text-slate-400 text-sm uppercase italic leading-tight">Authenticating forensics for {operator?.org_name}. Entry is isolated to your specific node link.</p>
-            <button onClick={() => setStep("diagnostic")} className="w-full py-6 bg-red-600 text-white font-black uppercase italic tracking-[0.4em] hover:bg-white hover:text-black transition-all">Start_Audit</button>
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
+              Operational Risk Assessment
+            </h1>
+            <p className="mb-8 text-slate-600 text-sm leading-relaxed">
+              You are completing the forensic assessment for <strong>{operator?.org_name}</strong> as an authorized representative for the <strong>{operator?.persona_type}</strong> track. Your input directly calibrates operational readiness and governance specifications.
+            </p>
+            <button 
+              onClick={() => setStep("diagnostic")} 
+              className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wider text-xs transition-colors rounded shadow-sm flex items-center justify-center gap-2"
+            >
+              Begin Diagnostic
+              <ArrowRight size={16} />
+            </button>
           </div>
         )}
 
         {step === "diagnostic" && (
-          <div className="animate-in slide-in-from-right-4 duration-500">
-             <div className="text-[10px] text-slate-500 mb-4 uppercase font-black italic tracking-widest">Segment {currentIndex + 1} of {questions.length}</div>
-             <h2 className="text-2xl font-black mb-12 uppercase text-white tracking-tight leading-tight">{questions[currentIndex].text}</h2>
-             {!selectedAnswer ? (
-               <div className="grid grid-cols-2 gap-6">
-                 {["Yes", "No"].map(opt => <button key={opt} onClick={() => setSelectedAnswer(opt)} className="p-10 border-2 border-slate-800 text-center font-black uppercase italic text-2xl hover:bg-red-600 transition-all">{opt}</button>)}
-               </div>
-             ) : (
-               <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                 <select className="w-full bg-black border-2 border-red-900 p-6 mb-8 text-white font-black uppercase text-sm appearance-none cursor-pointer outline-none" onChange={(e) => handleFinalizeNode(e.target.value)} defaultValue="">
-                   <option value="" disabled>Choose_Evidence_Basis...</option>
-                   {questions[currentIndex].evidenceOptions?.map((opt: string) => <option key={opt} value={opt}>{opt.replace(/_/g, " ")}</option>)}
-                 </select>
-               </div>
-             )}
+          <div>
+            <div className="text-xs font-mono text-slate-500 mb-3 font-semibold uppercase tracking-wider">
+              Question {currentIndex + 1} of {questions.length}
+            </div>
+            <h2 className="text-xl md:text-2xl font-bold mb-8 text-slate-900 tracking-tight leading-snug">
+              {questions[currentIndex].text}
+            </h2>
+
+            {!selectedAnswer ? (
+              <div className="grid grid-cols-2 gap-4">
+                {["Yes", "No"].map(opt => (
+                  <button 
+                    key={opt} 
+                    onClick={() => setSelectedAnswer(opt)} 
+                    className="p-8 border border-slate-200 bg-slate-50/50 hover:bg-slate-900 hover:text-white text-slate-900 font-bold uppercase text-lg transition-colors rounded shadow-sm cursor-pointer"
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <label className="block text-xs font-mono text-slate-500 font-bold uppercase tracking-wider mb-2">
+                  Select Evidence / Verification Basis:
+                </label>
+                <select 
+                  className="w-full bg-slate-50 border border-slate-300 p-4 text-slate-900 font-medium text-sm rounded outline-none focus:border-slate-900 cursor-pointer" 
+                  onChange={(e) => handleFinalizeNode(e.target.value)} 
+                  defaultValue=""
+                >
+                  <option value="" disabled>Choose verification documentation...</option>
+                  {questions[currentIndex].evidenceOptions?.map((opt: string) => (
+                    <option key={opt} value={opt}>
+                      {formatEvidenceLabel(opt)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         )}
       </div>

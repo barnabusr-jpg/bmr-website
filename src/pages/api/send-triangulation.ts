@@ -23,10 +23,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const roleLabels: Record<string, string> = {
-    EXECUTIVE: 'Executive Leadership (Strategic Oversight Node)',
-    TECH_MGMT: 'Technical Management (Infrastructure & DevOps Node)',
-    OPS_MGMT: 'Operations Management (Workflow & Process Node)',
-    SYSTEM_USER: 'Core System Operator (Terminal Execution Node)'
+    EXECUTIVE: 'Executive Leadership (Strategic Oversight Track)',
+    TECH_MGMT: 'Technical Management (Infrastructure & DevOps Track)',
+    OPS_MGMT: 'Operations Management (Workflow & Process Track)',
+    SYSTEM_USER: 'Core System Operator (Terminal Execution Track)'
   };
 
   const roleToPillarMap: Record<string, string> = {
@@ -37,7 +37,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   };
 
   try {
-    const formattedOrg = companyName.toUpperCase().trim();
+    const formattedOrg = companyName.trim();
     const sentenceCompany = toSentenceCase(companyName);
     const targetPillar = activePillar || 'AVS';
     
@@ -53,55 +53,60 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       let emailHtmlValue = '';
 
       if (roleKey === 'EXECUTIVE' && !isNudge) {
-        // DISPATCH ONE: Executive Consolidated View (Initial Launch)
+        // DISPATCH ONE: Executive Consolidated View (Initial Launch - Executive Light Theme)
         emailHtmlValue = `
-          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: monospace;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <tr>
               <td align="center" style="padding: 40px 20px;">
-                <div style="max-width: 600px; width: 100%; background: #020617; color: #ffffff; padding: 40px; border: 2px solid #dc2626; box-sizing: border-box; text-transform: uppercase;">
+                <div style="max-width: 600px; width: 100%; background: #ffffff; color: #0f172a; padding: 40px; border: 1px solid #e2e8f0; border-top: 6px solid #0f172a; border-radius: 6px; box-sizing: border-box; text-align: left;">
                   
-                  <h2 style="color: #dc2626; font-size: 18px; font-weight: 900; margin: 0 0 5px 0;">BMR Solutions // Diagnostic Node Dispatch</h2>
-                  <p style="font-size: 10px; color: #64748b; margin: 0 0 20px 0;">Target System: ${formattedOrg}</p>
+                  <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px;">
+                    BMR Solutions // Diagnostic Dispatch
+                  </h2>
+                  <p style="font-size: 11px; font-family: monospace; color: #64748b; margin: 0 0 20px 0; font-weight: 600;">
+                    Target Organization: ${formattedOrg}
+                  </p>
                   
-                  <hr style="border: 0; border-top: 1px solid #1e293b; margin: 20px 0"/>
+                  <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
                   
-                  <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                    The Quad-Node assessment protocol for your organization is underway.
+                  <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 16px 0;">
+                    The pre-automation diagnostic assessment for <strong>${sentenceCompany}</strong> is underway.
                   </p>
 
-                  <p style="line-height: 1.6; font-size: 13px; color: #94a3b8; text-transform: none; margin: 0 0 20px 0; font-family: sans-serif;">
-                    Invitation signals have been dispatched to designated stakeholders to isolate Pre-Automation AI friction and schema drift liabilities.
+                  <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 24px 0;">
+                    Invitation links have been dispatched to designated stakeholders to evaluate operational friction, schema stability, and risk guardrails prior to scaling autonomous agents.
                   </p>
 
-                  <!-- STEP 1: Find your email -->
-                  <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 20px; text-align: left;">
-                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 1: Complete Executive Assessment</p>
-                    <p style="margin: 0 0 15px 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
-                      Use the direct access terminal below to complete your strategic posture evaluation.
+                  <!-- STEP 1: Executive Track -->
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 20px; margin-bottom: 16px; border-radius: 4px; text-align: left;">
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 1: Complete Executive Assessment</p>
+                    <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">
+                      Access your direct link below to complete your executive assessment module:
                     </p>
-                    <a href="${diagnosticUrl}" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
-                      Open Executive Assessment Track &rarr;
+                    <a href="${diagnosticUrl}" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
+                      Open Executive Assessment Track →
                     </a>
                   </div>
 
                   <!-- STEP 2: Remind your team -->
-                  <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
-                    <p style="margin: 0 0 10px 0; font-size: 11px; color: #64748b; font-weight: bold;">Step 2: Track Team Completions</p>
-                    <p style="margin: 0; font-size: 13px; color: #94a3b8; text-transform: none; font-family: sans-serif;">
-                      Ensure your technical and operational team leads access their respective node links to enable 360-degree triangulation.
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 2: Stakeholder Alignment</p>
+                    <p style="margin: 0; font-size: 13px; color: #475569;">
+                      Ensure your technical and operational team leads access their respective node links to complete multi-track evaluation.
                     </p>
                   </div>
 
                   <!-- STEP 3: Calibration Scheduling Link -->
-                  <div style="background-color: #090d1f; border: 1px solid #1e293b; padding: 20px; margin-bottom: 30px; text-align: left;">
-                    <a href="https://calendly.com/hello-bmradvisory/quad-node-calibration" target="_blank" style="color: #ffffff; text-decoration: underline; font-weight: bold; font-size: 13px;">
-                      Schedule Quad-Node Calibration Meeting &rarr;
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing</p>
+                    <a href="https://calendly.com/hello-bmradvisory/forensic-briefing" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
+                      Schedule Calibration Briefing →
                     </a>
                   </div>
 
-                  <p style="font-size: 11px; color: #475569; border-top: 1px solid #1e293b; padding-top: 20px; text-transform: none; font-family: sans-serif;">
+                  <p style="font-size: 12px; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 24px;">
                     Sincerely,<br/>
-                    <strong>BMR Solutions</strong>
+                    <strong style="color: #0f172a;">BMR Solutions Independent Advisory</strong>
                   </p>
                   
                 </div>
@@ -110,46 +115,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </table>
         `;
       } else {
-        // DISPATCH TWO: Operator Assessment / Targeted Nudge Notification
+        // DISPATCH TWO: Operator Assessment / Targeted Nudge Notification (Light Executive Theme)
         emailHtmlValue = `
-          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #020617; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <tr>
               <td align="center" style="padding: 40px 20px;">
-                <div style="max-width: 600px; width: 100%; background: #020617; color: #cbd5e1; padding: 40px; border: 1px solid #1e293b; box-sizing: border-box; text-align: left;">
+                <div style="max-width: 600px; width: 100%; background: #ffffff; color: #0f172a; padding: 40px; border: 1px solid #e2e8f0; border-top: 6px solid #0f172a; border-radius: 6px; box-sizing: border-box; text-align: left;">
                   
-                  <div style="margin-bottom: 40px; border-left: 4px solid #dc2626; padding-left: 16px;">
-                    <h2 style="color: #ffffff; font-weight: 900; font-style: italic; text-transform: uppercase; margin: 0; letter-spacing: 2px; font-size: 20px; line-height: 1.3;">
-                      ${isNudge ? '// REMINDER: Diagnostic Access Required' : '// Quad-Node Assessment Initialized'}
+                  <div style="margin-bottom: 24px;">
+                    <h2 style="color: #0f172a; font-weight: 800; margin: 0; letter-spacing: -0.5px; font-size: 20px; line-height: 1.3;">
+                      ${isNudge ? 'Assessment Reminder' : 'Diagnostic Track Authorized'}
                     </h2>
-                    <p style="color: #64748b; font-family: monospace; font-size: 11px; margin: 6px 0 0 0; letter-spacing: 0.1em; font-weight: bold;">
-                      TARGET ENTITY // ${formattedOrg}
+                    <p style="color: #64748b; font-family: monospace; font-size: 11px; margin: 4px 0 0 0; font-weight: 600;">
+                      Organization: ${formattedOrg}
                     </p>
                   </div>
+
+                  <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
                   
-                  <div style="background-color: #0f172a; border-left: 4px solid #dc2626; padding: 24px; margin-bottom: 32px; box-sizing: border-box;">
-                    <span style="color: #ef4444; font-family: monospace; font-size: 10px; font-weight: 900; letter-spacing: 0.2em; display: block; margin-bottom: 6px;">
-                      // ASSIGNED VECTOR NODE
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
+                    <span style="color: #64748b; font-family: monospace; font-size: 10px; font-weight: 700; uppercase tracking-wider block margin-bottom: 4px;">
+                      ASSIGNED STAKEHOLDER TRACK
                     </span>
-                    <span style="color: #ffffff; font-size: 15px; font-weight: 900; letter-spacing: -0.01em; text-transform: uppercase; line-height: 1.4; display: block;">
-                      ${roleName.toUpperCase()}
+                    <span style="color: #0f172a; font-size: 14px; font-weight: 800; display: block;">
+                      ${roleName}
                     </span>
                   </div>
 
-                  <p style="font-size: 14px; line-height: 1.6; color: #94a3b8; font-weight: 500; margin: 0 0 30px 0;">
-                    <strong>${sentenceCompany} leadership</strong> has provisioned a specialized Quad-Node Assessment stream for <strong>${formattedOrg}</strong>. Your operational perspective is required to evaluate friction boundaries, schema drift, and validation fatigue within the <strong>${dynamicTrack} Framework Layer</strong>.
+                  <p style="font-size: 14px; line-height: 1.6; color: #334155; font-weight: 400; margin: 0 0 24px 0;">
+                    Leadership at <strong>${sentenceCompany}</strong> has provisioned an operational diagnostic stream. Your direct feedback is required to evaluate workflow friction and schema stability within the <strong>${dynamicTrack} Framework Layer</strong>.
                   </p>
                   
-                  <div style="background: #090d16; border: 1px solid #1e293b; padding: 32px; margin: 40px 0; text-align: center;">
-                    <p style="font-size: 10px; font-family: monospace; color: #475569; margin-bottom: 20px; text-transform: uppercase; font-weight: bold; letter-spacing: 1px;">
-                      SECURE DIAGNOSTIC ACCESS TERMINAL
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 24px; margin: 24px 0; text-align: center; border-radius: 4px;">
+                    <p style="font-size: 11px; font-family: monospace; color: #64748b; margin-bottom: 16px; font-weight: 600; uppercase tracking-wider;">
+                      SECURE DIAGNOSTIC TERMINAL
                     </p>
-                    <a href="${diagnosticUrl}" style="background: #dc2626; color: #ffffff; padding: 16px 32px; font-weight: 900; text-decoration: none; display: inline-block; text-transform: uppercase; font-size: 11px; letter-spacing: 2px; font-style: italic;">
-                      Launch Assessment Node
+                    <a href="${diagnosticUrl}" style="background: #0f172a; color: #ffffff; padding: 14px 28px; font-weight: 700; text-decoration: none; display: inline-block; font-size: 12px; letter-spacing: 1px; border-radius: 4px; text-transform: uppercase;">
+                      Launch Assessment Track →
                     </a>
                   </div>
 
-                  <p style="font-size: 11px; color: #475569; line-height: 1.8; text-transform: uppercase; font-weight: bold; font-family: monospace; border-top: 1px solid #0f172a; padding-top: 20px; margin: 40px 0 0 0;">
-                    CONFIDENTIALITY NOTICE: This terminal entry link is uniquely customized for your operational assignment. Do not forward this access token.
+                  <p style="font-size: 11px; color: #94a3b8; line-height: 1.6; font-family: monospace; border-top: 1px solid #f1f5f9; padding-top: 20px; margin: 32px 0 0 0; uppercase;">
+                    Confidential // BMR Solutions Independent Governance
                   </p>
 
                 </div>
@@ -160,8 +167,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       const subjectLine = isNudge
-        ? `REMINDER: Action Required: Quad-Node Assessment Gateway // ${formattedOrg}`
-        : `ACTION REQUIRED: Quad-Node Assessment Initialized // ${formattedOrg}`;
+        ? `REMINDER: Operational Assessment Gateway // ${formattedOrg}`
+        : `ACTION REQUIRED: Operational Assessment Authorized // ${formattedOrg}`;
 
       const sendgridPayload = {
         personalizations: [
