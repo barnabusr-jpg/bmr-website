@@ -39,13 +39,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // 3. Populate dynamic presentational fractures (C-Suite / Pre-Automation AI Aligned)
       const compiledFractures = [
         { 
-          id: "UNMAPPED_SCHEMA_DRIFT", 
+          id: "Unmapped Schema Drift", 
           severity: "CRITICAL", 
           description: "Unstructured third-party software updates and sliding target schemas inject context noise into model ingestion layers.", 
           directive: "Deploy Track 01 Ingestion Contracts and isolate vendor data payloads before LLM context windows." 
         },
         { 
-          id: "VALIDATION_FATIGUE_NODE", 
+          id: "Validation Fatigue Node", 
           severity: "HIGH", 
           description: "Absence of automated sensitivity labeling and human-in-the-loop escalation gates exposes operational runtimes to unhedged DLP risk.", 
           directive: "Instantiate Track 02 Telemetry Filters and enforce Purview DLP deployment gates before scaling agents." 
@@ -88,20 +88,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const generatedFractures = answers
       .filter((ans) => ans.selectedOptionWeight >= 6)
       .map((ans) => {
-        let idString = "UNMAPPED_SCHEMA_DRIFT";
+        let idString = "Unmapped Schema Drift";
         let descriptionText = "Sliding API data contracts and unstructured vendor payloads introduce operational friction prior to AI ingestion.";
         let directiveText = "Deploy Track 01 Ingestion Contracts and isolate vendor data payloads before model context windows.";
 
         if (ans.category === "governance") {
-          idString = "VALIDATION_FATIGUE_NODE";
+          idString = "Validation Fatigue Node";
           descriptionText = "Absence of automated sensitivity labeling and clear human-in-the-loop gates allows unmonitored workflows to process untracked.";
           directiveText = "Instantiate Track 02 Telemetry Filters and enforce Purview DLP deployment gates before scaling agents.";
         } else if (ans.category === "shadow_ai" || ans.category === "security") {
-          idString = "CONTEXT_WINDOW_NOISE";
+          idString = "Context Window Noise";
           descriptionText = "Unfiltered telemetry traces stream raw into production pipelines, triggering alert exhaustion and masking operational errors.";
           directiveText = "Configure sliding window event aggregation and circuit breaker hooks to suppress background noise.";
         } else if (ans.category === "workforce" || ans.category === "tribal") {
-          idString = "SHADOW_REWORK_TAX";
+          idString = "Process Waste Tax Exposure";
           descriptionText = "Critical workflow stabilization relies on manual developer firefighting, creating a persistent Process Waste Tax.";
           directiveText = "Deconstruct manual firefighting loops into machine-readable runbooks to restore workforce velocity.";
         }
@@ -120,7 +120,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .from("audits")
       .insert([
         {
-          org_name: orgName.toUpperCase().trim(),
+          org_name: orgName.trim(),
           sector: sector.toLowerCase().trim(),
           decay_pct: decayPct,
           fractures: curatedFractures,
