@@ -9,7 +9,7 @@ import { supabase } from "@/lib/supabaseClient";
 const LOCAL_QUESTIONS = [
   { 
     id: "NODE_01_AVS_01", 
-    text: "Are data safety rules required and enforced before outside information is brought into your AI models?", 
+    text: "Are data safety rules required and enforced before third-party or vendor data (e.g., partner feeds, public web data, API payloads) is brought into your AI models?", 
     options: [
       { label: "No safety rules or verification checks present", weight: 10 }, 
       { label: "Informal developer fixes and manual scripts", weight: 6 }, 
@@ -34,17 +34,17 @@ const LOCAL_QUESTIONS = [
       { label: "System failure costs are not tracked", weight: 10 }, 
       { label: "Costs are calculated only after major incidents occur", weight: 6 }, 
       { label: "Defined risk budgets are set aside for potential failures", weight: 4 }, 
-      { label: "Real-time financial loss tracking and Promise Gap™ integration", weight: 2 }
+      { label: "Real-time financial loss tracking with automated reporting", weight: 2 }
     ] 
   },
   { 
     id: "NODE_02_AVS_01", 
-    text: "Do your automated agents have security barriers that keep out unverified external data?", 
+    text: "Do your automated agents have security barriers that isolate and keep out unverified external data?", 
     options: [
       { label: "External data connects directly without safety filters", weight: 10 }, 
       { label: "Basic data checking tools are active", weight: 6 }, 
       { label: "Isolated staging environments handle data entry", weight: 4 }, 
-      { label: "Fully isolated zero-trust security gateways", weight: 2 }
+      { label: "Strong access controls and network isolation gateways", weight: 2 }
     ] 
   },
   { 
@@ -59,9 +59,9 @@ const LOCAL_QUESTIONS = [
   },
   { 
     id: "NODE_02_AVS_03", 
-    text: "Do your AI applications use verified internal company records instead of unverified public sources?", 
+    text: "Do your AI models use verified internal company records instead of public web or third-party data?", 
     options: [
-      { label: "Applications use unverified external data sources", weight: 10 }, 
+      { label: "Models use unverified external data sources", weight: 10 }, 
       { label: "A mix of internal and external sources is used", weight: 6 }, 
       { label: "Verified internal data pipelines feed models", weight: 4 }, 
       { label: "Fully governed and secure internal record stores", weight: 2 }
@@ -99,7 +99,7 @@ const LOCAL_QUESTIONS = [
   },
   { 
     id: "NODE_03_AVS_03", 
-    text: "Are there clear playbooks to guide teams when automated AI workflows exceed error limits?", 
+    text: "Are there clear playbooks to guide teams when an automated workflow fails or produces questionable output?", 
     options: [
       { label: "No playbooks or response guides available", weight: 10 }, 
       { label: "Basic service recovery guidelines exist", weight: 6 }, 
@@ -307,9 +307,12 @@ export default function PulseCheck() {
                   // QUESTION {String(currentDimension + 1).padStart(2, '0')} OF {LOCAL_QUESTIONS.length}
                 </span>
                 
-                <h2 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-relaxed min-h-[90px] max-w-3xl">
+                <h2 className="text-xl sm:text-3xl font-bold text-slate-900 tracking-tight leading-relaxed max-w-3xl">
                   {LOCAL_QUESTIONS[currentDimension]?.text}
                 </h2>
+                <p className="text-xs font-mono text-slate-400 mt-3 tracking-wide">
+                  Choose the option that best matches today's reality.
+                </p>
               </div>
 
               <div className="grid grid-cols-1 gap-4">
