@@ -25,10 +25,7 @@ export default function Custom404() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild>
-                <Link href="/promise-gap">The Promise Gap</Link>
-              </Button>
-              <Button variant="outline" asChild className="text-white border-white hover:bg-white hover:text-black">
-                <Link href="/diagnostic">Start Diagnostic</Link>
+                <Link href="/forensic">Open Diagnostic Engine</Link>
               </Button>
               <Button variant="ghost" asChild className="text-slate-400">
                 <Link href="/">Back to Home</Link>

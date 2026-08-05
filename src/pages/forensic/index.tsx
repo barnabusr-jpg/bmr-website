@@ -40,7 +40,6 @@ export default function ForensicEngineRoot() {
 
   const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic'); 
 
-  // 📡 REAL-TIME CROSS-TAB SYNC LISTENER
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -62,14 +61,14 @@ export default function ForensicEngineRoot() {
         const params = new URLSearchParams(window.location.search); 
         const authVal = params.get('auth'); 
         const matrixToken = params.get('matrix');
+        const idParam = params.get('id'); // ✅ Extracts ID directly from results page route
         const pillarParam = params.get('pillar') as FunnelPillar; 
         const entityParam = params.get('entity') || params.get('org') || params.get('entity_code'); 
         const roleParam = params.get('role') as PersonaKey; 
 
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
-        const isParticipantRoute = !!(roleParam && entityParam && pillarParam); 
+        const isParticipantRoute = !!(roleParam && (entityParam || idParam) && pillarParam); 
 
-        // 🛰️ DECRYPT COMPRESSED CORE MATRIX INTERCEPTOR
         let decryptedData: Record<string, any> = {};
         if (matrixToken) {
           try {
@@ -79,7 +78,7 @@ export default function ForensicEngineRoot() {
           }
         }
 
-        const targetCompanyName = (decryptedData.companyName || decryptedData.org || entityParam || '').trim().replace(/\s+/g, ' ');
+        let targetCompanyName = (decryptedData.companyName || decryptedData.org || entityParam || '').trim().replace(/\s+/g, ' ');
         const activeSectorStr = String(decryptedData.sector || decryptedData.sec || pillarParam || '').toUpperCase();
 
         if (targetCompanyName) { 
@@ -101,15 +100,35 @@ export default function ForensicEngineRoot() {
             return emailRegex.test(cleanVal) ? cleanVal : ""; 
           }; 
 
-          // 📡 UNIFIED SOURCE-OF-TRUTH RECOVERY & EARLY-WARNING MATRIX SELECTOR
           const synchronizeEngineDataMatrix = async () => {
-            const cleanOrgLookup = targetCompanyName.replace(/ GLOBAL$/, '');
-            
-            const { data: activeAudit } = await supabase
-              .from('audits')
-              .select('id, sfi_score, decay_pct, sector')
-              .ilike('org_name', cleanOrgLookup)
-              .maybeSingle();
+            let activeAudit = null;
+
+            // ✅ Lookup strictly by ID if navigating from the results screen
+            if (idParam) {
+              const { data } = await supabase
+                .from('audits')
+                .select('id, org_name, sfi_score, decay_pct, sector')
+                .eq('id', idParam)
+                .maybeSingle();
+              activeAudit = data;
+
+              if (activeAudit && !targetCompanyName) {
+                targetCompanyName = activeAudit.org_name;
+                setCompanyName(targetCompanyName);
+                const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
+                if (savedSession) setTriangulation(JSON.parse(savedSession));
+              }
+            } 
+            // Fallback to searching by org string (Dashboard matrix link)
+            else if (targetCompanyName) {
+              const cleanOrgLookup = targetCompanyName.replace(/ GLOBAL$/, '');
+              const { data } = await supabase
+                .from('audits')
+                .select('id, org_name, sfi_score, decay_pct, sector')
+                .ilike('org_name', cleanOrgLookup)
+                .maybeSingle();
+              activeAudit = data;
+            }
 
             let targetCalculatedPillar: FunnelPillar = 'IGF';
 
@@ -149,12 +168,14 @@ export default function ForensicEngineRoot() {
 
                 setEmails(freshDBEmails);
 
-                const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
-                if (saved) {
-                  const parsed = JSON.parse(saved);
-                  parsed.emails = freshDBEmails;
-                  parsed.pillar = targetCalculatedPillar; 
-                  window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
+                if (targetCompanyName) {
+                  const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
+                  if (saved) {
+                    const parsed = JSON.parse(saved);
+                    parsed.emails = freshDBEmails;
+                    parsed.pillar = targetCalculatedPillar; 
+                    window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
+                  }
                 }
                 return; 
               }
@@ -460,7 +481,7 @@ export default function ForensicEngineRoot() {
     return ( 
       <div className="bg-slate-50 min-h-screen text-slate-900 flex flex-col justify-center items-center py-12 px-4 font-sans"> 
         <div className="w-full max-w-xl border border-slate-200 bg-white p-8 text-left rounded-lg shadow-sm"> 
-                     
+                      
           <div className="border-b border-slate-100 pb-5 mb-6 flex items-center justify-between"> 
             <div className="flex items-center gap-3"> 
               <Lock size={18} className="text-red-600 shrink-0" /> 
