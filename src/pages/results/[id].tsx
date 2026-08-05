@@ -319,9 +319,14 @@ export default function UnifiedResultsPortal() {
   };
 
   const navigateToTriangulation = () => {
-    if (id) {
-      router.push(`/triangulation/${id}`);
-    }
+    if (!id) return;
+    
+    // Route navigation with safe directory fallbacks
+    router.push(`/triangulation/${id}`).catch(() => {
+      router.push(`/360/${id}`).catch(() => {
+        router.push(`/triangulation?id=${id}`);
+      });
+    });
   };
 
   if (!mounted || loading || !router.isReady || !audit) {
