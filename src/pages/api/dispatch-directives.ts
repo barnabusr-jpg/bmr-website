@@ -116,7 +116,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (insertError) throw insertError;
       }
 
-      const diagnosticLink = `${BASE_URL}/diagnostic?code=${code}`;
+      // ✅ RESTORED ROUTE FIX: Points directly to existing physical page file src/pages/diagnostic/forensic.tsx
+      const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
       if (standardizedRole === 'EXECUTIVE') {
         // DISPATCH ONE: Executive Alignment Email Template (Light Executive Theme)
