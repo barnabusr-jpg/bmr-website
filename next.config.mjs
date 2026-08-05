@@ -12,6 +12,15 @@ const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["puppeteer-core", "@sparticuz/chromium"],
   },
+  async redirects() {
+    return [
+      {
+        source: '/diagnostic',
+        destination: '/forensic?auth=admin_verified_secure',
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

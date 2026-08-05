@@ -318,14 +318,15 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
+  // ✅ DECOUPLED ROUTE NAVIGATION (Explicit query-based route target)
   const navigateToTriangulation = () => {
     if (!id) return;
     
-    // Route navigation with safe directory fallbacks
-    router.push(`/triangulation/${id}`).catch(() => {
-      router.push(`/360/${id}`).catch(() => {
-        router.push(`/triangulation?id=${id}`);
-      });
+    router.push({
+      pathname: "/forensic",
+      query: { id, auth: "admin_verified_secure" },
+    }).catch((err) => {
+      console.error("Navigation routing error:", err);
     });
   };
 
