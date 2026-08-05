@@ -85,16 +85,16 @@ export default function Methodology() {
             
             <div className="space-y-6">
               <p className="text-lg sm:text-2xl text-slate-950 max-w-4xl leading-relaxed font-bold">
-                Systemic risk goes beyond software bugs. It is a deeper, structural issue. We find process and data gaps, such as undocumented manual overrides, API schema drift, legacy data mismatches, or missing validation checks, before they can disrupt your automated systems or cause business problems.
+                Systemic risk is more than just software bugs. It is a deeper, structural problem. We look for hidden process and data gaps, such as unmonitored manual fixes, changing data formats, outdated records, or missing verification checks, before they disrupt your automated systems or lead to costly business issues.
               </p>
               
               <p className="text-base sm:text-lg text-slate-600 max-w-4xl leading-relaxed font-normal border-l-2 border-slate-300 pl-4">
-                For example, in one recent engagement, our team identified an undocumented data mapping override in a client order processing system. Left unchecked, this mismatch would have caused thousands of failed transactions during a software upgrade, risking lost revenue and customer trust. These real-world risks can silently build up and trigger failures that impact operations.
+                Recently, our team found a major gap in how different departments managed their data. Had this remained unaddressed, the executive team would have needed an expensive reorganization to fix ongoing delays. By spotting the root issue early, we saved the client months of internal restructuring and allowed their leaders to stay focused on growth.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sm:gap-12 items-start text-left">
             <div className="bg-white border border-slate-200 p-6 sm:p-10 shadow-sm rounded-sm">
               <h2 className="text-red-700 font-mono text-xs font-bold mb-4 tracking-widest uppercase">// ORIGIN AND LEADERSHIP</h2>
               <p className="text-slate-700 text-base leading-relaxed font-normal">
@@ -131,7 +131,7 @@ export default function Methodology() {
         </section>
 
         {/* --- SECTION II: THE THREE ASSESSMENT NODES --- */}
-        <section className="mb-24 sm:mb-32">
+        <section className="mb-24 sm:mb-32 text-left">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {nodes.map((node) => (
               <div key={node.id} className="bg-white border border-slate-200 p-6 sm:p-8 shadow-sm rounded-sm relative group hover:border-red-700 transition-all flex flex-col justify-between">
@@ -178,7 +178,7 @@ export default function Methodology() {
         </section>
 
         {/* --- SECTION III: THE FOUR-PHASE DIAGNOSTIC PROCESS --- */}
-        <section className="mb-20 sm:mb-24 bg-white border border-slate-200 p-6 sm:p-12 md:p-16 rounded-sm shadow-sm">
+        <section className="mb-20 sm:mb-24 bg-white border border-slate-200 p-6 sm:p-12 md:p-16 rounded-sm shadow-sm text-left">
           <div className="max-w-4xl">
             <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight mb-6 text-slate-950 leading-tight">
               THE FOUR-PHASE <span className="text-red-700">DIAGNOSTIC PROCESS.</span>
@@ -203,7 +203,7 @@ export default function Methodology() {
         </section>
 
         {/* --- COMPLIANCE HIGHLIGHT --- */}
-        <section className="mb-24 sm:mb-32 max-w-7xl mx-auto">
+        <section className="mb-24 sm:mb-32 max-w-7xl mx-auto text-left">
           <div className="bg-white border-l-4 border-red-700 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 font-mono text-xs rounded-sm border border-slate-200 shadow-sm">
             <div className="space-y-2">
               <div className="text-red-700 font-bold tracking-wider flex items-center gap-2 text-xs uppercase">
