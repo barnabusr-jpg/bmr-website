@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useMemo, useEffect } from 'react';
-import { Shield, ChevronRight, Activity, AlertCircle } from 'lucide-react';
+import { Shield, ChevronRight, Activity, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { forensicQuestions } from '../data/forensicQuestions';
 import { calculateForensicMetrics } from '../lib/forensicCalculus';
 
@@ -33,7 +33,6 @@ export default function ForensicDiagnosticWizard({
   const [isCompiling, setIsCompiling] = useState(false);
   const [activeRole, setActiveRole] = useState<string>('');
 
-  // 📥 GLOBAL MOUNT HYDRATION & SECURE PAIRING
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -66,7 +65,6 @@ export default function ForensicDiagnosticWizard({
     }
   }, [activePillar]);
 
-  // 📡 ROLE-BASED VECTOR ROUTER FILTER
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
     const normalizedRole = activeRole?.toUpperCase() || '';
@@ -180,24 +178,24 @@ export default function ForensicDiagnosticWizard({
   const isPillarIncomplete = currentStepAnsweredCount < currentStepTotal;
 
   return (
-    <div className="bg-slate-50 text-slate-900 font-sans text-left antialiased p-8 md:p-12 max-w-4xl mx-auto my-12 border border-slate-200 shadow-sm rounded-lg">
+    <div className="bg-slate-50 text-slate-900 font-sans text-left antialiased p-6 md:p-10 max-w-4xl mx-auto my-8 border border-slate-200 shadow-sm rounded-lg">
       
       {/* Structural Progression Control Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4 mb-8 gap-4 font-mono">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4 mb-6 gap-4 font-mono text-xs">
         <div className="flex items-center gap-3">
           <Activity className="text-slate-900 animate-pulse shrink-0" size={18} />
-          <span className="text-xs font-bold uppercase tracking-wider text-slate-900">
+          <span className="font-bold uppercase tracking-wider text-slate-900">
             PRE-AUTOMATION DIAGNOSTIC // STAKEHOLDER NODE ROUTING
           </span>
         </div>
         
-        <div className="text-xs text-slate-500 font-bold tracking-wider shrink-0">
+        <div className="text-slate-500 font-bold tracking-wider shrink-0 bg-slate-100 border border-slate-200 px-3 py-1 rounded">
           SECTOR READINESS PROGRESS: {String(currentStepAnsweredCount).padStart(2, '0')} / {String(currentStepTotal).padStart(2, '0')}
         </div>
       </div>
 
       {/* Narrative Context Alert Header */}
-      <div className="bg-white border border-slate-200 p-5 mb-8 text-xs text-slate-600 leading-relaxed flex items-start gap-3 rounded shadow-sm">
+      <div className="bg-white border border-slate-200 p-4 mb-6 text-xs text-slate-600 leading-relaxed flex items-start gap-3 rounded shadow-sm">
         <AlertCircle size={18} className="text-slate-900 shrink-0 mt-0.5" />
         <div>
           This pre-automation diagnostic evaluates pipeline readiness, schema stability, and operational friction to establish machine-readable guardrails prior to scaling AI deployments.
@@ -205,19 +203,26 @@ export default function ForensicDiagnosticWizard({
       </div>
 
       {/* Scenario Ingestion Loop */}
-      <div className="space-y-8 mb-10">
+      <div className="space-y-6 mb-8">
         {activeQuestions.map((question, index) => {
           const targetKey = `quad_${question.id}`;
           const currentSelection = answers[targetKey] || answers[question.id];
           
           return (
-            <div key={question.id} className="border border-slate-200 bg-white p-6 md:p-8 relative rounded-lg shadow-sm group/card">
+            <div key={question.id} className="border border-slate-200 bg-white p-6 md:p-8 rounded-lg shadow-sm space-y-6">
               
-              <span className="text-xs font-mono text-slate-500 block mb-3 font-semibold tracking-wider">
-                Question {String(index + 1).padStart(2, '0')} of {String(activeQuestions.length).padStart(2, '0')}
-              </span>
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3 font-mono text-xs">
+                <span className="text-red-600 font-bold uppercase tracking-wider">
+                  // Question {String(index + 1).padStart(2, '0')} of {String(activeQuestions.length).padStart(2, '0')}
+                </span>
+                {question.target_node && (
+                  <span className="text-slate-400 font-semibold uppercase">
+                    Node: {question.target_node}
+                  </span>
+                )}
+              </div>
 
-              <p className="text-xl md:text-2xl text-slate-900 font-bold tracking-tight mb-6">
+              <p className="text-xl md:text-2xl text-slate-900 font-bold tracking-tight leading-snug">
                 {question.symptomatic_scenario}
               </p>
               
@@ -229,25 +234,29 @@ export default function ForensicDiagnosticWizard({
                     <div 
                       key={key}
                       onClick={() => handleSelectOption(question.id, key)}
-                      className={`border p-4 cursor-pointer transition-colors flex items-start gap-4 rounded ${
+                      className={`border p-4 cursor-pointer transition-all flex items-start gap-4 rounded-md ${
                         isSelected 
-                          ? 'border-slate-900 bg-slate-900 text-white' 
-                          : 'border-slate-200 bg-slate-50/50 text-slate-700 hover:border-slate-300 hover:bg-slate-100/60'
+                          ? 'border-slate-900 bg-slate-900 text-white shadow-sm' 
+                          : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-slate-300 hover:bg-slate-100/80'
                       }`}
                     >
-                      <span className={`text-xs font-bold px-3 py-1 border shrink-0 transition-colors rounded ${
+                      <span className={`text-xs font-mono font-bold px-2.5 py-1 rounded border shrink-0 transition-colors ${
                         isSelected 
-                          ? 'bg-white text-slate-900 border-white font-mono' 
-                          : 'bg-white text-slate-600 border-slate-200 font-mono'
+                          ? 'bg-white text-slate-900 border-white' 
+                          : 'bg-white text-slate-600 border-slate-200'
                       }`}>
                         {key}
                       </span>
 
-                      <p className={`leading-relaxed text-sm font-medium pt-0.5 transition-colors ${
+                      <p className={`leading-relaxed text-sm font-medium pt-0.5 flex-1 transition-colors ${
                         isSelected ? 'text-white' : 'text-slate-700'
                       }`}>
                         {choice.text}
                       </p>
+
+                      {isSelected && (
+                        <CheckCircle2 size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                      )}
                     </div>
                   );
                 })}
@@ -258,9 +267,9 @@ export default function ForensicDiagnosticWizard({
       </div>
 
       {/* Bottom Pipeline Status Controller */}
-      <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono">
-        <div className="text-xs text-slate-500 tracking-wider flex items-center gap-2 font-bold">
-          <Shield size={14} className={isPillarIncomplete ? "text-slate-400" : "text-slate-900"} /> 
+      <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono text-xs">
+        <div className="text-slate-500 tracking-wider flex items-center gap-2 font-bold">
+          <Shield size={16} className={isPillarIncomplete ? "text-slate-400" : "text-emerald-600"} /> 
           {isPillarIncomplete ? "ALL ACTIVE SECTOR OBSERVATIONS REQUIRED TO RESOLVE POSTURE" : "PRE-AUTOMATION VECTORS VALIDATED // READY TO COMPUTE"}
         </div>
         
@@ -268,10 +277,10 @@ export default function ForensicDiagnosticWizard({
           type="button"
           disabled={isPillarIncomplete || isCompiling}
           onClick={compileActiveNodePosture}
-          className={`w-full sm:w-auto px-8 py-3.5 font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors rounded shadow-sm ${
+          className={`w-full sm:w-auto px-8 py-3.5 font-sans font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-colors rounded-md shadow-sm ${
             isPillarIncomplete 
               ? 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' 
-              : 'bg-slate-900 text-white hover:bg-slate-800'
+              : 'bg-slate-900 text-white hover:bg-slate-800 cursor-pointer'
           }`}
         >
           {isCompiling ? "COMPILING VECTOR LOGS..." : "Save & Close Node Posture"} 
