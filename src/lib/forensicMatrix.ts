@@ -1,37 +1,6 @@
 // src/lib/forensicMatrix.ts
 
-export interface ForensicMatrixItem {
-  id: string;
-  lens: "EXE" | "MGR" | "TEC";
-  triangulationId: string;
-  weight: number;
-  text: string;
-  evidenceOptions: string[];
-}
-
-/**
- * Normalizes incoming evidence choices from UI dropdowns (Title Case, spaces, lowercase)
- * into strict UPPERCASE_SNAKE_CASE used by calculation and icon engines.
- */
-export const normalizeEvidence = (val?: string): string => {
-  if (!val) return "NONE";
-  return val.trim().toUpperCase().replace(/\s+/g, "_");
-};
-
-/**
- * Validates whether a given evidence choice matches an allowed option key.
- */
-export const isValidEvidenceOption = (
-  option: string,
-  allowedOptions: string[]
-): boolean => {
-  const normalizedInput = normalizeEvidence(option);
-  return allowedOptions.some(
-    (allowed) => normalizeEvidence(allowed) === normalizedInput
-  );
-};
-
-export const FORENSIC_MATRIX: ForensicMatrixItem[] = [
+export const FORENSIC_MATRIX = [
   // --- T1: INDEMNITY & GOVERNANCE GATES ---
   { 
     id: "EXE_01", lens: "EXE", triangulationId: "T1", weight: 15, 
@@ -201,4 +170,5 @@ export const FORENSIC_MATRIX: ForensicMatrixItem[] = [
     text: "Has engineering tested automated failovers to switch traffic to secondary model providers during an outage?", 
     evidenceOptions: ["FAILOVER_TEST_LOGS", "ADAPTER_CONFIG", "NONE"] 
   }
-];
+]; 
+
