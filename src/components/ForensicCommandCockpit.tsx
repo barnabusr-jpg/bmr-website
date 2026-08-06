@@ -54,7 +54,7 @@ export default function ForensicCommandCockpit({
   const readinessVariance = Math.round(score - peerReadinessBaseline);
 
   // Derived Financial Itemizations
-  const wastedHoursPerYr = Math.round(leakage / 85); // ~$85/hr blended engineering rate
+  const wastedHoursPerYr = Math.round(leakage / 85);
   const weeklyLoss = Math.round(leakage / 52);
 
   const handleExportCSV = () => {
@@ -75,9 +75,18 @@ export default function ForensicCommandCockpit({
   };
 
   const handleSOWClick = () => {
+    // 1. Activate the REMEDIATION / SOW tab
     if (onSelectSOW) {
       onSelectSOW();
     }
+    
+    // 2. Smoothly scroll down to bring the active SOW table into focus
+    setTimeout(() => {
+      const sowElement = document.getElementById('sow-section');
+      if (sowElement) {
+        sowElement.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 50);
   };
 
   return (
