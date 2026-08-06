@@ -61,7 +61,7 @@ export default function ForensicEngineRoot() {
         const params = new URLSearchParams(window.location.search); 
         const authVal = params.get('auth'); 
         const matrixToken = params.get('matrix');
-        const idParam = params.get('id'); // ✅ Extracts ID directly from results page route
+        const idParam = params.get('id'); 
         const pillarParam = params.get('pillar') as FunnelPillar; 
         const entityParam = params.get('entity') || params.get('org') || params.get('entity_code'); 
         const roleParam = params.get('role') as PersonaKey; 
@@ -103,7 +103,6 @@ export default function ForensicEngineRoot() {
           const synchronizeEngineDataMatrix = async () => {
             let activeAudit = null;
 
-            // ✅ Lookup strictly by ID if navigating from the results screen
             if (idParam) {
               const { data } = await supabase
                 .from('audits')
@@ -119,7 +118,6 @@ export default function ForensicEngineRoot() {
                 if (savedSession) setTriangulation(JSON.parse(savedSession));
               }
             } 
-            // Fallback to searching by org string (Dashboard matrix link)
             else if (targetCompanyName) {
               const cleanOrgLookup = targetCompanyName.replace(/ GLOBAL$/, '');
               const { data } = await supabase
@@ -326,7 +324,7 @@ export default function ForensicEngineRoot() {
     } catch (err) {
       console.error("Nudge API exception:", err);
       alert("Error sending notification via API.");
-    } finally {
+    } fontFinally {
       setSendingNudgeRole(null);
     }
   };
@@ -758,6 +756,7 @@ export default function ForensicEngineRoot() {
             companyName={triangulation.companyName} 
             sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'} 
             metrics={alignedCockpitMetrics} 
+            onSelectSOW={() => setDossierTab('REMEDIATION')}
           /> 
 
           {/* GOVERNANCE & COMPLIANCE SUPPLEMENT INTEGRATION */}
@@ -769,7 +768,7 @@ export default function ForensicEngineRoot() {
             />
           </div>
 
-          <div className="mt-12 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left">
+          <div id="sow-section" className="mt-12 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left">
             <div className="border-b border-slate-100 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
                 <FileText size={22} className="text-slate-900 shrink-0" />
