@@ -3,9 +3,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight, Loader2 } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight, Loader2, Copy, Check, Printer, Download, Calendar, DollarSign, Sliders } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
-import { decompressFromEncodedURIComponent } from 'lz-string';
+import { decompressFromEncodedURIComponent, compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
@@ -26,6 +26,7 @@ export default function ForensicEngineRoot() {
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
   const [sendingNudgeRole, setSendingNudgeRole] = useState<PersonaKey | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({ 
     EXECUTIVE: '', 
@@ -467,6 +468,29 @@ export default function ForensicEngineRoot() {
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
+  // Compressed Shareable SOW Generator Token URL
+  const sowShareLink = useMemo(() => {
+    if (typeof window === 'undefined' || !triangulation) return '';
+    const payload = {
+      org: triangulation.companyName,
+      pillar: triangulation.pillar,
+      ans: triangulation.responses,
+      expires: Date.now() + 86400000
+    };
+    const compressed = compressToEncodedURIComponent(JSON.stringify(payload));
+    return `${window.location.origin}/sow-generator?matrix=${compressed}`;
+  }, [triangulation]);
+
+  const handleCopySOWLink = async () => {
+    try {
+      await navigator.clipboard.writeText(sowShareLink);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.error('Clipboard write exception:', err);
+    }
+  };
+
   if (authorizedAdmin === null) { 
     return ( 
       <div className="bg-slate-50 min-h-screen text-slate-500 font-mono flex items-center justify-center"> 
@@ -768,20 +792,22 @@ export default function ForensicEngineRoot() {
             />
           </div>
 
-          <div id="sow-section" className="mt-12 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left">
+          {/* ACTIVE DOSSIER & SOW TERMINAL SECTION */}
+          <div className="mt-8 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left">
             <div className="border-b border-slate-100 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
                 <FileText size={22} className="text-slate-900 shrink-0" />
                 <div>
                   <h3 className="text-lg font-mono font-bold uppercase tracking-wider text-slate-900 leading-none">
-                    BMR Solutions // Explanatory Summary
+                    BMR Solutions // Explanatory Summary & Active SOW
                   </h3>
                   <span className="text-xs font-mono text-slate-500 block uppercase tracking-wider mt-1">
-                    Companion Leave-Behind Document // Diagnostic Summary
+                    Companion Leave-Behind Document // Statement of Work Matrix
                   </span>
                 </div>
               </div>
 
+              {/* TAB SELECTOR */}
               <div className="flex bg-slate-100 p-1 border border-slate-200 rounded-md font-mono text-xs font-bold uppercase tracking-wider">
                 <button 
                   onClick={() => setDossierTab('METRICS')}
@@ -793,7 +819,7 @@ export default function ForensicEngineRoot() {
                   onClick={() => setDossierTab('REMEDIATION')}
                   className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'REMEDIATION' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                 >
-                  02 // Alignment Track
+                  02 // Alignment Track SOW
                 </button>
               </div>
             </div>
@@ -835,44 +861,145 @@ export default function ForensicEngineRoot() {
               </div>
             )}
 
+            {/* TAB 02: ACTIVE INTERACTIVE STATEMENT OF WORK TABLE */}
             {dossierTab === 'REMEDIATION' && (
-              <div className="space-y-6">
+              <div className="space-y-8 font-sans">
+                
+                {/* SOW ACTIVE TABLE HEADER */}
+                <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <span className="font-mono text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">
+                      // Active Remediation Statement of Work Matrix
+                    </span>
+                    <h4 className="text-xl font-extrabold tracking-tight mt-0.5">
+                      Target Implementation SOW: {companyName.replace(/_/g, ' ')}
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-3 font-mono text-xs">
+                    <button
+                      type="button"
+                      onClick={() => typeof window !== 'undefined' && window.print()}
+                      className="bg-white text-slate-900 px-4 py-2 font-bold uppercase tracking-wider rounded hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer"
+                    >
+                      <Printer size={14} /> Print SOW Contract
+                    </button>
+                  </div>
+                </div>
+
+                {/* DETAILED IMPLEMENTATION SOW TABLE */}
+                <div className="border border-slate-200 rounded-md overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 font-mono text-slate-700 uppercase tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="p-4 font-bold">Phase</th>
+                        <th className="p-4 font-bold">Remediation Scope</th>
+                        <th className="p-4 font-bold">Technical Deliverables</th>
+                        <th className="p-4 font-bold">Timeline</th>
+                        <th className="p-4 font-bold">Resource Allocation</th>
+                        <th className="p-4 font-bold text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      <tr>
+                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 01</td>
+                        <td className="p-4 font-bold text-slate-900">
+                          Pipeline Hardening & Schema Abstraction
+                        </td>
+                        <td className="p-4 text-slate-600 leading-relaxed">
+                          Deploy strict GraphQL/OpenAPI schema validation gates, microservice adapter decoupling, and circuit breakers.
+                        </td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 1 – 3</td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Senior Data Eng + SecOps</td>
+                        <td className="p-4 text-right whitespace-nowrap">
+                          <span className="bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
+                            Pending Approval
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 02</td>
+                        <td className="p-4 font-bold text-slate-900">
+                          Telemetry Decoupling & Alarm Filtering
+                        </td>
+                        <td className="p-4 text-slate-600 leading-relaxed">
+                          Implement Purview/DLP sensitivity tagging, suppress alert fatigue loops, and install audit trail logging.
+                        </td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 4 – 6</td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">DevOps + Platform Lead</td>
+                        <td className="p-4 text-right whitespace-nowrap">
+                          <span className="bg-slate-100 text-slate-600 border border-slate-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
+                            Queued
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 03</td>
+                        <td className="p-4 font-bold text-slate-900">
+                          Autonomous Governance & Deployment Gates
+                        </td>
+                        <td className="p-4 text-slate-600 leading-relaxed">
+                          Automate Purview data loss prevention policies, continuous model evaluation pipelines, and executive steering dashboards.
+                        </td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 7 – 8</td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Enterprise Architect</td>
+                        <td className="p-4 text-right whitespace-nowrap">
+                          <span className="bg-slate-100 text-slate-600 border border-slate-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
+                            Queued
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* GOVERNANCE & REGULATORY STANDARDS AUDIT FLAGS */}
                 <div className="border border-slate-200 bg-slate-50 p-6 rounded-md">
                   <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-3">
-                    // Governance & Regulatory Standard Mapping
+                    // Regulatory Non-Compliance Standards Audit
                   </span>
                   
                   <div className="space-y-3 font-mono text-xs text-slate-700">
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[PENDING REVIEW]</strong> ISO 9001:2015 // Clause 8.5.1: Messaging anomalies create unmapped distribution risk.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[PENDING REVIEW]</strong> HL7 FHIR v4 // Data Conformance: Unstructured drift triggers serialization failures.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[PENDING REVIEW]</strong> PCI-DSS v4.0 // Req 10.2: Processing delays interrupt automated auditing boundaries.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[PENDING REVIEW]</strong> SOX Act // Section 404: Telemetry friction degrades financial reporting controls.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> ISO 9001:2015 // Clause 8.5.1: Messaging anomalies create unmapped distribution risk.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> HL7 FHIR v4 // Data Conformance: Unstructured drift triggers serialization failures.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> PCI-DSS v4.0 // Req 10.2: Processing delays interrupt automated auditing boundaries.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> SOX Act // Section 404: Telemetry friction degrades financial reporting controls.</span></div>
                   </div>
+                </div>
 
-                  <div className="border-t border-slate-200 mt-5 pt-4">
-                    <span className="font-mono text-[11px] text-slate-500 block font-bold uppercase tracking-wider mb-1">Audit Findings</span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      These flags highlight active operational risks recorded in system logs. Resolving these findings prior to expanding autonomous workflow deployments prevents unhedged corporate liability.
+                {/* STATELESS SHAREABLE SOW GENERATOR CARD */}
+                <div className="bg-slate-900 text-white p-6 rounded-md space-y-3 font-sans no-print">
+                  <div>
+                    <span className="text-[10px] font-mono text-emerald-400 block font-bold uppercase tracking-wider">
+                      // Stateless Deployable SOW Link Generator
+                    </span>
+                    <h5 className="text-sm font-extrabold uppercase mt-0.5">
+                      Shareable Permanent SOW Token Interface
+                    </h5>
+                    <p className="text-xs text-slate-300 font-normal mt-1 leading-relaxed">
+                      Copy this encrypted token to open or share this exact Statement of Work blueprint independently without requiring database session locks.
                     </p>
                   </div>
-                </div>
-
-                <div className="bg-slate-50 border border-slate-200 p-5 rounded-md">
-                  <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-2">// Statement of Work & Remediation Roadmap</span>
-                  <p className="text-xs text-slate-600 leading-relaxed mb-4 font-normal">
-                    To eliminate manual friction and insulate enterprise data pipelines, BMR Solutions recommends a two-phase remediation SOW:
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans text-xs">
-                    <div className="bg-white p-4 border border-slate-200 rounded-md">
-                      <strong className="text-slate-900 block font-bold mb-1">Phase 01 // Track 01 Pipeline Hardening</strong>
-                      <p className="text-slate-600 font-normal leading-relaxed">Deploys data contracts and SLA gates to insulate backend architectures from schema drift and model hallucinations.</p>
-                    </div>
-                    <div className="bg-white p-4 border border-slate-200 rounded-md">
-                      <strong className="text-slate-900 block font-bold mb-1">Phase 02 // Track 02 Telemetry Decoupling</strong>
-                      <p className="text-slate-600 font-normal leading-relaxed">Filters alert noise across network topologies to suppress alert desensitization and restore operational focus.</p>
-                    </div>
+                  <div className="flex flex-col sm:flex-row items-stretch gap-2 font-mono text-xs">
+                    <input
+                      type="text"
+                      value={sowShareLink}
+                      readOnly
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
+                      className="flex-1 bg-slate-950 border border-slate-700 p-3 text-slate-300 font-mono text-[11px] rounded focus:outline-none truncate selection:bg-emerald-900 selection:text-emerald-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopySOWLink}
+                      className={`px-5 py-3 font-mono font-bold uppercase tracking-wider rounded flex items-center justify-center gap-2 transition-colors shrink-0 cursor-pointer ${
+                        copiedLink ? 'bg-emerald-600 text-white' : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                      }`}
+                    >
+                      {copiedLink ? <Check size={14} /> : <Copy size={14} />}
+                      {copiedLink ? 'COPIED' : 'COPY SOW LINK'}
+                    </button>
                   </div>
                 </div>
+
               </div>
             )}
 
