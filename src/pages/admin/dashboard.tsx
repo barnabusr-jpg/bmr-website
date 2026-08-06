@@ -4,32 +4,23 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  X, Send, CheckCircle, Clock, Search, BellRing, FileText, Monitor, ExternalLink
+  X, Send, Clock, Search, BellRing, FileText, Monitor, ExternalLink
 } from "lucide-react";
 import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
 
 // CANONICAL SECTOR RISK MULTIPLIERS (Indexed to 4-Card Strategy Intake UI)
 const SECTOR_MULTIPLIERS: Record<string, number> = {
-  // Option 1: Finance / Compliance
   FINANCE: 1.35,
   FINANCIAL_SERVICES: 1.35,
   COMPLIANCE: 1.35,
-
-  // Option 2: Healthcare / Liability
   HEALTHCARE: 1.40,
   LIABILITY: 1.40,
-
-  // Option 3: Industrial / Operations
   INDUSTRIAL: 1.15,
   MANUFACTURING: 1.15,
   OPERATIONS: 1.15,
-
-  // Option 4: Services / Labor
   SERVICES: 1.20,
   LABOR: 1.20,
-
-  // Standard Fallback
   DEFAULT: 1.28
 };
 
@@ -76,7 +67,7 @@ export default function AdminDashboard() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      alert("AUTHORIZATION FAILED: UNRECOGNIZED SIGNAL");
+      alert("Sign-in failed. Please check your credentials.");
       setLoading(false);
     } else {
       setIsAuthenticated(true);
@@ -156,7 +147,7 @@ export default function AdminDashboard() {
           emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
         })
       });
-      if (!res.ok) throw new Error("Dispatch Failed");
+      if (!res.ok) throw new Error("Email dispatch failed.");
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
@@ -170,7 +161,7 @@ export default function AdminDashboard() {
   const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
     const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey.toUpperCase());
     if (!matchingNode || !matchingNode.email) {
-      alert("NUDGE ERROR: RECIPIENT NODE ROUTE NOT IDENTIFIED.");
+      alert("Nudge failed: Recipient email address not found.");
       return;
     }
     
@@ -190,10 +181,10 @@ export default function AdminDashboard() {
         })
       });
       
-      if (res.ok) alert(`NUDGE SUCCESS: ACCESS REMINDER LINK FIRED TO ${matchingNode.email}`);
-      else throw new Error("Gateway Timeout");
+      if (res.ok) alert(`Reminder email sent to ${matchingNode.email}`);
+      else throw new Error("Server timeout");
     } catch (err) {
-      alert("NUDGE LOGISTICS FAILURE.");
+      alert("Failed to send reminder email.");
     } finally {
       setIsUpdating(false);
     }
@@ -239,9 +230,9 @@ export default function AdminDashboard() {
         if (cleanAudit) {
           setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
         }
-        alert("SYNTHESIS ROOT LOGIC ENGINE RE-CALCULATED SUCCESSFULLY.");
+        alert("Diagnostic calculation updated successfully.");
       } else {
-        alert(`SERVER REJECTION: ${serverResponse.error || 'UNEXPECTED SIGNAL OUTAGE'}`);
+        alert(`Server error: ${serverResponse.error || 'Failed to recalculate data.'}`);
       }
     } catch (err) { 
       console.error(err); 
@@ -262,7 +253,7 @@ export default function AdminDashboard() {
       if (error) throw error;
       await fetchLedger();
     } catch (err) {
-      console.error("ACCESS TOGGLE ERR ->", err);
+      console.error("Access toggle error:", err);
     } finally {
       setIsUpdating(false);
     }
@@ -285,7 +276,7 @@ export default function AdminDashboard() {
         
         delete debounceTimersRef.current[targetTimerKey];
       } catch (err) {
-        console.error("LIVE_SLIDER_SYNC_ERROR:", err);
+        console.error("Live slider sync error:", err);
       }
     }, 120);
   };
@@ -319,14 +310,14 @@ export default function AdminDashboard() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <form onSubmit={handleSignIn} className="bg-white border border-slate-200 p-12 max-w-md w-full text-center shadow-sm rounded-lg relative">
-          <Key className="text-slate-900 mx-auto mb-6 animate-pulse" size={48} />
-          <p className="text-slate-500 font-mono text-xs uppercase tracking-wider mb-6 font-bold">ADMIN CLEARANCE REQUIRED</p>
+          <Key className="text-slate-900 mx-auto mb-6" size={48} />
+          <p className="text-slate-500 font-mono text-xs uppercase tracking-wider mb-6 font-bold">Admin Clearance Required</p>
           <div className="space-y-4">
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="OPERATOR EMAIL" className="w-full bg-slate-50 border border-slate-200 p-3 text-center text-slate-900 font-mono outline-none focus:border-slate-900 rounded text-xs" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="SECURE PASSKEY" className="w-full bg-slate-50 border border-slate-200 p-3 text-center text-slate-900 font-mono font-bold outline-none tracking-widest text-lg focus:border-slate-900 rounded" />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" className="w-full bg-slate-50 border border-slate-200 p-3 text-center text-slate-900 font-sans outline-none focus:border-slate-900 rounded text-xs" />
+            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" className="w-full bg-slate-50 border border-slate-200 p-3 text-center text-slate-900 font-sans outline-none focus:border-slate-900 rounded text-xs" />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white py-4 mt-6 font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors rounded text-xs">
-            {loading ? "VERIFYING..." : "INITIALIZE COMMAND"}
+          <button type="submit" disabled={loading} className="w-full bg-slate-900 text-white py-4 mt-6 font-bold uppercase tracking-wider hover:bg-slate-800 transition-colors rounded text-xs cursor-pointer">
+            {loading ? "Authenticating..." : "Sign In to Dashboard"}
           </button>
         </form>
       </div>
@@ -335,20 +326,19 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans text-left antialiased overflow-x-hidden">
-      {/* TOP DECK ACCENT BAR */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-slate-900 z-[60]" />
 
       {/* NAVIGATION HEADER */}
       <nav className="fixed top-1 left-0 right-0 h-20 bg-white border-b border-slate-200 z-50 px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-8 w-full justify-between">
           <div className="flex items-center gap-3 shrink-0">
-            <Activity className="text-slate-900 animate-pulse" size={20} />
-            <span className="text-slate-900 font-bold uppercase tracking-tight text-sm font-mono">FORENSIC COMMAND</span>
+            <Activity className="text-slate-900" size={20} />
+            <span className="text-slate-900 font-bold uppercase tracking-tight text-sm font-mono">Admin Control Panel</span>
           </div>
           
           <div className="flex items-center gap-3 shrink-0 bg-slate-100 p-1 rounded-lg">
-            <button onClick={() => setActiveTab('ledger')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Ledger</button>
-            <button onClick={() => setActiveTab('frameworks')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'frameworks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>IP Framework</button>
+            <button onClick={() => setActiveTab('ledger')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Audits Ledger</button>
+            <button onClick={() => setActiveTab('frameworks')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'frameworks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Frameworks</button>
             
             <button 
               onClick={(e) => {
@@ -371,7 +361,7 @@ export default function AdminDashboard() {
                     '_blank'
                   );
                 } else {
-                  alert("ATTENTION: Please expand an active ledger row below to prime the configuration matrix before initializing the engine.");
+                  alert("Please expand an audit row below before opening the diagnostic wizard.");
                 }
               }}
               className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded border transition-colors cursor-pointer ${
@@ -380,10 +370,9 @@ export default function AdminDashboard() {
                   : 'text-slate-600 border-slate-300 bg-white hover:text-slate-900'
               }`}
             >
-              Configure Quad-Node Engine
+              Configure 360° Diagnostic
             </button>
 
-            {/* TELEMETRY GATE: LINK TO LIVE RESULTS */}
             {expandedRow && (
               <a
                 href={`/results/${expandedRow}`}
@@ -407,16 +396,16 @@ export default function AdminDashboard() {
               <button onClick={() => setSelectedAudit(null)} className="absolute top-6 right-6 text-slate-400 hover:text-slate-900 cursor-pointer"><X size={20}/></button>
               
               <h2 className="text-2xl font-bold uppercase text-slate-900 mb-1 tracking-tight">Assign Stakeholder Emails</h2>
-              <p className="text-xs text-slate-500 font-mono tracking-wider">Provisioning association nodes for: {selectedAudit.org_name}</p>
+              <p className="text-xs text-slate-500 font-mono tracking-wider">Assigning team access for: {selectedAudit.org_name}</p>
               
               <div className="space-y-3 mt-8 text-left">
-                <input placeholder="EXECUTIVE STAKEHOLDER EMAIL" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 uppercase font-mono text-xs focus:border-slate-900 outline-none rounded" />
-                <input placeholder="MANAGERIAL STAKEHOLDER EMAIL" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 uppercase font-mono text-xs focus:border-slate-900 outline-none rounded" />
-                <input placeholder="TECHNICAL STAKEHOLDER EMAIL" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 uppercase font-mono text-xs focus:border-slate-900 outline-none rounded" />
+                <input placeholder="Executive Stakeholder Email" value={emails.exec} onChange={(e) => setEmails({...emails, exec: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 font-sans text-xs focus:border-slate-900 outline-none rounded" />
+                <input placeholder="Managerial Stakeholder Email" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 font-sans text-xs focus:border-slate-900 outline-none rounded" />
+                <input placeholder="Technical Stakeholder Email" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 font-sans text-xs focus:border-slate-900 outline-none rounded" />
                 
                 <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-slate-900 text-white py-4 mt-4 font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer rounded shadow-sm">
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={16} />} 
-                  {isUpdating ? "GENERATING ACCESS KEYS..." : "Generate Access Keys"}
+                  {isUpdating ? "Sending Access Links..." : "Send Assessment Access Links"}
                 </button>
               </div>
             </motion.div>
@@ -433,13 +422,13 @@ export default function AdminDashboard() {
               {/* SUMMARY STAT CARDS */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {[
-                  { label: "TOTAL ASSETS INGESTED", value: totalCount, color: "border-slate-200 text-slate-900" },
-                  { label: "ACTIVE TRIANGULATIONS", value: data.filter(d => d.status?.toUpperCase().includes("TRIANGULATION") || d.status?.toUpperCase().includes("TRIANGULATING")).length, color: "border-amber-200 text-amber-800" },
+                  { label: "TOTAL ASSESSMENT RECORDS", value: totalCount, color: "border-slate-200 text-slate-900" },
+                  { label: "ACTIVE MULTI-TRACK AUDITS", value: data.filter(d => d.status?.toUpperCase().includes("TRIANGULATION") || d.status?.toUpperCase().includes("TRIANGULATING")).length, color: "border-amber-200 text-amber-800" },
                   { label: "PROPOSED SOW DOSSIERS SENT", value: data.filter(d => d.sow_sent === true).length, color: "border-blue-200 text-blue-800" },
-                  { label: "CLOSED/REVENUE REALIZED", value: data.filter(d => d.is_paid === true).length, color: "border-emerald-200 text-emerald-800" }
+                  { label: "COMPLETED & VERIFIED", value: data.filter(d => d.is_paid === true).length, color: "border-emerald-200 text-emerald-800" }
                 ].map((stat) => (
                   <div key={stat.label} className={`bg-white border p-5 flex flex-col justify-between min-h-[100px] rounded-lg shadow-sm ${stat.color.split(" ")[0]}`}>
-                    <span className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase block">// {stat.label}</span>
+                    <span className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase">// {stat.label}</span>
                     <div className={`text-3xl font-extrabold tracking-tight mt-2 leading-none ${stat.color.split(" ")[1]}`}>
                       {stat.value.toString().padStart(2, '0')}
                     </div>
@@ -455,17 +444,17 @@ export default function AdminDashboard() {
                     type="text" 
                     value={searchTerm} 
                     onChange={(e) => setSearchTerm(e.target.value)} 
-                    placeholder="Search by organization or lead email..." 
-                    className="w-full bg-slate-50 border border-slate-200 pl-11 pr-4 py-3 text-slate-900 font-mono text-xs focus:border-slate-900 outline-none rounded placeholder:text-slate-400"
+                    placeholder="Search by organization or email..." 
+                    className="w-full bg-slate-50 border border-slate-200 pl-11 pr-4 py-3 text-slate-900 font-sans text-xs focus:border-slate-900 outline-none rounded placeholder:text-slate-400"
                   />
                 </div>
                 
                 <div className="flex bg-slate-100 p-1 gap-1 overflow-x-auto shrink-0 rounded-lg">
                   {([
-                    { label: "All Assets", value: "ALL" },
-                    { label: "Initial Leads", value: "LEAD" },
-                    { label: "Triangulating", value: "TRIANGULATING" },
-                    { label: "Calculated Dossiers", value: "COMPLETE" }
+                    { label: "All Audits", value: "ALL" },
+                    { label: "New Leads", value: "LEAD" },
+                    { label: "In Progress", value: "TRIANGULATING" },
+                    { label: "Completed Reports", value: "COMPLETE" }
                   ] as const).map((tab) => (
                     <button 
                       key={tab.value} 
@@ -481,7 +470,7 @@ export default function AdminDashboard() {
               {/* LEDGER ENTRIES LIST */}
               {data.length === 0 ? (
                 <div className="text-center p-16 border border-dashed border-slate-300 rounded-lg bg-white font-mono text-xs text-slate-500 uppercase tracking-wider">
-                  No corresponding forensic ledger entries located inside this category index.
+                  No assessment records match this filter criteria.
                 </div>
               ) : (
                 data.map((audit) => {
@@ -502,33 +491,33 @@ export default function AdminDashboard() {
                   const exposure = (0.22 * (dbDecay / 25) * (spend * 1000000)) * sectorInflationMultiplier;
                   const totalLeakage = laborTax + exposure;
 
-                  let playbookHeadline = "Balanced Pre-Automation Foundation";
+                  let playbookHeadline = "Standard Pre-Automation Baseline";
                   let playbookNarrative = "Operational alignment metrics indicate standard system readiness. Interface parameters match baseline stability thresholds required for automation.";
                   let playbookPitch = "Deploy routine baseline optimization filters to preserve ongoing alignment tracks.";
-                  let targetTier = "TRACK_01 // PIPELINE HARDENING";
+                  let targetTier = "TRACK 01 // PIPELINE HARDENING";
 
                   const cleanStatus = (audit.status || "").toUpperCase();
                   
                   if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) {
-                    playbookHeadline = "Pending Multi-Node Triangulation";
-                    playbookNarrative = "Multi-node operational telemetry validation parameters match initial baseline presets or require structural evaluation. Click the Quad-Node switch to compile results or synthesize findings.";
-                    playbookPitch = "Initialize matrix synthesis override engine to evaluate internal contradiction markers.";
-                    targetTier = "TRACK_02 // MULTI-NODE TRIANGULATION";
+                    playbookHeadline = "Multi-Track Diagnostic In Progress";
+                    playbookNarrative = "Stakeholder evaluation inputs are currently being gathered across Executive, Managerial, and Technical tracks.";
+                    playbookPitch = "Recalculate matrix synthesis to combine multi-track responses into unified findings.";
+                    targetTier = "TRACK 02 // MULTI-TRACK ASSESSMENT";
                   } else if (cleanStatus === "ARCHIVED") {
-                    playbookHeadline = "Record Deactivated // Historical Storage";
-                    playbookNarrative = "This architectural record has been formally decommissioned and stored inside server archives. Dynamic metric aggregation timers and client-facing telemetry channels are hard-locked.";
-                    playbookPitch = "System metrics are preserved for permanent historical reference compliance logs.";
-                    targetTier = "ARCHIVED VAULT CONTENT";
+                    playbookHeadline = "Record Archived";
+                    playbookNarrative = "This assessment record has been archived. Real-time metric calculation timers and client links are locked.";
+                    playbookPitch = "Record archived for compliance and historical audit logs.";
+                    targetTier = "ARCHIVED CONTENT";
                   } else if (sfi >= 45) {
-                    playbookHeadline = "The Promise Gap™ Encountered // Pre-Automation Impedance";
-                    playbookNarrative = `An elevated AI Readiness Gap of ${100 - sfi}% (${sfi}% Friction) reveals a persistent Infrastructure as Code (IaC) deficit. While executive strategy emphasizes AI velocity, the underlying engineering pipeline lacks machine-readable guardrails—forcing senior developers to manually nurse drifting schemas rather than scaling automated runtimes.`;
-                    playbookPitch = "Deploy machine-readable directives and ingestion contracts to close The Promise Gap™ before scaling autonomous agents.";
-                    targetTier = "TRACK_01 & 02 // PRE-AUTOMATION CONTROL PLANE";
+                    playbookHeadline = "The Promise Gap™ Identified";
+                    playbookNarrative = `An elevated AI Readiness Gap of ${100 - sfi}% reveals an infrastructure code deficit. While executive strategy emphasizes AI speed, underlying data pipelines lack automated guardrails.`;
+                    playbookPitch = "Deploy machine-readable directives to close The Promise Gap™ before scaling automation.";
+                    targetTier = "TRACKS 01 & 02 // PRE-AUTOMATION CONTROL PLANE";
                   } else if (sfi >= 0) {
-                    playbookHeadline = "Operational Absorption Maxima";
-                    playbookNarrative = `Active logic fractures (${realFractures.length} detected) are currently concentrated inside mid-tier workflow operations. Teams are manually routing data dependencies to ensure strategic objectives remain shielded from infrastructure limitations. Modernizing these hand-offs is required before scaling AI agents.`;
-                    playbookPitch = "Modernize mid-tier human-in-the-loop workflows to automate data pipelines and free up critical management bandwidth.";
-                    targetTier = "TRACK_02 // TELEMETRY DECOUPLING";
+                    playbookHeadline = "Operational Friction Area";
+                    playbookNarrative = `Identified operational risks (${realFractures.length} detected) are currently concentrated inside mid-tier workflows. Teams are manually fixing data gaps to keep tools running.`;
+                    playbookPitch = "Automate mid-tier data hand-offs to reduce manual work and free up developer time.";
+                    targetTier = "TRACK 02 // WORKFLOW AUTOMATION";
                   }
 
                   return (
@@ -539,22 +528,22 @@ export default function AdminDashboard() {
                             <Building2 size={20} className={cleanStatus.includes("COMPLETE") ? "text-emerald-700" : "text-slate-700"} />
                           </div>
                           <div>
-                            <div className="font-bold text-slate-900 text-2xl tracking-tight leading-none">{audit.org_name || "PENDING SIGNAL"}</div>
-                            <div className="text-[10px] text-slate-500 font-mono mt-1 uppercase tracking-wider font-semibold">LEAD_RECORD_NODE</div>
+                            <div className="font-bold text-slate-900 text-2xl tracking-tight leading-none">{audit.org_name || "ORGANIZATION RECORD"}</div>
+                            <div className="text-[10px] text-slate-500 font-mono mt-1 uppercase tracking-wider font-semibold">Assessment ID: {audit.id.slice(0, 8)}...</div>
                           </div>
                         </div>
                         
                         <div className="col-span-4 text-center font-bold text-xs font-mono flex items-center justify-center gap-3">
                           {sfi >= 45 && cleanStatus !== "ARCHIVED" && (
                             <span className="bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 text-[10px] font-mono tracking-wider uppercase font-bold rounded shrink-0">
-                              ⚠️ PROMISE GAP™ EXPOSURE
+                              ⚠️ PROMISE GAP™ RISK
                             </span>
                           )}
                           <span className="text-slate-800">
-                            {cleanStatus.includes("COMPLETE") && 'RESULT PUBLISHED'}
-                            {cleanStatus === 'LEAD' && 'LEAD CAPTURED'}
-                            {cleanStatus === 'ARCHIVED' && '📁 ARCHIVED INACTIVE'}
-                            {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'TRIANGULATION ACTIVE'}
+                            {cleanStatus.includes("COMPLETE") && 'REPORT READY'}
+                            {cleanStatus === 'LEAD' && 'NEW LEAD'}
+                            {cleanStatus === 'ARCHIVED' && '📁 ARCHIVED'}
+                            {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'DIAGNOSTIC IN PROGRESS'}
                           </span>
                         </div>
                         
@@ -582,7 +571,7 @@ export default function AdminDashboard() {
                                         <button 
                                           type="button"
                                           role="button"
-                                          title="Fire Email Reminder Nudge" 
+                                          title="Send Email Reminder" 
                                           disabled={isUpdating || cleanStatus === "ARCHIVED"}
                                           onClick={(e) => { e.stopPropagation(); triggerNudge(role.key, audit); }}
                                           className="text-slate-600 hover:text-slate-900 transition-colors cursor-pointer disabled:opacity-20"
@@ -604,7 +593,7 @@ export default function AdminDashboard() {
                                           : 'bg-slate-900 text-white hover:bg-slate-800'   
                                       }`} 
                                     >   
-                                      {isDone ? 'Override Matrix' : 'Open Posture'}   
+                                      {isDone ? 'Override Answers' : 'Open Diagnostic'}   
                                     </button>
                                   </div>
                                 </div>
@@ -678,15 +667,15 @@ export default function AdminDashboard() {
                           {/* FRACTURES TABLE */}
                           {realFractures.length > 0 && (
                             <div className="border border-slate-200 bg-white p-6 rounded-lg shadow-sm space-y-3 mb-6">
-                              <div className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase">// IDENTIFIED_LOGIC_FRACTURES_INVENTORY ({realFractures.length})</div>
+                              <div className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase">// IDENTIFIED_RISK_AREAS ({realFractures.length})</div>
                               <div className="overflow-x-auto">
                                 <table className="w-full text-left font-mono text-xs border-collapse">
                                   <thead>
                                     <tr className="border-b border-slate-200 text-slate-500 font-bold">
-                                      <th className="pb-2 w-1/6">FRACTURE_ID</th>
+                                      <th className="pb-2 w-1/6">RISK_ID</th>
                                       <th className="pb-2 w-1/12">SEVERITY</th>
                                       <th className="pb-2 w-1/2">DESCRIPTION</th>
-                                      <th className="pb-2 w-1/4">REQUIRED_DIRECTIVE</th>
+                                      <th className="pb-2 w-1/4">RECOMMENDED_ACTION</th>
                                     </tr>
                                   </thead>
                                   <tbody className="divide-y divide-slate-100 text-slate-800 font-medium">
@@ -744,7 +733,7 @@ export default function AdminDashboard() {
                           {/* CONTROL BUTTONS */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-200 pt-6">
                             <div className="space-y-3">
-                              <span className="text-[10px] font-mono text-slate-500 block tracking-wider uppercase font-bold">PHASE GATEWAY CONTROLS</span>
+                              <span className="text-[10px] font-mono text-slate-500 block tracking-wider uppercase font-bold">STATUS CONTROLS</span>
                               
                               <div className="flex gap-2 p-1.5 bg-slate-100 border border-slate-200 rounded font-mono text-[10px] font-bold uppercase tracking-wider w-full">
                                 <button 
@@ -781,7 +770,7 @@ export default function AdminDashboard() {
                                     const isCurrentlyArchived = cleanStatus === 'ARCHIVED';
                                     const nextStatusState = isCurrentlyArchived ? 'COMPLETE' : 'ARCHIVED';
                                     
-                                    if (!isCurrentlyArchived && !window.confirm(`CRITICAL DEACTIVATION PROTOCOL:\nAre you sure you want to ARCHIVE ${audit.org_name}?\nThis action immediately locks and freezes all live ticker telemetry.`)) {
+                                    if (!isCurrentlyArchived && !window.confirm(`Are you sure you want to archive ${audit.org_name}? This will lock results and freeze live counters.`)) {
                                       return;
                                     }
 
@@ -796,8 +785,8 @@ export default function AdminDashboard() {
                                       if (nextStatusState === 'ARCHIVED') setExpandedRow(null);
                                       await fetchLedger();
                                     } catch (err) {
-                                      console.error("ARCHIVE_MUTATION_CRASH:", err);
-                                      alert("CRITICAL TRANSMISSION INTERRUPTION: Failed to mutate database entry posture.");
+                                      console.error("Archive error:", err);
+                                      alert("Failed to update status.");
                                     } finally {
                                       setIsUpdating(false);
                                     }
@@ -808,21 +797,21 @@ export default function AdminDashboard() {
                                       : 'text-slate-600 border-slate-300 hover:text-red-700 bg-white'
                                   }`}
                                 >
-                                  File Status: {cleanStatus === 'ARCHIVED' ? "🔒 Archived" : "📁 Archive Record"}
+                                  Record Status: {cleanStatus === 'ARCHIVED' ? "🔒 Archived" : "📁 Archive Record"}
                                 </button>
                               </div>
 
                               <div className="flex flex-col sm:flex-row gap-3">
                                 <div className="flex-1 space-y-2">
-                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-slate-900 text-white px-4 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer disabled:opacity-20"><Mail size={14} /> Launch 360 Deep Dive</button>
-                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-amber-600 text-white px-4 py-3 font-bold uppercase text-xs tracking-wider hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer disabled:opacity-20"><Zap size={14} /> Export Preliminary Findings</button>
+                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); setSelectedAudit(audit); }} className="w-full bg-slate-900 text-white px-4 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer disabled:opacity-20"><Mail size={14} /> Send Invites</button>
+                                  <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); runSynthesis(audit.id); }} className="w-full bg-amber-600 text-white px-4 py-3 font-bold uppercase text-xs tracking-wider hover:bg-amber-700 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer disabled:opacity-20"><Zap size={14} /> Recalculate Findings</button>
                                 </div>
-                                <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-6 py-4 font-bold uppercase text-xs tracking-wider transition-colors shadow-sm rounded flex flex-col items-center justify-center gap-2 border cursor-pointer disabled:opacity-20 ${clientHasAccess ? 'bg-emerald-700 text-white border-emerald-700 hover:bg-emerald-800' : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'}`}><Shield size={16} /><span>{clientHasAccess ? "Blur Dossier" : "Unblur Dossier"}</span></button>
+                                <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-6 py-4 font-bold uppercase text-xs tracking-wider transition-colors shadow-sm rounded flex flex-col items-center justify-center gap-2 border cursor-pointer disabled:opacity-20 ${clientHasAccess ? 'bg-emerald-700 text-white border-emerald-700 hover:bg-emerald-800' : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'}`}><Shield size={16} /><span>{clientHasAccess ? "Lock Results Page" : "Unlock Results Page"}</span></button>
                               </div>
                             </div>
                             
                             <div className="space-y-3 md:border-l md:border-slate-200 md:pl-8">
-                              <span className="text-[10px] font-mono text-slate-500 block tracking-wider uppercase font-bold">INTERNAL ASSET EXPORTS</span>
+                              <span className="text-[10px] font-mono text-slate-500 block tracking-wider uppercase font-bold">REPORTS & EXPORTS</span>
                               
                               <div className="w-full mb-2">
                                 <input 
@@ -830,8 +819,8 @@ export default function AdminDashboard() {
                                   disabled={cleanStatus === "ARCHIVED"}
                                   value={dossierNotes[audit.id] || ""}
                                   onChange={(e) => setDossierNotes({ ...dossierNotes, [audit.id]: e.target.value })}
-                                  placeholder="Append custom dossier annotation note..."
-                                  className="w-full bg-white border border-slate-200 p-2.5 text-xs font-mono text-slate-900 focus:border-slate-900 outline-none placeholder:text-slate-400 rounded disabled:opacity-30"
+                                  placeholder="Add an internal note to this record..."
+                                  className="w-full bg-white border border-slate-200 p-2.5 text-xs font-sans text-slate-900 focus:border-slate-900 outline-none placeholder:text-slate-400 rounded disabled:opacity-30"
                                 />
                               </div>
 
@@ -847,9 +836,9 @@ export default function AdminDashboard() {
                                   }} 
                                   className="w-full bg-white border border-slate-300 text-slate-900 px-6 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-50 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer"
                                 >
-                                  <Monitor size={16} /> Open Onscreen Ledger
+                                  <Monitor size={16} /> Open Interactive Report
                                 </button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-slate-900 text-white px-6 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer"><FileText size={16} /> Print SteerCo Dossier (PDF)</button>
+                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-slate-900 text-white px-6 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer"><FileText size={16} /> Download PDF Dossier</button>
                               </div>
                             </div>
                           </div>

@@ -40,6 +40,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const formattedOrg = companyName.trim();
     const sentenceCompany = toSentenceCase(companyName);
     const targetPillar = activePillar || 'AVS';
+
+    // Normalize base URL path to /forensic
+    const cleanOrigin = (originUrl || 'https://www.bmradvisory.co/forensic')
+      .replace(/\/diagnostic\/forensic\/?$/, '/forensic');
     
     const mailRequests = Object.entries(endpoints).map(([roleKey, emailAddress]) => {
       if (!emailAddress || typeof emailAddress !== 'string') return null;
@@ -48,7 +52,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const roleName = roleLabels[roleKey] || roleKey;
       const dynamicTrack = roleToPillarMap[roleKey] || targetPillar;
       
-      const diagnosticUrl = `${originUrl}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}`;
+      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&auth=true`;
 
       let emailHtmlValue = '';
 

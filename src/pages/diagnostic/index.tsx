@@ -1,3 +1,4 @@
+"use client";
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 
@@ -10,7 +11,7 @@ export default function DiagnosticIndexRedirect() {
     // Grab incoming query parameters (e.g. ?code=RLIMOQ58 or ?id=...)
     const { code, id, ...otherQuery } = router.query;
 
-    // Forward seamlessly to your active forensic route
+    // Forward seamlessly to active forensic route
     router.replace({
       pathname: "/forensic",
       query: { 
@@ -20,10 +21,10 @@ export default function DiagnosticIndexRedirect() {
         auth: "admin_verified_secure" 
       },
     });
-  }, [router.isReady]);
+  }, [router.isReady, router]);
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-400 font-mono text-xs flex items-center justify-center">
+    <div className="min-h-screen bg-slate-50 text-slate-500 font-mono text-xs flex items-center justify-center">
       // Redirecting to active diagnostic environment...
     </div>
   );

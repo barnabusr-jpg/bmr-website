@@ -71,63 +71,77 @@ const DIMENSION_TITLES: Record<string, { label: string; description: string }> =
   }
 };
 
-// Configurable velocity parameters for real-time loss accumulation
-const MAX_VELOCITY_MULTIPLIER = 8.0; 
+// Configurable velocity parameter ceiling for real-time loss accumulation
+const MAX_VELOCITY_MULTIPLIER = 1.5; 
 
-// REAL-TIME LOSS TICKER ENGINE
+// REAL-TIME LOSS TICKER ENGINE (STABILIZED & DECOUPLED)
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
   anomalies,
   isArchived
 }: LossTickerProps) {
-  const [elapsedSeconds, setElapsedSeconds] = useState<number>(10);
   const frozenLossRef = useRef<number | null>(null);
-  const anchorTimeRef = useRef<number>(Date.now() - 10000);
+
+  // Initialize elapsed time at 0 to prevent initial render jumps
+  const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
+
+  // Absolute reference timestamp for true elapsed duration
+  const anchorTimeRef = useRef<number>(Date.now());
 
   const severityVelocityMultiplier = useMemo(() => {
     let multiplier = 1.0;
     if (!anomalies || !Array.isArray(anomalies)) return multiplier;
-    
+
     anomalies.forEach(anomaly => {
       const severity = anomaly?.severity?.toUpperCase() || "";
-      if (severity === 'CRITICAL' || severity === 'HIGH' || severity === 'HIGH PRIORITY') {
-        multiplier += 2.5; 
-      } else if (severity === 'MEDIUM' || severity === 'MEDIUM PRIORITY') {
-        multiplier += 1.5;
-      } else if (severity === 'LOW' || severity === 'ACTION REQUIRED') {
-        multiplier += 0.5;
+      if (severity === "CRITICAL" || severity === "HIGH" || severity === "HIGH PRIORITY") {
+        multiplier += 0.25;
+      } else if (severity === "MEDIUM" || severity === "MEDIUM PRIORITY") {
+        multiplier += 0.15;
       }
     });
 
     return Math.min(multiplier, MAX_VELOCITY_MULTIPLIER);
   }, [anomalies]);
 
+  // PURE TIME TICKER EFFECT
   useEffect(() => {
-    let parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
+    // 1. Completely halt interval creation if report is archived
+    if (isArchived) return;
+
+    const parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
     if (!isNaN(parsed) && parsed > 0 && parsed < Date.now()) {
       anchorTimeRef.current = parsed;
+
+      // Immediately calculate true elapsed duration on mount
+      const initialElapsed = (Date.now() - parsed) / 1000;
+      setElapsedSeconds(Math.max(0, initialElapsed));
+    } else {
+      anchorTimeRef.current = Date.now();
+      setElapsedSeconds(0);
     }
 
     const interval = setInterval(() => {
-      if (isArchived) return;
       const now = Date.now();
-      const delta = Math.max(0.1, (now - anchorTimeRef.current) / 1000);
-      setElapsedSeconds(delta * severityVelocityMultiplier);
-    }, 100); 
+      const deltaSeconds = Math.max(0, (now - anchorTimeRef.current) / 1000);
+      setElapsedSeconds(deltaSeconds);
+    }, 250); // Smooth 4Hz update rate
 
     return () => clearInterval(interval);
-  }, [diagnosticCompletedAt, severityVelocityMultiplier, isArchived]);
+  }, [diagnosticCompletedAt, isArchived]);
 
   const safeExposure = useMemo(() => {
     const parsed = Number(exposure);
-    return (!isNaN(parsed) && parsed > 0) ? parsed : 462528;
+    return !isNaN(parsed) && parsed > 0 ? parsed : 462528;
   }, [exposure]);
 
-  let dynamicAccumulatedLoss = (safeExposure / 31536000) * elapsedSeconds;
+  // Apply velocity multiplier directly to output rate (preserves true clock time)
+  let dynamicAccumulatedLoss =
+    (safeExposure / 31536000) * elapsedSeconds * severityVelocityMultiplier;
 
-  if (dynamicAccumulatedLoss <= 0) {
-    dynamicAccumulatedLoss = 0.05 + (elapsedSeconds * 0.01);
+  if (dynamicAccumulatedLoss <= 0 && elapsedSeconds > 0) {
+    dynamicAccumulatedLoss = 0.05 + elapsedSeconds * 0.01;
   }
 
   if (isArchived) {
@@ -136,7 +150,7 @@ function RealTimeLossTicker({
     }
     dynamicAccumulatedLoss = frozenLossRef.current;
   } else {
-    frozenLossRef.current = null; 
+    frozenLossRef.current = null;
   }
 
   return (

@@ -16,6 +16,9 @@ export default function CertificatePage() {
   const t0Raw = typeof t0 === 'string' ? t0 : null;
   const t1Raw = typeof t1 === 'string' ? t1 : null;
 
+  // Determine if a second post-remediation round exists
+  const hasSecondAudit = Boolean(t1Raw && t1Raw.trim().length > 0);
+
   const { initialMetrics, verifiedMetrics } = useMemo(() => {
     let t0Responses = {};
     let t1Responses = {};
@@ -62,11 +65,26 @@ export default function CertificatePage() {
           </button>
         </div>
 
-        <VerificationCertificateView
-          companyName={orgName}
-          initialMetrics={initialMetrics}
-          verifiedMetrics={verifiedMetrics}
-        />
+        {/* CERTIFICATE CONTAINER WITH WATERMARK OVERLAY */}
+        <div className="relative overflow-hidden rounded-lg">
+          {!hasSecondAudit && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-30">
+              <div className="rotate-[-18deg] border-8 border-red-600/35 text-red-600/35 font-mono font-black text-3xl sm:text-4xl md:text-5xl px-8 py-5 uppercase tracking-widest text-center bg-white/70 backdrop-blur-[1px] rounded-xl shadow-2xl select-none">
+                PROVISIONAL // NOT A VALID CERTIFICATE
+                <span className="block text-xs md:text-sm font-bold tracking-normal mt-1 text-red-700/50">
+                  SINGLE INPUT BASELINE — AWAITING TIER 01 POST-AUDIT
+                </span>
+              </div>
+            </div>
+          )}
+
+          <VerificationCertificateView
+            companyName={orgName}
+            initialMetrics={initialMetrics}
+            verifiedMetrics={verifiedMetrics}
+            hasSecondAudit={hasSecondAudit}
+          />
+        </div>
       </div>
     </main>
   );
