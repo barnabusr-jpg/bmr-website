@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { useRouter } from 'next/router';
-import { ShieldCheck, Printer, FileText, Download, AlertTriangle, CheckCircle2, TrendingDown, Layers } from 'lucide-react';
+import { ShieldCheck, Printer, FileText, Download, TrendingDown, Layers, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 export interface ForensicMetricsPayload {
   complianceScore?: number;
@@ -54,7 +54,7 @@ export default function ForensicCommandCockpit({
   const readinessVariance = Math.round(score - peerReadinessBaseline);
 
   // Derived Financial Itemizations
-  const wastedHoursPerYr = Math.round(leakage / 85); // Assuming ~$85/hr blended engineering rate
+  const wastedHoursPerYr = Math.round(leakage / 85); // ~$85/hr blended engineering rate
   const weeklyLoss = Math.round(leakage / 52);
 
   const handleExportCSV = () => {
@@ -75,10 +75,8 @@ export default function ForensicCommandCockpit({
   };
 
   const handleSOWClick = () => {
-    if (onSelectSOW) onSelectSOW();
-    const element = document.getElementById('sow-section');
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+    if (onSelectSOW) {
+      onSelectSOW();
     }
   };
 
@@ -179,7 +177,7 @@ export default function ForensicCommandCockpit({
 
       </div>
 
-      {/* DETAILED ANALYSIS SECTION 1: FINANCIAL LEAKAGE DEEP-DIVE */}
+      {/* DETAILED FINANCIAL LEAKAGE BREAKDOWN */}
       <div className="border border-slate-200 bg-slate-50/50 p-6 rounded-lg space-y-4">
         <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
           <TrendingDown size={18} className="text-amber-600" />
@@ -206,7 +204,7 @@ export default function ForensicCommandCockpit({
         </div>
       </div>
 
-      {/* DETAILED ANALYSIS SECTION 2: CROSS-PERSONA TRIANGULATION MATRIX */}
+      {/* CROSS-PERSONA TRIANGULATION MATRIX */}
       <div className="border border-slate-200 bg-white rounded-lg p-6 space-y-4">
         <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
           <Layers size={18} className="text-slate-900" />
