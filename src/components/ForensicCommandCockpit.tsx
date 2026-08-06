@@ -13,7 +13,7 @@ interface ForensicCommandCockpitProps {
   peerReadinessBaseline?: number;
 }
 
-export function ForensicCommandCockpit({
+export default function ForensicCommandCockpit({
   companyName = "TARGET SPECIFICATION",
   complianceScore = 62,
   annualSalaryLeakage = 114750,
