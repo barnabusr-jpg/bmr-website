@@ -16,7 +16,7 @@ interface ForensicCommandCockpitProps {
   companyName?: string;
   sector?: string;
   metrics?: ForensicMetricsPayload;
-  // Fallback flat props for backward compatibility
+  onSelectSOW?: () => void;
   complianceScore?: number;
   annualSalaryLeakage?: number;
   unhedgedLegalExposure?: number;
@@ -29,6 +29,7 @@ export default function ForensicCommandCockpit({
   companyName = "TARGET SPECIFICATION",
   sector = "FINANCE",
   metrics,
+  onSelectSOW,
   complianceScore: flatScore = 62,
   annualSalaryLeakage: flatLeakage = 114750,
   unhedgedLegalExposure: flatExposure = 607500,
@@ -68,6 +69,14 @@ export default function ForensicCommandCockpit({
     document.body.removeChild(link);
   };
 
+  const handleSOWClick = () => {
+    if (onSelectSOW) onSelectSOW();
+    const element = document.getElementById('sow-section');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="bg-white text-slate-900 border border-slate-200 p-8 rounded-lg shadow-sm space-y-8 font-sans max-w-[1200px] mx-auto text-left">
       
@@ -102,10 +111,7 @@ export default function ForensicCommandCockpit({
 
           <button
             type="button"
-            onClick={() => {
-              const company = encodeURIComponent(companyName || 'Target Organization');
-              router.push(`/sow?org=${company}`);
-            }}
+            onClick={handleSOWClick}
             className="bg-slate-900 text-white text-xs font-mono font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer rounded-md flex items-center gap-2"
           >
             <FileText size={14} /> Final SOW
