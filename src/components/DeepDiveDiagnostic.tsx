@@ -64,33 +64,70 @@ export default function DeepDiveDiagnostic({ operatorId, userLens }: { operatorI
     }
   };
 
-  if (isLoading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center font-mono text-red-600 animate-pulse uppercase">Authorizing_Node...</div>;
-  if (!isAuthorized) return <div className="min-h-screen bg-[#020617] flex items-center justify-center text-white font-black uppercase italic tracking-tighter">Node_Locked</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center font-mono text-xs text-slate-600 animate-pulse font-bold uppercase tracking-wider">
+        Authorizing Node...
+      </div>
+    );
+  }
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-900 font-mono text-xs font-bold uppercase tracking-wider">
+        Node Locked // Authorization Required
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-white flex flex-col md:flex-row font-sans">
-      <aside className="w-full md:w-96 bg-slate-950 border-r border-slate-900 p-10 space-y-12">
-        <div className="flex items-center gap-3 text-red-600 font-black uppercase italic text-sm tracking-tighter"><BookOpen size={20} /> BMR_FieldGuide_V3</div>
-        <div className="p-6 border border-slate-800 bg-slate-900/40">
-           <label className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-2">Active_Chapter</label>
-           <h4 className="text-white font-bold text-[11px] uppercase">{lensQuestions[currentIdx]?.chapter}</h4>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row font-sans antialiased">
+      
+      {/* SIDEBAR NAVIGATION / FIELD GUIDE */}
+      <aside className="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-8 md:p-10 space-y-8 shadow-sm">
+        <div className="flex items-center gap-2.5 text-slate-900 font-mono font-bold uppercase text-xs tracking-wider">
+          <BookOpen size={18} className="text-slate-900" /> BMR Field Guide V3
+        </div>
+
+        <div className="p-5 border border-slate-200 bg-slate-50/70 rounded-md space-y-1">
+          <label className="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold block">
+            Active Chapter
+          </label>
+          <h4 className="text-slate-900 font-bold text-xs uppercase leading-snug">
+            {lensQuestions[currentIdx]?.chapter || 'Overview'}
+          </h4>
         </div>
       </aside>
-      <main className="flex-1 p-12 md:p-24 overflow-y-auto">
-        <div className="max-w-3xl">
-          <div className="flex items-center gap-2 text-red-600 font-mono text-[10px] uppercase tracking-widest mb-12 italic font-black">
-             <Activity size={14} className="animate-pulse" /> Zone_{lensQuestions[currentIdx]?.zone} // Lens_{LENS_SIGNAL}
+
+      {/* MAIN QUESTION WORKBENCH */}
+      <main className="flex-1 p-8 md:p-16 overflow-y-auto">
+        <div className="max-w-3xl space-y-8">
+          
+          <div className="flex items-center gap-2 text-slate-500 font-mono text-xs font-bold uppercase tracking-wider border-b border-slate-200 pb-4">
+            <Activity size={16} className="text-slate-900 animate-pulse" /> Zone {lensQuestions[currentIdx]?.zone} // Lens: {LENS_SIGNAL}
           </div>
-          <h1 className="text-5xl font-black uppercase italic tracking-tighter leading-tight mb-16">{lensQuestions[currentIdx]?.text}</h1>
-          <div className="grid grid-cols-1 gap-4">
+
+          <h1 className="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight leading-snug">
+            {lensQuestions[currentIdx]?.text}
+          </h1>
+
+          <div className="grid grid-cols-1 gap-3 pt-2">
             {["High Confidence", "Moderate Confidence", "Theoretical"].map((opt) => (
-              <button key={opt} onClick={() => handleNext(opt)} className="w-full p-8 bg-slate-900/30 border border-slate-800 text-left hover:border-red-600 transition-all flex justify-between items-center group font-black uppercase italic text-slate-400 hover:text-white">
-                {opt} <ChevronRight size={20} className="text-slate-800 group-hover:text-red-600 transition-colors" />
+              <button
+                key={opt}
+                type="button"
+                onClick={() => handleNext(opt)}
+                className="w-full p-5 bg-white border border-slate-200 text-slate-800 text-left hover:border-slate-900 hover:bg-slate-50 transition-all flex justify-between items-center group font-sans font-semibold text-xs md:text-sm rounded-md shadow-sm cursor-pointer"
+              >
+                <span>{opt}</span>
+                <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-900 transition-colors" />
               </button>
             ))}
           </div>
+
         </div>
       </main>
+
     </div>
   );
 }
