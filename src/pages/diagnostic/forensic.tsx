@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { Activity, ShieldCheck, ArrowRight } from 'lucide-react';
-import ForensicDiagnosticWizard from '../../src/components/ForensicDiagnosticWizard';
+import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard';
 
 export default function ForensicPage() {
   const router = useRouter();
