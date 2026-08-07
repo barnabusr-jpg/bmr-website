@@ -190,12 +190,9 @@ export default function AdminDashboard() {
     }
   };
 
+  // ✅ TARGETS 360 TRIANGULATION DIRECTLY PER TRACK
   const handleLaunchPersonaWizard = (roleKey: string, auditRecord: any) => {
     const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === roleKey.toUpperCase());
-    
-    let assignedPillar = "AVS";
-    if (roleKey.toUpperCase() === "EXECUTIVE") assignedPillar = "IGF";
-    if (roleKey.toUpperCase() === "MANAGERIAL") assignedPillar = "HAI";
 
     const matrixPayload = {
       org: auditRecord.org_name,
@@ -207,7 +204,7 @@ export default function AdminDashboard() {
     const targetEmail = matchingNode?.email || "barnabusr@gmail.com";
 
     window.open(
-      `/forensic?matrix=${compressedToken}&pillar=${assignedPillar}&role=${roleKey.toUpperCase()}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&auth=admin_verified_secure`,
+      `/forensic?matrix=${compressedToken}&track=${roleKey.toUpperCase()}&role=${roleKey.toUpperCase()}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&auth=admin_verified_secure`,
       '_blank'
     );
   };
@@ -340,6 +337,7 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Audits Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'frameworks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Frameworks</button>
             
+            {/* ✅ UPDATED HEADER LABEL & QUAD NODE ROUTING */}
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -357,11 +355,11 @@ export default function AdminDashboard() {
                   const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
                   
                   window.open(
-                    `/forensic?matrix=${compressedToken}&auth=admin_verified_secure`, 
+                    `/forensic?matrix=${compressedToken}&flow=quad_node&auth=admin_verified_secure`, 
                     '_blank'
                   );
                 } else {
-                  alert("Please expand an audit row below before opening the diagnostic wizard.");
+                  alert("Please expand an audit row below before configuring Quad Node.");
                 }
               }}
               className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded border transition-colors cursor-pointer ${
@@ -370,7 +368,7 @@ export default function AdminDashboard() {
                   : 'text-slate-600 border-slate-300 bg-white hover:text-slate-900'
               }`}
             >
-              Configure 360° Diagnostic
+              Configure Quad Node
             </button>
 
             {expandedRow && (
@@ -729,7 +727,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           </div>
-                          
+
                           {/* CONTROL BUTTONS */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-200 pt-6">
                             <div className="space-y-3">
