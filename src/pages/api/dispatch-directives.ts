@@ -49,7 +49,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   const { groupId, orgName, emails, parentAuditId } = req.body;
   
-  // ✅ UPDATED BASE DOMAIN FALLBACK (Replaces legacy lab domain defaults)
+  // ✅ CANONICAL BASE DOMAIN FALLBACK
   const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.bmradvisory.co';
   const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co'; 
 
@@ -116,11 +116,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (insertError) throw insertError;
       }
 
-      // ✅ FIXED ROUTE: Points directly to /diagnostic/forensic to match physical page file structure
-      const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}&id=${parentAuditId}&track=${standardizedRole}`;
+      // ✅ TARGETS NEW LIGHT-MODE ASSESSMENT ROUTE (pages/forensic.tsx)
+      const diagnosticLink = `${BASE_URL}/forensic?code=${code}&id=${parentAuditId}&track=${standardizedRole}`;
 
       if (standardizedRole === 'EXECUTIVE') {
-        // DISPATCH ONE: Executive Alignment Email Template (Light Executive Theme)
         emailPromises.push(sgMail.send({
           to: targetEmail,
           from: {
@@ -147,7 +146,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       Invitation links have been dispatched to designated leadership and engineering stakeholders. Please ensure your team reviews their inbox to complete their respective assessment modules.
                     </p>
 
-                    <!-- STEP 1: Assessment Link -->
                     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 20px; margin-bottom: 16px; border-radius: 4px; text-align: left;">
                       <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 1: Complete Executive Assessment</p>
                       <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">
@@ -158,7 +156,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       </a>
                     </div>
 
-                    <!-- STEP 2: Stakeholder Alignment -->
                     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
                       <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 2: Stakeholder Alignment</p>
                       <p style="margin: 0; font-size: 13px; color: #475569;">
@@ -166,7 +163,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       </p>
                     </div>
 
-                    <!-- STEP 3: Calibration Scheduling Link -->
                     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
                       <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing</p>
                       <a href="https://calendly.com/hello-bmradvisory/forensic-briefing" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
@@ -186,7 +182,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           `
         }));
       } else {
-        // DISPATCH TWO: Stakeholder Node Notification Template (Light Executive Theme)
         emailPromises.push(sgMail.send({
           to: targetEmail,
           from: {
