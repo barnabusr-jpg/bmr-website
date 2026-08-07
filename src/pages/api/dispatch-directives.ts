@@ -16,28 +16,29 @@ function toSentenceCase(str: string): string {
   return clean.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-const ROLE_MAP: Record<string, string> = {
-  'executive': 'EXECUTIVE', 
-  'exec': 'EXECUTIVE',
-  'executivenode': 'EXECUTIVE', 
-  
-  'tech mgmt': 'TECHNICAL',
-  'technical': 'TECHNICAL', 
-  'tech': 'TECHNICAL', 
-  'technicalnode': 'TECHNICAL',
-  
-  'ops mgmt': 'MANAGERIAL', 
-  'managerial': 'MANAGERIAL', 
-  'manager': 'MANAGERIAL', 
-  'man': 'MANAGERIAL',
-  'managerialnode': 'MANAGERIAL',
+// Maps input strings to Supabase DB persona types and URL PersonaKeys
+const ROLE_CONFIG: Record<string, { dbRole: string; urlRole: string }> = {
+  'executive': { dbRole: 'EXECUTIVE', urlRole: 'EXECUTIVE' },
+  'exec': { dbRole: 'EXECUTIVE', urlRole: 'EXECUTIVE' },
+  'executivenode': { dbRole: 'EXECUTIVE', urlRole: 'EXECUTIVE' },
+  'system user': { dbRole: 'EXECUTIVE', urlRole: 'EXECUTIVE' },
+  'system_user': { dbRole: 'EXECUTIVE', urlRole: 'EXECUTIVE' },
+  'systemuser': { dbRole: 'EXECUTIVE', urlRole: 'EXECUTIVE' },
 
-  'ops_mgmt': 'MANAGERIAL',
-  'system user': 'EXECUTIVE',
-  'system_user': 'EXECUTIVE',
-  'techMgmt': 'TECHNICAL',
-  'opsMgmt': 'MANAGERIAL',
-  'systemUser': 'EXECUTIVE',
+  'tech mgmt': { dbRole: 'TECHNICAL', urlRole: 'TECH_MGMT' },
+  'tech_mgmt': { dbRole: 'TECHNICAL', urlRole: 'TECH_MGMT' },
+  'technical': { dbRole: 'TECHNICAL', urlRole: 'TECH_MGMT' },
+  'tech': { dbRole: 'TECHNICAL', urlRole: 'TECH_MGMT' },
+  'technicalnode': { dbRole: 'TECHNICAL', urlRole: 'TECH_MGMT' },
+  'techmgmt': { dbRole: 'TECHNICAL', urlRole: 'TECH_MGMT' },
+
+  'ops mgmt': { dbRole: 'MANAGERIAL', urlRole: 'OPS_MGMT' },
+  'ops_mgmt': { dbRole: 'MANAGERIAL', urlRole: 'OPS_MGMT' },
+  'managerial': { dbRole: 'MANAGERIAL', urlRole: 'OPS_MGMT' },
+  'manager': { dbRole: 'MANAGERIAL', urlRole: 'OPS_MGMT' },
+  'man': { dbRole: 'MANAGERIAL', urlRole: 'OPS_MGMT' },
+  'managerialnode': { dbRole: 'MANAGERIAL', urlRole: 'OPS_MGMT' },
+  'opsmgmt': { dbRole: 'MANAGERIAL', urlRole: 'OPS_MGMT' },
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -49,14 +50,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   const { groupId, orgName, emails, parentAuditId } = req.body;
   
-  // ✅ DYNAMIC HOST RESOLUTION ENGINE
-  // Automatically captures current host (Preview, Local, or Production) and strips legacy lab domains
+  // Dynamic host resolution: strips legacy lab domain and adapts to host environment
   const host = req.headers.host || 'www.bmradvisory.co';
   const protocol = req.headers['x-forwarded-proto'] || 'https';
   
   let BASE_URL = `${protocol}://${host}`;
-  
-  // Fallback override if NEXT_PUBLIC_APP_URL is explicitly set and valid
   if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('lab.bmradvisory.co')) {
     BASE_URL = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
   }
@@ -73,27 +71,49 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const emailPromises = [];
     const prettyCompany = toSentenceCase(orgName);
 
+    // Fetch active audit details to determine pillar classification (IGF, AVS, HAI)
+    const { data: activeAudit } = await supabaseAdmin
+      .from('audits')
+      .select('sector, sfi_score, decay_pct')
+      .eq('id', parentAuditId)
+      .maybeSingle();
+
+    let targetPillar = 'IGF';
+    if (activeAudit) {
+      const sfi = activeAudit.sfi_score || 0;
+      const sectorStr = String(activeAudit.sector || '').toUpperCase();
+
+      if (sfi >= 45 || sectorStr.includes('AVS') || sectorStr.includes('INDUSTRIAL') || sectorStr.includes('MANUFACTURING')) {
+        targetPillar = 'AVS';
+      } else if (sectorStr.includes('HAI') || sectorStr.includes('SERVICES')) {
+        targetPillar = 'HAI';
+      } else {
+        targetPillar = 'IGF';
+      }
+    }
+
     for (const [rawRole, email] of roles) {
       const targetEmail = (email as string).trim().toLowerCase();
       if (!targetEmail) continue;
 
       const normalizedKey = rawRole.toLowerCase().trim();
-      const standardizedRole = ROLE_MAP[normalizedKey];
+      const roleMapping = ROLE_CONFIG[normalizedKey];
 
-      if (!standardizedRole) {
+      if (!roleMapping) {
         return res.status(400).json({ 
           error: 'INVALID NODE ASSIGNMENT', 
           message: `The provided role identifier "${rawRole}" is incompatible with the system engine.` 
         });
       }
 
+      const { dbRole, urlRole } = roleMapping;
       const code = Math.random().toString(36).substring(2, 10).toUpperCase();
 
       const { data: existingNode, error: checkError } = await supabaseAdmin
         .from('operators')
         .select('id')
         .eq('audit_id', parentAuditId)
-        .eq('persona_type', standardizedRole)
+        .eq('persona_type', dbRole)
         .maybeSingle();
 
       if (checkError) throw checkError;
@@ -116,7 +136,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             audit_id: parentAuditId,
             group_id: groupId,
             email: targetEmail,
-            persona_type: standardizedRole,
+            persona_type: dbRole,
             access_code: code,
             is_authorized: true,
             status: 'pending',
@@ -126,10 +146,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (insertError) throw insertError;
       }
 
-      // ✅ TARGETS ACTIVE LIGHT-MODE ASSESSMENT (pages/forensic.tsx)
-      const diagnosticLink = `${BASE_URL}/forensic?code=${code}&id=${parentAuditId}&track=${standardizedRole}`;
+      // ✅ TARGETS pages/forensic/index.tsx WITH EXACT AUTHORIZATION PARAMS REQUIRED BY isParticipantRoute
+      const diagnosticLink = `${BASE_URL}/forensic?role=${urlRole}&org=${encodeURIComponent(orgName)}&pillar=${targetPillar}&id=${parentAuditId}&code=${code}`;
 
-      if (standardizedRole === 'EXECUTIVE') {
+      if (dbRole === 'EXECUTIVE') {
         emailPromises.push(sgMail.send({
           to: targetEmail,
           from: {
@@ -198,7 +218,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             name: "BMR Solutions",
             email: FROM_EMAIL
           },
-          subject: `ACTION REQUIRED: ${standardizedRole} Track Assessment Authorized // ${prettyCompany}`,
+          subject: `ACTION REQUIRED: ${urlRole} Track Assessment Authorized // ${prettyCompany}`,
           html: `
             <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
               <tr>
@@ -209,7 +229,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       BMR Solutions // Operational Assessment
                     </h2>
                     <p style="font-size: 11px; font-family: monospace; color: #64748b; margin: 0 0 20px 0; font-weight: 600;">
-                      Organization: ${prettyCompany} | Track: ${standardizedRole} NODE
+                      Organization: ${prettyCompany} | Track: ${urlRole} NODE
                     </p>
                     
                     <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
@@ -219,7 +239,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     </p>
                     
                     <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 24px 0;">
-                      You are designated as the stakeholder representative for the <strong>${standardizedRole} Track</strong>. Select the button below to access your secure assessment module.
+                      You are designated as the stakeholder representative for the <strong>${urlRole} Track</strong>. Select the button below to access your secure assessment module.
                     </p>
                     
                     <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; padding: 16px; margin-bottom: 28px; border-radius: 4px; font-family: monospace; font-size: 12px; color: #475569;">
@@ -258,19 +278,19 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const unsubmittedPaths = allOperators.filter((o) => !o.survey_completed).length;
     const logicDecayCoefficient = totalPaths > 0 ? unsubmittedPaths / totalPaths : 0.00;
 
-    const { data: activeAudit, error: auditFetchError } = await supabaseAdmin
+    const { data: activeAuditData, error: auditFetchError } = await supabaseAdmin
       .from('audits')
       .select('hai_raw_score, avs_raw_score, igf_raw_score, status, compiled_at, decay_pct')
       .eq('id', parentAuditId)
       .single();
 
-    if (auditFetchError || !activeAudit) {
+    if (auditFetchError || !activeAuditData) {
       throw new Error('Failed to retrieve primary core diagnostic metrics.');
     }
 
-    const adjustedHAI = Number(activeAudit.hai_raw_score || 0) * (1 - logicDecayCoefficient);
-    const adjustedAVS = Number(activeAudit.avs_raw_score || 0) * (1 - logicDecayCoefficient);
-    const adjustedIGF = Number(activeAudit.igf_raw_score || 0) * (1 - logicDecayCoefficient);
+    const adjustedHAI = Number(activeAuditData.hai_raw_score || 0) * (1 - logicDecayCoefficient);
+    const adjustedAVS = Number(activeAuditData.avs_raw_score || 0) * (1 - logicDecayCoefficient);
+    const adjustedIGF = Number(activeAuditData.igf_raw_score || 0) * (1 - logicDecayCoefficient);
 
     let recommendedService = 'PRE-AUTOMATION GOVERNANCE';
     let targetNode = 'EXECUTIVE';
