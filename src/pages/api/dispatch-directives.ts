@@ -49,8 +49,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   const { groupId, orgName, emails, parentAuditId } = req.body;
   
-  // ✅ CANONICAL BASE DOMAIN FALLBACK
-  const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://www.bmradvisory.co';
+  // ✅ DYNAMIC HOST RESOLUTION ENGINE
+  // Automatically captures current host (Preview, Local, or Production) and strips legacy lab domains
+  const host = req.headers.host || 'www.bmradvisory.co';
+  const protocol = req.headers['x-forwarded-proto'] || 'https';
+  
+  let BASE_URL = `${protocol}://${host}`;
+  
+  // Fallback override if NEXT_PUBLIC_APP_URL is explicitly set and valid
+  if (process.env.NEXT_PUBLIC_APP_URL && !process.env.NEXT_PUBLIC_APP_URL.includes('lab.bmradvisory.co')) {
+    BASE_URL = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+  }
+
   const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co'; 
 
   if (!parentAuditId) {
@@ -116,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         if (insertError) throw insertError;
       }
 
-      // ✅ TARGETS NEW LIGHT-MODE ASSESSMENT ROUTE (pages/forensic.tsx)
+      // ✅ TARGETS ACTIVE LIGHT-MODE ASSESSMENT (pages/forensic.tsx)
       const diagnosticLink = `${BASE_URL}/forensic?code=${code}&id=${parentAuditId}&track=${standardizedRole}`;
 
       if (standardizedRole === 'EXECUTIVE') {
