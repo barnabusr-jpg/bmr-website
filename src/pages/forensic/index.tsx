@@ -3,9 +3,9 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight, Loader2, Copy, Check, Printer } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2 } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
-import { decompressFromEncodedURIComponent, compressToEncodedURIComponent } from 'lz-string';
+import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
@@ -56,7 +56,6 @@ export default function ForensicEngineRoot() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [triangulation]);
 
-  // 📡 UNIFIED SOURCE-OF-TRUTH RECOVERY & REAL-TIME SYNC
   const synchronizeEngineDataMatrix = async () => {
     if (isSyncingRef.current) return;
     isSyncingRef.current = true;
@@ -65,15 +64,12 @@ export default function ForensicEngineRoot() {
       const params = new URLSearchParams(window.location.search);
       const idParam = params.get('id'); 
       const codeParam = params.get('code');
-      const matrixToken = params.get('matrix');
       const entityParam = params.get('entity') || params.get('org') || params.get('entity_code');
-      const roleParam = params.get('role') as PersonaKey;
 
       let targetCompanyName = (entityParam || companyName || '').trim().replace(/\s+/g, ' ');
       let activeAudit = null;
       let matchedOperator = null;
 
-      // 1. Resolve participant via access code from dispatch-directives
       if (codeParam) {
         const { data: opData } = await supabase
           .from('operators')
@@ -170,7 +166,6 @@ export default function ForensicEngineRoot() {
 
           setTriangulation(updatedTriangulation);
 
-          // Route participant by access_code or roleParam
           if (matchedOperator) {
             const personaKeyMap: Record<string, PersonaKey> = {
               'EXECUTIVE': 'EXECUTIVE',
@@ -224,7 +219,6 @@ export default function ForensicEngineRoot() {
     } 
   }, []); 
 
-  // Initialize Triangulation via dispatch-directives API
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     const sanitizedInput = companyName.trim(); 
@@ -293,7 +287,6 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  // Send Nudge via dispatch-directives API
   const handleTriggerNudge = async (persona: PersonaKey) => {
     if (!triangulation || !activeAuditId) return;
     const email = triangulation.emails[persona];
@@ -329,6 +322,7 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
+  // 🎯 COMPLEMENTARY SAVE HANDLER
   const handlePersonaAnswersSaved = async (personaAnswers: Record<string, string>) => { 
     if (!triangulation || !activePersona) return; 
 
@@ -345,37 +339,53 @@ export default function ForensicEngineRoot() {
         OPS_MGMT: "MANAGERIAL" 
       }[activePersona]; 
 
-      if (!activeAuditId) return;
+      const params = new URLSearchParams(window.location.search);
+      const codeParam = params.get('code')?.toUpperCase().trim();
 
-      // 1. Update individual operator track status
-      await supabase 
-        .from("operators") 
-        .update({ 
-          survey_completed: true, 
-          status: "COMPLETED",
-          raw_responses: personaAnswers
-        }) 
-        .eq("audit_id", activeAuditId)
-        .eq("persona_type", personaToBackendKey); 
-
-      // 2. 🎯 AUTOMATIC AUDIT ROLLUP: Check if all 3 360° Triangulation nodes are complete
-      const { data: all360Nodes } = await supabase
-        .from("operators")
-        .select("survey_completed, status")
-        .eq("audit_id", activeAuditId);
-
-      const isFullyComplete = all360Nodes && all360Nodes.length >= 3 && all360Nodes.every(
-        n => n.survey_completed === true || String(n.status).toUpperCase() === 'COMPLETED'
-      );
-
-      if (isFullyComplete) {
-        await supabase
-          .from("audits")
+      // 1. Precise Operator Resolution
+      if (codeParam) {
+        await supabase 
+          .from("operators") 
           .update({ 
-            status: "COMPLETE",
-            compiled_at: new Date().toISOString()
-          })
-          .eq("id", activeAuditId);
+            survey_completed: true, 
+            status: "COMPLETED",
+            raw_responses: personaAnswers
+          }) 
+          .eq("access_code", codeParam); 
+      } else if (activeAuditId) {
+        await supabase 
+          .from("operators") 
+          .update({ 
+            survey_completed: true, 
+            status: "COMPLETED",
+            raw_responses: personaAnswers
+          }) 
+          .eq("audit_id", activeAuditId)
+          .eq("persona_type", personaToBackendKey); 
+      }
+
+      // 2. Audit Status Auto-Rollup Check
+      if (activeAuditId) {
+        const { data: all360Nodes } = await supabase
+          .from("operators")
+          .select("survey_completed, status")
+          .eq("audit_id", activeAuditId);
+
+        const isFullyComplete = all360Nodes && all360Nodes.length >= 3 && all360Nodes.every(
+          n => n.survey_completed === true || String(n.status).toUpperCase() === 'COMPLETED'
+        );
+
+        if (isFullyComplete) {
+          await supabase
+            .from("audits")
+            .update({ 
+              status: "COMPLETE",
+              sfi_score: alignedCockpitMetrics.complianceScore,
+              decay_pct: 100 - alignedCockpitMetrics.complianceScore,
+              compiled_at: new Date().toISOString()
+            })
+            .eq("id", activeAuditId);
+        }
       }
 
     } catch (dbError) { 
@@ -443,28 +453,6 @@ export default function ForensicEngineRoot() {
     dominantVisibility: "PARTIAL",
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
-
-  const sowShareLink = useMemo(() => {
-    if (typeof window === 'undefined' || !triangulation) return '';
-    const payload = {
-      org: triangulation.companyName,
-      pillar: triangulation.pillar,
-      ans: triangulation.responses,
-      expires: Date.now() + 86400000
-    };
-    const compressed = compressToEncodedURIComponent(JSON.stringify(payload));
-    return `${window.location.origin}/sow-generator?matrix=${compressed}`;
-  }, [triangulation]);
-
-  const handleCopySOWLink = async () => {
-    try {
-      await navigator.clipboard.writeText(sowShareLink);
-      setCopiedLink(true);
-      setTimeout(() => setCopiedLink(false), 2000);
-    } catch (err) {
-      console.error('Clipboard write exception:', err);
-    }
-  };
 
   if (authorizedAdmin === null) { 
     return ( 
