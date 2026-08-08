@@ -26,12 +26,12 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 1. Fetch operator
+      // 1. Fetch operator record safely
       const { data: op, error: opError } = await supabase
         .from('operators')
         .select('id, audit_id, access_code, status, persona_type')
         .eq('access_code', code)
-        .single();
+        .maybeSingle();
 
       if (opError || !op) {
         console.error("DB_ERROR: Operator lookup failed.", opError?.message);
@@ -39,14 +39,14 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 2. Fetch parent audit
+      // 2. Fetch parent audit record
       const { data: audit, error: auditError } = await supabase
         .from('audits')
         .select('status, org_name, id')
         .eq('id', op.audit_id)
-        .single();
+        .maybeSingle();
 
-      // SECURITY: Check if already completed
+      // SECURITY: Check if link is completed or deactivated
       if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
         console.log("NODE_ACCESS: Link is deactivated or already completed.");
         setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
@@ -54,15 +54,14 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 3. DEFENSIVE FILTERING: Matches MGR, MANAGERIAL, etc.
+      // 3. Filter matrix questions by persona lens (EXE, TEC, MGR)
+      const normalizedPersona = op.persona_type?.toUpperCase() || '';
       const filtered = FORENSIC_MATRIX.filter(q => {
-        const lens = q.lens?.toUpperCase();
-        const persona = op.persona_type?.toUpperCase();
-        
-        return lens === persona || 
-               (persona === 'MANAGERIAL' && lens === 'MGR') ||
-               (persona === 'TECHNICAL' && lens === 'TEC') ||
-               (persona === 'EXECUTIVE' && lens === 'EXE');
+        const lens = q.lens?.toUpperCase() || '';
+        return lens === normalizedPersona || 
+               (normalizedPersona.includes('MAN') && lens === 'MGR') ||
+               (normalizedPersona.includes('TECH') && lens === 'TEC') ||
+               (normalizedPersona.includes('EXEC') && lens === 'EXE');
       });
       
       console.log(`LENS_CHECK: Persona is [${op.persona_type}]. Questions found: ${filtered.length}`);
@@ -87,7 +86,7 @@ export default function ForensicDiagnostic() {
     setStep("submitting");
 
     try {
-      // Step 1: Save data natively to database
+      // 1. Save raw responses directly to operator node
       const { error: updateError } = await supabase
         .from('operators')
         .update({
@@ -99,53 +98,31 @@ export default function ForensicDiagnostic() {
 
       if (updateError) throw new Error(`Operator record save rejected: ${updateError.message}`);
 
-      // Step 2: Fetch all sibling operator entries linked to this audit row
+      // 2. Query all sibling nodes for this parent audit
       const { data: siblingOperators, error: fetchError } = await supabase
         .from('operators')
-        .select('persona_type, status, raw_responses')
+        .select('persona_type, status')
         .eq('audit_id', operator.audit_id);
 
       if (fetchError) throw new Error(`Cross-node matrix sync failed: ${fetchError.message}`);
 
-      // Step 3: Parse status indicators across tracking categories
-      const completedOps = siblingOperators || [];
-      const technicalTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'TECHNICAL' && o.status === 'completed');
-      const managerialTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && o.status === 'completed');
-      const executiveTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && o.status === 'completed');
+      // 3. Strict status check across all 3 tracks
+      const ops = siblingOperators || [];
+      const technicalDone = ops.some(o => o.persona_type?.toUpperCase() === 'TECHNICAL' && o.status === 'completed');
+      const managerialDone = ops.some(o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && o.status === 'completed');
+      const executiveDone = ops.some(o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && o.status === 'completed');
 
-      const auditPayload: any = {
-        has_technical: !!technicalTrack,
-        has_managerial: !!managerialTrack,
-        has_executive: !!executiveTrack,
-        updated_at: new Date().toISOString()
+      const allThreeComplete = technicalDone && managerialDone && executiveDone;
+
+      // 4. Update parent audit timestamp & mark COMPLETED only when all tracks pass
+      const auditPayload: Record<string, any> = {
+        compiled_at: new Date().toISOString()
       };
 
-      // Step 4: AUTOMATED MULTI-TRACK COMPILATION SYSTEM
-      if (technicalTrack && managerialTrack && executiveTrack) {
-        console.log("QUAD-NODE MATRIX BALANCED // RUNNING INTEGRATED CALCULUS RUNTIME");
-
-        const computedAnomalies = [
-          {
-            anomaly_id: "Finding #1",
-            title: "Automated Architecture Discrepancy",
-            description: "Systemic workflow variances compiled automatically across aligned operational tracks.",
-            severity: "CRITICAL",
-            remediation_directive: "Optimize process vectors to stabilize data flow dynamics."
-          },
-          {
-            anomaly_id: "Finding #2",
-            title: "Strategic Alignment Leakage",
-            description: "Cross-track validation indicates elevated risk in human-in-the-loop dependencies.",
-            severity: "HIGH",
-            remediation_directive: "Deploy automated tracking filters to mitigate processing waste."
-          }
-        ];
-
-        auditPayload.anomalies = computedAnomalies;
+      if (allThreeComplete) {
         auditPayload.status = 'COMPLETED';
       }
 
-      // Step 5: Execute master update pass on parent audit row
       const { error: auditUpdateError } = await supabase
         .from('audits')
         .update(auditPayload)
@@ -177,7 +154,6 @@ export default function ForensicDiagnostic() {
     }
   };
 
-  // Helper to convert snake_case evidence tags to human-readable text
   const formatEvidenceLabel = (rawTag: string) => {
     return rawTag
       .toLowerCase()
@@ -186,9 +162,6 @@ export default function ForensicDiagnostic() {
       .join(' ');
   };
 
-  // ========================================================================
-  // CONTROL GATES (EXECUTIVE LIGHT UI)
-  // ========================================================================
   if (step === "loading") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
