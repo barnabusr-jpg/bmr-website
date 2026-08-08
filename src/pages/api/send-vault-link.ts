@@ -14,7 +14,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const apiKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
 
   try {
-    const secureUrl = `https://www.bmradvisory.co/results/${auditId}`;
+    // 🎯 DYNAMIC BASE URL RESOLUTION (Supports local dev, staging & production)
+    const host = req.headers.host || 'localhost:3000';
+    const protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || `${protocol}://${host}`;
+    
+    // 🎯 DETERMINISTIC SECURE RESULTS LINK
+    const secureUrl = `${baseUrl}/results/${auditId}`;
+
     const targetEmail = email.toLowerCase().trim();
     const formattedOrg = orgName ? orgName.trim() : 'Your Organization';
     const namePrefix = userName ? `${userName}: ` : '';
@@ -27,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
       ],
       from: {
-        email: 'hello@bmradvisory.co',
+        email: process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co',
         name: 'BMR Solutions'
       },
       content: [
@@ -52,22 +59,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                             </p>
                           </div>
                           
-                          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
+                          <!-- 🎯 CLEAN EMAIL-CLIENT COMPLIANT HR TAG -->
+                          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
 
                           <p style="font-size: 14px; line-height: 1.6; color: #334155; font-weight: 400; margin: 0 0 24px 0;">
                             Your diagnostic findings have been processed and recorded to your organization's executive portal ledger. Select the button below to view your interactive audit dashboard.
                           </p>
                           
                           <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 24px; margin: 24px 0; text-align: center; border-radius: 4px;">
-                            <p style="font-size: 11px; font-family: monospace; color: #64748b; margin-bottom: 16px; font-weight: 600; uppercase tracking-wider;">
+                            <p style="font-size: 11px; font-family: monospace; color: #64748b; margin-bottom: 16px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
                               RECORD REF // ${auditId}
                             </p>
-                            <a href="${secureUrl}" style="background: #0f172a; color: #ffffff; padding: 14px 28px; font-weight: 700; text-decoration: none; display: inline-block; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; border-radius: 4px;">
-                              Open Executive Results Portal →
+                            
+                            <!-- 🎯 VERIFIED CLICKABLE CTA LINK -->
+                            <a href="${secureUrl}" target="_blank" style="background: #0f172a; color: #ffffff; padding: 14px 28px; font-weight: 700; text-decoration: none; display: inline-block; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; border-radius: 4px;">
+                              Open Executive Results Portal &rarr;
                             </a>
                           </div>
 
-                          <p style="font-size: 11px; color: #94a3b8; line-height: 1.6; font-family: monospace; border-top: 1px solid #f1f5f9; padding-top: 20px; margin: 32px 0 0 0; uppercase;">
+                          <!-- 🎯 CLEAN FOOTER HR TAG -->
+                          <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0;">
+
+                          <p style="font-size: 11px; color: #94a3b8; line-height: 1.6; font-family: monospace; margin: 12px 0 0 0; text-transform: uppercase;">
                             Confidential // BMR Solutions Independent Governance
                           </p>
 
@@ -98,7 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'SENDGRID_ERROR', details: errorText });
     }
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, secureUrl });
 
   } catch (err: any) {
     return res.status(500).json({ error: 'SERVER_EXCEPTION', message: err.message });
