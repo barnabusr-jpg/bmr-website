@@ -29,7 +29,7 @@ export default function ForensicDiagnostic() {
       // 1. Fetch operator record safely
       const { data: op, error: opError } = await supabase
         .from('operators')
-        .select('id, audit_id, access_code, status, persona_type')
+        .select('id, audit_id, access_code, status, persona_type, survey_completed')
         .eq('access_code', code)
         .maybeSingle();
 
@@ -47,7 +47,8 @@ export default function ForensicDiagnostic() {
         .maybeSingle();
 
       // SECURITY: Check if link is completed or deactivated
-      if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
+      const isOperatorDone = op.survey_completed || String(op.status).toUpperCase() === 'COMPLETED';
+      if (auditError || !audit || audit.status === 'COMPLETED' || isOperatorDone) {
         console.log("NODE_ACCESS: Link is deactivated or already completed.");
         setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
         setStep("finalized");
@@ -90,9 +91,9 @@ export default function ForensicDiagnostic() {
       const { error: updateError } = await supabase
         .from('operators')
         .update({
-          status: 'completed',
-          raw_responses: finalAnswers,
-          survey_completed: true
+          status: 'COMPLETED',
+          survey_completed: true,
+          raw_responses: finalAnswers
         })
         .eq('id', operator.id); 
 
@@ -101,16 +102,18 @@ export default function ForensicDiagnostic() {
       // 2. Query all sibling nodes for this parent audit
       const { data: siblingOperators, error: fetchError } = await supabase
         .from('operators')
-        .select('persona_type, status')
+        .select('persona_type, status, survey_completed')
         .eq('audit_id', operator.audit_id);
 
       if (fetchError) throw new Error(`Cross-node matrix sync failed: ${fetchError.message}`);
 
       // 3. Strict status check across all 3 tracks
+      const isDone = (o: any) => o.survey_completed === true || String(o.status).toUpperCase() === 'COMPLETED';
       const ops = siblingOperators || [];
-      const technicalDone = ops.some(o => o.persona_type?.toUpperCase() === 'TECHNICAL' && o.status === 'completed');
-      const managerialDone = ops.some(o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && o.status === 'completed');
-      const executiveDone = ops.some(o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && o.status === 'completed');
+
+      const technicalDone = ops.some(o => o.persona_type?.toUpperCase() === 'TECHNICAL' && isDone(o));
+      const managerialDone = ops.some(o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && isDone(o));
+      const executiveDone = ops.some(o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && isDone(o));
 
       const allThreeComplete = technicalDone && managerialDone && executiveDone;
 
