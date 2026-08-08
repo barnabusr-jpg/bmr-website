@@ -5,7 +5,6 @@ import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
 import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2 } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
-import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
@@ -26,7 +25,6 @@ export default function ForensicEngineRoot() {
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
   const [sendingNudgeRole, setSendingNudgeRole] = useState<PersonaKey | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
   const [activeAuditId, setActiveAuditId] = useState<string | null>(null);
 
   const isSyncingRef = useRef(false);
@@ -40,8 +38,6 @@ export default function ForensicEngineRoot() {
   const [triangulation, setTriangulation] = useState<TriangulationState | null>(null); 
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null); 
   const [inputError, setInputError] = useState(''); 
-
-  const [baseSecurePath, setBaseSecurePath] = useState('https://www.bmradvisory.co/forensic'); 
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -73,17 +69,17 @@ export default function ForensicEngineRoot() {
       if (codeParam) {
         const { data: opData } = await supabase
           .from('operators')
-          .select('id, audit_id, persona_type, email, survey_completed, status')
+          .select('id, group_id, persona_type, email, survey_completed, status')
           .eq('access_code', codeParam.toUpperCase().trim())
           .maybeSingle();
 
         matchedOperator = opData;
 
-        if (matchedOperator?.audit_id) {
+        if (matchedOperator?.group_id) {
           const { data: auditData } = await supabase
             .from('audits')
             .select('id, org_name, sfi_score, decay_pct, sector, status')
-            .eq('id', matchedOperator.audit_id)
+            .eq('id', matchedOperator.group_id)
             .maybeSingle();
 
           activeAudit = auditData;
@@ -97,14 +93,6 @@ export default function ForensicEngineRoot() {
           .maybeSingle();
         activeAudit = data;
         if (activeAudit && !targetCompanyName) targetCompanyName = activeAudit.org_name;
-      } else if (targetCompanyName) {
-        const cleanOrgLookup = targetCompanyName.replace(/_GLOBAL$/, '').replace(/_/g, ' ');
-        const { data } = await supabase
-          .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status')
-          .ilike('org_name', cleanOrgLookup)
-          .maybeSingle();
-        activeAudit = data;
       }
 
       if (activeAudit) {
@@ -123,7 +111,7 @@ export default function ForensicEngineRoot() {
         const { data: databaseNodes } = await supabase
           .from('operators')
           .select('persona_type, email, status, survey_completed, raw_responses')
-          .eq('audit_id', activeAudit.id);
+          .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
         if (databaseNodes && databaseNodes.length > 0) {
           const dbExecNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
@@ -141,7 +129,7 @@ export default function ForensicEngineRoot() {
           const isTrackDone = (node: any) => {
             if (!node) return false;
             const statusUpper = String(node.status || '').toUpperCase();
-            return node.survey_completed === true && (statusUpper === 'COMPLETED' || statusUpper === 'COMPLETE');
+            return node.survey_completed === true || statusUpper === 'COMPLETED' || statusUpper === 'COMPLETE';
           };
 
           const liveCompletions = {
@@ -156,15 +144,13 @@ export default function ForensicEngineRoot() {
             OPS_MGMT: dbMgrNode?.raw_responses || {}
           };
 
-          const updatedTriangulation: TriangulationState = {
+          setTriangulation({
             companyName: targetCompanyName,
             pillar: targetCalculatedPillar,
             emails: freshDBEmails,
             completions: liveCompletions,
             responses: liveResponses
-          };
-
-          setTriangulation(updatedTriangulation);
+          });
 
           if (matchedOperator) {
             const personaKeyMap: Record<string, PersonaKey> = {
@@ -193,8 +179,6 @@ export default function ForensicEngineRoot() {
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
       try { 
-        setBaseSecurePath(`${window.location.origin}${window.location.pathname}`); 
-
         const params = new URLSearchParams(window.location.search); 
         const authVal = params.get('auth'); 
         const codeParam = params.get('code');
@@ -203,17 +187,14 @@ export default function ForensicEngineRoot() {
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
         const isParticipantRoute = !!(codeParam || roleParam); 
 
-        if (isAdminAuthenticated && !roleParam && !codeParam) { 
-          setAuthorizedAdmin(true); 
-          synchronizeEngineDataMatrix();
-        } else if (isParticipantRoute) { 
+        if (isAdminAuthenticated || isParticipantRoute) { 
           setAuthorizedAdmin(true); 
           synchronizeEngineDataMatrix();
         } else { 
           setAuthorizedAdmin(false); 
         } 
       } catch (e) { 
-        console.error("Hydration parsing interrupted by security policy filters:", e); 
+        console.error("Hydration parsing error:", e); 
         setAuthorizedAdmin(false); 
       } 
     } 
@@ -258,15 +239,13 @@ export default function ForensicEngineRoot() {
 
       setActiveAuditId(parentAudit.id);
 
-      const initialTriangulationState: TriangulationState = { 
+      setTriangulation({ 
         companyName: sanitizedInput, 
         pillar: activePillar, 
         emails: { ...emails }, 
         completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false }, 
         responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {} } 
-      }; 
-
-      setTriangulation(initialTriangulationState); 
+      }); 
       setViewState('HUB'); 
 
       await fetch('/api/dispatch-directives', { 
@@ -307,11 +286,11 @@ export default function ForensicEngineRoot() {
       if (res.ok) {
         alert(`Reminder dispatch sent to ${persona.replace('_', ' ')} (${email}).`);
       } else {
-        alert("Failed to send reminder via BMR platform.");
+        alert("Failed to send reminder.");
       }
     } catch (err) {
       console.error("Nudge API exception:", err);
-      alert("Error sending notification via API.");
+      alert("Error sending notification.");
     } finally {
       setSendingNudgeRole(null);
     }
@@ -322,7 +301,7 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
-  // 🎯 COMPLEMENTARY SAVE HANDLER
+  // 🎯 SCHEMATICALLY ALIGNED SAVE HANDLER
   const handlePersonaAnswersSaved = async (personaAnswers: Record<string, string>) => { 
     if (!triangulation || !activePersona) return; 
 
@@ -341,41 +320,69 @@ export default function ForensicEngineRoot() {
 
       const params = new URLSearchParams(window.location.search);
       const codeParam = params.get('code')?.toUpperCase().trim();
+      const emailParam = params.get('email')?.toLowerCase().trim() || triangulation.emails[activePersona]?.toLowerCase().trim();
 
-      // 1. Precise Operator Resolution
+      let updateSuccess = false;
+
+      // 1. Update by unique Access Code (P1)
       if (codeParam) {
-        await supabase 
+        const { data } = await supabase 
           .from("operators") 
           .update({ 
             survey_completed: true, 
             status: "COMPLETED",
             raw_responses: personaAnswers
           }) 
-          .eq("access_code", codeParam); 
-      } else if (activeAuditId) {
-        await supabase 
-          .from("operators") 
-          .update({ 
-            survey_completed: true, 
-            status: "COMPLETED",
-            raw_responses: personaAnswers
-          }) 
-          .eq("audit_id", activeAuditId)
-          .eq("persona_type", personaToBackendKey); 
+          .eq("access_code", codeParam)
+          .select(); 
+
+        if (data && data.length > 0) updateSuccess = true;
       }
 
-      // 2. Audit Status Auto-Rollup Check
+      // 2. Update by group_id (Schema Alignment) + persona_type (P2)
+      if (!updateSuccess && activeAuditId) {
+        const { data } = await supabase 
+          .from("operators") 
+          .update({ 
+            survey_completed: true, 
+            status: "COMPLETED",
+            raw_responses: personaAnswers
+          }) 
+          .eq("group_id", activeAuditId)
+          .eq("persona_type", personaToBackendKey)
+          .select();
+
+        if (data && data.length > 0) updateSuccess = true;
+      }
+
+      // 3. Fallback by group_id + Email (P3)
+      if (!updateSuccess && activeAuditId && emailParam) {
+        const { data } = await supabase 
+          .from("operators") 
+          .update({ 
+            survey_completed: true, 
+            status: "COMPLETED",
+            raw_responses: personaAnswers
+          }) 
+          .eq("group_id", activeAuditId)
+          .ilike("email", emailParam)
+          .select();
+
+        if (data && data.length > 0) updateSuccess = true;
+      }
+
+      // 🎯 AUTO-ROLLUP PARENT AUDIT STATUS TO COMPLETE
       if (activeAuditId) {
-        const { data: all360Nodes } = await supabase
+        const { data: groupNodes } = await supabase
           .from("operators")
           .select("survey_completed, status")
-          .eq("audit_id", activeAuditId);
+          .or(`group_id.eq.${activeAuditId},audit_id.eq.${activeAuditId}`);
 
-        const isFullyComplete = all360Nodes && all360Nodes.length >= 3 && all360Nodes.every(
+        const completedCount = groupNodes?.filter(
           n => n.survey_completed === true || String(n.status).toUpperCase() === 'COMPLETED'
-        );
+        ).length || 0;
 
-        if (isFullyComplete) {
+        if (completedCount >= 3) {
           await supabase
             .from("audits")
             .update({ 
