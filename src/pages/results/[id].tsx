@@ -71,10 +71,8 @@ const DIMENSION_TITLES: Record<string, { label: string; description: string }> =
   }
 };
 
-// Configurable velocity parameter ceiling for real-time loss accumulation
 const MAX_VELOCITY_MULTIPLIER = 1.5; 
 
-// REAL-TIME LOSS TICKER ENGINE (STABILIZED & DECOUPLED)
 function RealTimeLossTicker({ 
   diagnosticCompletedAt, 
   exposure,
@@ -82,11 +80,7 @@ function RealTimeLossTicker({
   isArchived
 }: LossTickerProps) {
   const frozenLossRef = useRef<number | null>(null);
-
-  // Initialize elapsed time at 0 to prevent initial render jumps
   const [elapsedSeconds, setElapsedSeconds] = useState<number>(0);
-
-  // Absolute reference timestamp for true elapsed duration
   const anchorTimeRef = useRef<number>(Date.now());
 
   const severityVelocityMultiplier = useMemo(() => {
@@ -105,16 +99,12 @@ function RealTimeLossTicker({
     return Math.min(multiplier, MAX_VELOCITY_MULTIPLIER);
   }, [anomalies]);
 
-  // PURE TIME TICKER EFFECT
   useEffect(() => {
-    // 1. Completely halt interval creation if report is archived
     if (isArchived) return;
 
     const parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
     if (!isNaN(parsed) && parsed > 0 && parsed < Date.now()) {
       anchorTimeRef.current = parsed;
-
-      // Immediately calculate true elapsed duration on mount
       const initialElapsed = (Date.now() - parsed) / 1000;
       setElapsedSeconds(Math.max(0, initialElapsed));
     } else {
@@ -126,7 +116,7 @@ function RealTimeLossTicker({
       const now = Date.now();
       const deltaSeconds = Math.max(0, (now - anchorTimeRef.current) / 1000);
       setElapsedSeconds(deltaSeconds);
-    }, 250); // Smooth 4Hz update rate
+    }, 250);
 
     return () => clearInterval(interval);
   }, [diagnosticCompletedAt, isArchived]);
@@ -136,7 +126,6 @@ function RealTimeLossTicker({
     return !isNaN(parsed) && parsed > 0 ? parsed : 462528;
   }, [exposure]);
 
-  // Apply velocity multiplier directly to output rate (preserves true clock time)
   let dynamicAccumulatedLoss =
     (safeExposure / 31536000) * elapsedSeconds * severityVelocityMultiplier;
 
@@ -225,6 +214,7 @@ export default function UnifiedResultsPortal() {
     return audit?.status?.toUpperCase() === 'PAID';
   }, [audit?.status]);
 
+  // ✅ NORMALIZED DOLLAR-WEIGHTED METRICS LOGIC
   const metrics = useMemo(() => {
     const fteCount = audit?.roi_pct 
       ? audit.roi_pct 
@@ -243,22 +233,29 @@ export default function UnifiedResultsPortal() {
         ? (audit as any).sector_multiplier
         : SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
 
-    let totalLaborTaxPool = baseLaborTaxPool;
-    let totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
+    let totalLaborTaxPool = Math.round(baseLaborTaxPool);
+    let promiseGapExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
 
     if (live_sync === "true" && tax) {
       const parsedTax = parseFloat(tax as string);
-      totalLaborTaxPool = parsedTax < 1000 ? parsedTax * 1000000 : parsedTax;
-      totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
+      totalLaborTaxPool = Math.round(parsedTax < 1000 ? parsedTax * 1000000 : parsedTax);
     }
+
+    const totalCapitalExposure = totalLaborTaxPool + promiseGapExposure;
+    const rawGapPct = totalCapitalExposure > 0 ? (promiseGapExposure / totalCapitalExposure) * 100 : 0;
+    const aiReadinessGap = Math.round(rawGapPct);
+    const complianceScore = 100 - aiReadinessGap;
 
     return {
       fteCount,
       activeSectorMultiplier,
       totalLaborTaxPool,
-      internalReworkTax: totalLaborTaxPool * 0.60,
-      operationalDragTax: totalLaborTaxPool * 0.40,
-      exposure: totalExposure
+      promiseGapExposure,
+      totalCapitalExposure,
+      aiReadinessGap,
+      complianceScore,
+      internalReworkTax: Math.round(totalLaborTaxPool * 0.60),
+      operationalDragTax: totalLaborTaxPool - Math.round(totalLaborTaxPool * 0.60),
     };
   }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector, (audit as any)?.sector_multiplier, querySector, live_sync, tax]);
 
@@ -332,7 +329,6 @@ export default function UnifiedResultsPortal() {
     window.open(specializedUrl, "_blank");
   };
 
-  // ✅ DECOUPLED ROUTE NAVIGATION (Explicit query-based route target)
   const navigateToTriangulation = () => {
     if (!id) return;
     
@@ -354,9 +350,6 @@ export default function UnifiedResultsPortal() {
   }
 
   const verifyIsAdminView = String(router.query.live_sync).toLowerCase() === "true";
-
-  const calculatedExposureSum = metrics.exposure + metrics.totalLaborTaxPool;
-  const safeExposureSum = calculatedExposureSum > 0 ? calculatedExposureSum : 462528;
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans overflow-x-hidden text-left antialiased">
@@ -392,7 +385,7 @@ export default function UnifiedResultsPortal() {
           <p className="text-slate-700 font-sans text-xs leading-relaxed max-w-4xl">
             {isPhaseTwoActive 
               ? `These operational metrics are actively calibrated to your team's real-world footprint of $${spend}M in annual software allocations across ${metrics.fteCount} FTE resources.` 
-              : `This diagnostic uses standard industry baselines calibrated to your captured AI Readiness Score of ${100 - dbDecay}%. Specific workforce calibration parameters assume default inputs of $${spend}M annual software allocations across ${metrics.fteCount} FTE resources.`
+              : `This diagnostic uses standard industry baselines calibrated to your captured AI Readiness Score of ${metrics.complianceScore}%. Specific workforce calibration parameters assume default inputs of $${spend}M annual software allocations across ${metrics.fteCount} FTE resources.`
             }
           </p>
         </div>
@@ -412,12 +405,18 @@ export default function UnifiedResultsPortal() {
               </p>
             </div>
             
+            {/* ✅ UPDATED METRIC BINDINGS WITH SUB-LABEL EXPLANATION */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
                 <span className="text-xs text-slate-500 font-medium">AI Readiness Score</span>
-                <p className="text-sm font-bold mt-1 text-slate-900">
-                  Readiness: <span className={`${accentColorClass} text-base`}>{100 - dbDecay}%</span>
-                </p>
+                <div>
+                  <p className="text-sm font-bold mt-1 text-slate-900">
+                    Readiness: <span className={`${accentColorClass} text-base`}>{metrics.complianceScore}%</span>
+                  </p>
+                  <span className="text-[9px] font-mono text-slate-400 block mt-0.5">
+                    Capital Exposure Model // 100% − {metrics.aiReadinessGap}% Promise Gap
+                  </span>
+                </div>
               </div>
 
               <div className="flex flex-col justify-between">
@@ -430,7 +429,7 @@ export default function UnifiedResultsPortal() {
               <div className="flex flex-col justify-between">
                 <span className="text-xs text-slate-500 font-medium">Total Risk Exposure</span>
                 <p className="text-sm font-bold mt-1 text-slate-900">
-                  Total Risk: <span className="font-mono text-slate-900">${safeExposureSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  Total Risk: <span className="font-mono text-slate-900">${metrics.totalCapitalExposure.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
             </div>
@@ -443,7 +442,7 @@ export default function UnifiedResultsPortal() {
             
             <RealTimeLossTicker 
               diagnosticCompletedAt={(audit as any)?.compiled_at || audit?.created_at || (audit as any)?.updated_at} 
-              exposure={safeExposureSum} 
+              exposure={metrics.totalCapitalExposure} 
               anomalies={activeAnomaliesList}
               isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
             />
@@ -549,7 +548,6 @@ export default function UnifiedResultsPortal() {
             </div>
           </div>
         ) : (
-          /* CUSTOMER LANDING CTA */
           !isPhaseTwoActive && (
             <div 
               className="bg-white text-slate-900 p-8 md:p-12 flex flex-col items-center justify-center group cursor-pointer border-l-8 border-slate-900 shadow-sm text-center mt-12 hover:bg-slate-100/50 transition-all duration-300 rounded-r-lg" 
