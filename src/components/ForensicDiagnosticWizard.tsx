@@ -6,6 +6,14 @@ import { calculateForensicMetrics } from '../lib/forensicCalculus';
 
 type PillarType = 'IGF' | 'AVS' | 'HAI';
 
+interface ForensicDiagnosticWizardProps {
+  companyName: string;
+  activePillar: PillarType;
+  onCalculated?: (answers: Record<string, string>, metrics?: any) => void;
+  onComplete?: (answers: Record<string, string>, metrics?: any) => void;
+  onSubmit?: (answers: Record<string, string>, metrics?: any) => void;
+}
+
 function findContradictions(matrix: Record<string, string>) {
   const contradictions = [];
   
@@ -23,12 +31,10 @@ function findContradictions(matrix: Record<string, string>) {
 export default function ForensicDiagnosticWizard({ 
   companyName, 
   activePillar,
-  onCalculated 
-}: { 
-  companyName: string; 
-  activePillar: PillarType;
-  onCalculated: (metrics: any) => void; 
-}) {
+  onCalculated,
+  onComplete,
+  onSubmit
+}: ForensicDiagnosticWizardProps) {
   const [answers, setAnswers] = useState<Record<string, 'A' | 'B' | 'C' | 'D'>>({});
   const [isCompiling, setIsCompiling] = useState(false);
   const [activeRole, setActiveRole] = useState<string>('');
@@ -38,13 +44,17 @@ export default function ForensicDiagnosticWizard({
       const params = new URLSearchParams(window.location.search);
       const emailParam = params.get('email');
       const roleParam = params.get('role');
+      const trackParam = params.get('track');
       
       if (emailParam) {
         window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
       }
-      if (roleParam) {
-        window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
-        setActiveRole(roleParam); 
+
+      // 🎯 RESOLVE ROLE FROM ROLE OR TRACK QUERY PARAMETER
+      const resolvedRole = roleParam || trackParam;
+      if (resolvedRole) {
+        window.sessionStorage.setItem('stakeholder_runtime_role', resolvedRole);
+        setActiveRole(resolvedRole); 
       } else {
         const cachedRole = window.sessionStorage.getItem('stakeholder_runtime_role');
         if (cachedRole) setActiveRole(cachedRole);
@@ -81,7 +91,7 @@ export default function ForensicDiagnosticWizard({
         q.pillar?.toUpperCase() === 'AVS' && 
         (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('TECH'))
       );
-    } else if (normalizedRole.includes('OPS')) {
+    } else if (normalizedRole.includes('OPS') || normalizedRole.includes('MANAGE')) {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'HAI' && 
         q.target_node?.toUpperCase().includes('MGMT')
@@ -165,7 +175,13 @@ export default function ForensicDiagnosticWizard({
         window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(fullyCompiledMatrix));
         window.sessionStorage.setItem(`bmr_runtime_${companyName}`, JSON.stringify(computedResults));
 
-        onCalculated(computedResults);
+        console.log("WIZARD_COMPLETED: Dispatching raw answer matrix size:", Object.keys(fullyCompiledMatrix).length);
+
+        // 🎯 PASS RAW ANSWER MATRIX AS FIRST PARAMETER TO PARENT CALLBACKS
+        if (typeof onCalculated === 'function') onCalculated(fullyCompiledMatrix, computedResults);
+        if (typeof onComplete === 'function') onComplete(fullyCompiledMatrix, computedResults);
+        if (typeof onSubmit === 'function') onSubmit(fullyCompiledMatrix, computedResults);
+
       } catch (err) {
         console.error("Post-compilation matrix union break:", err);
       }
