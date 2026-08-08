@@ -8,7 +8,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
-type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT'; 
+type PersonaKey = 'EXECUTIVE' | 'MANAGERIAL' | 'TECHNICAL'; 
 
 interface TriangulationState { 
   companyName: string; 
@@ -31,8 +31,8 @@ export default function ForensicEngineRoot() {
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({ 
     EXECUTIVE: '', 
-    TECH_MGMT: '', 
-    OPS_MGMT: '' 
+    MANAGERIAL: '', 
+    TECHNICAL: '' 
   }); 
 
   const [triangulation, setTriangulation] = useState<TriangulationState | null>(null); 
@@ -115,13 +115,13 @@ export default function ForensicEngineRoot() {
 
         if (databaseNodes && databaseNodes.length > 0) {
           const dbExecNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
-          const dbTechNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
           const dbMgrNode  = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
+          const dbTechNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
 
           const freshDBEmails = {
             EXECUTIVE: dbExecNode?.email || "",
-            TECH_MGMT: dbTechNode?.email || "",
-            OPS_MGMT: dbMgrNode?.email || ""
+            MANAGERIAL: dbMgrNode?.email || "",
+            TECHNICAL: dbTechNode?.email || ""
           };
 
           setEmails(freshDBEmails);
@@ -134,14 +134,14 @@ export default function ForensicEngineRoot() {
 
           const liveCompletions = {
             EXECUTIVE: isTrackDone(dbExecNode),
-            TECH_MGMT: isTrackDone(dbTechNode),
-            OPS_MGMT: isTrackDone(dbMgrNode)
+            MANAGERIAL: isTrackDone(dbMgrNode),
+            TECHNICAL: isTrackDone(dbTechNode)
           };
 
           const liveResponses = {
             EXECUTIVE: dbExecNode?.raw_responses || {},
-            TECH_MGMT: dbTechNode?.raw_responses || {},
-            OPS_MGMT: dbMgrNode?.raw_responses || {}
+            MANAGERIAL: dbMgrNode?.raw_responses || {},
+            TECHNICAL: dbTechNode?.raw_responses || {}
           };
 
           setTriangulation({
@@ -153,13 +153,10 @@ export default function ForensicEngineRoot() {
           });
 
           if (matchedOperator) {
-            const personaKeyMap: Record<string, PersonaKey> = {
-              'EXECUTIVE': 'EXECUTIVE',
-              'TECHNICAL': 'TECH_MGMT',
-              'MANAGERIAL': 'OPS_MGMT'
-            };
-            const mappedPersona = personaKeyMap[matchedOperator.persona_type?.toUpperCase()];
-            setActivePersona(mappedPersona);
+            const rawPersona = String(matchedOperator.persona_type || '').toUpperCase().trim();
+            if (rawPersona === 'EXECUTIVE' || rawPersona === 'MANAGERIAL' || rawPersona === 'TECHNICAL') {
+              setActivePersona(rawPersona as PersonaKey);
+            }
 
             if (matchedOperator.survey_completed || String(matchedOperator.status).toUpperCase() === 'COMPLETED') {
               setViewState('THANK_YOU');
@@ -208,7 +205,7 @@ export default function ForensicEngineRoot() {
       setInputError('Organization name is required.'); 
       return; 
     } 
-    if (!emails.EXECUTIVE || !emails.TECH_MGMT || !emails.OPS_MGMT) { 
+    if (!emails.EXECUTIVE || !emails.MANAGERIAL || !emails.TECHNICAL) { 
       setInputError('All 3 stakeholder track emails are required.'); 
       return; 
     } 
@@ -243,8 +240,8 @@ export default function ForensicEngineRoot() {
         companyName: sanitizedInput, 
         pillar: activePillar, 
         emails: { ...emails }, 
-        completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false }, 
-        responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {} } 
+        completions: { EXECUTIVE: false, MANAGERIAL: false, TECHNICAL: false }, 
+        responses: { EXECUTIVE: {}, MANAGERIAL: {}, TECHNICAL: {} } 
       }); 
       setViewState('HUB'); 
 
@@ -256,8 +253,8 @@ export default function ForensicEngineRoot() {
           orgName: sanitizedInput, 
           emails: {
             executive: emails.EXECUTIVE,
-            tech_mgmt: emails.TECH_MGMT,
-            ops_mgmt: emails.OPS_MGMT
+            managerial: emails.MANAGERIAL,
+            technical: emails.TECHNICAL
           }
         }), 
       }); 
@@ -284,7 +281,7 @@ export default function ForensicEngineRoot() {
       });
 
       if (res.ok) {
-        alert(`Reminder dispatch sent to ${persona.replace('_', ' ')} (${email}).`);
+        alert(`Reminder dispatch sent to ${persona} (${email}).`);
       } else {
         alert("Failed to send reminder.");
       }
@@ -301,7 +298,7 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
-  // 🎯 SCHEMATICALLY ALIGNED SAVE HANDLER
+  // 🎯 CLEAN SAVE HANDLER WITH DIRECT MATCHING
   const handlePersonaAnswersSaved = async (personaAnswers: Record<string, string>) => { 
     if (!triangulation || !activePersona) return; 
 
@@ -312,19 +309,13 @@ export default function ForensicEngineRoot() {
     setTriangulation(updatedState); 
 
     try { 
-      const personaToBackendKey = { 
-        EXECUTIVE: "EXECUTIVE", 
-        TECH_MGMT: "TECHNICAL", 
-        OPS_MGMT: "MANAGERIAL" 
-      }[activePersona]; 
-
       const params = new URLSearchParams(window.location.search);
       const codeParam = params.get('code')?.toUpperCase().trim();
       const emailParam = params.get('email')?.toLowerCase().trim() || triangulation.emails[activePersona]?.toLowerCase().trim();
 
       let updateSuccess = false;
 
-      // 1. Update by unique Access Code (P1)
+      // 1. Update by unique Access Code (Primary)
       if (codeParam) {
         const { data } = await supabase 
           .from("operators") 
@@ -339,7 +330,7 @@ export default function ForensicEngineRoot() {
         if (data && data.length > 0) updateSuccess = true;
       }
 
-      // 2. Update by group_id (Schema Alignment) + persona_type (P2)
+      // 2. Update by group_id + persona_type
       if (!updateSuccess && activeAuditId) {
         const { data } = await supabase 
           .from("operators") 
@@ -349,13 +340,13 @@ export default function ForensicEngineRoot() {
             raw_responses: personaAnswers
           }) 
           .eq("group_id", activeAuditId)
-          .eq("persona_type", personaToBackendKey)
+          .eq("persona_type", activePersona)
           .select();
 
         if (data && data.length > 0) updateSuccess = true;
       }
 
-      // 3. Fallback by group_id + Email (P3)
+      // 3. Fallback by group_id + Email
       if (!updateSuccess && activeAuditId && emailParam) {
         const { data } = await supabase 
           .from("operators") 
@@ -414,7 +405,7 @@ export default function ForensicEngineRoot() {
 
   const handleSystemReset = () => { 
     setCompanyName(''); 
-    setEmails({ EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '' }); 
+    setEmails({ EXECUTIVE: '', MANAGERIAL: '', TECHNICAL: '' }); 
     setTriangulation(null); 
     setActivePersona(null); 
     setViewState('INTAKE'); 
@@ -499,7 +490,7 @@ export default function ForensicEngineRoot() {
               <label className="text-xs font-mono font-bold text-slate-700 block uppercase tracking-wider mb-2">360° Stakeholder Emails</label> 
               {(Object.keys(emails) as PersonaKey[]).map((role) => ( 
                 <div key={role}> 
-                  <span className="text-[11px] text-slate-500 block mb-1 font-mono font-bold uppercase tracking-wider">{role.replace('_', ' ')} Email</span> 
+                  <span className="text-[11px] text-slate-500 block mb-1 font-mono font-bold uppercase tracking-wider">{role} Track Email</span> 
                   <input         
                     type="email" 
                     placeholder={`e.g., ${role.toLowerCase()}@company.com`} 
@@ -545,7 +536,7 @@ export default function ForensicEngineRoot() {
               return ( 
                 <div key={persona} className="border border-slate-200 bg-white p-5 rounded-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
                   <div> 
-                    <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{persona.replace('_', ' ')} Track</span> 
+                    <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{persona} Track</span> 
                     <span className="text-xs text-slate-500 block font-mono mt-1">{triangulation.emails[persona]}</span> 
                   </div> 
 
