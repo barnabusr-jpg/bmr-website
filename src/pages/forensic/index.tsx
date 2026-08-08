@@ -241,7 +241,6 @@ export default function ForensicEngineRoot() {
     setInputError(''); 
 
     try { 
-      // 1. Ensure parent audit exists or create one
       let { data: parentAudit } = await supabase
         .from('audits')
         .select('id')
@@ -276,7 +275,6 @@ export default function ForensicEngineRoot() {
       setTriangulation(initialTriangulationState); 
       setViewState('HUB'); 
 
-      // 🎯 TARGET dispatch-directives API
       await fetch('/api/dispatch-directives', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
@@ -349,6 +347,7 @@ export default function ForensicEngineRoot() {
 
       if (!activeAuditId) return;
 
+      // 1. Update individual operator track status
       await supabase 
         .from("operators") 
         .update({ 
@@ -358,6 +357,26 @@ export default function ForensicEngineRoot() {
         }) 
         .eq("audit_id", activeAuditId)
         .eq("persona_type", personaToBackendKey); 
+
+      // 2. 🎯 AUTOMATIC AUDIT ROLLUP: Check if all 3 360° Triangulation nodes are complete
+      const { data: all360Nodes } = await supabase
+        .from("operators")
+        .select("survey_completed, status")
+        .eq("audit_id", activeAuditId);
+
+      const isFullyComplete = all360Nodes && all360Nodes.length >= 3 && all360Nodes.every(
+        n => n.survey_completed === true || String(n.status).toUpperCase() === 'COMPLETED'
+      );
+
+      if (isFullyComplete) {
+        await supabase
+          .from("audits")
+          .update({ 
+            status: "COMPLETE",
+            compiled_at: new Date().toISOString()
+          })
+          .eq("id", activeAuditId);
+      }
 
     } catch (dbError) { 
       console.error("Database update exception:", dbError); 
