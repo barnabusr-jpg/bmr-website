@@ -67,6 +67,7 @@ export default function ForensicEngineRoot() {
       const idParam = params.get('id'); 
       const matrixToken = params.get('matrix');
       const entityParam = params.get('entity') || params.get('org') || params.get('entity_code');
+      const roleParam = params.get('role') as PersonaKey;
 
       let decryptedData: Record<string, any> = {};
       if (matrixToken) {
@@ -104,7 +105,7 @@ export default function ForensicEngineRoot() {
       }
 
       if (activeAudit) {
-        setActiveAuditId(activeAudit.id); // 👈 Store active audit anchor
+        setActiveAuditId(activeAudit.id);
 
         const decay = activeAudit.decay_pct || 24;
         const sfi = activeAudit.sfi_score || decay;
@@ -123,21 +124,13 @@ export default function ForensicEngineRoot() {
 
         setActivePillar(targetCalculatedPillar);
 
-        // Fetch operator nodes with verified schema columns
         const { data: databaseNodes } = await supabase
           .from('operators')
           .select('persona_type, email, status, survey_completed, raw_responses')
           .eq('audit_id', activeAudit.id);
 
-        // 🛡️ EARLY EXIT: Flush state on empty dataset to prevent stale UI bleed
         if (!databaseNodes || databaseNodes.length === 0) {
-          const emptyEmails = {
-            EXECUTIVE: "",
-            TECH_MGMT: "",
-            OPS_MGMT: "",
-            SYSTEM_USER: ""
-          };
-
+          const emptyEmails = { EXECUTIVE: "", TECH_MGMT: "", OPS_MGMT: "", SYSTEM_USER: "" };
           const emptyTriangulation: TriangulationState = {
             companyName: targetCompanyName,
             pillar: targetCalculatedPillar,
@@ -161,37 +154,40 @@ export default function ForensicEngineRoot() {
           return emailRegex.test(cleanVal) ? cleanVal : ""; 
         };
 
+        // 🎯 EXACT PERSONA NODE MATCHING (No fallback to dbTechNode)
         const dbExecNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
         const dbTechNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
         const dbMgrNode  = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
+        const dbUserNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'SYSTEM_USER' || n.persona_type?.toUpperCase() === 'USER');
 
         const freshDBEmails = {
           EXECUTIVE: filterIncomingEmail(dbExecNode?.email || ""),
           TECH_MGMT: filterIncomingEmail(dbTechNode?.email || ""),
           OPS_MGMT: filterIncomingEmail(dbMgrNode?.email || ""),
-          SYSTEM_USER: filterIncomingEmail(dbTechNode?.email || "")
+          SYSTEM_USER: filterIncomingEmail(dbUserNode?.email || "")
         };
 
         setEmails(freshDBEmails);
 
+        // 🛡️ STRICT COMPLETION CHECK: Prevents premature lockout
         const isTrackDone = (node: any) => {
           if (!node) return false;
           const statusUpper = String(node.status || '').toUpperCase();
-          return node.survey_completed === true || statusUpper === 'COMPLETED' || statusUpper === 'COMPLETE';
+          return node.survey_completed === true && (statusUpper === 'COMPLETED' || statusUpper === 'COMPLETE');
         };
 
         const liveCompletions = {
           EXECUTIVE: isTrackDone(dbExecNode),
           TECH_MGMT: isTrackDone(dbTechNode),
           OPS_MGMT: isTrackDone(dbMgrNode),
-          SYSTEM_USER: isTrackDone(dbTechNode)
+          SYSTEM_USER: isTrackDone(dbUserNode)
         };
 
         const liveResponses = {
           EXECUTIVE: dbExecNode?.raw_responses || {},
           TECH_MGMT: dbTechNode?.raw_responses || {},
           OPS_MGMT: dbMgrNode?.raw_responses || {},
-          SYSTEM_USER: dbTechNode?.raw_responses || {}
+          SYSTEM_USER: dbUserNode?.raw_responses || {}
         };
 
         const updatedTriangulation: TriangulationState = {
@@ -205,6 +201,15 @@ export default function ForensicEngineRoot() {
         setTriangulation(updatedTriangulation);
         if (targetCompanyName) {
           window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(updatedTriangulation));
+        }
+
+        // 🛡️ ISOLATED PARTICIPANT ROUTE GATE
+        if (roleParam) {
+          if (liveCompletions[roleParam]) {
+            setViewState('THANK_YOU');
+          } else {
+            setViewState('WIZARD');
+          }
         }
       }
     } catch (err) {
@@ -268,6 +273,7 @@ export default function ForensicEngineRoot() {
           }); 
 
           setViewState('WIZARD'); 
+          synchronizeEngineDataMatrix();
         } else { 
           setAuthorizedAdmin(false); 
         } 
@@ -278,11 +284,9 @@ export default function ForensicEngineRoot() {
     } 
   }, []); 
 
-  // Auto-refresh when switching back to the admin tab
   useEffect(() => {
     const handleFocus = () => {
       if (authorizedAdmin) {
-        console.log("COCKPIT_SYNC: Tab focused. Refreshing matrix ledger...");
         synchronizeEngineDataMatrix();
       }
     };
@@ -297,7 +301,7 @@ export default function ForensicEngineRoot() {
       EXECUTIVE: 'executive@example.com', 
       TECH_MGMT: 'technical@example.com', 
       OPS_MGMT: 'operations@example.com', 
-      SYSTEM_USER: 'technical@example.com' 
+      SYSTEM_USER: 'user@example.com' 
     }); 
     setInputError(''); 
   }; 
@@ -405,7 +409,7 @@ export default function ForensicEngineRoot() {
         EXECUTIVE: "EXECUTIVE", 
         TECH_MGMT: "TECHNICAL", 
         OPS_MGMT: "MANAGERIAL", 
-        SYSTEM_USER: "TECHNICAL" 
+        SYSTEM_USER: "SYSTEM_USER" 
       }[activePersona]; 
 
       if (!activeAuditId) {
@@ -413,7 +417,6 @@ export default function ForensicEngineRoot() {
         return;
       }
 
-      // Anchor update query directly to activeAuditId & persist raw_responses
       let updateQuery = supabase 
         .from("operators") 
         .update({ 
@@ -528,7 +531,6 @@ export default function ForensicEngineRoot() {
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
-  // Compressed Shareable SOW Generator Token URL
   const sowShareLink = useMemo(() => {
     if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
@@ -824,6 +826,16 @@ export default function ForensicEngineRoot() {
         /> 
       )} 
 
+      {viewState === 'THANK_YOU' && (
+        <div className="w-full max-w-lg border border-slate-200 bg-white p-8 md:p-10 text-center rounded-lg shadow-sm">
+          <CheckCircle size={40} className="text-emerald-600 mx-auto mb-4" />
+          <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Diagnostic Complete</h2>
+          <p className="text-xs font-mono text-slate-500 mt-2 uppercase tracking-wider">
+            Your assessment responses have been recorded and synchronized to the organization command cockpit.
+          </p>
+        </div>
+      )}
+
       {viewState === 'COCKPIT' && triangulation && ( 
         <div className="w-full max-w-[1600px] mx-auto text-left"> 
           <div className="mb-4 px-10 no-print flex justify-start"> 
@@ -843,7 +855,6 @@ export default function ForensicEngineRoot() {
             onSelectSOW={() => setDossierTab('REMEDIATION')}
           /> 
 
-          {/* GOVERNANCE & COMPLIANCE SUPPLEMENT INTEGRATION */}
           <div className="mx-10 my-8">
             <GovernanceSupplementView
               metrics={governanceMetrics}
@@ -852,7 +863,6 @@ export default function ForensicEngineRoot() {
             />
           </div>
 
-          {/* ACTIVE DOSSIER & SOW TERMINAL SECTION */}
           <div className="mt-8 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left">
             <div className="border-b border-slate-100 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
@@ -867,7 +877,6 @@ export default function ForensicEngineRoot() {
                 </div>
               </div>
 
-              {/* TAB SELECTOR */}
               <div className="flex bg-slate-100 p-1 border border-slate-200 rounded-md font-mono text-xs font-bold uppercase tracking-wider">
                 <button 
                   onClick={() => setDossierTab('METRICS')}
@@ -921,11 +930,8 @@ export default function ForensicEngineRoot() {
               </div>
             )}
 
-            {/* TAB 02: ACTIVE INTERACTIVE STATEMENT OF WORK TABLE */}
             {dossierTab === 'REMEDIATION' && (
               <div className="space-y-8 font-sans">
-                
-                {/* SOW ACTIVE TABLE HEADER */}
                 <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
                     <span className="font-mono text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">
@@ -946,7 +952,6 @@ export default function ForensicEngineRoot() {
                   </div>
                 </div>
 
-                {/* DETAILED IMPLEMENTATION SOW TABLE */}
                 <div className="border border-slate-200 rounded-md overflow-hidden">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-100 font-mono text-slate-700 uppercase tracking-wider border-b border-slate-200">
@@ -1012,7 +1017,6 @@ export default function ForensicEngineRoot() {
                   </table>
                 </div>
 
-                {/* GOVERNANCE & REGULATORY STANDARDS AUDIT FLAGS */}
                 <div className="border border-slate-200 bg-slate-50 p-6 rounded-md">
                   <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-3">
                     // Regulatory Non-Compliance Standards Audit
@@ -1026,7 +1030,6 @@ export default function ForensicEngineRoot() {
                   </div>
                 </div>
 
-                {/* STATELESS SHAREABLE SOW GENERATOR CARD */}
                 <div className="bg-slate-900 text-white p-6 rounded-md space-y-3 font-sans no-print">
                   <div>
                     <span className="text-[10px] font-mono text-emerald-400 block font-bold uppercase tracking-wider">
