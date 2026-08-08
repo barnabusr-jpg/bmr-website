@@ -16,7 +16,6 @@ function toSentenceCase(str: string): string {
   return clean.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-// Maps input roles strictly to database persona_type expected by ForensicDiagnostic.tsx
 const ROLE_MAP: Record<string, string> = {
   'executive': 'EXECUTIVE',
   'exec': 'EXECUTIVE',
@@ -51,7 +50,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   
   const { groupId, orgName, emails, parentAuditId } = req.body;
   
-  // Dynamic host resolution
   const host = req.headers.host || 'www.bmradvisory.co';
   const protocol = req.headers['x-forwarded-proto'] || 'https';
   
@@ -61,14 +59,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co'; 
-  const CALENDLY_BRIEFING_URL = 'https://calendly.com/hello-bmradvisory/forensic-briefing';
+  
+  // 🎯 ACCURATE CALENDLY CALIBRATION BRIEFING LINK
+  const CALENDLY_BRIEFING_URL = 'https://calendly.com/hello-bmradvisory/systems-triangulation-calibration';
 
   if (!parentAuditId) {
     return res.status(400).json({ error: 'MISSING PARENT AUDIT ID' });
   }
 
   try {
-    // Reset parent audit status to IN_PROGRESS to ensure evaluation is open
     await supabaseAdmin
       .from('audits')
       .update({ status: 'IN_PROGRESS' })
@@ -101,7 +100,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         .eq('persona_type', dbPersona)
         .maybeSingle();
 
-      // 🛡️ CRITICAL FIX: Explicitly reset survey_completed and raw_responses to prevent instant lockout
       if (existingNode) {
         await supabaseAdmin
           .from('operators')
@@ -135,7 +133,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       let emailHtml = '';
 
       if (dbPersona === 'EXECUTIVE') {
-        // EXECUTIVE EMAIL: Background, execution steps, and Calendar link
         emailHtml = `
           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <tr>
@@ -180,7 +177,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
                   <!-- STEP 3: Executive Briefing Scheduling -->
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
-                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing</p>
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Systems Triangulation Calibration</p>
                     <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">
                       Reserve a 15-minute calibration briefing with BMR leads to review compiled metrics and the active Statement of Work:
                     </p>
@@ -200,7 +197,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </table>
         `;
       } else {
-        // TECHNICAL & MANAGERIAL EMAIL: Detailed background and instructions
         emailHtml = `
           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <tr>
