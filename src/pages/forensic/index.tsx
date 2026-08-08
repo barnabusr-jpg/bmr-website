@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useEffect, useMemo } from 'react'; 
+import React, { useState, useEffect, useMemo, useRef } from 'react'; 
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight, Loader2, Copy, Check, Printer, Download, Calendar, DollarSign, Sliders } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight, Loader2, Copy, Check, Printer } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { decompressFromEncodedURIComponent, compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
@@ -27,6 +27,9 @@ export default function ForensicEngineRoot() {
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
   const [sendingNudgeRole, setSendingNudgeRole] = useState<PersonaKey | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [activeAuditId, setActiveAuditId] = useState<string | null>(null);
+
+  const isSyncingRef = useRef(false);
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>({ 
     EXECUTIVE: '', 
@@ -54,6 +57,163 @@ export default function ForensicEngineRoot() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, [triangulation]);
 
+  // 📡 UNIFIED SOURCE-OF-TRUTH RECOVERY & REAL-TIME SYNC
+  const synchronizeEngineDataMatrix = async () => {
+    if (isSyncingRef.current) return;
+    isSyncingRef.current = true;
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const idParam = params.get('id'); 
+      const matrixToken = params.get('matrix');
+      const entityParam = params.get('entity') || params.get('org') || params.get('entity_code');
+
+      let decryptedData: Record<string, any> = {};
+      if (matrixToken) {
+        try {
+          decryptedData = JSON.parse(decompressFromEncodedURIComponent(matrixToken) || '{}');
+        } catch (tokenErr) {
+          console.error("Token structural matrix parsing error:", tokenErr);
+        }
+      }
+
+      let targetCompanyName = (decryptedData.companyName || decryptedData.org || entityParam || companyName || '').trim().replace(/\s+/g, ' ');
+
+      let activeAudit = null;
+
+      if (idParam) {
+        const { data } = await supabase
+          .from('audits')
+          .select('id, org_name, sfi_score, decay_pct, sector, status, hai_raw_score, avs_raw_score, igf_raw_score')
+          .eq('id', idParam)
+          .maybeSingle();
+        activeAudit = data;
+
+        if (activeAudit && !targetCompanyName) {
+          targetCompanyName = activeAudit.org_name;
+          setCompanyName(targetCompanyName);
+        }
+      } else if (targetCompanyName) {
+        const cleanOrgLookup = targetCompanyName.replace(/_GLOBAL$/, '').replace(/_/g, ' ');
+        const { data } = await supabase
+          .from('audits')
+          .select('id, org_name, sfi_score, decay_pct, sector, status, hai_raw_score, avs_raw_score, igf_raw_score')
+          .ilike('org_name', cleanOrgLookup)
+          .maybeSingle();
+        activeAudit = data;
+      }
+
+      if (activeAudit) {
+        setActiveAuditId(activeAudit.id); // 👈 Store active audit anchor
+
+        const decay = activeAudit.decay_pct || 24;
+        const sfi = activeAudit.sfi_score || decay;
+        const sectorStr = String(activeAudit.sector || '').toUpperCase();
+
+        let targetCalculatedPillar: FunnelPillar = 'IGF';
+        if (sfi >= 45) {
+          targetCalculatedPillar = 'AVS'; 
+        } else if (sectorStr.includes('IGF') || sectorStr.includes('FINANCE') || sectorStr.includes('COMPLIANCE')) {
+          targetCalculatedPillar = 'IGF';
+        } else if (sectorStr.includes('AVS') || sectorStr.includes('MANUFACTURING') || sectorStr.includes('INDUSTRIAL')) {
+          targetCalculatedPillar = 'AVS';
+        } else {
+          targetCalculatedPillar = 'HAI'; 
+        }
+
+        setActivePillar(targetCalculatedPillar);
+
+        // Fetch operator nodes with verified schema columns
+        const { data: databaseNodes } = await supabase
+          .from('operators')
+          .select('persona_type, email, status, survey_completed, raw_responses')
+          .eq('audit_id', activeAudit.id);
+
+        // 🛡️ EARLY EXIT: Flush state on empty dataset to prevent stale UI bleed
+        if (!databaseNodes || databaseNodes.length === 0) {
+          const emptyEmails = {
+            EXECUTIVE: "",
+            TECH_MGMT: "",
+            OPS_MGMT: "",
+            SYSTEM_USER: ""
+          };
+
+          const emptyTriangulation: TriangulationState = {
+            companyName: targetCompanyName,
+            pillar: targetCalculatedPillar,
+            emails: emptyEmails,
+            completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
+            responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
+          };
+
+          setEmails(emptyEmails);
+          setTriangulation(emptyTriangulation);
+          if (targetCompanyName) {
+            window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(emptyTriangulation));
+          }
+          return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+        const filterIncomingEmail = (val: string | null): string => { 
+          if (!val) return ""; 
+          const cleanVal = decodeURIComponent(val).trim(); 
+          return emailRegex.test(cleanVal) ? cleanVal : ""; 
+        };
+
+        const dbExecNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
+        const dbTechNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
+        const dbMgrNode  = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
+
+        const freshDBEmails = {
+          EXECUTIVE: filterIncomingEmail(dbExecNode?.email || ""),
+          TECH_MGMT: filterIncomingEmail(dbTechNode?.email || ""),
+          OPS_MGMT: filterIncomingEmail(dbMgrNode?.email || ""),
+          SYSTEM_USER: filterIncomingEmail(dbTechNode?.email || "")
+        };
+
+        setEmails(freshDBEmails);
+
+        const isTrackDone = (node: any) => {
+          if (!node) return false;
+          const statusUpper = String(node.status || '').toUpperCase();
+          return node.survey_completed === true || statusUpper === 'COMPLETED' || statusUpper === 'COMPLETE';
+        };
+
+        const liveCompletions = {
+          EXECUTIVE: isTrackDone(dbExecNode),
+          TECH_MGMT: isTrackDone(dbTechNode),
+          OPS_MGMT: isTrackDone(dbMgrNode),
+          SYSTEM_USER: isTrackDone(dbTechNode)
+        };
+
+        const liveResponses = {
+          EXECUTIVE: dbExecNode?.raw_responses || {},
+          TECH_MGMT: dbTechNode?.raw_responses || {},
+          OPS_MGMT: dbMgrNode?.raw_responses || {},
+          SYSTEM_USER: dbTechNode?.raw_responses || {}
+        };
+
+        const updatedTriangulation: TriangulationState = {
+          companyName: targetCompanyName,
+          pillar: targetCalculatedPillar,
+          emails: freshDBEmails,
+          completions: liveCompletions,
+          responses: liveResponses
+        };
+
+        setTriangulation(updatedTriangulation);
+        if (targetCompanyName) {
+          window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(updatedTriangulation));
+        }
+      }
+    } catch (err) {
+      console.error("COCKPIT_SYNC_ERROR: Matrix re-sync failed", err);
+    } finally {
+      isSyncingRef.current = false;
+    }
+  };
+
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
       try { 
@@ -80,7 +240,6 @@ export default function ForensicEngineRoot() {
         }
 
         let targetCompanyName = (decryptedData.companyName || decryptedData.org || entityParam || '').trim().replace(/\s+/g, ' ');
-        const activeSectorStr = String(decryptedData.sector || decryptedData.sec || pillarParam || '').toUpperCase();
 
         if (targetCompanyName) { 
           setCompanyName(targetCompanyName); 
@@ -93,127 +252,7 @@ export default function ForensicEngineRoot() {
 
         if (isAdminAuthenticated && !roleParam) { 
           setAuthorizedAdmin(true); 
-
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
-          const filterIncomingEmail = (val: string | null): string => { 
-            if (!val) return ""; 
-            const cleanVal = decodeURIComponent(val).trim(); 
-            return emailRegex.test(cleanVal) ? cleanVal : ""; 
-          }; 
-
-          const synchronizeEngineDataMatrix = async () => {
-            let activeAudit = null;
-
-            if (idParam) {
-              const { data } = await supabase
-                .from('audits')
-                .select('id, org_name, sfi_score, decay_pct, sector')
-                .eq('id', idParam)
-                .maybeSingle();
-              activeAudit = data;
-
-              if (activeAudit && !targetCompanyName) {
-                targetCompanyName = activeAudit.org_name;
-                setCompanyName(targetCompanyName);
-                const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
-                if (savedSession) setTriangulation(JSON.parse(savedSession));
-              }
-            } 
-            else if (targetCompanyName) {
-              const cleanOrgLookup = targetCompanyName.replace(/ GLOBAL$/, '');
-              const { data } = await supabase
-                .from('audits')
-                .select('id, org_name, sfi_score, decay_pct, sector')
-                .ilike('org_name', cleanOrgLookup)
-                .maybeSingle();
-              activeAudit = data;
-            }
-
-            let targetCalculatedPillar: FunnelPillar = 'IGF';
-
-            if (activeAudit) {
-              const decay = activeAudit.decay_pct || 24;
-              const sfi = activeAudit.sfi_score || decay;
-              const sectorStr = String(activeAudit.sector || '').toUpperCase();
-
-              if (sfi >= 45) {
-                targetCalculatedPillar = 'AVS'; 
-              } else if (sectorStr.includes('IGF') || sectorStr.includes('FINANCE') || sectorStr.includes('COMPLIANCE')) {
-                targetCalculatedPillar = 'IGF';
-              } else if (sectorStr.includes('AVS') || sectorStr.includes('MANUFACTURING') || sectorStr.includes('INDUSTRIAL')) {
-                targetCalculatedPillar = 'AVS';
-              } else {
-                targetCalculatedPillar = 'HAI'; 
-              }
-
-              setActivePillar(targetCalculatedPillar);
-
-              const { data: databaseNodes } = await supabase
-                .from('operators')
-                .select('persona_type, email')
-                .eq('audit_id', activeAudit.id);
-
-              if (databaseNodes && databaseNodes.length > 0) {
-                const dbExec = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE')?.email || "";
-                const dbTech = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL')?.email || "";
-                const dbMgr  = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL')?.email || "";
-
-                const freshDBEmails = {
-                  EXECUTIVE: filterIncomingEmail(dbExec),
-                  TECH_MGMT: filterIncomingEmail(dbTech),
-                  OPS_MGMT: filterIncomingEmail(dbMgr),
-                  SYSTEM_USER: filterIncomingEmail(dbTech)
-                };
-
-                setEmails(freshDBEmails);
-
-                if (targetCompanyName) {
-                  const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
-                  if (saved) {
-                    const parsed = JSON.parse(saved);
-                    parsed.emails = freshDBEmails;
-                    parsed.pillar = targetCalculatedPillar; 
-                    window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
-                  }
-                }
-                return; 
-              }
-            }
-
-            const rawExec = params.get('exec') || params.get('executive') || params.get('execEmail') || "";
-            const rawTech = params.get('tech_mgmt') || params.get('tech') || params.get('technical') || params.get('techEmail') || "";
-            const rawMgr  = params.get('ops_mgmt') || params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || "";
-            const rawSys  = params.get('sys_user') || rawTech;
-
-            const fallbackEmails = { 
-              EXECUTIVE: filterIncomingEmail(rawExec), 
-              TECH_MGMT: filterIncomingEmail(rawTech), 
-              OPS_MGMT: filterIncomingEmail(rawMgr), 
-              SYSTEM_USER: filterIncomingEmail(rawSys)
-            };
-
-            setEmails(fallbackEmails);
-            
-            if (activeSectorStr.includes('AVS') || activeSectorStr.includes('INDUSTRIAL')) {
-              setActivePillar('AVS');
-            } else if (activeSectorStr.includes('HAI') || activeSectorStr.includes('SERVICES')) {
-              setActivePillar('HAI');
-            } else {
-              setActivePillar('IGF');
-            }
-
-            if (targetCompanyName) {
-              const saved = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
-              if (saved) {
-                const parsed = JSON.parse(saved);
-                parsed.emails = fallbackEmails;
-                window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
-              }
-            }
-          };
-
           synchronizeEngineDataMatrix();
-
         } else if (isParticipantRoute) { 
           setAuthorizedAdmin(true); 
           setActivePillar(['IGF', 'AVS', 'HAI'].includes(pillarParam?.toUpperCase()) ? pillarParam : 'IGF'); 
@@ -238,6 +277,19 @@ export default function ForensicEngineRoot() {
       } 
     } 
   }, []); 
+
+  // Auto-refresh when switching back to the admin tab
+  useEffect(() => {
+    const handleFocus = () => {
+      if (authorizedAdmin) {
+        console.log("COCKPIT_SYNC: Tab focused. Refreshing matrix ledger...");
+        synchronizeEngineDataMatrix();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [authorizedAdmin, companyName]);
 
   const handleLoadDemoParameters = () => { 
     setCompanyName('Evaluation Client System'); 
@@ -356,12 +408,20 @@ export default function ForensicEngineRoot() {
         SYSTEM_USER: "TECHNICAL" 
       }[activePersona]; 
 
+      if (!activeAuditId) {
+        console.warn("WIZARD_SYNC: activeAuditId missing; aborting operator update.");
+        return;
+      }
+
+      // Anchor update query directly to activeAuditId & persist raw_responses
       let updateQuery = supabase 
         .from("operators") 
         .update({ 
           survey_completed: true, 
-          status: "COMPLETED" 
+          status: "COMPLETED",
+          raw_responses: personaAnswers
         }) 
+        .eq("audit_id", activeAuditId)
         .eq("persona_type", personaToBackendKey); 
 
       const params = new URLSearchParams(window.location.search); 
