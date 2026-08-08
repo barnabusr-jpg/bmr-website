@@ -267,8 +267,7 @@ export default function AdminDashboard() {
       await fetchLedger();
     } catch (err) {
       console.error("Access toggle error:", err);
-    } font-mono
-    finally {
+    } finally {
       setIsUpdating(false);
     }
   };
@@ -314,7 +313,6 @@ export default function AdminDashboard() {
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes, selectedAudit]);
 
-  // Realtime Supabase Subscription to listen for 360° survey completions
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -582,7 +580,7 @@ export default function AdminDashboard() {
                       {expandedRow === audit.id && (
                         <div className="p-8 pt-0 border-t border-slate-100 bg-slate-50/50 text-left select-text">
                           
-                          {/* 🎯 STRICT 360° STAKEHOLDER TRACK CARDS */}
+                          {/* STRICT 360° STAKEHOLDER TRACK CARDS */}
                           <div className="grid grid-cols-3 gap-4 pt-6 mb-6">
                             {[
                               { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
