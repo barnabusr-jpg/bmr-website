@@ -116,7 +116,7 @@ export default function AdminDashboard() {
     }
   }, [statusFilter, searchTerm, currentPage, isUpdating]);
 
-  // 🎯 FETCH OPERATOR NODES (INCLUDES ACCESS_CODE & DUAL FOREIGN KEY SELECTION)
+  // 🎯 FETCH OPERATOR NODES (INCLUDES ACCESS_CODE)
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     if (isUpdating) return;
     const { data: nodes } = await supabase
