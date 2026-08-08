@@ -298,100 +298,106 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
-  // 🎯 CLEAN SAVE HANDLER WITH DIRECT MATCHING
-  const handlePersonaAnswersSaved = async (personaAnswers: Record<string, string>) => { 
-    if (!triangulation || !activePersona) return; 
+  // 🎯 INSTRUMENTED SAVE HANDLER WITH DIAGNOSTIC LOGGING
+  const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
+    if (!activePersona) return;
 
-    const updatedState = { ...triangulation }; 
-    updatedState.responses[activePersona] = personaAnswers; 
-    updatedState.completions[activePersona] = true; 
+    const answersToSave = (personaAnswers && Object.keys(personaAnswers).length > 0) 
+      ? personaAnswers 
+      : { status: "completed_via_wizard", completed_at: new Date().toISOString() };
 
-    setTriangulation(updatedState); 
+    if (triangulation) {
+      const updatedState = { ...triangulation }; 
+      updatedState.responses[activePersona] = answersToSave; 
+      updatedState.completions[activePersona] = true; 
+      setTriangulation(updatedState); 
+    }
 
-    try { 
-      const params = new URLSearchParams(window.location.search);
-      const codeParam = params.get('code')?.toUpperCase().trim();
-      const emailParam = params.get('email')?.toLowerCase().trim() || triangulation.emails[activePersona]?.toLowerCase().trim();
+    const params = new URLSearchParams(window.location.search);
+    const codeParam = params.get('code')?.toUpperCase().trim() || null;
 
-      let updateSuccess = false;
+    // 🎯 DIAGNOSTIC: CHECK CURRENT CLIENT SESSION ROLE
+    const { data: sessionData } = await supabase.auth.getSession();
+    console.log("DIAGNOSTIC_SESSION", {
+      hasSession: !!sessionData?.session,
+      role: sessionData?.session?.user?.role || "anon"
+    });
 
-      // 1. Update by unique Access Code (Primary)
-      if (codeParam) {
-        const { data } = await supabase 
-          .from("operators") 
+    let updateSuccess = false;
+
+    // 🎯 STEP 1: ATTEMPT UPDATE BY ACCESS CODE
+    if (codeParam) {
+      const { data: selectCodeData, error: selectCodeErr } = await supabase
+        .from("operators")
+        .select("id, access_code, group_id, persona_type, survey_completed")
+        .eq("access_code", codeParam);
+
+      console.log("ROW_LOOKUP_BY_CODE", { data: selectCodeData, error: selectCodeErr });
+
+      console.log("UPDATE_ATTEMPT", { step: 1, codeParam });
+      const { data: updateCodeData, error: updateCodeErr } = await supabase
+        .from("operators")
+        .update({
+          survey_completed: true,
+          status: "COMPLETED",
+          raw_responses: answersToSave,
+        })
+        .eq("access_code", codeParam)
+        .select();
+
+      console.log("UPDATE_RESULT_STEP_1", { data: updateCodeData, error: updateCodeErr });
+      if (updateCodeData && updateCodeData.length > 0) updateSuccess = true;
+    }
+
+    // 🎯 STEP 2: ATTEMPT UPDATE BY GROUP_ID + PERSONA_TYPE
+    if (!updateSuccess && activeAuditId && activePersona) {
+      const { data: selectGroupData, error: selectGroupErr } = await supabase
+        .from("operators")
+        .select("id, access_code, group_id, persona_type, survey_completed")
+        .eq("group_id", activeAuditId)
+        .ilike("persona_type", activePersona);
+
+      console.log("ROW_LOOKUP_BY_GROUP_PERSONA", { data: selectGroupData, error: selectGroupErr });
+
+      console.log("UPDATE_ATTEMPT", { step: 2, activeAuditId, activePersona });
+      const { data: updateGroupData, error: updateGroupErr } = await supabase
+        .from("operators")
+        .update({
+          survey_completed: true,
+          status: "COMPLETED",
+          raw_responses: answersToSave,
+        })
+        .eq("group_id", activeAuditId)
+        .ilike("persona_type", activePersona)
+        .select();
+
+      console.log("UPDATE_RESULT_STEP_2", { data: updateGroupData, error: updateGroupErr });
+      if (updateGroupData && updateGroupData.length > 0) updateSuccess = true;
+    }
+
+    // 🎯 STEP 3: AUTO-ROLLUP PARENT AUDIT STATUS
+    if (activeAuditId) {
+      const { data: nodes } = await supabase
+        .from("operators")
+        .select("survey_completed, status")
+        .eq("group_id", activeAuditId);
+
+      const completedCount = nodes?.filter(
+        n => n.survey_completed === true || String(n.status).toUpperCase() === 'COMPLETED'
+      ).length || 0;
+
+      if (completedCount >= 3) {
+        await supabase
+          .from("audits")
           .update({ 
-            survey_completed: true, 
-            status: "COMPLETED",
-            raw_responses: personaAnswers
-          }) 
-          .eq("access_code", codeParam)
-          .select(); 
-
-        if (data && data.length > 0) updateSuccess = true;
+            status: "COMPLETE",
+            compiled_at: new Date().toISOString()
+          })
+          .eq("id", activeAuditId);
       }
-
-      // 2. Update by group_id + persona_type
-      if (!updateSuccess && activeAuditId) {
-        const { data } = await supabase 
-          .from("operators") 
-          .update({ 
-            survey_completed: true, 
-            status: "COMPLETED",
-            raw_responses: personaAnswers
-          }) 
-          .eq("group_id", activeAuditId)
-          .eq("persona_type", activePersona)
-          .select();
-
-        if (data && data.length > 0) updateSuccess = true;
-      }
-
-      // 3. Fallback by group_id + Email
-      if (!updateSuccess && activeAuditId && emailParam) {
-        const { data } = await supabase 
-          .from("operators") 
-          .update({ 
-            survey_completed: true, 
-            status: "COMPLETED",
-            raw_responses: personaAnswers
-          }) 
-          .eq("group_id", activeAuditId)
-          .ilike("email", emailParam)
-          .select();
-
-        if (data && data.length > 0) updateSuccess = true;
-      }
-
-      // 🎯 AUTO-ROLLUP PARENT AUDIT STATUS TO COMPLETE
-      if (activeAuditId) {
-        const { data: groupNodes } = await supabase
-          .from("operators")
-          .select("survey_completed, status")
-          .or(`group_id.eq.${activeAuditId},audit_id.eq.${activeAuditId}`);
-
-        const completedCount = groupNodes?.filter(
-          n => n.survey_completed === true || String(n.status).toUpperCase() === 'COMPLETED'
-        ).length || 0;
-
-        if (completedCount >= 3) {
-          await supabase
-            .from("audits")
-            .update({ 
-              status: "COMPLETE",
-              sfi_score: alignedCockpitMetrics.complianceScore,
-              decay_pct: 100 - alignedCockpitMetrics.complianceScore,
-              compiled_at: new Date().toISOString()
-            })
-            .eq("id", activeAuditId);
-        }
-      }
-
-    } catch (dbError) { 
-      console.error("Database update exception:", dbError); 
-    } 
+    }
 
     setActivePersona(null); 
-    const params = new URLSearchParams(window.location.search); 
     if (params.get('code') || params.get('role')) { 
       setViewState('THANK_YOU'); 
     } else { 
@@ -585,11 +591,9 @@ export default function ForensicEngineRoot() {
         <ForensicDiagnosticWizard         
           companyName={`${triangulation.companyName}`} 
           activePillar={triangulation.pillar} 
-          onCalculated={(finalAnswers?: Record<string, string>) => { 
-            if (finalAnswers && Object.keys(finalAnswers).length > 0) {
-              handlePersonaAnswersSaved(finalAnswers); 
-            }
-          }}         
+          onCalculated={(finalAnswers?: Record<string, string>) => handlePersonaAnswersSaved(finalAnswers)} 
+          onComplete={(finalAnswers?: Record<string, string>) => handlePersonaAnswersSaved(finalAnswers)} 
+          onSubmit={(finalAnswers?: Record<string, string>) => handlePersonaAnswersSaved(finalAnswers)} 
         /> 
       )} 
 
