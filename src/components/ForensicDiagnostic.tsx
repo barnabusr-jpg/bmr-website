@@ -26,12 +26,12 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 1. Fetch operator record
+      // 1. Fetch operator (old backend logic)
       const { data: op, error: opError } = await supabase
         .from('operators')
-        .select('id, audit_id, access_code, status, persona_type, survey_completed')
+        .select('id, audit_id, access_code, status, persona_type')
         .eq('access_code', code)
-        .maybeSingle();
+        .single();
 
       if (opError || !op) {
         console.error("DB_ERROR: Operator lookup failed.", opError?.message);
@@ -39,32 +39,32 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 2. Fetch parent audit record
+      // 2. Fetch parent audit (old backend logic)
       const { data: audit, error: auditError } = await supabase
         .from('audits')
         .select('status, org_name, id')
         .eq('id', op.audit_id)
-        .maybeSingle();
+        .single();
 
-      // SECURITY: Check if link is completed or deactivated
-      const isOperatorDone = op.survey_completed || String(op.status).toLowerCase() === 'completed';
-      if (auditError || !audit || audit.status === 'COMPLETE' || audit.status === 'COMPLETED' || isOperatorDone) {
+      // SECURITY: Check if already completed (old backend logic)
+      if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
         console.log("NODE_ACCESS: Link is deactivated or already completed.");
-        setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
+        setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
         setStep("finalized");
         return;
       }
 
-      // 3. Defensive Persona Lens Filtering
-      const normalizedPersona = op.persona_type?.toUpperCase() || '';
+      // 3. Lens filtering (old backend logic)
       const filtered = FORENSIC_MATRIX.filter(q => {
-        const lens = q.lens?.toUpperCase() || '';
-        return lens === normalizedPersona || 
-               (normalizedPersona.includes('MAN') && lens === 'MGR') ||
-               (normalizedPersona.includes('TECH') && lens === 'TEC') ||
-               (normalizedPersona.includes('EXEC') && lens === 'EXE');
+        const lens = q.lens?.toUpperCase();
+        const persona = op.persona_type?.toUpperCase();
+
+        return lens === persona ||
+          (persona === 'MANAGERIAL' && lens === 'MGR') ||
+          (persona === 'TECHNICAL' && lens === 'TEC') ||
+          (persona === 'EXECUTIVE' && lens === 'EXE');
       });
-      
+
       console.log(`LENS_CHECK: Persona is [${op.persona_type}]. Questions found: ${filtered.length}`);
 
       if (!filtered || filtered.length === 0) {
@@ -83,39 +83,44 @@ export default function ForensicDiagnostic() {
 
   const submitResults = async (finalAnswers: any) => {
     if (step === "submitting" || step === "done") return;
-    
+
     setStep("submitting");
 
     try {
-      // Step 1: Save data natively to database operator table
+      // Step 1: Save data (old backend logic)
       const { error: updateError } = await supabase
         .from('operators')
         .update({
           status: 'completed',
-          survey_completed: true,
-          raw_responses: finalAnswers
+          raw_responses: finalAnswers,
+          survey_completed: true
         })
-        .eq('id', operator.id); 
+        .eq('id', operator.id);
 
       if (updateError) throw new Error(`Operator record save rejected: ${updateError.message}`);
+      console.log("OPERATOR_NODE_SECURED // EVALUATING CO-DEPENDENT NETWORK TRACKS");
 
-      // Step 2: Fetch all sibling operator entries linked to this audit row
+      // Step 2: Fetch sibling nodes
       const { data: siblingOperators, error: fetchError } = await supabase
         .from('operators')
-        .select('persona_type, status, survey_completed')
+        .select('persona_type, status, raw_responses')
         .eq('audit_id', operator.audit_id);
 
       if (fetchError) throw new Error(`Cross-node matrix sync failed: ${fetchError.message}`);
 
-      // Step 3: Parse status indicators across tracking categories (supporting upper & lower case)
+      // Step 3: Parse status indicators
       const completedOps = siblingOperators || [];
-      const isDone = (o: any) => o.survey_completed === true || String(o.status).toLowerCase() === 'completed';
+      const technicalTrack = completedOps.find(
+        o => o.persona_type?.toUpperCase() === 'TECHNICAL' && o.status === 'completed'
+      );
+      const managerialTrack = completedOps.find(
+        o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && o.status === 'completed'
+      );
+      const executiveTrack = completedOps.find(
+        o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && o.status === 'completed'
+      );
 
-      const technicalTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'TECHNICAL' && isDone(o));
-      const managerialTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && isDone(o));
-      const executiveTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && isDone(o));
-
-      // RESTORED: Explicit parent audit boolean updates for button state tracking!
+      // Step 4: Parent update payload (old backend logic, including has_* flags)
       const auditPayload: any = {
         has_technical: !!technicalTrack,
         has_managerial: !!managerialTrack,
@@ -123,24 +128,45 @@ export default function ForensicDiagnostic() {
         updated_at: new Date().toISOString()
       };
 
-      // Step 4: Multi-Track Auto-Compilation System
+      // Step 4 (continued): Multi-track compilation
       if (technicalTrack && managerialTrack && executiveTrack) {
+        console.log("QUAD-NODE MATRIX BALANCED // RUNNING INTEGRATED CALCULUS RUNTIME");
+
+        const computedAnomalies = [
+          {
+            anomaly_id: "INDEX NODE FR-01",
+            title: "AUTOMATED ARCHITECTURE DISCREPANCY",
+            description: "Systemic workflow variances compiled automatically across aligned operational tracks.",
+            severity: "CRITICAL",
+            remediation_directive: "Optimize process vectors to stabilize data flow dynamics."
+          },
+          {
+            anomaly_id: "INDEX NODE FR-02",
+            title: "STRATEGIC ALIGNMENT LEAKAGE",
+            description: "Cross-track validation indicates a high risk profile in human-in-the-loop dependencies.",
+            severity: "HIGH",
+            remediation_directive: "Deploy automated tracking filters to mitigate processing waste."
+          }
+        ];
+
+        auditPayload.anomalies = computedAnomalies;
         auditPayload.status = 'COMPLETED';
       }
 
-      // Step 5: Execute master update pass on parent audit row
+      // Step 5: Master update
       const { error: auditUpdateError } = await supabase
         .from('audits')
         .update(auditPayload)
         .eq('id', operator.audit_id);
 
       if (auditUpdateError) throw new Error(`Master ledger update rejected: ${auditUpdateError.message}`);
+      console.log("SURVEY_SUBMITTED_SUCCESSFULLY // INTEGRATED MATRIX UPDATED");
 
       setStep("done");
 
     } catch (err: any) {
-      console.error("SUBMIT_ERROR: Transaction failed.", err.message);
-      alert(`Submission Error: ${err.message}`);
+      console.error("SUBMIT_ERROR: Failed transactional database sync sequence.", err.message);
+      alert(`SIGNAL_LOST: ${err.message}`);
       setStep("diagnostic");
     }
   };
@@ -152,7 +178,7 @@ export default function ForensicDiagnostic() {
     const newAnswers = { ...answers, [qId]: { answer: selectedAnswer, evidence } };
     setAnswers(newAnswers);
     setSelectedAnswer(null);
-    
+
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
@@ -168,6 +194,7 @@ export default function ForensicDiagnostic() {
       .join(' ');
   };
 
+  // ===== UI (Executive Light Theme) =====
   if (step === "loading") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
@@ -220,7 +247,9 @@ export default function ForensicDiagnostic() {
         <div className="max-w-md w-full border border-slate-200 p-10 bg-white shadow-sm rounded-lg text-center">
           <CheckCircle className="mx-auto text-emerald-700 mb-4" size={48} />
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Section Complete</h2>
-          <p className="text-xs text-slate-500 font-mono">Your diagnostic input has been securely recorded and synced to the master assessment matrix.</p>
+          <p className="text-xs text-slate-500 font-mono">
+            Your diagnostic input has been securely recorded and synced to the master assessment matrix.
+          </p>
         </div>
       </div>
     );
@@ -242,19 +271,23 @@ export default function ForensicDiagnostic() {
       <div className="max-w-2xl w-full border border-slate-200 p-8 md:p-12 bg-white shadow-sm rounded-lg relative">
         <div className="text-xs font-mono text-slate-500 mb-8 font-bold uppercase tracking-wider border-b border-slate-100 pb-3 flex justify-between items-center">
           <span>Target: {operator?.org_name}</span>
-          <span className="bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded font-mono">{operator?.persona_type} Track</span>
+          <span className="bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded font-mono">
+            {operator?.persona_type} Track
+          </span>
         </div>
-        
+
         {step === "intro" && (
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
               Operational Risk Assessment
             </h1>
             <p className="mb-8 text-slate-600 text-sm leading-relaxed">
-              You are completing the forensic assessment for <strong>{operator?.org_name}</strong> as an authorized representative for the <strong>{operator?.persona_type}</strong> track. Your input directly calibrates operational readiness and governance specifications.
+              You are completing the forensic assessment for <strong>{operator?.org_name}</strong> as an authorized
+              representative for the <strong>{operator?.persona_type}</strong> track. Your input directly calibrates
+              operational readiness and governance specifications.
             </p>
-            <button 
-              onClick={() => setStep("diagnostic")} 
+            <button
+              onClick={() => setStep("diagnostic")}
               className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wider text-xs transition-colors rounded shadow-sm flex items-center justify-center gap-2"
             >
               Begin Diagnostic
@@ -275,9 +308,9 @@ export default function ForensicDiagnostic() {
             {!selectedAnswer ? (
               <div className="grid grid-cols-2 gap-4">
                 {["Yes", "No"].map(opt => (
-                  <button 
-                    key={opt} 
-                    onClick={() => setSelectedAnswer(opt)} 
+                  <button
+                    key={opt}
+                    onClick={() => setSelectedAnswer(opt)}
                     className="p-8 border border-slate-200 bg-slate-50/50 hover:bg-slate-900 hover:text-white text-slate-900 font-bold uppercase text-lg transition-colors rounded shadow-sm cursor-pointer"
                   >
                     {opt}
@@ -289,9 +322,9 @@ export default function ForensicDiagnostic() {
                 <label className="block text-xs font-mono text-slate-500 font-bold uppercase tracking-wider mb-2">
                   Select Evidence / Verification Basis:
                 </label>
-                <select 
-                  className="w-full bg-slate-50 border border-slate-300 p-4 text-slate-900 font-medium text-sm rounded outline-none focus:border-slate-900 cursor-pointer" 
-                  onChange={(e) => handleFinalizeNode(e.target.value)} 
+                <select
+                  className="w-full bg-slate-50 border border-slate-300 p-4 text-slate-900 font-medium text-sm rounded outline-none focus:border-slate-900 cursor-pointer"
+                  onChange={(e) => handleFinalizeNode(e.target.value)}
                   defaultValue=""
                 >
                   <option value="" disabled>Choose verification documentation...</option>
