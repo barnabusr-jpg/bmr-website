@@ -26,7 +26,7 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 1. Fetch operator (legacy backend handshake)
+      // 1. Fetch operator (legacy backend logic)
       const { data: op, error: opError } = await supabase
         .from('operators')
         .select('id, audit_id, access_code, status, persona_type')
@@ -39,15 +39,15 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 2. Fetch parent audit (legacy backend handshake)
+      // 2. Fetch parent audit (legacy backend logic)
       const { data: audit, error: auditError } = await supabase
         .from('audits')
         .select('status, org_name, id')
         .eq('id', op.audit_id)
         .single();
 
-      // SECURITY: Check if already completed (case-insensitive guard)
-      const isOpComplete = String(op.status).toUpperCase() === 'COMPLETED';
+      // SECURITY: Case-insensitive guard for completed assessments
+      const isOpComplete = String(op.status).trim().toUpperCase() === 'COMPLETED';
       if (auditError || !audit || audit.status === 'COMPLETE' || audit.status === 'COMPLETED' || isOpComplete) {
         console.log("NODE_ACCESS: Link is deactivated or already completed.");
         setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
@@ -55,7 +55,7 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 3. Lens filtering (legacy matrix mapping)
+      // 3. Lens filtering (strict 360 matrix mapping)
       const filtered = FORENSIC_MATRIX.filter(q => {
         const lens = q.lens?.toUpperCase();
         const persona = op.persona_type?.toUpperCase();
@@ -88,7 +88,9 @@ export default function ForensicDiagnostic() {
     setStep("submitting");
 
     try {
-      // Step 1: Save operator data (canonical uppercase write)
+      const currentPersona = operator.persona_type?.trim().toUpperCase();
+
+      // Step 1: Save operator data with canonical status
       const { error: updateError } = await supabase
         .from('operators')
         .update({
@@ -101,44 +103,66 @@ export default function ForensicDiagnostic() {
       if (updateError) throw new Error(`Operator record save rejected: ${updateError.message}`);
       console.log("OPERATOR_NODE_SECURED // EVALUATING CO-DEPENDENT NETWORK TRACKS");
 
-      // Step 2: Fetch sibling nodes
+      // Step 2: Fetch all sibling operator nodes for this audit
       const { data: siblingOperators, error: fetchError } = await supabase
         .from('operators')
-        .select('persona_type, status, survey_completed, raw_responses')
+        .select('persona_type, status, survey_completed')
         .eq('audit_id', operator.audit_id);
 
       if (fetchError) throw new Error(`Cross-node matrix sync failed: ${fetchError.message}`);
 
-      const completedOps = siblingOperators || [];
+      // Step 3: Build a clean map of completed personas across siblings + current session
+      const completedPersonas = new Set<string>();
 
-      // Step 3: Case-insensitive done check for resilient sibling matching
-      const isOperatorDone = (o: any) =>
-        o.survey_completed === true || String(o.status).toUpperCase() === 'COMPLETED';
+      // Explicitly include current operator submitting in this session
+      if (currentPersona) {
+        completedPersonas.add(currentPersona);
+      }
 
-      const technicalTrack = completedOps.find(
-        (o: any) => o.persona_type?.toUpperCase() === 'TECHNICAL' && isOperatorDone(o)
-      );
-      const managerialTrack = completedOps.find(
-        (o: any) => o.persona_type?.toUpperCase() === 'MANAGERIAL' && isOperatorDone(o)
-      );
-      const executiveTrack = completedOps.find(
-        (o: any) => o.persona_type?.toUpperCase() === 'EXECUTIVE' && isOperatorDone(o)
-      );
+      // Parse sibling completion records (handling whitespace and case)
+      (siblingOperators || []).forEach(o => {
+        const p = o.persona_type?.trim().toUpperCase();
+        const isDone = o.survey_completed === true || String(o.status).trim().toUpperCase() === 'COMPLETED';
+        if (p && isDone) {
+          completedPersonas.add(p);
+        }
+      });
 
-      // Step 4: Audit payload (boolean flags flip live UI dashboard buttons)
+      // Step 4: Strict 360-node flag evaluation
+      const hasTech = completedPersonas.has('TECHNICAL');
+      const hasMgr  = completedPersonas.has('MANAGERIAL');
+      const hasExe  = completedPersonas.has('EXECUTIVE');
+
+      // Console diagnostic probe
+      console.log("AUDIT FLAG DEBUG", {
+        operatorId: operator?.id,
+        operatorAuditId: operator?.audit_id,
+        currentPersona: operator?.persona_type,
+        normalizedPersona: currentPersona,
+        hasTechCandidate: hasTech,
+        hasMgrCandidate: hasMgr,
+        hasExeCandidate: hasExe,
+        siblingCount: siblingOperators?.length,
+        siblingPersonas: (siblingOperators || []).map(o => ({
+          persona_type: o.persona_type,
+          status: o.status,
+          survey_completed: o.survey_completed,
+        }))
+      });
+
       const auditPayload: any = {
-        has_technical: !!technicalTrack,
-        has_managerial: !!managerialTrack,
-        has_executive: !!executiveTrack,
+        has_technical: hasTech,
+        has_managerial: hasMgr,
+        has_executive: hasExe,
         compiled_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      // Step 4 (continued): Multi-track compilation pass when all 3 complete
-      if (technicalTrack && managerialTrack && executiveTrack) {
+      // Step 5: Master audit completion pass when all 3 tracks complete
+      if (hasTech && hasMgr && hasExe) {
         console.log("QUAD-NODE MATRIX BALANCED // RUNNING INTEGRATED CALCULUS RUNTIME");
 
-        const computedAnomalies = [
+        auditPayload.anomalies = [
           {
             anomaly_id: "INDEX NODE FR-01",
             title: "AUTOMATED ARCHITECTURE DISCREPANCY",
@@ -154,19 +178,23 @@ export default function ForensicDiagnostic() {
             remediation_directive: "Deploy automated tracking filters to mitigate processing waste."
           }
         ];
-
-        auditPayload.anomalies = computedAnomalies;
         auditPayload.status = 'COMPLETED';
       }
 
-      // Step 5: Master update on audits table
-      const { error: auditUpdateError } = await supabase
+      // Step 6: Master update pass with explicit row-count validation
+      const { data: auditUpdated, error: auditUpdateError } = await supabase
         .from('audits')
         .update(auditPayload)
-        .eq('id', operator.audit_id);
+        .eq('id', operator.audit_id)
+        .select();
 
       if (auditUpdateError) throw new Error(`Master ledger update rejected: ${auditUpdateError.message}`);
-      console.log("SURVEY_SUBMITTED_SUCCESSFULLY // INTEGRATED MATRIX UPDATED");
+
+      if (!auditUpdated || auditUpdated.length === 0) {
+        throw new Error(`AUDITS UPDATE FAILED: 0 rows affected (ID mismatch or RLS block? audit_id=${operator?.audit_id})`);
+      }
+
+      console.log("SURVEY_SUBMITTED_SUCCESSFULLY // INTEGRATED MATRIX UPDATED", auditUpdated);
 
       setStep("done");
 
