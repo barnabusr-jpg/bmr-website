@@ -26,7 +26,7 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 1. Fetch operator record safely
+      // 1. Fetch operator record
       const { data: op, error: opError } = await supabase
         .from('operators')
         .select('id, audit_id, access_code, status, persona_type, survey_completed')
@@ -47,15 +47,15 @@ export default function ForensicDiagnostic() {
         .maybeSingle();
 
       // SECURITY: Check if link is completed or deactivated
-      const isOperatorDone = op.survey_completed || String(op.status).toUpperCase() === 'COMPLETED';
-      if (auditError || !audit || audit.status === 'COMPLETED' || isOperatorDone) {
+      const isOperatorDone = op.survey_completed || String(op.status).toLowerCase() === 'completed';
+      if (auditError || !audit || audit.status === 'COMPLETE' || audit.status === 'COMPLETED' || isOperatorDone) {
         console.log("NODE_ACCESS: Link is deactivated or already completed.");
         setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
         setStep("finalized");
         return;
       }
 
-      // 3. Filter matrix questions by persona lens (EXE, TEC, MGR)
+      // 3. Defensive Persona Lens Filtering
       const normalizedPersona = op.persona_type?.toUpperCase() || '';
       const filtered = FORENSIC_MATRIX.filter(q => {
         const lens = q.lens?.toUpperCase() || '';
@@ -87,11 +87,11 @@ export default function ForensicDiagnostic() {
     setStep("submitting");
 
     try {
-      // 1. Save raw responses directly to operator node
+      // Step 1: Save data natively to database operator table
       const { error: updateError } = await supabase
         .from('operators')
         .update({
-          status: 'COMPLETED',
+          status: 'completed',
           survey_completed: true,
           raw_responses: finalAnswers
         })
@@ -99,7 +99,7 @@ export default function ForensicDiagnostic() {
 
       if (updateError) throw new Error(`Operator record save rejected: ${updateError.message}`);
 
-      // 2. Query all sibling nodes for this parent audit
+      // Step 2: Fetch all sibling operator entries linked to this audit row
       const { data: siblingOperators, error: fetchError } = await supabase
         .from('operators')
         .select('persona_type, status, survey_completed')
@@ -107,25 +107,28 @@ export default function ForensicDiagnostic() {
 
       if (fetchError) throw new Error(`Cross-node matrix sync failed: ${fetchError.message}`);
 
-      // 3. Strict status check across all 3 tracks
-      const isDone = (o: any) => o.survey_completed === true || String(o.status).toUpperCase() === 'COMPLETED';
-      const ops = siblingOperators || [];
+      // Step 3: Parse status indicators across tracking categories (supporting upper & lower case)
+      const completedOps = siblingOperators || [];
+      const isDone = (o: any) => o.survey_completed === true || String(o.status).toLowerCase() === 'completed';
 
-      const technicalDone = ops.some(o => o.persona_type?.toUpperCase() === 'TECHNICAL' && isDone(o));
-      const managerialDone = ops.some(o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && isDone(o));
-      const executiveDone = ops.some(o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && isDone(o));
+      const technicalTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'TECHNICAL' && isDone(o));
+      const managerialTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && isDone(o));
+      const executiveTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && isDone(o));
 
-      const allThreeComplete = technicalDone && managerialDone && executiveDone;
-
-      // 4. Update parent audit timestamp & mark COMPLETED only when all tracks pass
-      const auditPayload: Record<string, any> = {
-        compiled_at: new Date().toISOString()
+      // RESTORED: Explicit parent audit boolean updates for button state tracking!
+      const auditPayload: any = {
+        has_technical: !!technicalTrack,
+        has_managerial: !!managerialTrack,
+        has_executive: !!executiveTrack,
+        updated_at: new Date().toISOString()
       };
 
-      if (allThreeComplete) {
+      // Step 4: Multi-Track Auto-Compilation System
+      if (technicalTrack && managerialTrack && executiveTrack) {
         auditPayload.status = 'COMPLETED';
       }
 
+      // Step 5: Execute master update pass on parent audit row
       const { error: auditUpdateError } = await supabase
         .from('audits')
         .update(auditPayload)
