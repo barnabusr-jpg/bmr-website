@@ -26,7 +26,7 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 1. Fetch operator (old backend logic)
+      // 1. Fetch operator (legacy backend handshake)
       const { data: op, error: opError } = await supabase
         .from('operators')
         .select('id, audit_id, access_code, status, persona_type')
@@ -39,22 +39,23 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 2. Fetch parent audit (old backend logic)
+      // 2. Fetch parent audit (legacy backend handshake)
       const { data: audit, error: auditError } = await supabase
         .from('audits')
         .select('status, org_name, id')
         .eq('id', op.audit_id)
         .single();
 
-      // SECURITY: Check if already completed (old backend logic)
-      if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
+      // SECURITY: Check if already completed (case-insensitive guard)
+      const isOpComplete = String(op.status).toUpperCase() === 'COMPLETED';
+      if (auditError || !audit || audit.status === 'COMPLETE' || audit.status === 'COMPLETED' || isOpComplete) {
         console.log("NODE_ACCESS: Link is deactivated or already completed.");
         setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
         setStep("finalized");
         return;
       }
 
-      // 3. Lens filtering (old backend logic)
+      // 3. Lens filtering (legacy matrix mapping)
       const filtered = FORENSIC_MATRIX.filter(q => {
         const lens = q.lens?.toUpperCase();
         const persona = op.persona_type?.toUpperCase();
@@ -87,13 +88,13 @@ export default function ForensicDiagnostic() {
     setStep("submitting");
 
     try {
-      // Step 1: Save data (old backend logic)
+      // Step 1: Save operator data (canonical uppercase write)
       const { error: updateError } = await supabase
         .from('operators')
         .update({
-          status: 'completed',
-          raw_responses: finalAnswers,
-          survey_completed: true
+          status: 'COMPLETED',
+          survey_completed: true,
+          raw_responses: finalAnswers
         })
         .eq('id', operator.id);
 
@@ -103,32 +104,37 @@ export default function ForensicDiagnostic() {
       // Step 2: Fetch sibling nodes
       const { data: siblingOperators, error: fetchError } = await supabase
         .from('operators')
-        .select('persona_type, status, raw_responses')
+        .select('persona_type, status, survey_completed, raw_responses')
         .eq('audit_id', operator.audit_id);
 
       if (fetchError) throw new Error(`Cross-node matrix sync failed: ${fetchError.message}`);
 
-      // Step 3: Parse status indicators
       const completedOps = siblingOperators || [];
+
+      // Step 3: Case-insensitive done check for resilient sibling matching
+      const isOperatorDone = (o: any) =>
+        o.survey_completed === true || String(o.status).toUpperCase() === 'COMPLETED';
+
       const technicalTrack = completedOps.find(
-        o => o.persona_type?.toUpperCase() === 'TECHNICAL' && o.status === 'completed'
+        (o: any) => o.persona_type?.toUpperCase() === 'TECHNICAL' && isOperatorDone(o)
       );
       const managerialTrack = completedOps.find(
-        o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && o.status === 'completed'
+        (o: any) => o.persona_type?.toUpperCase() === 'MANAGERIAL' && isOperatorDone(o)
       );
       const executiveTrack = completedOps.find(
-        o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && o.status === 'completed'
+        (o: any) => o.persona_type?.toUpperCase() === 'EXECUTIVE' && isOperatorDone(o)
       );
 
-      // Step 4: Parent update payload (old backend logic, including has_* flags)
+      // Step 4: Audit payload (boolean flags flip live UI dashboard buttons)
       const auditPayload: any = {
         has_technical: !!technicalTrack,
         has_managerial: !!managerialTrack,
         has_executive: !!executiveTrack,
+        compiled_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
 
-      // Step 4 (continued): Multi-track compilation
+      // Step 4 (continued): Multi-track compilation pass when all 3 complete
       if (technicalTrack && managerialTrack && executiveTrack) {
         console.log("QUAD-NODE MATRIX BALANCED // RUNNING INTEGRATED CALCULUS RUNTIME");
 
@@ -153,7 +159,7 @@ export default function ForensicDiagnostic() {
         auditPayload.status = 'COMPLETED';
       }
 
-      // Step 5: Master update
+      // Step 5: Master update on audits table
       const { error: auditUpdateError } = await supabase
         .from('audits')
         .update(auditPayload)
@@ -194,7 +200,7 @@ export default function ForensicDiagnostic() {
       .join(' ');
   };
 
-  // ===== UI (Executive Light Theme) =====
+  // ===== UI (Executive Light Theme Layout) =====
   if (step === "loading") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
