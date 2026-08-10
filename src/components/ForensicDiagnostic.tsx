@@ -88,19 +88,34 @@ export default function ForensicDiagnostic() {
     setStep("submitting");
 
     try {
-      const currentPersona = operator.persona_type?.trim().toUpperCase();
+      const params = new URLSearchParams(window.location.search);
+      const urlCode = params.get('code')?.trim().toUpperCase();
+      const activeCode = operator?.access_code || urlCode;
 
-      // Step 1: Save operator data with canonical status
-      const { error: updateError } = await supabase
-        .from('operators')
-        .update({
-          status: 'COMPLETED',
-          survey_completed: true,
-          raw_responses: finalAnswers
-        })
-        .eq('id', operator.id);
+      console.log("RPC_DISPATCH_ATTEMPT", {
+        p_access_code: activeCode,
+        answersCount: Object.keys(finalAnswers || {}).length,
+      });
 
-      if (updateError) throw new Error(`Operator record save rejected: ${updateError.message}`);
+      // Step 1: Execute security-definer RPC (Bypasses RLS safely with pessimistic row locking)
+      const { data: rpcSuccess, error: rpcError } = await supabase.rpc(
+        'submit_operator_diagnostic',
+        {
+          p_access_code: activeCode,
+          p_raw_responses: finalAnswers,
+        }
+      );
+
+      console.log("RPC_DISPATCH_RESPONSE", { rpcSuccess, rpcError });
+
+      if (rpcError) {
+        throw new Error(`RPC_EXECUTION_FAILED: ${rpcError.message}`);
+      }
+
+      if (!rpcSuccess) {
+        throw new Error("RPC_REJECTED: Code invalid or already completed.");
+      }
+
       console.log("OPERATOR_NODE_SECURED // EVALUATING CO-DEPENDENT NETWORK TRACKS");
 
       // Step 2: Fetch all sibling operator nodes for this audit
@@ -113,13 +128,12 @@ export default function ForensicDiagnostic() {
 
       // Step 3: Build a clean map of completed personas across siblings + current session
       const completedPersonas = new Set<string>();
+      const currentPersona = operator?.persona_type?.trim().toUpperCase();
 
-      // Explicitly include current operator submitting in this session
       if (currentPersona) {
         completedPersonas.add(currentPersona);
       }
 
-      // Parse sibling completion records (handling whitespace and case)
       (siblingOperators || []).forEach(o => {
         const p = o.persona_type?.trim().toUpperCase();
         const isDone = o.survey_completed === true || String(o.status).trim().toUpperCase() === 'COMPLETED';
@@ -133,7 +147,6 @@ export default function ForensicDiagnostic() {
       const hasMgr  = completedPersonas.has('MANAGERIAL');
       const hasExe  = completedPersonas.has('EXECUTIVE');
 
-      // Console diagnostic probe
       console.log("AUDIT FLAG DEBUG", {
         operatorId: operator?.id,
         operatorAuditId: operator?.audit_id,
@@ -228,7 +241,7 @@ export default function ForensicDiagnostic() {
       .join(' ');
   };
 
-  // ===== UI (Executive Light Theme Layout) =====
+  // ===== UI Layout =====
   if (step === "loading") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
