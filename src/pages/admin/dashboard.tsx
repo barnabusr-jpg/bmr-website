@@ -116,7 +116,6 @@ export default function AdminDashboard() {
     }
   }, [statusFilter, searchTerm, currentPage, isUpdating]);
 
-  // 🎯 FETCH OPERATOR NODES (INCLUDES ACCESS_CODE)
   const refreshActiveNodes = useCallback(async (auditId: string) => {
     if (isUpdating) return;
     const { data: nodes } = await supabase
@@ -211,14 +210,13 @@ export default function AdminDashboard() {
     }
   };
 
-  // 🎯 DETERMINISTIC LAUNCH ROUTE USING ACCESS_CODE
   const handleLaunchPersonaWizard = (roleKey: string, auditRecord: any) => {
     const matchingNode = nodeDetails.find(n => 
       String(n.persona_type || '').toUpperCase().trim() === roleKey.toUpperCase().trim()
     );
 
     if (matchingNode?.access_code) {
-      window.open(`/diagnostic/forensic?code=${matchingNode.access_code}`, '_blank');
+      window.open(`/forensic?code=${matchingNode.access_code}`, '_blank');
       return;
     }
 
@@ -232,7 +230,7 @@ export default function AdminDashboard() {
     const targetEmail = matchingNode?.email || "hello@bmradvisory.co";
 
     window.open(
-      `/diagnostic/forensic?id=${auditRecord.id}&matrix=${compressedToken}&track=${roleKey.toUpperCase()}&role=${roleKey.toUpperCase()}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&auth=admin_verified_secure`,
+      `/forensic?id=${auditRecord.id}&matrix=${compressedToken}&track=${roleKey.toUpperCase()}&role=${roleKey.toUpperCase()}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&auth=admin_verified_secure`,
       '_blank'
     );
   };
@@ -309,7 +307,6 @@ export default function AdminDashboard() {
     setCurrentPage(0);
   }, [searchTerm, statusFilter]);
 
-  // 📡 REALTIME LISTENERS
   useEffect(() => {
     if (!isAuthenticated) return;
 
@@ -391,7 +388,9 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Audits Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'frameworks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Frameworks</button>
             
+            {/* UPDATED: Points explicitly to /forensic with id, org, matrix, and flow=quad_node */}
             <button 
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 const activeAudit = data.find(item => item.id === expandedRow);
@@ -408,7 +407,7 @@ export default function AdminDashboard() {
                   const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
                   
                   window.open(
-                    `/diagnostic/forensic?matrix=${compressedToken}&flow=quad_node&auth=admin_verified_secure`, 
+                    `/forensic?id=${activeAudit.id}&org=${encodeURIComponent(activeAudit.org_name)}&matrix=${compressedToken}&flow=quad_node&auth=admin_verified_secure`, 
                     '_blank'
                   );
                 } else {
