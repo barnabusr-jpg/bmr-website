@@ -84,13 +84,13 @@ export default function ForensicDiagnosticWizard({
 
     let filtered = [];
 
-    // STRICT EXACT MATCHING ORDER PREVENTS ROLE OVERLAPS
+    // STRICT PRIORITY MATCHING: Evaluates TECH_MGMT before general MGMT string matches
     if (normalizedRole === 'SYSTEM_USER' || normalizedRole.includes('SYS') || normalizedRole.includes('USER')) {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
         (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('TECH'))
       );
-    } else if (normalizedRole === 'TECH_MGMT' || (normalizedRole.includes('TECH') && !normalizedRole.includes('USER'))) {
+    } else if (normalizedRole === 'TECH_MGMT' || normalizedRole.includes('TECH')) {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
         (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('MANAGE') || q.target_node?.toUpperCase().includes('TECH'))
