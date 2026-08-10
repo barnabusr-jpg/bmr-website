@@ -41,7 +41,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const sentenceCompany = toSentenceCase(companyName);
     const targetPillar = activePillar || 'AVS';
 
-    // Normalize base URL path to /forensic
     const cleanOrigin = (originUrl || 'https://www.bmradvisory.co/forensic')
       .replace(/\/diagnostic\/forensic\/?$/, '/forensic');
     
@@ -52,13 +51,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const roleName = roleLabels[roleKey] || roleKey;
       const dynamicTrack = roleToPillarMap[roleKey] || targetPillar;
       
-      // 🎯 APPENDS flow=quad_node TO PARTICIPANT LINK
-      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&track=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&flow=quad_node&auth=true`;
+      // STRICT ROLE AND TRACK BOUND TO PARTICIPANT LINK
+      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&track=${roleKey}&persona=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&flow=quad_node&auth=true`;
 
       let emailHtmlValue = '';
 
       if (roleKey === 'EXECUTIVE' && !isNudge) {
-        // DISPATCH ONE: Executive Quad-Node Consolidated View
         emailHtmlValue = `
           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <tr>
@@ -82,7 +80,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     Invitation links have been dispatched across the 4 Quad-Node persona tracks (Executive, Tech Management, Ops Management, System User) to evaluate operational friction, schema stability, and risk guardrails.
                   </p>
 
-                  <!-- STEP 1: Executive Track -->
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 20px; margin-bottom: 16px; border-radius: 4px; text-align: left;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 1: Executive Assessment Module</p>
                     <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">
@@ -93,7 +90,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     </a>
                   </div>
 
-                  <!-- STEP 2: Stakeholder Alignment -->
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 2: Quad-Node Stakeholder Alignment</p>
                     <p style="margin: 0; font-size: 13px; color: #475569;">
@@ -101,7 +97,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     </p>
                   </div>
 
-                  <!-- STEP 3: Calibration Scheduling Link -->
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing</p>
                     <a href="https://calendly.com/hello-bmradvisory/forensic-briefing" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
@@ -120,7 +115,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </table>
         `;
       } else {
-        // DISPATCH TWO: Operator Assessment / Targeted Nudge Notification (Quad-Node Specific Copy)
         emailHtmlValue = `
           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <tr>
