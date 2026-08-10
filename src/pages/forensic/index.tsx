@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2 } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
@@ -22,6 +22,7 @@ export default function ForensicEngineRoot() {
   const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT' | 'THANK_YOU'>('INTAKE'); 
   const [dossierTab, setDossierTab] = useState<'METRICS' | 'REMEDIATION'>('METRICS');
   const [companyName, setCompanyName] = useState(''); 
+  const [isCompanyFromDB, setIsCompanyFromDB] = useState(false);
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
   const [sendingNudgeRole, setSendingNudgeRole] = useState<PersonaKey | null>(null);
@@ -59,9 +60,12 @@ export default function ForensicEngineRoot() {
 
       let targetCompanyName = (entityParam || companyName || '').trim().replace(/\s+/g, ' ');
 
-      // 1. PARTICIPANT ROUTED FROM EMAIL LINK (Has role/code): Route directly to Question Wizard
+      // 1. PARTICIPANT ROUTE FROM EMAIL LINK: Directly open Wizard
       if (isParticipantRoute && roleParam) {
-        if (targetCompanyName) setCompanyName(targetCompanyName);
+        if (targetCompanyName) {
+          setCompanyName(targetCompanyName);
+          setIsCompanyFromDB(true);
+        }
         setActivePersona(roleParam);
 
         if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam.toUpperCase())) {
@@ -80,14 +84,7 @@ export default function ForensicEngineRoot() {
         return;
       }
 
-      // 2. ADMIN SETUP LAUNCH (From Admin Dashboard with flow=quad_node and NO participant role)
-      if (flowParam === 'quad_node' && !isParticipantRoute) {
-        setTriangulation(null);
-        setViewState('INTAKE');
-        return;
-      }
-
-      // 3. DATABASE LOOKUPS FOR EXISTING AUDITS
+      // 2. DATABASE AUDIT HYDRATION
       let activeAudit = null;
       let matchedOperator = null;
 
@@ -109,7 +106,6 @@ export default function ForensicEngineRoot() {
             .maybeSingle();
 
           activeAudit = auditData;
-          if (activeAudit) targetCompanyName = activeAudit.org_name;
         }
       } else if (idParam) {
         const { data } = await supabase
@@ -118,12 +114,19 @@ export default function ForensicEngineRoot() {
           .eq('id', idParam)
           .maybeSingle();
         activeAudit = data;
-        if (activeAudit && !targetCompanyName) targetCompanyName = activeAudit.org_name;
+      } else if (targetCompanyName) {
+        const { data } = await supabase
+          .from('audits')
+          .select('id, org_name, sfi_score, decay_pct, sector, status')
+          .ilike('org_name', targetCompanyName)
+          .maybeSingle();
+        activeAudit = data;
       }
 
       if (activeAudit) {
         setActiveAuditId(activeAudit.id);
-        if (targetCompanyName) setCompanyName(targetCompanyName);
+        setCompanyName(activeAudit.org_name);
+        setIsCompanyFromDB(true);
 
         const sectorStr = String(activeAudit.sector || '').toUpperCase();
         let targetCalculatedPillar: FunnelPillar = 'IGF';
@@ -133,6 +136,27 @@ export default function ForensicEngineRoot() {
           targetCalculatedPillar = 'HAI';
         }
         setActivePillar(targetCalculatedPillar);
+
+        const { data: existingOperators } = await supabase
+          .from('operators')
+          .select('persona_type, email')
+          .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
+
+        if (existingOperators && existingOperators.length > 0) {
+          const loadedEmails: Record<PersonaKey, string> = {
+            EXECUTIVE: existingOperators.find(o => o.persona_type?.toUpperCase() === 'EXECUTIVE')?.email || '',
+            TECH_MGMT: existingOperators.find(o => ['TECHNICAL', 'TECH_MGMT'].includes(o.persona_type?.toUpperCase()))?.email || '',
+            OPS_MGMT: existingOperators.find(o => ['MANAGERIAL', 'OPS_MGMT'].includes(o.persona_type?.toUpperCase()))?.email || '',
+            SYSTEM_USER: existingOperators.find(o => ['SYSTEM_USER', 'SYS'].includes(o.persona_type?.toUpperCase()))?.email || ''
+          };
+          setEmails(loadedEmails);
+        }
+
+        if (flowParam === 'quad_node' && !isParticipantRoute) {
+          setTriangulation(null);
+          setViewState('INTAKE');
+          return;
+        }
 
         if (matchedOperator) {
           const rawPersona = String(matchedOperator.persona_type || '').toUpperCase().trim();
@@ -150,6 +174,10 @@ export default function ForensicEngineRoot() {
           }
         }
       } else if (isAdminSession && flowParam === 'quad_node') {
+        if (targetCompanyName) {
+          setCompanyName(targetCompanyName);
+          setIsCompanyFromDB(true);
+        }
         setViewState('INTAKE');
       }
     } catch (err) {
@@ -191,7 +219,7 @@ export default function ForensicEngineRoot() {
     const sanitizedInput = companyName.trim(); 
           
     if (!sanitizedInput) { 
-      setInputError('Organization name is required.'); 
+      setInputError('Organization record was not resolved.'); 
       return; 
     } 
     if (!emails.EXECUTIVE || !emails.TECH_MGMT || !emails.OPS_MGMT || !emails.SYSTEM_USER) { 
@@ -202,28 +230,32 @@ export default function ForensicEngineRoot() {
     setInputError(''); 
 
     try { 
-      let { data: parentAudit } = await supabase
-        .from('audits')
-        .select('id')
-        .ilike('org_name', sanitizedInput)
-        .maybeSingle();
+      let parentAuditId = activeAuditId;
 
-      if (!parentAudit) {
-        const { data: newAudit, error: createErr } = await supabase
+      if (!parentAuditId) {
+        let { data: parentAudit } = await supabase
           .from('audits')
-          .insert({
-            org_name: sanitizedInput,
-            sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
-            status: 'IN_PROGRESS'
-          })
           .select('id')
-          .single();
+          .ilike('org_name', sanitizedInput)
+          .maybeSingle();
 
-        if (createErr) throw createErr;
-        parentAudit = newAudit;
+        if (!parentAudit) {
+          const { data: newAudit, error: createErr } = await supabase
+            .from('audits')
+            .insert({
+              org_name: sanitizedInput,
+              sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
+              status: 'IN_PROGRESS'
+            })
+            .select('id')
+            .single();
+
+          if (createErr) throw createErr;
+          parentAudit = newAudit;
+        }
+        parentAuditId = parentAudit.id;
+        setActiveAuditId(parentAuditId);
       }
-
-      setActiveAuditId(parentAudit.id);
 
       setTriangulation({ 
         companyName: sanitizedInput, 
@@ -352,6 +384,7 @@ export default function ForensicEngineRoot() {
 
   const handleSystemReset = () => { 
     setCompanyName(''); 
+    setIsCompanyFromDB(false);
     setEmails({ EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }); 
     setTriangulation(null); 
     setActivePersona(null); 
@@ -422,14 +455,24 @@ export default function ForensicEngineRoot() {
 
           <form onSubmit={handleInitializeTriangulation} className="space-y-6"> 
             <div> 
-              <label className="text-xs font-mono font-bold text-slate-700 block uppercase tracking-wider mb-2">Target Organization Name</label> 
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-mono font-bold text-slate-700 uppercase tracking-wider block">Target Organization Name</label>
+                {isCompanyFromDB && (
+                  <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold flex items-center gap-1">
+                    <Lock size={10} /> DATABASE RESOLVED
+                  </span>
+                )}
+              </div>
               <input         
                 type="text" 
                 autoComplete="off" 
                 placeholder="e.g., Enterprise Client Systems" 
                 value={companyName} 
-                onChange={(e) => setCompanyName(e.target.value)} 
-                className="w-full bg-slate-50 border border-slate-200 p-3.5 text-sm text-slate-900 focus:outline-none focus:border-slate-900 transition-colors rounded-md font-medium" 
+                readOnly={isCompanyFromDB}
+                onChange={(e) => !isCompanyFromDB && setCompanyName(e.target.value)} 
+                className={`w-full border p-3.5 text-sm text-slate-900 focus:outline-none transition-colors rounded-md font-medium ${
+                  isCompanyFromDB ? 'bg-slate-100 border-slate-300 text-slate-700 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:border-slate-900'
+                }`} 
               /> 
             </div> 
 
