@@ -198,18 +198,27 @@ export default function ForensicEngineRoot() {
 
       setActiveAuditId(parentAudit.id);
 
-      setTriangulation({ 
+      const initialTriangulationState = { 
         companyName: sanitizedInput, 
         pillar: activePillar, 
         emails: { ...emails }, 
         completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
         responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} } 
-      }); 
+      }; 
+
+      if (typeof window !== 'undefined') { 
+        window.localStorage.setItem(`bmr_matrix_run_${sanitizedInput}`, JSON.stringify(initialTriangulationState)); 
+      } 
+
+      setTriangulation(initialTriangulationState); 
       setViewState('HUB'); 
 
+      // CALLS QUAD NODE API ROUTE (/api/send-triangulation)
       await fetch('/api/send-triangulation', { 
         method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
+        headers: { 
+          'Content-Type': 'application/json', 
+        }, 
         body: JSON.stringify({ 
           companyName: sanitizedInput, 
           activePillar: activePillar, 
