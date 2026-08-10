@@ -157,10 +157,11 @@ export default function ForensicEngineRoot() {
               const isOpDone = (pType: string) => {
                 const node = completedOps.find(n => {
                   const p = n.persona_type?.toUpperCase();
-                  return p === pType ||
-                    (pType === 'TECH_MGMT' && p === 'TECHNICAL') ||
-                    (pType === 'OPS_MGMT' && p === 'MANAGERIAL') ||
-                    (pType === 'SYSTEM_USER' && (p === 'SYS' || p === 'SYSTEM_USER'));
+                  if (pType === 'EXECUTIVE') return p === 'EXECUTIVE';
+                  if (pType === 'TECH_MGMT') return p === 'TECHNICAL' || p === 'TECH_MGMT';
+                  if (pType === 'OPS_MGMT') return p === 'MANAGERIAL' || p === 'OPS_MGMT';
+                  if (pType === 'SYSTEM_USER') return p === 'SYSTEM_USER' || p === 'SYS';
+                  return false;
                 });
                 if (!node) return false;
                 const statusUpper = String(node.status || '').toUpperCase();
@@ -177,7 +178,7 @@ export default function ForensicEngineRoot() {
               const dbExec = completedOps.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE')?.email || "";
               const dbTech = completedOps.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL' || n.persona_type?.toUpperCase() === 'TECH_MGMT')?.email || "";
               const dbMgr  = completedOps.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL' || n.persona_type?.toUpperCase() === 'OPS_MGMT')?.email || "";
-              const dbSys  = completedOps.find(n => n.persona_type?.toUpperCase() === 'SYSTEM_USER' || n.persona_type?.toUpperCase() === 'SYS')?.email || dbTech;
+              const dbSys  = completedOps.find(n => n.persona_type?.toUpperCase() === 'SYSTEM_USER' || n.persona_type?.toUpperCase() === 'SYS')?.email || "";
 
               const freshDBEmails = {
                 EXECUTIVE: filterIncomingEmail(dbExec),
@@ -213,7 +214,7 @@ export default function ForensicEngineRoot() {
             const rawExec = params.get('exec') || params.get('executive') || params.get('execEmail') || "";
             const rawTech = params.get('tech_mgmt') || params.get('tech') || params.get('technical') || params.get('techEmail') || "";
             const rawMgr  = params.get('ops_mgmt') || params.get('mgr') || params.get('managerial') || params.get('mgrEmail') || "";
-            const rawSys  = params.get('sys_user') || rawTech;
+            const rawSys  = params.get('sys_user') || "";
 
             const fallbackEmails = { 
               EXECUTIVE: filterIncomingEmail(rawExec), 
@@ -279,7 +280,7 @@ export default function ForensicEngineRoot() {
       EXECUTIVE: 'executive@example.com', 
       TECH_MGMT: 'technical@example.com', 
       OPS_MGMT: 'operations@example.com', 
-      SYSTEM_USER: 'technical@example.com' 
+      SYSTEM_USER: 'user@example.com' 
     }); 
     setInputError(''); 
   }; 
@@ -366,6 +367,14 @@ export default function ForensicEngineRoot() {
 
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
     setActivePersona(persona); 
+    
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('role', persona);
+      url.searchParams.set('track', persona);
+      window.history.replaceState({}, '', url.toString());
+    }
+
     setViewState('WIZARD'); 
   }; 
 
@@ -387,7 +396,7 @@ export default function ForensicEngineRoot() {
         EXECUTIVE: "EXECUTIVE", 
         TECH_MGMT: "TECHNICAL", 
         OPS_MGMT: "MANAGERIAL", 
-        SYSTEM_USER: "TECHNICAL" 
+        SYSTEM_USER: "SYSTEM_USER" 
       }[activePersona]; 
 
       let updateQuery = supabase 
@@ -786,6 +795,8 @@ export default function ForensicEngineRoot() {
         <ForensicDiagnosticWizard         
           companyName={`${triangulation.companyName}`} 
           activePillar={triangulation.pillar} 
+          role={activePersona}
+          persona={activePersona}
           onCalculated={() => { 
             if (typeof window !== 'undefined') { 
               const cachedAnswers = JSON.parse(window.sessionStorage.getItem(`bmr_wizard_state_cache`) || '{}'); 
@@ -816,7 +827,6 @@ export default function ForensicEngineRoot() {
             onSelectSOW={() => setDossierTab('REMEDIATION')}
           /> 
 
-          {/* GOVERNANCE & COMPLIANCE SUPPLEMENT INTEGRATION */}
           <div className="mx-10 my-8">
             <GovernanceSupplementView
               metrics={governanceMetrics}
@@ -825,7 +835,6 @@ export default function ForensicEngineRoot() {
             />
           </div>
 
-          {/* ACTIVE DOSSIER & SOW TERMINAL SECTION */}
           <div className="mt-8 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left">
             <div className="border-b border-slate-100 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
@@ -840,7 +849,6 @@ export default function ForensicEngineRoot() {
                 </div>
               </div>
 
-              {/* TAB SELECTOR */}
               <div className="flex bg-slate-100 p-1 border border-slate-200 rounded-md font-mono text-xs font-bold uppercase tracking-wider">
                 <button 
                   onClick={() => setDossierTab('METRICS')}
@@ -894,11 +902,8 @@ export default function ForensicEngineRoot() {
               </div>
             )}
 
-            {/* TAB 02: ACTIVE INTERACTIVE STATEMENT OF WORK TABLE */}
             {dossierTab === 'REMEDIATION' && (
               <div className="space-y-8 font-sans">
-                
-                {/* SOW ACTIVE TABLE HEADER */}
                 <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
                     <span className="font-mono text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">
@@ -919,7 +924,6 @@ export default function ForensicEngineRoot() {
                   </div>
                 </div>
 
-                {/* DETAILED IMPLEMENTATION SOW TABLE */}
                 <div className="border border-slate-200 rounded-md overflow-hidden">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-100 font-mono text-slate-700 uppercase tracking-wider border-b border-slate-200">
@@ -985,7 +989,6 @@ export default function ForensicEngineRoot() {
                   </table>
                 </div>
 
-                {/* GOVERNANCE & REGULATORY STANDARDS AUDIT FLAGS */}
                 <div className="border border-slate-200 bg-slate-50 p-6 rounded-md">
                   <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-3">
                     // Regulatory Non-Compliance Standards Audit
@@ -999,7 +1002,6 @@ export default function ForensicEngineRoot() {
                   </div>
                 </div>
 
-                {/* STATELESS SHAREABLE SOW GENERATOR CARD */}
                 <div className="bg-slate-900 text-white p-6 rounded-md space-y-3 font-sans no-print">
                   <div>
                     <span className="text-[10px] font-mono text-emerald-400 block font-bold uppercase tracking-wider">
