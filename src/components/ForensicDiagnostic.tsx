@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import LZString from 'lz-string';
 import { supabase } from '@/lib/supabaseClient';
 import { FORENSIC_MATRIX } from '@/lib/forensicMatrix';
-import { Lock, CheckCircle, ShieldAlert, Activity, ArrowRight } from 'lucide-react';
+import { Lock, CheckCircle, ShieldAlert, Activity, ArrowRight, Mail, Network } from 'lucide-react';
 
 export default function ForensicDiagnostic() {
   const [step, setStep] = useState("loading");
@@ -13,6 +13,13 @@ export default function ForensicDiagnostic() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState({});
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+
+  // Quad-Node Stakeholder Routing Emails
+  const [quadEmails, setQuadEmails] = useState({
+    executive: "",
+    managerial: "",
+    technical: ""
+  });
 
   useEffect(() => {
     const init = async () => {
@@ -91,8 +98,23 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 2. Admin Preview / Quad-Node Execution Resolver
-      if (flow === 'quad_node' || matrixToken || authParam === 'admin_verified_secure' || trackParam) {
+      // 2. Dedicated Quad-Node Landing Page Setup (flow=quad_node OR matrix token without explicit track)
+      if (flow === 'quad_node' || (matrixToken && !trackParam)) {
+        const targetOrg = matrixPayload?.org || orgParam || "TARGET SPECIFICATION";
+        
+        setOperator({
+          id: auditIdParam || 'quad_node_admin',
+          audit_id: auditIdParam || 'quad_node_audit',
+          org_name: targetOrg,
+          persona_type: 'QUAD_NODE',
+          access_code: 'ADMIN_QUAD_NODE'
+        });
+        setStep("quad_landing");
+        return;
+      }
+
+      // 3. Admin Persona Direct Track Preview (When explicit trackParam is present)
+      if (trackParam || authParam === 'admin_verified_secure') {
         const targetOrg = matrixPayload?.org || orgParam || "TARGET SPECIFICATION";
         const persona = trackParam || 'EXECUTIVE';
 
@@ -123,6 +145,47 @@ export default function ForensicDiagnostic() {
     init();
   }, []);
 
+  const handleStartQuadDiagnostic = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!quadEmails.executive || !quadEmails.managerial || !quadEmails.technical) {
+      alert("Please provide routing emails for all three stakeholder tracks.");
+      return;
+    }
+
+    setStep("submitting");
+
+    try {
+      if (operator?.audit_id && operator?.audit_id !== 'quad_node_audit') {
+        const res = await fetch('/api/dispatch-directives', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            groupId: operator.audit_id,
+            orgName: operator.org_name,
+            parentAuditId: operator.audit_id,
+            emails: {
+              EXECUTIVE: quadEmails.executive.trim(),
+              MANAGERIAL: quadEmails.managerial.trim(),
+              TECHNICAL: quadEmails.technical.trim()
+            }
+          })
+        });
+
+        if (!res.ok) throw new Error("Failed to dispatch stakeholder access links.");
+      }
+
+      const filtered = FORENSIC_MATRIX.filter(q => q.lens?.toUpperCase() === 'EXE' || q.lens?.toUpperCase() === 'EXECUTIVE');
+      setQuestions(filtered.length > 0 ? filtered : FORENSIC_MATRIX);
+      setOperator((prev: any) => ({ ...prev, persona_type: 'EXECUTIVE' }));
+      setStep("intro");
+    } catch (err: any) {
+      console.error("QUAD_DISPATCH_ERROR:", err.message);
+      alert(`Dispatch Error: ${err.message}`);
+      setStep("quad_landing");
+    }
+  };
+
   const submitResults = async (finalAnswers: any) => {
     if (step === "submitting" || step === "done") return;
 
@@ -132,7 +195,7 @@ export default function ForensicDiagnostic() {
       const activeCode = operator?.access_code;
 
       // Bypass DB mutations during administrative test previews
-      if (activeCode === 'ADMIN_PREVIEW' || operator?.id === 'admin_preview') {
+      if (activeCode === 'ADMIN_PREVIEW' || activeCode === 'ADMIN_QUAD_NODE' || operator?.id === 'admin_preview' || operator?.id === 'quad_node_admin') {
         console.log("SIMULATION_COMPLETE: Admin diagnostic preview finished.");
         setStep("done");
         return;
@@ -278,6 +341,92 @@ export default function ForensicDiagnostic() {
           <Lock className="mb-4 text-slate-900 mx-auto" size={48} />
           <h2 className="text-xl font-bold text-slate-900 mb-2">Diagnostic Complete</h2>
           <p className="text-xs text-slate-500 font-mono">This assessment link has already been completed and deactivated.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // QUAD-NODE ROUTING LANDING PAGE
+  if (step === "quad_landing") {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-6 md:p-12 flex items-center justify-center">
+        <div className="max-w-xl w-full border border-slate-200 p-8 md:p-10 bg-white shadow-sm rounded-lg">
+          
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-6">
+            <Network size={20} className="text-slate-900" />
+            <span className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+              QUAD-NODE CONFIGURATION // STAKEHOLDER ROUTING
+            </span>
+          </div>
+
+          <h1 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">
+            Configure Multi-Track Assessment
+          </h1>
+          <p className="text-xs text-slate-600 mb-8 leading-relaxed font-sans">
+            Enter target stakeholder email addresses for <strong>{operator?.org_name}</strong> to initialize 360° triangulation and route assessment links across all operational vectors.
+          </p>
+
+          <form onSubmit={handleStartQuadDiagnostic} className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
+                Executive Stakeholder Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="email"
+                  required
+                  value={quadEmails.executive}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, executive: e.target.value })}
+                  placeholder="executive@organization.com"
+                  className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
+                Managerial Stakeholder Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="email"
+                  required
+                  value={quadEmails.managerial}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, managerial: e.target.value })}
+                  placeholder="managerial@organization.com"
+                  className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
+                Technical Stakeholder Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="email"
+                  required
+                  value={quadEmails.technical}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, technical: e.target.value })}
+                  placeholder="technical@organization.com"
+                  className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wider text-xs transition-colors rounded shadow-sm flex items-center justify-center gap-2 mt-6 cursor-pointer"
+            >
+              Initialize Quad-Node Assessment
+              <ArrowRight size={16} />
+            </button>
+          </form>
+
         </div>
       </div>
     );
