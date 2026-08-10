@@ -9,6 +9,9 @@ type PillarType = 'IGF' | 'AVS' | 'HAI';
 interface ForensicDiagnosticWizardProps {
   companyName: string;
   activePillar: PillarType;
+  role?: string;
+  persona?: string;
+  track?: string;
   onCalculated?: (answers: Record<string, string>, metrics?: any) => void;
   onComplete?: (answers: Record<string, string>, metrics?: any) => void;
   onSubmit?: (answers: Record<string, string>, metrics?: any) => void;
@@ -31,6 +34,9 @@ function findContradictions(matrix: Record<string, string>) {
 export default function ForensicDiagnosticWizard({ 
   companyName, 
   activePillar,
+  role,
+  persona,
+  track,
   onCalculated,
   onComplete,
   onSubmit
@@ -50,8 +56,7 @@ export default function ForensicDiagnosticWizard({
         window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
       }
 
-      // 🎯 RESOLVE ROLE FROM ROLE OR TRACK QUERY PARAMETER
-      const resolvedRole = roleParam || trackParam;
+      const resolvedRole = role || persona || track || roleParam || trackParam;
       if (resolvedRole) {
         window.sessionStorage.setItem('stakeholder_runtime_role', resolvedRole);
         setActiveRole(resolvedRole); 
@@ -73,7 +78,7 @@ export default function ForensicDiagnosticWizard({
       });
       setAnswers(savedAnswers);
     }
-  }, [activePillar]);
+  }, [activePillar, role, persona, track]);
 
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
@@ -81,20 +86,20 @@ export default function ForensicDiagnosticWizard({
 
     let filtered = [];
 
-    if (normalizedRole.includes('TECH') || normalizedRole.includes('MGMT')) {
-      filtered = rawList.filter(q => 
-        q.pillar?.toUpperCase() === 'AVS' && 
-        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('MANAGE'))
-      );
-    } else if (normalizedRole.includes('USER') || normalizedRole.includes('SYS')) {
+    if (normalizedRole.includes('USER') || normalizedRole.includes('SYS')) {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
         (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('TECH'))
       );
-    } else if (normalizedRole.includes('OPS') || normalizedRole.includes('MANAGE')) {
+    } else if (normalizedRole.includes('OPS') || normalizedRole.includes('MANAGE') || normalizedRole === 'MANAGERIAL') {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'HAI' && 
         q.target_node?.toUpperCase().includes('MGMT')
+      );
+    } else if (normalizedRole.includes('TECH')) {
+      filtered = rawList.filter(q => 
+        q.pillar?.toUpperCase() === 'AVS' && 
+        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('MANAGE'))
       );
     } else if (normalizedRole.includes('EXEC')) {
       filtered = rawList.filter(q => 
@@ -175,9 +180,6 @@ export default function ForensicDiagnosticWizard({
         window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(fullyCompiledMatrix));
         window.sessionStorage.setItem(`bmr_runtime_${companyName}`, JSON.stringify(computedResults));
 
-        console.log("WIZARD_COMPLETED: Dispatching raw answer matrix size:", Object.keys(fullyCompiledMatrix).length);
-
-        // 🎯 PASS RAW ANSWER MATRIX AS FIRST PARAMETER TO PARENT CALLBACKS
         if (typeof onCalculated === 'function') onCalculated(fullyCompiledMatrix, computedResults);
         if (typeof onComplete === 'function') onComplete(fullyCompiledMatrix, computedResults);
         if (typeof onSubmit === 'function') onSubmit(fullyCompiledMatrix, computedResults);
@@ -196,7 +198,6 @@ export default function ForensicDiagnosticWizard({
   return (
     <div className="bg-slate-50 text-slate-900 font-sans text-left antialiased p-6 md:p-10 max-w-4xl mx-auto my-8 border border-slate-200 shadow-sm rounded-lg">
       
-      {/* Structural Progression Control Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-200 pb-4 mb-6 gap-4 font-mono text-xs">
         <div className="flex items-center gap-3">
           <Activity className="text-slate-900 animate-pulse shrink-0" size={18} />
@@ -210,7 +211,6 @@ export default function ForensicDiagnosticWizard({
         </div>
       </div>
 
-      {/* Narrative Context Alert Header */}
       <div className="bg-white border border-slate-200 p-4 mb-6 text-xs text-slate-600 leading-relaxed flex items-start gap-3 rounded shadow-sm">
         <AlertCircle size={18} className="text-slate-900 shrink-0 mt-0.5" />
         <div>
@@ -218,7 +218,6 @@ export default function ForensicDiagnosticWizard({
         </div>
       </div>
 
-      {/* Scenario Ingestion Loop */}
       <div className="space-y-6 mb-8">
         {activeQuestions.map((question, index) => {
           const targetKey = `quad_${question.id}`;
@@ -282,7 +281,6 @@ export default function ForensicDiagnosticWizard({
         })}
       </div>
 
-      {/* Bottom Pipeline Status Controller */}
       <div className="border-t border-slate-200 pt-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono text-xs">
         <div className="text-slate-500 tracking-wider flex items-center gap-2 font-bold">
           <Shield size={16} className={isPillarIncomplete ? "text-slate-400" : "text-emerald-600"} /> 
