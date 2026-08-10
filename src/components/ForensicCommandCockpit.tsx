@@ -1,7 +1,7 @@
 "use client";
 import React from 'react';
 import { useRouter } from 'next/router';
-import { ShieldCheck, Printer, FileText, Download, TrendingDown, Layers, AlertTriangle, CheckCircle2, Zap } from 'lucide-react';
+import { ShieldCheck, Printer, FileText, Download, TrendingDown, Layers, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 export interface ForensicMetricsPayload {
   complianceScore?: number;
@@ -17,7 +17,6 @@ interface ForensicCommandCockpitProps {
   sector?: string;
   metrics?: ForensicMetricsPayload;
   onSelectSOW?: () => void;
-  onCompileMatrix?: () => void;
   complianceScore?: number;
   annualSalaryLeakage?: number;
   unhedgedLegalExposure?: number;
@@ -31,7 +30,6 @@ export default function ForensicCommandCockpit({
   sector = "FINANCE",
   metrics,
   onSelectSOW,
-  onCompileMatrix,
   complianceScore: flatScore = 62,
   annualSalaryLeakage: flatLeakage = 114750,
   unhedgedLegalExposure: flatExposure = 607500,
@@ -107,14 +105,6 @@ export default function ForensicCommandCockpit({
 
         {/* Executive Action Buttons */}
         <div className="flex flex-wrap items-center gap-3 no-print">
-          <button
-            type="button"
-            onClick={onCompileMatrix}
-            className="bg-amber-600 text-white text-xs font-mono font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-amber-700 transition-colors cursor-pointer rounded-md shadow-sm flex items-center gap-2"
-          >
-            <Zap size={14} /> Compile Matrix Report
-          </button>
-
           <button
             type="button"
             onClick={handleExportCSV}
@@ -274,4 +264,4 @@ export default function ForensicCommandCockpit({
 
     </div>
   );
-}
+} 
