@@ -19,15 +19,12 @@ interface ForensicDiagnosticWizardProps {
 
 function findContradictions(matrix: Record<string, string>) {
   const contradictions = [];
-  
   if (matrix['deepdive_Q1'] === 'A' && matrix['quad_Q14'] === 'D') {
     contradictions.push("CRITICAL GOVERNANCE MISMATCH: Executive reports formalized AI policy gates // Operational leads report unmonitored context ingestion.");
   }
-  
   if (matrix['deepdive_Q5'] === 'A' && matrix['quad_Q32'] === 'D') {
     contradictions.push("PRE-AUTOMATION FRICTION FLAGGED: Management reports structured integration budgeting // Technical team reports unhedged schema drift.");
   }
-
   return contradictions;
 }
 
@@ -51,12 +48,13 @@ export default function ForensicDiagnosticWizard({
       const emailParam = params.get('email');
       const roleParam = params.get('role');
       const trackParam = params.get('track');
+      const personaParam = params.get('persona');
       
       if (emailParam) {
         window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
       }
 
-      const resolvedRole = role || persona || track || roleParam || trackParam;
+      const resolvedRole = role || persona || track || roleParam || trackParam || personaParam;
       if (resolvedRole) {
         window.sessionStorage.setItem('stakeholder_runtime_role', resolvedRole);
         setActiveRole(resolvedRole); 
@@ -86,22 +84,23 @@ export default function ForensicDiagnosticWizard({
 
     let filtered = [];
 
-    if (normalizedRole.includes('USER') || normalizedRole.includes('SYS')) {
+    // STRICT EXACT MATCHING ORDER PREVENTS ROLE OVERLAPS
+    if (normalizedRole === 'SYSTEM_USER' || normalizedRole.includes('SYS') || normalizedRole.includes('USER')) {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
         (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('TECH'))
       );
-    } else if (normalizedRole.includes('OPS') || normalizedRole.includes('MANAGE') || normalizedRole === 'MANAGERIAL') {
-      filtered = rawList.filter(q => 
-        q.pillar?.toUpperCase() === 'HAI' && 
-        q.target_node?.toUpperCase().includes('MGMT')
-      );
-    } else if (normalizedRole.includes('TECH')) {
+    } else if (normalizedRole === 'TECH_MGMT' || (normalizedRole.includes('TECH') && !normalizedRole.includes('USER'))) {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
-        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('MANAGE'))
+        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('MANAGE') || q.target_node?.toUpperCase().includes('TECH'))
       );
-    } else if (normalizedRole.includes('EXEC')) {
+    } else if (normalizedRole === 'OPS_MGMT' || normalizedRole.includes('OPS') || normalizedRole === 'MANAGERIAL') {
+      filtered = rawList.filter(q => 
+        q.pillar?.toUpperCase() === 'HAI' && 
+        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('OPS'))
+      );
+    } else if (normalizedRole === 'EXECUTIVE' || normalizedRole.includes('EXEC')) {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'IGF' && 
         q.target_node?.toUpperCase().includes('EXEC')
