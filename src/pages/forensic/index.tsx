@@ -3,9 +3,8 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Users, CheckCircle, Play, Mail, Lock, Building, FileText, ChevronRight, Loader2, Copy, Check, Printer } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2 } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
-import { decompressFromEncodedURIComponent, compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
@@ -102,7 +101,7 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(targetCalculatedPillar);
 
-        // 🎯 QUAD NODE LAUNCH CHECK: If flow=quad_node, force clean INTAKE state for email setup
+        // QUAD NODE LAUNCH CHECK: If flow=quad_node, force clean INTAKE state for email setup
         if (flowParam === 'quad_node') {
           setTriangulation(null);
           setViewState('INTAKE');
@@ -210,57 +209,64 @@ export default function ForensicEngineRoot() {
       }); 
       setViewState('HUB'); 
 
-      await fetch('/api/dispatch-directives', { 
+      // SendGrid Quad-Node Invite Dispatch API Call
+      await fetch('/api/send-triangulation', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
-          parentAuditId: parentAudit.id,
-          orgName: sanitizedInput, 
-          emails: {
-            executive: emails.EXECUTIVE,
-            tech_mgmt: emails.TECH_MGMT,
-            ops_mgmt: emails.OPS_MGMT,
-            system_user: emails.SYSTEM_USER
-          }
+          companyName: sanitizedInput, 
+          activePillar: activePillar, 
+          endpoints: emails, 
+          originUrl: `${window.location.origin}${window.location.pathname}` 
         }), 
       }); 
     } catch (error) { 
-      console.error("Dispatch directives exception:", error); 
+      console.error("Quad Node notification dispatch exception:", error); 
     } 
   }; 
 
   const handleTriggerNudge = async (persona: PersonaKey) => {
-    if (!triangulation || !activeAuditId) return;
+    if (!triangulation) return;
     const email = triangulation.emails[persona];
     if (!email) return;
 
     try {
       setSendingNudgeRole(persona);
-      const res = await fetch('/api/dispatch-directives', {
+      const res = await fetch('/api/send-triangulation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          parentAuditId: activeAuditId,
-          orgName: triangulation.companyName,
-          emails: { [persona.toLowerCase()]: email }
+          companyName: triangulation.companyName,
+          activePillar: triangulation.pillar,
+          endpoints: { [persona]: email },
+          isNudge: true,
+          originUrl: `${window.location.origin}${window.location.pathname}`
         })
       });
 
       if (res.ok) {
-        alert(`Reminder dispatch sent to ${persona} (${email}).`);
+        alert(`Quad Node reminder notification sent to ${persona.replace('_', ' ')} (${email}).`);
       } else {
-        alert("Failed to send reminder.");
+        alert("Failed to send Quad Node reminder via BMR platform.");
       }
     } catch (err) {
       console.error("Nudge API exception:", err);
-      alert("Error sending notification.");
-    } finally {
+      alert("Error sending Quad Node notification.");
+    } font-sans finally {
       setSendingNudgeRole(null);
     }
   };
 
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
     setActivePersona(persona); 
+    
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('role', persona);
+      url.searchParams.set('track', persona);
+      window.history.replaceState({}, '', url.toString());
+    }
+
     setViewState('WIZARD'); 
   }; 
 
