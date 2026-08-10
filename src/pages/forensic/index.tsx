@@ -101,7 +101,6 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(targetCalculatedPillar);
 
-        // QUAD NODE LAUNCH CHECK: If flow=quad_node, force clean INTAKE state for email setup
         if (flowParam === 'quad_node') {
           setTriangulation(null);
           setViewState('INTAKE');
@@ -124,7 +123,6 @@ export default function ForensicEngineRoot() {
           }
         }
       } else if (isAdminSession && flowParam === 'quad_node') {
-        // Force clean setup screen for new Quad Node configuration
         setViewState('INTAKE');
       }
     } catch (err) {
@@ -209,7 +207,6 @@ export default function ForensicEngineRoot() {
       }); 
       setViewState('HUB'); 
 
-      // SendGrid Quad-Node Invite Dispatch API Call
       await fetch('/api/send-triangulation', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
@@ -252,7 +249,7 @@ export default function ForensicEngineRoot() {
     } catch (err) {
       console.error("Nudge API exception:", err);
       alert("Error sending Quad Node notification.");
-    } font-sans finally {
+    } finally {
       setSendingNudgeRole(null);
     }
   };
