@@ -48,6 +48,11 @@ export default function ForensicEngineRoot() {
       const idParam = params.get('id'); 
       const codeParam = params.get('code');
       const entityParam = params.get('entity') || params.get('org') || params.get('entity_code');
+      const flowParam = params.get('flow');
+      const matrixParam = params.get('matrix');
+      const authVal = params.get('auth');
+
+      const isAdminSession = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
       let targetCompanyName = (entityParam || companyName || '').trim().replace(/\s+/g, ' ');
       let activeAudit = null;
@@ -112,7 +117,6 @@ export default function ForensicEngineRoot() {
           return node.survey_completed === true || statusUpper === 'COMPLETED' || statusUpper === 'COMPLETE';
         };
 
-        // Fallback check against audit table master boolean flags
         const liveCompletions = {
           EXECUTIVE: isOpDone('EXECUTIVE') || Boolean(activeAudit.has_executive),
           MANAGERIAL: isOpDone('MANAGERIAL') || Boolean(activeAudit.has_managerial),
@@ -149,6 +153,13 @@ export default function ForensicEngineRoot() {
           responses: liveResponses
         });
 
+        // AUTO-ADVANCE: If launching via Quad-Node, Matrix Token, or Admin Auth, switch directly to HUB
+        if (isAdminSession || flowParam === 'quad_node' || matrixParam) {
+          if (!matchedOperator) {
+            setViewState('HUB');
+          }
+        }
+
         if (matchedOperator) {
           const rawPersona = String(matchedOperator.persona_type || '').toUpperCase().trim();
           if (rawPersona === 'EXECUTIVE' || rawPersona === 'MANAGERIAL' || rawPersona === 'TECHNICAL') {
@@ -161,13 +172,25 @@ export default function ForensicEngineRoot() {
             setViewState('WIZARD');
           }
         }
+      } else if (isAdminSession && (flowParam === 'quad_node' || matrixParam || targetCompanyName)) {
+        // Fallback for admin quad-node preview without persistent DB record
+        const fallbackName = targetCompanyName || "Quad Node Target System";
+        setCompanyName(fallbackName);
+        setTriangulation({
+          companyName: fallbackName,
+          pillar: activePillar,
+          emails: { EXECUTIVE: '', MANAGERIAL: '', TECHNICAL: '' },
+          completions: { EXECUTIVE: false, MANAGERIAL: false, TECHNICAL: false },
+          responses: { EXECUTIVE: {}, MANAGERIAL: {}, TECHNICAL: {} }
+        });
+        setViewState('HUB');
       }
     } catch (err) {
       console.error("COCKPIT_SYNC_ERROR: Matrix re-sync failed", err);
     } finally {
       isSyncingRef.current = false;
     }
-  }, [companyName, activeAuditId]);
+  }, [companyName, activeAuditId, activePillar]);
 
   // Window focus auto-resync
   useEffect(() => {
@@ -208,11 +231,14 @@ export default function ForensicEngineRoot() {
         const authVal = params.get('auth'); 
         const codeParam = params.get('code');
         const roleParam = params.get('role') as PersonaKey; 
+        const matrixParam = params.get('matrix');
+        const idParam = params.get('id');
+        const flowParam = params.get('flow');
 
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
         const isParticipantRoute = !!(codeParam || roleParam); 
 
-        if (isAdminAuthenticated || isParticipantRoute) { 
+        if (isAdminAuthenticated || isParticipantRoute || matrixParam || idParam || flowParam) { 
           setAuthorizedAdmin(true); 
           synchronizeEngineDataMatrix();
         } else { 
@@ -316,7 +342,7 @@ export default function ForensicEngineRoot() {
     } catch (err) {
       console.error("Nudge API exception:", err);
       alert("Error sending notification.");
-    } finally {
+    } fontinally {
       setSendingNudgeRole(null);
     }
   };
