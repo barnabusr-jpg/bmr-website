@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import LZString from 'lz-string';
 import { supabase } from '@/lib/supabaseClient';
 import { FORENSIC_MATRIX } from '@/lib/forensicMatrix';
 import { Lock, CheckCircle, ShieldAlert, Activity, ArrowRight } from 'lucide-react';
@@ -17,66 +18,111 @@ export default function ForensicDiagnostic() {
     const init = async () => {
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code')?.trim().toUpperCase();
+      const flow = params.get('flow');
+      const matrixToken = params.get('matrix');
+      const trackParam = (params.get('track') || params.get('role'))?.trim().toUpperCase();
+      const orgParam = params.get('org');
+      const auditIdParam = params.get('id');
+      const authParam = params.get('auth');
 
-      console.log("DIAGNOSTIC_AUTH: Attempting handshake with code:", code);
+      console.log("DIAGNOSTIC_AUTH: Attempting handshake with code/flow:", { code, flow, hasMatrix: !!matrixToken });
 
-      if (!code) {
-        console.error("AUTH_ERROR: No code provided in URL.");
-        setStep("invalid");
+      let matrixPayload: any = null;
+      if (matrixToken) {
+        try {
+          const decompressed = LZString.decompressFromEncodedURIComponent(matrixToken);
+          if (decompressed) {
+            matrixPayload = JSON.parse(decompressed);
+          }
+        } catch (e) {
+          console.warn("LOGIC_WARN: Failed to decompress matrix token", e);
+        }
+      }
+
+      // 1. Standard Participant Flow (via access_code)
+      if (code) {
+        const { data: op, error: opError } = await supabase
+          .from('operators')
+          .select('id, audit_id, access_code, status, persona_type')
+          .eq('access_code', code)
+          .single();
+
+        if (opError || !op) {
+          console.error("DB_ERROR: Operator lookup failed.", opError?.message);
+          setStep("invalid");
+          return;
+        }
+
+        const { data: audit, error: auditError } = await supabase
+          .from('audits')
+          .select('status, org_name, id')
+          .eq('id', op.audit_id)
+          .single();
+
+        const isOpComplete = String(op.status).trim().toUpperCase() === 'COMPLETED';
+        if (auditError || !audit || audit.status === 'COMPLETE' || audit.status === 'COMPLETED' || isOpComplete) {
+          console.log("NODE_ACCESS: Link is deactivated or already completed.");
+          setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
+          setStep("finalized");
+          return;
+        }
+
+        const filtered = FORENSIC_MATRIX.filter(q => {
+          const lens = q.lens?.toUpperCase();
+          const persona = op.persona_type?.toUpperCase();
+
+          return lens === persona ||
+            (persona === 'MANAGERIAL' && lens === 'MGR') ||
+            (persona === 'TECHNICAL' && lens === 'TEC') ||
+            (persona === 'EXECUTIVE' && lens === 'EXE');
+        });
+
+        if (!filtered || filtered.length === 0) {
+          console.error("LOGIC_ERROR: No matrix mapping for persona type:", op.persona_type);
+          setStep("invalid");
+          return;
+        }
+
+        setQuestions(filtered);
+        setOperator({ ...op, org_name: audit.org_name });
+        setStep("intro");
         return;
       }
 
-      // 1. Fetch operator (legacy backend logic)
-      const { data: op, error: opError } = await supabase
-        .from('operators')
-        .select('id, audit_id, access_code, status, persona_type')
-        .eq('access_code', code)
-        .single();
+      // 2. Quad Node / Admin Preview Flow (tokenized bypass)
+      if (flow === 'quad_node' || matrixToken || authParam === 'admin_verified_secure' || trackParam) {
+        const targetOrg = matrixPayload?.org || orgParam || "QUAD NODE DIAGNOSTIC";
+        const persona = trackParam || (flow === 'quad_node' ? 'QUAD_NODE' : 'EXECUTIVE');
 
-      if (opError || !op) {
-        console.error("DB_ERROR: Operator lookup failed.", opError?.message);
-        setStep("invalid");
+        let filtered = FORENSIC_MATRIX;
+        if (persona !== 'QUAD_NODE') {
+          filtered = FORENSIC_MATRIX.filter(q => {
+            const lens = q.lens?.toUpperCase();
+            return lens === persona ||
+              (persona === 'MANAGERIAL' && lens === 'MGR') ||
+              (persona === 'TECHNICAL' && lens === 'TEC') ||
+              (persona === 'EXECUTIVE' && lens === 'EXE');
+          });
+        }
+
+        if (!filtered || filtered.length === 0) {
+          filtered = FORENSIC_MATRIX;
+        }
+
+        setQuestions(filtered);
+        setOperator({
+          id: auditIdParam || 'quad_node_admin',
+          audit_id: auditIdParam || 'quad_node_audit',
+          org_name: targetOrg,
+          persona_type: persona,
+          access_code: 'ADMIN_QUAD_NODE'
+        });
+        setStep("intro");
         return;
       }
 
-      // 2. Fetch parent audit (legacy backend logic)
-      const { data: audit, error: auditError } = await supabase
-        .from('audits')
-        .select('status, org_name, id')
-        .eq('id', op.audit_id)
-        .single();
-
-      // SECURITY: Case-insensitive guard for completed assessments
-      const isOpComplete = String(op.status).trim().toUpperCase() === 'COMPLETED';
-      if (auditError || !audit || audit.status === 'COMPLETE' || audit.status === 'COMPLETED' || isOpComplete) {
-        console.log("NODE_ACCESS: Link is deactivated or already completed.");
-        setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
-        setStep("finalized");
-        return;
-      }
-
-      // 3. Lens filtering (strict 360 matrix mapping)
-      const filtered = FORENSIC_MATRIX.filter(q => {
-        const lens = q.lens?.toUpperCase();
-        const persona = op.persona_type?.toUpperCase();
-
-        return lens === persona ||
-          (persona === 'MANAGERIAL' && lens === 'MGR') ||
-          (persona === 'TECHNICAL' && lens === 'TEC') ||
-          (persona === 'EXECUTIVE' && lens === 'EXE');
-      });
-
-      console.log(`LENS_CHECK: Persona is [${op.persona_type}]. Questions found: ${filtered.length}`);
-
-      if (!filtered || filtered.length === 0) {
-        console.error("LOGIC_ERROR: No matrix mapping for persona type:", op.persona_type);
-        setStep("invalid");
-        return;
-      }
-
-      setQuestions(filtered);
-      setOperator({ ...op, org_name: audit.org_name });
-      setStep("intro");
+      console.error("AUTH_ERROR: No code or matrix token provided in URL.");
+      setStep("invalid");
     };
 
     init();
@@ -88,16 +134,16 @@ export default function ForensicDiagnostic() {
     setStep("submitting");
 
     try {
-      const params = new URLSearchParams(window.location.search);
-      const urlCode = params.get('code')?.trim().toUpperCase();
-      const activeCode = operator?.access_code || urlCode;
+      const activeCode = operator?.access_code;
 
-      console.log("RPC_DISPATCH_ATTEMPT", {
-        p_access_code: activeCode,
-        answersCount: Object.keys(finalAnswers || {}).length,
-      });
+      // Handle simulated admin previews cleanly
+      if (activeCode === 'ADMIN_QUAD_NODE' || operator?.id === 'quad_node_admin') {
+        console.log("QUAD_NODE_SIMULATION_COMPLETE: Admin preview session finished.");
+        setStep("done");
+        return;
+      }
 
-      // Step 1: Execute security-definer RPC (Bypasses RLS safely with pessimistic row locking)
+      // Step 1: Execute security-definer RPC
       const { data: rpcSuccess, error: rpcError } = await supabase.rpc(
         'submit_operator_diagnostic',
         {
@@ -105,8 +151,6 @@ export default function ForensicDiagnostic() {
           p_raw_responses: finalAnswers,
         }
       );
-
-      console.log("RPC_DISPATCH_RESPONSE", { rpcSuccess, rpcError });
 
       if (rpcError) {
         throw new Error(`RPC_EXECUTION_FAILED: ${rpcError.message}`);
@@ -116,9 +160,7 @@ export default function ForensicDiagnostic() {
         throw new Error("RPC_REJECTED: Code invalid or already completed.");
       }
 
-      console.log("OPERATOR_NODE_SECURED // EVALUATING CO-DEPENDENT NETWORK TRACKS");
-
-      // Step 2: Fetch all sibling operator nodes for this audit
+      // Step 2: Fetch sibling operator nodes
       const { data: siblingOperators, error: fetchError } = await supabase
         .from('operators')
         .select('persona_type, status, survey_completed')
@@ -126,7 +168,7 @@ export default function ForensicDiagnostic() {
 
       if (fetchError) throw new Error(`Cross-node matrix sync failed: ${fetchError.message}`);
 
-      // Step 3: Build a clean map of completed personas across siblings + current session
+      // Step 3: Check completion state
       const completedPersonas = new Set<string>();
       const currentPersona = operator?.persona_type?.trim().toUpperCase();
 
@@ -142,26 +184,9 @@ export default function ForensicDiagnostic() {
         }
       });
 
-      // Step 4: Strict 360-node flag evaluation
       const hasTech = completedPersonas.has('TECHNICAL');
       const hasMgr  = completedPersonas.has('MANAGERIAL');
       const hasExe  = completedPersonas.has('EXECUTIVE');
-
-      console.log("AUDIT FLAG DEBUG", {
-        operatorId: operator?.id,
-        operatorAuditId: operator?.audit_id,
-        currentPersona: operator?.persona_type,
-        normalizedPersona: currentPersona,
-        hasTechCandidate: hasTech,
-        hasMgrCandidate: hasMgr,
-        hasExeCandidate: hasExe,
-        siblingCount: siblingOperators?.length,
-        siblingPersonas: (siblingOperators || []).map(o => ({
-          persona_type: o.persona_type,
-          status: o.status,
-          survey_completed: o.survey_completed,
-        }))
-      });
 
       const auditPayload: any = {
         has_technical: hasTech,
@@ -171,10 +196,7 @@ export default function ForensicDiagnostic() {
         updated_at: new Date().toISOString()
       };
 
-      // Step 5: Master audit completion pass when all 3 tracks complete
       if (hasTech && hasMgr && hasExe) {
-        console.log("QUAD-NODE MATRIX BALANCED // RUNNING INTEGRATED CALCULUS RUNTIME");
-
         auditPayload.anomalies = [
           {
             anomaly_id: "INDEX NODE FR-01",
@@ -194,7 +216,6 @@ export default function ForensicDiagnostic() {
         auditPayload.status = 'COMPLETED';
       }
 
-      // Step 6: Master update pass with explicit row-count validation
       const { data: auditUpdated, error: auditUpdateError } = await supabase
         .from('audits')
         .update(auditPayload)
@@ -204,15 +225,13 @@ export default function ForensicDiagnostic() {
       if (auditUpdateError) throw new Error(`Master ledger update rejected: ${auditUpdateError.message}`);
 
       if (!auditUpdated || auditUpdated.length === 0) {
-        throw new Error(`AUDITS UPDATE FAILED: 0 rows affected (ID mismatch or RLS block? audit_id=${operator?.audit_id})`);
+        throw new Error(`AUDITS UPDATE FAILED: 0 rows affected (audit_id=${operator?.audit_id})`);
       }
-
-      console.log("SURVEY_SUBMITTED_SUCCESSFULLY // INTEGRATED MATRIX UPDATED", auditUpdated);
 
       setStep("done");
 
     } catch (err: any) {
-      console.error("SUBMIT_ERROR: Failed transactional database sync sequence.", err.message);
+      console.error("SUBMIT_ERROR:", err.message);
       alert(`SIGNAL_LOST: ${err.message}`);
       setStep("diagnostic");
     }
@@ -241,7 +260,6 @@ export default function ForensicDiagnostic() {
       .join(' ');
   };
 
-  // ===== UI Layout =====
   if (step === "loading") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
