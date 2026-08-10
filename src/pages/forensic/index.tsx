@@ -50,11 +50,44 @@ export default function ForensicEngineRoot() {
       const codeParam = params.get('code');
       const entityParam = params.get('entity') || params.get('org') || params.get('entity_code');
       const flowParam = params.get('flow');
+      const roleParam = params.get('role') as PersonaKey;
+      const pillarParam = params.get('pillar') as FunnelPillar;
       const authVal = params.get('auth');
 
       const isAdminSession = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
+      const isParticipantRoute = !!(codeParam || roleParam);
 
       let targetCompanyName = (entityParam || companyName || '').trim().replace(/\s+/g, ' ');
+
+      // 1. PARTICIPANT ROUTED FROM EMAIL LINK (Has role/code): Route directly to Question Wizard
+      if (isParticipantRoute && roleParam) {
+        if (targetCompanyName) setCompanyName(targetCompanyName);
+        setActivePersona(roleParam);
+
+        if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam.toUpperCase())) {
+          setActivePillar(pillarParam.toUpperCase() as FunnelPillar);
+        }
+
+        setTriangulation(prev => prev || {
+          companyName: targetCompanyName || "Quad Node Client System",
+          pillar: pillarParam || activePillar,
+          emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' },
+          completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
+          responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
+        });
+
+        setViewState('WIZARD');
+        return;
+      }
+
+      // 2. ADMIN SETUP LAUNCH (From Admin Dashboard with flow=quad_node and NO participant role)
+      if (flowParam === 'quad_node' && !isParticipantRoute) {
+        setTriangulation(null);
+        setViewState('INTAKE');
+        return;
+      }
+
+      // 3. DATABASE LOOKUPS FOR EXISTING AUDITS
       let activeAudit = null;
       let matchedOperator = null;
 
@@ -101,12 +134,6 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(targetCalculatedPillar);
 
-        if (flowParam === 'quad_node') {
-          setTriangulation(null);
-          setViewState('INTAKE');
-          return;
-        }
-
         if (matchedOperator) {
           const rawPersona = String(matchedOperator.persona_type || '').toUpperCase().trim();
           let mappedKey: PersonaKey = 'EXECUTIVE';
@@ -130,7 +157,7 @@ export default function ForensicEngineRoot() {
     } finally {
       isSyncingRef.current = false;
     }
-  }, [companyName]);
+  }, [companyName, activePillar]);
 
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
@@ -198,27 +225,18 @@ export default function ForensicEngineRoot() {
 
       setActiveAuditId(parentAudit.id);
 
-      const initialTriangulationState = { 
+      setTriangulation({ 
         companyName: sanitizedInput, 
         pillar: activePillar, 
         emails: { ...emails }, 
         completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
         responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} } 
-      }; 
-
-      if (typeof window !== 'undefined') { 
-        window.localStorage.setItem(`bmr_matrix_run_${sanitizedInput}`, JSON.stringify(initialTriangulationState)); 
-      } 
-
-      setTriangulation(initialTriangulationState); 
+      }); 
       setViewState('HUB'); 
 
-      // CALLS QUAD NODE API ROUTE (/api/send-triangulation)
       await fetch('/api/send-triangulation', { 
         method: 'POST', 
-        headers: { 
-          'Content-Type': 'application/json', 
-        }, 
+        headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
           companyName: sanitizedInput, 
           activePillar: activePillar, 
