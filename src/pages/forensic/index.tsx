@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect, useMemo, useRef } from 'react'; 
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'; 
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
@@ -39,20 +39,7 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null); 
   const [inputError, setInputError] = useState(''); 
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handleStorageChange = (e: StorageEvent) => {
-      if (triangulation && e.key === `bmr_matrix_run_${triangulation.companyName}` && e.newValue) {
-        setTriangulation(JSON.parse(e.newValue));
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [triangulation]);
-
-  const synchronizeEngineDataMatrix = async () => {
+  const synchronizeEngineDataMatrix = useCallback(async () => {
     if (isSyncingRef.current) return;
     isSyncingRef.current = true;
 
@@ -69,27 +56,29 @@ export default function ForensicEngineRoot() {
       if (codeParam) {
         const { data: opData } = await supabase
           .from('operators')
-          .select('id, group_id, persona_type, email, survey_completed, status')
+          .select('id, group_id, audit_id, persona_type, email, survey_completed, status')
           .eq('access_code', codeParam.toUpperCase().trim())
           .maybeSingle();
 
         matchedOperator = opData;
+        const targetAuditId = matchedOperator?.audit_id || matchedOperator?.group_id;
 
-        if (matchedOperator?.group_id) {
+        if (targetAuditId) {
           const { data: auditData } = await supabase
             .from('audits')
-            .select('id, org_name, sfi_score, decay_pct, sector, status')
-            .eq('id', matchedOperator.group_id)
+            .select('id, org_name, sfi_score, decay_pct, sector, status, has_executive, has_managerial, has_technical')
+            .eq('id', targetAuditId)
             .maybeSingle();
 
           activeAudit = auditData;
           if (activeAudit) targetCompanyName = activeAudit.org_name;
         }
-      } else if (idParam) {
+      } else if (idParam || activeAuditId) {
+        const queryId = idParam || activeAuditId;
         const { data } = await supabase
           .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status')
-          .eq('id', idParam)
+          .select('id, org_name, sfi_score, decay_pct, sector, status, has_executive, has_managerial, has_technical')
+          .eq('id', queryId)
           .maybeSingle();
         activeAudit = data;
         if (activeAudit && !targetCompanyName) targetCompanyName = activeAudit.org_name;
@@ -108,61 +97,68 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(targetCalculatedPillar);
 
+        // Fetch operators linked by either audit_id OR group_id
         const { data: databaseNodes } = await supabase
           .from('operators')
           .select('persona_type, email, status, survey_completed, raw_responses')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
-        if (databaseNodes && databaseNodes.length > 0) {
-          const dbExecNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
-          const dbMgrNode  = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
-          const dbTechNode = databaseNodes.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
+        const completedOps = databaseNodes || [];
 
-          const freshDBEmails = {
-            EXECUTIVE: dbExecNode?.email || "",
-            MANAGERIAL: dbMgrNode?.email || "",
-            TECHNICAL: dbTechNode?.email || ""
-          };
+        const isOpDone = (pType: string) => {
+          const node = completedOps.find(n => n.persona_type?.toUpperCase() === pType);
+          if (!node) return false;
+          const statusUpper = String(node.status || '').toUpperCase();
+          return node.survey_completed === true || statusUpper === 'COMPLETED' || statusUpper === 'COMPLETE';
+        };
 
-          setEmails(freshDBEmails);
+        // Fallback check against audit table master boolean flags
+        const liveCompletions = {
+          EXECUTIVE: isOpDone('EXECUTIVE') || Boolean(activeAudit.has_executive),
+          MANAGERIAL: isOpDone('MANAGERIAL') || Boolean(activeAudit.has_managerial),
+          TECHNICAL: isOpDone('TECHNICAL') || Boolean(activeAudit.has_technical)
+        };
 
-          const isTrackDone = (node: any) => {
-            if (!node) return false;
-            const statusUpper = String(node.status || '').toUpperCase();
-            return node.survey_completed === true || statusUpper === 'COMPLETED' || statusUpper === 'COMPLETE';
-          };
+        const dbExecNode = completedOps.find(n => n.persona_type?.toUpperCase() === 'EXECUTIVE');
+        const dbMgrNode  = completedOps.find(n => n.persona_type?.toUpperCase() === 'MANAGERIAL');
+        const dbTechNode = completedOps.find(n => n.persona_type?.toUpperCase() === 'TECHNICAL');
 
-          const liveCompletions = {
-            EXECUTIVE: isTrackDone(dbExecNode),
-            MANAGERIAL: isTrackDone(dbMgrNode),
-            TECHNICAL: isTrackDone(dbTechNode)
-          };
+        const freshDBEmails = {
+          EXECUTIVE: dbExecNode?.email || "",
+          MANAGERIAL: dbMgrNode?.email || "",
+          TECHNICAL: dbTechNode?.email || ""
+        };
 
-          const liveResponses = {
-            EXECUTIVE: dbExecNode?.raw_responses || {},
-            MANAGERIAL: dbMgrNode?.raw_responses || {},
-            TECHNICAL: dbTechNode?.raw_responses || {}
-          };
+        setEmails(prev => ({
+          EXECUTIVE: freshDBEmails.EXECUTIVE || prev.EXECUTIVE,
+          MANAGERIAL: freshDBEmails.MANAGERIAL || prev.MANAGERIAL,
+          TECHNICAL: freshDBEmails.TECHNICAL || prev.TECHNICAL,
+        }));
 
-          setTriangulation({
-            companyName: targetCompanyName,
-            pillar: targetCalculatedPillar,
-            emails: freshDBEmails,
-            completions: liveCompletions,
-            responses: liveResponses
-          });
+        const liveResponses = {
+          EXECUTIVE: dbExecNode?.raw_responses || {},
+          MANAGERIAL: dbMgrNode?.raw_responses || {},
+          TECHNICAL: dbTechNode?.raw_responses || {}
+        };
 
-          if (matchedOperator) {
-            const rawPersona = String(matchedOperator.persona_type || '').toUpperCase().trim();
-            if (rawPersona === 'EXECUTIVE' || rawPersona === 'MANAGERIAL' || rawPersona === 'TECHNICAL') {
-              setActivePersona(rawPersona as PersonaKey);
-            }
+        setTriangulation({
+          companyName: targetCompanyName,
+          pillar: targetCalculatedPillar,
+          emails: freshDBEmails,
+          completions: liveCompletions,
+          responses: liveResponses
+        });
 
-            if (matchedOperator.survey_completed || String(matchedOperator.status).toUpperCase() === 'COMPLETED') {
-              setViewState('THANK_YOU');
-            } else {
-              setViewState('WIZARD');
-            }
+        if (matchedOperator) {
+          const rawPersona = String(matchedOperator.persona_type || '').toUpperCase().trim();
+          if (rawPersona === 'EXECUTIVE' || rawPersona === 'MANAGERIAL' || rawPersona === 'TECHNICAL') {
+            setActivePersona(rawPersona as PersonaKey);
+          }
+
+          if (matchedOperator.survey_completed || String(matchedOperator.status).toUpperCase() === 'COMPLETED') {
+            setViewState('THANK_YOU');
+          } else {
+            setViewState('WIZARD');
           }
         }
       }
@@ -171,7 +167,39 @@ export default function ForensicEngineRoot() {
     } finally {
       isSyncingRef.current = false;
     }
-  };
+  }, [companyName, activeAuditId]);
+
+  // Window focus auto-resync
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const onFocus = () => {
+      synchronizeEngineDataMatrix();
+    };
+
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, [synchronizeEngineDataMatrix]);
+
+  // Trigger sync on HUB view mount
+  useEffect(() => {
+    if (viewState === 'HUB') {
+      synchronizeEngineDataMatrix();
+    }
+  }, [viewState, synchronizeEngineDataMatrix]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (triangulation && e.key === `bmr_matrix_run_${triangulation.companyName}` && e.newValue) {
+        setTriangulation(JSON.parse(e.newValue));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, [triangulation]);
 
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
@@ -195,7 +223,7 @@ export default function ForensicEngineRoot() {
         setAuthorizedAdmin(false); 
       } 
     } 
-  }, []); 
+  }, [synchronizeEngineDataMatrix]); 
 
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
@@ -298,7 +326,6 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
-  // 🎯 INSTRUMENTED SAVE HANDLER WITH DIAGNOSTIC LOGGING
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
@@ -316,86 +343,35 @@ export default function ForensicEngineRoot() {
     const params = new URLSearchParams(window.location.search);
     const codeParam = params.get('code')?.toUpperCase().trim() || null;
 
-    // 🎯 DIAGNOSTIC: CHECK CURRENT CLIENT SESSION ROLE
-    const { data: sessionData } = await supabase.auth.getSession();
-    console.log("DIAGNOSTIC_SESSION", {
-      hasSession: !!sessionData?.session,
-      role: sessionData?.session?.user?.role || "anon"
-    });
-
     let updateSuccess = false;
 
-    // 🎯 STEP 1: ATTEMPT UPDATE BY ACCESS CODE
+    // STEP 1: Execute RPC function for secure mutation
     if (codeParam) {
-      const { data: selectCodeData, error: selectCodeErr } = await supabase
-        .from("operators")
-        .select("id, access_code, group_id, persona_type, survey_completed")
-        .eq("access_code", codeParam);
-
-      console.log("ROW_LOOKUP_BY_CODE", { data: selectCodeData, error: selectCodeErr });
-
-      console.log("UPDATE_ATTEMPT", { step: 1, codeParam });
-      const { data: updateCodeData, error: updateCodeErr } = await supabase
-        .from("operators")
-        .update({
-          survey_completed: true,
-          status: "COMPLETED",
-          raw_responses: answersToSave,
-        })
-        .eq("access_code", codeParam)
-        .select();
-
-      console.log("UPDATE_RESULT_STEP_1", { data: updateCodeData, error: updateCodeErr });
-      if (updateCodeData && updateCodeData.length > 0) updateSuccess = true;
+      const { error: rpcErr } = await supabase.rpc('submit_operator_diagnostic', {
+        p_access_code: codeParam,
+        p_raw_responses: answersToSave
+      });
+      if (!rpcErr) updateSuccess = true;
     }
 
-    // 🎯 STEP 2: ATTEMPT UPDATE BY GROUP_ID + PERSONA_TYPE
+    // STEP 2: Direct fallback update by Group ID / Audit ID
     if (!updateSuccess && activeAuditId && activePersona) {
-      const { data: selectGroupData, error: selectGroupErr } = await supabase
-        .from("operators")
-        .select("id, access_code, group_id, persona_type, survey_completed")
-        .eq("group_id", activeAuditId)
-        .ilike("persona_type", activePersona);
-
-      console.log("ROW_LOOKUP_BY_GROUP_PERSONA", { data: selectGroupData, error: selectGroupErr });
-
-      console.log("UPDATE_ATTEMPT", { step: 2, activeAuditId, activePersona });
-      const { data: updateGroupData, error: updateGroupErr } = await supabase
+      const { data: updateGroupData } = await supabase
         .from("operators")
         .update({
           survey_completed: true,
           status: "COMPLETED",
           raw_responses: answersToSave,
         })
-        .eq("group_id", activeAuditId)
+        .or(`group_id.eq.${activeAuditId},audit_id.eq.${activeAuditId}`)
         .ilike("persona_type", activePersona)
         .select();
 
-      console.log("UPDATE_RESULT_STEP_2", { data: updateGroupData, error: updateGroupErr });
       if (updateGroupData && updateGroupData.length > 0) updateSuccess = true;
     }
 
-    // 🎯 STEP 3: AUTO-ROLLUP PARENT AUDIT STATUS
-    if (activeAuditId) {
-      const { data: nodes } = await supabase
-        .from("operators")
-        .select("survey_completed, status")
-        .eq("group_id", activeAuditId);
-
-      const completedCount = nodes?.filter(
-        n => n.survey_completed === true || String(n.status).toUpperCase() === 'COMPLETED'
-      ).length || 0;
-
-      if (completedCount >= 3) {
-        await supabase
-          .from("audits")
-          .update({ 
-            status: "COMPLETE",
-            compiled_at: new Date().toISOString()
-          })
-          .eq("id", activeAuditId);
-      }
-    }
+    // STEP 3: Re-sync state from database
+    await synchronizeEngineDataMatrix();
 
     setActivePersona(null); 
     if (params.get('code') || params.get('role')) { 
@@ -560,7 +536,7 @@ export default function ForensicEngineRoot() {
                     <button 
                       onClick={() => handleLaunchPersonaWizard(persona)} 
                       className={`px-4 py-2 text-xs uppercase tracking-wider font-bold rounded-md transition-colors flex items-center gap-2 cursor-pointer ${ 
-                        isDone ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200' : 'bg-slate-900 text-white hover:bg-slate-800' 
+                        isDone ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-slate-900 text-white hover:bg-slate-800' 
                       }`} 
                     > 
                       {isDone ? 'Review Track' : 'Open Track'} 
