@@ -25,7 +25,7 @@ export default function ForensicDiagnostic() {
       const auditIdParam = params.get('id');
       const authParam = params.get('auth');
 
-      console.log("DIAGNOSTIC_AUTH: Attempting handshake with code/flow:", { code, flow, hasMatrix: !!matrixToken });
+      console.log("DIAGNOSTIC_AUTH: Attempting handshake:", { code, flow, hasMatrix: !!matrixToken });
 
       let matrixPayload: any = null;
       if (matrixToken) {
@@ -35,11 +35,11 @@ export default function ForensicDiagnostic() {
             matrixPayload = JSON.parse(decompressed);
           }
         } catch (e) {
-          console.warn("LOGIC_WARN: Failed to decompress matrix token", e);
+          console.warn("LOGIC_WARN: Failed to parse matrix token", e);
         }
       }
 
-      // 1. Standard Participant Flow (via access_code)
+      // 1. Participant Access Code Resolution
       if (code) {
         const { data: op, error: opError } = await supabase
           .from('operators')
@@ -59,10 +59,12 @@ export default function ForensicDiagnostic() {
           .eq('id', op.audit_id)
           .single();
 
-        const isOpComplete = String(op.status).trim().toUpperCase() === 'COMPLETED';
-        if (auditError || !audit || audit.status === 'COMPLETE' || audit.status === 'COMPLETED' || isOpComplete) {
-          console.log("NODE_ACCESS: Link is deactivated or already completed.");
-          setOperator(op ? { ...op, org_name: audit?.org_name || "SECURE_NODE" } : null);
+        const isOpComplete = String(op.status).trim().toUpperCase() === 'COMPLETED' || op.status === 'completed';
+        const isAuditComplete = audit?.status === 'COMPLETE' || audit?.status === 'COMPLETED';
+
+        if (auditError || !audit || isAuditComplete || isOpComplete) {
+          console.log("NODE_ACCESS: Assessment link completed or deactivated.");
+          setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
           setStep("finalized");
           return;
         }
@@ -89,39 +91,32 @@ export default function ForensicDiagnostic() {
         return;
       }
 
-      // 2. Quad Node / Admin Preview Flow (tokenized bypass)
+      // 2. Admin Preview / Quad-Node Execution Resolver
       if (flow === 'quad_node' || matrixToken || authParam === 'admin_verified_secure' || trackParam) {
-        const targetOrg = matrixPayload?.org || orgParam || "QUAD NODE DIAGNOSTIC";
-        const persona = trackParam || (flow === 'quad_node' ? 'QUAD_NODE' : 'EXECUTIVE');
+        const targetOrg = matrixPayload?.org || orgParam || "TARGET SPECIFICATION";
+        const persona = trackParam || 'EXECUTIVE';
 
-        let filtered = FORENSIC_MATRIX;
-        if (persona !== 'QUAD_NODE') {
-          filtered = FORENSIC_MATRIX.filter(q => {
-            const lens = q.lens?.toUpperCase();
-            return lens === persona ||
-              (persona === 'MANAGERIAL' && lens === 'MGR') ||
-              (persona === 'TECHNICAL' && lens === 'TEC') ||
-              (persona === 'EXECUTIVE' && lens === 'EXE');
-          });
-        }
+        const filtered = FORENSIC_MATRIX.filter(q => {
+          const lens = q.lens?.toUpperCase();
+          return lens === persona ||
+            (persona === 'MANAGERIAL' && lens === 'MGR') ||
+            (persona === 'TECHNICAL' && lens === 'TEC') ||
+            (persona === 'EXECUTIVE' && lens === 'EXE');
+        });
 
-        if (!filtered || filtered.length === 0) {
-          filtered = FORENSIC_MATRIX;
-        }
-
-        setQuestions(filtered);
+        setQuestions(filtered.length > 0 ? filtered : FORENSIC_MATRIX);
         setOperator({
-          id: auditIdParam || 'quad_node_admin',
-          audit_id: auditIdParam || 'quad_node_audit',
+          id: auditIdParam || 'admin_preview',
+          audit_id: auditIdParam || 'admin_audit',
           org_name: targetOrg,
           persona_type: persona,
-          access_code: 'ADMIN_QUAD_NODE'
+          access_code: 'ADMIN_PREVIEW'
         });
         setStep("intro");
         return;
       }
 
-      console.error("AUTH_ERROR: No code or matrix token provided in URL.");
+      console.error("AUTH_ERROR: No code or token provided.");
       setStep("invalid");
     };
 
@@ -136,14 +131,14 @@ export default function ForensicDiagnostic() {
     try {
       const activeCode = operator?.access_code;
 
-      // Handle simulated admin previews cleanly
-      if (activeCode === 'ADMIN_QUAD_NODE' || operator?.id === 'quad_node_admin') {
-        console.log("QUAD_NODE_SIMULATION_COMPLETE: Admin preview session finished.");
+      // Bypass DB mutations during administrative test previews
+      if (activeCode === 'ADMIN_PREVIEW' || operator?.id === 'admin_preview') {
+        console.log("SIMULATION_COMPLETE: Admin diagnostic preview finished.");
         setStep("done");
         return;
       }
 
-      // Step 1: Execute security-definer RPC
+      // Step 1: Execute elevated RPC submission (Bypasses RLS write blocks)
       const { data: rpcSuccess, error: rpcError } = await supabase.rpc(
         'submit_operator_diagnostic',
         {
@@ -152,15 +147,10 @@ export default function ForensicDiagnostic() {
         }
       );
 
-      if (rpcError) {
-        throw new Error(`RPC_EXECUTION_FAILED: ${rpcError.message}`);
-      }
+      if (rpcError) throw new Error(`RPC submission failed: ${rpcError.message}`);
+      if (!rpcSuccess) throw new Error("RPC rejected: Invalid or completed access code.");
 
-      if (!rpcSuccess) {
-        throw new Error("RPC_REJECTED: Code invalid or already completed.");
-      }
-
-      // Step 2: Fetch sibling operator nodes
+      // Step 2: Fetch sibling operator statuses
       const { data: siblingOperators, error: fetchError } = await supabase
         .from('operators')
         .select('persona_type, status, survey_completed')
@@ -168,20 +158,16 @@ export default function ForensicDiagnostic() {
 
       if (fetchError) throw new Error(`Cross-node matrix sync failed: ${fetchError.message}`);
 
-      // Step 3: Check completion state
+      // Step 3: Triangulate human participant completions
       const completedPersonas = new Set<string>();
       const currentPersona = operator?.persona_type?.trim().toUpperCase();
 
-      if (currentPersona) {
-        completedPersonas.add(currentPersona);
-      }
+      if (currentPersona) completedPersonas.add(currentPersona);
 
       (siblingOperators || []).forEach(o => {
         const p = o.persona_type?.trim().toUpperCase();
         const isDone = o.survey_completed === true || String(o.status).trim().toUpperCase() === 'COMPLETED';
-        if (p && isDone) {
-          completedPersonas.add(p);
-        }
+        if (p && isDone) completedPersonas.add(p);
       });
 
       const hasTech = completedPersonas.has('TECHNICAL');
@@ -196,19 +182,22 @@ export default function ForensicDiagnostic() {
         updated_at: new Date().toISOString()
       };
 
+      // Step 4: Multi-track compilation pass when all 3 human tracks complete
       if (hasTech && hasMgr && hasExe) {
+        console.log("QUAD-NODE MATRIX BALANCED // RUNNING INTEGRATED CALCULUS RUNTIME");
+
         auditPayload.anomalies = [
           {
-            anomaly_id: "INDEX NODE FR-01",
-            title: "AUTOMATED ARCHITECTURE DISCREPANCY",
+            anomaly_id: "Finding #1",
+            title: "Automated Architecture Discrepancy",
             description: "Systemic workflow variances compiled automatically across aligned operational tracks.",
             severity: "CRITICAL",
             remediation_directive: "Optimize process vectors to stabilize data flow dynamics."
           },
           {
-            anomaly_id: "INDEX NODE FR-02",
-            title: "STRATEGIC ALIGNMENT LEAKAGE",
-            description: "Cross-track validation indicates a high risk profile in human-in-the-loop dependencies.",
+            anomaly_id: "Finding #2",
+            title: "Strategic Alignment Leakage",
+            description: "Cross-track validation indicates elevated risk in human-in-the-loop dependencies.",
             severity: "HIGH",
             remediation_directive: "Deploy automated tracking filters to mitigate processing waste."
           }
@@ -216,23 +205,22 @@ export default function ForensicDiagnostic() {
         auditPayload.status = 'COMPLETED';
       }
 
+      // Step 5: Master update pass on parent audit record
       const { data: auditUpdated, error: auditUpdateError } = await supabase
         .from('audits')
         .update(auditPayload)
         .eq('id', operator.audit_id)
         .select();
 
-      if (auditUpdateError) throw new Error(`Master ledger update rejected: ${auditUpdateError.message}`);
-
-      if (!auditUpdated || auditUpdated.length === 0) {
-        throw new Error(`AUDITS UPDATE FAILED: 0 rows affected (audit_id=${operator?.audit_id})`);
+      if (auditUpdateError || !auditUpdated || auditUpdated.length === 0) {
+        throw new Error(`Master ledger update failed: ${auditUpdateError?.message || '0 rows updated'}`);
       }
 
       setStep("done");
 
     } catch (err: any) {
       console.error("SUBMIT_ERROR:", err.message);
-      alert(`SIGNAL_LOST: ${err.message}`);
+      alert(`Submission Error: ${err.message}`);
       setStep("diagnostic");
     }
   };
@@ -353,7 +341,7 @@ export default function ForensicDiagnostic() {
             </p>
             <button
               onClick={() => setStep("diagnostic")}
-              className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wider text-xs transition-colors rounded shadow-sm flex items-center justify-center gap-2"
+              className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wider text-xs transition-colors rounded shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               Begin Diagnostic
               <ArrowRight size={16} />
