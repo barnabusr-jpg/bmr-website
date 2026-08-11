@@ -84,21 +84,22 @@ export default function ForensicDiagnosticWizard({
 
     let filtered = [];
 
-    // STRICT PRIORITY MATCHING: Evaluates TECH_MGMT before general MGMT string matches
-    if (normalizedRole === 'SYSTEM_USER' || normalizedRole.includes('SYS') || normalizedRole.includes('USER')) {
+    // STRICT NODE TARGETING (PREVENTS MANAGERIAL LEAKAGE)
+    if (normalizedRole === 'SYSTEM_USER' || normalizedRole.includes('USER') || normalizedRole.includes('SYS')) {
       filtered = rawList.filter(q => 
-        q.pillar?.toUpperCase() === 'AVS' && 
-        (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('TECH'))
+        (q.pillar?.toUpperCase() === 'AVS' || q.pillar?.toUpperCase() === 'HAI') && 
+        (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('SYS'))
       );
-    } else if (normalizedRole === 'TECH_MGMT' || normalizedRole.includes('TECH')) {
+    } else if (normalizedRole === 'TECH_MGMT') {
+      // STRICT EQUALITY TO TECHNICAL IN AVS DATASET
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
-        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('MANAGE') || q.target_node?.toUpperCase().includes('TECH'))
+        q.target_node?.toUpperCase() === 'TECHNICAL'
       );
     } else if (normalizedRole === 'OPS_MGMT' || normalizedRole.includes('OPS') || normalizedRole === 'MANAGERIAL') {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'HAI' && 
-        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('OPS'))
+        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('OPS') || q.target_node?.toUpperCase() === 'MANAGERIAL')
       );
     } else if (normalizedRole === 'EXECUTIVE' || normalizedRole.includes('EXEC')) {
       filtered = rawList.filter(q => 
