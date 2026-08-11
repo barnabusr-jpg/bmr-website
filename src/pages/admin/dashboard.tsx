@@ -215,22 +215,14 @@ export default function AdminDashboard() {
       String(n.persona_type || '').toUpperCase().trim() === roleKey.toUpperCase().trim()
     );
 
-    if (matchingNode?.access_code) {
-      window.open(`/forensic?code=${matchingNode.access_code}`, '_blank');
-      return;
-    }
+    let mappedPersona = roleKey.toUpperCase();
+    if (mappedPersona === 'TECHNICAL') mappedPersona = 'TECH_MGMT';
+    if (mappedPersona === 'MANAGERIAL') mappedPersona = 'OPS_MGMT';
 
-    const matrixPayload = {
-      org: auditRecord.org_name,
-      sec: String(auditRecord.sector || 'INDUSTRIAL').toUpperCase().trim(),
-      ans: {}
-    };
-
-    const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
     const targetEmail = matchingNode?.email || "hello@bmradvisory.co";
 
     window.open(
-      `/forensic?id=${auditRecord.id}&matrix=${compressedToken}&track=${roleKey.toUpperCase()}&role=${roleKey.toUpperCase()}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&auth=admin_verified_secure`,
+      `/forensic?role=${mappedPersona}&track=${mappedPersona}&persona=${mappedPersona}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&flow=quad_node&auth=admin_verified_secure`,
       '_blank'
     );
   };
@@ -388,7 +380,6 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Audits Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'frameworks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Frameworks</button>
             
-            {/* UPDATED: Points explicitly to /forensic with id, org, matrix, and flow=quad_node */}
             <button 
               type="button"
               onClick={(e) => {
@@ -396,22 +387,15 @@ export default function AdminDashboard() {
                 const activeAudit = data.find(item => item.id === expandedRow);
                 
                 if (activeAudit) {
-                  const sectorTag = String(activeAudit.sector || 'INDUSTRIAL').toUpperCase().trim();
-                  
-                  const matrixPayload = {
-                    org: activeAudit.org_name,
-                    sec: sectorTag,
-                    ans: {} 
-                  };
-
-                  const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
-                  
                   window.open(
-                    `/forensic?id=${activeAudit.id}&org=${encodeURIComponent(activeAudit.org_name)}&matrix=${compressedToken}&flow=quad_node&auth=admin_verified_secure`, 
+                    `/forensic?org=${encodeURIComponent(activeAudit.org_name)}&flow=quad_node&auth=admin_verified_secure`, 
                     '_blank'
                   );
                 } else {
-                  alert("Please expand an audit row below before configuring Quad Node.");
+                  window.open(
+                    `/forensic?flow=quad_node&auth=admin_verified_secure`, 
+                    '_blank'
+                  );
                 }
               }}
               className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded border transition-colors cursor-pointer ${
