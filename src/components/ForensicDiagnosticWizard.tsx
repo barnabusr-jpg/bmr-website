@@ -43,40 +43,43 @@ export default function ForensicDiagnosticWizard({
   const [activeRole, setActiveRole] = useState<string>('');
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const emailParam = params.get('email');
-      const roleParam = params.get('role');
-      const trackParam = params.get('track');
-      const personaParam = params.get('persona');
-      
-      if (emailParam) {
-        window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
-      }
+    if (typeof window === 'undefined') return;
 
-      const resolvedRole = role || persona || track || roleParam || trackParam || personaParam;
-      if (resolvedRole) {
-        window.sessionStorage.setItem('stakeholder_runtime_role', resolvedRole);
-        setActiveRole(resolvedRole); 
-      } else {
-        const cachedRole = window.sessionStorage.getItem('stakeholder_runtime_role');
-        if (cachedRole) setActiveRole(cachedRole);
-      }
-
-      const savedAnswers: Record<string, 'A' | 'B' | 'C' | 'D'> = {};
-      ['IGF', 'AVS', 'HAI'].forEach(pillar => {
-        const cached = window.sessionStorage.getItem(`quad_cache_${pillar.toUpperCase()}`);
-        if (cached) {
-          try {
-            Object.assign(savedAnswers, JSON.parse(cached));
-          } catch (e) {
-            console.error(`Failed to combine track cache for ${pillar}:`, e);
-          }
-        }
-      });
-      setAnswers(savedAnswers);
+    const params = new URLSearchParams(window.location.search);
+    const emailParam = params.get('email');
+    const roleParam = params.get('role');
+    const trackParam = params.get('track');
+    const personaParam = params.get('persona');
+    
+    if (emailParam) {
+      window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
     }
-  }, [activePillar, role, persona, track]);
+
+    const resolvedRole = role || persona || track || roleParam || trackParam || personaParam || '';
+    const cleanOrg = companyName.trim();
+
+    if (resolvedRole && cleanOrg) {
+      const cleanRole = resolvedRole.toUpperCase().trim();
+      window.sessionStorage.setItem('stakeholder_runtime_role', cleanRole);
+      setActiveRole(cleanRole); 
+
+      const scopedCacheKey = `quad_cache_${cleanOrg}_${cleanRole}`;
+      const cachedAnswers = window.sessionStorage.getItem(scopedCacheKey);
+
+      if (cachedAnswers) {
+        try {
+          setAnswers(JSON.parse(cachedAnswers));
+        } catch (e) {
+          console.error("Failed to parse scoped answer cache:", e);
+          setAnswers({});
+        }
+      } else {
+        setAnswers({});
+      }
+    } else {
+      setAnswers({});
+    }
+  }, [companyName, role, persona, track]);
 
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
@@ -84,14 +87,12 @@ export default function ForensicDiagnosticWizard({
 
     let filtered = [];
 
-    // STRICT NODE TARGETING (PREVENTS MANAGERIAL LEAKAGE)
     if (normalizedRole === 'SYSTEM_USER' || normalizedRole.includes('USER') || normalizedRole.includes('SYS')) {
       filtered = rawList.filter(q => 
         (q.pillar?.toUpperCase() === 'AVS' || q.pillar?.toUpperCase() === 'HAI') && 
         (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('SYS'))
       );
     } else if (normalizedRole === 'TECH_MGMT') {
-      // STRICT EQUALITY TO TECHNICAL IN AVS DATASET
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
         q.target_node?.toUpperCase() === 'TECHNICAL'
@@ -116,25 +117,15 @@ export default function ForensicDiagnosticWizard({
   }, [activePillar, activeRole]);
 
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
-    const targetQuestion = Object.values(forensicQuestions).find(q => q.id === questionId);
-    const targetPillar = targetQuestion?.pillar || activePillar;
-
     setAnswers(prev => {
       const prefixedKey = `quad_${questionId}`;
       const updated = { ...prev, [prefixedKey]: choiceKey };
       
-      if (typeof window !== 'undefined') {
-        const targetPillarAnswers: Record<string, string> = {};
-        Object.keys(updated).forEach(key => {
-          const cleanId = key.replace(/^quad_/, '');
-          const qObj = Object.values(forensicQuestions).find(q => q.id === cleanId);
-          
-          if (qObj?.pillar?.toUpperCase() === targetPillar.toUpperCase()) {
-            targetPillarAnswers[key] = updated[key];
-          }
-        });
-
-        window.sessionStorage.setItem(`quad_cache_${targetPillar.toUpperCase()}`, JSON.stringify(targetPillarAnswers));
+      if (typeof window !== 'undefined' && companyName && activeRole) {
+        const cleanOrg = companyName.trim();
+        const cleanRole = activeRole.toUpperCase().trim();
+        const scopedCacheKey = `quad_cache_${cleanOrg}_${cleanRole}`;
+        window.sessionStorage.setItem(scopedCacheKey, JSON.stringify(updated));
       }
       return updated;
     });
@@ -146,22 +137,6 @@ export default function ForensicDiagnosticWizard({
     
     if (typeof window !== 'undefined') {
       try {
-        const ddIgf = JSON.parse(window.sessionStorage.getItem('deepdive_cache_IGF') || '{}');
-        const ddAvs = JSON.parse(window.sessionStorage.getItem('deepdive_cache_AVS') || '{}');
-        const ddHai = JSON.parse(window.sessionStorage.getItem('deepdive_cache_HAI') || '{}');
-
-        const quadIgf = JSON.parse(window.sessionStorage.getItem('quad_cache_IGF') || '{}');
-        const quadAvs = JSON.parse(window.sessionStorage.getItem('quad_cache_AVS') || '{}');
-        const quadHai = JSON.parse(window.sessionStorage.getItem('quad_cache_HAI') || '{}');
-        
-        Object.keys(ddIgf).forEach(k => fullyCompiledMatrix[`deepdive_${k.replace(/^deepdive_/, '')}`] = ddIgf[k]);
-        Object.keys(ddAvs).forEach(k => fullyCompiledMatrix[`deepdive_${k.replace(/^deepdive_/, '')}`] = ddAvs[k]);
-        Object.keys(ddHai).forEach(k => fullyCompiledMatrix[`deepdive_${k.replace(/^deepdive_/, '')}`] = ddHai[k]);
-
-        Object.keys(quadIgf).forEach(k => fullyCompiledMatrix[`quad_${k.replace(/^quad_/, '')}`] = quadIgf[k]);
-        Object.keys(quadAvs).forEach(k => fullyCompiledMatrix[`quad_${k.replace(/^quad_/, '')}`] = quadAvs[k]);
-        Object.keys(quadHai).forEach(k => fullyCompiledMatrix[`quad_${k.replace(/^quad_/, '')}`] = quadHai[k]);
-
         Object.keys(answers).forEach(k => {
           const cleanKey = k.startsWith('quad_') ? k : `quad_${k}`;
           fullyCompiledMatrix[cleanKey] = answers[k];
