@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock, RotateCcw } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
@@ -54,13 +54,14 @@ export default function ForensicEngineRoot() {
       const roleParam = params.get('role') as PersonaKey;
       const pillarParam = params.get('pillar') as FunnelPillar;
       const authVal = params.get('auth');
+      const matrixParam = params.get('matrix');
 
       const isAdminSession = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
       const isParticipantRoute = !!(codeParam || roleParam);
 
       let targetCompanyName = (entityParam || companyName || '').trim().replace(/\s+/g, ' ');
 
-      // 1. PARTICIPANT ROUTE FROM EMAIL LINK: Dynamically evaluate computed pillar and open Wizard directly
+      // 1. PARTICIPANT ROUTE FROM EMAIL LINK: Route directly to WIZARD
       if (isParticipantRoute && roleParam) {
         const targetPillar = (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam.toUpperCase()))
           ? (pillarParam.toUpperCase() as FunnelPillar)
@@ -86,7 +87,16 @@ export default function ForensicEngineRoot() {
         return;
       }
 
-      // 2. READ LOCALSTORAGE CACHE SCOPED TO ORGANIZATION
+      // 2. ADMIN CLEAN SETUP: Launching Quad Node without id or matrix forces INTAKE setup view
+      if (isAdminSession && flowParam === 'quad_node' && !idParam && !matrixParam) {
+        if (targetCompanyName) {
+          setCompanyName(targetCompanyName);
+        }
+        setViewState('INTAKE');
+        return;
+      }
+
+      // 3. REHYDRATE EXISTING AUDIT IF AUTHORIZED ADMIN PROVIDES ID OR MATRIX
       let cachedCompletions = { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
       let cachedEmails = emails;
       let cachedResponses = { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
@@ -96,7 +106,9 @@ export default function ForensicEngineRoot() {
         if (rawCache) {
           try {
             const parsed = JSON.parse(rawCache);
-            if (parsed?.completions) cachedCompletions = parsed.completions;
+            if (parsed?.companyName === targetCompanyName && parsed?.completions) {
+              cachedCompletions = parsed.completions;
+            }
             if (parsed?.emails) cachedEmails = parsed.emails;
             if (parsed?.responses) cachedResponses = parsed.responses;
           } catch (e) { console.error(e); }
@@ -125,14 +137,14 @@ export default function ForensicEngineRoot() {
 
           activeAudit = auditData;
         }
-      } else if (idParam) {
+      } else if (idParam && isAdminSession) {
         const { data } = await supabase
           .from('audits')
           .select('id, org_name, sfi_score, decay_pct, sector, status')
           .eq('id', idParam)
           .maybeSingle();
         activeAudit = data;
-      } else if (targetCompanyName) {
+      } else if (targetCompanyName && matrixParam && isAdminSession) {
         const { data } = await supabase
           .from('audits')
           .select('id, org_name, sfi_score, decay_pct, sector, status')
@@ -227,12 +239,6 @@ export default function ForensicEngineRoot() {
             setViewState('WIZARD');
           }
         }
-      } else if (isAdminSession && flowParam === 'quad_node') {
-        if (targetCompanyName) {
-          setCompanyName(targetCompanyName);
-          setIsCompanyFromDB(true);
-        }
-        setViewState('INTAKE');
       } else if (targetCompanyName) {
         setTriangulation(prev => prev || {
           companyName: targetCompanyName,
@@ -242,6 +248,8 @@ export default function ForensicEngineRoot() {
           responses: cachedResponses
         });
         setViewState('HUB');
+      } else {
+        setViewState('INTAKE');
       }
     } catch (err) {
       console.error("QUAD_NODE_SYNC_ERROR: Matrix re-sync failed", err);
@@ -250,6 +258,7 @@ export default function ForensicEngineRoot() {
     }
   }, [companyName, activePillar, emails]);
 
+  // HARDENED SECURITY & AUTHORIZATION GATE
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
       try { 
@@ -257,14 +266,16 @@ export default function ForensicEngineRoot() {
         const authVal = params.get('auth'); 
         const codeParam = params.get('code');
         const roleParam = params.get('role') as PersonaKey; 
-        const matrixParam = params.get('matrix');
-        const idParam = params.get('id');
-        const flowParam = params.get('flow');
 
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
         const isParticipantRoute = !!(codeParam || roleParam); 
 
-        if (isAdminAuthenticated || isParticipantRoute || matrixParam || idParam || flowParam) { 
+        // CLEAN & STRICT AUTHORIZATION RULE:
+        // 1. Participant routes allow direct stakeholder links via role/code parameters.
+        // 2. Admin sessions pass through cleanly when authenticating setup or explicit audit rehydration.
+        const isAuthorized = isParticipantRoute || isAdminAuthenticated;
+
+        if (isAuthorized) { 
           setAuthorizedAdmin(true); 
           synchronizeEngineDataMatrix();
         } else { 
@@ -292,7 +303,7 @@ export default function ForensicEngineRoot() {
           
     setInputError(''); 
 
-    // 1. PURGE BROWSER STORAGE FOR FRESH DISPATCH
+    // Purge local and session cache on new dispatches
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(`bmr_matrix_run_${sanitizedInput}`);
       ['EXECUTIVE', 'TECH_MGMT', 'OPS_MGMT', 'SYSTEM_USER'].forEach(p => {
@@ -328,7 +339,7 @@ export default function ForensicEngineRoot() {
         setActiveAuditId(parentAuditId);
       }
 
-      // 2. RESET EXISTING OPERATOR STATUSES IN SUPABASE SO NEW DISPATCH LINKS DO NOT LOCK
+      // Reset existing operator status in Supabase so re-dispatched links open cleanly
       if (parentAuditId) {
         await supabase
           .from('operators')
@@ -459,6 +470,13 @@ export default function ForensicEngineRoot() {
     setEmails({ EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }); 
     setTriangulation(null); 
     setActivePersona(null); 
+    setActiveAuditId(null);
+
+    if (typeof window !== 'undefined') {
+      const cleanUrl = `${window.location.pathname}?flow=quad_node&auth=admin_verified_secure`;
+      window.history.replaceState({}, '', cleanUrl);
+    }
+
     setViewState('INTAKE'); 
   }; 
 
@@ -581,7 +599,7 @@ export default function ForensicEngineRoot() {
 
       {viewState === 'HUB' && triangulation && ( 
         <div className="w-full max-w-2xl border border-slate-200 bg-white p-8 md:p-10 text-left rounded-lg shadow-sm"> 
-          <div className="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center"> 
+          <div className="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center gap-4"> 
             <div className="flex items-center gap-3"> 
               <Users size={20} className="text-slate-900" /> 
               <div> 
@@ -589,6 +607,14 @@ export default function ForensicEngineRoot() {
                 <span className="text-[11px] font-mono text-slate-500 block mt-1 uppercase tracking-wider">Organization: {triangulation.companyName}</span> 
               </div> 
             </div> 
+
+            <button 
+              type="button" 
+              onClick={handleSystemReset} 
+              className="text-xs font-mono font-bold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-400 bg-slate-50 px-3 py-1.5 rounded uppercase tracking-wider transition-colors shrink-0 flex items-center gap-1.5 cursor-pointer" 
+            > 
+              <RotateCcw size={12} /> New Setup 
+            </button> 
           </div> 
 
           <div className="space-y-3"> 
