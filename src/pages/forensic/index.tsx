@@ -60,6 +60,7 @@ export default function ForensicEngineRoot() {
 
       let targetCompanyName = (entityParam || companyName || '').trim().replace(/\s+/g, ' ');
 
+      // 1. PARTICIPANT ROUTE FROM EMAIL LINK: Dynamically evaluate computed pillar and open Wizard directly
       if (isParticipantRoute && roleParam) {
         const targetPillar = (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam.toUpperCase()))
           ? (pillarParam.toUpperCase() as FunnelPillar)
@@ -85,6 +86,7 @@ export default function ForensicEngineRoot() {
         return;
       }
 
+      // 2. READ LOCALSTORAGE CACHE SCOPED TO ORGANIZATION
       let cachedCompletions = { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
       let cachedEmails = emails;
       let cachedResponses = { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
@@ -290,6 +292,7 @@ export default function ForensicEngineRoot() {
           
     setInputError(''); 
 
+    // 1. PURGE BROWSER STORAGE FOR FRESH DISPATCH
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(`bmr_matrix_run_${sanitizedInput}`);
       ['EXECUTIVE', 'TECH_MGMT', 'OPS_MGMT', 'SYSTEM_USER'].forEach(p => {
@@ -323,6 +326,17 @@ export default function ForensicEngineRoot() {
         }
         parentAuditId = parentAudit.id;
         setActiveAuditId(parentAuditId);
+      }
+
+      // 2. RESET EXISTING OPERATOR STATUSES IN SUPABASE SO NEW DISPATCH LINKS DO NOT LOCK
+      if (parentAuditId) {
+        await supabase
+          .from('operators')
+          .update({ 
+            survey_completed: false, 
+            status: 'PENDING' 
+          })
+          .or(`audit_id.eq.${parentAuditId},group_id.eq.${parentAuditId}`);
       }
 
       const initialTriangulation = { 
