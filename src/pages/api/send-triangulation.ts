@@ -51,7 +51,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const roleName = roleLabels[roleKey] || roleKey;
       const dynamicTrack = roleToPillarMap[roleKey] || targetPillar;
       
-      // auth=true REMOVED TO PREVENT PARTICIPANT/ADMIN SESSION COLLISIONS
       const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&track=${roleKey}&persona=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&flow=quad_node`;
 
       let emailHtmlValue = '';
@@ -98,9 +97,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   </div>
 
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
-                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing</p>
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing (30 Mins)</p>
+                    <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">
+                      Schedule a 30-minute calibration briefing with senior advisory leadership to review consolidated diagnostic findings:
+                    </p>
                     <a href="https://calendly.com/hello-bmradvisory/forensic-briefing" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
-                      Schedule Calibration Briefing →
+                      Schedule 30-Min Calibration Briefing →
                     </a>
                   </div>
 
