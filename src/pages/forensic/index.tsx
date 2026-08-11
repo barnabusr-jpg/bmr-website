@@ -10,6 +10,13 @@ import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
 
+const PERSONA_ALIASES: Record<PersonaKey, string[]> = {
+  EXECUTIVE: ['EXECUTIVE', 'IGF', 'EXEC'],
+  TECH_MGMT: ['TECHNICAL', 'TECH_MGMT', 'AVS', 'TECH'],
+  OPS_MGMT: ['MANAGERIAL', 'OPS_MGMT', 'HAI', 'OPS'],
+  SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER'],
+};
+
 interface TriangulationState { 
   companyName: string; 
   pillar: FunnelPillar; 
@@ -169,21 +176,22 @@ export default function ForensicEngineRoot() {
 
         const { data: existingOperators } = await supabase
           .from('operators')
-          .select('persona_type, email, survey_completed, status')
+          .select('persona_type, email, survey_completed, status, audit_id, group_id')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
         if (existingOperators && existingOperators.length > 0) {
           const checkDbDone = (pKey: PersonaKey) => {
+            const allowedTypes = PERSONA_ALIASES[pKey];
             const matches = existingOperators.filter(o => {
-              const p = String(o.persona_type || '').toUpperCase().trim();
-              if (pKey === 'EXECUTIVE') return p === 'EXECUTIVE' || p === 'IGF';
-              if (pKey === 'TECH_MGMT') return p === 'TECHNICAL' || p === 'TECH_MGMT' || p === 'AVS';
-              if (pKey === 'OPS_MGMT') return p === 'MANAGERIAL' || p === 'OPS_MGMT' || p === 'HAI';
-              if (pKey === 'SYSTEM_USER') return p === 'SYSTEM_USER' || p === 'SYS' || p === 'USER';
-              return false;
+              const rawPersona = String(o.persona_type || '').toUpperCase().trim();
+              return allowedTypes.includes(rawPersona);
             });
 
-            return matches.some(m => m.survey_completed === true || String(m.status).toUpperCase() === 'COMPLETED');
+            return matches.some(m => 
+              m.survey_completed === true || 
+              String(m.status).toUpperCase() === 'COMPLETED' ||
+              String(m.status).toUpperCase() === 'COMPLETE'
+            );
           };
 
           const mergedCompletions: Record<PersonaKey, boolean> = {
@@ -194,10 +202,10 @@ export default function ForensicEngineRoot() {
           };
 
           const loadedEmails: Record<PersonaKey, string> = {
-            EXECUTIVE: existingOperators.find(o => ['EXECUTIVE', 'IGF'].includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.EXECUTIVE,
-            TECH_MGMT: existingOperators.find(o => ['TECHNICAL', 'TECH_MGMT', 'AVS'].includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.TECH_MGMT,
-            OPS_MGMT: existingOperators.find(o => ['MANAGERIAL', 'OPS_MGMT', 'HAI'].includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.OPS_MGMT,
-            SYSTEM_USER: existingOperators.find(o => ['SYSTEM_USER', 'SYS', 'USER'].includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.SYSTEM_USER
+            EXECUTIVE: existingOperators.find(o => PERSONA_ALIASES.EXECUTIVE.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.EXECUTIVE,
+            TECH_MGMT: existingOperators.find(o => PERSONA_ALIASES.TECH_MGMT.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.TECH_MGMT,
+            OPS_MGMT: existingOperators.find(o => PERSONA_ALIASES.OPS_MGMT.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.OPS_MGMT,
+            SYSTEM_USER: existingOperators.find(o => PERSONA_ALIASES.SYSTEM_USER.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.SYSTEM_USER
           };
 
           setEmails(loadedEmails);
@@ -227,9 +235,9 @@ export default function ForensicEngineRoot() {
         if (matchedOperator) {
           const rawPersona = String(matchedOperator.persona_type || '').toUpperCase().trim();
           let mappedKey: PersonaKey = 'EXECUTIVE';
-          if (rawPersona === 'TECHNICAL' || rawPersona === 'TECH_MGMT') mappedKey = 'TECH_MGMT';
-          if (rawPersona === 'MANAGERIAL' || rawPersona === 'OPS_MGMT') mappedKey = 'OPS_MGMT';
-          if (rawPersona === 'SYSTEM_USER' || rawPersona === 'SYS' || rawPersona === 'USER') mappedKey = 'SYSTEM_USER';
+          if (PERSONA_ALIASES.TECH_MGMT.includes(rawPersona)) mappedKey = 'TECH_MGMT';
+          if (PERSONA_ALIASES.OPS_MGMT.includes(rawPersona)) mappedKey = 'OPS_MGMT';
+          if (PERSONA_ALIASES.SYSTEM_USER.includes(rawPersona)) mappedKey = 'SYSTEM_USER';
 
           setActivePersona(mappedKey);
 
@@ -258,6 +266,26 @@ export default function ForensicEngineRoot() {
     }
   }, [companyName, activePillar, emails]);
 
+  // REALTIME DATABASE LISTENER FOR HUB MATRIX UPDATES
+  useEffect(() => {
+    if (!activeAuditId) return;
+
+    const channel = supabase
+      .channel(`audit-operators-${activeAuditId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'operators' },
+        () => {
+          synchronizeEngineDataMatrix();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [activeAuditId, synchronizeEngineDataMatrix]);
+
   // HARDENED SECURITY & AUTHORIZATION GATE
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
@@ -270,9 +298,6 @@ export default function ForensicEngineRoot() {
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
         const isParticipantRoute = !!(codeParam || roleParam); 
 
-        // CLEAN & STRICT AUTHORIZATION RULE:
-        // 1. Participant routes allow direct stakeholder links via role/code parameters.
-        // 2. Admin sessions pass through cleanly when authenticating setup or explicit audit rehydration.
         const isAuthorized = isParticipantRoute || isAdminAuthenticated;
 
         if (isAuthorized) { 
@@ -339,15 +364,28 @@ export default function ForensicEngineRoot() {
         setActiveAuditId(parentAuditId);
       }
 
-      // Reset existing operator status in Supabase so re-dispatched links open cleanly
+      // Explicit 4-Node Provisioning / Reset to ensure all 4 rows exist in DB
       if (parentAuditId) {
+        const personaMapping: Record<PersonaKey, string> = {
+          EXECUTIVE: 'EXECUTIVE',
+          TECH_MGMT: 'TECHNICAL',
+          OPS_MGMT: 'MANAGERIAL',
+          SYSTEM_USER: 'SYSTEM_USER',
+        };
+
+        const rowsToProvision = (Object.keys(emails) as PersonaKey[]).map(pKey => ({
+          audit_id: parentAuditId,
+          group_id: parentAuditId,
+          persona_type: personaMapping[pKey],
+          email: emails[pKey],
+          survey_completed: false,
+          status: 'PENDING',
+          updated_at: new Date().toISOString()
+        }));
+
         await supabase
           .from('operators')
-          .update({ 
-            survey_completed: false, 
-            status: 'PENDING' 
-          })
-          .or(`audit_id.eq.${parentAuditId},group_id.eq.${parentAuditId}`);
+          .upsert(rowsToProvision, { onConflict: 'audit_id,persona_type' });
       }
 
       const initialTriangulation = { 
@@ -432,17 +470,21 @@ export default function ForensicEngineRoot() {
       ? personaAnswers 
       : { status: "completed_via_wizard", completed_at: new Date().toISOString() };
 
+    const targetPersona = activePersona;
+    const targetAuditId = activeAuditId;
+
+    // 1. UPDATE LOCAL REACT STATE IMMEDIATELY
     setTriangulation(prev => {
-      if (!prev || !activePersona) return prev;
+      if (!prev) return prev;
       const updated = {
         ...prev,
         completions: {
           ...prev.completions,
-          [activePersona]: true
+          [targetPersona]: true
         },
         responses: {
           ...prev.responses,
-          [activePersona]: answersToSave
+          [targetPersona]: answersToSave
         }
       };
       if (typeof window !== 'undefined') {
@@ -450,6 +492,54 @@ export default function ForensicEngineRoot() {
       }
       return updated;
     });
+
+    // 2. PERSIST TO SUPABASE (UPDATE WITH INSERT FALLBACK)
+    if (targetAuditId) {
+      const aliases = PERSONA_ALIASES[targetPersona];
+      const canonicalType = 
+        targetPersona === 'TECH_MGMT' ? 'TECHNICAL' :
+        targetPersona === 'OPS_MGMT' ? 'MANAGERIAL' : targetPersona;
+
+      try {
+        const { data: updatedRows, error: updateErr } = await supabase
+          .from('operators')
+          .update({
+            survey_completed: true,
+            status: 'COMPLETED',
+            raw_responses: answersToSave,
+            updated_at: new Date().toISOString()
+          })
+          .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
+          .in('persona_type', aliases)
+          .select('id');
+
+        if (updateErr) {
+          console.error('[Save Handler] DB Update error:', updateErr.message);
+        }
+
+        // Fallback to INSERT if no existing row was updated
+        if (!updateErr && (!updatedRows || updatedRows.length === 0)) {
+          await supabase
+            .from('operators')
+            .insert({
+              audit_id: targetAuditId,
+              group_id: targetAuditId,
+              persona_type: canonicalType,
+              email: triangulation?.emails[targetPersona] || null,
+              survey_completed: true,
+              status: 'COMPLETED',
+              raw_responses: answersToSave,
+              updated_at: new Date().toISOString()
+            });
+        }
+
+        // RE-SYNC MATRIX DIRECTLY AFTER WRITE
+        await synchronizeEngineDataMatrix();
+
+      } catch (dbErr) {
+        console.error('[Save Handler] Database persistence exception:', dbErr);
+      }
+    }
 
     setActivePersona(null); 
     const params = new URLSearchParams(window.location.search);
