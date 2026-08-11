@@ -41,7 +41,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const sentenceCompany = toSentenceCase(companyName);
     const targetPillar = activePillar || 'AVS';
 
-    // STRIP QUERY PARAMS FROM ORIGIN TO PREVENT LEAKING ?code= PARAMS
+    // Strip query string from originUrl to prevent leaking admin ?code= or ?id= params
     const cleanOrigin = (originUrl || 'https://www.bmradvisory.co/forensic').split('?')[0];
     
     const mailRequests = Object.entries(endpoints).map(([roleKey, emailAddress]) => {
