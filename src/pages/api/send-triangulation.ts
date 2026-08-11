@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabaseClient';
 
 function toSentenceCase(str: string): string {
   if (!str) return 'Your company';
@@ -42,39 +41,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const sentenceCompany = toSentenceCase(companyName);
     const targetPillar = activePillar || 'AVS';
 
-    let parentAuditId = null;
-    const { data: existingAudit } = await supabase
-      .from('audits')
-      .select('id')
-      .ilike('org_name', formattedOrg)
-      .maybeSingle();
-
-    if (existingAudit) {
-      parentAuditId = existingAudit.id;
-    }
-
     const cleanOrigin = (originUrl || 'https://www.bmradvisory.co/forensic')
       .replace(/\/diagnostic\/forensic\/?$/, '/forensic');
     
-    const mailRequests = Object.entries(endpoints).map(async ([roleKey, emailAddress]) => {
+    const mailRequests = Object.entries(endpoints).map(([roleKey, emailAddress]) => {
       if (!emailAddress || typeof emailAddress !== 'string') return null;
 
       const targetEmail = (emailAddress as string).toLowerCase().trim();
       const roleName = roleLabels[roleKey] || roleKey;
       const dynamicTrack = roleToPillarMap[roleKey] || targetPillar;
       
-      // Upsert operator in Supabase to track status across sessions
-      if (parentAuditId) {
-        await supabase.from('operators').upsert({
-          audit_id: parentAuditId,
-          group_id: parentAuditId,
-          persona_type: roleKey,
-          email: targetEmail,
-          status: 'PENDING'
-        }, { onConflict: 'audit_id,persona_type' });
-      }
-
-      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&track=${roleKey}&persona=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&flow=quad_node&auth=true${parentAuditId ? `&id=${parentAuditId}` : ''}`;
+      // auth=true REMOVED TO PREVENT PARTICIPANT/ADMIN SESSION COLLISIONS
+      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&track=${roleKey}&persona=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&flow=quad_node`;
 
       let emailHtmlValue = '';
 
@@ -84,19 +62,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             <tr>
               <td align="center" style="padding: 40px 20px;">
                 <div style="max-width: 600px; width: 100%; background: #ffffff; color: #0f172a; padding: 40px; border: 1px solid #e2e8f0; border-top: 6px solid #0f172a; border-radius: 6px; box-sizing: border-box; text-align: left;">
+                  
                   <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px;">
                     BMR Solutions // Quad-Node Diagnostic Dispatch
                   </h2>
                   <p style="font-size: 11px; font-family: monospace; color: #64748b; margin: 0 0 20px 0; font-weight: 600;">
                     Target Organization: ${formattedOrg}
                   </p>
+                  
                   <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
+                  
                   <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 16px 0;">
                     The Quad-Node pre-automation diagnostic assessment for <strong>${sentenceCompany}</strong> is underway.
                   </p>
+
                   <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 24px 0;">
                     Invitation links have been dispatched across the 4 Quad-Node persona tracks (Executive, Tech Management, Ops Management, System User) to evaluate operational friction, schema stability, and risk guardrails.
                   </p>
+
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 20px; margin-bottom: 16px; border-radius: 4px; text-align: left;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 1: Executive Assessment Module</p>
                     <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">
@@ -106,22 +89,26 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       Open Executive Quad-Node Track →
                     </a>
                   </div>
+
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 2: Quad-Node Stakeholder Alignment</p>
                     <p style="margin: 0; font-size: 13px; color: #475569;">
                       Ensure technical management, operations management, and core system users access their respective node links.
                     </p>
                   </div>
+
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing</p>
                     <a href="https://calendly.com/hello-bmradvisory/forensic-briefing" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
                       Schedule Calibration Briefing →
                     </a>
                   </div>
+
                   <p style="font-size: 12px; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 24px;">
                     Sincerely,<br/>
                     <strong style="color: #0f172a;">BMR Solutions Independent Advisory</strong>
                   </p>
+                  
                 </div>
               </td>
             </tr>
@@ -133,6 +120,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             <tr>
               <td align="center" style="padding: 40px 20px;">
                 <div style="max-width: 600px; width: 100%; background: #ffffff; color: #0f172a; padding: 40px; border: 1px solid #e2e8f0; border-top: 6px solid #0f172a; border-radius: 6px; box-sizing: border-box; text-align: left;">
+                  
                   <div style="margin-bottom: 24px;">
                     <h2 style="color: #0f172a; font-weight: 800; margin: 0; letter-spacing: -0.5px; font-size: 20px; line-height: 1.3;">
                       ${isNudge ? 'Quad-Node Assessment Reminder' : 'Quad-Node Diagnostic Track Authorized'}
@@ -141,7 +129,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       Organization: ${formattedOrg}
                     </p>
                   </div>
+
                   <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
+                  
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
                     <span style="color: #64748b; font-family: monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">
                       ASSIGNED STAKEHOLDER TRACK
@@ -150,9 +140,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       ${roleName}
                     </span>
                   </div>
+
                   <p style="font-size: 14px; line-height: 1.6; color: #334155; font-weight: 400; margin: 0 0 24px 0;">
                     Leadership at <strong>${sentenceCompany}</strong> has provisioned a Quad-Node operational diagnostic stream. Your direct feedback is required to evaluate workflow friction and schema stability within the <strong>${dynamicTrack} Framework Layer</strong>.
                   </p>
+                  
                   <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 24px; margin: 24px 0; text-align: center; border-radius: 4px;">
                     <p style="font-size: 11px; font-family: monospace; color: #64748b; margin-bottom: 16px; font-weight: 600; text-transform: uppercase;">
                       SECURE DIAGNOSTIC TERMINAL
@@ -161,9 +153,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                       Launch Quad-Node Track →
                     </a>
                   </div>
+
                   <p style="font-size: 11px; color: #94a3b8; line-height: 1.6; font-family: monospace; border-top: 1px solid #f1f5f9; padding-top: 20px; margin: 32px 0 0 0; text-transform: uppercase;">
                     Confidential // BMR Solutions Independent Governance
                   </p>
+
                 </div>
               </td>
             </tr>
