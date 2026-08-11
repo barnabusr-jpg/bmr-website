@@ -60,7 +60,6 @@ export default function ForensicEngineRoot() {
 
       let targetCompanyName = (entityParam || companyName || '').trim().replace(/\s+/g, ' ');
 
-      // 1. PARTICIPANT ROUTE FROM EMAIL LINK: Dynamically evaluate computed pillar and open Wizard directly
       if (isParticipantRoute && roleParam) {
         const targetPillar = (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam.toUpperCase()))
           ? (pillarParam.toUpperCase() as FunnelPillar)
@@ -86,7 +85,6 @@ export default function ForensicEngineRoot() {
         return;
       }
 
-      // 2. READ LOCALSTORAGE CACHE AS SOURCE OF TRUTH FOR COMPLETION BUTTONS
       let cachedCompletions = { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
       let cachedEmails = emails;
       let cachedResponses = { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
@@ -291,6 +289,13 @@ export default function ForensicEngineRoot() {
     } 
           
     setInputError(''); 
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(`bmr_matrix_run_${sanitizedInput}`);
+      ['EXECUTIVE', 'TECH_MGMT', 'OPS_MGMT', 'SYSTEM_USER'].forEach(p => {
+        window.sessionStorage.removeItem(`quad_cache_${sanitizedInput}_${p}`);
+      });
+    }
 
     try { 
       let parentAuditId = activeAuditId;
@@ -579,7 +584,7 @@ export default function ForensicEngineRoot() {
                 <div key={persona} className="border border-slate-200 bg-white p-5 rounded-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
                   <div> 
                     <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{persona.replace('_', ' ')} Track</span> 
-                    <span className="text-xs text-slate-500 block font-mono mt-1">{triangulation.emails[persona]}</span> 
+                    <span className="text-xs text-slate-500 block font-mono font-normal mt-1">{triangulation.emails[persona]}</span> 
                   </div> 
 
                   <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end"> 
