@@ -60,20 +60,23 @@ export default function ForensicEngineRoot() {
 
       let targetCompanyName = (entityParam || companyName || '').trim().replace(/\s+/g, ' ');
 
+      // 1. PARTICIPANT ROUTE FROM EMAIL LINK: Dynamically evaluate computed pillar and open Wizard directly
       if (isParticipantRoute && roleParam) {
+        const targetPillar = (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam.toUpperCase()))
+          ? (pillarParam.toUpperCase() as FunnelPillar)
+          : activePillar;
+
         if (targetCompanyName) {
           setCompanyName(targetCompanyName);
           setIsCompanyFromDB(true);
         }
-        setActivePersona(roleParam);
 
-        if (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam.toUpperCase())) {
-          setActivePillar(pillarParam.toUpperCase() as FunnelPillar);
-        }
+        setActivePersona(roleParam);
+        setActivePillar(targetPillar);
 
         setTriangulation(prev => prev || {
           companyName: targetCompanyName || "Quad Node Client System",
-          pillar: pillarParam || activePillar,
+          pillar: targetPillar,
           emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' },
           completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
           responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
@@ -81,6 +84,23 @@ export default function ForensicEngineRoot() {
 
         setViewState('WIZARD');
         return;
+      }
+
+      // 2. READ LOCALSTORAGE CACHE AS SOURCE OF TRUTH FOR COMPLETION BUTTONS
+      let cachedCompletions = { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
+      let cachedEmails = emails;
+      let cachedResponses = { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
+
+      if (typeof window !== 'undefined' && targetCompanyName) {
+        const rawCache = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
+        if (rawCache) {
+          try {
+            const parsed = JSON.parse(rawCache);
+            if (parsed?.completions) cachedCompletions = parsed.completions;
+            if (parsed?.emails) cachedEmails = parsed.emails;
+            if (parsed?.responses) cachedResponses = parsed.responses;
+          } catch (e) { console.error(e); }
+        }
       }
 
       let activeAudit = null;
@@ -135,71 +155,55 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(targetCalculatedPillar);
 
-        // SYNC ALL OPERATOR SURVEY STATES FROM SUPABASE
         const { data: existingOperators } = await supabase
           .from('operators')
-          .select('persona_type, email, survey_completed, status, raw_responses')
+          .select('persona_type, email, survey_completed, status')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
         if (existingOperators && existingOperators.length > 0) {
-          const checkCompleted = (pType: PersonaKey) => {
+          const checkDbDone = (pKey: PersonaKey) => {
             const matches = existingOperators.filter(o => {
-              const p = String(o.persona_type || '').toUpperCase();
-              if (pType === 'EXECUTIVE') return p === 'EXECUTIVE' || p === 'IGF';
-              if (pType === 'TECH_MGMT') return p === 'TECHNICAL' || p === 'TECH_MGMT' || p === 'AVS';
-              if (pType === 'OPS_MGMT') return p === 'MANAGERIAL' || p === 'OPS_MGMT' || p === 'HAI';
-              if (pType === 'SYSTEM_USER') return p === 'SYSTEM_USER' || p === 'SYS' || p === 'USER';
+              const p = String(o.persona_type || '').toUpperCase().trim();
+              if (pKey === 'EXECUTIVE') return p === 'EXECUTIVE' || p === 'IGF';
+              if (pKey === 'TECH_MGMT') return p === 'TECHNICAL' || p === 'TECH_MGMT' || p === 'AVS';
+              if (pKey === 'OPS_MGMT') return p === 'MANAGERIAL' || p === 'OPS_MGMT' || p === 'HAI';
+              if (pKey === 'SYSTEM_USER') return p === 'SYSTEM_USER' || p === 'SYS' || p === 'USER';
               return false;
             });
 
             return matches.some(m => m.survey_completed === true || String(m.status).toUpperCase() === 'COMPLETED');
           };
 
-          const loadedEmails: Record<PersonaKey, string> = {
-            EXECUTIVE: existingOperators.find(o => ['EXECUTIVE', 'IGF'].includes(o.persona_type?.toUpperCase()))?.email || emails.EXECUTIVE,
-            TECH_MGMT: existingOperators.find(o => ['TECHNICAL', 'TECH_MGMT', 'AVS'].includes(o.persona_type?.toUpperCase()))?.email || emails.TECH_MGMT,
-            OPS_MGMT: existingOperators.find(o => ['MANAGERIAL', 'OPS_MGMT', 'HAI'].includes(o.persona_type?.toUpperCase()))?.email || emails.OPS_MGMT,
-            SYSTEM_USER: existingOperators.find(o => ['SYSTEM_USER', 'SYS', 'USER'].includes(o.persona_type?.toUpperCase()))?.email || emails.SYSTEM_USER
+          const mergedCompletions: Record<PersonaKey, boolean> = {
+            EXECUTIVE: checkDbDone('EXECUTIVE') || cachedCompletions.EXECUTIVE,
+            TECH_MGMT: checkDbDone('TECH_MGMT') || cachedCompletions.TECH_MGMT,
+            OPS_MGMT: checkDbDone('OPS_MGMT') || cachedCompletions.OPS_MGMT,
+            SYSTEM_USER: checkDbDone('SYSTEM_USER') || cachedCompletions.SYSTEM_USER,
           };
 
-          const loadedCompletions: Record<PersonaKey, boolean> = {
-            EXECUTIVE: checkCompleted('EXECUTIVE'),
-            TECH_MGMT: checkCompleted('TECH_MGMT'),
-            OPS_MGMT: checkCompleted('OPS_MGMT'),
-            SYSTEM_USER: checkCompleted('SYSTEM_USER')
+          const loadedEmails: Record<PersonaKey, string> = {
+            EXECUTIVE: existingOperators.find(o => ['EXECUTIVE', 'IGF'].includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.EXECUTIVE,
+            TECH_MGMT: existingOperators.find(o => ['TECHNICAL', 'TECH_MGMT', 'AVS'].includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.TECH_MGMT,
+            OPS_MGMT: existingOperators.find(o => ['MANAGERIAL', 'OPS_MGMT', 'HAI'].includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.OPS_MGMT,
+            SYSTEM_USER: existingOperators.find(o => ['SYSTEM_USER', 'SYS', 'USER'].includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.SYSTEM_USER
           };
 
           setEmails(loadedEmails);
 
-          // Check localStorage backup as secondary source of truth
-          let localCompletions = loadedCompletions;
-          if (typeof window !== 'undefined') {
-            const rawCache = window.localStorage.getItem(`bmr_matrix_run_${activeAudit.org_name}`);
-            if (rawCache) {
-              try {
-                const parsedCache = JSON.parse(rawCache);
-                localCompletions = {
-                  EXECUTIVE: loadedCompletions.EXECUTIVE || parsedCache?.completions?.EXECUTIVE || false,
-                  TECH_MGMT: loadedCompletions.TECH_MGMT || parsedCache?.completions?.TECH_MGMT || false,
-                  OPS_MGMT: loadedCompletions.OPS_MGMT || parsedCache?.completions?.OPS_MGMT || false,
-                  SYSTEM_USER: loadedCompletions.SYSTEM_USER || parsedCache?.completions?.SYSTEM_USER || false,
-                };
-              } catch (e) { console.error(e); }
-            }
-          }
-
-          setTriangulation(prev => {
-            const updated = {
-              companyName: activeAudit.org_name,
-              pillar: targetCalculatedPillar,
-              emails: loadedEmails,
-              completions: localCompletions,
-              responses: prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
-            };
-            if (typeof window !== 'undefined') {
-              window.localStorage.setItem(`bmr_matrix_run_${activeAudit.org_name}`, JSON.stringify(updated));
-            }
-            return updated;
+          setTriangulation({
+            companyName: activeAudit.org_name,
+            pillar: targetCalculatedPillar,
+            emails: loadedEmails,
+            completions: mergedCompletions,
+            responses: cachedResponses
+          });
+        } else {
+          setTriangulation(prev => prev || {
+            companyName: activeAudit.org_name,
+            pillar: targetCalculatedPillar,
+            emails: cachedEmails,
+            completions: cachedCompletions,
+            responses: cachedResponses
           });
         }
 
@@ -213,7 +217,7 @@ export default function ForensicEngineRoot() {
           let mappedKey: PersonaKey = 'EXECUTIVE';
           if (rawPersona === 'TECHNICAL' || rawPersona === 'TECH_MGMT') mappedKey = 'TECH_MGMT';
           if (rawPersona === 'MANAGERIAL' || rawPersona === 'OPS_MGMT') mappedKey = 'OPS_MGMT';
-          if (rawPersona === 'SYSTEM_USER' || rawPersona === 'SYS') mappedKey = 'SYSTEM_USER';
+          if (rawPersona === 'SYSTEM_USER' || rawPersona === 'SYS' || rawPersona === 'USER') mappedKey = 'SYSTEM_USER';
 
           setActivePersona(mappedKey);
 
@@ -229,6 +233,15 @@ export default function ForensicEngineRoot() {
           setIsCompanyFromDB(true);
         }
         setViewState('INTAKE');
+      } else if (targetCompanyName) {
+        setTriangulation(prev => prev || {
+          companyName: targetCompanyName,
+          pillar: activePillar,
+          emails: cachedEmails,
+          completions: cachedCompletions,
+          responses: cachedResponses
+        });
+        setViewState('HUB');
       }
     } catch (err) {
       console.error("QUAD_NODE_SYNC_ERROR: Matrix re-sync failed", err);
@@ -236,27 +249,6 @@ export default function ForensicEngineRoot() {
       isSyncingRef.current = false;
     }
   }, [companyName, activePillar, emails]);
-
-  // AUTO-REFRESH MATRIX WHEN TAB REGIONS OR WINDOW ACCESSED
-  useEffect(() => {
-    const handleFocus = () => {
-      synchronizeEngineDataMatrix();
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('focus', handleFocus);
-      window.addEventListener('visibilitychange', handleFocus);
-      window.addEventListener('storage', handleFocus);
-    }
-
-    return () => {
-      if (typeof window !== 'undefined') {
-        window.removeEventListener('focus', handleFocus);
-        window.removeEventListener('visibilitychange', handleFocus);
-        window.removeEventListener('storage', handleFocus);
-      }
-    };
-  }, [synchronizeEngineDataMatrix]);
 
   useEffect(() => { 
     if (typeof window !== 'undefined') { 
@@ -328,13 +320,19 @@ export default function ForensicEngineRoot() {
         setActiveAuditId(parentAuditId);
       }
 
-      setTriangulation({ 
+      const initialTriangulation = { 
         companyName: sanitizedInput, 
         pillar: activePillar, 
         emails: { ...emails }, 
         completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
         responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} } 
-      }); 
+      };
+
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(`bmr_matrix_run_${sanitizedInput}`, JSON.stringify(initialTriangulation));
+      }
+
+      setTriangulation(initialTriangulation); 
       setViewState('HUB'); 
 
       await fetch('/api/send-triangulation', { 
@@ -423,37 +421,8 @@ export default function ForensicEngineRoot() {
       return updated;
     });
 
-    const params = new URLSearchParams(window.location.search);
-    const codeParam = params.get('code')?.toUpperCase().trim() || null;
-
-    let updateSuccess = false;
-
-    if (codeParam) {
-      const { error: rpcErr } = await supabase.rpc('submit_operator_diagnostic', {
-        p_access_code: codeParam,
-        p_raw_responses: answersToSave
-      });
-      if (!rpcErr) updateSuccess = true;
-    }
-
-    if (!updateSuccess && activeAuditId && activePersona) {
-      const dbPersonaType = activePersona === 'TECH_MGMT' ? 'TECHNICAL' 
-        : activePersona === 'OPS_MGMT' ? 'MANAGERIAL' 
-        : activePersona;
-
-      await supabase
-        .from("operators")
-        .upsert({
-          audit_id: activeAuditId,
-          group_id: activeAuditId,
-          persona_type: activePersona,
-          survey_completed: true,
-          status: "COMPLETED",
-          raw_responses: answersToSave,
-        }, { onConflict: 'audit_id,persona_type' });
-    }
-
     setActivePersona(null); 
+    const params = new URLSearchParams(window.location.search);
     if (params.get('code') || params.get('role')) { 
       setViewState('THANK_YOU'); 
     } else { 
