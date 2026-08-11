@@ -41,8 +41,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const sentenceCompany = toSentenceCase(companyName);
     const targetPillar = activePillar || 'AVS';
 
-    const cleanOrigin = (originUrl || 'https://www.bmradvisory.co/forensic')
-      .replace(/\/diagnostic\/forensic\/?$/, '/forensic');
+    // STRIP QUERY PARAMS FROM ORIGIN TO PREVENT LEAKING ?code= PARAMS
+    const cleanOrigin = (originUrl || 'https://www.bmradvisory.co/forensic').split('?')[0];
     
     const mailRequests = Object.entries(endpoints).map(([roleKey, emailAddress]) => {
       if (!emailAddress || typeof emailAddress !== 'string') return null;
@@ -144,7 +144,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   </div>
 
                   <p style="font-size: 14px; line-height: 1.6; color: #334155; font-weight: 400; margin: 0 0 24px 0;">
-                    Leadership at <strong>${sentenceCompany}</strong> has provisioned a Quad-Node operational diagnostic stream. Your direct feedback is required to evaluate workflow friction and schema stability within the <strong>${dynamicTrack} Framework Layer</strong>.
+                    Leadership at <strong>${sentenceCompany}</strong> has provisioned a Quad-Node operational diagnostic stream. Your direct feedback is required to evaluate workflow friction and schema stability within the <strong>${roleName}</strong>.
                   </p>
                   
                   <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 24px; margin: 24px 0; text-align: center; border-radius: 4px;">
