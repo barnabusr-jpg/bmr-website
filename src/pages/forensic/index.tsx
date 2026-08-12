@@ -66,6 +66,8 @@ export default function ForensicEngineRoot() {
         const pillarParam = params.get('pillar') as FunnelPillar; 
         const entityParam = params.get('entity') || params.get('org') || params.get('entity_code'); 
         const roleParam = params.get('role') as PersonaKey; 
+        const viewParam = params.get('view');
+        const flowParam = params.get('flow');
 
         const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
         const isParticipantRoute = !!(roleParam && (entityParam || idParam) && pillarParam); 
@@ -87,7 +89,13 @@ export default function ForensicEngineRoot() {
           const savedSession = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`); 
           if (savedSession) { 
             setTriangulation(JSON.parse(savedSession)); 
-            if (!roleParam && isAdminAuthenticated) setViewState('HUB'); 
+
+            // Intercept direct Results / Cockpit requests
+            if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
+              setViewState('COCKPIT');
+            } else if (!roleParam && isAdminAuthenticated) {
+              setViewState('HUB'); 
+            }
           } 
         } 
 
@@ -176,6 +184,10 @@ export default function ForensicEngineRoot() {
                     window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
                   }
                 }
+
+                if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
+                  setViewState('COCKPIT');
+                }
                 return; 
               }
             }
@@ -210,6 +222,10 @@ export default function ForensicEngineRoot() {
                 window.localStorage.setItem(`bmr_matrix_run_${targetCompanyName}`, JSON.stringify(parsed));
               }
             }
+
+            if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
+              setViewState('COCKPIT');
+            }
           };
 
           synchronizeEngineDataMatrix();
@@ -228,7 +244,11 @@ export default function ForensicEngineRoot() {
             responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} } 
           }); 
 
-          setViewState('WIZARD'); 
+          if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
+            setViewState('COCKPIT');
+          } else {
+            setViewState('WIZARD'); 
+          }
         } else { 
           setAuthorizedAdmin(false); 
         } 
@@ -468,7 +488,6 @@ export default function ForensicEngineRoot() {
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
-  // Compressed Shareable SOW Generator Token URL
   const sowShareLink = useMemo(() => {
     if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
@@ -503,7 +522,7 @@ export default function ForensicEngineRoot() {
     return ( 
       <div className="bg-slate-50 min-h-screen text-slate-900 flex flex-col justify-center items-center py-12 px-4 font-sans"> 
         <div className="w-full max-w-xl border border-slate-200 bg-white p-8 text-left rounded-lg shadow-sm"> 
-                      
+                    
           <div className="border-b border-slate-100 pb-5 mb-6 flex items-center justify-between"> 
             <div className="flex items-center gap-3"> 
               <Lock size={18} className="text-red-600 shrink-0" /> 
