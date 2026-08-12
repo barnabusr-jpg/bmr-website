@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock, FileText, ChevronRight, Copy, Check, Printer, RotateCcw } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Play, Mail, Loader2, Lock, FileText, ChevronRight, Copy, Check, Printer, RotateCcw } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
@@ -110,7 +110,7 @@ export default function ForensicEngineRoot() {
         setActivePersona(roleParam);
         setActivePillar(targetPillar);
 
-        // PATCH 1: TENANT-SAFE PARTICIPANT RESET
+        // TENANT-SAFE PARTICIPANT RESET
         setTriangulation(prev => {
           const nextOrg = (targetCompanyName || "Quad Node Client System").trim().toLowerCase();
           const prevOrg = prev?.companyName?.trim().toLowerCase();
@@ -444,6 +444,7 @@ export default function ForensicEngineRoot() {
         setActiveAuditId(parentAuditId);
       }
 
+      // SAFE PROVISIONING (REPLACES UPSERT TO AVOID 400 UNIQUE CONSTRAINT ERRORS)
       if (parentAuditId) {
         const personaMapping: Record<PersonaKey, string> = {
           EXECUTIVE: 'EXECUTIVE',
@@ -452,19 +453,36 @@ export default function ForensicEngineRoot() {
           SYSTEM_USER: 'SYSTEM_USER',
         };
 
-        const rowsToProvision = (Object.keys(emails) as PersonaKey[]).map(pKey => ({
-          audit_id: parentAuditId,
-          group_id: parentAuditId,
-          persona_type: personaMapping[pKey],
-          email: emails[pKey],
-          survey_completed: false,
-          status: 'PENDING',
-          updated_at: new Date().toISOString()
-        }));
-
-        await supabase
+        const { data: existingOps } = await supabase
           .from('operators')
-          .upsert(rowsToProvision, { onConflict: 'audit_id,persona_type' });
+          .select('persona_type')
+          .eq('audit_id', parentAuditId);
+
+        const existingTypes = new Set(
+          (existingOps || []).map(o => String(o.persona_type).toUpperCase())
+        );
+
+        const rowsToInsert = (Object.keys(emails) as PersonaKey[])
+          .filter(pKey => !existingTypes.has(personaMapping[pKey]))
+          .map(pKey => ({
+            audit_id: parentAuditId,
+            group_id: parentAuditId,
+            persona_type: personaMapping[pKey],
+            email: emails[pKey],
+            survey_completed: false,
+            status: 'PENDING',
+            updated_at: new Date().toISOString()
+          }));
+
+        if (rowsToInsert.length > 0) {
+          const { error: insertErr } = await supabase
+            .from('operators')
+            .insert(rowsToInsert);
+
+          if (insertErr) {
+            console.error('[Provisioning Error] Failed to insert operator rows:', insertErr.message);
+          }
+        }
       }
 
       const initialTriangulation = { 
@@ -598,7 +616,7 @@ export default function ForensicEngineRoot() {
         }
 
         if (!updateErr && (!updatedRows || updatedRows.length === 0)) {
-          // PATCH 2: USE FRESH updatedTriangulation.emails TO PREVENT STALE EMAIL INSERTION
+          // USE FRESH updatedTriangulation.emails TO PREVENT STALE EMAIL INSERTION
           await supabase
             .from('operators')
             .insert({
@@ -730,12 +748,22 @@ export default function ForensicEngineRoot() {
                   
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-200 bg-white p-8 md:p-10 text-left rounded-lg shadow-sm"> 
-          <div className="border-b border-slate-100 pb-5 mb-8 flex items-center gap-3"> 
-            <ShieldAlert size={24} className="text-slate-900 shrink-0" /> 
-            <div> 
-              <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 leading-none">Quad Node Assessment Setup</h2> 
-              <span className="text-[11px] font-mono text-slate-500 font-medium block mt-1.5 uppercase tracking-wider">Configure Stakeholder Email Routing</span> 
-            </div> 
+          <div className="border-b border-slate-100 pb-5 mb-8 flex items-center justify-between"> 
+            <div className="flex items-center gap-3">
+              <ShieldAlert size={24} className="text-slate-900 shrink-0" /> 
+              <div> 
+                <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 leading-none">Quad Node Diagnostic Setup</h2> 
+                <span className="text-[11px] font-mono text-slate-500 font-medium block mt-1.5 uppercase tracking-wider">Configure Stakeholder Routing</span> 
+              </div> 
+            </div>
+            
+            <button 
+              type="button" 
+              onClick={handleLoadDemoParameters} 
+              className="text-[10px] font-mono font-bold text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-400 bg-slate-50 px-2.5 py-1.5 rounded uppercase tracking-wider transition-colors shrink-0 flex items-center gap-1 cursor-pointer" 
+            > 
+              <Play size={10} /> Load Staging 
+            </button>
           </div> 
 
           <form onSubmit={handleInitializeTriangulation} className="space-y-6"> 
@@ -762,7 +790,11 @@ export default function ForensicEngineRoot() {
             </div> 
 
             <div className="space-y-4 pt-4 border-t border-slate-100"> 
-              <label className="text-xs font-mono font-bold text-slate-700 block uppercase tracking-wider mb-2">Quad Node Stakeholder Emails</label> 
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-mono font-bold text-slate-700 block uppercase tracking-wider">Quad Node Stakeholder Tracks</label> 
+                <span className="text-[10px] font-mono text-slate-400 font-bold uppercase">// 4 Persona Channels</span>
+              </div>
+
               {(Object.keys(emails) as PersonaKey[]).map((role) => ( 
                 <div key={role}> 
                   <span className="text-[11px] text-slate-500 block mb-1 font-mono font-bold uppercase tracking-wider">{role.replace('_', ' ')} Track Email</span> 
@@ -781,7 +813,7 @@ export default function ForensicEngineRoot() {
               <span className="text-xs text-red-600 font-mono block font-semibold">{inputError}</span> 
             )} 
 
-            <div className="pt-4 space-y-3"> 
+            <div className="pt-2"> 
               <button 
                 type="submit" 
                 className="w-full bg-slate-900 text-white font-bold text-xs py-3.5 uppercase tracking-wider rounded-md hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm" 
