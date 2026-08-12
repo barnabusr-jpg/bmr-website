@@ -3,8 +3,9 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock, RotateCcw } from 'lucide-react'; 
+import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock, FileText, ChevronRight, Copy, Check, Printer, RotateCcw } from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
+import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
@@ -33,6 +34,7 @@ export default function ForensicEngineRoot() {
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
   const [sendingNudgeRole, setSendingNudgeRole] = useState<PersonaKey | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
   const [activeAuditId, setActiveAuditId] = useState<string | null>(null);
 
   const isSyncingRef = useRef(false);
@@ -48,31 +50,57 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null); 
   const [inputError, setInputError] = useState(''); 
 
+  // --- IDENTITY REFS (PREVENTS STALE CLOSURES IN REHYDRATION LOOPS) ---
+  const companyNameRef = useRef(companyName);
+  const activePillarRef = useRef(activePillar);
+  const emailsRef = useRef(emails);
+  const activeAuditIdRef = useRef(activeAuditId);
+
+  useEffect(() => { companyNameRef.current = companyName; }, [companyName]);
+  useEffect(() => { activePillarRef.current = activePillar; }, [activePillar]);
+  useEffect(() => { emailsRef.current = emails; }, [emails]);
+  useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
+
   const synchronizeEngineDataMatrix = useCallback(async () => {
     if (isSyncingRef.current) return;
+
+    const params = typeof window !== 'undefined' 
+      ? new URLSearchParams(window.location.search) 
+      : new URLSearchParams();
+
+    const idParam = params.get('id') || activeAuditIdRef.current;
+    const codeParam = params.get('code');
+    const entityParam = params.get('entity') || params.get('org') || params.get('entity_code');
+
+    const latestCompanyName = companyNameRef.current;
+    const latestActivePillar = activePillarRef.current;
+    const latestEmails = emailsRef.current;
+
+    // ABORT GUARD: Allow any valid identifier
+    if (!idParam && !codeParam && !entityParam && !latestCompanyName && !activeAuditIdRef.current) {
+      return;
+    }
+
     isSyncingRef.current = true;
 
     try {
-      const params = new URLSearchParams(window.location.search);
-      const idParam = params.get('id'); 
-      const codeParam = params.get('code');
-      const entityParam = params.get('entity') || params.get('org') || params.get('entity_code');
       const flowParam = params.get('flow');
       const roleParam = params.get('role') as PersonaKey;
       const pillarParam = params.get('pillar') as FunnelPillar;
       const authVal = params.get('auth');
       const matrixParam = params.get('matrix');
+      const viewParam = params.get('view');
 
       const isAdminSession = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
       const isParticipantRoute = !!(codeParam || roleParam);
 
-      let targetCompanyName = (entityParam || companyName || '').trim().replace(/\s+/g, ' ');
+      let targetCompanyName = (entityParam || latestCompanyName || '').trim().replace(/\s+/g, ' ');
 
-      // 1. PARTICIPANT ROUTE FROM EMAIL LINK: Route directly to WIZARD
+      // 1. PARTICIPANT ROUTE FROM EMAIL LINK: Route directly to WIZARD or COCKPIT
       if (isParticipantRoute && roleParam) {
         const targetPillar = (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam.toUpperCase()))
           ? (pillarParam.toUpperCase() as FunnelPillar)
-          : activePillar;
+          : latestActivePillar;
 
         if (targetCompanyName) {
           setCompanyName(targetCompanyName);
@@ -82,19 +110,33 @@ export default function ForensicEngineRoot() {
         setActivePersona(roleParam);
         setActivePillar(targetPillar);
 
-        setTriangulation(prev => prev || {
-          companyName: targetCompanyName || "Quad Node Client System",
-          pillar: targetPillar,
-          emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' },
-          completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
-          responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
+        // PATCH 1: TENANT-SAFE PARTICIPANT RESET
+        setTriangulation(prev => {
+          const nextOrg = (targetCompanyName || "Quad Node Client System").trim().toLowerCase();
+          const prevOrg = prev?.companyName?.trim().toLowerCase();
+
+          if (!prev || !prevOrg || prevOrg !== nextOrg) {
+            return {
+              companyName: targetCompanyName || "Quad Node Client System",
+              pillar: targetPillar,
+              emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' },
+              completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
+              responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
+            };
+          }
+
+          return prev;
         });
 
-        setViewState('WIZARD');
+        if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
+          setViewState('COCKPIT');
+        } else {
+          setViewState('WIZARD');
+        }
         return;
       }
 
-      // 2. ADMIN CLEAN SETUP: Launching Quad Node without id or matrix forces INTAKE setup view
+      // 2. ADMIN CLEAN SETUP
       if (isAdminSession && flowParam === 'quad_node' && !idParam && !matrixParam) {
         if (targetCompanyName) {
           setCompanyName(targetCompanyName);
@@ -105,7 +147,7 @@ export default function ForensicEngineRoot() {
 
       // 3. REHYDRATE EXISTING AUDIT IF AUTHORIZED ADMIN PROVIDES ID OR MATRIX
       let cachedCompletions = { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
-      let cachedEmails = emails;
+      let cachedEmails = latestEmails;
       let cachedResponses = { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
 
       if (typeof window !== 'undefined' && targetCompanyName) {
@@ -122,8 +164,8 @@ export default function ForensicEngineRoot() {
         }
       }
 
-      let activeAudit = null;
-      let matchedOperator = null;
+      let activeAudit: any = null;
+      let matchedOperator: any = null;
 
       if (codeParam) {
         const { data: opData } = await supabase
@@ -160,17 +202,20 @@ export default function ForensicEngineRoot() {
         activeAudit = data;
       }
 
+      let targetCalculatedPillar: FunnelPillar = latestActivePillar;
+
       if (activeAudit) {
         setActiveAuditId(activeAudit.id);
         setCompanyName(activeAudit.org_name);
         setIsCompanyFromDB(true);
 
         const sectorStr = String(activeAudit.sector || '').toUpperCase();
-        let targetCalculatedPillar: FunnelPillar = 'IGF';
         if (sectorStr.includes('AVS') || sectorStr.includes('MANUFACTURING') || sectorStr.includes('INDUSTRIAL')) {
           targetCalculatedPillar = 'AVS';
         } else if (sectorStr.includes('HAI') || sectorStr.includes('SERVICES')) {
           targetCalculatedPillar = 'HAI';
+        } else {
+          targetCalculatedPillar = 'IGF';
         }
         setActivePillar(targetCalculatedPillar);
 
@@ -179,52 +224,62 @@ export default function ForensicEngineRoot() {
           .select('persona_type, email, survey_completed, status, audit_id, group_id')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
-        if (existingOperators && existingOperators.length > 0) {
-          const checkDbDone = (pKey: PersonaKey) => {
-            const allowedTypes = PERSONA_ALIASES[pKey];
-            const matches = existingOperators.filter(o => {
-              const rawPersona = String(o.persona_type || '').toUpperCase().trim();
-              return allowedTypes.includes(rawPersona);
-            });
+        const checkDbDone = (pKey: PersonaKey) => {
+          if (!existingOperators || existingOperators.length === 0) return false;
+          const allowedTypes = PERSONA_ALIASES[pKey];
+          const matches = existingOperators.filter(o => {
+            const rawPersona = String(o.persona_type || '').toUpperCase().trim();
+            return allowedTypes.includes(rawPersona);
+          });
 
-            return matches.some(m => 
-              m.survey_completed === true || 
-              String(m.status).toUpperCase() === 'COMPLETED' ||
-              String(m.status).toUpperCase() === 'COMPLETE'
-            );
-          };
+          return matches.some(m => 
+            m.survey_completed === true || 
+            String(m.status).toUpperCase() === 'COMPLETED' ||
+            String(m.status).toUpperCase() === 'COMPLETE'
+          );
+        };
+
+        const loadedEmails: Record<PersonaKey, string> = existingOperators && existingOperators.length > 0 ? {
+          EXECUTIVE: existingOperators.find(o => PERSONA_ALIASES.EXECUTIVE.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.EXECUTIVE,
+          TECH_MGMT: existingOperators.find(o => PERSONA_ALIASES.TECH_MGMT.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.TECH_MGMT,
+          OPS_MGMT: existingOperators.find(o => PERSONA_ALIASES.OPS_MGMT.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.OPS_MGMT,
+          SYSTEM_USER: existingOperators.find(o => PERSONA_ALIASES.SYSTEM_USER.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.SYSTEM_USER
+        } : cachedEmails;
+
+        setEmails(loadedEmails);
+
+        setTriangulation(prev => {
+          const resolvedOrg = (activeAudit?.org_name ?? targetCompanyName)?.trim();
+          const prevOrg = prev?.companyName?.trim();
+
+          const isMatchingOrg =
+            !!resolvedOrg &&
+            !!prevOrg &&
+            prevOrg.toLowerCase() === resolvedOrg.toLowerCase();
+
+          const inMemoryCompletions = isMatchingOrg ? prev.completions : cachedCompletions;
 
           const mergedCompletions: Record<PersonaKey, boolean> = {
-            EXECUTIVE: checkDbDone('EXECUTIVE') || cachedCompletions.EXECUTIVE,
-            TECH_MGMT: checkDbDone('TECH_MGMT') || cachedCompletions.TECH_MGMT,
-            OPS_MGMT: checkDbDone('OPS_MGMT') || cachedCompletions.OPS_MGMT,
-            SYSTEM_USER: checkDbDone('SYSTEM_USER') || cachedCompletions.SYSTEM_USER,
+            EXECUTIVE: checkDbDone('EXECUTIVE') || inMemoryCompletions.EXECUTIVE,
+            TECH_MGMT: checkDbDone('TECH_MGMT') || inMemoryCompletions.TECH_MGMT,
+            OPS_MGMT: checkDbDone('OPS_MGMT') || inMemoryCompletions.OPS_MGMT,
+            SYSTEM_USER: checkDbDone('SYSTEM_USER') || inMemoryCompletions.SYSTEM_USER,
           };
 
-          const loadedEmails: Record<PersonaKey, string> = {
-            EXECUTIVE: existingOperators.find(o => PERSONA_ALIASES.EXECUTIVE.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.EXECUTIVE,
-            TECH_MGMT: existingOperators.find(o => PERSONA_ALIASES.TECH_MGMT.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.TECH_MGMT,
-            OPS_MGMT: existingOperators.find(o => PERSONA_ALIASES.OPS_MGMT.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.OPS_MGMT,
-            SYSTEM_USER: existingOperators.find(o => PERSONA_ALIASES.SYSTEM_USER.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.SYSTEM_USER
-          };
-
-          setEmails(loadedEmails);
-
-          setTriangulation({
-            companyName: activeAudit.org_name,
+          return {
+            companyName: resolvedOrg || prev?.companyName || targetCompanyName,
             pillar: targetCalculatedPillar,
             emails: loadedEmails,
             completions: mergedCompletions,
-            responses: cachedResponses
-          });
-        } else {
-          setTriangulation(prev => prev || {
-            companyName: activeAudit.org_name,
-            pillar: targetCalculatedPillar,
-            emails: cachedEmails,
-            completions: cachedCompletions,
-            responses: cachedResponses
-          });
+            responses: (isMatchingOrg && prev?.responses && Object.keys(prev.responses).length > 0)
+              ? prev.responses
+              : cachedResponses,
+          };
+        });
+
+        if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
+          setViewState('COCKPIT');
+          return;
         }
 
         if (flowParam === 'quad_node' && !isParticipantRoute) {
@@ -248,14 +303,29 @@ export default function ForensicEngineRoot() {
           }
         }
       } else if (targetCompanyName) {
-        setTriangulation(prev => prev || {
-          companyName: targetCompanyName,
-          pillar: activePillar,
-          emails: cachedEmails,
-          completions: cachedCompletions,
-          responses: cachedResponses
+        // TENANT-SAFE ADMIN REHYDRATE FALLBACK
+        setTriangulation(prev => {
+          const nextOrg = targetCompanyName.trim().toLowerCase();
+          const prevOrg = prev?.companyName?.trim().toLowerCase();
+
+          if (!prev || !prevOrg || prevOrg !== nextOrg) {
+            return {
+              companyName: targetCompanyName,
+              pillar: latestActivePillar,
+              emails: cachedEmails,
+              completions: cachedCompletions,
+              responses: cachedResponses
+            };
+          }
+
+          return prev;
         });
-        setViewState('HUB');
+
+        if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
+          setViewState('COCKPIT');
+        } else {
+          setViewState('HUB');
+        }
       } else {
         setViewState('INTAKE');
       }
@@ -264,7 +334,7 @@ export default function ForensicEngineRoot() {
     } finally {
       isSyncingRef.current = false;
     }
-  }, [companyName, activePillar, emails]);
+  }, []);
 
   // REALTIME DATABASE LISTENER FOR HUB MATRIX UPDATES
   useEffect(() => {
@@ -313,6 +383,17 @@ export default function ForensicEngineRoot() {
     } 
   }, [synchronizeEngineDataMatrix]); 
 
+  const handleLoadDemoParameters = () => { 
+    setCompanyName('Evaluation Client System'); 
+    setEmails({ 
+      EXECUTIVE: 'executive@example.com', 
+      TECH_MGMT: 'technical@example.com', 
+      OPS_MGMT: 'operations@example.com', 
+      SYSTEM_USER: 'technical@example.com' 
+    }); 
+    setInputError(''); 
+  }; 
+
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     const sanitizedInput = companyName.trim(); 
@@ -328,7 +409,6 @@ export default function ForensicEngineRoot() {
           
     setInputError(''); 
 
-    // Purge local and session cache on new dispatches
     if (typeof window !== 'undefined') {
       window.localStorage.removeItem(`bmr_matrix_run_${sanitizedInput}`);
       ['EXECUTIVE', 'TECH_MGMT', 'OPS_MGMT', 'SYSTEM_USER'].forEach(p => {
@@ -364,7 +444,6 @@ export default function ForensicEngineRoot() {
         setActiveAuditId(parentAuditId);
       }
 
-      // Explicit 4-Node Provisioning / Reset to ensure all 4 rows exist in DB
       if (parentAuditId) {
         const personaMapping: Record<PersonaKey, string> = {
           EXECUTIVE: 'EXECUTIVE',
@@ -464,36 +543,37 @@ export default function ForensicEngineRoot() {
   }; 
 
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
-    if (!activePersona) return;
+    if (!activePersona || !triangulation) return;
 
+    const targetPersona = activePersona;
+    const targetAuditId = activeAuditId;
     const answersToSave = (personaAnswers && Object.keys(personaAnswers).length > 0) 
       ? personaAnswers 
       : { status: "completed_via_wizard", completed_at: new Date().toISOString() };
 
-    const targetPersona = activePersona;
-    const targetAuditId = activeAuditId;
-
-    // 1. UPDATE LOCAL REACT STATE IMMEDIATELY
-    setTriangulation(prev => {
-      if (!prev) return prev;
-      const updated = {
-        ...prev,
-        completions: {
-          ...prev.completions,
-          [targetPersona]: true
-        },
-        responses: {
-          ...prev.responses,
-          [targetPersona]: answersToSave
-        }
-      };
-      if (typeof window !== 'undefined') {
-        window.localStorage.setItem(`bmr_matrix_run_${updated.companyName}`, JSON.stringify(updated));
+    // Explicit non-null update object
+    const updatedTriangulation: TriangulationState = {
+      ...triangulation,
+      completions: {
+        ...triangulation.completions,
+        [targetPersona]: true
+      },
+      responses: {
+        ...triangulation.responses,
+        [targetPersona]: answersToSave
       }
-      return updated;
-    });
+    };
 
-    // 2. PERSIST TO SUPABASE (UPDATE WITH INSERT FALLBACK)
+    // Synchronous write to LocalStorage BEFORE triggering DB async refetches
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(
+        `bmr_matrix_run_${updatedTriangulation.companyName}`,
+        JSON.stringify(updatedTriangulation)
+      );
+    }
+
+    setTriangulation(updatedTriangulation);
+
     if (targetAuditId) {
       const aliases = PERSONA_ALIASES[targetPersona];
       const canonicalType = 
@@ -517,15 +597,15 @@ export default function ForensicEngineRoot() {
           console.error('[Save Handler] DB Update error:', updateErr.message);
         }
 
-        // Fallback to INSERT if no existing row was updated
         if (!updateErr && (!updatedRows || updatedRows.length === 0)) {
+          // PATCH 2: USE FRESH updatedTriangulation.emails TO PREVENT STALE EMAIL INSERTION
           await supabase
             .from('operators')
             .insert({
               audit_id: targetAuditId,
               group_id: targetAuditId,
               persona_type: canonicalType,
-              email: triangulation?.emails[targetPersona] || null,
+              email: updatedTriangulation.emails[targetPersona] || null,
               survey_completed: true,
               status: 'COMPLETED',
               raw_responses: answersToSave,
@@ -533,7 +613,6 @@ export default function ForensicEngineRoot() {
             });
         }
 
-        // RE-SYNC MATRIX DIRECTLY AFTER WRITE
         await synchronizeEngineDataMatrix();
 
       } catch (dbErr) {
@@ -542,12 +621,17 @@ export default function ForensicEngineRoot() {
     }
 
     setActivePersona(null); 
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('code') || params.get('role')) { 
-      setViewState('THANK_YOU'); 
-    } else { 
-      setViewState('HUB'); 
-    } 
+
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('code') || params.get('role')) { 
+        setViewState('THANK_YOU'); 
+      } else { 
+        setViewState('HUB'); 
+      } 
+    } else {
+      setViewState('HUB');
+    }
   }; 
 
   const allPersonasComplete = triangulation       
@@ -610,6 +694,28 @@ export default function ForensicEngineRoot() {
     dominantVisibility: "PARTIAL",
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
+
+  const sowShareLink = useMemo(() => {
+    if (typeof window === 'undefined' || !triangulation) return '';
+    const payload = {
+      org: triangulation.companyName,
+      pillar: triangulation.pillar,
+      ans: triangulation.responses,
+      expires: Date.now() + 86400000
+    };
+    const compressed = compressToEncodedURIComponent(JSON.stringify(payload));
+    return `${window.location.origin}/sow-generator?matrix=${compressed}`;
+  }, [triangulation]);
+
+  const handleCopySOWLink = async () => {
+    try {
+      await navigator.clipboard.writeText(sowShareLink);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    } catch (err) {
+      console.error('Clipboard write exception:', err);
+    }
+  };
 
   if (authorizedAdmin === null) { 
     return ( 
@@ -687,6 +793,7 @@ export default function ForensicEngineRoot() {
         </div> 
       )} 
 
+      {/* FULL UI HUB VIEW WITH 4-NODE STATUS GRID & PARTIAL COMPILE OVERRIDE */}
       {viewState === 'HUB' && triangulation && ( 
         <div className="w-full max-w-2xl border border-slate-200 bg-white p-8 md:p-10 text-left rounded-lg shadow-sm"> 
           <div className="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center gap-4"> 
@@ -694,7 +801,9 @@ export default function ForensicEngineRoot() {
               <Users size={20} className="text-slate-900" /> 
               <div> 
                 <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Stakeholder Assessment Monitor</h2> 
-                <span className="text-[11px] font-mono text-slate-500 block mt-1 uppercase tracking-wider">Organization: {triangulation.companyName}</span> 
+                <span className="text-[11px] font-mono text-slate-500 block mt-1 uppercase tracking-wider">
+                  ORGANIZATION: {triangulation.companyName} | TRACK: {triangulation.pillar}
+                </span> 
               </div> 
             </div> 
 
@@ -705,6 +814,26 @@ export default function ForensicEngineRoot() {
             > 
               <RotateCcw size={12} /> New Setup 
             </button> 
+          </div> 
+
+          {/* 4-NODE COMPLETION STATUS BOARD */}
+          <div className="bg-slate-50 border border-slate-200 p-5 mb-6 rounded-md"> 
+            <span className="text-[11px] font-mono text-slate-500 block font-bold uppercase tracking-wider mb-4">Completion Status</span> 
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4"> 
+              {(Object.keys(triangulation.completions) as PersonaKey[]).map((persona) => { 
+                const completed = triangulation.completions[persona]; 
+                return ( 
+                  <div key={persona} className="border border-slate-200 bg-white p-4 rounded-md text-center flex flex-col items-center justify-center min-h-[74px]"> 
+                    <span className="text-[11px] font-mono text-slate-700 uppercase tracking-wider block mb-2 font-bold">{persona.replace('_', ' ')}</span> 
+                    {completed ? ( 
+                      <CheckCircle size={16} className="text-emerald-600 mt-1" /> 
+                    ) : ( 
+                      <div className="w-3 h-3 rounded-full bg-slate-200 border-2 border-slate-400 animate-pulse mt-1" /> 
+                    )} 
+                  </div> 
+                ); 
+              })} 
+            </div> 
           </div> 
 
           <div className="space-y-3"> 
@@ -742,11 +871,30 @@ export default function ForensicEngineRoot() {
             })} 
           </div> 
 
-          <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end"> 
+          {/* FOOTER ACTIONS WITH COMPILE PARTIAL RESULTS OVERRIDE */}
+          <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
+            <div className="text-left"> 
+              <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-bold block">Consolidated Results Compilation</span> 
+                
+              {!allPersonasComplete && ( 
+                <button 
+                  type="button" 
+                  onClick={() => { 
+                    if (window.confirm("Compile diagnostic metrics using currently available response data?")) { 
+                      setViewState('COCKPIT'); 
+                    } 
+                  }} 
+                  className="text-xs text-red-600 font-mono font-bold uppercase tracking-wider hover:underline bg-transparent border-0 p-0 mt-1 cursor-pointer block" 
+                > 
+                  Compile Partial Results 
+                </button> 
+              )} 
+            </div> 
+
             <button 
               onClick={() => setViewState('COCKPIT')} 
               disabled={!allPersonasComplete} 
-              className={`px-6 py-3.5 font-bold uppercase tracking-wider rounded-md transition-colors text-xs ${ 
+              className={`w-full sm:w-auto px-6 py-3.5 font-bold uppercase tracking-wider rounded-md transition-colors text-xs ${ 
                 allPersonasComplete 
                   ? 'bg-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-sm' 
                   : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' 
@@ -770,13 +918,14 @@ export default function ForensicEngineRoot() {
         /> 
       )} 
 
+      {/* FULL COCKPIT VIEW WITH SOW TERMINAL & TOKEN GENERATOR */}
       {viewState === 'COCKPIT' && triangulation && ( 
         <div className="w-full max-w-[1600px] mx-auto text-left"> 
           <div className="mb-4 px-10 no-print flex justify-start"> 
             <button 
               type="button" 
               onClick={handleSystemReset} 
-              className="border border-slate-200 bg-white text-slate-700 hover:text-slate-900 text-xs font-mono font-bold px-5 py-2.5 uppercase tracking-wider transition-colors cursor-pointer rounded-md shadow-sm" 
+              className="border border-slate-200 bg-white text-slate-700 hover:text-slate-900 border border-slate-200 hover:border-slate-300 text-xs font-mono font-bold px-5 py-2.5 uppercase tracking-wider transition-colors cursor-pointer rounded-md shadow-sm" 
             > 
               ← Return to Setup Control 
             </button> 
@@ -795,6 +944,216 @@ export default function ForensicEngineRoot() {
               forensicAnalytics={governanceAnalytics}
               orgName={triangulation.companyName.replace(/_/g, ' ')}
             />
+          </div>
+
+          {/* ACTIVE DOSSIER & SOW TERMINAL SECTION */}
+          <div className="mt-8 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left">
+            <div className="border-b border-slate-100 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3">
+                <FileText size={22} className="text-slate-900 shrink-0" />
+                <div>
+                  <h3 className="text-lg font-mono font-bold uppercase tracking-wider text-slate-900 leading-none">
+                    BMR Solutions // Explanatory Summary & Active SOW
+                  </h3>
+                  <span className="text-xs font-mono text-slate-500 block uppercase tracking-wider mt-1">
+                    Companion Leave-Behind Document // Statement of Work Matrix
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex bg-slate-100 p-1 border border-slate-200 rounded-md font-mono text-xs font-bold uppercase tracking-wider">
+                <button 
+                  onClick={() => setDossierTab('METRICS')}
+                  className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'METRICS' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  01 // Risk Matrix
+                </button>
+                <button 
+                  onClick={() => setDossierTab('REMEDIATION')}
+                  className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'REMEDIATION' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                >
+                  02 // Alignment Track SOW
+                </button>
+              </div>
+            </div>
+
+            {dossierTab === 'METRICS' && (
+              <div className="space-y-6">
+                <p className="text-sm text-slate-600 font-sans leading-relaxed">
+                  This framework maps live cross-persona diagnostic responses to identify risk vectors across engineering pipelines for <strong className="text-slate-900 font-bold">{companyName.replace(/_/g, ' ')}</strong>. Below is the tactical summary of your current operational posture.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
+                    <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-2">
+                      Integrity Index ({alignedCockpitMetrics.complianceScore}/100)
+                    </span>
+                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                      Measures the alignment gap between governance mandate and operational velocity. A rating of {alignedCockpitMetrics.complianceScore} highlights where technical environments lack automated policy guardrails.
+                    </p>
+                  </div>
+
+                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
+                    <span className="font-mono text-xs text-amber-600 block font-bold uppercase tracking-wider mb-2">
+                      Process Waste Tax (${alignedCockpitMetrics.annualSalaryLeakage.toLocaleString()})
+                    </span>
+                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to approximately engineering hours exhausted resolving schema drift and manual firefighting.
+                    </p>
+                  </div>
+
+                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
+                    <span className="font-mono text-xs text-red-600 block font-bold uppercase tracking-wider mb-2">
+                      Total Promise Gap™ Exposure (${alignedCockpitMetrics.unhedgedLegalExposure.toLocaleString()})
+                    </span>
+                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                      Projects total compliance fines and operational risk incurred if data pipelines remain uninsulated prior to expanding AI automation.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {dossierTab === 'REMEDIATION' && (
+              <div className="space-y-8 font-sans">
+                <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <span className="font-mono text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">
+                      // Active Remediation Statement of Work Matrix
+                    </span>
+                    <h4 className="text-xl font-extrabold tracking-tight mt-0.5">
+                      Target Implementation SOW: {companyName.replace(/_/g, ' ')}
+                    </h4>
+                  </div>
+                  <div className="flex items-center gap-3 font-mono text-xs">
+                    <button
+                      type="button"
+                      onClick={() => typeof window !== 'undefined' && window.print()}
+                      className="bg-white text-slate-900 px-4 py-2 font-bold uppercase tracking-wider rounded hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer"
+                    >
+                      <Printer size={14} /> Print SOW Contract
+                    </button>
+                  </div>
+                </div>
+
+                <div className="border border-slate-200 rounded-md overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-100 font-mono text-slate-700 uppercase tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="p-4 font-bold">Phase</th>
+                        <th className="p-4 font-bold">Remediation Scope</th>
+                        <th className="p-4 font-bold">Technical Deliverables</th>
+                        <th className="p-4 font-bold">Timeline</th>
+                        <th className="p-4 font-bold">Resource Allocation</th>
+                        <th className="p-4 font-bold text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      <tr>
+                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 01</td>
+                        <td className="p-4 font-bold text-slate-900">
+                          Pipeline Hardening & Schema Abstraction
+                        </td>
+                        <td className="p-4 text-slate-600 leading-relaxed">
+                          Deploy strict GraphQL/OpenAPI schema validation gates, microservice adapter decoupling, and circuit breakers.
+                        </td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 1 – 3</td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Senior Data Eng + SecOps</td>
+                        <td className="p-4 text-right whitespace-nowrap">
+                          <span className="bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
+                            Pending Approval
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 02</td>
+                        <td className="p-4 font-bold text-slate-900">
+                          Telemetry Decoupling & Alarm Filtering
+                        </td>
+                        <td className="p-4 text-slate-600 leading-relaxed">
+                          Implement Purview/DLP sensitivity tagging, suppress alert fatigue loops, and install audit trail logging.
+                        </td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 4 – 6</td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">DevOps + Platform Lead</td>
+                        <td className="p-4 text-right whitespace-nowrap">
+                          <span className="bg-slate-100 text-slate-600 border border-slate-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
+                            Queued
+                          </span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 03</td>
+                        <td className="p-4 font-bold text-slate-900">
+                          Autonomous Governance & Deployment Gates
+                        </td>
+                        <td className="p-4 text-slate-600 leading-relaxed">
+                          Automate Purview data loss prevention policies, continuous model evaluation pipelines, and executive steering dashboards.
+                        </td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 7 – 8</td>
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Enterprise Architect</td>
+                        <td className="p-4 text-right whitespace-nowrap">
+                          <span className="bg-slate-100 text-slate-600 border border-slate-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
+                            Queued
+                          </span>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="border border-slate-200 bg-slate-50 p-6 rounded-md">
+                  <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-3">
+                    // Regulatory Non-Compliance Standards Audit
+                  </span>
+                  
+                  <div className="space-y-3 font-mono text-xs text-slate-700">
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> ISO 9001:2015 // Clause 8.5.1: Messaging anomalies create unmapped distribution risk.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> HL7 FHIR v4 // Data Conformance: Unstructured drift triggers serialization failures.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> PCI-DSS v4.0 // Req 10.2: Processing delays interrupt automated auditing boundaries.</span></div>
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> SOX Act // Section 404: Telemetry friction degrades financial reporting controls.</span></div>
+                  </div>
+                </div>
+
+                <div className="bg-slate-900 text-white p-6 rounded-md space-y-3 font-sans no-print">
+                  <div>
+                    <span className="text-[10px] font-mono text-emerald-400 block font-bold uppercase tracking-wider">
+                      // Stateless Deployable SOW Link Generator
+                    </span>
+                    <h5 className="text-sm font-extrabold uppercase mt-0.5">
+                      Shareable Permanent SOW Token Interface
+                    </h5>
+                    <p className="text-xs text-slate-300 font-normal mt-1 leading-relaxed">
+                      Copy this encrypted token to open or share this exact Statement of Work blueprint independently without requiring database session locks.
+                    </p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row items-stretch gap-2 font-mono text-xs">
+                    <input
+                      type="text"
+                      value={sowShareLink}
+                      readOnly
+                      onClick={(e) => (e.target as HTMLInputElement).select()}
+                      className="flex-1 bg-slate-950 border border-slate-700 p-3 text-slate-300 font-mono text-[11px] rounded focus:outline-none truncate selection:bg-emerald-900 selection:text-emerald-300"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCopySOWLink}
+                      className={`px-5 py-3 font-mono font-bold uppercase tracking-wider rounded flex items-center justify-center gap-2 transition-colors shrink-0 cursor-pointer ${
+                        copiedLink ? 'bg-emerald-600 text-white' : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                      }`}
+                    >
+                      {copiedLink ? <Check size={14} /> : <Copy size={14} />}
+                      {copiedLink ? 'COPIED' : 'COPY SOW LINK'}
+                    </button>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            <div className="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+              <span>BMR Solutions © 2026 // Independent Operational Governance</span>
+              <span>Pre-Automation Control Plane</span>
+            </div>
           </div>
         </div> 
       )} 
