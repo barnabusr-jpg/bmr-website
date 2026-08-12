@@ -3,7 +3,21 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
-import { ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock, FileText, ChevronRight, Copy, Check, Printer, RotateCcw } from 'lucide-react'; 
+import { 
+  ShieldAlert, 
+  ArrowRight, 
+  Users, 
+  CheckCircle, 
+  Mail, 
+  Loader2, 
+  Lock, 
+  FileText, 
+  ChevronRight, 
+  Copy, 
+  Check, 
+  Printer, 
+  RotateCcw 
+} from 'lucide-react'; 
 import { supabase } from '../../lib/supabaseClient'; 
 import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
@@ -16,6 +30,14 @@ const PERSONA_ALIASES: Record<PersonaKey, string[]> = {
   TECH_MGMT: ['TECHNICAL', 'TECH_MGMT', 'AVS', 'TECH'],
   OPS_MGMT: ['MANAGERIAL', 'OPS_MGMT', 'HAI', 'OPS'],
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER'],
+};
+
+// FRESH QUAD NODE ARCHITECTURE: CONSTANT FOR FORCED FRESH EMAILS
+const FRESH_EMPTY_EMAILS: Record<PersonaKey, string> = {
+  EXECUTIVE: '',
+  TECH_MGMT: '',
+  OPS_MGMT: '',
+  SYSTEM_USER: '',
 };
 
 interface TriangulationState { 
@@ -38,14 +60,14 @@ export default function ForensicEngineRoot() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeAuditId, setActiveAuditId] = useState<string | null>(null);
 
-  const isSyncingRef = useRef(false);
+  // INLINE EMAIL EDITING STATE
+  const [editingPersona, setEditingPersona] = useState<PersonaKey | null>(null);
+  const [tempEmailInput, setTempEmailInput] = useState<string>('');
 
-  const [emails, setEmails] = useState<Record<PersonaKey, string>>({ 
-    EXECUTIVE: '', 
-    TECH_MGMT: '', 
-    OPS_MGMT: '', 
-    SYSTEM_USER: '' 
-  }); 
+  const isSyncingRef = useRef(false);
+  const didBootRef = useRef(false);
+
+  const [emails, setEmails] = useState<Record<PersonaKey, string>>(FRESH_EMPTY_EMAILS); 
 
   const [triangulation, setTriangulation] = useState<TriangulationState | null>(null); 
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null); 
@@ -75,7 +97,6 @@ export default function ForensicEngineRoot() {
 
     const latestCompanyName = companyNameRef.current;
     const latestActivePillar = activePillarRef.current;
-    const latestEmails = emailsRef.current;
 
     let targetCompanyName = (entityParam || latestCompanyName || '').trim().replace(/\s+/g, ' ');
 
@@ -86,7 +107,6 @@ export default function ForensicEngineRoot() {
       const roleParam = params.get('role') as PersonaKey;
       const pillarParam = params.get('pillar') as FunnelPillar;
       const authVal = params.get('auth');
-      const matrixParam = params.get('matrix');
       const viewParam = params.get('view');
 
       const isAdminSession = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
@@ -114,7 +134,7 @@ export default function ForensicEngineRoot() {
             return {
               companyName: targetCompanyName || "Quad Node Client System",
               pillar: targetPillar,
-              emails: { EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' },
+              emails: FRESH_EMPTY_EMAILS,
               completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
               responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
             };
@@ -131,14 +151,14 @@ export default function ForensicEngineRoot() {
       }
 
       // 2. ADMIN CLEAN EXPLICIT INTAKE ROUTE
-      if (isAdminSession && flowParam === 'quad_node' && !idParam && !matrixParam && !targetCompanyName) {
+      if (isAdminSession && flowParam === 'quad_node' && !idParam && !targetCompanyName) {
+        setEmails(FRESH_EMPTY_EMAILS);
         setViewState('INTAKE');
         return;
       }
 
       // 3. REHYDRATE EXISTING AUDIT BY NAME, ID, OR MATRIX
       let cachedCompletions = { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
-      let cachedEmails = latestEmails;
       let cachedResponses = { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
 
       if (typeof window !== 'undefined' && targetCompanyName) {
@@ -149,7 +169,6 @@ export default function ForensicEngineRoot() {
             if (parsed?.companyName === targetCompanyName && parsed?.completions) {
               cachedCompletions = parsed.completions;
             }
-            if (parsed?.emails) cachedEmails = parsed.emails;
             if (parsed?.responses) cachedResponses = parsed.responses;
           } catch (e) { console.error(e); }
         }
@@ -230,14 +249,8 @@ export default function ForensicEngineRoot() {
           );
         };
 
-        const loadedEmails: Record<PersonaKey, string> = existingOperators && existingOperators.length > 0 ? {
-          EXECUTIVE: existingOperators.find(o => PERSONA_ALIASES.EXECUTIVE.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.EXECUTIVE,
-          TECH_MGMT: existingOperators.find(o => PERSONA_ALIASES.TECH_MGMT.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.TECH_MGMT,
-          OPS_MGMT: existingOperators.find(o => PERSONA_ALIASES.OPS_MGMT.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.OPS_MGMT,
-          SYSTEM_USER: existingOperators.find(o => PERSONA_ALIASES.SYSTEM_USER.includes(o.persona_type?.toUpperCase()))?.email || cachedEmails.SYSTEM_USER
-        } : cachedEmails;
-
-        setEmails(loadedEmails);
+        // FRESH QUAD NODE ARCHITECTURE: Force emails to be fresh empties.
+        setEmails(FRESH_EMPTY_EMAILS);
 
         setTriangulation(prev => {
           const resolvedOrg = (activeAudit?.org_name ?? targetCompanyName)?.trim();
@@ -260,7 +273,7 @@ export default function ForensicEngineRoot() {
           return {
             companyName: resolvedOrg || prev?.companyName || targetCompanyName,
             pillar: targetCalculatedPillar,
-            emails: loadedEmails,
+            emails: FRESH_EMPTY_EMAILS,
             completions: mergedCompletions,
             responses: (isMatchingOrg && prev?.responses && Object.keys(prev.responses).length > 0)
               ? prev.responses
@@ -292,6 +305,8 @@ export default function ForensicEngineRoot() {
 
         setViewState('HUB');
       } else if (targetCompanyName) {
+        setEmails(FRESH_EMPTY_EMAILS);
+
         setTriangulation(prev => {
           const nextOrg = targetCompanyName.trim().toLowerCase();
           const prevOrg = prev?.companyName?.trim().toLowerCase();
@@ -300,13 +315,16 @@ export default function ForensicEngineRoot() {
             return {
               companyName: targetCompanyName,
               pillar: latestActivePillar,
-              emails: cachedEmails,
+              emails: FRESH_EMPTY_EMAILS,
               completions: cachedCompletions,
               responses: cachedResponses
             };
           }
 
-          return prev;
+          return {
+            ...prev,
+            emails: FRESH_EMPTY_EMAILS
+          };
         });
 
         if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
@@ -315,6 +333,7 @@ export default function ForensicEngineRoot() {
           setViewState('HUB');
         }
       } else {
+        setEmails(FRESH_EMPTY_EMAILS);
         setViewState('INTAKE');
       }
     } catch (err) {
@@ -345,30 +364,32 @@ export default function ForensicEngineRoot() {
     };
   }, [activeAuditId, synchronizeEngineDataMatrix]);
 
-  // SECURITY AND AUTHORIZATION GATE
+  // SECURITY AND AUTHORIZATION GATE (STRICT SINGLE-PASS EXECUTION + TIMEOUT SAFETY NET)
   useEffect(() => { 
-    if (typeof window !== 'undefined') { 
-      try { 
-        const params = new URLSearchParams(window.location.search); 
-        const authVal = params.get('auth'); 
-        const codeParam = params.get('code');
-        const roleParam = params.get('role') as PersonaKey; 
+    if (typeof window === 'undefined' || didBootRef.current) return; 
 
-        const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
-        const isParticipantRoute = !!(codeParam || roleParam); 
+    try { 
+      const params = new URLSearchParams(window.location.search); 
+      const authVal = params.get('auth'); 
+      const codeParam = params.get('code');
+      const roleParam = params.get('role') as PersonaKey; 
 
-        const isAuthorized = isParticipantRoute || isAdminAuthenticated;
+      const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
+      const isParticipantRoute = !!(codeParam || roleParam); 
+      const isAuthorized = isParticipantRoute || isAdminAuthenticated;
 
-        if (isAuthorized) { 
-          setAuthorizedAdmin(true); 
-          synchronizeEngineDataMatrix();
-        } else { 
-          setAuthorizedAdmin(false); 
-        } 
-      } catch (e) { 
-        console.error("Hydration parsing error:", e); 
-        setAuthorizedAdmin(false); 
-      } 
+      setAuthorizedAdmin(isAuthorized);
+
+      if (isAuthorized) { 
+        didBootRef.current = true; 
+        synchronizeEngineDataMatrix(); 
+      } else {
+        setHasSynced(true);
+      }
+    } catch (e) { 
+      console.error("Hydration parsing error:", e); 
+      setAuthorizedAdmin(false); 
+      setHasSynced(true);
     } 
   }, [synchronizeEngineDataMatrix]); 
 
@@ -444,6 +465,12 @@ export default function ForensicEngineRoot() {
         targetPersona === 'TECH_MGMT' ? 'TECHNICAL' :
         targetPersona === 'OPS_MGMT' ? 'MANAGERIAL' : targetPersona;
 
+      console.log('[Completion Write]', {
+        targetPersona,
+        targetAuditId,
+        canonicalType,
+      });
+
       try {
         const { data: updatedRows, error: updateErr } = await supabase
           .from('operators')
@@ -461,6 +488,7 @@ export default function ForensicEngineRoot() {
           console.error('[Save Handler] DB Update error:', updateErr.message);
         }
 
+        // SAFE FALLBACK INSERT: Read directly from React state/refs to prevent closure timing bugs
         if (!updateErr && (!updatedRows || updatedRows.length === 0)) {
           await supabase
             .from('operators')
@@ -468,7 +496,7 @@ export default function ForensicEngineRoot() {
               audit_id: targetAuditId,
               group_id: targetAuditId,
               persona_type: canonicalType,
-              email: updatedTriangulation.emails[targetPersona] || null,
+              email: (triangulation?.emails?.[targetPersona] ?? emailsRef.current[targetPersona]) || null,
               survey_completed: true,
               status: 'COMPLETED',
               raw_responses: answersToSave,
@@ -617,9 +645,9 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  const handleTriggerNudge = async (persona: PersonaKey) => {
+  const handleTriggerNudge = async (persona: PersonaKey, overrideEmail?: string) => {
     if (!triangulation) return;
-    const email = triangulation.emails[persona];
+    const email = overrideEmail || triangulation.emails[persona];
     if (!email) return;
 
     try {
@@ -649,6 +677,41 @@ export default function ForensicEngineRoot() {
     }
   };
 
+  const handleUpdatePersonaEmail = async (persona: PersonaKey) => {
+    const newEmail = tempEmailInput.trim();
+    if (!newEmail || !triangulation) return;
+
+    const targetAuditId = activeAuditId || activeAuditIdRef.current;
+
+    // 1. Update Local React State & LocalStorage
+    const updatedEmails = { ...triangulation.emails, [persona]: newEmail };
+    const updatedState = { ...triangulation, emails: updatedEmails };
+
+    setTriangulation(updatedState);
+    setEmails(updatedEmails);
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(`bmr_matrix_run_${triangulation.companyName}`, JSON.stringify(updatedState));
+    }
+
+    // 2. Persist Correction to Supabase operators table
+    if (targetAuditId) {
+      const canonicalType = 
+        persona === 'TECH_MGMT' ? 'TECHNICAL' :
+        persona === 'OPS_MGMT' ? 'MANAGERIAL' : persona;
+
+      await supabase
+        .from('operators')
+        .update({ email: newEmail, updated_at: new Date().toISOString() })
+        .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
+        .in('persona_type', PERSONA_ALIASES[persona]);
+    }
+
+    setEditingPersona(null);
+
+    // 3. Automatically Dispatch Invite to Corrected Email
+    await handleTriggerNudge(persona, newEmail);
+  };
+
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
     setActivePersona(persona); 
     
@@ -663,9 +726,14 @@ export default function ForensicEngineRoot() {
   }; 
 
   const handleSystemReset = () => { 
+    didBootRef.current = false;
+
+    setAuthorizedAdmin(null);
+    setHasSynced(false);
+
     setCompanyName(''); 
     setIsCompanyFromDB(false);
-    setEmails({ EXECUTIVE: '', TECH_MGMT: '', OPS_MGMT: '', SYSTEM_USER: '' }); 
+    setEmails(FRESH_EMPTY_EMAILS); 
     setTriangulation(null); 
     setActivePersona(null); 
     setActiveAuditId(null);
@@ -870,21 +938,68 @@ export default function ForensicEngineRoot() {
             </div> 
           </div> 
 
+          {/* EDITABLE TRACK ROW CARDS */}
           <div className="space-y-3"> 
             {(Object.keys(triangulation.emails) as PersonaKey[]).map((persona) => { 
               const isDone = triangulation.completions[persona]; 
+              const isEditing = editingPersona === persona;
+
               return ( 
                 <div key={persona} className="border border-slate-200 bg-white p-5 rounded-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
-                  <div> 
+                  <div className="flex-1 w-full sm:w-auto"> 
                     <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{persona.replace('_', ' ')} Track</span> 
-                    <span className="text-xs text-slate-500 block font-mono font-normal mt-1">{triangulation.emails[persona]}</span> 
+                    
+                    {isEditing ? (
+                      <div className="flex items-center gap-2 mt-1.5 w-full max-w-sm">
+                        <input
+                          type="email"
+                          value={tempEmailInput}
+                          onChange={(e) => setTempEmailInput(e.target.value)}
+                          placeholder="enter corrected email..."
+                          className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs text-slate-900 font-mono focus:outline-none focus:border-slate-900"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleUpdatePersonaEmail(persona)}
+                          className="bg-slate-900 text-white font-mono text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider hover:bg-slate-800"
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingPersona(null)}
+                          className="text-slate-500 font-mono text-[10px] hover:text-slate-900"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-xs text-slate-500 block font-mono font-normal">
+                          {triangulation.emails[persona] || <span className="italic text-slate-400">No email assigned</span>}
+                        </span>
+                        {!isDone && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingPersona(persona);
+                              setTempEmailInput(triangulation.emails[persona] || '');
+                            }}
+                            className="text-[10px] font-mono text-slate-400 hover:text-slate-900 underline uppercase font-bold cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div> 
 
-                  <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end"> 
-                    {!isDone && ( 
+                  <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end shrink-0"> 
+                    {!isDone && !isEditing && ( 
                       <button 
                         onClick={() => handleTriggerNudge(persona)} 
-                        disabled={sendingNudgeRole === persona}
+                        disabled={sendingNudgeRole === persona || !triangulation.emails[persona]}
                         className="text-[11px] font-mono text-slate-500 font-bold hover:text-slate-900 transition-colors uppercase tracking-wider flex items-center gap-1.5 cursor-pointer bg-transparent border-0 disabled:opacity-50" 
                       > 
                         {sendingNudgeRole === persona ? <Loader2 size={12} className="animate-spin text-slate-900" /> : <Mail size={12}/>} Send Reminder 
