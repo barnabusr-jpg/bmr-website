@@ -52,7 +52,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const roleName = roleLabels[roleKey] || roleKey;
       const dynamicTrack = roleToPillarMap[roleKey] || targetPillar;
       
-      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&auth=true`;
+      const isExec = roleKey === 'EXECUTIVE';
+      const viewMode = isExec ? 'cockpit' : 'wizard';
+      const flowMode = isExec ? 'results' : 'quad_node';
+
+      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&view=${viewMode}&flow=${flowMode}&auth=true`;
 
       let emailHtmlValue = '';
 
