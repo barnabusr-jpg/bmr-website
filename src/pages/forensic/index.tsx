@@ -33,7 +33,7 @@ const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF'],
   TECH_MGMT: ['TECH_MGMT', 'TECH', 'TECHNICAL', 'AVS'],
   OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'HAI'],
-  SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER'],
+  SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR'],
 };
 
 // FRESH QUAD NODE ARCHITECTURE: CONSTANT FOR FORCED FRESH EMAILS
@@ -126,7 +126,7 @@ export default function ForensicEngineRoot() {
           setCompanyName(targetCompanyName);
           setIsCompanyFromDB(true);
 
-          // RESOLVE EXACT AUDIT ID FOR PARTICIPANT (PREVENTS NULL activeAuditId)
+          // EXACT AUDIT RESOLUTION FOR PARTICIPANTS (PREVENTS NULL activeAuditId)
           if (!idParam) {
             const { data: participantAudit } = await supabase
               .from('audits')
@@ -264,7 +264,7 @@ export default function ForensicEngineRoot() {
           .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
-        // EMBEDDED TELEMETRY DEBUG checkDbDone FUNCTION
+        // TELEMETRY-HARDENED COMPLETION EVALUATOR
         const checkDbDone = (pKey: PersonaKey) => {
           if (!existingOperators || existingOperators.length === 0) return false;
           const allowedTypes = QUAD_PERSONA_TYPES[pKey];
@@ -282,7 +282,6 @@ export default function ForensicEngineRoot() {
 
             const rr = (m as any).raw_responses;
 
-            // RESILIENT RESPONSE CHECK: Handles objects, arrays, stringified JSON, booleans, and numbers
             let hasResponses = false;
             if (rr) {
               if (typeof rr === 'object') {
@@ -299,7 +298,6 @@ export default function ForensicEngineRoot() {
 
             const finalEvaluatedResult = isCompletedFlag || hasResponses;
 
-            // CONSOLE DIAGNOSTIC LOG
             console.log('[checkDbDone debug]', {
               pKey,
               matchedPersonaType: m.persona_type,
@@ -307,7 +305,6 @@ export default function ForensicEngineRoot() {
               status: m.status,
               raw_responses_type: rr ? typeof rr : rr,
               raw_responses_keys: rr && typeof rr === 'object' ? Object.keys(rr).length : null,
-              raw_responses_sample: rr && typeof rr === 'object' ? Object.values(rr).slice(0, 3) : rr,
               isCompletedFlag,
               hasResponses,
               EVALUATED_RESULT: finalEvaluatedResult
@@ -510,6 +507,18 @@ export default function ForensicEngineRoot() {
 
     // 2. HARDENED EXACT AUDIT RESOLUTION
     let targetAuditId = activeAuditId || activeAuditIdRef.current;
+
+    // DEFENSIVE URL CHECK: READ DIRECTLY FROM WINDOW LOCATION IF STATE/REF IS NULL
+    if (typeof window !== 'undefined' && !targetAuditId) {
+      const params = new URLSearchParams(window.location.search);
+      const idFromUrl = params.get('id');
+      if (idFromUrl) {
+        targetAuditId = idFromUrl;
+        setActiveAuditId(idFromUrl);
+        activeAuditIdRef.current = idFromUrl;
+      }
+    }
+
     const targetOrgName = (companyName || triangulation?.companyName || companyNameRef.current)?.trim();
 
     if (!targetAuditId && targetOrgName) {
@@ -531,7 +540,7 @@ export default function ForensicEngineRoot() {
       }
     }
 
-    // 3. PERSIST COMPLETION TO SUPABASE (WITH ROW-COUNT LOGGING)
+    // 3. PERSIST COMPLETION STATUS TO SUPABASE (SAFE UPSERT FALLBACK)
     if (targetAuditId) {
       const aliases = QUAD_PERSONA_TYPES[targetPersona];
 
@@ -556,19 +565,39 @@ export default function ForensicEngineRoot() {
           updateErr
         });
 
+        // INSTRUMENTED UPSERT FALLBACK FOR LEGACY AUDITS LACKING THIS PERSONA ROW
         if (!updateErr && (!updatedRows || updatedRows.length === 0)) {
-          await supabase
+          console.warn(`[handlePersonaAnswersSaved] No pre-existing row found for ${targetPersona} in audit ${targetAuditId}. Upserting dynamic operator row...`);
+          
+          const fallbackEmail = 
+            (triangulation?.emails?.[targetPersona] ?? emailsRef.current[targetPersona]) || 
+            `stakeholder_${targetPersona.toLowerCase()}@quadnode.internal`;
+
+          const { data: insertedRows, error: insertErr } = await supabase
             .from('operators')
             .insert({
               audit_id: targetAuditId,
               group_id: targetAuditId,
               persona_type: targetPersona,
-              email: (triangulation?.emails?.[targetPersona] ?? emailsRef.current[targetPersona]) || null,
+              email: fallbackEmail,
               survey_completed: true,
               status: 'COMPLETED',
               raw_responses: answersToSave,
               updated_at: new Date().toISOString()
-            });
+            })
+            .select('id, audit_id, group_id, persona_type, survey_completed, status');
+
+          console.log('[handlePersonaAnswersSaved] INSERT fallback result:', {
+            targetAuditId,
+            targetPersona,
+            insertErr: insertErr?.message || null,
+            insertedRowsLength: insertedRows?.length ?? 0,
+            insertedRecord: insertedRows?.[0] ?? null
+          });
+
+          if (insertErr) {
+            console.error('[handlePersonaAnswersSaved] INSERT fallback error:', insertErr);
+          }
         }
 
         await synchronizeEngineDataMatrix();
