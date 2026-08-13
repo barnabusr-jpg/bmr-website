@@ -684,7 +684,6 @@ export default function ForensicEngineRoot() {
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
           companyName: sanitizedInput, 
-          activePillar: activePillar, 
           endpoints: emails, 
           originUrl: `${window.location.origin}${window.location.pathname}` 
         }), 
@@ -706,21 +705,21 @@ export default function ForensicEngineRoot() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           companyName: triangulation.companyName,
-          activePillar: triangulation.pillar,
           endpoints: { [persona]: email },
           isNudge: true,
           originUrl: `${window.location.origin}${window.location.pathname}`
         })
       });
 
-      if (res.ok) {
+      const payload = await res.json().catch(() => null);
+
+      if (res.ok && payload?.success !== false) {
         alert(`Quad Node reminder notification sent to ${persona.replace('_', ' ')} (${email}).`);
       } else {
-        alert("Failed to send Quad Node reminder via BMR platform.");
+        console.warn("Quad Node reminder dispatch returned warning or failure:", payload);
       }
     } catch (err) {
       console.error("Nudge API exception:", err);
-      alert("Error sending Quad Node notification.");
     } finally {
       setSendingNudgeRole(null);
     }
@@ -738,26 +737,36 @@ export default function ForensicEngineRoot() {
 
     setTriangulation(updatedState);
     setEmails(updatedEmails);
+
     if (typeof window !== 'undefined') {
       const cacheKey = `bmr_matrix_run_${sanitizeOrgKey(triangulation.companyName)}`;
       window.localStorage.setItem(cacheKey, JSON.stringify(updatedState));
     }
 
-    // 2. Persist Correction to Supabase operators table (QUAD-SCOPED WRITE)
+    // 2. Persist Correction to Supabase operators table (QUAD-scoped)
     if (targetAuditId) {
-      const canonicalType = persona;
-
-      await supabase
-        .from('operators')
-        .update({ email: newEmail, updated_at: new Date().toISOString() })
-        .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
-        .in('persona_type', QUAD_PERSONA_TYPES[persona]);
+      try {
+        await supabase
+          .from('operators')
+          .update({ email: newEmail, updated_at: new Date().toISOString() })
+          .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
+          .in('persona_type', QUAD_PERSONA_TYPES[persona]);
+      } catch (dbErr) {
+        console.error("Failed to update email in operators table:", dbErr);
+      }
     }
 
     setEditingPersona(null);
 
-    // 3. Automatically Dispatch Invite to Corrected Email
-    await handleTriggerNudge(persona, newEmail);
+    // 3. Optional Nudge Attempt (Non-blocking)
+    try {
+      await handleTriggerNudge(persona, newEmail);
+    } catch (err) {
+      console.warn(
+        "Email updated successfully in database, but reminder dispatch failed (non-blocking):",
+        err
+      );
+    }
   };
 
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
