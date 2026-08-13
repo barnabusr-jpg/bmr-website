@@ -229,7 +229,6 @@ export default function ForensicEngineRoot() {
           .maybeSingle();
         activeAudit = data;
       } else if (targetCompanyName) {
-        // EXACT MATCH RESOLUTION FOR TOKENS LIKE "9:12"
         const { data } = await supabase
           .from('audits')
           .select('id, org_name, sfi_score, decay_pct, sector, status')
@@ -264,7 +263,7 @@ export default function ForensicEngineRoot() {
           .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
-        // TELEMETRY-HARDENED COMPLETION EVALUATOR
+        // TELEMETRY-HARDENED COMPLETION EVALUATOR WITH PERMISSIVE BOOLEAN CHECKS
         const checkDbDone = (pKey: PersonaKey) => {
           if (!existingOperators || existingOperators.length === 0) return false;
           const allowedTypes = QUAD_PERSONA_TYPES[pKey];
@@ -275,10 +274,16 @@ export default function ForensicEngineRoot() {
           });
 
           return matches.some(m => {
+            // PERMISSIVE BOOLEAN EVALUATOR: Handles boolean true, "true", "t", 1, "1", "yes"
+            const rawSurveyVal = (m as any).survey_completed;
+            const isSurveyCompletedBool = 
+              rawSurveyVal === true || 
+              rawSurveyVal === 1 || 
+              ['TRUE', 'T', '1', 'YES'].includes(String(rawSurveyVal ?? '').toUpperCase().trim());
+
             const isCompletedFlag = 
-              m.survey_completed === true || 
-              String(m.status).toUpperCase() === 'COMPLETED' ||
-              String(m.status).toUpperCase() === 'COMPLETE';
+              isSurveyCompletedBool || 
+              ['COMPLETED', 'COMPLETE'].includes(String(m.status ?? '').toUpperCase().trim());
 
             const rr = (m as any).raw_responses;
 
