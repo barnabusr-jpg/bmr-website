@@ -147,13 +147,21 @@ export default function ForensicDiagnosticWizard({
           console.warn("[INTEGRITY WARNING] Contradictions cross-validated:", contradictions);
         }
 
-        const computedResults = calculateForensicMetrics(companyName, fullyCompiledMatrix, {
-          quadWeight: 2,
-          deepDiveWeight: 1
-        });
+        // SAFE CALCULATOR INVOKING WITH EXPECTED SECTOR STRING
+        let computedResults = null;
+        try {
+          const targetSector = activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE';
+          computedResults = calculateForensicMetrics(companyName, fullyCompiledMatrix, targetSector);
+        } catch (calcErr) {
+          console.warn("[Wizard] Non-blocking metrics calculation warning:", calcErr);
+        }
 
         window.sessionStorage.setItem(`bmr_wizard_state_cache`, JSON.stringify(fullyCompiledMatrix));
-        window.sessionStorage.setItem(`bmr_runtime_${companyName}`, JSON.stringify(computedResults));
+        if (computedResults) {
+          window.sessionStorage.setItem(`bmr_runtime_${companyName}`, JSON.stringify(computedResults));
+        }
+
+        console.log('[Wizard] Invoking completion callbacks with answers:', fullyCompiledMatrix);
 
         if (typeof onCalculated === 'function') onCalculated(fullyCompiledMatrix, computedResults);
         if (typeof onComplete === 'function') onComplete(fullyCompiledMatrix, computedResults);
