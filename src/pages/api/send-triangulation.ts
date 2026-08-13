@@ -1,19 +1,12 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { Resend } from 'resend';
 
-// SAFE ENVIRONMENT GUARD
-const resendApiKey = process.env.RESEND_API_KEY;
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
+function toSentenceCase(str: string): string {
+  if (!str) return 'Your company';
+  const clean = str.replace(/_/g, ' ').toLowerCase().trim();
+  return clean.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+}
 
-// STRICT QUAD NODE DISPLAY LABELS
-const PERSONA_DISPLAY_NAMES: Record<string, string> = {
-  EXECUTIVE: 'Executive Track',
-  TECH_MGMT: 'Technical Management Track',
-  OPS_MGMT: 'Operations & Process Track',
-  SYSTEM_USER: 'System User & Operator Track',
-};
-
-// ENFORCE CANONICAL QUAD KEYS (PREVENTS 360 FALLBACK)
+// ENFORCE CANONICAL QUAD NODE KEYS (PREVENTS 360 CROSS-CONTAMINATION)
 function getCanonicalPersonaKey(k: string): string {
   const up = String(k || '').toUpperCase().trim();
   if (up === 'TECHNICAL' || up === 'TECH') return 'TECH_MGMT';
@@ -25,138 +18,234 @@ function getCanonicalPersonaKey(k: string): string {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  // NON-BLOCKING ENV MISSING GUARD
-  if (!resend) {
-    console.warn('[send-triangulation] RESEND_API_KEY is missing. Skipping email dispatch.');
-    return res.status(200).json({ 
-      success: true, 
-      warning: 'Email provider unconfigured. Database updated successfully without email dispatch.' 
-    });
+    return res.status(405).json({ error: 'METHOD_NOT_ALLOWED' });
   }
 
   try {
-    const { companyName, endpoints, isNudge, originUrl } = req.body || {};
+    const { endpoints, companyName, activePillar, originUrl, isNudge } = req.body || {};
 
-    if (!endpoints || typeof endpoints !== 'object' || Array.isArray(endpoints)) {
-      return res.status(400).json({ error: 'Invalid endpoints payload.' });
+    if (!endpoints || typeof endpoints !== 'object' || Array.isArray(endpoints) || !companyName) {
+      return res.status(400).json({ error: 'MISSING_REQUIRED_PARAMETERS' });
     }
 
-    const safeCompanyName = String(companyName || '').trim();
-    const baseOrigin = originUrl || 'https://bmr-website.vercel.app';
-    const dispatched: string[] = [];
+    // 1. SENDGRID CREDENTIALS GUARD
+    const apiKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
+    if (!apiKey) {
+      console.warn('[send-triangulation] Missing SENDGRID_API_KEY or BMR_SENDGRID_KEY in environment.');
+      return res.status(200).json({ 
+        success: true, 
+        warning: 'SendGrid API key unconfigured. DB updated successfully without email dispatch.' 
+      });
+    }
 
-    for (const [rawPersona, emailVal] of Object.entries(endpoints)) {
-      const email = String(emailVal || '').trim();
-      
-      // Skip empty or invalid emails safely
-      if (!email || !email.includes('@')) {
-        console.warn(`[send-triangulation] Invalid email provided for ${rawPersona}:`, emailVal);
-        continue;
+    const roleLabels: Record<string, string> = {
+      EXECUTIVE: 'Executive Leadership (Strategic Oversight Track)',
+      TECH_MGMT: 'Technical Management (Infrastructure & DevOps Track)',
+      OPS_MGMT: 'Operations Management (Workflow & Process Track)',
+      SYSTEM_USER: 'Core System Operator (Terminal Execution Track)'
+    };
+
+    const roleToPillarMap: Record<string, string> = {
+      EXECUTIVE: 'IGF',
+      TECH_MGMT: 'AVS',
+      OPS_MGMT: 'HAI',
+      SYSTEM_USER: 'HAI'
+    };
+
+    const formattedOrg = companyName.trim();
+    const sentenceCompany = toSentenceCase(companyName);
+    const targetPillar = activePillar || 'AVS';
+
+    // Normalize base URL path to /forensic
+    const cleanOrigin = (originUrl || 'https://www.bmradvisory.co/forensic')
+      .replace(/\/diagnostic\/forensic\/?$/, '/forensic');
+
+    const mailRequests = Object.entries(endpoints).map(([rawRoleKey, emailAddress]) => {
+      if (!emailAddress || typeof emailAddress !== 'string') return null;
+
+      const targetEmail = (emailAddress as string).toLowerCase().trim();
+      if (!targetEmail || !targetEmail.includes('@')) return null;
+
+      const roleKey = getCanonicalPersonaKey(rawRoleKey);
+      const roleName = roleLabels[roleKey] || roleKey;
+      const dynamicTrack = roleToPillarMap[roleKey] || targetPillar;
+
+      // QUAD NODE BOUND URL PARAMETERS
+      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&flow=quad_node&auth=true`;
+
+      let emailHtmlValue = '';
+
+      if (roleKey === 'EXECUTIVE' && !isNudge) {
+        // DISPATCH ONE: Executive Consolidated View (Initial Launch - Executive Light Theme)
+        emailHtmlValue = `
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <div style="max-width: 600px; width: 100%; background: #ffffff; color: #0f172a; padding: 40px; border: 1px solid #e2e8f0; border-top: 6px solid #0f172a; border-radius: 6px; box-sizing: border-box; text-align: left;">
+                  
+                  <h2 style="color: #0f172a; font-size: 20px; font-weight: 800; margin: 0 0 4px 0; letter-spacing: -0.5px;">
+                    BMR Solutions // Diagnostic Dispatch
+                  </h2>
+                  <p style="font-size: 11px; font-family: monospace; color: #64748b; margin: 0 0 20px 0; font-weight: 600;">
+                    Target Organization: ${formattedOrg}
+                  </p>
+                  
+                  <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
+                  
+                  <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 16px 0;">
+                    The pre-automation diagnostic assessment for <strong>${sentenceCompany}</strong> is underway.
+                  </p>
+
+                  <p style="line-height: 1.6; font-size: 14px; color: #334155; margin: 0 0 24px 0;">
+                    Invitation links have been dispatched to designated stakeholders to evaluate operational friction, schema stability, and risk guardrails prior to scaling autonomous agents.
+                  </p>
+
+                  <!-- STEP 1: Executive Track -->
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 20px; margin-bottom: 16px; border-radius: 4px; text-align: left;">
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 1: Complete Executive Assessment</p>
+                    <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">
+                      Access your direct link below to complete your executive assessment module:
+                    </p>
+                    <a href="${diagnosticUrl}" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
+                      Open Executive Assessment Track →
+                    </a>
+                  </div>
+
+                  <!-- STEP 2: Remind your team -->
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 2: Stakeholder Alignment</p>
+                    <p style="margin: 0; font-size: 13px; color: #475569;">
+                      Ensure your technical and operational team leads access their respective node links to complete multi-track evaluation.
+                    </p>
+                  </div>
+
+                  <!-- STEP 3: Calibration Scheduling Link -->
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
+                    <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing</p>
+                    <a href="https://calendly.com/hello-bmradvisory/forensic-briefing" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
+                      Schedule Calibration Briefing →
+                    </a>
+                  </div>
+
+                  <p style="font-size: 12px; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 24px;">
+                    Confidential // BMR Solutions Independent Governance
+                  </p>
+                  
+                </div>
+              </td>
+            </tr>
+          </table>
+        `;
+      } else {
+        // DISPATCH TWO: Operator Assessment / Targeted Nudge Notification (Light Executive Theme)
+        emailHtmlValue = `
+          <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+            <tr>
+              <td align="center" style="padding: 40px 20px;">
+                <div style="max-width: 600px; width: 100%; background: #ffffff; color: #0f172a; padding: 40px; border: 1px solid #e2e8f0; border-top: 6px solid #0f172a; border-radius: 6px; box-sizing: border-box; text-align: left;">
+                  
+                  <div style="margin-bottom: 24px;">
+                    <h2 style="color: #0f172a; font-weight: 800; margin: 0; letter-spacing: -0.5px; font-size: 20px; line-height: 1.3;">
+                      ${isNudge ? 'Assessment Reminder' : 'Diagnostic Track Authorized'}
+                    </h2>
+                    <p style="color: #64748b; font-family: monospace; font-size: 11px; margin: 4px 0 0 0; font-weight: 600;">
+                      Organization: ${formattedOrg}
+                    </p>
+                  </div>
+
+                  <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 20px 0"/>
+                  
+                  <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 16px; margin-bottom: 24px; border-radius: 4px;">
+                    <span style="color: #64748b; font-family: monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; display: block; margin-bottom: 4px;">
+                      ASSIGNED STAKEHOLDER TRACK
+                    </span>
+                    <span style="color: #0f172a; font-size: 14px; font-weight: 800; display: block;">
+                      ${roleName}
+                    </span>
+                  </div>
+
+                  <p style="font-size: 14px; line-height: 1.6; color: #334155; font-weight: 400; margin: 0 0 24px 0;">
+                    Leadership at <strong>${sentenceCompany}</strong> has provisioned an operational diagnostic stream. Your direct feedback is required to evaluate workflow friction and schema stability within the <strong>${dynamicTrack} Framework Layer</strong>.
+                  </p>
+                  
+                  <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 24px; margin: 24px 0; text-align: center; border-radius: 4px;">
+                    <p style="font-size: 11px; font-family: monospace; color: #64748b; margin-bottom: 16px; font-weight: 600; text-transform: uppercase;">
+                      SECURE DIAGNOSTIC TERMINAL
+                    </p>
+                    <a href="${diagnosticUrl}" style="background: #0f172a; color: #ffffff; padding: 14px 28px; font-weight: 700; text-decoration: none; display: inline-block; font-size: 12px; letter-spacing: 1px; border-radius: 4px; text-transform: uppercase;">
+                      Launch Assessment Track →
+                    </a>
+                  </div>
+
+                  <p style="font-size: 11px; color: #94a3b8; line-height: 1.6; font-family: monospace; border-top: 1px solid #f1f5f9; padding-top: 20px; margin: 32px 0 0 0;">
+                    Confidential // BMR Solutions Independent Governance
+                  </p>
+
+                </div>
+              </td>
+            </tr>
+          </table>
+        `;
       }
 
-      const canonicalPersona = getCanonicalPersonaKey(rawPersona);
-      const displayLabel = PERSONA_DISPLAY_NAMES[canonicalPersona] || canonicalPersona;
+      const subjectLine = isNudge
+        ? `REMINDER: Operational Assessment Gateway // ${formattedOrg}`
+        : `ACTION REQUIRED: Operational Assessment Authorized // ${formattedOrg}`;
 
-      const subject = isNudge
-        ? `[Nudge] Action Required: ${safeCompanyName || 'Target System'} ${displayLabel} Quad Node Assessment`
-        : `ACTION REQUIRED: ${displayLabel} Assessment Authorized // ${safeCompanyName}`;
+      const sendgridPayload = {
+        personalizations: [
+          {
+            to: [{ email: targetEmail }],
+            subject: subjectLine
+          }
+        ],
+        from: {
+          email: 'hello@bmradvisory.co',
+          name: 'BMR Solutions'
+        },
+        content: [
+          {
+            type: 'text/html',
+            value: emailHtmlValue
+          }
+        ]
+      };
 
-      // EXACT QUAD NODE PARAMETER BINDING LINK
-      const targetUrl = `${baseOrigin}/forensic?org=${encodeURIComponent(safeCompanyName)}&role=${canonicalPersona}&flow=quad_node`;
-
-      // BRANDED BMR QUAD NODE HTML EMAIL TEMPLATE
-      const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #0f172a; margin: 0; padding: 40px 20px; }
-            .container { max-width: 580px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-            .header { border-bottom: 4px solid #0f172a; padding: 32px 32px 24px 32px; }
-            .title { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin: 0; color: #0f172a; }
-            .subtitle { font-family: monospace; font-size: 11px; color: #64748b; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
-            .content { padding: 32px; }
-            .track-box { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 16px 20px; border-radius: 4px; margin-bottom: 24px; }
-            .track-label { font-family: monospace; font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; font-weight: bold; }
-            .track-name { font-size: 15px; font-weight: 800; color: #0f172a; margin-top: 4px; }
-            .body-text { font-size: 13px; color: #334155; line-height: 1.6; margin-bottom: 24px; }
-            
-            /* EXECUTION INSTRUCTIONS SECTION */
-            .instructions-card { background: #fafafa; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin-bottom: 28px; }
-            .instructions-header { font-family: monospace; font-size: 10px; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
-            .instructions-list { margin: 0; padding: 0; list-style: none; font-size: 12px; color: #475569; }
-            .instructions-list li { margin-bottom: 8px; line-height: 1.5; padding-left: 14px; position: relative; }
-            .instructions-list li::before { content: "•"; position: absolute; left: 0; color: #0f172a; font-weight: bold; }
-            
-            .cta-container { text-align: center; padding-top: 8px; padding-bottom: 8px; }
-            .cta-button { background-color: #0f172a; color: #ffffff !important; font-family: monospace; font-size: 11px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 4px; display: inline-block; text-transform: uppercase; letter-spacing: 0.05em; width: 80%; text-align: center; }
-
-            .footer { border-top: 1px solid #f1f5f9; padding: 20px 32px; background: #fafafa; font-family: monospace; font-size: 10px; color: #94a3b8; letter-spacing: 0.05em; text-align: center; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h1 class="title">Diagnostic Track Authorized</h1>
-              <div class="subtitle">Organization: ${safeCompanyName} // Quad Node Stream</div>
-            </div>
-            
-            <div class="content">
-              <div class="track-box">
-                <div class="track-label">// Assigned Stakeholder Track</div>
-                <div class="track-name">${displayLabel}</div>
-              </div>
-              
-              <p class="body-text">
-                Leadership at <strong>${safeCompanyName}</strong> has authorized a Quad Node operational diagnostic stream. Your direct technical and operational input is required to evaluate workflow friction and schema stability.
-              </p>
-
-              <!-- INSTRUCTIONS BLOCK -->
-              <div class="instructions-card">
-                <div class="instructions-header">// Execution Instructions</div>
-                <ul class="instructions-list">
-                  <li><strong>Estimated Duration:</strong> ~5 to 7 minutes.</li>
-                  <li><strong>Format:</strong> Diagnostic wizard evaluating pipeline hygiene and operational bottlenecks.</li>
-                  <li><strong>Access Control:</strong> Secure single-participant link generated strictly for your role.</li>
-                </ul>
-              </div>
-              
-              <!-- PRIMARY CTA TERMINAL -->
-              <div class="cta-container">
-                <a href="${targetUrl}" class="cta-button">BEGIN QUAD NODE ASSESSMENT TRACK →</a>
-              </div>
-            </div>
-
-            <div class="footer">
-              Confidential // BMR Solutions Independent Governance
-            </div>
-          </div>
-        </body>
-        </html>
-      `;
-
-      await resend.emails.send({
-        from: 'BMR Solutions <notifications@bmrsolutions.io>',
-        to: [email],
-        subject,
-        html: htmlContent
+      return fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${apiKey}`
+        },
+        body: JSON.stringify(sendgridPayload)
       });
+    });
 
-      dispatched.push(canonicalPersona);
+    const activeRequests = mailRequests.filter(Boolean);
+    const outcomes = await Promise.all(activeRequests);
+    const failedDispatch = outcomes.find(res => res && !res.ok);
+
+    if (failedDispatch) {
+      const errDetails = await failedDispatch.text();
+      console.error('[SendGrid Dispatch Error]:', errDetails);
+      return res.status(200).json({ 
+        success: false, 
+        warning: 'SendGrid dispatch returned an error.', 
+        details: errDetails 
+      });
     }
 
-    return res.status(200).json({ success: true, dispatchedCount: dispatched.length });
+    return res.status(200).json({ 
+      success: true, 
+      status: isNudge ? 'NUDGE_DISPATCH_COMPLETE' : 'BATCH_DISPATCH_COMPLETE' 
+    });
 
   } catch (err: any) {
-    console.error('[send-triangulation] Dispatch exception caught:', err);
+    console.error('[send-triangulation Exception]:', err);
     return res.status(200).json({ 
       success: false, 
-      warning: 'Email dispatch failed on provider layer', 
-      details: err?.message || String(err) 
+      warning: 'Server matrix exception occurred', 
+      message: err.message 
     });
   }
 }
