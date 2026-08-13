@@ -36,9 +36,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { companyName, activePillar, endpoints, isNudge, originUrl } = req.body || {};
+    const { companyName, endpoints, isNudge, originUrl } = req.body || {};
 
-    // STRICT ENDPOINTS GUARD
+    // STRICT ENDPOINTS GUARD (EXCLUDES NULL, ARRAYS & NON-OBJECTS)
     if (!endpoints || typeof endpoints !== 'object' || Array.isArray(endpoints)) {
       return res.status(400).json({ error: 'Invalid endpoints payload.' });
     }
