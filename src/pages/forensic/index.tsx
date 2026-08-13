@@ -28,11 +28,11 @@ type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 // HELPER: CANONICAL LOCALSTORAGE KEY NORMALIZER
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
-// STRICT QUAD NODE PERSONA TYPES (PREVENTS 360 CROSS-CONTAMINATION)
+// STRICT QUAD NODE PERSONA TYPES + LEGACY ALIASES FOR DB READ/WRITE MATCHING
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
-  EXECUTIVE: ['EXECUTIVE', 'EXEC'],
-  TECH_MGMT: ['TECH_MGMT', 'TECH'],
-  OPS_MGMT: ['OPS_MGMT', 'OPS'],
+  EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF'],
+  TECH_MGMT: ['TECH_MGMT', 'TECH', 'TECHNICAL', 'AVS'],
+  OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'HAI'],
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER'],
 };
 
@@ -125,6 +125,26 @@ export default function ForensicEngineRoot() {
         if (targetCompanyName) {
           setCompanyName(targetCompanyName);
           setIsCompanyFromDB(true);
+
+          // RESOLVE EXACT AUDIT ID FOR PARTICIPANT (PREVENTS NULL activeAuditId)
+          if (!idParam) {
+            const { data: participantAudit } = await supabase
+              .from('audits')
+              .select('id')
+              .eq('org_name', targetCompanyName)
+              .eq('status', 'IN_PROGRESS')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            if (participantAudit?.id) {
+              setActiveAuditId(participantAudit.id);
+              activeAuditIdRef.current = participantAudit.id;
+            }
+          } else {
+            setActiveAuditId(idParam);
+            activeAuditIdRef.current = idParam;
+          }
         }
 
         setActivePersona(roleParam);
@@ -171,17 +191,11 @@ export default function ForensicEngineRoot() {
         if (rawCache) {
           try {
             const parsed = JSON.parse(rawCache);
-            console.log(`[Quad Cache Diagnostic] Key: ${cacheKey}`, {
-              hasCompletions: !!parsed?.completions,
-              cachedCompletions: parsed?.completions
-            });
             if (sanitizeOrgKey(parsed?.companyName || '') === sanitizeOrgKey(targetCompanyName) && parsed?.completions) {
               cachedCompletions = parsed.completions;
             }
             if (parsed?.responses) cachedResponses = parsed.responses;
           } catch (e) { console.error('[Quad Cache] Parse error:', e); }
-        } else {
-          console.log(`[Quad Cache Diagnostic] Key: ${cacheKey} (No local cache found)`);
         }
       }
 
@@ -207,18 +221,19 @@ export default function ForensicEngineRoot() {
 
           activeAudit = auditData;
         }
-      } else if (idParam && isAdminSession) {
+      } else if (idParam) {
         const { data } = await supabase
           .from('audits')
           .select('id, org_name, sfi_score, decay_pct, sector, status')
           .eq('id', idParam)
           .maybeSingle();
         activeAudit = data;
-      } else if (targetCompanyName && isAdminSession) {
+      } else if (targetCompanyName) {
+        // EXACT MATCH RESOLUTION FOR TOKENS LIKE "9:12"
         const { data } = await supabase
           .from('audits')
           .select('id, org_name, sfi_score, decay_pct, sector, status')
-          .ilike('org_name', targetCompanyName)
+          .eq('org_name', targetCompanyName)
           .eq('status', 'IN_PROGRESS')
           .order('created_at', { ascending: false })
           .limit(1)
@@ -230,6 +245,7 @@ export default function ForensicEngineRoot() {
 
       if (activeAudit) {
         setActiveAuditId(activeAudit.id);
+        activeAuditIdRef.current = activeAudit.id;
         setCompanyName(activeAudit.org_name);
         setIsCompanyFromDB(true);
 
@@ -248,56 +264,65 @@ export default function ForensicEngineRoot() {
           .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
-        // TELEMETRY LOGGING BLOCK
-        console.group(`[Quad Node Matrix Sync] Audit ID: ${activeAudit.id}`);
-        console.log('URL Param ID:', idParam);
-        console.log('Raw DB Operators Count:', existingOperators?.length ?? 0);
-        console.log('Fetched Operator Persona Types:', existingOperators?.map(o => o.persona_type));
-
-        // STRICT QUAD CHECK: USES QUAD_PERSONA_TYPES (NO 360 ALIASES)
+        // EMBEDDED TELEMETRY DEBUG checkDbDone FUNCTION
         const checkDbDone = (pKey: PersonaKey) => {
           if (!existingOperators || existingOperators.length === 0) return false;
           const allowedTypes = QUAD_PERSONA_TYPES[pKey];
+
           const matches = existingOperators.filter(o => {
             const rawPersona = String(o.persona_type || '').toUpperCase().trim();
             return allowedTypes.includes(rawPersona);
           });
 
-          const isDone = matches.some(m => {
+          return matches.some(m => {
             const isCompletedFlag = 
               m.survey_completed === true || 
               String(m.status).toUpperCase() === 'COMPLETED' ||
               String(m.status).toUpperCase() === 'COMPLETE';
 
             const rr = (m as any).raw_responses;
-            const hasResponses = 
-              rr && 
-              typeof rr === 'object' && 
-              Object.keys(rr).length > 0 && 
-              Object.values(rr).some(v => String(v ?? '').trim().length > 0);
 
-            return isCompletedFlag && hasResponses;
+            // RESILIENT RESPONSE CHECK: Handles objects, arrays, stringified JSON, booleans, and numbers
+            let hasResponses = false;
+            if (rr) {
+              if (typeof rr === 'object') {
+                const values = Array.isArray(rr) ? rr : Object.values(rr);
+                hasResponses = values.length > 0 && values.some(v => {
+                  if (v === null || v === undefined) return false;
+                  if (typeof v === 'object') return Object.keys(v).length > 0;
+                  return String(v).trim().length > 0;
+                });
+              } else if (typeof rr === 'string') {
+                hasResponses = rr.trim().length > 0 && rr !== '{}' && rr !== '[]';
+              }
+            }
+
+            const finalEvaluatedResult = isCompletedFlag || hasResponses;
+
+            // CONSOLE DIAGNOSTIC LOG
+            console.log('[checkDbDone debug]', {
+              pKey,
+              matchedPersonaType: m.persona_type,
+              survey_completed: m.survey_completed,
+              status: m.status,
+              raw_responses_type: rr ? typeof rr : rr,
+              raw_responses_keys: rr && typeof rr === 'object' ? Object.keys(rr).length : null,
+              raw_responses_sample: rr && typeof rr === 'object' ? Object.values(rr).slice(0, 3) : rr,
+              isCompletedFlag,
+              hasResponses,
+              EVALUATED_RESULT: finalEvaluatedResult
+            });
+
+            return finalEvaluatedResult;
           });
-
-          console.log(`[checkDbDone] ${pKey}:`, {
-            allowedTypes,
-            matchedOperators: matches,
-            evaluatedResult: isDone
-          });
-
-          return isDone;
         };
 
-        // STRICT MERGE: DB GROUND TRUTH TAKES 100% PRECEDENCE WHEN ACTIVE AUDIT IS BOUND
         const mergedCompletions: Record<PersonaKey, boolean> = {
           EXECUTIVE: checkDbDone('EXECUTIVE'),
           TECH_MGMT: checkDbDone('TECH_MGMT'),
           OPS_MGMT: checkDbDone('OPS_MGMT'),
           SYSTEM_USER: checkDbDone('SYSTEM_USER'),
         };
-
-        console.log('[Final Merged Completions - DB Authoritative]:', mergedCompletions);
-        console.groupEnd();
 
         setTriangulation(prev => {
           const resolvedOrg = (activeAudit?.org_name ?? targetCompanyName)?.trim();
@@ -352,7 +377,6 @@ export default function ForensicEngineRoot() {
 
         setViewState('HUB');
       } else if (targetCompanyName) {
-        // UNBOUND / PRE-BIND FALLBACK (Strict zero-state completions prevent stale flashes)
         setTriangulation(prev => {
           const nextOrg = targetCompanyName.trim().toLowerCase();
           const prevOrg = prev?.companyName?.trim().toLowerCase();
@@ -375,7 +399,7 @@ export default function ForensicEngineRoot() {
             companyName: targetCompanyName,
             pillar: latestActivePillar,
             emails: currentActiveEmails,
-            completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, // Strict zero-state
+            completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
             responses: (isMatchingOrg && prev?.responses) ? prev.responses : cachedResponses,
           };
         });
@@ -417,7 +441,7 @@ export default function ForensicEngineRoot() {
     };
   }, [activeAuditId, synchronizeEngineDataMatrix]);
 
-  // SECURITY AND AUTHORIZATION GATE (STRICT SINGLE-PASS EXECUTION + TIMEOUT SAFETY NET)
+  // SECURITY AND AUTHORIZATION GATE
   useEffect(() => { 
     if (typeof window === 'undefined' || didBootRef.current) return; 
 
@@ -454,20 +478,13 @@ export default function ForensicEngineRoot() {
       ? personaAnswers 
       : { status: "completed_via_wizard", completed_at: new Date().toISOString() };
 
-    // 1. IMMEDIATE OPTIMISTIC LOCAL STATE UPDATE (SAFE)
+    // 1. OPTIMISTIC LOCAL STATE UPDATE
     setTriangulation(prev => {
-      const currentCompany =
-        prev?.companyName || companyName || companyNameRef.current || "Quad Node Client System";
-
+      const currentCompany = prev?.companyName || companyName || companyNameRef.current || "Quad Node Client System";
       const currentPillar = prev?.pillar || activePillar || "IGF";
-
       const currentEmails = prev?.emails || emails;
-
-      const currentCompletions =
-        prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
-
-      const currentResponses =
-        prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
+      const currentCompletions = prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
+      const currentResponses = prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
 
       const updated: TriangulationState = {
         companyName: currentCompany,
@@ -485,26 +502,21 @@ export default function ForensicEngineRoot() {
 
       if (typeof window !== 'undefined') {
         const cacheKey = `bmr_matrix_run_${sanitizeOrgKey(updated.companyName)}`;
-        window.localStorage.setItem(
-          cacheKey,
-          JSON.stringify(updated)
-        );
+        window.localStorage.setItem(cacheKey, JSON.stringify(updated));
       }
 
       return updated;
     });
 
-    // 2. RESOLVE DB AUDIT ID (STRICT LATEST IN-PROGRESS AUDIT FALLBACK)
+    // 2. HARDENED EXACT AUDIT RESOLUTION
     let targetAuditId = activeAuditId || activeAuditIdRef.current;
     const targetOrgName = (companyName || triangulation?.companyName || companyNameRef.current)?.trim();
 
     if (!targetAuditId && targetOrgName) {
-      console.warn(`[Completion Telemetry] activeAuditId missing for ${targetPersona}. Resolving LATEST IN_PROGRESS audit record for org: "${targetOrgName}"...`);
-
       const { data: auditLookup, error: lookupErr } = await supabase
         .from('audits')
         .select('id')
-        .ilike('org_name', targetOrgName)
+        .eq('org_name', targetOrgName)
         .eq('status', 'IN_PROGRESS')
         .order('created_at', { ascending: false })
         .limit(1)
@@ -513,24 +525,15 @@ export default function ForensicEngineRoot() {
       if (auditLookup?.id) {
         targetAuditId = auditLookup.id;
         setActiveAuditId(targetAuditId);
-        console.log(`[Completion Telemetry] Fallback resolved latest in-progress audit ID: ${targetAuditId}`);
+        activeAuditIdRef.current = targetAuditId;
       } else if (lookupErr) {
-        console.error(`[Completion Telemetry] Failed to resolve audit ID for "${targetOrgName}":`, lookupErr.message);
-      } else {
-        console.warn(`[Completion Telemetry] No active IN_PROGRESS audit record found matching org_name: "${targetOrgName}"`);
+        console.error(`[handlePersonaAnswersSaved] Audit lookup error:`, lookupErr.message);
       }
     }
 
-    // 3. PERSIST COMPLETION STATUS TO SUPABASE (QUAD-SCOPED WRITE)
+    // 3. PERSIST COMPLETION TO SUPABASE (WITH ROW-COUNT LOGGING)
     if (targetAuditId) {
       const aliases = QUAD_PERSONA_TYPES[targetPersona];
-      const canonicalType = targetPersona;
-
-      console.log('[Completion Write]', {
-        targetPersona,
-        targetAuditId,
-        canonicalType,
-      });
 
       try {
         const { data: updatedRows, error: updateErr } = await supabase
@@ -545,9 +548,13 @@ export default function ForensicEngineRoot() {
           .in('persona_type', aliases)
           .select('id');
 
-        if (updateErr) {
-          console.error('[Save Handler] DB Update error:', updateErr.message);
-        }
+        console.log('[handlePersonaAnswersSaved] Update result:', {
+          targetAuditId,
+          targetPersona,
+          aliases,
+          updatedCount: updatedRows?.length ?? 0,
+          updateErr
+        });
 
         if (!updateErr && (!updatedRows || updatedRows.length === 0)) {
           await supabase
@@ -555,7 +562,7 @@ export default function ForensicEngineRoot() {
             .insert({
               audit_id: targetAuditId,
               group_id: targetAuditId,
-              persona_type: canonicalType,
+              persona_type: targetPersona,
               email: (triangulation?.emails?.[targetPersona] ?? emailsRef.current[targetPersona]) || null,
               survey_completed: true,
               status: 'COMPLETED',
@@ -608,7 +615,6 @@ export default function ForensicEngineRoot() {
     }
 
     try { 
-      // 1. ALWAYS CREATE A NEW ISOLATED AUDIT RECORD FOR QUAD NODE SETUPS
       const { data: newAudit, error: createErr } = await supabase
         .from('audits')
         .insert({
@@ -624,7 +630,6 @@ export default function ForensicEngineRoot() {
       const parentAuditId = newAudit.id;
       setActiveAuditId(parentAuditId);
 
-      // SYNCHRONOUS URL PARAMETER BINDING (PREVENTS ILIKE FALLBACK)
       if (typeof window !== 'undefined') {
         const url = new URL(window.location.href);
         url.searchParams.set('id', parentAuditId);
@@ -632,23 +637,15 @@ export default function ForensicEngineRoot() {
         window.history.replaceState({}, '', url.toString());
       }
 
-      // 2. ENFORCE CLEAN SLATE OPERATOR PROVISIONING
       await supabase
         .from('operators')
         .delete()
         .or(`audit_id.eq.${parentAuditId},group_id.eq.${parentAuditId}`);
 
-      const personaMapping: Record<PersonaKey, string> = {
-        EXECUTIVE: 'EXECUTIVE',
-        TECH_MGMT: 'TECH_MGMT',
-        OPS_MGMT: 'OPS_MGMT',
-        SYSTEM_USER: 'SYSTEM_USER',
-      };
-
       const rowsToInsert = (Object.keys(emails) as PersonaKey[]).map(pKey => ({
         audit_id: parentAuditId,
         group_id: parentAuditId,
-        persona_type: personaMapping[pKey],
+        persona_type: pKey,
         email: emails[pKey],
         survey_completed: false,
         status: 'PENDING',
@@ -684,6 +681,7 @@ export default function ForensicEngineRoot() {
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
           companyName: sanitizedInput, 
+          auditId: parentAuditId,
           endpoints: emails, 
           originUrl: `${window.location.origin}${window.location.pathname}` 
         }), 
@@ -705,6 +703,7 @@ export default function ForensicEngineRoot() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           companyName: triangulation.companyName,
+          auditId: activeAuditId || activeAuditIdRef.current,
           endpoints: { [persona]: email },
           isNudge: true,
           originUrl: `${window.location.origin}${window.location.pathname}`
@@ -731,7 +730,6 @@ export default function ForensicEngineRoot() {
 
     const targetAuditId = activeAuditId || activeAuditIdRef.current;
 
-    // 1. Update Local React State & LocalStorage
     const updatedEmails = { ...triangulation.emails, [persona]: newEmail };
     const updatedState = { ...triangulation, emails: updatedEmails };
 
@@ -743,7 +741,6 @@ export default function ForensicEngineRoot() {
       window.localStorage.setItem(cacheKey, JSON.stringify(updatedState));
     }
 
-    // 2. Persist Correction to Supabase operators table (QUAD-scoped)
     if (targetAuditId) {
       try {
         await supabase
@@ -758,14 +755,10 @@ export default function ForensicEngineRoot() {
 
     setEditingPersona(null);
 
-    // 3. Optional Nudge Attempt (Non-blocking)
     try {
       await handleTriggerNudge(persona, newEmail);
     } catch (err) {
-      console.warn(
-        "Email updated successfully in database, but reminder dispatch failed (non-blocking):",
-        err
-      );
+      console.warn("Email updated in DB, reminder dispatch skipped:", err);
     }
   };
 
@@ -952,7 +945,7 @@ export default function ForensicEngineRoot() {
         </div> 
       )} 
 
-      {/* FULL UI HUB VIEW WITH 4-NODE STATUS GRID & PARTIAL COMPILE OVERRIDE */}
+      {/* FULL UI HUB VIEW WITH 4-NODE STATUS GRID */}
       {viewState === 'HUB' && triangulation && ( 
         <div className="w-full max-w-2xl border border-slate-200 bg-white p-8 md:p-10 text-left rounded-lg shadow-sm"> 
           <div className="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center gap-4"> 
@@ -975,7 +968,6 @@ export default function ForensicEngineRoot() {
             </button> 
           </div> 
 
-          {/* 4-NODE COMPLETION STATUS BOARD */}
           <div className="bg-slate-50 border border-slate-200 p-5 mb-6 rounded-md"> 
             <span className="text-[11px] font-mono text-slate-500 block font-bold uppercase tracking-wider mb-4">Completion Status</span> 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4"> 
@@ -995,7 +987,6 @@ export default function ForensicEngineRoot() {
             </div> 
           </div> 
 
-          {/* EDITABLE TRACK ROW CARDS */}
           <div className="space-y-3"> 
             {(Object.keys(triangulation.emails) as PersonaKey[]).map((persona) => { 
               const isDone = triangulation.completions[persona]; 
@@ -1075,7 +1066,6 @@ export default function ForensicEngineRoot() {
             })} 
           </div> 
 
-          {/* FOOTER ACTIONS WITH COMPILE PARTIAL RESULTS OVERRIDE */}
           <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
             <div className="text-left"> 
               <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-bold block">Consolidated Results Compilation</span> 
@@ -1122,7 +1112,6 @@ export default function ForensicEngineRoot() {
         /> 
       )} 
 
-      {/* FULL COCKPIT VIEW WITH SOW TERMINAL & TOKEN GENERATOR */}
       {viewState === 'COCKPIT' && triangulation && ( 
         <div className="w-full max-w-[1600px] mx-auto text-left"> 
           <div className="mb-4 px-10 no-print flex justify-start"> 
@@ -1150,7 +1139,6 @@ export default function ForensicEngineRoot() {
             />
           </div>
 
-          {/* ACTIVE DOSSIER & SOW TERMINAL SECTION */}
           <div className="mt-8 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left">
             <div className="border-b border-slate-100 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div className="flex items-center gap-3">
