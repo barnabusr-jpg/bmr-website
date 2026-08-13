@@ -118,7 +118,7 @@ export default function ForensicEngineRoot() {
       const viewParam = params.get('view');
 
       const isAdminSession = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
-      const isParticipantRoute = !!(codeParam || roleParam);
+      const isParticipantRoute = !isAdminSession && !!(codeParam || roleParam);
 
       // 1. PARTICIPANT ROUTE FROM EMAIL LINK
       if (isParticipantRoute && roleParam) {
@@ -130,7 +130,6 @@ export default function ForensicEngineRoot() {
           setCompanyName(targetCompanyName);
           setIsCompanyFromDB(true);
 
-          // EXACT AUDIT RESOLUTION FOR PARTICIPANTS (PREVENTS NULL activeAuditId)
           if (!idParam) {
             const { data: participantAudit } = await supabase
               .from('audits')
@@ -278,7 +277,6 @@ export default function ForensicEngineRoot() {
           });
 
           return matches.some(m => {
-            // PERMISSIVE BOOLEAN EVALUATOR: Handles boolean true, "true", "t", 1, "1", "yes"
             const rawSurveyVal = (m as any).survey_completed;
             const isSurveyCompletedBool = 
               rawSurveyVal === true || 
@@ -312,8 +310,6 @@ export default function ForensicEngineRoot() {
               matchedPersonaType: m.persona_type,
               survey_completed: m.survey_completed,
               status: m.status,
-              raw_responses_type: rr ? typeof rr : rr,
-              raw_responses_keys: rr && typeof rr === 'object' ? Object.keys(rr).length : null,
               isCompletedFlag,
               hasResponses,
               EVALUATED_RESULT: finalEvaluatedResult
@@ -364,7 +360,7 @@ export default function ForensicEngineRoot() {
           return;
         }
 
-        if (matchedOperator) {
+        if (matchedOperator && !isAdminSession) {
           const rawPersona = String(matchedOperator.persona_type || '').toUpperCase().trim();
           let mappedKey: PersonaKey = 'EXECUTIVE';
           if (QUAD_PERSONA_TYPES.TECH_MGMT.includes(rawPersona)) mappedKey = 'TECH_MGMT';
@@ -459,7 +455,7 @@ export default function ForensicEngineRoot() {
       const roleParam = params.get('role') as PersonaKey; 
 
       const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
-      const isParticipantRoute = !!(codeParam || roleParam); 
+      const isParticipantRoute = !isAdminAuthenticated && !!(codeParam || roleParam); 
       const isAuthorized = isParticipantRoute || isAdminAuthenticated;
 
       setAuthorizedAdmin(isAuthorized);
@@ -487,38 +483,23 @@ export default function ForensicEngineRoot() {
 
     // 1. OPTIMISTIC LOCAL STATE UPDATE
     setTriangulation(prev => {
-      const currentCompany = prev?.companyName || companyName || companyNameRef.current || "Quad Node Client System";
-      const currentPillar = prev?.pillar || activePillar || "IGF";
-      const currentEmails = prev?.emails || emails;
-      const currentCompletions = prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
-      const currentResponses = prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
-
-      const updated: TriangulationState = {
-        companyName: currentCompany,
-        pillar: currentPillar,
-        emails: currentEmails,
+      if (!prev) return prev;
+      return {
+        ...prev,
         completions: {
-          ...currentCompletions,
+          ...prev.completions,
           [targetPersona]: true
         },
         responses: {
-          ...currentResponses,
+          ...prev.responses,
           [targetPersona]: answersToSave
         }
       };
-
-      if (typeof window !== 'undefined') {
-        const cacheKey = `bmr_matrix_run_${sanitizeOrgKey(updated.companyName)}`;
-        window.localStorage.setItem(cacheKey, JSON.stringify(updated));
-      }
-
-      return updated;
     });
 
     // 2. HARDENED EXACT AUDIT RESOLUTION
     let targetAuditId = activeAuditId || activeAuditIdRef.current;
 
-    // DEFENSIVE URL CHECK: READ DIRECTLY FROM WINDOW LOCATION IF STATE/REF IS NULL
     if (typeof window !== 'undefined' && !targetAuditId) {
       const params = new URLSearchParams(window.location.search);
       const idFromUrl = params.get('id');
@@ -550,7 +531,7 @@ export default function ForensicEngineRoot() {
       }
     }
 
-    // 3. PERSIST COMPLETION STATUS TO SUPABASE (SAFE UPSERT FALLBACK)
+    // 3. PERSIST COMPLETION STATUS TO SUPABASE
     if (targetAuditId) {
       const aliases = QUAD_PERSONA_TYPES[targetPersona];
 
@@ -575,7 +556,6 @@ export default function ForensicEngineRoot() {
           updateErr
         });
 
-        // INSTRUMENTED UPSERT FALLBACK FOR LEGACY AUDITS LACKING THIS PERSONA ROW
         if (!updateErr && (!updatedRows || updatedRows.length === 0)) {
           console.warn(`[handlePersonaAnswersSaved] No pre-existing row found for ${targetPersona} in audit ${targetAuditId}. Upserting dynamic operator row...`);
           
@@ -604,13 +584,17 @@ export default function ForensicEngineRoot() {
             insertedRowsLength: insertedRows?.length ?? 0,
             insertedRecord: insertedRows?.[0] ?? null
           });
-
-          if (insertErr) {
-            console.error('[handlePersonaAnswersSaved] INSERT fallback error:', insertErr);
-          }
         }
 
-        // FORCE RE-SYNC MATRIX SO LOCK DOES NOT BLOCK UI REFRESH
+        // CLEAN UP PARTICIPANT ROLE PARAMETERS FROM URL BEFORE RE-SYNC
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('role');
+          url.searchParams.delete('track');
+          window.history.replaceState({}, '', url.toString());
+        }
+
+        // FORCE RE-SYNC MATRIX
         await synchronizeEngineDataMatrix(true);
 
       } catch (dbErr) {
@@ -619,17 +603,7 @@ export default function ForensicEngineRoot() {
     }
 
     setActivePersona(null); 
-
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      if (params.get('code') || params.get('role')) { 
-        setViewState('THANK_YOU'); 
-      } else { 
-        setViewState('HUB'); 
-      } 
-    } else {
-      setViewState('HUB');
-    }
+    setViewState('HUB');
   }; 
 
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
@@ -802,23 +776,25 @@ export default function ForensicEngineRoot() {
     }
   };
 
+  // ADMIN TRACK LAUNCH: REMOVES ROLE PARAMETERS FROM URL TO PREVENT SHORT-CIRCUITING
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
     setActivePersona(persona); 
-    
+
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
-      url.searchParams.set('role', persona);
-      url.searchParams.set('track', persona);
+      url.searchParams.delete('role');
+      url.searchParams.delete('track');
       window.history.replaceState({}, '', url.toString());
     }
 
     setViewState('WIZARD'); 
   }; 
 
+  // SETUP RESET: KEEPS ADMIN AUTHORIZED AND EXPLICITLY KICKS OFF SYNC
   const handleSystemReset = () => { 
     didBootRef.current = false;
 
-    setAuthorizedAdmin(null);
+    setAuthorizedAdmin(true);
     setHasSynced(false);
 
     setCompanyName(''); 
@@ -834,6 +810,10 @@ export default function ForensicEngineRoot() {
     }
 
     setViewState('INTAKE'); 
+
+    setTimeout(() => {
+      synchronizeEngineDataMatrix(true);
+    }, 0);
   }; 
 
   const allPersonasComplete = triangulation       
@@ -1146,9 +1126,7 @@ export default function ForensicEngineRoot() {
           activePillar={triangulation.pillar} 
           role={activePersona}
           persona={activePersona}
-          onCalculated={(finalAnswers?: Record<string, string>) => handlePersonaAnswersSaved(finalAnswers)} 
           onComplete={(finalAnswers?: Record<string, string>) => handlePersonaAnswersSaved(finalAnswers)} 
-          onSubmit={(finalAnswers?: Record<string, string>) => handlePersonaAnswersSaved(finalAnswers)} 
         /> 
       )} 
 
