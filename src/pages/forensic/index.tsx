@@ -231,7 +231,7 @@ export default function ForensicEngineRoot() {
 
         const { data: existingOperators } = await supabase
           .from('operators')
-          .select('persona_type, email, survey_completed, status, audit_id, group_id')
+          .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
         const checkDbDone = (pKey: PersonaKey) => {
@@ -242,15 +242,22 @@ export default function ForensicEngineRoot() {
             return allowedTypes.includes(rawPersona);
           });
 
-          return matches.some(m => 
-            m.survey_completed === true || 
-            String(m.status).toUpperCase() === 'COMPLETED' ||
-            String(m.status).toUpperCase() === 'COMPLETE'
-          );
-        };
+          return matches.some(m => {
+            const isCompletedFlag = 
+              m.survey_completed === true || 
+              String(m.status).toUpperCase() === 'COMPLETED' ||
+              String(m.status).toUpperCase() === 'COMPLETE';
 
-        // FRESH QUAD NODE ARCHITECTURE: Force emails to be fresh empties.
-        setEmails(FRESH_EMPTY_EMAILS);
+            const rr = (m as any).raw_responses;
+            const hasResponses = 
+              rr && 
+              typeof rr === 'object' && 
+              Object.keys(rr).length > 0 && 
+              Object.values(rr).some(v => String(v ?? '').trim().length > 0);
+
+            return isCompletedFlag && hasResponses;
+          });
+        };
 
         setTriangulation(prev => {
           const resolvedOrg = (activeAudit?.org_name ?? targetCompanyName)?.trim();
@@ -260,6 +267,15 @@ export default function ForensicEngineRoot() {
             !!resolvedOrg &&
             !!prevOrg &&
             prevOrg.toLowerCase() === resolvedOrg.toLowerCase();
+
+          const currentActiveEmails = {
+            EXECUTIVE: prev?.emails?.EXECUTIVE || emailsRef.current.EXECUTIVE || '',
+            TECH_MGMT: prev?.emails?.TECH_MGMT || emailsRef.current.TECH_MGMT || '',
+            OPS_MGMT: prev?.emails?.OPS_MGMT || emailsRef.current.OPS_MGMT || '',
+            SYSTEM_USER: prev?.emails?.SYSTEM_USER || emailsRef.current.SYSTEM_USER || '',
+          };
+
+          setEmails(currentActiveEmails);
 
           const inMemoryCompletions = isMatchingOrg ? prev.completions : cachedCompletions;
 
@@ -273,7 +289,7 @@ export default function ForensicEngineRoot() {
           return {
             companyName: resolvedOrg || prev?.companyName || targetCompanyName,
             pillar: targetCalculatedPillar,
-            emails: FRESH_EMPTY_EMAILS,
+            emails: currentActiveEmails,
             completions: mergedCompletions,
             responses: (isMatchingOrg && prev?.responses && Object.keys(prev.responses).length > 0)
               ? prev.responses
@@ -305,17 +321,24 @@ export default function ForensicEngineRoot() {
 
         setViewState('HUB');
       } else if (targetCompanyName) {
-        setEmails(FRESH_EMPTY_EMAILS);
-
         setTriangulation(prev => {
           const nextOrg = targetCompanyName.trim().toLowerCase();
           const prevOrg = prev?.companyName?.trim().toLowerCase();
+
+          const currentActiveEmails = {
+            EXECUTIVE: prev?.emails?.EXECUTIVE || emailsRef.current.EXECUTIVE || '',
+            TECH_MGMT: prev?.emails?.TECH_MGMT || emailsRef.current.TECH_MGMT || '',
+            OPS_MGMT: prev?.emails?.OPS_MGMT || emailsRef.current.OPS_MGMT || '',
+            SYSTEM_USER: prev?.emails?.SYSTEM_USER || emailsRef.current.SYSTEM_USER || '',
+          };
+
+          setEmails(currentActiveEmails);
 
           if (!prev || !prevOrg || prevOrg !== nextOrg) {
             return {
               companyName: targetCompanyName,
               pillar: latestActivePillar,
-              emails: FRESH_EMPTY_EMAILS,
+              emails: currentActiveEmails,
               completions: cachedCompletions,
               responses: cachedResponses
             };
@@ -323,7 +346,7 @@ export default function ForensicEngineRoot() {
 
           return {
             ...prev,
-            emails: FRESH_EMPTY_EMAILS
+            emails: currentActiveEmails
           };
         });
 
@@ -401,16 +424,22 @@ export default function ForensicEngineRoot() {
       ? personaAnswers 
       : { status: "completed_via_wizard", completed_at: new Date().toISOString() };
 
-    // 1. IMMEDIATE OPTIMISTIC LOCAL STATE UPDATE
-    let updatedTriangulation: TriangulationState;
+    // 1. IMMEDIATE OPTIMISTIC LOCAL STATE UPDATE (SAFE)
     setTriangulation(prev => {
-      const currentCompany = prev?.companyName || companyName || companyNameRef.current || "Quad Node Client System";
-      const currentPillar = prev?.pillar || activePillar || "IGF";
-      const currentEmails = prev?.emails || emails;
-      const currentCompletions = prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
-      const currentResponses = prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
+      const currentCompany =
+        prev?.companyName || companyName || companyNameRef.current || "Quad Node Client System";
 
-      updatedTriangulation = {
+      const currentPillar = prev?.pillar || activePillar || "IGF";
+
+      const currentEmails = prev?.emails || emails;
+
+      const currentCompletions =
+        prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
+
+      const currentResponses =
+        prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
+
+      const updated: TriangulationState = {
         companyName: currentCompany,
         pillar: currentPillar,
         emails: currentEmails,
@@ -426,35 +455,38 @@ export default function ForensicEngineRoot() {
 
       if (typeof window !== 'undefined') {
         window.localStorage.setItem(
-          `bmr_matrix_run_${updatedTriangulation.companyName}`,
-          JSON.stringify(updatedTriangulation)
+          `bmr_matrix_run_${updated.companyName}`,
+          JSON.stringify(updated)
         );
       }
 
-      return updatedTriangulation;
+      return updated;
     });
 
-    // 2. RESOLVE DB AUDIT ID (WITH REF-BACKED ORG LOOKUP FALLBACK)
+    // 2. RESOLVE DB AUDIT ID (STRICT LATEST IN-PROGRESS AUDIT FALLBACK)
     let targetAuditId = activeAuditId || activeAuditIdRef.current;
     const targetOrgName = (companyName || triangulation?.companyName || companyNameRef.current)?.trim();
 
     if (!targetAuditId && targetOrgName) {
-      console.log(`[Completion Telemetry] activeAuditId missing for ${targetPersona}. Resolving fallback via org_name: "${targetOrgName}"...`);
+      console.warn(`[Completion Telemetry] activeAuditId missing for ${targetPersona}. Resolving LATEST IN_PROGRESS audit record for org: "${targetOrgName}"...`);
 
       const { data: auditLookup, error: lookupErr } = await supabase
         .from('audits')
         .select('id')
         .ilike('org_name', targetOrgName)
+        .eq('status', 'IN_PROGRESS')
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (auditLookup?.id) {
         targetAuditId = auditLookup.id;
         setActiveAuditId(targetAuditId);
-        console.log(`[Completion Telemetry] Fallback resolved audit ID: ${targetAuditId}`);
+        console.log(`[Completion Telemetry] Fallback resolved latest in-progress audit ID: ${targetAuditId}`);
       } else if (lookupErr) {
         console.error(`[Completion Telemetry] Failed to resolve audit ID for "${targetOrgName}":`, lookupErr.message);
       } else {
-        console.warn(`[Completion Telemetry] No audit record found matching org_name: "${targetOrgName}"`);
+        console.warn(`[Completion Telemetry] No active IN_PROGRESS audit record found matching org_name: "${targetOrgName}"`);
       }
     }
 
@@ -488,7 +520,6 @@ export default function ForensicEngineRoot() {
           console.error('[Save Handler] DB Update error:', updateErr.message);
         }
 
-        // SAFE FALLBACK INSERT: Read directly from React state/refs to prevent closure timing bugs
         if (!updateErr && (!updatedRows || updatedRows.length === 0)) {
           await supabase
             .from('operators')
@@ -548,71 +579,52 @@ export default function ForensicEngineRoot() {
     }
 
     try { 
-      let parentAuditId = activeAuditId;
+      // 1. ALWAYS CREATE A NEW ISOLATED AUDIT RECORD FOR QUAD NODE SETUPS
+      const { data: newAudit, error: createErr } = await supabase
+        .from('audits')
+        .insert({
+          org_name: sanitizedInput,
+          sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
+          status: 'IN_PROGRESS'
+        })
+        .select('id')
+        .single();
 
-      if (!parentAuditId) {
-        let { data: parentAudit } = await supabase
-          .from('audits')
-          .select('id')
-          .ilike('org_name', sanitizedInput)
-          .maybeSingle();
+      if (createErr) throw createErr;
 
-        if (!parentAudit) {
-          const { data: newAudit, error: createErr } = await supabase
-            .from('audits')
-            .insert({
-              org_name: sanitizedInput,
-              sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
-              status: 'IN_PROGRESS'
-            })
-            .select('id')
-            .single();
+      const parentAuditId = newAudit.id;
+      setActiveAuditId(parentAuditId);
 
-          if (createErr) throw createErr;
-          parentAudit = newAudit;
-        }
-        parentAuditId = parentAudit.id;
-        setActiveAuditId(parentAuditId);
-      }
+      // 2. ENFORCE CLEAN SLATE OPERATOR PROVISIONING
+      await supabase
+        .from('operators')
+        .delete()
+        .or(`audit_id.eq.${parentAuditId},group_id.eq.${parentAuditId}`);
 
-      if (parentAuditId) {
-        const personaMapping: Record<PersonaKey, string> = {
-          EXECUTIVE: 'EXECUTIVE',
-          TECH_MGMT: 'TECHNICAL',
-          OPS_MGMT: 'MANAGERIAL',
-          SYSTEM_USER: 'SYSTEM_USER',
-        };
+      const personaMapping: Record<PersonaKey, string> = {
+        EXECUTIVE: 'EXECUTIVE',
+        TECH_MGMT: 'TECHNICAL',
+        OPS_MGMT: 'MANAGERIAL',
+        SYSTEM_USER: 'SYSTEM_USER',
+      };
 
-        const { data: existingOps } = await supabase
-          .from('operators')
-          .select('persona_type')
-          .eq('audit_id', parentAuditId);
+      const rowsToInsert = (Object.keys(emails) as PersonaKey[]).map(pKey => ({
+        audit_id: parentAuditId,
+        group_id: parentAuditId,
+        persona_type: personaMapping[pKey],
+        email: emails[pKey],
+        survey_completed: false,
+        status: 'PENDING',
+        raw_responses: {},
+        updated_at: new Date().toISOString()
+      }));
 
-        const existingTypes = new Set(
-          (existingOps || []).map(o => String(o.persona_type).toUpperCase())
-        );
+      const { error: insertErr } = await supabase
+        .from('operators')
+        .insert(rowsToInsert);
 
-        const rowsToInsert = (Object.keys(emails) as PersonaKey[])
-          .filter(pKey => !existingTypes.has(personaMapping[pKey]))
-          .map(pKey => ({
-            audit_id: parentAuditId,
-            group_id: parentAuditId,
-            persona_type: personaMapping[pKey],
-            email: emails[pKey],
-            survey_completed: false,
-            status: 'PENDING',
-            updated_at: new Date().toISOString()
-          }));
-
-        if (rowsToInsert.length > 0) {
-          const { error: insertErr } = await supabase
-            .from('operators')
-            .insert(rowsToInsert);
-
-          if (insertErr) {
-            console.error('[Provisioning Error] Failed to insert operator rows:', insertErr.message);
-          }
-        }
+      if (insertErr) {
+        console.error('[Provisioning Error] Failed to insert fresh operator rows:', insertErr.message);
       }
 
       const initialTriangulation = { 
@@ -979,18 +991,16 @@ export default function ForensicEngineRoot() {
                         <span className="text-xs text-slate-500 block font-mono font-normal">
                           {triangulation.emails[persona] || <span className="italic text-slate-400">No email assigned</span>}
                         </span>
-                        {!isDone && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setEditingPersona(persona);
-                              setTempEmailInput(triangulation.emails[persona] || '');
-                            }}
-                            className="text-[10px] font-mono text-slate-400 hover:text-slate-900 underline uppercase font-bold cursor-pointer"
-                          >
-                            Edit
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingPersona(persona);
+                            setTempEmailInput(triangulation.emails[persona] || '');
+                          }}
+                          className="text-[10px] font-mono text-slate-400 hover:text-slate-900 underline uppercase font-bold cursor-pointer"
+                        >
+                          Edit
+                        </button>
                       </div>
                     )}
                   </div> 
