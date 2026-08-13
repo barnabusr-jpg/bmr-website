@@ -25,10 +25,14 @@ import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
 
-const PERSONA_ALIASES: Record<PersonaKey, string[]> = {
-  EXECUTIVE: ['EXECUTIVE', 'IGF', 'EXEC'],
-  TECH_MGMT: ['TECHNICAL', 'TECH_MGMT', 'AVS', 'TECH'],
-  OPS_MGMT: ['MANAGERIAL', 'OPS_MGMT', 'HAI', 'OPS'],
+// HELPER: CANONICAL LOCALSTORAGE KEY NORMALIZER
+const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
+
+// STRICT QUAD NODE PERSONA TYPES (PREVENTS 360 CROSS-CONTAMINATION)
+const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
+  EXECUTIVE: ['EXECUTIVE', 'EXEC'],
+  TECH_MGMT: ['TECH_MGMT', 'TECH'],
+  OPS_MGMT: ['OPS_MGMT', 'OPS'],
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER'],
 };
 
@@ -98,7 +102,7 @@ export default function ForensicEngineRoot() {
     const latestCompanyName = companyNameRef.current;
     const latestActivePillar = activePillarRef.current;
 
-    let targetCompanyName = (entityParam || latestCompanyName || '').trim().replace(/\s+/g, ' ');
+    let targetCompanyName = sanitizeOrgKey(entityParam || latestCompanyName || '');
 
     isSyncingRef.current = true;
 
@@ -162,15 +166,22 @@ export default function ForensicEngineRoot() {
       let cachedResponses = { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
 
       if (typeof window !== 'undefined' && targetCompanyName) {
-        const rawCache = window.localStorage.getItem(`bmr_matrix_run_${targetCompanyName}`);
+        const cacheKey = `bmr_matrix_run_${sanitizeOrgKey(targetCompanyName)}`;
+        const rawCache = window.localStorage.getItem(cacheKey);
         if (rawCache) {
           try {
             const parsed = JSON.parse(rawCache);
-            if (parsed?.companyName === targetCompanyName && parsed?.completions) {
+            console.log(`[Quad Cache Diagnostic] Key: ${cacheKey}`, {
+              hasCompletions: !!parsed?.completions,
+              cachedCompletions: parsed?.completions
+            });
+            if (sanitizeOrgKey(parsed?.companyName || '') === sanitizeOrgKey(targetCompanyName) && parsed?.completions) {
               cachedCompletions = parsed.completions;
             }
             if (parsed?.responses) cachedResponses = parsed.responses;
-          } catch (e) { console.error(e); }
+          } catch (e) { console.error('[Quad Cache] Parse error:', e); }
+        } else {
+          console.log(`[Quad Cache Diagnostic] Key: ${cacheKey} (No local cache found)`);
         }
       }
 
@@ -208,6 +219,9 @@ export default function ForensicEngineRoot() {
           .from('audits')
           .select('id, org_name, sfi_score, decay_pct, sector, status')
           .ilike('org_name', targetCompanyName)
+          .eq('status', 'IN_PROGRESS')
+          .order('created_at', { ascending: false })
+          .limit(1)
           .maybeSingle();
         activeAudit = data;
       }
@@ -234,15 +248,22 @@ export default function ForensicEngineRoot() {
           .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
+        // TELEMETRY LOGGING BLOCK
+        console.group(`[Quad Node Matrix Sync] Audit ID: ${activeAudit.id}`);
+        console.log('URL Param ID:', idParam);
+        console.log('Raw DB Operators Count:', existingOperators?.length ?? 0);
+        console.log('Fetched Operator Persona Types:', existingOperators?.map(o => o.persona_type));
+
+        // STRICT QUAD CHECK: USES QUAD_PERSONA_TYPES (NO 360 ALIASES)
         const checkDbDone = (pKey: PersonaKey) => {
           if (!existingOperators || existingOperators.length === 0) return false;
-          const allowedTypes = PERSONA_ALIASES[pKey];
+          const allowedTypes = QUAD_PERSONA_TYPES[pKey];
           const matches = existingOperators.filter(o => {
             const rawPersona = String(o.persona_type || '').toUpperCase().trim();
             return allowedTypes.includes(rawPersona);
           });
 
-          return matches.some(m => {
+          const isDone = matches.some(m => {
             const isCompletedFlag = 
               m.survey_completed === true || 
               String(m.status).toUpperCase() === 'COMPLETED' ||
@@ -257,7 +278,26 @@ export default function ForensicEngineRoot() {
 
             return isCompletedFlag && hasResponses;
           });
+
+          console.log(`[checkDbDone] ${pKey}:`, {
+            allowedTypes,
+            matchedOperators: matches,
+            evaluatedResult: isDone
+          });
+
+          return isDone;
         };
+
+        // STRICT MERGE: DB GROUND TRUTH TAKES 100% PRECEDENCE WHEN ACTIVE AUDIT IS BOUND
+        const mergedCompletions: Record<PersonaKey, boolean> = {
+          EXECUTIVE: checkDbDone('EXECUTIVE'),
+          TECH_MGMT: checkDbDone('TECH_MGMT'),
+          OPS_MGMT: checkDbDone('OPS_MGMT'),
+          SYSTEM_USER: checkDbDone('SYSTEM_USER'),
+        };
+
+        console.log('[Final Merged Completions - DB Authoritative]:', mergedCompletions);
+        console.groupEnd();
 
         setTriangulation(prev => {
           const resolvedOrg = (activeAudit?.org_name ?? targetCompanyName)?.trim();
@@ -276,15 +316,6 @@ export default function ForensicEngineRoot() {
           };
 
           setEmails(currentActiveEmails);
-
-          const inMemoryCompletions = isMatchingOrg ? prev.completions : cachedCompletions;
-
-          const mergedCompletions: Record<PersonaKey, boolean> = {
-            EXECUTIVE: checkDbDone('EXECUTIVE') || inMemoryCompletions.EXECUTIVE,
-            TECH_MGMT: checkDbDone('TECH_MGMT') || inMemoryCompletions.TECH_MGMT,
-            OPS_MGMT: checkDbDone('OPS_MGMT') || inMemoryCompletions.OPS_MGMT,
-            SYSTEM_USER: checkDbDone('SYSTEM_USER') || inMemoryCompletions.SYSTEM_USER,
-          };
 
           return {
             companyName: resolvedOrg || prev?.companyName || targetCompanyName,
@@ -305,9 +336,9 @@ export default function ForensicEngineRoot() {
         if (matchedOperator) {
           const rawPersona = String(matchedOperator.persona_type || '').toUpperCase().trim();
           let mappedKey: PersonaKey = 'EXECUTIVE';
-          if (PERSONA_ALIASES.TECH_MGMT.includes(rawPersona)) mappedKey = 'TECH_MGMT';
-          if (PERSONA_ALIASES.OPS_MGMT.includes(rawPersona)) mappedKey = 'OPS_MGMT';
-          if (PERSONA_ALIASES.SYSTEM_USER.includes(rawPersona)) mappedKey = 'SYSTEM_USER';
+          if (QUAD_PERSONA_TYPES.TECH_MGMT.includes(rawPersona)) mappedKey = 'TECH_MGMT';
+          if (QUAD_PERSONA_TYPES.OPS_MGMT.includes(rawPersona)) mappedKey = 'OPS_MGMT';
+          if (QUAD_PERSONA_TYPES.SYSTEM_USER.includes(rawPersona)) mappedKey = 'SYSTEM_USER';
 
           setActivePersona(mappedKey);
 
@@ -321,6 +352,7 @@ export default function ForensicEngineRoot() {
 
         setViewState('HUB');
       } else if (targetCompanyName) {
+        // UNBOUND / PRE-BIND FALLBACK (Strict zero-state completions prevent stale flashes)
         setTriangulation(prev => {
           const nextOrg = targetCompanyName.trim().toLowerCase();
           const prevOrg = prev?.companyName?.trim().toLowerCase();
@@ -334,19 +366,17 @@ export default function ForensicEngineRoot() {
 
           setEmails(currentActiveEmails);
 
-          if (!prev || !prevOrg || prevOrg !== nextOrg) {
-            return {
-              companyName: targetCompanyName,
-              pillar: latestActivePillar,
-              emails: currentActiveEmails,
-              completions: cachedCompletions,
-              responses: cachedResponses
-            };
-          }
+          const isMatchingOrg =
+            !!nextOrg &&
+            !!prevOrg &&
+            prevOrg === nextOrg;
 
           return {
-            ...prev,
-            emails: currentActiveEmails
+            companyName: targetCompanyName,
+            pillar: latestActivePillar,
+            emails: currentActiveEmails,
+            completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, // Strict zero-state
+            responses: (isMatchingOrg && prev?.responses) ? prev.responses : cachedResponses,
           };
         });
 
@@ -454,8 +484,9 @@ export default function ForensicEngineRoot() {
       };
 
       if (typeof window !== 'undefined') {
+        const cacheKey = `bmr_matrix_run_${sanitizeOrgKey(updated.companyName)}`;
         window.localStorage.setItem(
-          `bmr_matrix_run_${updated.companyName}`,
+          cacheKey,
           JSON.stringify(updated)
         );
       }
@@ -490,12 +521,10 @@ export default function ForensicEngineRoot() {
       }
     }
 
-    // 3. PERSIST COMPLETION STATUS TO SUPABASE
+    // 3. PERSIST COMPLETION STATUS TO SUPABASE (QUAD-SCOPED WRITE)
     if (targetAuditId) {
-      const aliases = PERSONA_ALIASES[targetPersona];
-      const canonicalType = 
-        targetPersona === 'TECH_MGMT' ? 'TECHNICAL' :
-        targetPersona === 'OPS_MGMT' ? 'MANAGERIAL' : targetPersona;
+      const aliases = QUAD_PERSONA_TYPES[targetPersona];
+      const canonicalType = targetPersona;
 
       console.log('[Completion Write]', {
         targetPersona,
@@ -572,9 +601,9 @@ export default function ForensicEngineRoot() {
     setInputError(''); 
 
     if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(`bmr_matrix_run_${sanitizedInput}`);
+      window.localStorage.removeItem(`bmr_matrix_run_${sanitizeOrgKey(sanitizedInput)}`);
       ['EXECUTIVE', 'TECH_MGMT', 'OPS_MGMT', 'SYSTEM_USER'].forEach(p => {
-        window.sessionStorage.removeItem(`quad_cache_${sanitizedInput}_${p}`);
+        window.sessionStorage.removeItem(`quad_cache_${sanitizeOrgKey(sanitizedInput)}_${p}`);
       });
     }
 
@@ -595,6 +624,14 @@ export default function ForensicEngineRoot() {
       const parentAuditId = newAudit.id;
       setActiveAuditId(parentAuditId);
 
+      // SYNCHRONOUS URL PARAMETER BINDING (PREVENTS ILIKE FALLBACK)
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.set('id', parentAuditId);
+        url.searchParams.set('flow', 'quad_node');
+        window.history.replaceState({}, '', url.toString());
+      }
+
       // 2. ENFORCE CLEAN SLATE OPERATOR PROVISIONING
       await supabase
         .from('operators')
@@ -603,8 +640,8 @@ export default function ForensicEngineRoot() {
 
       const personaMapping: Record<PersonaKey, string> = {
         EXECUTIVE: 'EXECUTIVE',
-        TECH_MGMT: 'TECHNICAL',
-        OPS_MGMT: 'MANAGERIAL',
+        TECH_MGMT: 'TECH_MGMT',
+        OPS_MGMT: 'OPS_MGMT',
         SYSTEM_USER: 'SYSTEM_USER',
       };
 
@@ -636,7 +673,7 @@ export default function ForensicEngineRoot() {
       };
 
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(`bmr_matrix_run_${sanitizedInput}`, JSON.stringify(initialTriangulation));
+        window.localStorage.setItem(`bmr_matrix_run_${sanitizeOrgKey(sanitizedInput)}`, JSON.stringify(initialTriangulation));
       }
 
       setTriangulation(initialTriangulation); 
@@ -702,20 +739,19 @@ export default function ForensicEngineRoot() {
     setTriangulation(updatedState);
     setEmails(updatedEmails);
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(`bmr_matrix_run_${triangulation.companyName}`, JSON.stringify(updatedState));
+      const cacheKey = `bmr_matrix_run_${sanitizeOrgKey(triangulation.companyName)}`;
+      window.localStorage.setItem(cacheKey, JSON.stringify(updatedState));
     }
 
-    // 2. Persist Correction to Supabase operators table
+    // 2. Persist Correction to Supabase operators table (QUAD-SCOPED WRITE)
     if (targetAuditId) {
-      const canonicalType = 
-        persona === 'TECH_MGMT' ? 'TECHNICAL' :
-        persona === 'OPS_MGMT' ? 'MANAGERIAL' : persona;
+      const canonicalType = persona;
 
       await supabase
         .from('operators')
         .update({ email: newEmail, updated_at: new Date().toISOString() })
         .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
-        .in('persona_type', PERSONA_ALIASES[persona]);
+        .in('persona_type', QUAD_PERSONA_TYPES[persona]);
     }
 
     setEditingPersona(null);
