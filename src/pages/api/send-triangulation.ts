@@ -6,7 +6,7 @@ function toSentenceCase(str: string): string {
   return clean.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
-// ENFORCE CANONICAL QUAD NODE KEYS (PREVENTS 360 CROSS-CONTAMINATION)
+// ENFORCE CANONICAL QUAD NODE KEYS
 function getCanonicalPersonaKey(k: string): string {
   const up = String(k || '').toUpperCase().trim();
   if (up === 'TECHNICAL' || up === 'TECH') return 'TECH_MGMT';
@@ -22,13 +22,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { endpoints, companyName, activePillar, originUrl, isNudge } = req.body || {};
+    const { endpoints, companyName, activePillar, originUrl, isNudge, auditId } = req.body || {};
 
     if (!endpoints || typeof endpoints !== 'object' || Array.isArray(endpoints) || !companyName) {
       return res.status(400).json({ error: 'MISSING_REQUIRED_PARAMETERS' });
     }
 
-    // 1. SENDGRID CREDENTIALS GUARD
     const apiKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
     if (!apiKey) {
       console.warn('[send-triangulation] Missing SENDGRID_API_KEY or BMR_SENDGRID_KEY in environment.');
@@ -56,9 +55,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const sentenceCompany = toSentenceCase(companyName);
     const targetPillar = activePillar || 'AVS';
 
-    // Normalize base URL path to /forensic
     const cleanOrigin = (originUrl || 'https://www.bmradvisory.co/forensic')
       .replace(/\/diagnostic\/forensic\/?$/, '/forensic');
+
+    const auditParam = auditId ? `&id=${encodeURIComponent(auditId)}` : '';
 
     const mailRequests = Object.entries(endpoints).map(([rawRoleKey, emailAddress]) => {
       if (!emailAddress || typeof emailAddress !== 'string') return null;
@@ -70,13 +70,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const roleName = roleLabels[roleKey] || roleKey;
       const dynamicTrack = roleToPillarMap[roleKey] || targetPillar;
 
-      // QUAD NODE BOUND URL PARAMETERS
-      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&flow=quad_node&auth=true`;
+      // EXPLICIT AUDIT ID AND QUAD NODE URL BINDING
+      const diagnosticUrl = `${cleanOrigin}?role=${roleKey}&org=${encodeURIComponent(formattedOrg)}&pillar=${dynamicTrack}&flow=quad_node&auth=true${auditParam}`;
 
       let emailHtmlValue = '';
 
       if (roleKey === 'EXECUTIVE' && !isNudge) {
-        // DISPATCH ONE: Executive Consolidated View (Initial Launch - Executive Light Theme)
         emailHtmlValue = `
           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <tr>
@@ -100,7 +99,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     Invitation links have been dispatched to designated stakeholders to evaluate operational friction, schema stability, and risk guardrails prior to scaling autonomous agents.
                   </p>
 
-                  <!-- STEP 1: Executive Track -->
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0f172a; padding: 20px; margin-bottom: 16px; border-radius: 4px; text-align: left;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 1: Complete Executive Assessment</p>
                     <p style="margin: 0 0 12px 0; font-size: 13px; color: #475569;">
@@ -111,7 +109,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     </a>
                   </div>
 
-                  <!-- STEP 2: Remind your team -->
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #64748b; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #64748b; font-weight: 700; text-transform: uppercase;">Step 2: Stakeholder Alignment</p>
                     <p style="margin: 0; font-size: 13px; color: #475569;">
@@ -119,7 +116,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                     </p>
                   </div>
 
-                  <!-- STEP 3: Calibration Scheduling Link -->
                   <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #dc2626; padding: 20px; margin-bottom: 24px; border-radius: 4px; text-align: left;">
                     <p style="margin: 0 0 6px 0; font-size: 11px; font-family: monospace; color: #dc2626; font-weight: 700; text-transform: uppercase;">Step 3: Executive Briefing</p>
                     <a href="https://calendly.com/hello-bmradvisory/forensic-briefing" target="_blank" style="color: #0f172a; font-weight: 700; font-size: 13px; text-decoration: underline;">
@@ -137,7 +133,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           </table>
         `;
       } else {
-        // DISPATCH TWO: Operator Assessment / Targeted Nudge Notification (Light Executive Theme)
         emailHtmlValue = `
           <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
             <tr>
