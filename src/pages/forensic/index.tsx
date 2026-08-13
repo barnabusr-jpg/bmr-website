@@ -88,8 +88,14 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  const synchronizeEngineDataMatrix = useCallback(async () => {
-    if (isSyncingRef.current) return;
+  const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
+    if (isSyncingRef.current && !force) {
+      console.log('[sync] skipped due to active sync lock', { force, isSyncing: isSyncingRef.current });
+      return;
+    }
+
+    console.log('[sync] enter', { force, isSyncingRef: isSyncingRef.current });
+    isSyncingRef.current = true;
 
     const params = typeof window !== 'undefined' 
       ? new URLSearchParams(window.location.search) 
@@ -103,8 +109,6 @@ export default function ForensicEngineRoot() {
     const latestActivePillar = activePillarRef.current;
 
     let targetCompanyName = sanitizeOrgKey(entityParam || latestCompanyName || '');
-
-    isSyncingRef.current = true;
 
     try {
       const flowParam = params.get('flow');
@@ -423,7 +427,7 @@ export default function ForensicEngineRoot() {
     }
   }, []);
 
-  // REALTIME DATABASE LISTENER
+  // REALTIME DATABASE LISTENER WITH FORCED REFRESH
   useEffect(() => {
     if (!activeAuditId) return;
 
@@ -433,7 +437,8 @@ export default function ForensicEngineRoot() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'operators' },
         () => {
-          synchronizeEngineDataMatrix();
+          console.log('[Realtime] Operator table change detected. Forcing matrix sync...');
+          synchronizeEngineDataMatrix(true);
         }
       )
       .subscribe();
@@ -605,7 +610,8 @@ export default function ForensicEngineRoot() {
           }
         }
 
-        await synchronizeEngineDataMatrix();
+        // FORCE RE-SYNC MATRIX SO LOCK DOES NOT BLOCK UI REFRESH
+        await synchronizeEngineDataMatrix(true);
 
       } catch (dbErr) {
         console.error('[Save Handler] Database persistence exception:', dbErr);
