@@ -70,6 +70,7 @@ export default function ForensicEngineRoot() {
 
   const isSyncingRef = useRef(false);
   const didBootRef = useRef(false);
+  const isParticipantSessionRef = useRef(false);
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>(FRESH_EMPTY_EMAILS); 
 
@@ -120,19 +121,21 @@ export default function ForensicEngineRoot() {
       // STRICT ROLE VALIDATION AGAINST KNOWN PERSONAS
       const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
 
-      // HARDENED ROUTE EVALUATION: PRESENCE OF ROLE OVERRIDES AUTH=TRUE
       const hasRoleParam = !!roleParam;
       const hasCodeParam = !!codeParam;
 
+      // ROLE OR CODE STRICTLY DEMARCATES PARTICIPANT ROUTE
+      const isParticipantRoute = hasRoleParam || hasCodeParam;
+      
+      // ADMIN ROUTE REQUIRES AUTH PARAMETER AND ABSENCE OF PARTICIPANT PARAMS
       const isAdminSession = 
-        !hasRoleParam && 
-        (authVal === 'admin_verified_secure' || authVal === 'admin');
-
-      const isParticipantRoute = 
-        hasRoleParam || (!isAdminSession && hasCodeParam);
+        !isParticipantRoute && 
+        (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
       // 1. PARTICIPANT ROUTE FROM EMAIL LINK
       if (isParticipantRoute && roleParam) {
+        isParticipantSessionRef.current = true;
+
         const targetPillar = (pillarParam && ['IGF', 'AVS', 'HAI'].includes(pillarParam.toUpperCase()))
           ? (pillarParam.toUpperCase() as FunnelPillar)
           : latestActivePillar;
@@ -141,23 +144,24 @@ export default function ForensicEngineRoot() {
           setCompanyName(targetCompanyName);
           setIsCompanyFromDB(true);
 
-          if (!idParam) {
+          let resolvedAuditId = idParam;
+          if (!resolvedAuditId) {
             const { data: participantAudit } = await supabase
               .from('audits')
               .select('id')
               .eq('org_name', targetCompanyName)
-              .eq('status', 'IN_PROGRESS')
               .order('created_at', { ascending: false })
               .limit(1)
               .maybeSingle();
 
             if (participantAudit?.id) {
-              setActiveAuditId(participantAudit.id);
-              activeAuditIdRef.current = participantAudit.id;
+              resolvedAuditId = participantAudit.id;
             }
-          } else {
-            setActiveAuditId(idParam);
-            activeAuditIdRef.current = idParam;
+          }
+
+          if (resolvedAuditId) {
+            setActiveAuditId(resolvedAuditId);
+            activeAuditIdRef.current = resolvedAuditId;
           }
         }
 
@@ -291,7 +295,6 @@ export default function ForensicEngineRoot() {
           .from('audits')
           .select('id, org_name, sfi_score, decay_pct, sector, status')
           .eq('org_name', targetCompanyName)
-          .eq('status', 'IN_PROGRESS')
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle();
@@ -358,19 +361,7 @@ export default function ForensicEngineRoot() {
               }
             }
 
-            const finalEvaluatedResult = isCompletedFlag || hasResponses;
-
-            console.log('[checkDbDone debug]', {
-              pKey,
-              matchedPersonaType: m.persona_type,
-              survey_completed: m.survey_completed,
-              status: m.status,
-              isCompletedFlag,
-              hasResponses,
-              EVALUATED_RESULT: finalEvaluatedResult
-            });
-
-            return finalEvaluatedResult;
+            return isCompletedFlag || hasResponses;
           });
         };
 
@@ -515,13 +506,18 @@ export default function ForensicEngineRoot() {
       const hasRoleParam = !!roleParam;
       const hasCodeParam = !!codeParam;
 
-      // ROLE ALWAYS MEANS PARTICIPANT ROUTE; ADMIN REQUIRES EXPLICIT TOKEN ONLY
-      const isAdminAuthenticated =
-        !hasRoleParam &&
-        (authVal === 'admin_verified_secure' || authVal === 'admin');
+      const isParticipantRoute = hasRoleParam || hasCodeParam;
 
-      const isParticipantRoute = hasRoleParam || (!isAdminAuthenticated && hasCodeParam);
+      // ADMIN REQUIRES AUTH PARAMETER AND ABSENCE OF PARTICIPANT PARAMETERS
+      const isAdminAuthenticated =
+        !isParticipantRoute &&
+        (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
+
       const isAuthorized = isParticipantRoute || isAdminAuthenticated;
+
+      if (isParticipantRoute) {
+        isParticipantSessionRef.current = true;
+      }
 
       setAuthorizedAdmin(isAuthorized);
 
@@ -562,7 +558,7 @@ export default function ForensicEngineRoot() {
       };
     });
 
-    // 2. HARDENED EXACT AUDIT RESOLUTION
+    // 2. HARDENED MULTI-STRATEGY AUDIT AND OPERATOR RESOLUTION
     let targetAuditId = activeAuditId || activeAuditIdRef.current;
 
     if (typeof window !== 'undefined' && !targetAuditId) {
@@ -582,7 +578,6 @@ export default function ForensicEngineRoot() {
         .from('audits')
         .select('id')
         .eq('org_name', targetOrgName)
-        .eq('status', 'IN_PROGRESS')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -596,9 +591,9 @@ export default function ForensicEngineRoot() {
       }
     }
 
-    // PARTICIPANT SESSION CHECK: PRESENCE OF ROLE OR CODE PARAMETER TRUMPS AUTH=TRUE
-    let isParticipantSession = false;
-    if (typeof window !== 'undefined') {
+    // CHECK PARTICIPANT REF FIRST (PERSISTED EVEN IF URL WAS WIPED ON LOAD)
+    let isParticipantSession = isParticipantSessionRef.current;
+    if (!isParticipantSession && typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const authVal = params.get('auth');
       const roleVal = params.get('role');
@@ -611,10 +606,12 @@ export default function ForensicEngineRoot() {
     }
 
     // 3. PERSIST COMPLETION STATUS TO SUPABASE
-    if (targetAuditId) {
-      const aliases = QUAD_PERSONA_TYPES[targetPersona];
+    const aliases = QUAD_PERSONA_TYPES[targetPersona];
+    let persistanceSuccess = false;
 
-      try {
+    try {
+      // PATH A: UPDATE BY TARGET AUDIT ID
+      if (targetAuditId) {
         const { data: updatedRows, error: updateErr } = await supabase
           .from('operators')
           .update({
@@ -627,59 +624,70 @@ export default function ForensicEngineRoot() {
           .in('persona_type', aliases)
           .select('id');
 
-        console.log('[handlePersonaAnswersSaved] Update result:', {
-          targetAuditId,
-          targetPersona,
-          aliases,
-          updatedCount: updatedRows?.length ?? 0,
-          updateErr
-        });
+        if (!updateErr && updatedRows && updatedRows.length > 0) {
+          persistanceSuccess = true;
+          console.log('[handlePersonaAnswersSaved] Successfully updated by targetAuditId:', updatedRows);
+        }
+      }
 
-        if (!updateErr && (!updatedRows || updatedRows.length === 0)) {
-          console.warn(`[handlePersonaAnswersSaved] No pre-existing row found for ${targetPersona} in audit ${targetAuditId}. Upserting dynamic operator row...`);
-          
-          const fallbackEmail = 
-            (triangulation?.emails?.[targetPersona] ?? emailsRef.current[targetPersona]) || 
-            `stakeholder_${targetPersona.toLowerCase()}@quadnode.internal`;
-
-          const { data: insertedRows, error: insertErr } = await supabase
+      // PATH B: FALLBACK UPDATE BY EMAIL + PERSONA MATCH IF PATH A UPDATED 0 ROWS
+      if (!persistanceSuccess) {
+        const activeEmail = triangulation?.emails?.[targetPersona] || emailsRef.current[targetPersona];
+        if (activeEmail) {
+          const { data: emailRows, error: emailErr } = await supabase
             .from('operators')
-            .insert({
-              audit_id: targetAuditId,
-              group_id: targetAuditId,
-              persona_type: targetPersona,
-              email: fallbackEmail,
+            .update({
               survey_completed: true,
               status: 'COMPLETED',
               raw_responses: answersToSave,
               updated_at: new Date().toISOString()
             })
-            .select('id, audit_id, group_id, persona_type, survey_completed, status');
+            .eq('email', activeEmail)
+            .in('persona_type', aliases)
+            .select('id');
 
-          console.log('[handlePersonaAnswersSaved] INSERT fallback result:', {
-            targetAuditId,
-            targetPersona,
-            insertErr: insertErr?.message || null,
-            insertedRowsLength: insertedRows?.length ?? 0,
-            insertedRecord: insertedRows?.[0] ?? null
-          });
+          if (!emailErr && emailRows && emailRows.length > 0) {
+            persistanceSuccess = true;
+            console.log('[handlePersonaAnswersSaved] Successfully updated by email match:', emailRows);
+          }
         }
-
-        // HARD-CLEAR ALL PARTICIPANT PARAMETERS FROM URL BEFORE RE-SYNC
-        if (typeof window !== 'undefined') {
-          const url = new URL(window.location.href);
-          url.searchParams.delete('role');
-          url.searchParams.delete('track');
-          url.searchParams.delete('code');
-          url.searchParams.delete('pillar');
-          url.searchParams.delete('view');
-          url.searchParams.delete('flow');
-          window.history.replaceState({}, '', url.toString());
-        }
-
-      } catch (dbErr) {
-        console.error('[Save Handler] Database persistence exception:', dbErr);
       }
+
+      // PATH C: DYNAMIC UPSERT FALLBACK IF NO PRE-EXISTING ROW MATCHED
+      if (!persistanceSuccess && targetAuditId) {
+        console.warn(`[handlePersonaAnswersSaved] Dynamic upsert fallback triggered for ${targetPersona} in audit ${targetAuditId}`);
+        const fallbackEmail = 
+          (triangulation?.emails?.[targetPersona] ?? emailsRef.current[targetPersona]) || 
+          `stakeholder_${targetPersona.toLowerCase()}@quadnode.internal`;
+
+        await supabase
+          .from('operators')
+          .insert({
+            audit_id: targetAuditId,
+            group_id: targetAuditId,
+            persona_type: targetPersona,
+            email: fallbackEmail,
+            survey_completed: true,
+            status: 'COMPLETED',
+            raw_responses: answersToSave,
+            updated_at: new Date().toISOString()
+          });
+      }
+
+      // HARD-CLEAR ALL PARTICIPANT PARAMETERS FROM URL BEFORE RE-SYNC
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('role');
+        url.searchParams.delete('track');
+        url.searchParams.delete('code');
+        url.searchParams.delete('pillar');
+        url.searchParams.delete('view');
+        url.searchParams.delete('flow');
+        window.history.replaceState({}, '', url.toString());
+      }
+
+    } catch (dbErr) {
+      console.error('[Save Handler] Database persistence exception:', dbErr);
     }
 
     setActivePersona(null); 
@@ -865,6 +873,7 @@ export default function ForensicEngineRoot() {
 
   // ADMIN TRACK LAUNCH: REMOVES ROLE PARAMETERS FROM URL TO PREVENT SHORT-CIRCUITING
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
+    isParticipantSessionRef.current = false;
     setActivePersona(persona); 
 
     if (typeof window !== 'undefined') {
@@ -881,6 +890,7 @@ export default function ForensicEngineRoot() {
   // SETUP RESET: KEEPS ADMIN AUTHORIZED AND EXPLICITLY KICKS OFF SYNC
   const handleSystemReset = () => { 
     didBootRef.current = false;
+    isParticipantSessionRef.current = false;
 
     setAuthorizedAdmin(true);
     setHasSynced(false);
