@@ -309,6 +309,11 @@ export default function ForensicEngineRoot() {
         setCompanyName(activeAudit.org_name);
         setIsCompanyFromDB(true);
 
+        console.log('[sync] picked audit', {
+          id: activeAudit.id,
+          org: activeAudit.org_name
+        });
+
         const sectorStr = String(activeAudit.sector || '').toUpperCase();
         if (sectorStr.includes('AVS') || sectorStr.includes('MANUFACTURING') || sectorStr.includes('INDUSTRIAL')) {
           targetCalculatedPillar = 'AVS';
@@ -319,19 +324,21 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(targetCalculatedPillar);
 
+        // HARDENED OPERATORS QUERY: SEARCH BY AUDIT_ID, GROUP_ID, OR ORG_NAME
         const { data: existingOperators } = await supabase
           .from('operators')
           .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
-        // TELEMETRY-HARDENED COMPLETION EVALUATOR WITH PERMISSIVE BOOLEAN CHECKS
+        // TELEMETRY-HARDENED COMPLETION EVALUATOR WITH CASE-INSENSITIVE ALIAS MATCHING
         const checkDbDone = (pKey: PersonaKey) => {
           if (!existingOperators || existingOperators.length === 0) return false;
-          const allowedTypes = QUAD_PERSONA_TYPES[pKey];
+          
+          const allowedTypesUpper = QUAD_PERSONA_TYPES[pKey].map(t => t.toUpperCase().trim());
 
           const matches = existingOperators.filter(o => {
-            const rawPersona = String(o.persona_type || '').toUpperCase().trim();
-            return allowedTypes.includes(rawPersona);
+            const rawPersonaUpper = String(o.persona_type || '').toUpperCase().trim();
+            return allowedTypesUpper.includes(rawPersonaUpper);
           });
 
           return matches.some(m => {
@@ -361,7 +368,10 @@ export default function ForensicEngineRoot() {
               }
             }
 
-            return isCompletedFlag || hasResponses;
+            const evaluatedDone = isCompletedFlag || hasResponses;
+
+            console.log(`[checkDbDone] Persona: ${pKey} | Matched: ${m.persona_type} | Done: ${evaluatedDone}`);
+            return evaluatedDone;
           });
         };
 
@@ -469,17 +479,18 @@ export default function ForensicEngineRoot() {
     }
   }, []);
 
-  // REALTIME DATABASE LISTENER WITH FORCED REFRESH
+  // REALTIME DATABASE LISTENER WITH BROAD FALLBACK SUBCRIPTIONS
   useEffect(() => {
-    if (!activeAuditId) return;
+    const targetId = activeAuditId || activeAuditIdRef.current;
+    console.log('[Realtime Setup] Initializing Postgres channel listener for audit:', targetId || 'global');
 
     const channel = supabase
-      .channel(`audit-operators-${activeAuditId}`)
+      .channel(`audit-operators-realtime-listener`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'operators' },
-        () => {
-          console.log('[Realtime] Operator table change detected. Forcing matrix sync...');
+        (payload) => {
+          console.log('[Realtime Payload Received] Operator row changed:', payload);
           synchronizeEngineDataMatrix(true);
         }
       )
