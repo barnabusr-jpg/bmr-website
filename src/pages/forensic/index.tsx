@@ -169,6 +169,50 @@ export default function ForensicEngineRoot() {
           return prev;
         });
 
+        // PRE-FLIGHT CHECK: HAS PARTICIPANT ALREADY COMPLETED THIS SURVEY?
+        const currentAuditId = idParam || activeAuditIdRef.current;
+        if (currentAuditId) {
+          const { data: checkOps } = await supabase
+            .from('operators')
+            .select('survey_completed, status, raw_responses')
+            .or(`audit_id.eq.${currentAuditId},group_id.eq.${currentAuditId}`)
+            .in('persona_type', QUAD_PERSONA_TYPES[roleParam]);
+
+          const isAlreadyCompleted = (checkOps ?? []).some(checkOp => {
+            const isCompletedBool = checkOp.survey_completed === true || String(checkOp.survey_completed) === 'true';
+            const isCompletedStatus = ['COMPLETED', 'COMPLETE'].includes(String(checkOp.status ?? '').toUpperCase());
+            const hasRawResp = checkOp.raw_responses && Object.keys(checkOp.raw_responses).length > 0;
+            return isCompletedBool || isCompletedStatus || hasRawResp;
+          });
+
+          if (isAlreadyCompleted) {
+            if (typeof window !== 'undefined') {
+              const url = new URL(window.location.href);
+              url.searchParams.delete('code');
+              url.searchParams.delete('role');
+              url.searchParams.delete('track');
+              url.searchParams.delete('pillar');
+              url.searchParams.delete('flow');
+              url.searchParams.delete('view');
+              window.history.replaceState({}, '', url.toString());
+            }
+            setViewState('THANK_YOU');
+            return;
+          }
+        }
+
+        // HARD-CLEAR PARTICIPANT ROUTE PARAMS ONCE RESOLVED TO PREVENT RE-TRIGGER LOOPS
+        if (typeof window !== 'undefined') {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('code');
+          url.searchParams.delete('role');
+          url.searchParams.delete('track');
+          url.searchParams.delete('pillar');
+          url.searchParams.delete('flow');
+          url.searchParams.delete('view');
+          window.history.replaceState({}, '', url.toString());
+        }
+
         if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
           setViewState('COCKPIT');
         } else {
@@ -531,6 +575,15 @@ export default function ForensicEngineRoot() {
       }
     }
 
+    // CHECK IF THIS WAS A PARTICIPANT SESSION BEFORE WE PURGE URL PARAMS
+    let isParticipantSession = false;
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const authVal = params.get('auth');
+      const isAdmin = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
+      isParticipantSession = !isAdmin && !!(params.get('code') || params.get('role'));
+    }
+
     // 3. PERSIST COMPLETION STATUS TO SUPABASE
     if (targetAuditId) {
       const aliases = QUAD_PERSONA_TYPES[targetPersona];
@@ -586,16 +639,17 @@ export default function ForensicEngineRoot() {
           });
         }
 
-        // CLEAN UP PARTICIPANT ROLE PARAMETERS FROM URL BEFORE RE-SYNC
+        // HARD-CLEAR ALL PARTICIPANT PARAMETERS FROM URL BEFORE RE-SYNC
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href);
           url.searchParams.delete('role');
           url.searchParams.delete('track');
+          url.searchParams.delete('code');
+          url.searchParams.delete('pillar');
+          url.searchParams.delete('view');
+          url.searchParams.delete('flow');
           window.history.replaceState({}, '', url.toString());
         }
-
-        // FORCE RE-SYNC MATRIX
-        await synchronizeEngineDataMatrix(true);
 
       } catch (dbErr) {
         console.error('[Save Handler] Database persistence exception:', dbErr);
@@ -603,7 +657,14 @@ export default function ForensicEngineRoot() {
     }
 
     setActivePersona(null); 
-    setViewState('HUB');
+
+    // ROUTE PARTICIPANTS TO THANK YOU VIEW; ADMINS TO HUB MONITOR
+    if (isParticipantSession) {
+      setViewState('THANK_YOU');
+    } else {
+      setViewState('HUB');
+      await synchronizeEngineDataMatrix(true);
+    }
   }; 
 
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
@@ -784,6 +845,7 @@ export default function ForensicEngineRoot() {
       const url = new URL(window.location.href);
       url.searchParams.delete('role');
       url.searchParams.delete('track');
+      url.searchParams.delete('code');
       window.history.replaceState({}, '', url.toString());
     }
 
@@ -1120,6 +1182,7 @@ export default function ForensicEngineRoot() {
         </div> 
       )} 
 
+      {/* WIZARD VIEW */}
       {viewState === 'WIZARD' && triangulation && activePersona && ( 
         <ForensicDiagnosticWizard         
           companyName={`${triangulation.companyName}`} 
@@ -1130,6 +1193,25 @@ export default function ForensicEngineRoot() {
         /> 
       )} 
 
+      {/* PARTICIPANT THANK YOU VIEW */}
+      {viewState === 'THANK_YOU' && (
+        <div className="w-full max-w-lg border border-slate-200 bg-white p-8 md:p-10 text-center rounded-lg shadow-sm space-y-6">
+          <div className="flex justify-center">
+            <CheckCircle size={48} className="text-emerald-600" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Assessment Completed</h2>
+            <p className="text-xs text-slate-600 font-mono mt-2 uppercase tracking-wider">
+              Your responses have been securely recorded into the Quad Node Diagnostic Matrix.
+            </p>
+          </div>
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded text-left text-xs font-mono text-slate-500 leading-relaxed">
+            // You may now close this browser tab. Your organization's diagnostic administrator will receive the consolidated readiness assessment upon completion of all stakeholder tracks.
+          </div>
+        </div>
+      )}
+
+      {/* COMMAND COCKPIT VIEW */}
       {viewState === 'COCKPIT' && triangulation && ( 
         <div className="w-full max-w-[1600px] mx-auto text-left"> 
           <div className="mb-4 px-10 no-print flex justify-start"> 
