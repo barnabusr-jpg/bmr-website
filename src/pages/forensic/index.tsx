@@ -112,13 +112,24 @@ export default function ForensicEngineRoot() {
 
     try {
       const flowParam = params.get('flow');
-      const roleParam = params.get('role') as PersonaKey;
+      const rawRole = params.get('role');
       const pillarParam = params.get('pillar') as FunnelPillar;
       const authVal = params.get('auth');
       const viewParam = params.get('view');
 
-      const isAdminSession = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
-      const isParticipantRoute = !isAdminSession && !!(codeParam || roleParam);
+      // STRICT ROLE VALIDATION AGAINST KNOWN PERSONAS
+      const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
+
+      // HARDENED ROUTE EVALUATION: PRESENCE OF ROLE OVERRIDES AUTH=TRUE
+      const hasRoleParam = !!roleParam;
+      const hasCodeParam = !!codeParam;
+
+      const isAdminSession = 
+        !hasRoleParam && 
+        (authVal === 'admin_verified_secure' || authVal === 'admin');
+
+      const isParticipantRoute = 
+        hasRoleParam || (!isAdminSession && hasCodeParam);
 
       // 1. PARTICIPANT ROUTE FROM EMAIL LINK
       if (isParticipantRoute && roleParam) {
@@ -496,10 +507,20 @@ export default function ForensicEngineRoot() {
       const params = new URLSearchParams(window.location.search); 
       const authVal = params.get('auth'); 
       const codeParam = params.get('code');
-      const roleParam = params.get('role') as PersonaKey; 
+      const rawRole = params.get('role'); 
 
-      const isAdminAuthenticated = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true'); 
-      const isParticipantRoute = !isAdminAuthenticated && !!(codeParam || roleParam); 
+      // STRICT ROLE VALIDATION AGAINST KNOWN PERSONAS
+      const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
+
+      const hasRoleParam = !!roleParam;
+      const hasCodeParam = !!codeParam;
+
+      // ROLE ALWAYS MEANS PARTICIPANT ROUTE; ADMIN REQUIRES EXPLICIT TOKEN ONLY
+      const isAdminAuthenticated =
+        !hasRoleParam &&
+        (authVal === 'admin_verified_secure' || authVal === 'admin');
+
+      const isParticipantRoute = hasRoleParam || (!isAdminAuthenticated && hasCodeParam);
       const isAuthorized = isParticipantRoute || isAdminAuthenticated;
 
       setAuthorizedAdmin(isAuthorized);
@@ -575,13 +596,18 @@ export default function ForensicEngineRoot() {
       }
     }
 
-    // CHECK IF THIS WAS A PARTICIPANT SESSION BEFORE WE PURGE URL PARAMS
+    // PARTICIPANT SESSION CHECK: PRESENCE OF ROLE OR CODE PARAMETER TRUMPS AUTH=TRUE
     let isParticipantSession = false;
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const authVal = params.get('auth');
-      const isAdmin = (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
-      isParticipantSession = !isAdmin && !!(params.get('code') || params.get('role'));
+      const roleVal = params.get('role');
+      const codeVal = params.get('code');
+
+      const isExplicitAdmin = 
+        (authVal === 'admin_verified_secure' || authVal === 'admin') && !roleVal;
+
+      isParticipantSession = !isExplicitAdmin && !!(codeVal || roleVal);
     }
 
     // 3. PERSIST COMPLETION STATUS TO SUPABASE
