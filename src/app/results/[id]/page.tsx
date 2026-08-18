@@ -2,16 +2,23 @@ import { createClient } from "@supabase/supabase-js";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
-const redis = new Redis({
-  url: process.env.UPSTASH_REDIS_REST_URL!,
-  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
-});
+export const dynamic = "force-dynamic";
 
-const resultsLimiter = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(20, "1 min"),
-  analytics: true,
-});
+const redis =
+  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+    ? new Redis({
+        url: process.env.UPSTASH_REDIS_REST_URL,
+        token: process.env.UPSTASH_REDIS_REST_TOKEN,
+      })
+    : null;
+
+const resultsLimiter = redis
+  ? new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(20, "60s"),
+      analytics: true,
+    })
+  : null;
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -19,20 +26,20 @@ const supabase = createClient(
 );
 
 export default async function ResultsPage({ params }: { params: { id: string } }) {
-  // Rate-limit token access using the UUID token to mitigate brute-force guessing
-  const rateKey = `results:${params.id}`;
+  if (resultsLimiter) {
+    const rateKey = `results:${params.id}`;
+    const { success } = await resultsLimiter.limit(rateKey);
 
-  const { success } = await resultsLimiter.limit(rateKey);
-  if (!success) {
-    return (
-      <div className="p-8 text-center text-red-500 font-mono">
-        <h1 className="text-xl font-semibold">TOO MANY REQUESTS</h1>
-        <p className="text-sm opacity-75 mt-1">Please try again shortly.</p>
-      </div>
-    );
+    if (!success) {
+      return (
+        <div className="p-8 text-center text-red-500 font-mono">
+          <h1 className="text-xl font-semibold">TOO MANY REQUESTS</h1>
+          <p className="text-sm opacity-75 mt-1">Please try again shortly.</p>
+        </div>
+      );
+    }
   }
 
-  // Explicitly query the custom auth_capabilities schema
   const { data: result, error } = await supabase
     .schema("auth_capabilities")
     .rpc("get_result_by_id", { p_id: params.id })
