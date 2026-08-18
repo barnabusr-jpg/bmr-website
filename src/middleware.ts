@@ -1,45 +1,92 @@
-import { NextRequest, NextResponse } from "next/server";
-import { strictApiLimiter } from "@/lib/ratelimit";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000;
+const MAX_REQUESTS_PER_WINDOW = 30;
 
-  // Only rate-limit writes
-  if (req.method !== "POST") return NextResponse.next();
-
-  // Local dev fallback if Redis env vars are missing
-  if (!strictApiLimiter) return NextResponse.next();
-
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
-    "127.0.0.1";
-
-  // Template literal properly escaped with backticks
-  const identifier = `ratelimit_${pathname}_${ip}`;
-
-  const { success, limit, remaining, reset } =
-    await strictApiLimiter.limit(identifier);
-
-  if (!success) {
-    return NextResponse.json(
-      {
-        error: "Too Many Requests",
-        message: "Rate limit exceeded. Please retry in a few seconds.",
-      },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Limit": limit.toString(),
-          "X-RateLimit-Remaining": remaining.toString(),
-          "X-RateLimit-Reset": reset.toString(),
-        },
+function pruneRateLimitMap(now: number) {
+  if (rateLimitMap.size > 1000) {
+    for (const [ip, record] of rateLimitMap.entries()) {
+      if (now > record.resetTime) {
+        rateLimitMap.delete(ip);
       }
-    );
+    }
+  }
+}
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  pruneRateLimitMap(now);
+
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return false;
   }
 
-  return NextResponse.next();
+  record.count += 1;
+  return record.count > MAX_REQUESTS_PER_WINDOW;
+}
+
+function makeNonce(): string {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+export function middleware(request: NextRequest) {
+  const ip =
+    request.ip ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    "127.0.0.1";
+  const { pathname } = request.nextUrl;
+
+  if (
+    pathname.startsWith("/results") ||
+    pathname.startsWith("/api/dispatch-directives")
+  ) {
+    if (isRateLimited(ip)) {
+      return new NextResponse("Too Many Requests", { status: 429 });
+    }
+  }
+
+  const nonce = makeNonce();
+  const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' blob: data:;
+    font-src 'self' https://fonts.gstatic.com;
+    object-src 'none';
+    base-uri 'self';
+    form-action 'self';
+    frame-ancestors 'none';
+    upgrade-insecure-requests;
+  `
+    .replace(/\s{2,}/g, " ")
+    .trim();
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+  requestHeaders.set("Content-Security-Policy", cspHeader);
+
+  const authCookie = request.cookies.get("sb-access-token");
+
+  if (pathname.startsWith("/admin") && !authCookie) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.search = request.nextUrl.search;
+    return NextResponse.redirect(loginUrl);
+  }
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", cspHeader);
+  return response;
 }
 
 export const config = {
-  matcher: ["/api/dispatch-directives", "/api/save-operator-response"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
