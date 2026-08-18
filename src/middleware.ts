@@ -55,9 +55,10 @@ export function middleware(request: NextRequest) {
   }
 
   const nonce = makeNonce();
+
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
+    script-src 'self' 'nonce-${nonce}';
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data:;
     font-src 'self' https://fonts.gstatic.com;
