@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import "@/styles/globals.css";
+import React from "react";
 
-export const metadata: Metadata = {
-  title: "Diagnostic Forensic Platform",
-  description: "Secure forensic diagnostics and report viewer",
+export const metadata = {
+  title: "BMR Solutions // Executive Results Portal",
+  description: "Independent forensic observer & AI readiness governance control plane.",
 };
 
 export default function RootLayout({
@@ -11,8 +12,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="antialiased bg-slate-950 text-slate-50 min-h-screen">
+    <html lang="en" className="dark">
+      <body className="bg-[#050811] text-slate-100 antialiased selection:bg-emerald-500 selection:text-slate-950">
         {children}
       </body>
     </html>
