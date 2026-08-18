@@ -205,6 +205,9 @@ export default function UnifiedResultsPortal() {
   useEffect(() => {
     if (!id || !mounted) return;
 
+    let channelSubscription: any = null;
+    let cancelled = false;
+
     const fetchInitialAuditState = async () => {
       try {
         const { data: rawResult, error } = await supabase
@@ -212,33 +215,51 @@ export default function UnifiedResultsPortal() {
           .rpc("get_result_by_id", { p_id: id });
 
         if (error) throw error;
+
         const result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
 
-        if (result && !result.error) {
+        if (!cancelled && result && !(result as any).error) {
           setAudit(result as AuditRecord);
         }
       } catch (err) {
         console.error("Audit RPC fetch failure:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchInitialAuditState();
 
-    const channelSubscription = supabase
-      .channel(`live-workshop-${id}`)
-      .on(
-        "postgres_changes",
-        { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` },
-        (payload) => {
-          if (payload.new) setAudit(payload.new as AuditRecord);
+    try {
+      channelSubscription = supabase
+        .channel(`live-workshop-${id}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` },
+          (payload) => {
+            if (payload?.new) setAudit(payload.new as AuditRecord);
+          }
+        );
+
+      channelSubscription.subscribe((status: string) => {
+        if (status === "CHANNEL_ERROR") {
+          console.warn(
+            "Supabase Realtime subscription failed (CHANNEL_ERROR). Rendering will continue without live updates."
+          );
         }
-      )
-      .subscribe();
+      });
+    } catch (realtimeErr) {
+      console.warn(
+        "Supabase Realtime not available in this browser/CSP context. Rendering continues without realtime:",
+        realtimeErr
+      );
+    }
 
     return () => {
-      supabase.removeChannel(channelSubscription);
+      cancelled = true;
+      if (channelSubscription) {
+        supabase.removeChannel(channelSubscription);
+      }
     };
   }, [id, mounted]);
 
