@@ -1,6 +1,6 @@
-import { createClient } from "@supabase/supabase-js";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import UnifiedResultsPortal from "./UnifiedResultsPortal";
 
 export const dynamic = "force-dynamic";
 
@@ -20,53 +20,24 @@ const resultsLimiter = redis
     })
   : null;
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-export default async function ResultsPage({ params }: { params: { id: string } }) {
+export default async function ResultsPage({
+  params,
+}: {
+  params: { id: string };
+}) {
   if (resultsLimiter) {
-    const rateKey = `results:${params.id}`;
-    const { success } = await resultsLimiter.limit(rateKey);
-
+    const { success } = await resultsLimiter.limit(`results:${params.id}`);
     if (!success) {
       return (
-        <div className="p-8 text-center text-red-500 font-mono">
-          <h1 className="text-xl font-semibold">TOO MANY REQUESTS</h1>
-          <p className="text-sm opacity-75 mt-1">Please try again shortly.</p>
+        <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+          <div className="p-8 text-center text-red-500 border border-red-900/50 bg-red-950/20 rounded-xl max-w-md font-mono">
+            <h1 className="text-xl font-bold tracking-wide">TOO MANY REQUESTS</h1>
+            <p className="text-sm opacity-75 mt-2">Please try again shortly.</p>
+          </div>
         </div>
       );
     }
   }
 
-  const { data: rawResult, error } = await supabase
-    .schema("auth_capabilities")
-    .rpc("get_result_by_id", { p_id: params.id });
-
-  const result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
-
-  if (error || !result) {
-    return (
-      <div className="p-8 text-center text-red-500 font-mono">
-        <h1 className="text-xl font-semibold">DIAGNOSTIC RESULT NOT FOUND</h1>
-        <p className="text-sm opacity-75 mt-1">
-          {error?.message || "Invalid or expired UUID capability token."}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <main className="max-w-4xl mx-auto p-6 font-mono">
-      <div className="flex items-center justify-between mb-4 border-b pb-2">
-        <h1 className="text-2xl font-bold">DIAGNOSTIC REPORT</h1>
-        <span className="text-xs text-slate-400">ID: {result.id || params.id}</span>
-      </div>
-
-      <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-auto text-sm">
-        {JSON.stringify(result.diagnostic_data ?? result, null, 2)}
-      </pre>
-    </main>
-  );
+  return <UnifiedResultsPortal />;
 }
