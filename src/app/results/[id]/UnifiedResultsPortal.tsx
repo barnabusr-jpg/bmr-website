@@ -83,7 +83,7 @@ function RealTimeLossTicker({ diagnosticCompletedAt, exposure, anomalies, isArch
   }
 
   return (
-    <div className="font-mono font-bold mt-2 tracking-tight tabular-nums text-red-500 leading-none block break-keep text-4xl md:text-5xl">
+    <div className="font-mono font-bold mt-2 tracking-tight tabular-nums text-red-700 leading-none block break-keep text-4xl md:text-5xl">
       {"$" +
         dynamicAccumulatedLoss.toLocaleString(undefined, {
           minimumFractionDigits: 2,
@@ -183,8 +183,8 @@ export default function UnifiedResultsPortal() {
     };
   }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector, querySector, live_sync, tax]);
 
-  const accentColorClass = isPhaseTwoActive ? "text-red-500" : "text-emerald-400";
-  const borderAccentClass = isPhaseTwoActive ? "border-red-600" : "border-emerald-500";
+  const accentColorClass = isPhaseTwoActive ? "text-red-700" : "text-emerald-700";
+  const borderAccentClass = isPhaseTwoActive ? "border-red-700" : "border-slate-900";
 
   const genericAnomalies: AnomalyNode[] = useMemo(() => [
     { id: `Data Safety Rules // Impact $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: "Baseline evaluation complete. Outside vendor data rules and safety verification controls are held under evaluation protocol.", severity: "High Priority", directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." },
@@ -216,35 +216,34 @@ export default function UnifiedResultsPortal() {
 
   if (loading || !audit) {
     return (
-      <div className="min-h-screen bg-[#050811] text-slate-100 flex flex-col items-center justify-center font-bold">
-        <Activity className="animate-spin mb-4 text-emerald-500" size={48} />
-        <p className="text-xs tracking-wider text-slate-400 font-mono">Loading diagnostic report...</p>
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center font-bold">
+        <Activity className="animate-spin mb-4 text-slate-950" size={48} />
+        <p className="text-xs tracking-wider text-slate-600 font-mono">Loading diagnostic report...</p>
       </div>
     );
   }
 
-  // Pre-calculate exposure sum variables before return scope
   const calculatedExposureSum = metrics.exposure + metrics.totalLaborTaxPool;
   const safeExposureSum = calculatedExposureSum > 0 ? calculatedExposureSum : 462528;
 
   return (
-    <div className="min-h-screen bg-[#050811] text-slate-100 font-sans overflow-x-hidden text-left antialiased">
-      <div className="h-1 bg-emerald-500 w-full" />
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-red-100 selection:text-red-900 overflow-x-hidden text-left antialiased">
+      <div className="h-1 bg-slate-950 w-full" />
 
       {/* HEADER */}
-      <nav className="h-20 bg-[#080d1a] border-b border-slate-800 px-6 md:px-12 flex items-center justify-between">
+      <nav className="h-20 bg-white border-b border-slate-200 px-6 md:px-12 flex items-center justify-between shadow-sm">
         <div>
-          <div className="text-white text-xl font-bold tracking-tight">
+          <div className="text-slate-950 text-xl font-extrabold tracking-tight">
             BMR<span className={accentColorClass}>SOLUTIONS</span>
           </div>
-          <span className="text-xs text-slate-400 font-mono block mt-0.5">
+          <span className="text-xs text-slate-500 font-mono block mt-0.5">
             {isPhaseTwoActive ? "Portal Mode // Continuous Governance Control Plane" : "Portal Mode // Diagnostic Baseline"}
           </span>
         </div>
         {isPhaseTwoActive && (
           <button 
             onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} 
-            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white text-xs px-5 py-2.5 font-medium rounded border border-slate-700 transition-colors cursor-pointer"
+            className="flex items-center gap-2 bg-slate-950 hover:bg-red-700 text-white text-xs px-5 py-2.5 font-bold uppercase tracking-wider rounded-sm transition-colors shadow-sm cursor-pointer"
           >
             <FileText size={14} />
             Generate SteerCo Funding Dossier & SOW
@@ -254,9 +253,9 @@ export default function UnifiedResultsPortal() {
 
       {/* MAIN BODY */}
       <main className="max-w-7xl mx-auto pt-8 md:pt-12 px-6 md:px-12 pb-24 space-y-10">
-        <div className="border-l-2 border-slate-700 pl-4 py-1 space-y-1">
-          <span className="text-slate-400 font-mono text-xs font-semibold block">Methodology & Calculation Inputs</span>
-          <p className="text-slate-300 font-sans text-xs leading-relaxed max-w-4xl">
+        <div className="border-l-2 border-slate-300 pl-4 py-1 space-y-1">
+          <span className="text-slate-500 font-mono text-xs font-bold block">// METHODOLOGY & CALCULATION INPUTS</span>
+          <p className="text-slate-700 font-sans text-xs leading-relaxed max-w-4xl">
             {isPhaseTwoActive 
               ? `These operational metrics are actively calibrated to your team's real-world footprint of $${spend}M in annual software allocations across ${metrics.fteCount} FTE resources.` 
               : `This diagnostic uses standard industry baselines calibrated to your captured AI Readiness Score of ${100 - dbDecay}%. Specific workforce calibration parameters assume default inputs of $${spend}M annual software allocations across ${metrics.fteCount} FTE resources.`
@@ -265,55 +264,55 @@ export default function UnifiedResultsPortal() {
         </div>
 
         {/* HERO EXECUTIVE CARD */}
-        <div className={`bg-[#0b101d] text-slate-100 p-8 md:p-12 border-l-8 md:border-l-[12px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-y border-r border-slate-800 shadow-2xl ${borderAccentClass}`}>
+        <div className={`bg-white text-slate-950 p-8 md:p-12 border-l-8 md:border-l-[12px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-y border-r border-slate-200 shadow-sm ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-6">
             <div>
-              <span className="text-xs font-mono font-semibold text-slate-400 block mb-1">
+              <span className="text-xs font-mono font-bold text-red-700 block mb-1 uppercase tracking-wider">
                 Independent Governance // Zero Security Footprint
               </span>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-white">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-slate-950">
                 {isPhaseTwoActive ? "Executive Summary" : "Diagnostic Results"}
               </h1>
-              <p className="text-xs font-mono text-slate-400 mt-2">
+              <p className="text-xs font-mono text-slate-500 mt-2">
                 Prepared for: {audit?.org_name || "Evaluation Client System"}
               </p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-800 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-left">
               <div className="flex flex-col justify-between">
-                <span className="text-xs text-slate-400 font-medium">AI Readiness Score</span>
-                <p className="text-sm font-bold mt-1 text-white">
+                <span className="text-xs text-slate-500 font-medium">AI Readiness Score</span>
+                <p className="text-sm font-bold mt-1 text-slate-950">
                   Readiness: <span className={`${accentColorClass} text-base`}>{100 - dbDecay}%</span>
                 </p>
               </div>
 
               <div className="flex flex-col justify-between">
-                <span className="text-xs text-slate-400 font-medium">Process Waste & Rework</span>
-                <p className="text-sm font-bold mt-1 text-white">
-                  Liability: <span className="font-mono text-emerald-400">${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                <span className="text-xs text-slate-500 font-medium">Process Waste & Rework</span>
+                <p className="text-sm font-bold mt-1 text-slate-950">
+                  Liability: <span className="font-mono text-slate-950">${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
 
               <div className="flex flex-col justify-between">
-                <span className="text-xs text-slate-400 font-medium">Total Risk Exposure</span>
-                <p className="text-sm font-bold mt-1 text-white">
-                  Total Risk: <span className="font-mono text-emerald-400">${safeExposureSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                <span className="text-xs text-slate-500 font-medium">Total Risk Exposure</span>
+                <p className="text-sm font-bold mt-1 text-slate-950">
+                  Total Risk: <span className="font-mono text-slate-950">${safeExposureSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
                 </p>
               </div>
             </div>
           </div>
           
-          <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-800" />
+          <div className="hidden md:block md:col-span-1 justify-self-center h-full w-[1px] bg-slate-200" />
           
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] shrink-0">
-            <span className="text-xs font-mono text-slate-400 block">Estimated Ongoing Capital Loss</span>
+            <span className="text-xs font-mono font-bold text-slate-500 block uppercase tracking-wider">Estimated Ongoing Capital Loss</span>
             <RealTimeLossTicker 
               diagnosticCompletedAt={(audit as any)?.compiled_at || audit?.created_at || (audit as any)?.updated_at} 
               exposure={safeExposureSum} 
               anomalies={activeAnomaliesList}
               isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
             />
-            <span className="text-xs text-slate-400 block font-mono mt-2">
+            <span className="text-xs text-slate-500 block font-mono mt-2">
               {audit?.status?.toUpperCase() === 'ARCHIVED' ? "Assessment archived" : "Accumulated financial loss since assessment completed"}
             </span>
           </div>
@@ -321,47 +320,47 @@ export default function UnifiedResultsPortal() {
 
         {/* METRICS SPLIT CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-[#0b101d] border border-slate-800 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 rounded-lg">
-            <div className="text-4xl md:text-5xl font-extrabold text-white font-mono tracking-tight">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-xs font-medium text-slate-400 tracking-wide block">Wasted Engineering & Fix Hours</span>
+          <div className="bg-white border border-slate-200 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 rounded-sm shadow-sm">
+            <div className="text-4xl md:text-5xl font-black text-slate-950 font-mono tracking-tight">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className="text-xs font-bold text-slate-500 tracking-wider uppercase block">Wasted Engineering & Fix Hours</span>
           </div>
-          <div className="bg-[#0b101d] border border-slate-800 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 shadow-sm rounded-lg">
-            <div className={`text-4xl md:text-5xl font-extrabold font-mono tracking-tight ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-xs font-medium text-slate-400 tracking-wide block">Testing & Validation Fatigue</span>
+          <div className="bg-white border border-slate-200 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 shadow-sm rounded-sm">
+            <div className={`text-4xl md:text-5xl font-black font-mono tracking-tight ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <span className="text-xs font-bold text-slate-500 tracking-wider uppercase block">Testing & Validation Fatigue</span>
           </div>
         </div>
 
         {/* ANOMALIES MATRIX */}
         <div className="pt-4 text-left">
-          <div className="border-b border-slate-800 pb-4 mb-6">
-            <span className="text-xs font-mono text-slate-400 block">High-Risk Operational Areas</span>
-            <h3 className="text-2xl font-bold tracking-tight mt-1 text-white">Key Findings & Integration Risks</h3>
+          <div className="border-b border-slate-200 pb-4 mb-6">
+            <span className="text-xs font-mono font-bold text-slate-500 block uppercase tracking-wider">// HIGH-RISK OPERATIONAL AREAS</span>
+            <h3 className="text-2xl font-black tracking-tight mt-1 text-slate-950 uppercase">Key Findings & Integration Risks</h3>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {activeAnomaliesList.map((frac: any, index: number) => (
               <div 
                 key={frac.id || index} 
-                className={`border p-6 rounded-lg flex flex-col justify-between relative min-h-[260px] transition-all ${
-                  isPaidGateUnlocked ? 'border-red-900/50 bg-red-950/10' : 'border-slate-800 bg-[#0b101d]'
+                className={`border p-6 rounded-sm flex flex-col justify-between relative min-h-[260px] shadow-sm transition-all ${
+                  isPaidGateUnlocked ? 'border-red-300 bg-red-50/50' : 'border-slate-200 bg-white'
                 }`}
               >
-                <div className="flex justify-between items-center border-b border-slate-800 pb-3 font-mono">
-                  <span className="text-xs text-slate-400 font-medium">Finding #{index + 1}</span>
-                  <span className={`text-xs px-2.5 py-0.5 font-medium flex items-center gap-1.5 border rounded ${
-                    isPaidGateUnlocked ? 'bg-red-950/40 text-red-400 border-red-800' : 'bg-emerald-950/40 text-emerald-400 border-emerald-800'
+                <div className="flex justify-between items-center border-b border-slate-100 pb-3 font-mono">
+                  <span className="text-xs text-slate-500 font-bold uppercase">Finding #{index + 1}</span>
+                  <span className={`text-xs px-2.5 py-0.5 font-bold uppercase flex items-center gap-1.5 border rounded-sm ${
+                    isPaidGateUnlocked ? 'bg-red-100 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                   }`}>
                     {isPaidGateUnlocked ? <Unlock size={12} /> : <Lock size={12} />} 
                     {isPaidGateUnlocked ? frac.severity : "Gate Cleared"}
                   </span>
                 </div>
                 <div className="my-4 space-y-2">
-                  <h4 className="text-base font-bold text-white">{String(frac.id || 'Identified Risk Area')}</h4>
-                  <p className="text-xs text-slate-300 leading-relaxed">{frac.description}</p>
+                  <h4 className="text-base font-bold text-slate-950">{String(frac.id || 'Identified Risk Area')}</h4>
+                  <p className="text-xs text-slate-600 leading-relaxed font-normal">{frac.description}</p>
                 </div>
-                <div className="border-t border-slate-800 pt-3">
-                  <div className="text-xs text-slate-400 font-medium mb-1">Recommended Action:</div>
-                  <div className="text-xs text-slate-200 font-medium">{frac.directive}</div>
+                <div className="border-t border-slate-100 pt-3">
+                  <div className="text-xs text-slate-500 font-bold uppercase mb-1">Recommended Action:</div>
+                  <div className="text-xs text-slate-800 font-medium">{frac.directive}</div>
                 </div>
               </div>
             ))}
