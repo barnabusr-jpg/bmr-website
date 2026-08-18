@@ -10,10 +10,8 @@ export default function LandingPage() {
   const router = useRouter();
 
   const handleAdminNavigate = () => {
-    // Route to /admin (or update to '/admin/dashboard' if your page file is src/pages/admin/dashboard.tsx)
-    router.push('/admin').catch(() => {
-      router.push('/admin/dashboard');
-    });
+    // Explicitly target the existing dashboard file at src/pages/admin/dashboard.tsx
+    router.push('/admin/dashboard');
   };
 
   return (
