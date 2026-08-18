@@ -30,14 +30,6 @@ function isRateLimited(ip: string): boolean {
   return record.count > MAX_REQUESTS_PER_WINDOW;
 }
 
-function makeNonce(): string {
-  const bytes = new Uint8Array(16);
-  crypto.getRandomValues(bytes);
-  return Array.from(bytes)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
 export function middleware(request: NextRequest) {
   const ip =
     request.ip ||
@@ -54,14 +46,13 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  const nonce = makeNonce();
-
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'nonce-${nonce}';
+    script-src 'self' 'unsafe-inline';
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data:;
     font-src 'self' https://fonts.gstatic.com;
+    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
@@ -72,7 +63,6 @@ export function middleware(request: NextRequest) {
     .trim();
 
   const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", cspHeader);
 
   const authCookie = request.cookies.get("sb-access-token");
