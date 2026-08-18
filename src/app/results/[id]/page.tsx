@@ -40,10 +40,11 @@ export default async function ResultsPage({ params }: { params: { id: string } }
     }
   }
 
-  const { data: result, error } = await supabase
+  const { data: rawResult, error } = await supabase
     .schema("auth_capabilities")
-    .rpc("get_result_by_id", { p_id: params.id })
-    .single();
+    .rpc("get_result_by_id", { p_id: params.id });
+
+  const result = Array.isArray(rawResult) ? rawResult[0] : rawResult;
 
   if (error || !result) {
     return (
@@ -60,11 +61,11 @@ export default async function ResultsPage({ params }: { params: { id: string } }
     <main className="max-w-4xl mx-auto p-6 font-mono">
       <div className="flex items-center justify-between mb-4 border-b pb-2">
         <h1 className="text-2xl font-bold">DIAGNOSTIC REPORT</h1>
-        <span className="text-xs text-slate-400">ID: {result.id}</span>
+        <span className="text-xs text-slate-400">ID: {result.id || params.id}</span>
       </div>
 
       <pre className="bg-slate-900 text-slate-100 p-4 rounded-lg overflow-auto text-sm">
-        {JSON.stringify(result.diagnostic_data, null, 2)}
+        {JSON.stringify(result.diagnostic_data ?? result, null, 2)}
       </pre>
     </main>
   );
