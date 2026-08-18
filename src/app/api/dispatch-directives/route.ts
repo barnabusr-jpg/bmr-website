@@ -1,24 +1,37 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-const dispatchDirectivesSchema = z.object({
-  directiveId: z.string().uuid().optional(),
-  recipients: z.array(z.string().email()).min(1).max(20).optional(),
-  groupId: z.string().uuid().optional(),
-  overallScore: z.number().int().min(0).max(100).optional(),
+const redis = new Redis({
+  url: process.env.UPSTASH_REDIS_REST_URL!,
+  token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+});
+
+const dispatchLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, "10 s"),
+  analytics: true,
+});
+
+const intakeSchema = z.object({
+  entityName: z.string().min(1),
+  operatorName: z.string().min(1),
+  email: z.string().email(),
+  sector: z.string().default("FINANCE"),
+  personaType: z.string().nullable().default("EXECUTIVE"),
+  decayPct: z.number(),
+  reworkTax: z.number(),
+  rawResponses: z.record(z.string()),
+  overallScore: z.coerce.number().transform((val) => Math.round(val)),
 });
 
 function getSupabaseAdmin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url || !serviceRole) {
-    throw new Error("Missing server-side database configuration.");
-  }
-
-  // Diagnostic log to confirm project host mapping in Vercel logs
-  console.log("[Supabase Host Target]", new URL(url).hostname);
+  if (!url || !serviceRole) throw new Error("Missing server-side database configuration.");
 
   return createClient(url, serviceRole, {
     auth: { persistSession: false },
@@ -26,89 +39,138 @@ function getSupabaseAdmin() {
 }
 
 export async function POST(request: Request) {
+  // Shared, cross-region rate limiting
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+
+  const { success } = await dispatchLimiter.limit(`dispatch:${ip}`);
+  if (!success) {
+    return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
+  }
+
   try {
     const body = await request.json();
-    const parsed = dispatchDirectivesSchema.safeParse(body);
+    const parsed = intakeSchema.safeParse(body);
 
     if (!parsed.success) {
-      console.warn("[Dispatch API Invalid Payload]", parsed.error.flatten());
+      console.warn("[Intake API Invalid Payload]", parsed.error.flatten());
       return NextResponse.json(
         { error: "Invalid payload schema", details: parsed.error.flatten() },
         { status: 400 }
       );
     }
 
-    console.log("[Dispatch Parsed Payload]", parsed.data);
-
     const supabaseAdmin = getSupabaseAdmin();
-    const { directiveId, recipients, groupId, overallScore } = parsed.data;
+    const payload = parsed.data;
 
-    let createdReportId: string | null = null;
+    // 1) Resolve or Create Diagnostic Group
+    const groupName = `${payload.sector}_${payload.personaType || "GENERAL"}`.toUpperCase();
+    let targetGroupId: string;
 
-    // 1. Handle Fracture Report Creation
-    if (groupId && overallScore !== undefined) {
-      const { data: reportData, error: reportError } = await supabaseAdmin
-        .from("fracture_reports")
-        .insert({
-          group_id: groupId,
-          overall_score: overallScore,
-        })
-        .select("id")
-        .single();
+    const { data: existingGroupRows } = await supabaseAdmin
+      .from("diagnostic_groups")
+      .select("id")
+      .eq("name", groupName)
+      .limit(1);
 
-      if (reportError) {
-        console.error("[Fracture Report Write Failed]", {
-          message: reportError.message,
-          details: reportError.details,
-          code: reportError.code,
-        });
-        return NextResponse.json(
-          { error: "Failed to persist fracture report", details: reportError.message },
-          { status: 500 }
-        );
-      }
+    if (existingGroupRows && existingGroupRows.length > 0) {
+      targetGroupId = existingGroupRows[0].id;
+    } else {
+      const { data: newGroupRows, error: groupErr } = await supabaseAdmin
+        .from("diagnostic_groups")
+        .insert({ name: groupName })
+        .select("id");
 
-      createdReportId = reportData.id;
-    }
+      if (groupErr || !newGroupRows || newGroupRows.length === 0) {
+        const { data: fallbackRows } = await supabaseAdmin
+          .from("diagnostic_groups")
+          .select("id")
+          .limit(1);
 
-    // 2. Handle Dispatch Audit Writes
-    if (directiveId && recipients) {
-      const { error: dispatchError } = await supabaseAdmin
-        .from("dispatches")
-        .insert({
-          directive_id: directiveId,
-          recipients: recipients,
-        });
+        if (!fallbackRows || fallbackRows.length === 0) {
+          console.error("[Fatal Diagnostic Group Error]: No available diagnostic_groups found.");
+          return NextResponse.json(
+            { error: "Configuration Error: No active diagnostic group available." },
+            { status: 500 }
+          );
+        }
 
-      if (dispatchError) {
-        console.error("[Dispatch Audit Write Failed]", {
-          message: dispatchError.message,
-          details: dispatchError.details,
-          code: dispatchError.code,
-        });
-        return NextResponse.json(
-          { error: "Dispatch processing failed", details: dispatchError.message },
-          { status: 500 }
-        );
+        targetGroupId = fallbackRows[0].id;
+      } else {
+        targetGroupId = newGroupRows[0].id;
       }
     }
 
-    if (!createdReportId && (!directiveId || !recipients)) {
+    // 2) Upsert Entity
+    const { data: entityRows } = await supabaseAdmin
+      .from("entities")
+      .upsert({ name: payload.entityName }, { onConflict: "name" })
+      .select("id");
+
+    const entityId = entityRows?.[0]?.id;
+
+    // 3) Insert Primary Audit Log
+    const { data: auditRows, error: auditError } = await supabaseAdmin
+      .from("audits")
+      .insert([
+        {
+          org_name: payload.entityName,
+          lead_email: payload.email,
+          sector: payload.sector,
+          decay_pct: payload.decayPct,
+          rework_tax: payload.reworkTax,
+          raw_responses: payload.rawResponses,
+          status: "COMPLETED",
+          roi_pct: 6,
+          ai_spend: 1.2,
+        },
+      ])
+      .select("id");
+
+    if (auditError || !auditRows || auditRows.length === 0) {
+      console.error("[Audit Persistence Error]", auditError);
       return NextResponse.json(
-        { error: "Payload missing required report or dispatch fields" },
-        { status: 400 }
+        { error: "Audit write failed", details: auditError?.message },
+        { status: 500 }
       );
     }
 
-    return NextResponse.json({
-      success: true,
-      ...(createdReportId && { id: createdReportId }),
+    const auditId = auditRows[0].id;
+
+    // 4) Insert Fracture Report
+    const { data: reportRows, error: reportError } = await supabaseAdmin
+      .from("fracture_reports")
+      .insert({
+        group_id: targetGroupId,
+        overall_score: payload.overallScore,
+      })
+      .select("id");
+
+    if (reportError || !reportRows || reportRows.length === 0) {
+      console.error("[Fracture Report Insert Error]", reportError);
+      return NextResponse.json(
+        { error: "Fracture report write failed", details: reportError?.message },
+        { status: 500 }
+      );
+    }
+
+    const reportId = reportRows[0].id;
+
+    // 5) Upsert Operator Record
+    await supabaseAdmin.from("operators").upsert({
+      email: payload.email,
+      full_name: payload.operatorName,
+      entity_id: entityId,
+      audit_id: auditId,
+      persona_type: payload.personaType,
+      status: "COMPLETED",
     });
+
+    return NextResponse.json({ success: true, id: reportId });
   } catch (err: any) {
-    console.error("[Dispatch API Unhandled Exception]", err?.message || err);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("[Dispatch Directive Exception]", err?.message || err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
