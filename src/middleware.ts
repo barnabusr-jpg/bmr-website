@@ -1,92 +1,49 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT_WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS_PER_WINDOW = 30;
-
-function pruneRateLimitMap(now: number) {
-  if (rateLimitMap.size > 1000) {
-    for (const [ip, record] of rateLimitMap.entries()) {
-      if (now > record.resetTime) rateLimitMap.delete(ip);
-    }
-  }
-}
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  pruneRateLimitMap(now);
-
-  const record = rateLimitMap.get(ip);
-  if (!record || now > record.resetTime) {
-    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
-    return false;
-  }
-  record.count += 1;
-  return record.count > MAX_REQUESTS_PER_WINDOW;
-}
-
-function isTestingEnv() {
-  const env = process.env.NODE_ENV;
-  const vercelEnv = process.env.VERCEL_ENV;
-
-  return (
-    env !== "production" ||
-    vercelEnv === "preview" ||
-    vercelEnv === "development"
-  );
+function makeNonce() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 export function middleware(request: NextRequest) {
-  const ip =
-    request.ip ||
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    "127.0.0.1";
-  const { pathname } = request.nextUrl;
-
-  if (
-    pathname.startsWith("/results") ||
-    pathname.startsWith("/api/dispatch-directives")
-  ) {
-    if (isRateLimited(ip)) {
-      return new NextResponse("Too Many Requests", { status: 429 });
-    }
-  }
-
-  const testing = isTestingEnv();
-
-  const imgSrc = testing
-    ? "img-src 'self' blob: data: https://vercel.live https://vercel.com;"
-    : "img-src 'self' blob: data:;";
+  const nonce = makeNonce();
 
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline' https://vercel.live;
+    script-src 'self' 'nonce-${nonce}' 'strict-dynamic';
     style-src 'self' 'unsafe-inline';
-    ${imgSrc}
-    font-src 'self' https://fonts.gstatic.com;
-    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live;
-    frame-src 'self' https://vercel.live;
+    img-src 'self' blob: data: https://*.supabase.co;
+    font-src 'self';
     object-src 'none';
     base-uri 'self';
     form-action 'self';
     frame-ancestors 'none';
+    block-all-mixed-content;
     upgrade-insecure-requests;
-  `
-    .replace(/\s{2,}/g, " ")
-    .trim();
+  `.replace(/\s{2,}/g, " ").trim();
 
   const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", cspHeader);
 
+  // Auth & Navigation Guard (preserves query strings like ?session_id=)
   const authCookie = request.cookies.get("sb-access-token");
-  if (pathname.startsWith("/admin") && !authCookie) {
+  const url = request.nextUrl.clone();
+
+  if (url.pathname.startsWith("/admin") && !authCookie) {
     const loginUrl = new URL("/login", request.url);
-    loginUrl.search = request.nextUrl.search;
+    loginUrl.search = url.search; // Preserve query parameters across redirects
     return NextResponse.redirect(loginUrl);
   }
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  const response = NextResponse.next({
+    request: { headers: requestHeaders },
+  });
+
   response.headers.set("Content-Security-Policy", cspHeader);
   return response;
 }
