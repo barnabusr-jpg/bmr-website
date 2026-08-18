@@ -8,9 +8,7 @@ const MAX_REQUESTS_PER_WINDOW = 30;
 function pruneRateLimitMap(now: number) {
   if (rateLimitMap.size > 1000) {
     for (const [ip, record] of rateLimitMap.entries()) {
-      if (now > record.resetTime) {
-        rateLimitMap.delete(ip);
-      }
+      if (now > record.resetTime) rateLimitMap.delete(ip);
     }
   }
 }
@@ -20,14 +18,23 @@ function isRateLimited(ip: string): boolean {
   pruneRateLimitMap(now);
 
   const record = rateLimitMap.get(ip);
-
   if (!record || now > record.resetTime) {
     rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
     return false;
   }
-
   record.count += 1;
   return record.count > MAX_REQUESTS_PER_WINDOW;
+}
+
+function isTestingEnv() {
+  const env = process.env.NODE_ENV;
+  const vercelEnv = process.env.VERCEL_ENV;
+
+  return (
+    env !== "production" ||
+    vercelEnv === "preview" ||
+    vercelEnv === "development"
+  );
 }
 
 export function middleware(request: NextRequest) {
@@ -46,13 +53,20 @@ export function middleware(request: NextRequest) {
     }
   }
 
+  const testing = isTestingEnv();
+
+  const imgSrc = testing
+    ? "img-src 'self' blob: data: https://vercel.live https://vercel.com;"
+    : "img-src 'self' blob: data:;";
+
   const cspHeader = `
     default-src 'self';
-    script-src 'self' 'unsafe-inline';
+    script-src 'self' 'unsafe-inline' https://vercel.live;
     style-src 'self' 'unsafe-inline';
-    img-src 'self' blob: data:;
+    ${imgSrc}
     font-src 'self' https://fonts.gstatic.com;
     connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live;
+    frame-src 'self' https://vercel.live;
     object-src 'none';
     base-uri 'self';
     form-action 'self';
@@ -66,7 +80,6 @@ export function middleware(request: NextRequest) {
   requestHeaders.set("Content-Security-Policy", cspHeader);
 
   const authCookie = request.cookies.get("sb-access-token");
-
   if (pathname.startsWith("/admin") && !authCookie) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.search = request.nextUrl.search;
