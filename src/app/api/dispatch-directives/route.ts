@@ -5,15 +5,24 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
 const intakeSchema = z.object({
-  entityName: z.string().min(1),
-  operatorName: z.string().min(1),
+  entityName: z.string().min(1).default("Admin Entity"),
+  operatorName: z.string().min(1).default("Admin Operator"),
   email: z.string().email(),
   sector: z.string().default("FINANCE"),
   personaType: z.string().nullable().default("EXECUTIVE"),
-  decayPct: z.coerce.number(),
-  reworkTax: z.coerce.number(),
-  rawResponses: z.record(z.string()),
-  overallScore: z.coerce.number().transform((val) => Math.round(val)),
+  decayPct: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined || Number.isNaN(Number(val)) ? 0 : Number(val)),
+    z.number()
+  ),
+  reworkTax: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined || Number.isNaN(Number(val)) ? 0 : Number(val)),
+    z.number()
+  ),
+  rawResponses: z.record(z.string()).optional().default({}),
+  overallScore: z.preprocess(
+    (val) => (val === "" || val === null || val === undefined || Number.isNaN(Number(val)) ? 0 : Math.round(Number(val))),
+    z.number()
+  ).default(0),
 });
 
 function getSupabaseAdmin() {
