@@ -152,80 +152,86 @@ export default function AdminDashboard() {
 
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
+
     setIsUpdating(true);
     try {
-      const targetEmail = emails.exec.trim() || emails.mgr.trim() || emails.tech.trim();
-      if (!targetEmail) {
+      const execEmail = emails.exec.trim();
+      const mgrEmail = emails.mgr.trim();
+      const techEmail = emails.tech.trim();
+
+      const hasAtLeastOne = execEmail || mgrEmail || techEmail;
+      if (!hasAtLeastOne) {
         alert("Please enter at least one stakeholder email.");
         setIsUpdating(false);
         return;
       }
 
-      const sanitizedPayload = {
-        entityName: selectedAudit.org_name || "Admin Entity",
-        operatorName: "Admin Stakeholder",
-        email: targetEmail,
-        sector: selectedAudit.sector || "FINANCE",
-        personaType: "EXECUTIVE",
-        decayPct: Number.isFinite(Number(selectedAudit.decay_pct)) ? Number(selectedAudit.decay_pct) : 0,
-        reworkTax: 0,
-        overallScore: Number.isFinite(Number(selectedAudit.sfi_score)) ? Number(selectedAudit.sfi_score) : 0,
-        rawResponses: {},
+      const emailsPayload: Record<string, string> = {};
+      if (execEmail) emailsPayload.executive = execEmail;
+      if (mgrEmail) emailsPayload.managerial = mgrEmail;
+      if (techEmail) emailsPayload.technical = techEmail;
+
+      const payload = {
+        parentAuditId: selectedAudit.id,
+        orgName: selectedAudit.org_name || "Admin Entity",
+        emails: emailsPayload,
       };
 
-      const res = await fetch('/api/dispatch-directives', { 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sanitizedPayload)
+      const res = await fetch("/api/dispatch-directives", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
+
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Email dispatch failed.");
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || errData.error || "Email dispatch failed.");
       }
-      
+
       alert("Access links successfully dispatched!");
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
-    } catch (err: any) { 
-      alert(err.message); 
-    } finally { 
-      setIsUpdating(false); 
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
   const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
-    const matchingNode = nodeDetails.find(n => 
-      String(n.persona_type || '').toUpperCase().trim() === targetRoleKey.toUpperCase().trim()
+    const matchingNode = nodeDetails.find(
+      (n) =>
+        String(n.persona_type || "").toUpperCase().trim() ===
+        targetRoleKey.toUpperCase().trim()
     );
 
     if (!matchingNode || !matchingNode.email) {
       alert("Nudge failed: Recipient email address not found.");
       return;
     }
-    
+
     setIsUpdating(true);
     try {
-      const sanitizedPayload = {
-        entityName: auditRecord.org_name || "Admin Entity",
-        operatorName: `${targetRoleKey} Operator`,
-        email: matchingNode.email,
-        sector: auditRecord.sector || "FINANCE",
-        personaType: targetRoleKey.toUpperCase(),
-        decayPct: Number.isFinite(Number(auditRecord.decay_pct)) ? Number(auditRecord.decay_pct) : 0,
-        reworkTax: 0,
-        overallScore: Number.isFinite(Number(auditRecord.sfi_score)) ? Number(auditRecord.sfi_score) : 0,
-        rawResponses: {},
+      const payload = {
+        parentAuditId: auditRecord.id,
+        orgName: auditRecord.org_name || "Admin Entity",
+        emails: {
+          [targetRoleKey.toLowerCase()]: matchingNode.email,
+        },
       };
 
-      const res = await fetch('/api/dispatch-directives', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(sanitizedPayload)
+      const res = await fetch("/api/dispatch-directives", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      
-      if (res.ok) alert(`Reminder email sent to ${matchingNode.email}`);
-      else throw new Error("Server timeout");
+
+      if (!res.ok) {
+        throw new Error("Server error dispatching nudge");
+      }
+
+      alert(`Reminder email sent to ${matchingNode.email}`);
     } catch (err) {
       alert("Failed to send reminder email.");
     } finally {
@@ -253,17 +259,17 @@ export default function AdminDashboard() {
   const runSynthesis = async (auditId: string) => {
     setIsUpdating(true);
     try {
-      const res = await fetch('/api/synthesize-fracture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ auditId })
+      const res = await fetch("/api/synthesize-fracture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ auditId }),
       });
-      
+
       if (res.ok) {
         await supabase
-          .from('audits')
-          .update({ status: 'COMPLETE' })
-          .eq('id', auditId);
+          .from("audits")
+          .update({ status: "COMPLETE" })
+          .eq("id", auditId);
 
         await fetchLedger();
         if (expandedRow === auditId) await refreshActiveNodes(auditId);
@@ -271,10 +277,10 @@ export default function AdminDashboard() {
       } else {
         alert("Failed to recalculate data.");
       }
-    } catch (err) { 
-      console.error(err); 
-    } finally { 
-      setIsUpdating(false); 
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
