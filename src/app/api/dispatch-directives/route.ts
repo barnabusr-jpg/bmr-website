@@ -38,6 +38,16 @@ const ROLE_MAP: Record<string, string> = {
   systemuser: "EXECUTIVE",
 };
 
+function getBaseUrl(): string {
+  const raw =
+    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
+    process.env.VERCEL_URL?.trim() ||
+    "bmradvisory.co";
+
+  const clean = raw.replace(/\/+$/, "");
+  return /^https?:\/\//i.test(clean) ? clean : `https://${clean}`;
+}
+
 function toSentenceCase(str: string): string {
   if (!str) return "Your Organization";
   const clean = str.replace(/_/g, " ").toLowerCase().trim();
@@ -58,32 +68,46 @@ function getSupabaseAdmin() {
   return createClient(url, serviceRole, { auth: { persistSession: false } });
 }
 
+function getRateLimiter() {
+  const upstashUrl = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+
+  if (
+    !upstashUrl ||
+    !upstashToken ||
+    !/^https?:\/\//i.test(upstashUrl) ||
+    upstashToken.length < 10
+  ) {
+    return null;
+  }
+
+  try {
+    const redis = new Redis({ url: upstashUrl, token: upstashToken });
+    return new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(10, "10 s"),
+      analytics: true,
+      prefix: "ratelimit:dispatch",
+    });
+  } catch (err) {
+    console.warn("[dispatch-directives] Upstash rate limiter skipped:", err);
+    return null;
+  }
+}
+
 export async function POST(request: Request) {
   try {
-    // 1) Rate Limiter (Upstash Redis)
-    const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
-    const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+    // 1) Lazy Rate Limit Execution
+    const limiter = getRateLimiter();
+    if (limiter) {
+      const ip =
+        request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+        request.headers.get("x-real-ip") ||
+        "unknown";
 
-    if (upstashUrl && upstashToken && /^https?:\/\//i.test(upstashUrl)) {
-      try {
-        const redis = new Redis({ url: upstashUrl, token: upstashToken });
-        const limiter = new Ratelimit({
-          redis,
-          limiter: Ratelimit.slidingWindow(10, "10 s"),
-          analytics: true,
-        });
-
-        const ip =
-          request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-          request.headers.get("x-real-ip") ||
-          "unknown";
-
-        const { success } = await limiter.limit(`dispatch:${ip}`);
-        if (!success) {
-          return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
-        }
-      } catch (e) {
-        console.warn("[dispatch-directives] Rate limiter skipped:", e);
+      const { success } = await limiter.limit(`dispatch:${ip}`);
+      if (!success) {
+        return NextResponse.json({ error: "Too Many Requests" }, { status: 429 });
       }
     }
 
@@ -100,12 +124,12 @@ export async function POST(request: Request) {
 
     const { parentAuditId, orgName, groupId, emails } = parsed.data;
 
-    const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://bmradvisory.co";
+    const BASE_URL = getBaseUrl();
     const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || "hello@bmradvisory.co";
     const supabaseAdmin = getSupabaseAdmin();
     const prettyCompany = toSentenceCase(orgName);
 
-    // 3) Upsert Operators & Dispatch Emails
+    // 3) Upsert Operators & Dispatch Email Tasks
     const emailPromises: Promise<any>[] = [];
 
     for (const [rawRole, email] of Object.entries(emails)) {
@@ -256,7 +280,7 @@ export async function POST(request: Request) {
       }
     }
 
-    // 4) Calculate Logic Decay and Set Status = TRIANGULATING
+    // 4) Compute Logic Decay and Set Status = TRIANGULATING
     const { data: allOperators, error: queryError } = await supabaseAdmin
       .from("operators")
       .select("survey_completed")
@@ -277,7 +301,7 @@ export async function POST(request: Request) {
       try {
         await Promise.all(emailPromises);
       } catch (emailErr: any) {
-        console.warn("[dispatch-directives] SendGrid delivery warning:", emailErr.message);
+        console.warn("[dispatch-directives] SendGrid email delivery warning:", emailErr.message);
       }
     }
 
