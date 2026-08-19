@@ -19,12 +19,6 @@ const nextConfig = {
         destination: '/forensic?auth=admin_verified_secure',
         permanent: false,
       },
-      // Safely alias /login to your existing admin dashboard route
-      {
-        source: '/login',
-        destination: '/admin/dashboard',
-        permanent: false,
-      },
       // Safely alias root /admin to the full dashboard route
       {
         source: '/admin',
