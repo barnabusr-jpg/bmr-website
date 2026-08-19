@@ -27,24 +27,44 @@ const dispatchSchema = z.object({
     .nullable(),
 });
 
+// Comprehensive mapping supporting raw, normalized, spaced, and unspaced forms
 const ROLE_MAP: Record<string, string> = {
+  // Uppercase Exact Keys
+  EXECUTIVE: "EXECUTIVE",
+  MANAGERIAL: "MANAGERIAL",
+  TECHNICAL: "TECHNICAL",
+  EXECUTIVE_NODE: "EXECUTIVE",
+  MANAGERIAL_NODE: "MANAGERIAL",
+  TECHNICAL_NODE: "TECHNICAL",
+  OPS_MGMT: "MANAGERIAL",
+  TECH_MGMT: "TECHNICAL",
+
+  // Lowercase Standard Keys
   executive: "EXECUTIVE",
-  exec: "EXECUTIVE",
-  executivenode: "EXECUTIVE",
-  "tech mgmt": "TECHNICAL",
+  managerial: "MANAGERIAL",
   technical: "TECHNICAL",
-  tech: "TECHNICAL",
+
+  // Spaced & Unspaced Variations
+  "executive node": "EXECUTIVE",
+  executivenode: "EXECUTIVE",
+  "managerial node": "MANAGERIAL",
+  managerialnode: "MANAGERIAL",
+  "technical node": "TECHNICAL",
   technicalnode: "TECHNICAL",
   "ops mgmt": "MANAGERIAL",
-  managerial: "MANAGERIAL",
+  opsmgmt: "MANAGERIAL",
+  ops_mgmt: "MANAGERIAL",
+  "tech mgmt": "TECHNICAL",
+  techmgmt: "TECHNICAL",
+  tech_mgmt: "TECHNICAL",
+
+  // Short Code Fallbacks
+  exec: "EXECUTIVE",
+  tech: "TECHNICAL",
   manager: "MANAGERIAL",
   man: "MANAGERIAL",
-  managerialnode: "MANAGERIAL",
-  ops_mgmt: "MANAGERIAL",
   "system user": "EXECUTIVE",
   system_user: "EXECUTIVE",
-  techmgmt: "TECHNICAL",
-  opsmgmt: "MANAGERIAL",
   systemuser: "EXECUTIVE",
 };
 
@@ -140,14 +160,14 @@ export async function POST(request: Request) {
         {
           error: "INVALID_PAYLOAD_SCHEMA",
           message:
-            "Payload validation failed. Ensure a valid audit identifier (parentAuditId, parent_audit_id, groupId, group_id, auditId, audit_id, or id) and non-empty email mappings are provided.",
+            "Payload validation failed. Ensure a valid audit identifier and non-empty email mappings are provided.",
           details: parsed.error.flatten(),
         },
         { status: 400 }
       );
     }
 
-    // Runtime Audit ID Resolution (Filters out nulls, undefined, and empty strings)
+    // Runtime Audit ID Resolution
     const parentAuditId = [
       parsed.data.parentAuditId,
       parsed.data.parent_audit_id,
@@ -171,7 +191,7 @@ export async function POST(request: Request) {
     const rawOrgName = parsed.data.orgName || parsed.data.org_name || "Your Organization";
     const groupId = parsed.data.groupId || parsed.data.group_id || parentAuditId;
 
-    // 4) Universal Email Normalizer (Record, Array, or String)
+    // 4) Universal Email Normalizer
     const rawEmails = parsed.data.emails;
     const emailMap: Record<string, string> = {};
 
@@ -236,22 +256,49 @@ export async function POST(request: Request) {
 
     for (const [rawRole, emailStr] of Object.entries(emailMap)) {
       const targetEmail = emailStr.toLowerCase();
+      const cleanedRawRole = rawRole.trim();
 
-      const normalizedKey = rawRole
+      // Normalize: lowercase, replace separators with spaces
+      const normalized = cleanedRawRole
         .toLowerCase()
-        .replace(/[-_]/g, " ")
+        .replace(/[-_]+/g, " ")
         .replace(/\s+/g, " ")
         .trim();
 
+      const noSpaces = normalized.replace(/\s+/g, "");
+      const lettersOnly = normalized.replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
+
+      // Remove common suffixes/prefix tokens for fallback
+      const withoutNode = normalized.replace(/\bnode\b/g, "").replace(/\s+/g, " ").trim();
+      const withoutTrack = normalized.replace(/\btrack\b/g, "").replace(/\s+/g, " ").trim();
+
       const standardizedRole =
-        ROLE_MAP[normalizedKey] ??
-        ROLE_MAP[normalizedKey.replace(/[^a-z ]/g, "").trim()];
+        ROLE_MAP[cleanedRawRole] ??
+        ROLE_MAP[cleanedRawRole.toUpperCase()] ??
+        ROLE_MAP[normalized] ??
+        ROLE_MAP[normalized.replace(/\s+/g, "")] ??
+        ROLE_MAP[noSpaces] ??
+        ROLE_MAP[lettersOnly] ??
+        ROLE_MAP[withoutNode] ??
+        ROLE_MAP[withoutNode.replace(/\s+/g, "")] ??
+        ROLE_MAP[withoutTrack] ??
+        ROLE_MAP[withoutTrack.replace(/\s+/g, "")];
+
+      console.warn("[dispatch-directives] role resolution", {
+        rawRole,
+        cleanedRawRole,
+        normalized,
+        withoutNode,
+        standardizedRole,
+        emailMapKeys: Object.keys(emailMap),
+      });
 
       if (!standardizedRole) {
         return NextResponse.json(
           {
             error: "INVALID NODE ASSIGNMENT",
             message: `The provided role identifier "${rawRole}" is incompatible with system tracks.`,
+            debugInfo: { rawRole, normalized, emailMapKeys: Object.keys(emailMap) },
           },
           { status: 400 }
         );
