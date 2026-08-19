@@ -154,17 +154,36 @@ export default function AdminDashboard() {
     if (!selectedAudit || isUpdating) return;
     setIsUpdating(true);
     try {
+      const targetEmail = emails.exec.trim() || emails.mgr.trim() || emails.tech.trim();
+      if (!targetEmail) {
+        alert("Please enter at least one stakeholder email.");
+        setIsUpdating(false);
+        return;
+      }
+
+      const sanitizedPayload = {
+        entityName: selectedAudit.org_name || "Admin Entity",
+        operatorName: "Admin Stakeholder",
+        email: targetEmail,
+        sector: selectedAudit.sector || "FINANCE",
+        personaType: "EXECUTIVE",
+        decayPct: Number.isFinite(Number(selectedAudit.decay_pct)) ? Number(selectedAudit.decay_pct) : 0,
+        reworkTax: 0,
+        overallScore: Number.isFinite(Number(selectedAudit.sfi_score)) ? Number(selectedAudit.sfi_score) : 0,
+        rawResponses: {},
+      };
+
       const res = await fetch('/api/dispatch-directives', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId: selectedAudit.id, 
-          orgName: selectedAudit.org_name,
-          parentAuditId: selectedAudit.id,
-          emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
-        })
+        body: JSON.stringify(sanitizedPayload)
       });
-      if (!res.ok) throw new Error("Email dispatch failed.");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Email dispatch failed.");
+      }
+      
+      alert("Access links successfully dispatched!");
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       fetchLedger();
@@ -187,18 +206,22 @@ export default function AdminDashboard() {
     
     setIsUpdating(true);
     try {
-      const formattedPayload: Record<string, string> = {};
-      formattedPayload[targetRoleKey.toUpperCase()] = matchingNode.email;
+      const sanitizedPayload = {
+        entityName: auditRecord.org_name || "Admin Entity",
+        operatorName: `${targetRoleKey} Operator`,
+        email: matchingNode.email,
+        sector: auditRecord.sector || "FINANCE",
+        personaType: targetRoleKey.toUpperCase(),
+        decayPct: Number.isFinite(Number(auditRecord.decay_pct)) ? Number(auditRecord.decay_pct) : 0,
+        reworkTax: 0,
+        overallScore: Number.isFinite(Number(auditRecord.sfi_score)) ? Number(auditRecord.sfi_score) : 0,
+        rawResponses: {},
+      };
 
       const res = await fetch('/api/dispatch-directives', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId: auditRecord.id,
-          orgName: auditRecord.org_name,
-          parentAuditId: auditRecord.id,
-          emails: formattedPayload
-        })
+        body: JSON.stringify(sanitizedPayload)
       });
       
       if (res.ok) alert(`Reminder email sent to ${matchingNode.email}`);
