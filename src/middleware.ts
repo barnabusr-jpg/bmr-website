@@ -18,15 +18,7 @@ export function middleware(request: NextRequest) {
     upgrade-insecure-requests;
   `.replace(/\s{2,}/g, " ").trim();
 
-  const authCookie = request.cookies.get("sb-access-token");
-  const url = request.nextUrl.clone();
-
-  if (url.pathname.startsWith("/admin") && !authCookie) {
-    const loginUrl = new URL("/login", request.url);
-    loginUrl.search = url.search;
-    return NextResponse.redirect(loginUrl);
-  }
-
+  // Allow /admin routes to pass through to dashboard.tsx for inline login validation
   const response = NextResponse.next();
   response.headers.set("Content-Security-Policy", cspHeader);
   return response;
