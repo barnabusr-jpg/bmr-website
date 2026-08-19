@@ -161,8 +161,8 @@ export default function AdminDashboard() {
 
       const hasAtLeastOne = execEmail || mgrEmail || techEmail;
       if (!hasAtLeastOne) {
-        alert("Please enter at least one stakeholder email.");
         setIsUpdating(false);
+        setTimeout(() => alert("Please enter at least one stakeholder email."), 50);
         return;
       }
 
@@ -188,14 +188,21 @@ export default function AdminDashboard() {
         throw new Error(errData.message || errData.error || "Email dispatch failed.");
       }
 
-      alert("Access links successfully dispatched!");
+      // Close modal state and reset flags immediately
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
-      fetchLedger();
-    } catch (err: any) {
-      alert(err.message);
-    } finally {
       setIsUpdating(false);
+      fetchLedger();
+
+      // Defer blocking alert to allow React to flush DOM unmount of modal
+      setTimeout(() => {
+        alert("Access links successfully dispatched!");
+      }, 50);
+    } catch (err: any) {
+      setIsUpdating(false);
+      setTimeout(() => {
+        alert(err.message || "Failed to dispatch emails.");
+      }, 50);
     }
   };
 
@@ -231,11 +238,15 @@ export default function AdminDashboard() {
         throw new Error("Server error dispatching nudge");
       }
 
-      alert(`Reminder email sent to ${matchingNode.email}`);
-    } catch (err) {
-      alert("Failed to send reminder email.");
-    } finally {
       setIsUpdating(false);
+      setTimeout(() => {
+        alert(`Reminder email sent to ${matchingNode.email}`);
+      }, 50);
+    } catch (err) {
+      setIsUpdating(false);
+      setTimeout(() => {
+        alert("Failed to send reminder email.");
+      }, 50);
     }
   };
 
@@ -271,15 +282,20 @@ export default function AdminDashboard() {
           .update({ status: "COMPLETE" })
           .eq("id", auditId);
 
+        setIsUpdating(false);
         await fetchLedger();
         if (expandedRow === auditId) await refreshActiveNodes(auditId);
-        alert("Diagnostic calculation and Roadmap synthesized successfully.");
+        setTimeout(() => {
+          alert("Diagnostic calculation and Roadmap synthesized successfully.");
+        }, 50);
       } else {
-        alert("Failed to recalculate data.");
+        setIsUpdating(false);
+        setTimeout(() => {
+          alert("Failed to recalculate data.");
+        }, 50);
       }
     } catch (err) {
       console.error(err);
-    } finally {
       setIsUpdating(false);
     }
   };
@@ -465,7 +481,7 @@ export default function AdminDashboard() {
                 <input placeholder="Managerial Stakeholder Email" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 font-sans text-xs focus:border-slate-900 outline-none rounded" />
                 <input placeholder="Technical Stakeholder Email" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 font-sans text-xs focus:border-slate-900 outline-none rounded" />
                 
-                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-slate-900 text-white py-4 mt-4 font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer rounded shadow-sm">
+                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-slate-900 text-white py-4 mt-4 font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer rounded shadow-sm font-sans font-bold">
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={16} />} 
                   {isUpdating ? "Sending Access Links..." : "Send Assessment Access Links"}
                 </button>
