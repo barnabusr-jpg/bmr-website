@@ -8,7 +8,7 @@ export function middleware(request: NextRequest) {
     style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
     img-src 'self' blob: data: https://*.supabase.co https://vercel.live https://*.vercel-storage.com;
     font-src 'self' https://fonts.gstatic.com data:;
-    connect-src 'self' https://*.supabase.co https://*.upstash.io https://vercel.live wss://*.vercel.live;
+    connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.upstash.io https://vercel.live wss://*.vercel.live;
     frame-src 'self' https://vercel.live;
     object-src 'none';
     base-uri 'self';
@@ -18,7 +18,6 @@ export function middleware(request: NextRequest) {
     upgrade-insecure-requests;
   `.replace(/\s{2,}/g, " ").trim();
 
-  // Allow /admin routes to pass through to dashboard.tsx for inline login validation
   const response = NextResponse.next();
   response.headers.set("Content-Security-Policy", cspHeader);
   return response;
