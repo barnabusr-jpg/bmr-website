@@ -10,12 +10,17 @@ if (SENDGRID_KEY) {
   sgMail.setApiKey(SENDGRID_KEY);
 }
 
-// Resilient schema accepting parentAuditId/groupId/auditId fallbacks and flexible emails
+// Permissive schema allowing empty/null values across optional ID keys
 const dispatchSchema = z.object({
   parentAuditId: z.string().optional().nullable(),
+  parent_audit_id: z.string().optional().nullable(),
   auditId: z.string().optional().nullable(),
+  audit_id: z.string().optional().nullable(),
   groupId: z.string().optional().nullable(),
+  group_id: z.string().optional().nullable(),
+  id: z.string().optional().nullable(),
   orgName: z.string().optional().nullable(),
+  org_name: z.string().optional().nullable(),
   emails: z
     .union([z.record(z.any()), z.array(z.any()), z.string()])
     .optional()
@@ -132,27 +137,39 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Invalid payload schema", details: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
-
-    // Dynamic ID resolution
-    const parentAuditId =
-      parsed.data.parentAuditId || parsed.data.groupId || parsed.data.auditId;
-
-    if (!parentAuditId) {
-      return NextResponse.json(
         {
-          error: "MISSING PARENT AUDIT ID",
-          message: "Payload must include parentAuditId, groupId, or auditId.",
+          error: "INVALID_PAYLOAD_SCHEMA",
+          message:
+            "Payload validation failed. Ensure a valid audit identifier (parentAuditId, parent_audit_id, groupId, group_id, auditId, audit_id, or id) and non-empty email mappings are provided.",
+          details: parsed.error.flatten(),
         },
         { status: 400 }
       );
     }
 
-    const rawOrgName = parsed.data.orgName || "Your Organization";
-    const groupId = parsed.data.groupId || parentAuditId;
+    // Runtime Audit ID Resolution (Filters out nulls, undefined, and empty strings)
+    const parentAuditId = [
+      parsed.data.parentAuditId,
+      parsed.data.parent_audit_id,
+      parsed.data.groupId,
+      parsed.data.group_id,
+      parsed.data.auditId,
+      parsed.data.audit_id,
+      parsed.data.id,
+    ].find((val) => typeof val === "string" && val.trim().length > 0);
+
+    if (!parentAuditId) {
+      return NextResponse.json(
+        {
+          error: "MISSING PARENT AUDIT ID",
+          message: "Payload must include a non-empty audit identifier key.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const rawOrgName = parsed.data.orgName || parsed.data.org_name || "Your Organization";
+    const groupId = parsed.data.groupId || parsed.data.group_id || parentAuditId;
 
     // 4) Universal Email Normalizer (Record, Array, or String)
     const rawEmails = parsed.data.emails;
@@ -199,7 +216,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // Guard: Prevent compiling/triangulating if no email nodes were found
     if (Object.keys(emailMap).length === 0) {
       return NextResponse.json(
         {
@@ -215,13 +231,12 @@ export async function POST(request: Request) {
     const supabaseAdmin = getSupabaseAdmin();
     const prettyCompany = toSentenceCase(rawOrgName);
 
-    // 5) Upsert Operators & Queue Emails
+    // 5) Upsert Operators & Queue Email Dispatch
     const emailPromises: Promise<any>[] = [];
 
     for (const [rawRole, emailStr] of Object.entries(emailMap)) {
       const targetEmail = emailStr.toLowerCase();
 
-      // Clean role key: replace hyphens/underscores with spaces and lowercase
       const normalizedKey = rawRole
         .toLowerCase()
         .replace(/[-_]/g, " ")
