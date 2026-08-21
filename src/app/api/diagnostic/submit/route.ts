@@ -111,7 +111,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Trigger pipeline if triangulation was finalized
+    // Server-side Pipeline Execution using centralized getBaseUrl()
     if (dbResult?.triangulation_just_completed && dbResult?.audit_id) {
       const targetEndpoint = `${getBaseUrl()}/pipeline`;
       console.log(`[Diagnostic Submit ${requestId}] Final node completed. Triggering pipeline at: ${targetEndpoint}`);
