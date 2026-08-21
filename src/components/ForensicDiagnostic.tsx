@@ -279,8 +279,7 @@ export default function ForensicDiagnostic() {
       console.error("SUBMIT_ERROR:", err?.message || err);
       alert(`Submission Error: ${err?.message || "Submission failed."}`);
       setStep("diagnostic");
-    } font-mono
-    finally {
+    } finally {
       submitInFlightRef.current = false;
     }
   };
