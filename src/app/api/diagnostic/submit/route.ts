@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
 const answerItemSchema = z.object({
   answer: z.string().min(1, "Answer value required"),
@@ -110,31 +111,31 @@ export async function POST(request: Request) {
       );
     }
 
+    // Trigger pipeline if triangulation was finalized
     if (dbResult?.triangulation_just_completed && dbResult?.audit_id) {
-      console.log(`[Diagnostic Submit ${requestId}] Final node completed. Triggering automatic synthesis for audit: ${dbResult.audit_id}`);
-      
-      const rawUrl = process.env.NEXT_PUBLIC_APP_URL?.trim() || process.env.VERCEL_URL?.trim() || "localhost:3000";
-      const baseUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : `https://${rawUrl}`;
+      const targetEndpoint = `${getBaseUrl()}/pipeline`;
+      console.log(`[Diagnostic Submit ${requestId}] Final node completed. Triggering pipeline at: ${targetEndpoint}`);
 
-      fetch(`${baseUrl}/api/synthesize-fracture`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ auditId: dbResult.audit_id }),
-      })
-        .then(async (r) => {
-          if (!r.ok) {
-            const text = await r.text().catch(() => "");
-            console.error(`[Diagnostic Submit ${requestId}] Synthesis trigger failed (${r.status}):`, text);
-          } else {
-            console.log(`[Diagnostic Submit ${requestId}] Auto-synthesis triggered successfully.`);
-          }
-        })
-        .catch((synthErr) => {
-          console.error(
-            `[Diagnostic Submit ${requestId}] Auto-synthesis execution warning:`,
-            synthErr?.message || synthErr
-          );
+      try {
+        const pipelineRes = await fetch(targetEndpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ auditId: dbResult.audit_id }),
+          cache: "no-store",
         });
+
+        if (!pipelineRes.ok) {
+          const text = await pipelineRes.text().catch(() => "");
+          console.error(`[Diagnostic Submit ${requestId}] Pipeline execution failed (${pipelineRes.status}):`, text);
+        } else {
+          console.log(`[Diagnostic Submit ${requestId}] Pipeline triggered successfully at ${targetEndpoint}.`);
+        }
+      } catch (pipelineErr: any) {
+        console.error(
+          `[Diagnostic Submit ${requestId}] Pipeline execution warning:`,
+          pipelineErr?.message || pipelineErr
+        );
+      }
     }
 
     console.log(`[Diagnostic Submit ${requestId}] Successfully processed submission for audit: ${dbResult.audit_id}`);
