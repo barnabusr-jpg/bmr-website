@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'; 
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard'; 
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit'; 
@@ -25,10 +26,8 @@ import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
 
-// HELPER: CANONICAL LOCALSTORAGE KEY NORMALIZER
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
-// STRICT QUAD NODE PERSONA TYPES + LEGACY ALIASES FOR DB READ/WRITE MATCHING
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF'],
   TECH_MGMT: ['TECH_MGMT', 'TECH', 'TECHNICAL', 'AVS'],
@@ -36,7 +35,6 @@ const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR'],
 };
 
-// FRESH QUAD NODE ARCHITECTURE: CONSTANT FOR FORCED FRESH EMAILS
 const FRESH_EMPTY_EMAILS: Record<PersonaKey, string> = {
   EXECUTIVE: '',
   TECH_MGMT: '',
@@ -64,7 +62,6 @@ export default function ForensicEngineRoot() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeAuditId, setActiveAuditId] = useState<string | null>(null);
 
-  // INLINE EMAIL EDITING STATE
   const [editingPersona, setEditingPersona] = useState<PersonaKey | null>(null);
   const [tempEmailInput, setTempEmailInput] = useState<string>('');
 
@@ -78,7 +75,6 @@ export default function ForensicEngineRoot() {
   const [activePersona, setActivePersona] = useState<PersonaKey | null>(null); 
   const [inputError, setInputError] = useState(''); 
 
-  // IDENTITY REFS TO PREVENT STALE CLOSURES
   const companyNameRef = useRef(companyName);
   const activePillarRef = useRef(activePillar);
   const emailsRef = useRef(emails);
@@ -90,12 +86,8 @@ export default function ForensicEngineRoot() {
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
-    if (isSyncingRef.current && !force) {
-      console.log('[sync] skipped due to active sync lock', { force, isSyncing: isSyncingRef.current });
-      return;
-    }
+    if (isSyncingRef.current && !force) return;
 
-    console.log('[sync] enter', { force, isSyncingRef: isSyncingRef.current });
     isSyncingRef.current = true;
 
     const params = typeof window !== 'undefined' 
@@ -118,21 +110,17 @@ export default function ForensicEngineRoot() {
       const authVal = params.get('auth');
       const viewParam = params.get('view');
 
-      // STRICT ROLE VALIDATION AGAINST KNOWN PERSONAS
       const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
 
       const hasRoleParam = !!roleParam;
       const hasCodeParam = !!codeParam;
 
-      // ROLE OR CODE STRICTLY DEMARCATES PARTICIPANT ROUTE
       const isParticipantRoute = hasRoleParam || hasCodeParam;
       
-      // ADMIN ROUTE REQUIRES AUTH PARAMETER AND ABSENCE OF PARTICIPANT PARAMS
       const isAdminSession = 
         !isParticipantRoute && 
         (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
-      // 1. PARTICIPANT ROUTE FROM EMAIL LINK
       if (isParticipantRoute && roleParam) {
         isParticipantSessionRef.current = true;
 
@@ -184,7 +172,6 @@ export default function ForensicEngineRoot() {
           return prev;
         });
 
-        // PRE-FLIGHT CHECK: HAS PARTICIPANT ALREADY COMPLETED THIS SURVEY?
         const currentAuditId = idParam || activeAuditIdRef.current;
         if (currentAuditId) {
           const { data: checkOps } = await supabase
@@ -216,7 +203,6 @@ export default function ForensicEngineRoot() {
           }
         }
 
-        // HARD-CLEAR PARTICIPANT ROUTE PARAMS ONCE RESOLVED TO PREVENT RE-TRIGGER LOOPS
         if (typeof window !== 'undefined') {
           const url = new URL(window.location.href);
           url.searchParams.delete('code');
@@ -236,14 +222,12 @@ export default function ForensicEngineRoot() {
         return;
       }
 
-      // 2. ADMIN CLEAN EXPLICIT INTAKE ROUTE
       if (isAdminSession && flowParam === 'quad_node' && !idParam && !targetCompanyName) {
         setEmails(FRESH_EMPTY_EMAILS);
         setViewState('INTAKE');
         return;
       }
 
-      // 3. REHYDRATE EXISTING AUDIT BY NAME, ID, OR MATRIX
       let cachedCompletions = { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false };
       let cachedResponses = { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} };
 
@@ -309,11 +293,6 @@ export default function ForensicEngineRoot() {
         setCompanyName(activeAudit.org_name);
         setIsCompanyFromDB(true);
 
-        console.log('[sync] picked audit', {
-          id: activeAudit.id,
-          org: activeAudit.org_name
-        });
-
         const sectorStr = String(activeAudit.sector || '').toUpperCase();
         if (sectorStr.includes('AVS') || sectorStr.includes('MANUFACTURING') || sectorStr.includes('INDUSTRIAL')) {
           targetCalculatedPillar = 'AVS';
@@ -324,13 +303,11 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(targetCalculatedPillar);
 
-        // HARDENED OPERATORS QUERY: SEARCH BY AUDIT_ID, GROUP_ID, OR ORG_NAME
         const { data: existingOperators } = await supabase
           .from('operators')
           .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses')
           .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
 
-        // TELEMETRY-HARDENED COMPLETION EVALUATOR WITH CASE-INSENSITIVE ALIAS MATCHING
         const checkDbDone = (pKey: PersonaKey) => {
           if (!existingOperators || existingOperators.length === 0) return false;
           
@@ -368,10 +345,7 @@ export default function ForensicEngineRoot() {
               }
             }
 
-            const evaluatedDone = isCompletedFlag || hasResponses;
-
-            console.log(`[checkDbDone] Persona: ${pKey} | Matched: ${m.persona_type} | Done: ${evaluatedDone}`);
-            return evaluatedDone;
+            return isCompletedFlag || hasResponses;
           });
         };
 
@@ -472,25 +446,20 @@ export default function ForensicEngineRoot() {
         setViewState('INTAKE');
       }
     } catch (err) {
-      console.error("QUAD_NODE_SYNC_ERROR: Matrix re-sync failed", err);
+      console.error("QUAD_NODE_SYNC_ERROR:", err);
     } finally {
       isSyncingRef.current = false;
       setHasSynced(true);
     }
   }, []);
 
-  // REALTIME DATABASE LISTENER WITH BROAD FALLBACK SUBCRIPTIONS
   useEffect(() => {
-    const targetId = activeAuditId || activeAuditIdRef.current;
-    console.log('[Realtime Setup] Initializing Postgres channel listener for audit:', targetId || 'global');
-
     const channel = supabase
       .channel(`audit-operators-realtime-listener`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'operators' },
-        (payload) => {
-          console.log('[Realtime Payload Received] Operator row changed:', payload);
+        () => {
           synchronizeEngineDataMatrix(true);
         }
       )
@@ -501,7 +470,7 @@ export default function ForensicEngineRoot() {
     };
   }, [activeAuditId, synchronizeEngineDataMatrix]);
 
-  // SECURITY AND AUTHORIZATION GATE
+  // SECURITY AND AUTHORIZATION GATE WITH EARLY REROUTE GUARD
   useEffect(() => { 
     if (typeof window === 'undefined' || didBootRef.current) return; 
 
@@ -511,7 +480,13 @@ export default function ForensicEngineRoot() {
       const codeParam = params.get('code');
       const rawRole = params.get('role'); 
 
-      // STRICT ROLE VALIDATION AGAINST KNOWN PERSONAS
+      // HARD BLOCK: If participant hits /forensic with an access code, redirect immediately
+      // and RETURN to prevent synchronizeEngineDataMatrix from executing client REST queries
+      if (codeParam && !authVal) {
+        window.location.href = `/diagnostic/forensic?code=${encodeURIComponent(codeParam)}`;
+        return;
+      }
+
       const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
 
       const hasRoleParam = !!roleParam;
@@ -519,7 +494,6 @@ export default function ForensicEngineRoot() {
 
       const isParticipantRoute = hasRoleParam || hasCodeParam;
 
-      // ADMIN REQUIRES AUTH PARAMETER AND ABSENCE OF PARTICIPANT PARAMETERS
       const isAdminAuthenticated =
         !isParticipantRoute &&
         (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
@@ -553,7 +527,6 @@ export default function ForensicEngineRoot() {
       ? personaAnswers 
       : { status: "completed_via_wizard", completed_at: new Date().toISOString() };
 
-    // 1. OPTIMISTIC LOCAL STATE UPDATE
     setTriangulation(prev => {
       if (!prev) return prev;
       return {
@@ -569,7 +542,6 @@ export default function ForensicEngineRoot() {
       };
     });
 
-    // 2. HARDENED MULTI-STRATEGY AUDIT AND OPERATOR RESOLUTION
     let targetAuditId = activeAuditId || activeAuditIdRef.current;
 
     if (typeof window !== 'undefined' && !targetAuditId) {
@@ -585,7 +557,7 @@ export default function ForensicEngineRoot() {
     const targetOrgName = (companyName || triangulation?.companyName || companyNameRef.current)?.trim();
 
     if (!targetAuditId && targetOrgName) {
-      const { data: auditLookup, error: lookupErr } = await supabase
+      const { data: auditLookup } = await supabase
         .from('audits')
         .select('id')
         .eq('org_name', targetOrgName)
@@ -597,12 +569,9 @@ export default function ForensicEngineRoot() {
         targetAuditId = auditLookup.id;
         setActiveAuditId(targetAuditId);
         activeAuditIdRef.current = targetAuditId;
-      } else if (lookupErr) {
-        console.error(`[handlePersonaAnswersSaved] Audit lookup error:`, lookupErr.message);
       }
     }
 
-    // CHECK PARTICIPANT REF FIRST (PERSISTED EVEN IF URL WAS WIPED ON LOAD)
     let isParticipantSession = isParticipantSessionRef.current;
     if (!isParticipantSession && typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
@@ -616,12 +585,10 @@ export default function ForensicEngineRoot() {
       isParticipantSession = !isExplicitAdmin && !!(codeVal || roleVal);
     }
 
-    // 3. PERSIST COMPLETION STATUS TO SUPABASE
     const aliases = QUAD_PERSONA_TYPES[targetPersona];
     let persistanceSuccess = false;
 
     try {
-      // PATH A: UPDATE BY TARGET AUDIT ID
       if (targetAuditId) {
         const { data: updatedRows, error: updateErr } = await supabase
           .from('operators')
@@ -637,11 +604,9 @@ export default function ForensicEngineRoot() {
 
         if (!updateErr && updatedRows && updatedRows.length > 0) {
           persistanceSuccess = true;
-          console.log('[handlePersonaAnswersSaved] Successfully updated by targetAuditId:', updatedRows);
         }
       }
 
-      // PATH B: FALLBACK UPDATE BY EMAIL + PERSONA MATCH IF PATH A UPDATED 0 ROWS
       if (!persistanceSuccess) {
         const activeEmail = triangulation?.emails?.[targetPersona] || emailsRef.current[targetPersona];
         if (activeEmail) {
@@ -659,14 +624,11 @@ export default function ForensicEngineRoot() {
 
           if (!emailErr && emailRows && emailRows.length > 0) {
             persistanceSuccess = true;
-            console.log('[handlePersonaAnswersSaved] Successfully updated by email match:', emailRows);
           }
         }
       }
 
-      // PATH C: DYNAMIC UPSERT FALLBACK IF NO PRE-EXISTING ROW MATCHED
       if (!persistanceSuccess && targetAuditId) {
-        console.warn(`[handlePersonaAnswersSaved] Dynamic upsert fallback triggered for ${targetPersona} in audit ${targetAuditId}`);
         const fallbackEmail = 
           (triangulation?.emails?.[targetPersona] ?? emailsRef.current[targetPersona]) || 
           `stakeholder_${targetPersona.toLowerCase()}@quadnode.internal`;
@@ -685,7 +647,6 @@ export default function ForensicEngineRoot() {
           });
       }
 
-      // HARD-CLEAR ALL PARTICIPANT PARAMETERS FROM URL BEFORE RE-SYNC
       if (typeof window !== 'undefined') {
         const url = new URL(window.location.href);
         url.searchParams.delete('role');
@@ -698,12 +659,11 @@ export default function ForensicEngineRoot() {
       }
 
     } catch (dbErr) {
-      console.error('[Save Handler] Database persistence exception:', dbErr);
+      console.error('[Save Handler] Exception:', dbErr);
     }
 
     setActivePersona(null); 
 
-    // ROUTE PARTICIPANTS TO THANK YOU VIEW; ADMINS TO HUB MONITOR
     if (isParticipantSession) {
       setViewState('THANK_YOU');
     } else {
@@ -773,13 +733,7 @@ export default function ForensicEngineRoot() {
         updated_at: new Date().toISOString()
       }));
 
-      const { error: insertErr } = await supabase
-        .from('operators')
-        .insert(rowsToInsert);
-
-      if (insertErr) {
-        console.error('[Provisioning Error] Failed to insert fresh operator rows:', insertErr.message);
-      }
+      await supabase.from('operators').insert(rowsToInsert);
 
       const initialTriangulation = { 
         companyName: sanitizedInput, 
@@ -807,7 +761,7 @@ export default function ForensicEngineRoot() {
         }), 
       }); 
     } catch (error) { 
-      console.error("Quad Node notification dispatch exception:", error); 
+      console.error("Quad Node dispatch exception:", error); 
     } 
   }; 
 
@@ -833,9 +787,7 @@ export default function ForensicEngineRoot() {
       const payload = await res.json().catch(() => null);
 
       if (res.ok && payload?.success !== false) {
-        alert(`Quad Node reminder notification sent to ${persona.replace('_', ' ')} (${email}).`);
-      } else {
-        console.warn("Quad Node reminder dispatch returned warning or failure:", payload);
+        alert(`Reminder notification sent to ${persona.replace('_', ' ')} (${email}).`);
       }
     } catch (err) {
       console.error("Nudge API exception:", err);
@@ -869,20 +821,14 @@ export default function ForensicEngineRoot() {
           .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
           .in('persona_type', QUAD_PERSONA_TYPES[persona]);
       } catch (dbErr) {
-        console.error("Failed to update email in operators table:", dbErr);
+        console.error("Failed to update email:", dbErr);
       }
     }
 
     setEditingPersona(null);
-
-    try {
-      await handleTriggerNudge(persona, newEmail);
-    } catch (err) {
-      console.warn("Email updated in DB, reminder dispatch skipped:", err);
-    }
+    await handleTriggerNudge(persona, newEmail);
   };
 
-  // ADMIN TRACK LAUNCH: REMOVES ROLE PARAMETERS FROM URL TO PREVENT SHORT-CIRCUITING
   const handleLaunchPersonaWizard = (persona: PersonaKey) => { 
     isParticipantSessionRef.current = false;
     setActivePersona(persona); 
@@ -898,7 +844,6 @@ export default function ForensicEngineRoot() {
     setViewState('WIZARD'); 
   }; 
 
-  // SETUP RESET: KEEPS ADMIN AUTHORIZED AND EXPLICITLY KICKS OFF SYNC
   const handleSystemReset = () => { 
     didBootRef.current = false;
     isParticipantSessionRef.current = false;
@@ -1074,7 +1019,6 @@ export default function ForensicEngineRoot() {
         </div> 
       )} 
 
-      {/* FULL UI HUB VIEW WITH 4-NODE STATUS GRID */}
       {viewState === 'HUB' && triangulation && ( 
         <div className="w-full max-w-2xl border border-slate-200 bg-white p-8 md:p-10 text-left rounded-lg shadow-sm"> 
           <div className="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center gap-4"> 
@@ -1229,7 +1173,6 @@ export default function ForensicEngineRoot() {
         </div> 
       )} 
 
-      {/* WIZARD VIEW */}
       {viewState === 'WIZARD' && triangulation && activePersona && ( 
         <ForensicDiagnosticWizard         
           companyName={`${triangulation.companyName}`} 
@@ -1240,7 +1183,6 @@ export default function ForensicEngineRoot() {
         /> 
       )} 
 
-      {/* PARTICIPANT THANK YOU VIEW */}
       {viewState === 'THANK_YOU' && (
         <div className="w-full max-w-lg border border-slate-200 bg-white p-8 md:p-10 text-center rounded-lg shadow-sm space-y-6">
           <div className="flex justify-center">
@@ -1258,7 +1200,6 @@ export default function ForensicEngineRoot() {
         </div>
       )}
 
-      {/* COMMAND COCKPIT VIEW */}
       {viewState === 'COCKPIT' && triangulation && ( 
         <div className="w-full max-w-[1600px] mx-auto text-left"> 
           <div className="mb-4 px-10 no-print flex justify-start"> 
