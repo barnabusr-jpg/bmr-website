@@ -4,6 +4,7 @@ import { z } from "zod";
 import sgMail from "@sendgrid/mail";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { getBaseUrl } from "@/lib/getBaseUrl";
 
 const SENDGRID_KEY = process.env.BMR_SENDGRID_KEY || process.env.SENDGRID_API_KEY;
 if (SENDGRID_KEY) {
@@ -29,7 +30,6 @@ const dispatchSchema = z.object({
 
 // Comprehensive mapping supporting raw, normalized, spaced, and unspaced forms
 const ROLE_MAP: Record<string, string> = {
-  // Uppercase Exact Keys
   EXECUTIVE: "EXECUTIVE",
   MANAGERIAL: "MANAGERIAL",
   TECHNICAL: "TECHNICAL",
@@ -39,12 +39,10 @@ const ROLE_MAP: Record<string, string> = {
   OPS_MGMT: "MANAGERIAL",
   TECH_MGMT: "TECHNICAL",
 
-  // Lowercase Standard Keys
   executive: "EXECUTIVE",
   managerial: "MANAGERIAL",
   technical: "TECHNICAL",
 
-  // Spaced & Unspaced Variations
   "executive node": "EXECUTIVE",
   executivenode: "EXECUTIVE",
   "managerial node": "MANAGERIAL",
@@ -58,7 +56,6 @@ const ROLE_MAP: Record<string, string> = {
   techmgmt: "TECHNICAL",
   tech_mgmt: "TECHNICAL",
 
-  // Short Code Fallbacks
   exec: "EXECUTIVE",
   tech: "TECHNICAL",
   manager: "MANAGERIAL",
@@ -67,16 +64,6 @@ const ROLE_MAP: Record<string, string> = {
   system_user: "EXECUTIVE",
   systemuser: "EXECUTIVE",
 };
-
-function getBaseUrl(): string {
-  const raw =
-    process.env.NEXT_PUBLIC_APP_URL?.trim() ||
-    process.env.VERCEL_URL?.trim() ||
-    "bmradvisory.co";
-
-  const clean = raw.replace(/\/+$/, "");
-  return /^https?:\/\//i.test(clean) ? clean : `https://${clean}`;
-}
 
 function toSentenceCase(str: string): string {
   if (!str) return "Your Organization";
@@ -246,6 +233,7 @@ export async function POST(request: Request) {
       );
     }
 
+    // Use Centralized getBaseUrl utility
     const BASE_URL = getBaseUrl();
     const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || "hello@bmradvisory.co";
     const supabaseAdmin = getSupabaseAdmin();
@@ -258,7 +246,6 @@ export async function POST(request: Request) {
       const targetEmail = emailStr.toLowerCase();
       const cleanedRawRole = rawRole.trim();
 
-      // Normalize: lowercase, replace separators with spaces
       const normalized = cleanedRawRole
         .toLowerCase()
         .replace(/[-_]+/g, " ")
@@ -268,7 +255,6 @@ export async function POST(request: Request) {
       const noSpaces = normalized.replace(/\s+/g, "");
       const lettersOnly = normalized.replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim();
 
-      // Remove common suffixes/prefix tokens for fallback
       const withoutNode = normalized.replace(/\bnode\b/g, "").replace(/\s+/g, " ").trim();
       const withoutTrack = normalized.replace(/\btrack\b/g, "").replace(/\s+/g, " ").trim();
 
@@ -320,6 +306,7 @@ export async function POST(request: Request) {
           .update({
             email: targetEmail,
             access_code: code,
+            flow_type: "360_triangulation", // Explicit canonical flow discriminator
             status: "pending",
           })
           .eq("id", existingNode.id);
@@ -331,6 +318,7 @@ export async function POST(request: Request) {
           group_id: groupId,
           email: targetEmail,
           persona_type: standardizedRole,
+          flow_type: "360_triangulation", // Explicit canonical flow discriminator
           access_code: code,
           is_authorized: true,
           status: "pending",
