@@ -11,7 +11,6 @@ if (SENDGRID_KEY) {
   sgMail.setApiKey(SENDGRID_KEY);
 }
 
-// Permissive schema allowing empty/null values across optional ID keys
 const dispatchSchema = z.object({
   parentAuditId: z.string().optional().nullable(),
   parent_audit_id: z.string().optional().nullable(),
@@ -28,7 +27,6 @@ const dispatchSchema = z.object({
     .nullable(),
 });
 
-// Comprehensive mapping supporting raw, normalized, spaced, and unspaced forms
 const ROLE_MAP: Record<string, string> = {
   EXECUTIVE: "EXECUTIVE",
   MANAGERIAL: "MANAGERIAL",
@@ -114,7 +112,6 @@ function getRateLimiter() {
 
 export async function POST(request: Request) {
   try {
-    // 1) Lazy Rate Limiter Execution
     const limiter = getRateLimiter();
     if (limiter) {
       const ip =
@@ -128,7 +125,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // 2) Parse JSON Body safely
     let body: any;
     try {
       body = await request.json();
@@ -139,7 +135,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3) Validate Payload Schema
     const parsed = dispatchSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -154,7 +149,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // Runtime Audit ID Resolution
     const parentAuditId = [
       parsed.data.parentAuditId,
       parsed.data.parent_audit_id,
@@ -178,7 +172,6 @@ export async function POST(request: Request) {
     const rawOrgName = parsed.data.orgName || parsed.data.org_name || "Your Organization";
     const groupId = parsed.data.groupId || parsed.data.group_id || parentAuditId;
 
-    // 4) Universal Email Normalizer
     const rawEmails = parsed.data.emails;
     const emailMap: Record<string, string> = {};
 
@@ -233,13 +226,11 @@ export async function POST(request: Request) {
       );
     }
 
-    // Use Centralized getBaseUrl utility
     const BASE_URL = getBaseUrl();
     const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || "hello@bmradvisory.co";
     const supabaseAdmin = getSupabaseAdmin();
     const prettyCompany = toSentenceCase(rawOrgName);
 
-    // 5) Upsert Operators & Queue Email Dispatch
     const emailPromises: Promise<any>[] = [];
 
     for (const [rawRole, emailStr] of Object.entries(emailMap)) {
@@ -270,15 +261,6 @@ export async function POST(request: Request) {
         ROLE_MAP[withoutTrack] ??
         ROLE_MAP[withoutTrack.replace(/\s+/g, "")];
 
-      console.warn("[dispatch-directives] role resolution", {
-        rawRole,
-        cleanedRawRole,
-        normalized,
-        withoutNode,
-        standardizedRole,
-        emailMapKeys: Object.keys(emailMap),
-      });
-
       if (!standardizedRole) {
         return NextResponse.json(
           {
@@ -306,7 +288,7 @@ export async function POST(request: Request) {
           .update({
             email: targetEmail,
             access_code: code,
-            flow_type: "360_triangulation", // Explicit canonical flow discriminator
+            flow_type: "360_triangulation",
             status: "pending",
           })
           .eq("id", existingNode.id);
@@ -318,7 +300,7 @@ export async function POST(request: Request) {
           group_id: groupId,
           email: targetEmail,
           persona_type: standardizedRole,
-          flow_type: "360_triangulation", // Explicit canonical flow discriminator
+          flow_type: "360_triangulation",
           access_code: code,
           is_authorized: true,
           status: "pending",
@@ -328,6 +310,7 @@ export async function POST(request: Request) {
         if (insertError) throw insertError;
       }
 
+      // Explicit target link directing participants to /diagnostic/forensic
       const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}`;
 
       if (SENDGRID_KEY) {
@@ -456,7 +439,6 @@ export async function POST(request: Request) {
       }
     }
 
-    // 6) Compute Decay & Transition Audit Status to TRIANGULATING
     const { data: allOperators, error: queryError } = await supabaseAdmin
       .from("operators")
       .select("survey_completed")
