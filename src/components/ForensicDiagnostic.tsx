@@ -210,8 +210,8 @@ export default function ForensicDiagnostic() {
   };
 
   const submitResults = async (finalAnswers: any) => {
-    if (submitInFlightRef.current) return;
     if (step === "submitting" || step === "done") return;
+    if (submitInFlightRef.current) return;
 
     submitInFlightRef.current = true;
     setStep("submitting");
@@ -544,8 +544,6 @@ export default function ForensicDiagnostic() {
           </div>
         )}
       </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
