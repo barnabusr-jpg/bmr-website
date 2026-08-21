@@ -1,10 +1,21 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
 
 interface PhaseOnePayload {
   orgName: string;
   sector: string;
   answers: { questionId: number; selectedOptionWeight: number; category: string }[];
+}
+
+function getSupabaseAdmin() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRole = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !serviceRole) {
+    throw new Error("Missing server-side database configuration (SUPABASE_SERVICE_ROLE_KEY).");
+  }
+
+  return createClient(url, serviceRole, { auth: { persistSession: false } });
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -13,6 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { auditId, orgName, sector, answers } = req.body;
 
     // =========================================================================
@@ -22,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const targetAuditId = auditId || req.body.groupId;
 
       // 1. Ingest telemetry from all stakeholder nodes tied to this parent execution
-      const { data: operators, error: opErr } = await supabase
+      const { data: operators, error: opErr } = await supabaseAdmin
         .from('operators')
         .select('persona_type, survey_completed, email')
         .eq('audit_id', targetAuditId);
@@ -53,7 +65,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       ];
 
       // 4. Persist compiled state metrics back to primary Ledger Audit row
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseAdmin
         .from('audits')
         .update({
           status: 'COMPLETE',
@@ -116,7 +128,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     const curatedFractures = generatedFractures.slice(0, 4);
 
-    const { data: newAudit, error: dbError } = await supabase
+    const { data: newAudit, error: dbError } = await supabaseAdmin
       .from("audits")
       .insert([
         {

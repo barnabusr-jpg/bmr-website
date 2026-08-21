@@ -9,6 +9,11 @@ import { motion } from 'framer-motion';
 export default function LandingPage() {
   const router = useRouter();
 
+  const handleAdminNavigate = () => {
+    // Explicitly target the existing dashboard file at src/pages/admin/dashboard.tsx
+    router.push('/admin/dashboard');
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-red-100 selection:text-red-900 overflow-x-hidden relative flex flex-col">
       <Header />
@@ -104,7 +109,6 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* THE THREE LEVELS STACK LAYOUT */}
           <div className="grid grid-cols-1 gap-4 font-mono text-xs mt-8">
             {/* LEVEL 1 */}
             <div className="border border-slate-200 bg-white p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-sm shadow-sm">
@@ -118,13 +122,12 @@ export default function LandingPage() {
               <span className="text-slate-500 tracking-wider text-[10px] hidden md:inline shrink-0 uppercase font-bold">RISK: PROMISE GAP™ APPEARS HERE</span>
             </div>
 
-            {/* INTERSECTING CONNECTIVE GAP */}
             <div className="flex items-center gap-3 px-4 py-1 text-red-700 font-mono">
               <Milestone size={14} className="shrink-0" />
               <span className="text-[10px] tracking-wider font-bold uppercase">WARNING: EXPECTATIONS DO NOT MATCH RUNTIME REALITY</span>
             </div>
 
-            {/* LEVEL 2 - THE FRICTION LAYER */}
+            {/* LEVEL 2 */}
             <div className="border border-red-300 bg-red-50/50 p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden rounded-sm shadow-sm">
               <div className="absolute top-0 right-0 bg-red-700 text-white text-[9px] font-bold px-3 py-0.5 tracking-wider uppercase">
                 FRICTION LAYER
@@ -139,7 +142,6 @@ export default function LandingPage() {
               <span className="text-red-700 font-bold tracking-wider text-[10px] hidden md:inline shrink-0 uppercase">RISK: CAPITAL LOSS & SLOWER OPERATIONS</span>
             </div>
 
-            {/* INTERSECTING CONNECTIVE GAP */}
             <div className="flex items-center gap-3 px-4 py-1 text-red-700 font-mono">
               <Milestone size={14} className="shrink-0" />
               <span className="text-[10px] tracking-wider font-bold uppercase">WARNING: UNMONITORED SCHEMA MUTATION & DRIFT</span>
@@ -177,7 +179,6 @@ export default function LandingPage() {
             </p>
           </div>
 
-          {/* SPLIT METRIC DISPLAY */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono">
             <div className="border border-slate-200 bg-slate-50 p-5 space-y-1 rounded-sm">
               <span className="text-slate-500 text-[10px] tracking-wider font-bold uppercase block">// TOP ENTERPRISE PRIORITY</span>
@@ -211,7 +212,6 @@ export default function LandingPage() {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-            {/* STEP 1 */}
             <div className="border border-slate-200 bg-white p-6 sm:p-8 space-y-3 rounded-sm shadow-sm">
               <div className="text-red-700 font-mono text-xs font-bold tracking-wider">// 01 // STEP ONE</div>
               <h4 className="text-lg font-bold text-slate-950 uppercase tracking-tight">QUANTIFY THE WASTE</h4>
@@ -220,7 +220,6 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* STEP 2 */}
             <div className="border border-slate-200 bg-white p-6 sm:p-8 space-y-4 flex flex-col justify-between h-full rounded-sm shadow-sm">
               <div className="space-y-3">
                 <div className="text-red-700 font-mono text-xs font-bold tracking-wider">// 02 // STEP TWO</div>
@@ -230,7 +229,6 @@ export default function LandingPage() {
                 </p>
               </div>
               
-              {/* ZERO SECURITY FOOTPRINT COMPLIANCE */}
               <div className="mt-4 p-4 bg-slate-100/80 border-l-2 border-red-700 font-mono text-[10px] text-slate-600 space-y-1">
                 <span className="text-red-700 font-bold block uppercase tracking-wider">// ZERO SECURITY FOOTPRINT COMPLIANCE:</span>
                 <p className="font-sans normal-case text-xs">
@@ -239,7 +237,6 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* STEP 3 */}
             <div className="border border-slate-200 bg-white p-6 sm:p-8 space-y-3 rounded-sm shadow-sm">
               <div className="text-red-700 font-mono text-xs font-bold tracking-wider">// 03 // STEP THREE</div>
               <h4 className="text-lg font-bold text-slate-950 uppercase tracking-tight">DEPLOYMENT GATES</h4>
@@ -259,7 +256,7 @@ export default function LandingPage() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.3 }}
         whileHover={{ opacity: 1, scale: 1.05 }}
-        onClick={() => router.push('/admin/dashboard')} 
+        onClick={handleAdminNavigate} 
         className="fixed bottom-8 left-8 sm:bottom-10 sm:left-10 z-[10000] cursor-crosshair p-3 group transition-all"
       >
         <Shield size={18} className="text-slate-400 group-hover:text-red-700 transition-colors" />
