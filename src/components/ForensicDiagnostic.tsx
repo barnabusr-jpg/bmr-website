@@ -23,9 +23,23 @@ export default function ForensicDiagnostic() {
 
   useEffect(() => {
     const init = async () => {
-      const params = new URLSearchParams(window.location.search);
+      // Robust parameter extractor with window.location.href regex fallback
+      const getParam = (key: string): string | null => {
+        if (typeof window === "undefined") return null;
+        
+        // 1. Standard URLSearchParams lookup
+        const searchParams = new URLSearchParams(window.location.search);
+        const val = searchParams.get(key);
+        if (val && val.trim().length > 0) return val;
+
+        // 2. Direct regex fallback against address bar string
+        const match = window.location.href.match(new RegExp(`[?&]${key}=([^&#]*)`, "i"));
+        return match ? decodeURIComponent(match[1]) : null;
+      };
+
+      // Resolve access code across aliases (code, access_code, c)
+      const rawCode = getParam("code") || getParam("access_code") || getParam("c");
       
-      const rawCode = params.get("code");
       let codeParam = (rawCode ?? "").trim().toUpperCase();
       if (codeParam.startsWith("=3D")) codeParam = codeParam.slice(3);
       if (codeParam.startsWith("3D")) codeParam = codeParam.slice(2);
@@ -35,14 +49,15 @@ export default function ForensicDiagnostic() {
         console.error("CODE_NORMALIZED_EMPTY: Received code param but it collapsed during sanitization.", { rawCode });
       }
 
-      const flow = params.get("flow");
-      const matrixToken = params.get("matrix");
-      const trackParam = (params.get("track") || params.get("role"))?.trim().toUpperCase();
-      const orgParam = params.get("org");
-      const auditIdParam = params.get("id");
-      const authParam = params.get("auth");
+      const flow = getParam("flow");
+      const matrixToken = getParam("matrix");
+      const trackParam = (getParam("track") || getParam("role"))?.trim().toUpperCase();
+      const orgParam = getParam("org");
+      const auditIdParam = getParam("id");
+      const authParam = getParam("auth");
 
-      console.log("DIAGNOSTIC_AUTH: Handshake parameter check:", { 
+      console.log("DIAGNOSTIC_AUTH_DEBUG:", { 
+        href: typeof window !== "undefined" ? window.location.href : "",
         rawCode,
         normalizedCode: code, 
         flow, 
@@ -264,7 +279,8 @@ export default function ForensicDiagnostic() {
       console.error("SUBMIT_ERROR:", err?.message || err);
       alert(`Submission Error: ${err?.message || "Submission failed."}`);
       setStep("diagnostic");
-    } finally {
+    } font-mono
+    finally {
       submitInFlightRef.current = false;
     }
   };
