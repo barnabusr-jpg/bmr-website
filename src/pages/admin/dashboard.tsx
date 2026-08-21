@@ -4,12 +4,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { 
   Key, Activity, Building2, ChevronUp, ChevronDown, 
   Shield, Zap, Binary, ZoomIn, Hammer, Mail, 
-  X, Send, Clock, Search, BellRing, FileText, Monitor, ExternalLink
+  X, Send, Clock, Search, BellRing, FileText, Monitor, ExternalLink, CheckCircle
 } from "lucide-react";
 import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
 
-// CANONICAL SECTOR RISK MULTIPLIERS (Indexed to 4-Card Strategy Intake UI)
 const SECTOR_MULTIPLIERS: Record<string, number> = {
   FINANCE: 1.35,
   FINANCIAL_SERVICES: 1.35,
@@ -121,11 +120,29 @@ export default function AdminDashboard() {
     if (isUpdating) return;
     const { data: nodes } = await supabase
       .from('operators')
-      .select('persona_type, status, email, survey_completed')
-      .eq('audit_id', auditId);
+      .select('persona_type, status, email, survey_completed, access_code')
+      .or(`group_id.eq.${auditId},audit_id.eq.${auditId}`);
       
-    if (nodes) setNodeDetails(nodes);
-  }, [isUpdating]);
+    if (nodes) {
+      setNodeDetails(nodes);
+
+      const completed360Count = nodes.filter(n => {
+        const isDone = n.survey_completed === true || 
+                       String(n.status).toUpperCase() === 'COMPLETED' || 
+                       String(n.status).toUpperCase() === 'COMPLETE';
+        return isDone;
+      }).length;
+
+      if (completed360Count >= 3) {
+        await supabase
+          .from('audits')
+          .update({ status: 'COMPLETE' })
+          .eq('id', auditId);
+
+        fetchLedger();
+      }
+    }
+  }, [isUpdating, fetchLedger]);
 
   const toggleRow = async (auditId: string) => {
     if (expandedRow === auditId) { setExpandedRow(null); return; }
@@ -135,79 +152,117 @@ export default function AdminDashboard() {
 
   const triggerActivation = async () => {
     if (!selectedAudit || isUpdating) return;
+
     setIsUpdating(true);
     try {
-      const res = await fetch('/api/dispatch-directives', { 
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId: selectedAudit.id, 
-          orgName: selectedAudit.org_name,
-          parentAuditId: selectedAudit.id,
-          emails: { EXECUTIVE: emails.exec.trim(), MANAGERIAL: emails.mgr.trim(), TECHNICAL: emails.tech.trim() }
-        })
+      const execEmail = emails.exec.trim();
+      const mgrEmail = emails.mgr.trim();
+      const techEmail = emails.tech.trim();
+
+      const hasAtLeastOne = execEmail || mgrEmail || techEmail;
+      if (!hasAtLeastOne) {
+        setIsUpdating(false);
+        setTimeout(() => alert("Please enter at least one stakeholder email."), 50);
+        return;
+      }
+
+      const emailsPayload: Record<string, string> = {};
+      if (execEmail) emailsPayload.executive = execEmail;
+      if (mgrEmail) emailsPayload.managerial = mgrEmail;
+      if (techEmail) emailsPayload.technical = techEmail;
+
+      const payload = {
+        parentAuditId: selectedAudit.id,
+        orgName: selectedAudit.org_name || "Admin Entity",
+        emails: emailsPayload,
+      };
+
+      const res = await fetch("/api/dispatch-directives", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Email dispatch failed.");
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.message || errData.error || "Email dispatch failed.");
+      }
+
+      // Close modal state and reset flags immediately
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
+      setIsUpdating(false);
       fetchLedger();
-    } catch (err: any) { 
-      alert(err.message); 
-    } finally { 
-      setIsUpdating(false); 
+
+      // Defer blocking alert to allow React to flush DOM unmount of modal
+      setTimeout(() => {
+        alert("Access links successfully dispatched!");
+      }, 50);
+    } catch (err: any) {
+      setIsUpdating(false);
+      setTimeout(() => {
+        alert(err.message || "Failed to dispatch emails.");
+      }, 50);
     }
   };
 
   const triggerNudge = async (targetRoleKey: string, auditRecord: any) => {
-    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === targetRoleKey.toUpperCase());
+    const matchingNode = nodeDetails.find(
+      (n) =>
+        String(n.persona_type || "").toUpperCase().trim() ===
+        targetRoleKey.toUpperCase().trim()
+    );
+
     if (!matchingNode || !matchingNode.email) {
       alert("Nudge failed: Recipient email address not found.");
       return;
     }
-    
+
     setIsUpdating(true);
     try {
-      const formattedPayload: Record<string, string> = {};
-      formattedPayload[targetRoleKey.toUpperCase()] = matchingNode.email;
+      const payload = {
+        parentAuditId: auditRecord.id,
+        orgName: auditRecord.org_name || "Admin Entity",
+        emails: {
+          [targetRoleKey.toLowerCase()]: matchingNode.email,
+        },
+      };
 
-      const res = await fetch('/api/dispatch-directives', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          groupId: auditRecord.id,
-          orgName: auditRecord.org_name,
-          parentAuditId: auditRecord.id,
-          emails: formattedPayload
-        })
+      const res = await fetch("/api/dispatch-directives", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      
-      if (res.ok) alert(`Reminder email sent to ${matchingNode.email}`);
-      else throw new Error("Server timeout");
-    } catch (err) {
-      alert("Failed to send reminder email.");
-    } finally {
+
+      if (!res.ok) {
+        throw new Error("Server error dispatching nudge");
+      }
+
       setIsUpdating(false);
+      setTimeout(() => {
+        alert(`Reminder email sent to ${matchingNode.email}`);
+      }, 50);
+    } catch (err) {
+      setIsUpdating(false);
+      setTimeout(() => {
+        alert("Failed to send reminder email.");
+      }, 50);
     }
   };
 
   const handleLaunchPersonaWizard = (roleKey: string, auditRecord: any) => {
-    const matchingNode = nodeDetails.find(n => n.persona_type?.toUpperCase() === roleKey.toUpperCase());
-    
-    let assignedPillar = "AVS";
-    if (roleKey.toUpperCase() === "EXECUTIVE") assignedPillar = "IGF";
-    if (roleKey.toUpperCase() === "MANAGERIAL") assignedPillar = "HAI";
+    const matchingNode = nodeDetails.find(n => 
+      String(n.persona_type || '').toUpperCase().trim() === roleKey.toUpperCase().trim()
+    );
 
-    const matrixPayload = {
-      org: auditRecord.org_name,
-      sec: String(auditRecord.sector || 'INDUSTRIAL').toUpperCase().trim(),
-      ans: {}
-    };
+    let mappedPersona = roleKey.toUpperCase();
+    if (mappedPersona === 'TECHNICAL') mappedPersona = 'TECH_MGMT';
+    if (mappedPersona === 'MANAGERIAL') mappedPersona = 'OPS_MGMT';
 
-    const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
-    const targetEmail = matchingNode?.email || "barnabusr@gmail.com";
+    const targetEmail = matchingNode?.email || "hello@bmradvisory.co";
 
     window.open(
-      `/forensic?matrix=${compressedToken}&pillar=${assignedPillar}&role=${roleKey.toUpperCase()}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&auth=admin_verified_secure`,
+      `/forensic?role=${mappedPersona}&track=${mappedPersona}&persona=${mappedPersona}&org=${encodeURIComponent(auditRecord.org_name)}&email=${encodeURIComponent(targetEmail)}&flow=quad_node&auth=admin_verified_secure`,
       '_blank'
     );
   };
@@ -215,29 +270,33 @@ export default function AdminDashboard() {
   const runSynthesis = async (auditId: string) => {
     setIsUpdating(true);
     try {
-      const res = await fetch('/api/synthesize-fracture', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ auditId })
+      const res = await fetch("/api/synthesize-fracture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ auditId }),
       });
-      
-      const serverResponse = await res.json();
-      
+
       if (res.ok) {
+        await supabase
+          .from("audits")
+          .update({ status: "COMPLETE" })
+          .eq("id", auditId);
+
         setIsUpdating(false);
-        let query = supabase.from('audits').select('id, org_name, status, sfi_score, decay_pct, fractures, is_released, ai_spend, roi_pct, created_at, sow_sent, is_paid, sector').eq('id', auditId).single();
-        const { data: cleanAudit } = await query;
-        if (cleanAudit) {
-          setData(prev => prev.map(item => item.id === auditId ? cleanAudit : item));
-        }
-        alert("Diagnostic calculation updated successfully.");
+        await fetchLedger();
+        if (expandedRow === auditId) await refreshActiveNodes(auditId);
+        setTimeout(() => {
+          alert("Diagnostic calculation and Roadmap synthesized successfully.");
+        }, 50);
       } else {
-        alert(`Server error: ${serverResponse.error || 'Failed to recalculate data.'}`);
+        setIsUpdating(false);
+        setTimeout(() => {
+          alert("Failed to recalculate data.");
+        }, 50);
       }
-    } catch (err) { 
-      console.error(err); 
-    } finally { 
-      setIsUpdating(false); 
+    } catch (err) {
+      console.error(err);
+      setIsUpdating(false);
     }
   };
 
@@ -286,6 +345,33 @@ export default function AdminDashboard() {
   }, [searchTerm, statusFilter]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const channel = supabase
+      .channel('realtime-dashboard-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'operators' },
+        () => {
+          if (expandedRow) refreshActiveNodes(expandedRow);
+          fetchLedger();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'audits' },
+        () => {
+          fetchLedger();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthenticated, expandedRow, refreshActiveNodes, fetchLedger]);
+
+  useEffect(() => {
     if (isAuthenticated) {
       if (!selectedAudit) {
         fetchLedger();
@@ -295,7 +381,7 @@ export default function AdminDashboard() {
           fetchLedger(); 
           if (expandedRow) refreshActiveNodes(expandedRow); 
         }
-      }, 5000); 
+      }, 3000); 
       return () => clearInterval(interval);
     }
   }, [isAuthenticated, fetchLedger, expandedRow, refreshActiveNodes, selectedAudit]);
@@ -328,7 +414,6 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans text-left antialiased overflow-x-hidden">
       <div className="fixed top-0 left-0 right-0 h-1 bg-slate-900 z-[60]" />
 
-      {/* NAVIGATION HEADER */}
       <nav className="fixed top-1 left-0 right-0 h-20 bg-white border-b border-slate-200 z-50 px-8 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-8 w-full justify-between">
           <div className="flex items-center gap-3 shrink-0">
@@ -341,27 +426,21 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('frameworks')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'frameworks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Frameworks</button>
             
             <button 
+              type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 const activeAudit = data.find(item => item.id === expandedRow);
                 
                 if (activeAudit) {
-                  const sectorTag = String(activeAudit.sector || 'INDUSTRIAL').toUpperCase().trim();
-                  
-                  const matrixPayload = {
-                    org: activeAudit.org_name,
-                    sec: sectorTag,
-                    ans: {} 
-                  };
-
-                  const compressedToken = LZString.compressToEncodedURIComponent(JSON.stringify(matrixPayload));
-                  
                   window.open(
-                    `/forensic?matrix=${compressedToken}&auth=admin_verified_secure`, 
+                    `/forensic?org=${encodeURIComponent(activeAudit.org_name)}&flow=quad_node&auth=admin_verified_secure`, 
                     '_blank'
                   );
                 } else {
-                  alert("Please expand an audit row below before opening the diagnostic wizard.");
+                  window.open(
+                    `/forensic?flow=quad_node&auth=admin_verified_secure`, 
+                    '_blank'
+                  );
                 }
               }}
               className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded border transition-colors cursor-pointer ${
@@ -370,7 +449,7 @@ export default function AdminDashboard() {
                   : 'text-slate-600 border-slate-300 bg-white hover:text-slate-900'
               }`}
             >
-              Configure 360° Diagnostic
+              Configure Quad Node
             </button>
 
             {expandedRow && (
@@ -388,7 +467,6 @@ export default function AdminDashboard() {
         </div>
       </nav>
 
-      {/* STAKEHOLDER EMAIL MODAL */}
       <AnimatePresence>
         {selectedAudit && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-sm">
@@ -403,7 +481,7 @@ export default function AdminDashboard() {
                 <input placeholder="Managerial Stakeholder Email" value={emails.mgr} onChange={(e) => setEmails({...emails, mgr: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 font-sans text-xs focus:border-slate-900 outline-none rounded" />
                 <input placeholder="Technical Stakeholder Email" value={emails.tech} onChange={(e) => setEmails({...emails, tech: e.target.value})} className="w-full bg-slate-50 border border-slate-200 p-3 text-slate-900 font-sans text-xs focus:border-slate-900 outline-none rounded" />
                 
-                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-slate-900 text-white py-4 mt-4 font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer rounded shadow-sm">
+                <button onClick={triggerActivation} disabled={isUpdating} className="w-full bg-slate-900 text-white py-4 mt-4 font-bold uppercase text-xs tracking-wider flex items-center justify-center gap-3 hover:bg-slate-800 transition-colors cursor-pointer rounded shadow-sm font-sans font-bold">
                   {isUpdating ? <Activity className="animate-spin" /> : <Send size={16} />} 
                   {isUpdating ? "Sending Access Links..." : "Send Assessment Access Links"}
                 </button>
@@ -413,19 +491,17 @@ export default function AdminDashboard() {
         )}
       </AnimatePresence>
 
-      {/* MAIN CONTAINER */}
       <main className="pt-32 px-8 max-w-[1600px] mx-auto pb-24">
         <AnimatePresence mode="wait">
           {activeTab === 'ledger' ? (
             <motion.div key="ledger" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="space-y-6">
               
-              {/* SUMMARY STAT CARDS */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                 {[
                   { label: "TOTAL ASSESSMENT RECORDS", value: totalCount, color: "border-slate-200 text-slate-900" },
-                  { label: "ACTIVE MULTI-TRACK AUDITS", value: data.filter(d => d.status?.toUpperCase().includes("TRIANGULATION") || d.status?.toUpperCase().includes("TRIANGULATING")).length, color: "border-amber-200 text-amber-800" },
+                  { label: "ACTIVE MULTI-TRACK AUDITS", value: data.filter(d => d.status?.toUpperCase().includes("TRIANGULATION") || d.status?.toUpperCase().includes("TRIANGULATING") || d.status?.toUpperCase() === "IN_PROGRESS").length, color: "border-amber-200 text-amber-800" },
                   { label: "PROPOSED SOW DOSSIERS SENT", value: data.filter(d => d.sow_sent === true).length, color: "border-blue-200 text-blue-800" },
-                  { label: "COMPLETED & VERIFIED", value: data.filter(d => d.is_paid === true).length, color: "border-emerald-200 text-emerald-800" }
+                  { label: "COMPLETED & VERIFIED", value: data.filter(d => d.is_paid === true || d.status?.toUpperCase() === "COMPLETE" || d.status?.toUpperCase() === "COMPLETED").length, color: "border-emerald-200 text-emerald-800" }
                 ].map((stat) => (
                   <div key={stat.label} className={`bg-white border p-5 flex flex-col justify-between min-h-[100px] rounded-lg shadow-sm ${stat.color.split(" ")[0]}`}>
                     <span className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase">// {stat.label}</span>
@@ -436,7 +512,6 @@ export default function AdminDashboard() {
                 ))}
               </div>
 
-              {/* SEARCH & FILTERS BAR */}
               <div className="flex flex-col md:flex-row gap-4 items-stretch justify-between bg-white p-4 border border-slate-200 rounded-lg shadow-sm">
                 <div className="relative flex-1">
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -467,7 +542,6 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {/* LEDGER ENTRIES LIST */}
               {data.length === 0 ? (
                 <div className="text-center p-16 border border-dashed border-slate-300 rounded-lg bg-white font-mono text-xs text-slate-500 uppercase tracking-wider">
                   No assessment records match this filter criteria.
@@ -496,9 +570,10 @@ export default function AdminDashboard() {
                   let playbookPitch = "Deploy routine baseline optimization filters to preserve ongoing alignment tracks.";
                   let targetTier = "TRACK 01 // PIPELINE HARDENING";
 
-                  const cleanStatus = (audit.status || "").toUpperCase();
-                  
-                  if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) {
+                  const cleanStatus = String(audit.status || "").toUpperCase().trim();
+                  const isAuditComplete = cleanStatus === "COMPLETE" || cleanStatus === "COMPLETED";
+
+                  if (cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING") || cleanStatus === "IN_PROGRESS") {
                     playbookHeadline = "Multi-Track Diagnostic In Progress";
                     playbookNarrative = "Stakeholder evaluation inputs are currently being gathered across Executive, Managerial, and Technical tracks.";
                     playbookPitch = "Recalculate matrix synthesis to combine multi-track responses into unified findings.";
@@ -525,7 +600,7 @@ export default function AdminDashboard() {
                       <div onClick={() => toggleRow(audit.id)} className="grid grid-cols-12 items-center p-6 cursor-pointer group">
                         <div className="col-span-6 flex items-center gap-4">
                           <div className="bg-slate-100 p-3 border border-slate-200 rounded shrink-0">
-                            <Building2 size={20} className={cleanStatus.includes("COMPLETE") ? "text-emerald-700" : "text-slate-700"} />
+                            <Building2 size={20} className={isAuditComplete ? "text-emerald-700" : "text-slate-700"} />
                           </div>
                           <div>
                             <div className="font-bold text-slate-900 text-2xl tracking-tight leading-none">{audit.org_name || "ORGANIZATION RECORD"}</div>
@@ -540,10 +615,10 @@ export default function AdminDashboard() {
                             </span>
                           )}
                           <span className="text-slate-800">
-                            {cleanStatus.includes("COMPLETE") && 'REPORT READY'}
+                            {isAuditComplete && 'REPORT READY'}
                             {cleanStatus === 'LEAD' && 'NEW LEAD'}
                             {cleanStatus === 'ARCHIVED' && '📁 ARCHIVED'}
-                            {(cleanStatus.includes("TRIANGULATION") || cleanStatus.includes("TRIANGULATING")) && 'DIAGNOSTIC IN PROGRESS'}
+                            {(!isAuditComplete && cleanStatus !== 'LEAD' && cleanStatus !== 'ARCHIVED') && 'DIAGNOSTIC IN PROGRESS'}
                           </span>
                         </div>
                         
@@ -552,21 +627,30 @@ export default function AdminDashboard() {
                       
                       {expandedRow === audit.id && (
                         <div className="p-8 pt-0 border-t border-slate-100 bg-slate-50/50 text-left select-text">
-                          {/* STAKEHOLDER TRACK CARDS */}
+                          
                           <div className="grid grid-cols-3 gap-4 pt-6 mb-6">
                             {[
                               { label: 'EXECUTIVE TRACK', key: 'EXECUTIVE' },
                               { label: 'MANAGERIAL TRACK', key: 'MANAGERIAL' },
                               { label: 'TECHNICAL TRACK', key: 'TECHNICAL' }
                             ].map((role) => {
-                              const node = nodeDetails.find(n => n.persona_type?.toUpperCase() === role.key);
-                              const isDone = node?.survey_completed === true || node?.status?.toLowerCase() === 'completed';
+                              const node = nodeDetails.find(n => 
+                                String(n.persona_type || '').toUpperCase().trim() === role.key.toUpperCase().trim()
+                              );
+
+                              const isDone = node?.survey_completed === true || 
+                                             String(node?.status || '').toUpperCase() === 'COMPLETED' || 
+                                             String(node?.status || '').toUpperCase() === 'COMPLETE';
                               
                               return (
                                 <div key={role.label} className="border border-slate-200 p-5 bg-white rounded-lg relative min-h-[120px] flex flex-col justify-between shadow-sm group/node">
                                   <div className="flex justify-between items-start w-full border-b border-slate-100 pb-2">
                                     <span className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase">{role.label}</span>
-                                    {!isDone && (
+                                    {isDone ? (
+                                      <span className="flex items-center gap-1 font-mono text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded uppercase">
+                                        <CheckCircle size={12} /> COMPLETE
+                                      </span>
+                                    ) : (
                                       <div className="flex items-center gap-2">
                                         <button 
                                           type="button"
@@ -578,7 +662,7 @@ export default function AdminDashboard() {
                                         >
                                           <BellRing size={12} />
                                         </button>
-                                        <Clock className="text-slate-400" size={12}/>
+                                        <Clock className="text-amber-600 animate-pulse" size={12}/>
                                       </div>
                                     )}
                                   </div>
@@ -589,11 +673,11 @@ export default function AdminDashboard() {
                                       onClick={() => handleLaunchPersonaWizard(role.key, audit)}   
                                       className={`px-4 py-2 text-xs uppercase tracking-wider font-bold rounded transition-colors flex items-center gap-2 cursor-pointer ${   
                                         isDone 
-                                          ? 'bg-slate-100 text-slate-600 border border-slate-200 hover:text-slate-900' 
+                                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100' 
                                           : 'bg-slate-900 text-white hover:bg-slate-800'   
                                       }`} 
                                     >   
-                                      {isDone ? 'Override Answers' : 'Open Diagnostic'}   
+                                      {isDone ? '✔ Track Completed' : 'Open Diagnostic'}   
                                     </button>
                                   </div>
                                 </div>
@@ -601,7 +685,6 @@ export default function AdminDashboard() {
                             })}
                           </div>
 
-                          {/* CALIBRATION SLIDERS */}
                           <div className="border border-slate-200 bg-white p-6 rounded-lg shadow-sm mb-6 space-y-4">
                             <span className="text-[10px] text-slate-500 font-bold font-mono tracking-wider uppercase block">// REAL-TIME PRESENTATION CALIBRATION STRIPS</span>
                             
@@ -634,7 +717,6 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
-                          {/* RUN RATE & SCRIPT CARDS */}
                           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
                             <div className="lg:col-span-5 border border-slate-200 bg-white p-6 rounded-lg shadow-sm space-y-3 font-mono">
                               <div className="text-[10px] text-slate-500 font-bold tracking-wider uppercase">// RUN_RATE_METRICS_LEDGER</div>
@@ -664,7 +746,6 @@ export default function AdminDashboard() {
                             </div>
                           </div>
 
-                          {/* FRACTURES TABLE */}
                           {realFractures.length > 0 && (
                             <div className="border border-slate-200 bg-white p-6 rounded-lg shadow-sm space-y-3 mb-6">
                               <div className="text-[10px] font-mono text-slate-500 font-bold tracking-wider uppercase">// IDENTIFIED_RISK_AREAS ({realFractures.length})</div>
@@ -693,7 +774,6 @@ export default function AdminDashboard() {
                             </div>
                           )}
 
-                          {/* RECOMMENDED STATEMENT OF WORK */}
                           <div className="bg-white text-slate-900 p-6 border-l-8 border-slate-900 border-y border-r border-slate-200 rounded-r-lg shadow-sm space-y-4 mb-6">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end border-b border-slate-100 pb-3 gap-2">
                               <div>
@@ -729,8 +809,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                           </div>
-                          
-                          {/* CONTROL BUTTONS */}
+
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 border-t border-slate-200 pt-6">
                             <div className="space-y-3">
                               <span className="text-[10px] font-mono text-slate-500 block tracking-wider uppercase font-bold">STATUS CONTROLS</span>
@@ -809,7 +888,7 @@ export default function AdminDashboard() {
                                 <button type="button" disabled={cleanStatus === "ARCHIVED"} onClick={(e) => { e.stopPropagation(); toggleClientAccess(audit); }} className={`flex-1 px-6 py-4 font-bold uppercase text-xs tracking-wider transition-colors shadow-sm rounded flex flex-col items-center justify-center gap-2 border cursor-pointer disabled:opacity-20 ${clientHasAccess ? 'bg-emerald-700 text-white border-emerald-700 hover:bg-emerald-800' : 'bg-slate-900 text-white border-slate-900 hover:bg-slate-800'}`}><Shield size={16} /><span>{clientHasAccess ? "Lock Results Page" : "Unlock Results Page"}</span></button>
                               </div>
                             </div>
-                            
+
                             <div className="space-y-3 md:border-l md:border-slate-200 md:pl-8">
                               <span className="text-[10px] font-mono text-slate-500 block tracking-wider uppercase font-bold">REPORTS & EXPORTS</span>
                               
@@ -850,7 +929,6 @@ export default function AdminDashboard() {
                 })
               )}
 
-              {/* PAGINATION */}
               {totalCount > ROWS_PER_PAGE && (
                 <div className="flex items-center justify-between bg-white p-4 border border-slate-200 text-slate-500 font-mono text-xs uppercase tracking-wider rounded-lg shadow-sm mt-4">
                   <div>SHOWING {currentPage * ROWS_PER_PAGE + 1} - {Math.min((currentPage + 1) * ROWS_PER_PAGE, totalCount)} OF {totalCount} ACTIVE RECORDS</div>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
-import { FORENSIC_MATRIX } from '@/lib/forensicMatrix';
-import { Lock, CheckCircle, ShieldAlert, Activity, ArrowRight } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import LZString from "lz-string";
+import { FORENSIC_MATRIX } from "@/lib/forensicMatrix";
+import { Lock, CheckCircle, ShieldAlert, Activity, ArrowRight, Mail, Network, FileQuestion } from "lucide-react";
 
 export default function ForensicDiagnostic() {
   const [step, setStep] = useState("loading");
@@ -13,152 +13,274 @@ export default function ForensicDiagnostic() {
   const [answers, setAnswers] = useState({});
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
 
+  const submitInFlightRef = useRef(false);
+
+  const [quadEmails, setQuadEmails] = useState({
+    executive: "",
+    managerial: "",
+    technical: "",
+  });
+
   useEffect(() => {
     const init = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code')?.trim().toUpperCase();
-
-      console.log("DIAGNOSTIC_AUTH: Attempting handshake with code:", code);
-
-      if (!code) {
-        console.error("AUTH_ERROR: No code provided in URL.");
-        setStep("invalid");
-        return;
-      }
-
-      // 1. Fetch operator
-      const { data: op, error: opError } = await supabase
-        .from('operators')
-        .select('id, audit_id, access_code, status, persona_type')
-        .eq('access_code', code)
-        .single();
-
-      if (opError || !op) {
-        console.error("DB_ERROR: Operator lookup failed.", opError?.message);
-        setStep("invalid");
-        return;
-      }
-
-      // 2. Fetch parent audit
-      const { data: audit, error: auditError } = await supabase
-        .from('audits')
-        .select('status, org_name, id')
-        .eq('id', op.audit_id)
-        .single();
-
-      // SECURITY: Check if already completed
-      if (auditError || !audit || audit.status === 'COMPLETE' || op.status === 'completed') {
-        console.log("NODE_ACCESS: Link is deactivated or already completed.");
-        setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
-        setStep("finalized");
-        return;
-      }
-
-      // 3. DEFENSIVE FILTERING: Matches MGR, MANAGERIAL, etc.
-      const filtered = FORENSIC_MATRIX.filter(q => {
-        const lens = q.lens?.toUpperCase();
-        const persona = op.persona_type?.toUpperCase();
+      // Robust parameter extractor with window.location.href regex fallback
+      const getParam = (key: string): string | null => {
+        if (typeof window === "undefined") return null;
         
-        return lens === persona || 
-               (persona === 'MANAGERIAL' && lens === 'MGR') ||
-               (persona === 'TECHNICAL' && lens === 'TEC') ||
-               (persona === 'EXECUTIVE' && lens === 'EXE');
-      });
-      
-      console.log(`LENS_CHECK: Persona is [${op.persona_type}]. Questions found: ${filtered.length}`);
+        // 1. Standard URLSearchParams lookup
+        const searchParams = new URLSearchParams(window.location.search);
+        const val = searchParams.get(key);
+        if (val && val.trim().length > 0) return val;
 
-      if (!filtered || filtered.length === 0) {
-        console.error("LOGIC_ERROR: No matrix mapping for persona type:", op.persona_type);
-        setStep("invalid");
+        // 2. Direct regex fallback against address bar string
+        const match = window.location.href.match(new RegExp(`[?&]${key}=([^&#]*)`, "i"));
+        return match ? decodeURIComponent(match[1]) : null;
+      };
+
+      // Resolve access code across aliases (code, access_code, c)
+      const rawCode = getParam("code") || getParam("access_code") || getParam("c");
+      
+      let codeParam = (rawCode ?? "").trim().toUpperCase();
+      if (codeParam.startsWith("=3D")) codeParam = codeParam.slice(3);
+      if (codeParam.startsWith("3D")) codeParam = codeParam.slice(2);
+      const code = codeParam;
+
+      if (rawCode && !code) {
+        console.error("CODE_NORMALIZED_EMPTY: Received code param but it collapsed during sanitization.", { rawCode });
+      }
+
+      const flow = getParam("flow");
+      const matrixToken = getParam("matrix");
+      const trackParam = (getParam("track") || getParam("role"))?.trim().toUpperCase();
+      const orgParam = getParam("org");
+      const auditIdParam = getParam("id");
+      const authParam = getParam("auth");
+
+      console.log("DIAGNOSTIC_AUTH_DEBUG:", { 
+        href: typeof window !== "undefined" ? window.location.href : "",
+        rawCode,
+        normalizedCode: code, 
+        flow, 
+        hasMatrix: !!matrixToken 
+      });
+
+      let matrixPayload: any = null;
+      if (matrixToken) {
+        try {
+          const decompressed = LZString.decompressFromEncodedURIComponent(matrixToken);
+          if (decompressed) {
+            matrixPayload = JSON.parse(decompressed);
+          }
+        } catch (e) {
+          console.warn("LOGIC_WARN: Failed to parse matrix token", e);
+        }
+      }
+
+      if (code) {
+        const res = await fetch(`/api/verify-code?code=${encodeURIComponent(code)}`);
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          console.error("VERIFY_CODE_FAILED:", { status: res.status, body: errData });
+          setStep("invalid");
+          return;
+        }
+
+        const { op, audit } = await res.json();
+        console.log("VERIFY_CODE_RESULT:", { op, audit });
+
+        const isOpComplete =
+          String(op?.status).trim().toUpperCase() === "COMPLETED" || String(op?.status).trim().toLowerCase() === "completed";
+        const isAuditComplete =
+          audit?.status === "COMPLETE" || audit?.status === "COMPLETED";
+
+        if (!audit || isAuditComplete || isOpComplete) {
+          console.log("NODE_ACCESS: Assessment link completed or deactivated.");
+          setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
+          setStep("finalized");
+          return;
+        }
+
+        const filtered = FORENSIC_MATRIX.filter((q) => {
+          const lens = String(q.lens ?? "").trim().toUpperCase();
+          const persona = String(op.persona_type ?? "").trim().toUpperCase();
+
+          if (!persona) return false;
+
+          if (persona === "EXECUTIVE" && lens === "EXE") return true;
+          if (persona === "MANAGERIAL" && lens === "MGR") return true;
+          if (persona === "TECHNICAL" && lens === "TEC") return true;
+
+          if (lens === persona) return true;
+
+          return false;
+        });
+
+        if (!filtered || filtered.length === 0) {
+          console.error("MATRIX_FILTER_EMPTY: No question mapping found for persona:", { 
+            rawPersona: op.persona_type,
+            trimmedPersona: String(op.persona_type ?? "").trim().toUpperCase(),
+            code 
+          });
+          setStep("persona_mismatch");
+          return;
+        }
+
+        setQuestions(filtered);
+        setOperator({ ...op, org_name: audit.org_name });
+        setStep("intro");
         return;
       }
 
-      setQuestions(filtered);
-      setOperator({ ...op, org_name: audit.org_name });
-      setStep("intro");
+      if (flow === "quad_node" || (matrixToken && !trackParam)) {
+        const targetOrg = matrixPayload?.org || orgParam || "TARGET SPECIFICATION";
+
+        setOperator({
+          id: auditIdParam || "quad_node_admin",
+          audit_id: auditIdParam || "quad_node_audit",
+          org_name: targetOrg,
+          persona_type: "QUAD_NODE",
+          access_code: "ADMIN_QUAD_NODE",
+        });
+        setStep("quad_landing");
+        return;
+      }
+
+      if (trackParam || authParam === "admin_verified_secure") {
+        const targetOrg = matrixPayload?.org || orgParam || "TARGET SPECIFICATION";
+        const persona = trackParam || "EXECUTIVE";
+
+        const filtered = FORENSIC_MATRIX.filter((q) => {
+          const lens = String(q.lens ?? "").trim().toUpperCase();
+          const p = String(persona ?? "").trim().toUpperCase();
+
+          return (
+            lens === p ||
+            (p === "MANAGERIAL" && lens === "MGR") ||
+            (p === "TECHNICAL" && lens === "TEC") ||
+            (p === "EXECUTIVE" && lens === "EXE")
+          );
+        });
+
+        setQuestions(filtered.length > 0 ? filtered : FORENSIC_MATRIX);
+        setOperator({
+          id: auditIdParam || "admin_preview",
+          audit_id: auditIdParam || "admin_audit",
+          org_name: targetOrg,
+          persona_type: persona,
+          access_code: "ADMIN_PREVIEW",
+        });
+        setStep("intro");
+        return;
+      }
+
+      console.error("HANDSHAKE_MISSING_PARAMETERS: No valid access code or track specified.");
+      setStep("invalid");
     };
 
     init();
   }, []);
 
-  const submitResults = async (finalAnswers: any) => {
-    if (step === "submitting" || step === "done") return;
-    
+  const handleStartQuadDiagnostic = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!quadEmails.executive || !quadEmails.managerial || !quadEmails.technical) {
+      alert("Please provide routing emails for all three stakeholder tracks.");
+      return;
+    }
+
     setStep("submitting");
 
     try {
-      // Step 1: Save data natively to database
-      const { error: updateError } = await supabase
-        .from('operators')
-        .update({
-          status: 'completed',
-          raw_responses: finalAnswers,
-          survey_completed: true
-        })
-        .eq('id', operator.id); 
+      if (operator?.audit_id && operator?.audit_id !== "quad_node_audit") {
+        const res = await fetch("/api/dispatch-directives", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            groupId: operator.audit_id,
+            orgName: operator.org_name,
+            parentAuditId: operator.audit_id,
+            emails: {
+              EXECUTIVE: quadEmails.executive.trim(),
+              MANAGERIAL: quadEmails.managerial.trim(),
+              TECHNICAL: quadEmails.technical.trim(),
+            },
+          }),
+        });
 
-      if (updateError) throw new Error(`Operator record save rejected: ${updateError.message}`);
-
-      // Step 2: Fetch all sibling operator entries linked to this audit row
-      const { data: siblingOperators, error: fetchError } = await supabase
-        .from('operators')
-        .select('persona_type, status, raw_responses')
-        .eq('audit_id', operator.audit_id);
-
-      if (fetchError) throw new Error(`Cross-node matrix sync failed: ${fetchError.message}`);
-
-      // Step 3: Parse status indicators across tracking categories
-      const completedOps = siblingOperators || [];
-      const technicalTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'TECHNICAL' && o.status === 'completed');
-      const managerialTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'MANAGERIAL' && o.status === 'completed');
-      const executiveTrack = completedOps.find(o => o.persona_type?.toUpperCase() === 'EXECUTIVE' && o.status === 'completed');
-
-      const auditPayload: any = {
-        has_technical: !!technicalTrack,
-        has_managerial: !!managerialTrack,
-        has_executive: !!executiveTrack,
-        updated_at: new Date().toISOString()
-      };
-
-      // Step 4: AUTOMATED MULTI-TRACK COMPILATION SYSTEM
-      if (technicalTrack && managerialTrack && executiveTrack) {
-        console.log("QUAD-NODE MATRIX BALANCED // RUNNING INTEGRATED CALCULUS RUNTIME");
-
-        const computedAnomalies = [
-          {
-            anomaly_id: "Finding #1",
-            title: "Automated Architecture Discrepancy",
-            description: "Systemic workflow variances compiled automatically across aligned operational tracks.",
-            severity: "CRITICAL",
-            remediation_directive: "Optimize process vectors to stabilize data flow dynamics."
-          },
-          {
-            anomaly_id: "Finding #2",
-            title: "Strategic Alignment Leakage",
-            description: "Cross-track validation indicates elevated risk in human-in-the-loop dependencies.",
-            severity: "HIGH",
-            remediation_directive: "Deploy automated tracking filters to mitigate processing waste."
-          }
-        ];
-
-        auditPayload.anomalies = computedAnomalies;
-        auditPayload.status = 'COMPLETED';
+        if (!res.ok) throw new Error("Failed to dispatch stakeholder access links.");
       }
 
-      // Step 5: Execute master update pass on parent audit row
-      const { error: auditUpdateError } = await supabase
-        .from('audits')
-        .update(auditPayload)
-        .eq('id', operator.audit_id);
+      const filtered = FORENSIC_MATRIX.filter(
+        (q) => q.lens?.toUpperCase() === "EXE" || q.lens?.toUpperCase() === "EXECUTIVE"
+      );
+      setQuestions(filtered.length > 0 ? filtered : FORENSIC_MATRIX);
+      setOperator((prev: any) => ({ ...prev, persona_type: "EXECUTIVE" }));
+      setStep("intro");
+    } catch (err: any) {
+      console.error("QUAD_DISPATCH_ERROR:", err.message);
+      alert(`Dispatch Error: ${err.message}`);
+      setStep("quad_landing");
+    }
+  };
 
-      if (auditUpdateError) throw new Error(`Master ledger update rejected: ${auditUpdateError.message}`);
+  const submitResults = async (finalAnswers: any) => {
+    if (step === "submitting" || step === "done") return;
+    if (submitInFlightRef.current) return;
+
+    submitInFlightRef.current = true;
+    setStep("submitting");
+
+    try {
+      const activeCode = operator?.access_code;
+
+      if (
+        activeCode === "ADMIN_PREVIEW" ||
+        activeCode === "ADMIN_QUAD_NODE" ||
+        operator?.id === "admin_preview" ||
+        operator?.id === "quad_node_admin"
+      ) {
+        console.log("SIMULATION_COMPLETE: Admin diagnostic preview finished.");
+        setStep("done");
+        return;
+      }
+
+      if (!activeCode) {
+        throw new Error("Missing access code. Unable to finalize diagnostic.");
+      }
+
+      const res = await fetch("/api/diagnostic/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          accessCode: activeCode,
+          rawResponses: finalAnswers,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (res.status === 409 || data.error === "ALREADY_COMPLETED") {
+          setStep("finalized");
+          return;
+        }
+
+        if (res.status === 401 || data.error === "INVALID_ACCESS_CODE") {
+          setStep("invalid");
+          return;
+        }
+
+        throw new Error(data.message || "Failed to submit assessment responses.");
+      }
 
       setStep("done");
-
     } catch (err: any) {
-      console.error("SUBMIT_ERROR: Transaction failed.", err.message);
-      alert(`Submission Error: ${err.message}`);
+      console.error("SUBMIT_ERROR:", err?.message || err);
+      alert(`Submission Error: ${err?.message || "Submission failed."}`);
       setStep("diagnostic");
+    } finally {
+      submitInFlightRef.current = false;
     }
   };
 
@@ -166,10 +288,15 @@ export default function ForensicDiagnostic() {
     const qId = questions[currentIndex]?.id;
     if (!qId) return;
 
+    if (!selectedAnswer) {
+      alert("Please select a response prior to attaching verification evidence.");
+      return;
+    }
+
     const newAnswers = { ...answers, [qId]: { answer: selectedAnswer, evidence } };
     setAnswers(newAnswers);
     setSelectedAnswer(null);
-    
+
     if (currentIndex < questions.length - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
@@ -177,18 +304,14 @@ export default function ForensicDiagnostic() {
     }
   };
 
-  // Helper to convert snake_case evidence tags to human-readable text
   const formatEvidenceLabel = (rawTag: string) => {
     return rawTag
       .toLowerCase()
-      .split('_')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
   };
 
-  // ========================================================================
-  // CONTROL GATES (EXECUTIVE LIGHT UI)
-  // ========================================================================
   if (step === "loading") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center font-sans">
@@ -212,6 +335,18 @@ export default function ForensicDiagnostic() {
     );
   }
 
+  if (step === "persona_mismatch") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
+        <div className="bg-white border border-slate-200 p-12 max-w-md w-full text-center shadow-sm rounded-lg">
+          <FileQuestion className="mb-4 text-amber-600 mx-auto" size={48} />
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Invalid Configuration</h2>
+          <p className="text-xs text-slate-500 font-mono">No operational matrix questions match the assigned operational track.</p>
+        </div>
+      </div>
+    );
+  }
+
   if (step === "finalized") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 font-sans">
@@ -219,6 +354,89 @@ export default function ForensicDiagnostic() {
           <Lock className="mb-4 text-slate-900 mx-auto" size={48} />
           <h2 className="text-xl font-bold text-slate-900 mb-2">Diagnostic Complete</h2>
           <p className="text-xs text-slate-500 font-mono">This assessment link has already been completed and deactivated.</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "quad_landing") {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-6 md:p-12 flex items-center justify-center">
+        <div className="max-w-xl w-full border border-slate-200 p-8 md:p-10 bg-white shadow-sm rounded-lg">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-4 mb-6">
+            <Network size={20} className="text-slate-900" />
+            <span className="text-xs font-mono font-bold text-slate-500 uppercase tracking-wider">
+              QUAD-NODE CONFIGURATION // STAKEHOLDER ROUTING
+            </span>
+          </div>
+
+          <h1 className="text-2xl font-extrabold text-slate-900 mb-2 tracking-tight">
+            Configure Multi-Track Assessment
+          </h1>
+          <p className="text-xs text-slate-600 mb-8 leading-relaxed font-sans">
+            Enter target stakeholder email addresses for <strong>{operator?.org_name}</strong> to initialize 360° triangulation and route assessment links across all operational vectors.
+          </p>
+
+          <form onSubmit={handleStartQuadDiagnostic} className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
+                Executive Stakeholder Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="email"
+                  required
+                  value={quadEmails.executive}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, executive: e.target.value })}
+                  placeholder="executive@organization.com"
+                  className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
+                Managerial Stakeholder Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="email"
+                  required
+                  value={quadEmails.managerial}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, managerial: e.target.value })}
+                  placeholder="managerial@organization.com"
+                  className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
+                Technical Stakeholder Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="email"
+                  required
+                  value={quadEmails.technical}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, technical: e.target.value })}
+                  placeholder="technical@organization.com"
+                  className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wider text-xs transition-colors rounded shadow-sm flex items-center justify-center gap-2 mt-6 cursor-pointer"
+            >
+              Initialize Quad-Node Assessment
+              <ArrowRight size={16} />
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -241,7 +459,9 @@ export default function ForensicDiagnostic() {
         <div className="max-w-md w-full border border-slate-200 p-10 bg-white shadow-sm rounded-lg text-center">
           <CheckCircle className="mx-auto text-emerald-700 mb-4" size={48} />
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Section Complete</h2>
-          <p className="text-xs text-slate-500 font-mono">Your diagnostic input has been securely recorded and synced to the master assessment matrix.</p>
+          <p className="text-xs text-slate-500 font-mono">
+            Your diagnostic input has been securely recorded and synced to the master assessment matrix.
+          </p>
         </div>
       </div>
     );
@@ -258,25 +478,31 @@ export default function ForensicDiagnostic() {
     );
   }
 
+  const isSubmitting = step === "submitting" || submitInFlightRef.current;
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans p-6 md:p-12 flex items-center justify-center">
       <div className="max-w-2xl w-full border border-slate-200 p-8 md:p-12 bg-white shadow-sm rounded-lg relative">
         <div className="text-xs font-mono text-slate-500 mb-8 font-bold uppercase tracking-wider border-b border-slate-100 pb-3 flex justify-between items-center">
           <span>Target: {operator?.org_name}</span>
-          <span className="bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded font-mono">{operator?.persona_type} Track</span>
+          <span className="bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded font-mono">
+            {operator?.persona_type} Track
+          </span>
         </div>
-        
+
         {step === "intro" && (
           <div>
             <h1 className="text-3xl font-extrabold text-slate-900 mb-4 tracking-tight">
               Operational Risk Assessment
             </h1>
             <p className="mb-8 text-slate-600 text-sm leading-relaxed">
-              You are completing the forensic assessment for <strong>{operator?.org_name}</strong> as an authorized representative for the <strong>{operator?.persona_type}</strong> track. Your input directly calibrates operational readiness and governance specifications.
+              You are completing the forensic assessment for <strong>{operator?.org_name}</strong> as an authorized
+              representative for the <strong>{operator?.persona_type}</strong> track. Your input directly calibrates
+              operational readiness and governance specifications.
             </p>
-            <button 
-              onClick={() => setStep("diagnostic")} 
-              className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wider text-xs transition-colors rounded shadow-sm flex items-center justify-center gap-2"
+            <button
+              onClick={() => setStep("diagnostic")}
+              className="w-full py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold uppercase tracking-wider text-xs transition-colors rounded shadow-sm flex items-center justify-center gap-2 cursor-pointer"
             >
               Begin Diagnostic
               <ArrowRight size={16} />
@@ -290,16 +516,19 @@ export default function ForensicDiagnostic() {
               Question {currentIndex + 1} of {questions.length}
             </div>
             <h2 className="text-xl md:text-2xl font-bold mb-8 text-slate-900 tracking-tight leading-snug">
-              {questions[currentIndex].text}
+              {questions[currentIndex].text || questions[currentIndex].question}
             </h2>
 
             {!selectedAnswer ? (
               <div className="grid grid-cols-2 gap-4">
-                {["Yes", "No"].map(opt => (
-                  <button 
-                    key={opt} 
-                    onClick={() => setSelectedAnswer(opt)} 
-                    className="p-8 border border-slate-200 bg-slate-50/50 hover:bg-slate-900 hover:text-white text-slate-900 font-bold uppercase text-lg transition-colors rounded shadow-sm cursor-pointer"
+                {["Yes", "No"].map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => setSelectedAnswer(opt)}
+                    disabled={isSubmitting}
+                    className={`p-8 border border-slate-200 bg-slate-50/50 hover:bg-slate-900 hover:text-white text-slate-900 font-bold uppercase text-lg transition-colors rounded shadow-sm ${
+                      isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                    }`}
                   >
                     {opt}
                   </button>
@@ -310,13 +539,16 @@ export default function ForensicDiagnostic() {
                 <label className="block text-xs font-mono text-slate-500 font-bold uppercase tracking-wider mb-2">
                   Select Evidence / Verification Basis:
                 </label>
-                <select 
-                  className="w-full bg-slate-50 border border-slate-300 p-4 text-slate-900 font-medium text-sm rounded outline-none focus:border-slate-900 cursor-pointer" 
-                  onChange={(e) => handleFinalizeNode(e.target.value)} 
+                <select
+                  disabled={isSubmitting}
+                  className={`w-full bg-slate-50 border border-slate-300 p-4 text-slate-900 font-medium text-sm rounded outline-none focus:border-slate-900 ${
+                    isSubmitting ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+                  }`}
+                  onChange={(e) => handleFinalizeNode(e.target.value)}
                   defaultValue=""
                 >
                   <option value="" disabled>Choose verification documentation...</option>
-                  {questions[currentIndex].evidenceOptions?.map((opt: string) => (
+                  {(questions[currentIndex].evidenceOptions || ["LOG_RECORD", "API_CONTRACT", "SLA_METRIC", "PROCESS_DOC"]).map((opt: string) => (
                     <option key={opt} value={opt}>
                       {formatEvidenceLabel(opt)}
                     </option>
