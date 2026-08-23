@@ -5,7 +5,6 @@ import crypto from "crypto";
 
 export const runtime = "nodejs";
 
-// Resolve SendGrid API Key (support both key names in Vercel)
 const sendGridKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
 if (sendGridKey) {
   sgMail.setApiKey(sendGridKey);
@@ -30,36 +29,45 @@ export async function POST(req: NextRequest) {
       originUrl 
     } = body;
 
-    // 1. DYNAMIC FLOW DISCRIMINATOR ('quad_node' vs '360_triangulation')
     const targetFlowType = flowType === "quad_node" ? "quad_node" : "360_triangulation";
 
-    // 2. PAYLOAD ADAPTER: Converts `endpoints` object map or `recipients` array
+    // 1. FLEXIBLE PAYLOAD ADAPTER
     let recipientsList: Array<{ email: string; persona?: string }> = [];
 
     if (Array.isArray(rawRecipients) && rawRecipients.length > 0) {
-      recipientsList = rawRecipients;
+      recipientsList = rawRecipients
+        .filter(r => r && typeof r.email === 'string' && r.email.trim().length > 0)
+        .map(r => ({ email: r.email.trim().toLowerCase(), persona: r.persona }));
     } else if (endpoints && typeof endpoints === "object") {
-      recipientsList = Object.entries(endpoints).map(([personaKey, emailVal]) => ({
-        email: String(emailVal || ""),
-        persona: personaKey
-      }));
+      recipientsList = Object.entries(endpoints)
+        .filter(([_, emailVal]) => emailVal && String(emailVal).trim().length > 0)
+        .map(([personaKey, emailVal]) => ({
+          email: String(emailVal).trim().toLowerCase(),
+          persona: personaKey
+        }));
     }
 
-    if (!auditId || typeof auditId !== "string" || recipientsList.length === 0) {
-      return NextResponse.json({ error: "Invalid payload parameters" }, { status: 400 });
+    const cleanAuditId = auditId ? String(auditId).trim() : null;
+
+    if (!cleanAuditId || recipientsList.length === 0) {
+      console.error("[Dispatch Reject] Missing Audit ID or Empty Recipients:", { cleanAuditId, recipientsList });
+      return NextResponse.json({ 
+        error: "Invalid payload parameters", 
+        details: { hasAuditId: !!cleanAuditId, recipientCount: recipientsList.length } 
+      }, { status: 400 });
     }
 
-    const cleanAuditId = auditId.trim();
+    // 2. RESET PARENT AUDIT POSTURE TO IN_PROGRESS
+    await supabase
+      .from("audits")
+      .update({ status: "IN_PROGRESS" })
+      .eq("id", cleanAuditId);
+
+    // 3. DATABASE OPERATOR UPSERT
     const upsertRows = [];
 
     for (const recipient of recipientsList) {
-      if (!recipient || typeof recipient !== "object" || !recipient.email || typeof recipient.email !== "string") {
-        continue;
-      }
-
-      const cleanEmail = recipient.email.trim().toLowerCase();
-      if (!cleanEmail) continue;
-
+      const cleanEmail = recipient.email;
       const persona = String(recipient.persona || "SYSTEM_USER").toUpperCase().trim();
 
       const { data: existing } = await supabase
@@ -86,11 +94,6 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (upsertRows.length === 0) {
-      return NextResponse.json({ error: "No valid recipients supplied" }, { status: 400 });
-    }
-
-    // 3. ATOMIC DATABASE UPSERT
     const { data: insertedOperators, error: dbError } = await supabase
       .from("operators")
       .upsert(upsertRows, { onConflict: "audit_id,email,flow_type" })
@@ -101,11 +104,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: dbError.message }, { status: 500 });
     }
 
-    // 4. SENDGRID EMAIL DISPATCH LOOP
-    const baseUrl = originUrl || process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://www.bmradvisory.co/forensic";
+    console.log(`[Dispatch] insertedOperators count: ${insertedOperators?.length ?? 0}`);
+
+    // 4. SEQUENTIAL SENDGRID DISPATCH WITH DETAILED TELEMETRY
+    const baseUrl = originUrl || process.env.NEXT_PUBLIC_APP_URL || "https://www.bmradvisory.co/forensic";
     const senderEmail = process.env.SENDGRID_FROM_EMAIL || "diagnostic@bmradvisory.co";
 
-    const emailPromises = (insertedOperators || []).map(async (op) => {
+    console.log(`[Dispatch] Using senderEmail: ${senderEmail}`);
+
+    const sendResults: Array<{
+      email: string;
+      persona_type: string;
+      accessCode: string;
+      ok: boolean;
+      reason?: string;
+    }> = [];
+
+    for (const op of insertedOperators || []) {
       const inviteUrl = `${baseUrl}?code=${op.access_code}`;
       const readablePersona = (op.persona_type || "Stakeholder").replace(/_/g, " ");
       const orgName = companyName || "Your Organization";
@@ -137,23 +152,38 @@ export async function POST(req: NextRequest) {
       try {
         await sgMail.send({
           to: op.email,
-          from: {
-            email: senderEmail,
-            name: "BMR Advisory Control Plane"
-          },
+          from: { email: senderEmail, name: "BMR Advisory Control Plane" },
           subject: subject,
           html: htmlContent,
         });
-      } catch (mailErr: any) {
-        console.error(`[SendGrid Email Failure - ${op.email}]`, mailErr?.response?.body || mailErr);
-      }
-    });
 
-    await Promise.all(emailPromises);
+        sendResults.push({
+          email: op.email,
+          persona_type: op.persona_type,
+          accessCode: op.access_code,
+          ok: true
+        });
+      } catch (mailErr: any) {
+        const reason = mailErr?.response?.body 
+          ? JSON.stringify(mailErr.response.body) 
+          : mailErr?.message ? String(mailErr.message) : "Unknown SendGrid error";
+
+        console.error(`[SendGrid Error - ${op.email}]:`, reason);
+
+        sendResults.push({
+          email: op.email,
+          persona_type: op.persona_type,
+          accessCode: op.access_code,
+          ok: false,
+          reason
+        });
+      }
+    }
 
     return NextResponse.json({ 
       success: true, 
-      dispatched: insertedOperators 
+      dispatched: insertedOperators, 
+      sendResults 
     }, { status: 200 });
 
   } catch (err: any) {
