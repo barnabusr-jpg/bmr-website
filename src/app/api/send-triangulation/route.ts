@@ -5,6 +5,7 @@ import crypto from "crypto";
 
 export const runtime = "nodejs";
 
+// Resolve SendGrid API Key (support both key names in Vercel)
 const sendGridKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
 if (sendGridKey) {
   sgMail.setApiKey(sendGridKey);
@@ -63,14 +64,15 @@ export async function POST(req: NextRequest) {
       .update({ status: "IN_PROGRESS" })
       .eq("id", cleanAuditId);
 
-    // 3. DATABASE OPERATOR UPSERT
-    const upsertRows = [];
+    // 3. SAFE OPERATOR PERSISTENCE (Avoids 409 ON CONFLICT Schema Errors)
+    const processedOperators = [];
 
     for (const recipient of recipientsList) {
       const cleanEmail = recipient.email;
       const persona = String(recipient.persona || "SYSTEM_USER").toUpperCase().trim();
 
-      const { data: existing } = await supabase
+      // Look up existing operator record
+      const { data: existingOp } = await supabase
         .from("operators")
         .select("id, access_code")
         .eq("audit_id", cleanAuditId)
@@ -79,32 +81,48 @@ export async function POST(req: NextRequest) {
         .limit(1)
         .maybeSingle();
 
-      const accessCode = existing?.access_code || crypto.randomBytes(8).toString("hex").toUpperCase();
+      const accessCode = existingOp?.access_code || crypto.randomBytes(8).toString("hex").toUpperCase();
 
-      upsertRows.push({
-        audit_id: cleanAuditId,
-        group_id: cleanAuditId,
-        email: cleanEmail,
-        persona_type: persona,
-        flow_type: targetFlowType,
-        access_code: accessCode,
-        status: "PENDING",
-        survey_completed: false,
-        updated_at: new Date().toISOString(),
-      });
+      if (existingOp?.id) {
+        // Update existing row
+        const { data: updated } = await supabase
+          .from("operators")
+          .update({
+            persona_type: persona,
+            updated_at: new Date().toISOString()
+          })
+          .eq("id", existingOp.id)
+          .select("id, email, persona_type, access_code, flow_type")
+          .single();
+
+        if (updated) processedOperators.push(updated);
+      } else {
+        // Insert new row
+        const { data: inserted, error: insErr } = await supabase
+          .from("operators")
+          .insert({
+            audit_id: cleanAuditId,
+            group_id: cleanAuditId,
+            email: cleanEmail,
+            persona_type: persona,
+            flow_type: targetFlowType,
+            access_code: accessCode,
+            status: "PENDING",
+            survey_completed: false,
+            updated_at: new Date().toISOString()
+          })
+          .select("id, email, persona_type, access_code, flow_type")
+          .single();
+
+        if (insErr) {
+          console.error(`[Operator Insert Error - ${cleanEmail}]`, insErr);
+        } else if (inserted) {
+          processedOperators.push(inserted);
+        }
+      }
     }
 
-    const { data: insertedOperators, error: dbError } = await supabase
-      .from("operators")
-      .upsert(upsertRows, { onConflict: "audit_id,email,flow_type" })
-      .select("id, email, persona_type, access_code, flow_type");
-
-    if (dbError) {
-      console.error(`[${targetFlowType} DB Upsert Error]`, dbError);
-      return NextResponse.json({ error: dbError.message }, { status: 500 });
-    }
-
-    console.log(`[Dispatch] insertedOperators count: ${insertedOperators?.length ?? 0}`);
+    console.log(`[Dispatch] Processed operators count: ${processedOperators.length}`);
 
     // 4. SEQUENTIAL SENDGRID DISPATCH WITH DETAILED TELEMETRY
     const baseUrl = originUrl || process.env.NEXT_PUBLIC_APP_URL || "https://www.bmradvisory.co/forensic";
@@ -120,7 +138,7 @@ export async function POST(req: NextRequest) {
       reason?: string;
     }> = [];
 
-    for (const op of insertedOperators || []) {
+    for (const op of processedOperators) {
       const inviteUrl = `${baseUrl}?code=${op.access_code}`;
       const readablePersona = (op.persona_type || "Stakeholder").replace(/_/g, " ");
       const orgName = companyName || "Your Organization";
@@ -182,7 +200,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      dispatched: insertedOperators, 
+      dispatched: processedOperators, 
       sendResults 
     }, { status: 200 });
 
