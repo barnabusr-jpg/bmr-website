@@ -772,8 +772,8 @@ export default function ForensicEngineRoot() {
         body: JSON.stringify({ 
           companyName: sanitizedInput, 
           auditId: parentAuditId,
-          activePillar: activePillar,       // ✅ Added
-          flowType: 'quad_node',            // ✅ Added
+          activePillar: activePillar,
+          flowType: 'quad_node',
           endpoints: emails, 
           originUrl: `${window.location.origin}${window.location.pathname}` 
         }), 
@@ -796,7 +796,7 @@ export default function ForensicEngineRoot() {
         body: JSON.stringify({
           companyName: triangulation.companyName,
           auditId: activeAuditId || activeAuditIdRef.current,
-          flowType: 'quad_node',            // ✅ Added
+          flowType: 'quad_node',
           endpoints: { [persona]: email },
           isNudge: true,
           originUrl: `${window.location.origin}${window.location.pathname}`
@@ -805,11 +805,31 @@ export default function ForensicEngineRoot() {
 
       const payload = await res.json().catch(() => null);
 
+      // Console logger for real-time browser DevTools debugging
+      console.log("[Nudge Debug] HTTP Status:", res.status, "Payload:", payload);
+
       if (res.ok && payload?.success !== false) {
+        const targetResult = payload?.sendResults?.find((r: any) => r.email?.toLowerCase() === email.toLowerCase());
+        
+        if (targetResult && targetResult.ok === false) {
+          alert(`Failed to deliver reminder to ${email}.\n\nSendGrid Reason: ${targetResult.reason}`);
+          return;
+        }
+
         alert(`Reminder notification sent to ${persona.replace('_', ' ')} (${email}).`);
+        return;
       }
-    } catch (err) {
+
+      const reason =
+        payload?.sendResults?.find((r: any) => r.email?.toLowerCase() === email.toLowerCase())?.reason ||
+        payload?.error ||
+        payload?.message ||
+        "SendGrid request failed";
+
+      alert(`Failed to send reminder to ${email}.\n\nReason: ${reason}`);
+    } catch (err: any) {
       console.error("Nudge API exception:", err);
+      alert(`Network error dispatching reminder: ${err?.message}`);
     } finally {
       setSendingNudgeRole(null);
     }
