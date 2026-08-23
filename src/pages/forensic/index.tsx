@@ -772,6 +772,8 @@ export default function ForensicEngineRoot() {
         body: JSON.stringify({ 
           companyName: sanitizedInput, 
           auditId: parentAuditId,
+          activePillar: activePillar,       // ✅ Added
+          flowType: 'quad_node',            // ✅ Added
           endpoints: emails, 
           originUrl: `${window.location.origin}${window.location.pathname}` 
         }), 
@@ -794,6 +796,7 @@ export default function ForensicEngineRoot() {
         body: JSON.stringify({
           companyName: triangulation.companyName,
           auditId: activeAuditId || activeAuditIdRef.current,
+          flowType: 'quad_node',            // ✅ Added
           endpoints: { [persona]: email },
           isNudge: true,
           originUrl: `${window.location.origin}${window.location.pathname}`
