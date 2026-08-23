@@ -178,12 +178,21 @@ export default function ForensicEngineRoot() {
             .from('operators')
             .select('survey_completed, status, raw_responses')
             .or(`audit_id.eq.${currentAuditId},group_id.eq.${currentAuditId}`)
+            .eq('flow_type', 'quad_node')
             .in('persona_type', QUAD_PERSONA_TYPES[roleParam]);
+
+          const hasPrimitiveValue = (obj: any): boolean => {
+            if (obj === null || obj === undefined) return false;
+            if (typeof obj === 'object') {
+              return Object.values(obj).some(val => hasPrimitiveValue(val));
+            }
+            return String(obj).trim().length > 0;
+          };
 
           const isAlreadyCompleted = (checkOps ?? []).some(checkOp => {
             const isCompletedBool = checkOp.survey_completed === true || String(checkOp.survey_completed) === 'true';
             const isCompletedStatus = ['COMPLETED', 'COMPLETE'].includes(String(checkOp.status ?? '').toUpperCase());
-            const hasRawResp = checkOp.raw_responses && Object.keys(checkOp.raw_responses).length > 0;
+            const hasRawResp = hasPrimitiveValue(checkOp.raw_responses);
             return isCompletedBool || isCompletedStatus || hasRawResp;
           });
 
@@ -253,6 +262,7 @@ export default function ForensicEngineRoot() {
           .from('operators')
           .select('id, group_id, audit_id, persona_type, email, survey_completed, status')
           .eq('access_code', codeParam.toUpperCase().trim())
+          .eq('flow_type', 'quad_node')
           .maybeSingle();
 
         matchedOperator = opData;
@@ -305,8 +315,9 @@ export default function ForensicEngineRoot() {
 
         const { data: existingOperators } = await supabase
           .from('operators')
-          .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses')
-          .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
+          .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses, flow_type')
+          .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`)
+          .eq('flow_type', 'quad_node');
 
         const checkDbDone = (pKey: PersonaKey) => {
           if (!existingOperators || existingOperators.length === 0) return false;
@@ -330,16 +341,19 @@ export default function ForensicEngineRoot() {
               ['COMPLETED', 'COMPLETE'].includes(String(m.status ?? '').toUpperCase().trim());
 
             const rr = (m as any).raw_responses;
-
             let hasResponses = false;
+
             if (rr) {
+              const hasPrimitiveValue = (obj: any): boolean => {
+                if (obj === null || obj === undefined) return false;
+                if (typeof obj === 'object') {
+                  return Object.values(obj).some(val => hasPrimitiveValue(val));
+                }
+                return String(obj).trim().length > 0;
+              };
+
               if (typeof rr === 'object') {
-                const values = Array.isArray(rr) ? rr : Object.values(rr);
-                hasResponses = values.length > 0 && values.some(v => {
-                  if (v === null || v === undefined) return false;
-                  if (typeof v === 'object') return Object.keys(v).length > 0;
-                  return String(v).trim().length > 0;
-                });
+                hasResponses = hasPrimitiveValue(rr);
               } else if (typeof rr === 'string') {
                 hasResponses = rr.trim().length > 0 && rr !== '{}' && rr !== '[]';
               }
@@ -480,8 +494,6 @@ export default function ForensicEngineRoot() {
       const codeParam = params.get('code');
       const rawRole = params.get('role'); 
 
-      // HARD BLOCK: If participant hits /forensic with an access code, redirect immediately
-      // and RETURN to prevent synchronizeEngineDataMatrix from executing client REST queries
       if (codeParam && !authVal) {
         window.location.href = `/diagnostic/forensic?code=${encodeURIComponent(codeParam)}`;
         return;
@@ -599,6 +611,7 @@ export default function ForensicEngineRoot() {
             updated_at: new Date().toISOString()
           })
           .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
+          .eq('flow_type', 'quad_node')
           .in('persona_type', aliases)
           .select('id');
 
@@ -619,6 +632,7 @@ export default function ForensicEngineRoot() {
               updated_at: new Date().toISOString()
             })
             .eq('email', activeEmail)
+            .eq('flow_type', 'quad_node')
             .in('persona_type', aliases)
             .select('id');
 
@@ -638,6 +652,7 @@ export default function ForensicEngineRoot() {
           .insert({
             audit_id: targetAuditId,
             group_id: targetAuditId,
+            flow_type: 'quad_node',
             persona_type: targetPersona,
             email: fallbackEmail,
             survey_completed: true,
@@ -720,11 +735,12 @@ export default function ForensicEngineRoot() {
       await supabase
         .from('operators')
         .delete()
-        .or(`audit_id.eq.${parentAuditId},group_id.eq.${parentAuditId}`);
+        .or(`and(audit_id.eq.${parentAuditId},flow_type.eq.quad_node),and(group_id.eq.${parentAuditId},flow_type.eq.quad_node)`);
 
       const rowsToInsert = (Object.keys(emails) as PersonaKey[]).map(pKey => ({
         audit_id: parentAuditId,
         group_id: parentAuditId,
+        flow_type: 'quad_node',
         persona_type: pKey,
         email: emails[pKey],
         survey_completed: false,
@@ -819,6 +835,7 @@ export default function ForensicEngineRoot() {
           .from('operators')
           .update({ email: newEmail, updated_at: new Date().toISOString() })
           .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
+          .eq('flow_type', 'quad_node')
           .in('persona_type', QUAD_PERSONA_TYPES[persona]);
       } catch (dbErr) {
         console.error("Failed to update email:", dbErr);
