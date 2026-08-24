@@ -22,6 +22,7 @@ import {
 import { supabase } from '../../lib/supabaseClient'; 
 import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
+import { forensicQuestions } from '../../data/forensicQuestions';
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
@@ -49,6 +50,48 @@ interface TriangulationState {
   completions: Record<PersonaKey, boolean>; 
   responses: Record<PersonaKey, Record<string, string>>; 
 } 
+
+const getPersonaQuestions = (personaKey: string) => {
+  const rawList = Object.values(forensicQuestions as any);
+  const cleanKey = String(personaKey || "").toUpperCase().trim();
+  const nodeStr = (q: any) => String(q?.target_node ?? "").toUpperCase();
+
+  if (
+    cleanKey === "SYSTEM_USER" ||
+    cleanKey.includes("USER") ||
+    cleanKey.includes("SYS")
+  ) {
+    const allowed = ["USER", "SYS", "SYSTEM", "CORE_SYSTEM", "OPERATOR", "TERMINAL"];
+    return rawList.filter((q: any) => {
+      const ns = nodeStr(q);
+      if (!q?.target_node) return true;
+      return allowed.some((tok) => ns.includes(tok));
+    });
+  }
+
+  if (cleanKey === "TECH_MGMT" || cleanKey.includes("TECH")) {
+    return rawList.filter((q: any) => {
+      const ns = nodeStr(q);
+      return ns.includes("TECH") || ns.includes("TECHNICAL") || ns.includes("AVS") || ns === "TECHNICAL";
+    });
+  }
+
+  if (cleanKey === "OPS_MGMT" || cleanKey.includes("OPS")) {
+    return rawList.filter((q: any) => {
+      const ns = nodeStr(q);
+      return ns.includes("OPS") || ns.includes("MANAGERIAL") || ns.includes("MGMT") || ns.includes("HAI");
+    });
+  }
+
+  if (cleanKey === "EXECUTIVE" || cleanKey.includes("EXEC")) {
+    return rawList.filter((q: any) => {
+      const ns = nodeStr(q);
+      return ns.includes("EXEC") || ns.includes("IGF") || ns.includes("STRATEGIC");
+    });
+  }
+
+  return rawList;
+};
 
 export default function ForensicEngineRoot() { 
   const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT' | 'THANK_YOU'>('HUB'); 
@@ -182,7 +225,6 @@ export default function ForensicEngineRoot() {
         };
 
         if (codeParam) {
-          // STRICT DIRECT MATCH BY ACCESS_CODE
           const { data: opRow } = await supabase
             .from('operators')
             .select('survey_completed, status, raw_responses, access_code')
@@ -205,7 +247,6 @@ export default function ForensicEngineRoot() {
             isAlreadyCompleted = isCompletedBool || isCompletedStatus || hasRawResp;
           }
         } else if (currentAuditId) {
-          // Broad audit/group query fallback when no access_code param exists
           const { data: checkOps } = await supabase
             .from('operators')
             .select('survey_completed, status, raw_responses, persona_type, email, access_code')
@@ -441,11 +482,23 @@ export default function ForensicEngineRoot() {
           if (QUAD_PERSONA_TYPES.OPS_MGMT.includes(rawPersona)) mappedKey = 'OPS_MGMT';
           if (QUAD_PERSONA_TYPES.SYSTEM_USER.includes(rawPersona)) mappedKey = 'SYSTEM_USER';
 
+          // PRE-MOUNT QUESTION MATRIX VALIDATION GATE USING ALIASES
+          const matchedQuestions = getPersonaQuestions(mappedKey);
+
+          if (!matchedQuestions || matchedQuestions.length === 0) {
+            console.error("MATRIX_FILTER_EMPTY: No question mapping found for persona:", {
+              code: codeParam,
+              rawPersona: matchedOperator.persona_type,
+              trimmedPersona: mappedKey,
+            });
+            setViewState('HUB');
+            return;
+          }
+
           setActivePersona(mappedKey);
 
           console.log("[Debug matchedOperator][code]", codeParam, "matchedOperator:", matchedOperator);
 
-          // Hardened gate: only evaluate survey_completed and status (ignore raw_responses)
           const isMatchedOpDone = 
             matchedOperator.survey_completed === true || 
             String(matchedOperator.survey_completed) === 'true' ||
@@ -523,7 +576,6 @@ export default function ForensicEngineRoot() {
     };
   }, [activeAuditId, synchronizeEngineDataMatrix]);
 
-  // SECURITY AND AUTHORIZATION GATE WITH EARLY REROUTE GUARD
   useEffect(() => { 
     if (typeof window === 'undefined' || didBootRef.current) return; 
 
