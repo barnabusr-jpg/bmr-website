@@ -51,10 +51,48 @@ interface TriangulationState {
   responses: Record<PersonaKey, Record<string, string>>; 
 } 
 
+// Hardened persona question resolution supporting all Webpack export shapes and alias fallback
 const getPersonaQuestions = (personaKey: string) => {
-  const rawList = Object.values(forensicQuestions as any);
+  const fqAny: any = forensicQuestions as any;
+
+  // Try 1: wrapper export shape: { forensicQuestions: [...] }
+  const wrapperList = fqAny?.forensicQuestions;
+
+  // Try 2: direct list shape: [...]
+  const directList = fqAny;
+
+  // Try 3: keyed object shape: { [id]: question }
+  const keyedValues =
+    fqAny && typeof fqAny === 'object' && !Array.isArray(fqAny)
+      ? Object.values(fqAny)
+      : null;
+
+  const rawList: any[] = Array.isArray(directList)
+    ? directList
+    : Array.isArray(wrapperList)
+      ? wrapperList
+      : Array.isArray(keyedValues)
+        ? keyedValues
+        : [];
+
+  if (rawList.length === 0) {
+    console.error("[CRITICAL] forensicQuestions is EMPTY at runtime", {
+      personaKey,
+      forensicQuestionsType: typeof fqAny,
+      hasWrapperForensicQuestions: !!wrapperList,
+      directIsArray: Array.isArray(directList),
+      keyedValuesCount: keyedValues?.length ?? 0,
+    });
+    return [];
+  }
+
   const cleanKey = String(personaKey || "").toUpperCase().trim();
   const nodeStr = (q: any) => String(q?.target_node ?? "").toUpperCase();
+
+  const filterOrFallback = (predicate: (q: any) => boolean) => {
+    const matched = rawList.filter(predicate);
+    return matched.length > 0 ? matched : rawList; // Prevents false MATRIX_FILTER_EMPTY
+  };
 
   if (
     cleanKey === "SYSTEM_USER" ||
@@ -62,7 +100,7 @@ const getPersonaQuestions = (personaKey: string) => {
     cleanKey.includes("SYS")
   ) {
     const allowed = ["USER", "SYS", "SYSTEM", "CORE_SYSTEM", "OPERATOR", "TERMINAL"];
-    return rawList.filter((q: any) => {
+    return filterOrFallback((q) => {
       const ns = nodeStr(q);
       if (!q?.target_node) return true;
       return allowed.some((tok) => ns.includes(tok));
@@ -70,21 +108,31 @@ const getPersonaQuestions = (personaKey: string) => {
   }
 
   if (cleanKey === "TECH_MGMT" || cleanKey.includes("TECH")) {
-    return rawList.filter((q: any) => {
+    return filterOrFallback((q) => {
       const ns = nodeStr(q);
-      return ns.includes("TECH") || ns.includes("TECHNICAL") || ns.includes("AVS") || ns === "TECHNICAL";
+      return (
+        ns.includes("TECH") ||
+        ns.includes("TECHNICAL") ||
+        ns.includes("AVS") ||
+        ns === "TECHNICAL"
+      );
     });
   }
 
   if (cleanKey === "OPS_MGMT" || cleanKey.includes("OPS")) {
-    return rawList.filter((q: any) => {
+    return filterOrFallback((q) => {
       const ns = nodeStr(q);
-      return ns.includes("OPS") || ns.includes("MANAGERIAL") || ns.includes("MGMT") || ns.includes("HAI");
+      return (
+        ns.includes("OPS") ||
+        ns.includes("MANAGERIAL") ||
+        ns.includes("MGMT") ||
+        ns.includes("HAI")
+      );
     });
   }
 
   if (cleanKey === "EXECUTIVE" || cleanKey.includes("EXEC")) {
-    return rawList.filter((q: any) => {
+    return filterOrFallback((q) => {
       const ns = nodeStr(q);
       return ns.includes("EXEC") || ns.includes("IGF") || ns.includes("STRATEGIC");
     });
@@ -482,7 +530,7 @@ export default function ForensicEngineRoot() {
           if (QUAD_PERSONA_TYPES.OPS_MGMT.includes(rawPersona)) mappedKey = 'OPS_MGMT';
           if (QUAD_PERSONA_TYPES.SYSTEM_USER.includes(rawPersona)) mappedKey = 'SYSTEM_USER';
 
-          // PRE-MOUNT QUESTION MATRIX VALIDATION GATE USING ALIASES
+          // DECOUPLED ALIAS FILTERING WITH EXPORT UNWRAPPING
           const matchedQuestions = getPersonaQuestions(mappedKey);
 
           if (!matchedQuestions || matchedQuestions.length === 0) {
@@ -1428,7 +1476,7 @@ export default function ForensicEngineRoot() {
               <div className="space-y-8 font-sans"> 
                 <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4"> 
                   <div> 
-                    <span className="font-mono text-[10px] text-emerald-400 font-bold uppercase tracking-wider block"> 
+                    <span className="font-mono text-[10px] text-emerald-400 block font-bold uppercase tracking-wider"> 
                       // Active Remediation Statement of Work Matrix 
                     </span> 
                     <h4 className="text-xl font-extrabold tracking-tight mt-0.5"> 
