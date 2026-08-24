@@ -81,40 +81,65 @@ export default function ForensicDiagnosticWizard({
     }
   }, [companyName, role, persona, track]);
 
+  // QUESTION SELECTION IS COMPLETELY DECOUPLED FROM activePillar
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
-    const normalizedRole = activeRole?.toUpperCase() || '';
+    const normalizedRole = activeRole?.toUpperCase() || "";
 
-    let filtered = [];
+    let filtered: any[] = [];
+    const nodeStrOf = (q: any) => String(q?.target_node ?? "").toUpperCase();
 
-    if (normalizedRole === 'SYSTEM_USER' || normalizedRole.includes('USER') || normalizedRole.includes('SYS')) {
-      filtered = rawList.filter(q => 
-        (q.pillar?.toUpperCase() === 'AVS' || q.pillar?.toUpperCase() === 'HAI') && 
-        (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('SYS'))
-      );
-    } else if (normalizedRole === 'TECH_MGMT') {
-      filtered = rawList.filter(q => 
-        q.pillar?.toUpperCase() === 'AVS' && 
-        q.target_node?.toUpperCase() === 'TECHNICAL'
-      );
-    } else if (normalizedRole === 'OPS_MGMT' || normalizedRole.includes('OPS') || normalizedRole === 'MANAGERIAL') {
-      filtered = rawList.filter(q => 
-        q.pillar?.toUpperCase() === 'HAI' && 
-        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('OPS') || q.target_node?.toUpperCase() === 'MANAGERIAL')
-      );
-    } else if (normalizedRole === 'EXECUTIVE' || normalizedRole.includes('EXEC')) {
-      filtered = rawList.filter(q => 
-        q.pillar?.toUpperCase() === 'IGF' && 
-        q.target_node?.toUpperCase().includes('EXEC')
-      );
+    if (
+      normalizedRole === "SYSTEM_USER" ||
+      normalizedRole.includes("USER") ||
+      normalizedRole.includes("SYS")
+    ) {
+      const allowedTarget = ["USER", "SYS", "SYSTEM", "CORE_SYSTEM", "OPERATOR", "TERMINAL"];
+      filtered = rawList.filter((q: any) => {
+        const nodeStr = nodeStrOf(q);
+        return !q.target_node || allowedTarget.some((tok) => nodeStr.includes(tok));
+      });
+    } else if (normalizedRole === "TECH_MGMT" || normalizedRole.includes("TECH")) {
+      filtered = rawList.filter((q: any) => {
+        const nodeStr = nodeStrOf(q);
+        return (
+          nodeStr.includes("TECH") ||
+          nodeStr.includes("AVS") ||
+          nodeStr === "TECHNICAL"
+        );
+      });
+    } else if (
+      normalizedRole === "OPS_MGMT" || 
+      normalizedRole.includes("OPS") || 
+      normalizedRole.includes("MANAGERIAL")
+    ) {
+      filtered = rawList.filter((q: any) => {
+        const nodeStr = nodeStrOf(q);
+        return (
+          nodeStr.includes("MGMT") ||
+          nodeStr.includes("OPS") ||
+          nodeStr.includes("HAI") ||
+          nodeStr === "MANAGERIAL"
+        );
+      });
+    } else if (normalizedRole === "EXECUTIVE" || normalizedRole.includes("EXEC")) {
+      filtered = rawList.filter((q: any) => {
+        const nodeStr = nodeStrOf(q);
+        return (
+          nodeStr.includes("EXEC") ||
+          nodeStr.includes("IGF") ||
+          nodeStr.includes("STRATEGIC")
+        );
+      });
     }
 
     if (filtered.length === 0) {
-      return rawList.filter(q => q.pillar?.toUpperCase() === activePillar.toUpperCase());
+      console.warn("[Wizard Warning] No node matches found for role:", normalizedRole, "Returning full question pool.");
+      return rawList;
     }
 
     return filtered;
-  }, [activePillar, activeRole]);
+  }, [activeRole]);
 
   const handleSelectOption = (questionId: string, choiceKey: 'A' | 'B' | 'C' | 'D') => {
     setAnswers(prev => {
@@ -147,7 +172,6 @@ export default function ForensicDiagnosticWizard({
           console.warn("[INTEGRITY WARNING] Contradictions cross-validated:", contradictions);
         }
 
-        // SAFE CALCULATOR INVOKING WITH EXPECTED SECTOR STRING
         let computedResults = null;
         try {
           const targetSector = activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE';
