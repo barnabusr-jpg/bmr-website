@@ -57,11 +57,19 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // 2. RESET PARENT AUDIT POSTURE TO IN_PROGRESS
-    await supabase
+    // 2. PARENT AUDIT RESET (Safely update to IN_PROGRESS without interrupting dispatch)
+    const { data: auditRow, error: auditErr } = await supabase
       .from("audits")
-      .update({ status: "IN_PROGRESS" })
-      .eq("id", cleanAuditId);
+      .update({ status: "IN_PROGRESS", updated_at: new Date().toISOString() })
+      .eq("id", cleanAuditId)
+      .select("id, status")
+      .maybeSingle();
+
+    if (auditErr) {
+      console.warn("[Dispatch Audit Reset Warning]:", auditErr.message);
+    } else {
+      console.log("[Dispatch Audit Reset OK]:", auditRow);
+    }
 
     // 3. HARDENED OPERATOR PERSISTENCE & SYMMETRICAL RESET
     const processedOperators = [];
@@ -70,7 +78,6 @@ export async function POST(req: NextRequest) {
       const cleanEmail = recipient.email;
       const persona = String(recipient.persona || "SYSTEM_USER").toUpperCase().trim();
 
-      // Symmetrical lookup across audit_id AND group_id with deterministic sort to avoid maybeSingle() duplicate errors
       const { data: existingRows } = await supabase
         .from("operators")
         .select("id, access_code, persona_type, email, flow_type, survey_completed, status")
@@ -83,7 +90,6 @@ export async function POST(req: NextRequest) {
       const existingOp = existingRows && existingRows.length > 0 ? existingRows[0] : null;
 
       if (existingOp?.id) {
-        // Enforce state reset on existing record
         const { data: updated } = await supabase
           .from("operators")
           .update({
@@ -105,17 +111,8 @@ export async function POST(req: NextRequest) {
           raw_responses: {}
         };
 
-        console.log("[Dispatch Reset Check] Existing Operator Reset:", {
-          email: activeOp.email,
-          access_code: activeOp.access_code,
-          survey_completed: activeOp.survey_completed,
-          status: activeOp.status,
-          raw_responses: activeOp.raw_responses
-        });
-
         processedOperators.push(activeOp);
       } else {
-        // Insert brand new record
         const accessCode = crypto.randomBytes(8).toString("hex").toUpperCase();
 
         const { data: inserted, error: insErr } = await supabase
@@ -138,12 +135,6 @@ export async function POST(req: NextRequest) {
         if (insErr) {
           console.error(`[Operator Insert Error - ${cleanEmail}]`, insErr);
         } else if (inserted) {
-          console.log("[Dispatch Reset Check] New Operator Inserted:", {
-            email: inserted.email,
-            access_code: inserted.access_code,
-            survey_completed: inserted.survey_completed,
-            status: inserted.status
-          });
           processedOperators.push(inserted);
         }
       }
@@ -151,74 +142,95 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Dispatch] Processed operators count: ${processedOperators.length}`);
 
-    // 4. SEQUENTIAL SENDGRID DISPATCH WITH TELEMETRY
+    // 4. QUAD-NODE DISPATCH SECTION (ALIGNED BYTE-FOR-BYTE TO 360)
     const baseUrl = originUrl || process.env.NEXT_PUBLIC_APP_URL || "https://www.bmradvisory.co/forensic";
-    const senderEmail = process.env.SENDGRID_FROM_EMAIL || "diagnostic@bmradvisory.co";
-
-    console.log(`[Dispatch] Using senderEmail: ${senderEmail}`);
+    const senderEmail = (process.env.SENDGRID_FROM_EMAIL || "diagnostic@bmradvisory.co").trim();
 
     const sendResults: Array<{
       email: string;
       persona_type: string;
       accessCode: string;
+      statusCode?: number;
       ok: boolean;
       reason?: string;
     }> = [];
 
     for (const op of processedOperators) {
-      const inviteUrl = `${baseUrl}?code=${op.access_code}`;
+      const cleanToEmail = String(op.email).trim().toLowerCase();
+
+      // Exact 360 URL Construction
+      const inviteUrl = `${baseUrl}?code=${encodeURIComponent(op.access_code)}`;
       const readablePersona = (op.persona_type || "Stakeholder").replace(/_/g, " ");
       const orgName = companyName || "Your Organization";
 
+      // Exact 360 Subject Line (Plain text, no brackets)
       const subject = isNudge
-        ? `[Reminder] Action Required: Complete ${readablePersona} Assessment for ${orgName}`
-        : `[Action Required] BMR Quad-Node Diagnostic Access: ${readablePersona}`;
+        ? `Reminder: Complete ${readablePersona} Assessment for ${orgName}`
+        : `BMR Diagnostic Access: ${readablePersona} (${orgName})`;
 
+      // Exact 360 HTML Body Template
       const htmlContent = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #1e293b; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px;">
-          <h2 style="font-size: 20px; font-weight: 800; color: #0f172a; margin-bottom: 16px; text-transform: uppercase;">
-            ${isNudge ? "Diagnostic Reminder" : "Quad-Node Diagnostic Assessment"}
+          <h2 style="font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 16px;">
+            ${isNudge ? "Diagnostic Reminder" : "Diagnostic Readiness Assessment"}
           </h2>
           <p style="font-size: 14px; line-height: 1.6; color: #475569;">
             You have been assigned to complete the <strong>${readablePersona}</strong> diagnostic track for <strong>${orgName}</strong>.
           </p>
           <div style="margin: 28px 0; text-align: left;">
-            <a href="${inviteUrl}" style="background-color: #0f172a; color: #ffffff; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 4px; display: inline-block; text-transform: uppercase; letter-spacing: 0.05em;">
+            <a href="${inviteUrl}" style="background-color: #0f172a; color: #ffffff; font-size: 13px; font-weight: 700; text-decoration: none; padding: 12px 24px; border-radius: 4px; display: inline-block;">
               Launch Assessment Posture &rarr;
             </a>
           </div>
           <p style="font-size: 12px; color: #64748b; font-family: monospace; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
-            Unique Access Code: <strong>${op.access_code}</strong><br />
-            Track: ${targetFlowType.toUpperCase()} | Pillar Context: ${activePillar || "IGF"}
+            Access Code: <strong>${op.access_code}</strong>
           </p>
         </div>
       `;
 
       try {
-        await sgMail.send({
-          to: op.email,
-          from: { email: senderEmail, name: "BMR Advisory Control Plane" },
+        const msg = {
+          to: cleanToEmail,
+          from: senderEmail, // Plain string email without object wrappers
           subject: subject,
           html: htmlContent,
+        };
+
+        const [sgResponse] = await sgMail.send(msg);
+
+        console.log("[SendGrid OK]", {
+          to: cleanToEmail,
+          status: sgResponse.statusCode,
+          messageId: sgResponse.headers['x-message-id'] || 'N/A',
+          requestId: sgResponse.headers['x-request-id'] || 'N/A',
         });
 
         sendResults.push({
-          email: op.email,
+          email: cleanToEmail,
           persona_type: op.persona_type,
           accessCode: op.access_code,
+          statusCode: sgResponse.statusCode,
           ok: true
         });
       } catch (mailErr: any) {
-        const reason = mailErr?.response?.body 
-          ? JSON.stringify(mailErr.response.body) 
-          : mailErr?.message ? String(mailErr.message) : "Unknown SendGrid error";
+        const reason = mailErr?.response?.body
+          ? JSON.stringify(mailErr.response.body)
+          : mailErr?.message
+            ? String(mailErr.message)
+            : "Unknown SendGrid error";
 
-        console.error(`[SendGrid Error - ${op.email}]:`, reason);
+        console.error("[SendGrid FAIL]", {
+          to: cleanToEmail,
+          code: mailErr?.code,
+          message: mailErr?.message,
+          response: mailErr?.response?.body
+        });
 
         sendResults.push({
-          email: op.email,
+          email: cleanToEmail,
           persona_type: op.persona_type,
           accessCode: op.access_code,
+          statusCode: mailErr?.code || 500,
           ok: false,
           reason
         });
