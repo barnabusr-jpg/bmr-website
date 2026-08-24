@@ -22,6 +22,13 @@ import {
 import { supabase } from '../../lib/supabaseClient'; 
 import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
+import forensicQuestionsRaw, { forensicQuestions as namedQuestions } from '../../data/forensicQuestions';
+
+const forensicQuestions =
+  (forensicQuestionsRaw as any)?.forensicQuestions ??
+  forensicQuestionsRaw ??
+  namedQuestions ??
+  {};
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
@@ -29,10 +36,10 @@ type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
-  EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF'],
-  TECH_MGMT: ['TECH_MGMT', 'TECH', 'TECHNICAL', 'AVS'],
-  OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'HAI'],
-  SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR'],
+  EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF', 'STRATEGIC'],
+  TECH_MGMT: ['TECH_MGMT', 'TECH', 'TECHNICAL', 'AVS', 'DEVOPS'],
+  OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'HAI', 'OPERATIONS'],
+  SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR', 'CORE_SYSTEM', 'TERMINAL', 'SYSTEM'],
 };
 
 const FRESH_EMPTY_EMAILS: Record<PersonaKey, string> = {
@@ -49,6 +56,96 @@ interface TriangulationState {
   completions: Record<PersonaKey, boolean>; 
   responses: Record<PersonaKey, Record<string, string>>; 
 } 
+
+// Hardened persona question resolution supporting all Webpack export shapes and alias fallback
+const getPersonaQuestions = (personaKey: string) => {
+  const fqAny: any = forensicQuestions as any;
+
+  // Try 1: wrapper export shape: { forensicQuestions: [...] }
+  const wrapperList = fqAny?.forensicQuestions;
+
+  // Try 2: direct list shape: [...]
+  const directList = fqAny;
+
+  // Try 3: keyed object shape: { [id]: question }
+  const keyedValues =
+    fqAny && typeof fqAny === 'object' && !Array.isArray(fqAny)
+      ? Object.values(fqAny)
+      : null;
+
+  const rawList: any[] = Array.isArray(directList)
+    ? directList
+    : Array.isArray(wrapperList)
+      ? wrapperList
+      : Array.isArray(keyedValues)
+        ? keyedValues
+        : [];
+
+  if (rawList.length === 0) {
+    console.error("[CRITICAL] forensicQuestions is EMPTY at runtime", {
+      personaKey,
+      forensicQuestionsType: typeof fqAny,
+      hasWrapperForensicQuestions: !!wrapperList,
+      directIsArray: Array.isArray(directList),
+      keyedValuesCount: keyedValues?.length ?? 0,
+    });
+    return [];
+  }
+
+  const cleanKey = String(personaKey || "").toUpperCase().trim();
+  const nodeStr = (q: any) => String(q?.target_node ?? "").toUpperCase();
+
+  const filterOrFallback = (predicate: (q: any) => boolean) => {
+    const matched = rawList.filter(predicate);
+    return matched.length > 0 ? matched : rawList; // Prevents false MATRIX_FILTER_EMPTY
+  };
+
+  if (
+    cleanKey === "SYSTEM_USER" ||
+    cleanKey.includes("USER") ||
+    cleanKey.includes("SYS")
+  ) {
+    const allowed = ["USER", "SYS", "SYSTEM", "CORE_SYSTEM", "OPERATOR", "TERMINAL"];
+    return filterOrFallback((q) => {
+      const ns = nodeStr(q);
+      if (!q?.target_node) return true;
+      return allowed.some((tok) => ns.includes(tok));
+    });
+  }
+
+  if (cleanKey === "TECH_MGMT" || cleanKey.includes("TECH")) {
+    return filterOrFallback((q) => {
+      const ns = nodeStr(q);
+      return (
+        ns.includes("TECH") ||
+        ns.includes("TECHNICAL") ||
+        ns.includes("AVS") ||
+        ns === "TECHNICAL"
+      );
+    });
+  }
+
+  if (cleanKey === "OPS_MGMT" || cleanKey.includes("OPS")) {
+    return filterOrFallback((q) => {
+      const ns = nodeStr(q);
+      return (
+        ns.includes("OPS") ||
+        ns.includes("MANAGERIAL") ||
+        ns.includes("MGMT") ||
+        ns.includes("HAI")
+      );
+    });
+  }
+
+  if (cleanKey === "EXECUTIVE" || cleanKey.includes("EXEC")) {
+    return filterOrFallback((q) => {
+      const ns = nodeStr(q);
+      return ns.includes("EXEC") || ns.includes("IGF") || ns.includes("STRATEGIC");
+    });
+  }
+
+  return rawList;
+};
 
 export default function ForensicEngineRoot() { 
   const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT' | 'THANK_YOU'>('HUB'); 
@@ -109,6 +206,19 @@ export default function ForensicEngineRoot() {
       const pillarParam = params.get('pillar') as FunnelPillar;
       const authVal = params.get('auth');
       const viewParam = params.get('view');
+
+      const matrixQuestionCount = Array.isArray(forensicQuestions)
+        ? forensicQuestions.length
+        : Object.keys(forensicQuestions || {}).length;
+
+      console.log("DIAGNOSTIC_AUTH_DEBUG:", {
+        flow: flowParam,
+        hasMatrix: matrixQuestionCount > 0,
+        matrixQuestionCount,
+        href: typeof window !== 'undefined' ? window.location.href : '',
+        normalizedCode: codeParam?.toUpperCase().trim(),
+        rawCode: codeParam
+      });
 
       const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
 
@@ -173,34 +283,71 @@ export default function ForensicEngineRoot() {
         });
 
         const currentAuditId = idParam || activeAuditIdRef.current;
-        if (currentAuditId) {
+        let isAlreadyCompleted = false;
+
+        const hasPrimitiveValue = (obj: any): boolean => {
+          if (obj === null || obj === undefined) return false;
+          if (typeof obj === 'object') return Object.values(obj).some(val => hasPrimitiveValue(val));
+          return String(obj).trim().length > 0;
+        };
+
+        if (codeParam) {
+          const { data: opRow } = await supabase
+            .from('operators')
+            .select('survey_completed, status, raw_responses, access_code')
+            .eq('access_code', codeParam.toUpperCase().trim())
+            .eq('flow_type', 'quad_node')
+            .limit(1)
+            .maybeSingle();
+
+          console.log("[Debug Completed Check][access_code-only] codeParam=", codeParam, "opRow=", opRow);
+
+          if (opRow) {
+            const isCompletedBool =
+              opRow.survey_completed === true || String(opRow.survey_completed) === 'true';
+
+            const isCompletedStatus =
+              ['COMPLETED', 'COMPLETE'].includes(String(opRow.status ?? '').toUpperCase());
+
+            const hasRawResp = hasPrimitiveValue(opRow.raw_responses);
+
+            isAlreadyCompleted = isCompletedBool || isCompletedStatus || hasRawResp;
+          }
+        } else if (currentAuditId) {
           const { data: checkOps } = await supabase
             .from('operators')
-            .select('survey_completed, status, raw_responses')
+            .select('survey_completed, status, raw_responses, persona_type, email, access_code')
             .or(`audit_id.eq.${currentAuditId},group_id.eq.${currentAuditId}`)
+            .eq('flow_type', 'quad_node')
             .in('persona_type', QUAD_PERSONA_TYPES[roleParam]);
 
-          const isAlreadyCompleted = (checkOps ?? []).some(checkOp => {
-            const isCompletedBool = checkOp.survey_completed === true || String(checkOp.survey_completed) === 'true';
-            const isCompletedStatus = ['COMPLETED', 'COMPLETE'].includes(String(checkOp.status ?? '').toUpperCase());
-            const hasRawResp = checkOp.raw_responses && Object.keys(checkOp.raw_responses).length > 0;
+          console.log("[Debug Completed Check][broad-fallback] matched operator rows:", checkOps);
+
+          isAlreadyCompleted = (checkOps ?? []).some((checkOp: any) => {
+            const isCompletedBool =
+              checkOp.survey_completed === true || String(checkOp.survey_completed) === 'true';
+
+            const isCompletedStatus =
+              ['COMPLETED', 'COMPLETE'].includes(String(checkOp.status ?? '').toUpperCase());
+
+            const hasRawResp = hasPrimitiveValue(checkOp.raw_responses);
             return isCompletedBool || isCompletedStatus || hasRawResp;
           });
+        }
 
-          if (isAlreadyCompleted) {
-            if (typeof window !== 'undefined') {
-              const url = new URL(window.location.href);
-              url.searchParams.delete('code');
-              url.searchParams.delete('role');
-              url.searchParams.delete('track');
-              url.searchParams.delete('pillar');
-              url.searchParams.delete('flow');
-              url.searchParams.delete('view');
-              window.history.replaceState({}, '', url.toString());
-            }
-            setViewState('THANK_YOU');
-            return;
+        if (isAlreadyCompleted) {
+          if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('code');
+            url.searchParams.delete('role');
+            url.searchParams.delete('track');
+            url.searchParams.delete('pillar');
+            url.searchParams.delete('flow');
+            url.searchParams.delete('view');
+            window.history.replaceState({}, '', url.toString());
           }
+          setViewState('THANK_YOU');
+          return;
         }
 
         if (typeof window !== 'undefined') {
@@ -251,8 +398,9 @@ export default function ForensicEngineRoot() {
       if (codeParam) {
         const { data: opData } = await supabase
           .from('operators')
-          .select('id, group_id, audit_id, persona_type, email, survey_completed, status')
+          .select('id, group_id, audit_id, persona_type, email, survey_completed, status, raw_responses')
           .eq('access_code', codeParam.toUpperCase().trim())
+          .eq('flow_type', 'quad_node')
           .maybeSingle();
 
         matchedOperator = opData;
@@ -305,8 +453,9 @@ export default function ForensicEngineRoot() {
 
         const { data: existingOperators } = await supabase
           .from('operators')
-          .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses')
-          .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`);
+          .select('persona_type, email, survey_completed, status, audit_id, group_id, raw_responses, flow_type')
+          .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`)
+          .eq('flow_type', 'quad_node');
 
         const checkDbDone = (pKey: PersonaKey) => {
           if (!existingOperators || existingOperators.length === 0) return false;
@@ -330,16 +479,19 @@ export default function ForensicEngineRoot() {
               ['COMPLETED', 'COMPLETE'].includes(String(m.status ?? '').toUpperCase().trim());
 
             const rr = (m as any).raw_responses;
-
             let hasResponses = false;
+
             if (rr) {
+              const hasPrimitiveValue = (obj: any): boolean => {
+                if (obj === null || obj === undefined) return false;
+                if (typeof obj === 'object') {
+                  return Object.values(obj).some(val => hasPrimitiveValue(val));
+                }
+                return String(obj).trim().length > 0;
+              };
+
               if (typeof rr === 'object') {
-                const values = Array.isArray(rr) ? rr : Object.values(rr);
-                hasResponses = values.length > 0 && values.some(v => {
-                  if (v === null || v === undefined) return false;
-                  if (typeof v === 'object') return Object.keys(v).length > 0;
-                  return String(v).trim().length > 0;
-                });
+                hasResponses = hasPrimitiveValue(rr);
               } else if (typeof rr === 'string') {
                 hasResponses = rr.trim().length > 0 && rr !== '{}' && rr !== '[]';
               }
@@ -397,9 +549,30 @@ export default function ForensicEngineRoot() {
           if (QUAD_PERSONA_TYPES.OPS_MGMT.includes(rawPersona)) mappedKey = 'OPS_MGMT';
           if (QUAD_PERSONA_TYPES.SYSTEM_USER.includes(rawPersona)) mappedKey = 'SYSTEM_USER';
 
+          // DECOUPLED ALIAS FILTERING WITH EXPORT UNWRAPPING
+          const matchedQuestions = getPersonaQuestions(mappedKey);
+
+          if (!matchedQuestions || matchedQuestions.length === 0) {
+            console.error("MATRIX_FILTER_EMPTY: No question mapping found for persona:", {
+              code: codeParam,
+              rawPersona: matchedOperator.persona_type,
+              trimmedPersona: mappedKey,
+            });
+            setViewState('HUB');
+            return;
+          }
+
           setActivePersona(mappedKey);
 
-          if (matchedOperator.survey_completed || String(matchedOperator.status).toUpperCase() === 'COMPLETED') {
+          console.log("[Debug matchedOperator][code]", codeParam, "matchedOperator:", matchedOperator);
+
+          const isMatchedOpDone = 
+            matchedOperator.survey_completed === true || 
+            String(matchedOperator.survey_completed) === 'true' ||
+            String(matchedOperator.status ?? '').toUpperCase() === 'COMPLETED' ||
+            String(matchedOperator.status ?? '').toUpperCase() === 'COMPLETE';
+
+          if (isMatchedOpDone) {
             setViewState('THANK_YOU');
           } else {
             setViewState('WIZARD');
@@ -470,7 +643,6 @@ export default function ForensicEngineRoot() {
     };
   }, [activeAuditId, synchronizeEngineDataMatrix]);
 
-  // SECURITY AND AUTHORIZATION GATE WITH EARLY REROUTE GUARD
   useEffect(() => { 
     if (typeof window === 'undefined' || didBootRef.current) return; 
 
@@ -480,8 +652,6 @@ export default function ForensicEngineRoot() {
       const codeParam = params.get('code');
       const rawRole = params.get('role'); 
 
-      // HARD BLOCK: If participant hits /forensic with an access code, redirect immediately
-      // and RETURN to prevent synchronizeEngineDataMatrix from executing client REST queries
       if (codeParam && !authVal) {
         window.location.href = `/diagnostic/forensic?code=${encodeURIComponent(codeParam)}`;
         return;
@@ -599,6 +769,7 @@ export default function ForensicEngineRoot() {
             updated_at: new Date().toISOString()
           })
           .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
+          .eq('flow_type', 'quad_node')
           .in('persona_type', aliases)
           .select('id');
 
@@ -619,6 +790,7 @@ export default function ForensicEngineRoot() {
               updated_at: new Date().toISOString()
             })
             .eq('email', activeEmail)
+            .eq('flow_type', 'quad_node')
             .in('persona_type', aliases)
             .select('id');
 
@@ -638,6 +810,7 @@ export default function ForensicEngineRoot() {
           .insert({
             audit_id: targetAuditId,
             group_id: targetAuditId,
+            flow_type: 'quad_node',
             persona_type: targetPersona,
             email: fallbackEmail,
             survey_completed: true,
@@ -720,11 +893,12 @@ export default function ForensicEngineRoot() {
       await supabase
         .from('operators')
         .delete()
-        .or(`audit_id.eq.${parentAuditId},group_id.eq.${parentAuditId}`);
+        .or(`and(audit_id.eq.${parentAuditId},flow_type.eq.quad_node),and(group_id.eq.${parentAuditId},flow_type.eq.quad_node)`);
 
       const rowsToInsert = (Object.keys(emails) as PersonaKey[]).map(pKey => ({
         audit_id: parentAuditId,
         group_id: parentAuditId,
+        flow_type: 'quad_node',
         persona_type: pKey,
         email: emails[pKey],
         survey_completed: false,
@@ -756,6 +930,8 @@ export default function ForensicEngineRoot() {
         body: JSON.stringify({ 
           companyName: sanitizedInput, 
           auditId: parentAuditId,
+          activePillar: activePillar,
+          flowType: 'quad_node',
           endpoints: emails, 
           originUrl: `${window.location.origin}${window.location.pathname}` 
         }), 
@@ -773,11 +949,12 @@ export default function ForensicEngineRoot() {
     try {
       setSendingNudgeRole(persona);
       const res = await fetch('/api/send-triangulation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({
           companyName: triangulation.companyName,
           auditId: activeAuditId || activeAuditIdRef.current,
+          flowType: 'quad_node',
           endpoints: { [persona]: email },
           isNudge: true,
           originUrl: `${window.location.origin}${window.location.pathname}`
@@ -786,11 +963,30 @@ export default function ForensicEngineRoot() {
 
       const payload = await res.json().catch(() => null);
 
+      console.log("[Nudge Debug] HTTP Status:", res.status, "Payload:", payload);
+
       if (res.ok && payload?.success !== false) {
+        const targetResult = payload?.sendResults?.find((r: any) => r.email?.toLowerCase() === email.toLowerCase());
+        
+        if (targetResult && targetResult.ok === false) {
+          alert(`Failed to deliver reminder to ${email}.\n\nSendGrid Reason: ${targetResult.reason}`);
+          return;
+        }
+
         alert(`Reminder notification sent to ${persona.replace('_', ' ')} (${email}).`);
+        return;
       }
-    } catch (err) {
+
+      const reason =
+        payload?.sendResults?.find((r: any) => r.email?.toLowerCase() === email.toLowerCase())?.reason ||
+        payload?.error ||
+        payload?.message ||
+        "SendGrid request failed";
+
+      alert(`Failed to send reminder to ${email}.\n\nReason: ${reason}`);
+    } catch (err: any) {
       console.error("Nudge API exception:", err);
+      alert(`Network error dispatching reminder: ${err?.message}`);
     } finally {
       setSendingNudgeRole(null);
     }
@@ -819,6 +1015,7 @@ export default function ForensicEngineRoot() {
           .from('operators')
           .update({ email: newEmail, updated_at: new Date().toISOString() })
           .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
+          .eq('flow_type', 'quad_node')
           .in('persona_type', QUAD_PERSONA_TYPES[persona]);
       } catch (dbErr) {
         console.error("Failed to update email:", dbErr);
@@ -916,7 +1113,7 @@ export default function ForensicEngineRoot() {
   }), [alignedCockpitMetrics.complianceScore]);
 
   const sowShareLink = useMemo(() => {
-    if (typeof window === 'undefined' || !triangulation) return '';
+    if (typeof window !== 'undefined' || !triangulation) return '';
     const payload = {
       org: triangulation.companyName,
       pillar: triangulation.pillar,
@@ -945,13 +1142,13 @@ export default function ForensicEngineRoot() {
     ); 
   } 
 
-  return (
+  return ( 
     <div className="bg-slate-50 min-h-screen text-slate-900 font-sans text-left overflow-x-hidden flex flex-col justify-center items-center py-12 px-4"> 
                   
       {viewState === 'INTAKE' && ( 
         <div className="w-full max-w-lg border border-slate-200 bg-white p-8 md:p-10 text-left rounded-lg shadow-sm"> 
           <div className="border-b border-slate-100 pb-5 mb-8 flex items-center justify-between"> 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3"> 
               <ShieldAlert size={24} className="text-slate-900 shrink-0" /> 
               <div> 
                 <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 leading-none">Quad Node Diagnostic Setup</h2> 
@@ -962,32 +1159,32 @@ export default function ForensicEngineRoot() {
 
           <form onSubmit={handleInitializeTriangulation} className="space-y-6"> 
             <div> 
-              <div className="flex justify-between items-center mb-2">
-                <label className="text-xs font-mono font-bold text-slate-700 uppercase tracking-wider block">Target Organization Name</label>
-                {isCompanyFromDB && (
-                  <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold flex items-center gap-1">
-                    <Lock size={10} /> DATABASE RESOLVED
-                  </span>
-                )}
-              </div>
+              <div className="flex justify-between items-center mb-2"> 
+                <label className="text-xs font-mono font-bold text-slate-700 uppercase tracking-wider block">Target Organization Name</label> 
+                {isCompanyFromDB && ( 
+                  <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-bold flex items-center gap-1"> 
+                    <Lock size={10} /> DATABASE RESOLVED 
+                  </span> 
+                )} 
+              </div> 
               <input         
                 type="text" 
                 autoComplete="off" 
                 placeholder="e.g., Enterprise Client Systems" 
                 value={companyName} 
-                readOnly={isCompanyFromDB}
+                readOnly={isCompanyFromDB} 
                 onChange={(e) => !isCompanyFromDB && setCompanyName(e.target.value)} 
-                className={`w-full border p-3.5 text-sm text-slate-900 focus:outline-none transition-colors rounded-md font-medium ${
-                  isCompanyFromDB ? 'bg-slate-100 border-slate-300 text-slate-700 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:border-slate-900'
+                className={`w-full border p-3.5 text-sm text-slate-900 focus:outline-none transition-colors rounded-md font-medium ${ 
+                  isCompanyFromDB ? 'bg-slate-100 border-slate-300 text-slate-700 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:border-slate-900' 
                 }`} 
               /> 
             </div> 
 
             <div className="space-y-4 pt-4 border-t border-slate-100"> 
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center"> 
                 <label className="text-xs font-mono font-bold text-slate-700 block uppercase tracking-wider">Quad Node Stakeholder Tracks</label> 
-                <span className="text-[10px] font-mono text-slate-400 font-bold uppercase">// 4 Persona Channels</span>
-              </div>
+                <span className="text-[10px] font-mono text-slate-400 font-bold uppercase">// 4 Persona Channels</span> 
+              </div> 
 
               {(Object.keys(emails) as PersonaKey[]).map((role) => ( 
                 <div key={role}> 
@@ -1026,8 +1223,8 @@ export default function ForensicEngineRoot() {
               <Users size={20} className="text-slate-900" /> 
               <div> 
                 <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Stakeholder Assessment Monitor</h2> 
-                <span className="text-[11px] font-mono text-slate-500 block mt-1 uppercase tracking-wider">
-                  ORGANIZATION: {triangulation.companyName} | TRACK: {triangulation.pillar}
+                <span className="text-[11px] font-mono text-slate-500 block mt-1 uppercase tracking-wider"> 
+                  ORGANIZATION: {triangulation.companyName} | TRACK: {triangulation.pillar} 
                 </span> 
               </div> 
             </div> 
@@ -1063,62 +1260,62 @@ export default function ForensicEngineRoot() {
           <div className="space-y-3"> 
             {(Object.keys(triangulation.emails) as PersonaKey[]).map((persona) => { 
               const isDone = triangulation.completions[persona]; 
-              const isEditing = editingPersona === persona;
+              const isEditing = editingPersona === persona; 
 
               return ( 
                 <div key={persona} className="border border-slate-200 bg-white p-5 rounded-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
                   <div className="flex-1 w-full sm:w-auto"> 
                     <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{persona.replace('_', ' ')} Track</span> 
                     
-                    {isEditing ? (
-                      <div className="flex items-center gap-2 mt-1.5 w-full max-w-sm">
-                        <input
-                          type="email"
-                          value={tempEmailInput}
-                          onChange={(e) => setTempEmailInput(e.target.value)}
-                          placeholder="enter corrected email..."
-                          className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs text-slate-900 font-mono focus:outline-none focus:border-slate-900"
-                          autoFocus
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleUpdatePersonaEmail(persona)}
-                          className="bg-slate-900 text-white font-mono text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider hover:bg-slate-800"
-                        >
-                          Save
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setEditingPersona(null)}
-                          className="text-slate-500 font-mono text-[10px] hover:text-slate-900"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs text-slate-500 block font-mono font-normal">
-                          {triangulation.emails[persona] || <span className="italic text-slate-400">No email assigned</span>}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingPersona(persona);
-                            setTempEmailInput(triangulation.emails[persona] || '');
-                          }}
-                          className="text-[10px] font-mono text-slate-400 hover:text-slate-900 underline uppercase font-bold cursor-pointer"
-                        >
-                          Edit
-                        </button>
-                      </div>
-                    )}
+                    {isEditing ? ( 
+                      <div className="flex items-center gap-2 mt-1.5 w-full max-w-sm"> 
+                        <input 
+                          type="email" 
+                          value={tempEmailInput} 
+                          onChange={(e) => setTempEmailInput(e.target.value)} 
+                          placeholder="enter corrected email..." 
+                          className="w-full bg-slate-50 border border-slate-300 rounded px-2.5 py-1 text-xs text-slate-900 font-mono focus:outline-none focus:border-slate-900" 
+                          autoFocus 
+                        /> 
+                        <button 
+                          type="button" 
+                          onClick={() => handleUpdatePersonaEmail(persona)} 
+                          className="bg-slate-900 text-white font-mono text-[10px] font-bold px-2.5 py-1 rounded uppercase tracking-wider hover:bg-slate-800" 
+                        > 
+                          Save 
+                        </button> 
+                        <button 
+                          type="button" 
+                          onClick={() => setEditingPersona(null)} 
+                          className="text-slate-500 font-mono text-[10px] hover:text-slate-900" 
+                        > 
+                          Cancel 
+                        </button> 
+                      </div> 
+                    ) : ( 
+                      <div className="flex items-center gap-2 mt-1"> 
+                        <span className="text-xs text-slate-500 block font-mono font-normal"> 
+                          {triangulation.emails[persona] || <span className="italic text-slate-400">No email assigned</span>} 
+                        </span> 
+                        <button 
+                          type="button" 
+                          onClick={() => { 
+                            setEditingPersona(persona); 
+                            setTempEmailInput(triangulation.emails[persona] || ''); 
+                          }} 
+                          className="text-[10px] font-mono text-slate-400 hover:text-slate-900 underline uppercase font-bold cursor-pointer" 
+                        > 
+                          Edit 
+                        </button> 
+                      </div> 
+                    )} 
                   </div> 
 
                   <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end shrink-0"> 
                     {!isDone && !isEditing && ( 
                       <button 
                         onClick={() => handleTriggerNudge(persona)} 
-                        disabled={sendingNudgeRole === persona || !triangulation.emails[persona]}
+                        disabled={sendingNudgeRole === persona || !triangulation.emails[persona]} 
                         className="text-[11px] font-mono text-slate-500 font-bold hover:text-slate-900 transition-colors uppercase tracking-wider flex items-center gap-1.5 cursor-pointer bg-transparent border-0 disabled:opacity-50" 
                       > 
                         {sendingNudgeRole === persona ? <Loader2 size={12} className="animate-spin text-slate-900" /> : <Mail size={12}/>} Send Reminder 
@@ -1177,28 +1374,28 @@ export default function ForensicEngineRoot() {
         <ForensicDiagnosticWizard         
           companyName={`${triangulation.companyName}`} 
           activePillar={triangulation.pillar} 
-          role={activePersona}
-          persona={activePersona}
+          role={activePersona} 
+          persona={activePersona} 
           onComplete={(finalAnswers?: Record<string, string>) => handlePersonaAnswersSaved(finalAnswers)} 
         /> 
       )} 
 
-      {viewState === 'THANK_YOU' && (
-        <div className="w-full max-w-lg border border-slate-200 bg-white p-8 md:p-10 text-center rounded-lg shadow-sm space-y-6">
-          <div className="flex justify-center">
-            <CheckCircle size={48} className="text-emerald-600" />
-          </div>
-          <div>
-            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Assessment Completed</h2>
-            <p className="text-xs text-slate-600 font-mono mt-2 uppercase tracking-wider">
-              Your responses have been securely recorded into the Quad Node Diagnostic Matrix.
-            </p>
-          </div>
-          <div className="bg-slate-50 border border-slate-200 p-4 rounded text-left text-xs font-mono text-slate-500 leading-relaxed">
-            // You may now close this browser tab. Your organization's diagnostic administrator will receive the consolidated readiness assessment upon completion of all stakeholder tracks.
-          </div>
-        </div>
-      )}
+      {viewState === 'THANK_YOU' && ( 
+        <div className="w-full max-w-lg border border-slate-200 bg-white p-8 md:p-10 text-center rounded-lg shadow-sm space-y-6"> 
+          <div className="flex justify-center"> 
+            <CheckCircle size={48} className="text-emerald-600" /> 
+          </div> 
+          <div> 
+            <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">Assessment Completed</h2> 
+            <p className="text-xs text-slate-600 font-mono mt-2 uppercase tracking-wider"> 
+              Your responses have been securely recorded into the Quad Node Diagnostic Matrix. 
+            </p> 
+          </div> 
+          <div className="bg-slate-50 border border-slate-200 p-4 rounded text-left text-xs font-mono text-slate-500 leading-relaxed"> 
+            // You may now close this browser tab. Your organization's diagnostic administrator will receive the consolidated readiness assessment upon completion of all stakeholder tracks. 
+          </div> 
+        </div> 
+      )} 
 
       {viewState === 'COCKPIT' && triangulation && ( 
         <div className="w-full max-w-[1600px] mx-auto text-left"> 
@@ -1216,225 +1413,225 @@ export default function ForensicEngineRoot() {
             companyName={triangulation.companyName} 
             sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'} 
             metrics={alignedCockpitMetrics} 
-            onSelectSOW={() => setDossierTab('REMEDIATION')}
+            onSelectSOW={() => setDossierTab('REMEDIATION')} 
           /> 
 
-          <div className="mx-10 my-8">
-            <GovernanceSupplementView
-              metrics={governanceMetrics}
-              forensicAnalytics={governanceAnalytics}
-              orgName={triangulation.companyName.replace(/_/g, ' ')}
-            />
-          </div>
+          <div className="mx-10 my-8"> 
+            <GovernanceSupplementView 
+              metrics={governanceMetrics} 
+              forensicAnalytics={governanceAnalytics} 
+              orgName={triangulation.companyName.replace(/_/g, ' ')} 
+            /> 
+          </div> 
 
-          <div className="mt-8 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left">
-            <div className="border-b border-slate-100 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div className="flex items-center gap-3">
-                <FileText size={22} className="text-slate-900 shrink-0" />
-                <div>
-                  <h3 className="text-lg font-mono font-bold uppercase tracking-wider text-slate-900 leading-none">
-                    BMR Solutions // Explanatory Summary & Active SOW
-                  </h3>
-                  <span className="text-xs font-mono text-slate-500 block uppercase tracking-wider mt-1">
-                    Companion Leave-Behind Document // Statement of Work Matrix
-                  </span>
-                </div>
-              </div>
+          <div className="mt-8 mx-10 border border-slate-200 bg-white rounded-lg shadow-sm p-8 md:p-10 text-left"> 
+            <div className="border-b border-slate-100 pb-5 mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
+              <div className="flex items-center gap-3"> 
+                <FileText size={22} className="text-slate-900 shrink-0" /> 
+                <div> 
+                  <h3 className="text-lg font-mono font-bold uppercase tracking-wider text-slate-900 leading-none"> 
+                    BMR Solutions // Explanatory Summary & Active SOW 
+                  </h3> 
+                  <span className="text-xs font-mono text-slate-500 block uppercase tracking-wider mt-1"> 
+                    Companion Leave-Behind Document // Statement of Work Matrix 
+                  </span> 
+                </div> 
+              </div> 
 
-              <div className="flex bg-slate-100 p-1 border border-slate-200 rounded-md font-mono text-xs font-bold uppercase tracking-wider">
-                <button 
-                  onClick={() => setDossierTab('METRICS')}
-                  className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'METRICS' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
-                >
-                  01 // Risk Matrix
-                </button>
-                <button 
-                  onClick={() => setDossierTab('REMEDIATION')}
-                  className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'REMEDIATION' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
-                >
-                  02 // Alignment Track SOW
-                </button>
-              </div>
-            </div>
+              <div className="flex bg-slate-100 p-1 border border-slate-200 rounded-md font-mono text-xs font-bold uppercase tracking-wider"> 
+                <button  
+                  onClick={() => setDossierTab('METRICS')} 
+                  className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'METRICS' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`} 
+                > 
+                  01 // Risk Matrix 
+                </button> 
+                <button  
+                  onClick={() => setDossierTab('REMEDIATION')} 
+                  className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'REMEDIATION' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`} 
+                > 
+                  02 // Alignment Track SOW 
+                </button> 
+              </div> 
+            </div> 
 
-            {dossierTab === 'METRICS' && (
-              <div className="space-y-6">
-                <p className="text-sm text-slate-600 font-sans leading-relaxed">
-                  This framework maps live cross-persona diagnostic responses to identify risk vectors across engineering pipelines for <strong className="text-slate-900 font-bold">{companyName.replace(/_/g, ' ')}</strong>. Below is the tactical summary of your current operational posture.
-                </p>
+            {dossierTab === 'METRICS' && ( 
+              <div className="space-y-6"> 
+                <p className="text-sm text-slate-600 font-sans leading-relaxed"> 
+                  This framework maps live cross-persona diagnostic responses to identify risk vectors across engineering pipelines for <strong className="text-slate-900 font-bold">{companyName.replace(/_/g, ' ')}</strong>. Below is the tactical summary of your current operational posture. 
+                </p> 
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
-                    <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-2">
-                      Integrity Index ({alignedCockpitMetrics.complianceScore}/100)
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Measures the alignment gap between governance mandate and operational velocity. A rating of {alignedCockpitMetrics.complianceScore} highlights where technical environments lack automated policy guardrails.
-                    </p>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2"> 
+                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md"> 
+                    <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-2"> 
+                      Integrity Index ({alignedCockpitMetrics.complianceScore}/100) 
+                    </span> 
+                    <p className="text-xs text-slate-600 leading-relaxed font-normal"> 
+                      Measures the alignment gap between governance mandate and operational velocity. A rating of {alignedCockpitMetrics.complianceScore} highlights where technical environments lack automated policy guardrails. 
+                    </p> 
+                  </div> 
 
-                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
-                    <span className="font-mono text-xs text-amber-600 block font-bold uppercase tracking-wider mb-2">
-                      Process Waste Tax (${alignedCockpitMetrics.annualSalaryLeakage.toLocaleString()})
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to approximately engineering hours exhausted resolving schema drift and manual firefighting.
-                    </p>
-                  </div>
+                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md"> 
+                    <span className="font-mono text-xs text-amber-600 block font-bold uppercase tracking-wider mb-2"> 
+                      Process Waste Tax (${alignedCockpitMetrics.annualSalaryLeakage.toLocaleString()}) 
+                    </span> 
+                    <p className="text-xs text-slate-600 leading-relaxed font-normal"> 
+                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to approximately engineering hours exhausted resolving schema drift and manual firefighting. 
+                    </p> 
+                  </div> 
 
-                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
-                    <span className="font-mono text-xs text-red-600 block font-bold uppercase tracking-wider mb-2">
-                      Total Promise Gap™ Exposure (${alignedCockpitMetrics.unhedgedLegalExposure.toLocaleString()})
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Projects total compliance fines and operational risk incurred if data pipelines remain uninsulated prior to expanding AI automation.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md"> 
+                    <span className="font-mono text-xs text-red-600 block font-bold uppercase tracking-wider mb-2"> 
+                      Total Promise Gap™ Exposure (${alignedCockpitMetrics.unhedgedLegalExposure.toLocaleString()}) 
+                    </span> 
+                    <p className="text-xs text-slate-600 leading-relaxed font-normal"> 
+                      Projects total compliance fines and operational risk incurred if data pipelines remain uninsulated prior to expanding AI automation. 
+                    </p> 
+                  </div> 
+                </div> 
+              </div> 
+            )} 
 
-            {dossierTab === 'REMEDIATION' && (
-              <div className="space-y-8 font-sans">
-                <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <span className="font-mono text-[10px] text-emerald-400 font-bold uppercase tracking-wider block">
-                      // Active Remediation Statement of Work Matrix
-                    </span>
-                    <h4 className="text-xl font-extrabold tracking-tight mt-0.5">
-                      Target Implementation SOW: {companyName.replace(/_/g, ' ')}
-                    </h4>
-                  </div>
-                  <div className="flex items-center gap-3 font-mono text-xs">
-                    <button
-                      type="button"
-                      onClick={() => typeof window !== 'undefined' && window.print()}
-                      className="bg-white text-slate-900 px-4 py-2 font-bold uppercase tracking-wider rounded hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer"
-                    >
-                      <Printer size={14} /> Print SOW Contract
-                    </button>
-                  </div>
-                </div>
+            {dossierTab === 'REMEDIATION' && ( 
+              <div className="space-y-8 font-sans"> 
+                <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4"> 
+                  <div> 
+                    <span className="font-mono text-[10px] text-emerald-400 block font-bold uppercase tracking-wider"> 
+                      // Active Remediation Statement of Work Matrix 
+                    </span> 
+                    <h4 className="text-xl font-extrabold tracking-tight mt-0.5"> 
+                      Target Implementation SOW: {companyName.replace(/_/g, ' ')} 
+                    </h4> 
+                  </div> 
+                  <div className="flex items-center gap-3 font-mono text-xs"> 
+                    <button 
+                      type="button" 
+                      onClick={() => typeof window !== 'undefined' && window.print()} 
+                      className="bg-white text-slate-900 px-4 py-2 font-bold uppercase tracking-wider rounded hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer" 
+                    > 
+                      <Printer size={14} /> Print SOW Contract 
+                    </button> 
+                  </div> 
+                </div> 
 
-                <div className="border border-slate-200 rounded-md overflow-hidden">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-100 font-mono text-slate-700 uppercase tracking-wider border-b border-slate-200">
-                      <tr>
-                        <th className="p-4 font-bold">Phase</th>
-                        <th className="p-4 font-bold">Remediation Scope</th>
-                        <th className="p-4 font-bold">Technical Deliverables</th>
-                        <th className="p-4 font-bold">Timeline</th>
-                        <th className="p-4 font-bold">Resource Allocation</th>
-                        <th className="p-4 font-bold text-right">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      <tr>
-                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 01</td>
-                        <td className="p-4 font-bold text-slate-900">
-                          Pipeline Hardening & Schema Abstraction
-                        </td>
-                        <td className="p-4 text-slate-600 leading-relaxed">
-                          Deploy strict GraphQL/OpenAPI schema validation gates, microservice adapter decoupling, and circuit breakers.
-                        </td>
-                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 1 – 3</td>
-                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Senior Data Eng + SecOps</td>
-                        <td className="p-4 text-right whitespace-nowrap">
-                          <span className="bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
-                            Pending Approval
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 02</td>
-                        <td className="p-4 font-bold text-slate-900">
-                          Telemetry Decoupling & Alarm Filtering
-                        </td>
-                        <td className="p-4 text-slate-600 leading-relaxed">
-                          Implement Purview/DLP sensitivity tagging, suppress alert fatigue loops, and install audit trail logging.
-                        </td>
-                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 4 – 6</td>
-                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">DevOps + Platform Lead</td>
-                        <td className="p-4 text-right whitespace-nowrap">
-                          <span className="bg-slate-100 text-slate-600 border border-slate-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
-                            Queued
-                          </span>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 03</td>
-                        <td className="p-4 font-bold text-slate-900">
-                          Autonomous Governance & Deployment Gates
-                        </td>
-                        <td className="p-4 text-slate-600 leading-relaxed">
-                          Automate Purview data loss prevention policies, continuous model evaluation pipelines, and executive steering dashboards.
-                        </td>
-                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 7 – 8</td>
-                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Enterprise Architect</td>
-                        <td className="p-4 text-right whitespace-nowrap">
-                          <span className="bg-slate-100 text-slate-600 border border-slate-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
-                            Queued
-                          </span>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                <div className="border border-slate-200 rounded-md overflow-hidden"> 
+                  <table className="w-full text-left text-xs"> 
+                    <thead className="bg-slate-100 font-mono text-slate-700 uppercase tracking-wider border-b border-slate-200"> 
+                      <tr> 
+                        <th className="p-4 font-bold">Phase</th> 
+                        <th className="p-4 font-bold">Remediation Scope</th> 
+                        <th className="p-4 font-bold">Technical Deliverables</th> 
+                        <th className="p-4 font-bold">Timeline</th> 
+                        <th className="p-4 font-bold">Resource Allocation</th> 
+                        <th className="p-4 font-bold text-right">Status</th> 
+                      </tr> 
+                    </thead> 
+                    <tbody className="divide-y divide-slate-200"> 
+                      <tr> 
+                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 01</td> 
+                        <td className="p-4 font-bold text-slate-900"> 
+                          Pipeline Hardening & Schema Abstraction 
+                        </td> 
+                        <td className="p-4 text-slate-600 leading-relaxed"> 
+                          Deploy strict GraphQL/OpenAPI schema validation gates, microservice adapter decoupling, and circuit breakers. 
+                        </td> 
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 1 – 3</td> 
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Senior Data Eng + SecOps</td> 
+                        <td className="p-4 text-right whitespace-nowrap"> 
+                          <span className="bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase"> 
+                            Pending Approval 
+                          </span> 
+                        </td> 
+                      </tr> 
+                      <tr> 
+                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 02</td> 
+                        <td className="p-4 font-bold text-slate-900"> 
+                          Telemetry Decoupling & Alarm Filtering 
+                        </td> 
+                        <td className="p-4 text-slate-600 leading-relaxed"> 
+                          Implement Purview/DLP sensitivity tagging, suppress alert fatigue loops, and install audit trail logging. 
+                        </td> 
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 4 – 6</td> 
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">DevOps + Platform Lead</td> 
+                        <td className="p-4 text-right whitespace-nowrap"> 
+                          <span className="bg-slate-100 text-slate-600 border border-slate-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase"> 
+                            Queued 
+                          </span> 
+                        </td> 
+                      </tr> 
+                      <tr> 
+                        <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 03</td> 
+                        <td className="p-4 font-bold text-slate-900"> 
+                          Autonomous Governance & Deployment Gates 
+                        </td> 
+                        <td className="p-4 text-slate-600 leading-relaxed"> 
+                          Automate Purview data loss prevention policies, continuous model evaluation pipelines, and executive steering dashboards. 
+                        </td> 
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 7 – 8</td> 
+                        <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Enterprise Architect</td> 
+                        <td className="p-4 text-right whitespace-nowrap"> 
+                          <span className="bg-slate-100 text-slate-600 border border-slate-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase"> 
+                            Queued 
+                          </span> 
+                        </td> 
+                      </tr> 
+                    </tbody> 
+                  </table> 
+                </div> 
 
-                <div className="border border-slate-200 bg-slate-50 p-6 rounded-md">
-                  <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-3">
-                    // Regulatory Non-Compliance Standards Audit
-                  </span>
+                <div className="border border-slate-200 bg-slate-50 p-6 rounded-md"> 
+                  <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-3"> 
+                    // Regulatory Non-Compliance Standards Audit 
+                  </span> 
                   
-                  <div className="space-y-3 font-mono text-xs text-slate-700">
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> ISO 9001:2015 // Clause 8.5.1: Messaging anomalies create unmapped distribution risk.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> HL7 FHIR v4 // Data Conformance: Unstructured drift triggers serialization failures.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> PCI-DSS v4.0 // Req 10.2: Processing delays interrupt automated auditing boundaries.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> SOX Act // Section 404: Telemetry friction degrades financial reporting controls.</span></div>
-                  </div>
-                </div>
+                  <div className="space-y-3 font-mono text-xs text-slate-700"> 
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> ISO 9001:2015 // Clause 8.5.1: Messaging anomalies create unmapped distribution risk.</span></div> 
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> HL7 FHIR v4 // Data Conformance: Unstructured drift triggers serialization failures.</span></div> 
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> PCI-DSS v4.0 // Req 10.2: Processing delays interrupt automated auditing boundaries.</span></div> 
+                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> SOX Act // Section 404: Telemetry friction degrades financial reporting controls.</span></div> 
+                  </div> 
+                </div> 
 
-                <div className="bg-slate-900 text-white p-6 rounded-md space-y-3 font-sans no-print">
-                  <div>
-                    <span className="text-[10px] font-mono text-emerald-400 block font-bold uppercase tracking-wider">
-                      // Stateless Deployable SOW Link Generator
-                    </span>
-                    <h5 className="text-sm font-extrabold uppercase mt-0.5">
-                      Shareable Permanent SOW Token Interface
-                    </h5>
-                    <p className="text-xs text-slate-300 font-normal mt-1 leading-relaxed">
-                      Copy this encrypted token to open or share this exact Statement of Work blueprint independently without requiring database session locks.
-                    </p>
-                  </div>
-                  <div className="flex flex-col sm:flex-row items-stretch gap-2 font-mono text-xs">
-                    <input
-                      type="text"
-                      value={sowShareLink}
-                      readOnly
-                      onClick={(e) => (e.target as HTMLInputElement).select()}
-                      className="flex-1 bg-slate-950 border border-slate-700 p-3 text-slate-300 font-mono text-[11px] rounded focus:outline-none truncate selection:bg-emerald-900 selection:text-emerald-300"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleCopySOWLink}
-                      className={`px-5 py-3 font-mono font-bold uppercase tracking-wider rounded flex items-center justify-center gap-2 transition-colors shrink-0 cursor-pointer ${
-                        copiedLink ? 'bg-emerald-600 text-white' : 'bg-emerald-700 text-white hover:bg-emerald-800'
-                      }`}
-                    >
-                      {copiedLink ? <Check size={14} /> : <Copy size={14} />}
-                      {copiedLink ? 'COPIED' : 'COPY SOW LINK'}
-                    </button>
-                  </div>
-                </div>
+                <div className="bg-slate-900 text-white p-6 rounded-md space-y-3 font-sans no-print"> 
+                  <div> 
+                    <span className="text-[10px] font-mono text-emerald-400 block font-bold uppercase tracking-wider"> 
+                      // Stateless Deployable SOW Link Generator 
+                    </span> 
+                    <h5 className="text-sm font-extrabold uppercase mt-0.5"> 
+                      Shareable Permanent SOW Token Interface 
+                    </h5> 
+                    <p className="text-xs text-slate-300 font-normal mt-1 leading-relaxed"> 
+                      Copy this encrypted token to open or share this exact Statement of Work blueprint independently without requiring database session locks. 
+                    </p> 
+                  </div> 
+                  <div className="flex flex-col sm:flex-row items-stretch gap-2 font-mono text-xs"> 
+                    <input 
+                      type="text" 
+                      value={sowShareLink} 
+                      readOnly 
+                      onClick={(e) => (e.target as HTMLInputElement).select()} 
+                      className="flex-1 bg-slate-950 border border-slate-700 p-3 text-slate-300 font-mono text-[11px] rounded focus:outline-none truncate selection:bg-emerald-900 selection:text-emerald-300" 
+                    /> 
+                    <button 
+                      type="button" 
+                      onClick={handleCopySOWLink} 
+                      className={`px-5 py-3 font-mono font-bold uppercase tracking-wider rounded flex items-center justify-center gap-2 transition-colors shrink-0 cursor-pointer ${ 
+                        copiedLink ? 'bg-emerald-600 text-white' : 'bg-emerald-700 text-white hover:bg-emerald-800' 
+                      }`} 
+                    > 
+                      {copiedLink ? <Check size={14} /> : <Copy size={14} />} 
+                      {copiedLink ? 'COPIED' : 'COPY SOW LINK'} 
+                    </button> 
+                  </div> 
+                </div> 
 
-              </div>
-            )}
+              </div> 
+            )} 
 
-            <div className="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              <span>BMR Solutions © 2026 // Independent Operational Governance</span>
-              <span>Pre-Automation Control Plane</span>
-            </div>
-          </div>
+            <div className="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider"> 
+              <span>BMR Solutions © 2026 // Independent Operational Governance</span> 
+              <span>Pre-Automation Control Plane</span> 
+            </div> 
+          </div> 
         </div> 
       )} 
     </div> 
