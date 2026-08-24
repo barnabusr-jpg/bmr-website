@@ -22,7 +22,13 @@ import {
 import { supabase } from '../../lib/supabaseClient'; 
 import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
-import { forensicQuestions } from '../../data/forensicQuestions';
+import forensicQuestionsRaw, { forensicQuestions as namedQuestions } from '../../data/forensicQuestions';
+
+const forensicQuestions =
+  (forensicQuestionsRaw as any)?.forensicQuestions ??
+  forensicQuestionsRaw ??
+  namedQuestions ??
+  {};
 
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
@@ -200,6 +206,19 @@ export default function ForensicEngineRoot() {
       const pillarParam = params.get('pillar') as FunnelPillar;
       const authVal = params.get('auth');
       const viewParam = params.get('view');
+
+      const matrixQuestionCount = Array.isArray(forensicQuestions)
+        ? forensicQuestions.length
+        : Object.keys(forensicQuestions || {}).length;
+
+      console.log("DIAGNOSTIC_AUTH_DEBUG:", {
+        flow: flowParam,
+        hasMatrix: matrixQuestionCount > 0,
+        matrixQuestionCount,
+        href: typeof window !== 'undefined' ? window.location.href : '',
+        normalizedCode: codeParam?.toUpperCase().trim(),
+        rawCode: codeParam
+      });
 
       const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
 
@@ -930,8 +949,8 @@ export default function ForensicEngineRoot() {
     try {
       setSendingNudgeRole(persona);
       const res = await fetch('/api/send-triangulation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({
           companyName: triangulation.companyName,
           auditId: activeAuditId || activeAuditIdRef.current,
@@ -1094,7 +1113,7 @@ export default function ForensicEngineRoot() {
   }), [alignedCockpitMetrics.complianceScore]);
 
   const sowShareLink = useMemo(() => {
-    if (typeof window === 'undefined' || !triangulation) return '';
+    if (typeof window !== 'undefined' || !triangulation) return '';
     const payload = {
       org: triangulation.companyName,
       pillar: triangulation.pillar,
