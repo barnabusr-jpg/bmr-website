@@ -142,10 +142,19 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Dispatch] Processed operators count: ${processedOperators.length}`);
 
-    // 4. PARALLEL SENDGRID V3 DIRECT DISPATCH
+    // 4. PARALLEL SENDGRID V3 DIRECT DISPATCH WITH DETERMINISTIC ROUTE ANCHORING
     const apiKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
-    const baseUrl = originUrl || process.env.NEXT_PUBLIC_APP_URL || "https://www.bmradvisory.co/forensic";
     const senderEmail = "hello@bmradvisory.co";
+
+    // Extract raw host domain cleanly
+    const rawHost = originUrl
+      ? new URL(originUrl).origin
+      : (process.env.NEXT_PUBLIC_APP_URL || "https://www.bmradvisory.co");
+
+    // Explicitly anchor path to /diagnostic/forensic
+    const baseForensic = rawHost.endsWith("/diagnostic/forensic") || rawHost.endsWith("/forensic")
+      ? rawHost
+      : `${rawHost}/diagnostic/forensic`;
 
     const roleLabels: Record<string, string> = {
       EXECUTIVE: 'Executive Leadership (Strategic Oversight Track)',
@@ -159,7 +168,10 @@ export async function POST(req: NextRequest) {
 
     const mailPromises = processedOperators.map(async (op) => {
       const cleanToEmail = String(op.email).trim().toLowerCase();
-      const inviteUrl = `${baseUrl}?code=${encodeURIComponent(op.access_code)}`;
+      
+      // Hardened invite URL: explicitly locked to forensic route and quad_node flow
+      const inviteUrl = `${baseForensic}?code=${encodeURIComponent(op.access_code)}&flow=quad_node`;
+      
       const personaKey = String(op.persona_type || "SYSTEM_USER").toUpperCase().trim();
       const roleName = roleLabels[personaKey] || personaKey.replace(/_/g, " ");
 
@@ -296,7 +308,6 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    // Logging summary for log verification
     const successfulSends = sendResults.filter(r => r.ok).length;
     const failedSends = sendResults.filter(r => !r.ok).length;
 
