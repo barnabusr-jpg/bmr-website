@@ -5,7 +5,6 @@ import crypto from "crypto";
 
 export const runtime = "nodejs";
 
-// Resolve SendGrid API Key (support both key names in Vercel)
 const sendGridKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
 if (sendGridKey) {
   sgMail.setApiKey(sendGridKey);
@@ -64,40 +63,61 @@ export async function POST(req: NextRequest) {
       .update({ status: "IN_PROGRESS" })
       .eq("id", cleanAuditId);
 
-    // 3. SAFE OPERATOR PERSISTENCE (Avoids 409 ON CONFLICT Schema Errors)
+    // 3. HARDENED OPERATOR PERSISTENCE & SYMMETRICAL RESET
     const processedOperators = [];
 
     for (const recipient of recipientsList) {
       const cleanEmail = recipient.email;
       const persona = String(recipient.persona || "SYSTEM_USER").toUpperCase().trim();
 
-      // Look up existing operator record
-      const { data: existingOp } = await supabase
+      // Symmetrical lookup across audit_id AND group_id with deterministic sort to avoid maybeSingle() duplicate errors
+      const { data: existingRows } = await supabase
         .from("operators")
-        .select("id, access_code")
-        .eq("audit_id", cleanAuditId)
+        .select("id, access_code, persona_type, email, flow_type, survey_completed, status")
+        .or(`audit_id.eq.${cleanAuditId},group_id.eq.${cleanAuditId}`)
         .eq("email", cleanEmail)
         .eq("flow_type", targetFlowType)
-        .limit(1)
-        .maybeSingle();
+        .order("updated_at", { ascending: false })
+        .limit(1);
 
-      const accessCode = existingOp?.access_code || crypto.randomBytes(8).toString("hex").toUpperCase();
+      const existingOp = existingRows && existingRows.length > 0 ? existingRows[0] : null;
 
       if (existingOp?.id) {
-        // Update existing row
+        // Enforce state reset on existing record
         const { data: updated } = await supabase
           .from("operators")
           .update({
             persona_type: persona,
+            survey_completed: false,
+            status: "PENDING",
+            raw_responses: {},
             updated_at: new Date().toISOString()
           })
           .eq("id", existingOp.id)
-          .select("id, email, persona_type, access_code, flow_type")
-          .single();
+          .select("id, email, persona_type, access_code, flow_type, survey_completed, status, raw_responses")
+          .maybeSingle();
 
-        if (updated) processedOperators.push(updated);
+        const activeOp = updated || {
+          ...existingOp,
+          persona_type: persona,
+          survey_completed: false,
+          status: "PENDING",
+          raw_responses: {}
+        };
+
+        console.log("[Dispatch Reset Check] Existing Operator Reset:", {
+          email: activeOp.email,
+          access_code: activeOp.access_code,
+          survey_completed: activeOp.survey_completed,
+          status: activeOp.status,
+          raw_responses: activeOp.raw_responses
+        });
+
+        processedOperators.push(activeOp);
       } else {
-        // Insert new row
+        // Insert brand new record
+        const accessCode = crypto.randomBytes(8).toString("hex").toUpperCase();
+
         const { data: inserted, error: insErr } = await supabase
           .from("operators")
           .insert({
@@ -109,14 +129,21 @@ export async function POST(req: NextRequest) {
             access_code: accessCode,
             status: "PENDING",
             survey_completed: false,
+            raw_responses: {},
             updated_at: new Date().toISOString()
           })
-          .select("id, email, persona_type, access_code, flow_type")
+          .select("id, email, persona_type, access_code, flow_type, survey_completed, status, raw_responses")
           .single();
 
         if (insErr) {
           console.error(`[Operator Insert Error - ${cleanEmail}]`, insErr);
         } else if (inserted) {
+          console.log("[Dispatch Reset Check] New Operator Inserted:", {
+            email: inserted.email,
+            access_code: inserted.access_code,
+            survey_completed: inserted.survey_completed,
+            status: inserted.status
+          });
           processedOperators.push(inserted);
         }
       }
@@ -124,7 +151,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`[Dispatch] Processed operators count: ${processedOperators.length}`);
 
-    // 4. SEQUENTIAL SENDGRID DISPATCH WITH DETAILED TELEMETRY
+    // 4. SEQUENTIAL SENDGRID DISPATCH WITH TELEMETRY
     const baseUrl = originUrl || process.env.NEXT_PUBLIC_APP_URL || "https://www.bmradvisory.co/forensic";
     const senderEmail = process.env.SENDGRID_FROM_EMAIL || "diagnostic@bmradvisory.co";
 
