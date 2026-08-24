@@ -173,43 +173,73 @@ export default function ForensicEngineRoot() {
         });
 
         const currentAuditId = idParam || activeAuditIdRef.current;
-        if (currentAuditId) {
+        let isAlreadyCompleted = false;
+
+        const hasPrimitiveValue = (obj: any): boolean => {
+          if (obj === null || obj === undefined) return false;
+          if (typeof obj === 'object') return Object.values(obj).some(val => hasPrimitiveValue(val));
+          return String(obj).trim().length > 0;
+        };
+
+        if (codeParam) {
+          // STRICT DIRECT MATCH BY ACCESS_CODE
+          const { data: opRow } = await supabase
+            .from('operators')
+            .select('survey_completed, status, raw_responses, access_code')
+            .eq('access_code', codeParam.toUpperCase().trim())
+            .eq('flow_type', 'quad_node')
+            .limit(1)
+            .maybeSingle();
+
+          console.log("[Debug Completed Check][access_code-only] codeParam=", codeParam, "opRow=", opRow);
+
+          if (opRow) {
+            const isCompletedBool =
+              opRow.survey_completed === true || String(opRow.survey_completed) === 'true';
+
+            const isCompletedStatus =
+              ['COMPLETED', 'COMPLETE'].includes(String(opRow.status ?? '').toUpperCase());
+
+            const hasRawResp = hasPrimitiveValue(opRow.raw_responses);
+
+            isAlreadyCompleted = isCompletedBool || isCompletedStatus || hasRawResp;
+          }
+        } else if (currentAuditId) {
+          // Broad audit/group query fallback when no access_code param exists
           const { data: checkOps } = await supabase
             .from('operators')
-            .select('survey_completed, status, raw_responses')
+            .select('survey_completed, status, raw_responses, persona_type, email, access_code')
             .or(`audit_id.eq.${currentAuditId},group_id.eq.${currentAuditId}`)
             .eq('flow_type', 'quad_node')
             .in('persona_type', QUAD_PERSONA_TYPES[roleParam]);
 
-          const hasPrimitiveValue = (obj: any): boolean => {
-            if (obj === null || obj === undefined) return false;
-            if (typeof obj === 'object') {
-              return Object.values(obj).some(val => hasPrimitiveValue(val));
-            }
-            return String(obj).trim().length > 0;
-          };
+          console.log("[Debug Completed Check][broad-fallback] matched operator rows:", checkOps);
 
-          const isAlreadyCompleted = (checkOps ?? []).some(checkOp => {
-            const isCompletedBool = checkOp.survey_completed === true || String(checkOp.survey_completed) === 'true';
-            const isCompletedStatus = ['COMPLETED', 'COMPLETE'].includes(String(checkOp.status ?? '').toUpperCase());
+          isAlreadyCompleted = (checkOps ?? []).some((checkOp: any) => {
+            const isCompletedBool =
+              checkOp.survey_completed === true || String(checkOp.survey_completed) === 'true';
+
+            const isCompletedStatus =
+              ['COMPLETED', 'COMPLETE'].includes(String(checkOp.status ?? '').toUpperCase());
+
             const hasRawResp = hasPrimitiveValue(checkOp.raw_responses);
             return isCompletedBool || isCompletedStatus || hasRawResp;
           });
+        }
 
-          if (isAlreadyCompleted) {
-            if (typeof window !== 'undefined') {
-              const url = new URL(window.location.href);
-              url.searchParams.delete('code');
-              url.searchParams.delete('role');
-              url.searchParams.delete('track');
-              url.searchParams.delete('pillar');
-              url.searchParams.delete('flow');
-              url.searchParams.delete('view');
-              window.history.replaceState({}, '', url.toString());
-            }
-            setViewState('THANK_YOU');
-            return;
+        if (isAlreadyCompleted) {
+          if (typeof window !== 'undefined') {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('code');
+            url.searchParams.delete('role');
+            url.searchParams.delete('track');
+            url.searchParams.delete('pillar');
+            url.searchParams.delete('flow');
+            url.searchParams.delete('view');
+            window.history.replaceState({}, '', url.toString());
           }
+          setViewState('THANK_YOU');
+          return;
         }
 
         if (typeof window !== 'undefined') {
@@ -260,7 +290,7 @@ export default function ForensicEngineRoot() {
       if (codeParam) {
         const { data: opData } = await supabase
           .from('operators')
-          .select('id, group_id, audit_id, persona_type, email, survey_completed, status')
+          .select('id, group_id, audit_id, persona_type, email, survey_completed, status, raw_responses')
           .eq('access_code', codeParam.toUpperCase().trim())
           .eq('flow_type', 'quad_node')
           .maybeSingle();
@@ -413,7 +443,16 @@ export default function ForensicEngineRoot() {
 
           setActivePersona(mappedKey);
 
-          if (matchedOperator.survey_completed || String(matchedOperator.status).toUpperCase() === 'COMPLETED') {
+          console.log("[Debug matchedOperator][code]", codeParam, "matchedOperator:", matchedOperator);
+
+          // Hardened gate: only evaluate survey_completed and status (ignore raw_responses)
+          const isMatchedOpDone = 
+            matchedOperator.survey_completed === true || 
+            String(matchedOperator.survey_completed) === 'true' ||
+            String(matchedOperator.status ?? '').toUpperCase() === 'COMPLETED' ||
+            String(matchedOperator.status ?? '').toUpperCase() === 'COMPLETE';
+
+          if (isMatchedOpDone) {
             setViewState('THANK_YOU');
           } else {
             setViewState('WIZARD');
@@ -805,7 +844,6 @@ export default function ForensicEngineRoot() {
 
       const payload = await res.json().catch(() => null);
 
-      // Console logger for real-time browser DevTools debugging
       console.log("[Nudge Debug] HTTP Status:", res.status, "Payload:", payload);
 
       if (res.ok && payload?.success !== false) {
