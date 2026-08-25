@@ -1,6 +1,3 @@
-ere is the complete, drop-in replacement for src/pages/api/send-triangulation/route.ts.
-This version preserves 100% of your working operational logic—including Supabase operators table resets, flexible payload adapters, parallel SendGrid v3 dispatch, and access_code generation—while only swapping in the rich, structured HTML email template and ensuring link paths point cleanly to /forensic without route duplication.
-TypeScript
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import crypto from "crypto";
