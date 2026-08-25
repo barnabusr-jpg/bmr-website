@@ -69,7 +69,7 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // 📡 BASELINE BOOT & TWO-TIER HYDRATION
+  // 📡 BASELINE BOOT & HYDRATION (AUDITS TABLE PAYLOAD MODEL)
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -125,20 +125,20 @@ export default function ForensicEngineRoot() {
         return;
       }
 
-      // ADMIN / HUB RESOLUTION
+      // ADMIN / HUB RESOLUTION FROM AUDITS TABLE
       let activeAudit: any = null;
 
       if (idParam) {
         const { data } = await supabase
           .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status')
+          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses')
           .eq('id', idParam)
           .maybeSingle();
         activeAudit = data;
       } else if (targetCompanyName) {
         const { data } = await supabase
           .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status')
+          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses')
           .ilike('org_name', targetCompanyName)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -164,66 +164,27 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(calculatedPillar);
 
-        // 📧 TWO-TIER OPERATOR FETCH: Prefer 'quad_node', fallback to any flow_type for the audit
-        let existingOperators: any[] = [];
-        
-        const { data: quadOps } = await supabase
-          .from('operators')
-          .select('persona_type, email, survey_completed, status, raw_responses, flow_type')
-          .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`)
-          .eq('flow_type', 'quad_node');
-
-        if (quadOps && quadOps.length > 0) {
-          existingOperators = quadOps;
-        } else {
-          const { data: fallbackOps } = await supabase
-            .from('operators')
-            .select('persona_type, email, survey_completed, status, raw_responses, flow_type')
-            .or(`group_id.eq.${activeAudit.id},audit_id.eq.${activeAudit.id}`)
-            .order('updated_at', { ascending: false });
-            
-          existingOperators = fallbackOps || [];
-        }
-
-        const checkDbDone = (pKey: PersonaKey) => {
-          if (!existingOperators || existingOperators.length === 0) return false;
-          const allowedTypesUpper = QUAD_PERSONA_TYPES[pKey].map(t => t.toUpperCase().trim());
-          return existingOperators.some(o => {
-            const matchPersona = allowedTypesUpper.includes(String(o.persona_type || '').toUpperCase().trim());
-            const isDone = o.survey_completed === true || String(o.status).toUpperCase() === 'COMPLETED';
-            return matchPersona && isDone;
-          });
-        };
-
-        // Extract recorded email addresses cleanly from resolved operators
-        const hydratedEmails: Record<PersonaKey, string> = { ...FRESH_EMPTY_EMAILS };
-        if (existingOperators.length > 0) {
-          (Object.keys(QUAD_PERSONA_TYPES) as PersonaKey[]).forEach(pKey => {
-            const allowedTypesUpper = QUAD_PERSONA_TYPES[pKey].map(t => t.toUpperCase().trim());
-            const matchedOp = existingOperators.find(o => 
-              allowedTypesUpper.includes(String(o.persona_type || '').toUpperCase().trim()) && o.email
-            );
-            if (matchedOp?.email) {
-              hydratedEmails[pKey] = matchedOp.email;
-            }
-          });
-        }
-
-        setEmails(hydratedEmails);
+        // HYDRATE RESPONSES & COMPLETIONS FROM AUDITS.RAW_RESPONSES
+        const auditResponses = (activeAudit.raw_responses as Record<string, any>) || {};
 
         const mergedCompletions: Record<PersonaKey, boolean> = {
-          EXECUTIVE: checkDbDone('EXECUTIVE'),
-          TECH_MGMT: checkDbDone('TECH_MGMT'),
-          OPS_MGMT: checkDbDone('OPS_MGMT'),
-          SYSTEM_USER: checkDbDone('SYSTEM_USER'),
+          EXECUTIVE: Object.keys(auditResponses.EXECUTIVE || {}).length > 0,
+          TECH_MGMT: Object.keys(auditResponses.TECH_MGMT || {}).length > 0,
+          OPS_MGMT: Object.keys(auditResponses.OPS_MGMT || {}).length > 0,
+          SYSTEM_USER: Object.keys(auditResponses.SYSTEM_USER || {}).length > 0,
         };
 
         setTriangulation(prev => ({
           companyName: activeAudit.org_name,
           pillar: calculatedPillar,
-          emails: hydratedEmails,
+          emails: prev?.emails || FRESH_EMPTY_EMAILS,
           completions: mergedCompletions,
-          responses: prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
+          responses: {
+            EXECUTIVE: auditResponses.EXECUTIVE || prev?.responses?.EXECUTIVE || {},
+            TECH_MGMT: auditResponses.TECH_MGMT || prev?.responses?.TECH_MGMT || {},
+            OPS_MGMT: auditResponses.OPS_MGMT || prev?.responses?.OPS_MGMT || {},
+            SYSTEM_USER: auditResponses.SYSTEM_USER || prev?.responses?.SYSTEM_USER || {},
+          }
         }));
 
         if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
@@ -251,19 +212,6 @@ export default function ForensicEngineRoot() {
       setHasSynced(true);
     }
   }, []);
-
-  useEffect(() => {
-    const channel = supabase
-      .channel(`audit-operators-realtime-listener`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'operators' },
-        () => { synchronizeEngineDataMatrix(true); }
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [synchronizeEngineDataMatrix]);
 
   useEffect(() => { 
     if (typeof window !== 'undefined' && !didBootRef.current) { 
@@ -300,11 +248,8 @@ export default function ForensicEngineRoot() {
     }
   }, [synchronizeEngineDataMatrix]); 
 
-  // ✏️ DURABLE EMAIL ENTRY HANDLER (FLOW-PREFERRING PERSISTENCE)
-  const handleUpdateEmailEntry = async (persona: PersonaKey, newEmail: string) => {
-    const cleanEmail = newEmail.trim().toLowerCase();
-
-    // 1. Immediate UI state update
+  // ✏️ IN-MEMORY LOCAL EMAIL UPDATE HANDLER
+  const handleUpdateEmailEntry = (persona: PersonaKey, newEmail: string) => {
     setEmails(prev => ({ ...prev, [persona]: newEmail }));
     setTriangulation(prev => {
       if (!prev) return prev;
@@ -313,105 +258,74 @@ export default function ForensicEngineRoot() {
         emails: { ...prev.emails, [persona]: newEmail }
       };
     });
-
-    // 2. Flow-preferred database sync
-    const targetAuditId = activeAuditId || activeAuditIdRef.current;
-    const aliases = QUAD_PERSONA_TYPES[persona];
-
-    if (targetAuditId && cleanEmail) {
-      try {
-        const { data: updatedQuad } = await supabase
-          .from('operators')
-          .update({ 
-            email: cleanEmail,
-            updated_at: new Date().toISOString()
-          })
-          .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
-          .eq('flow_type', 'quad_node')
-          .in('persona_type', aliases)
-          .select('id');
-
-        if (!updatedQuad || updatedQuad.length === 0) {
-          await supabase
-            .from('operators')
-            .update({ 
-              email: cleanEmail,
-              updated_at: new Date().toISOString()
-            })
-            .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
-            .in('persona_type', aliases);
-        }
-      } catch (err) {
-        console.error(`[Email Persist Error][${persona}]:`, err);
-      }
-    }
   };
 
-  // 💾 AUDIT-RESOLVED ANSWER SAVE HANDLER (TWO-TIER PERSISTENCE FLIPS CHECKMARKS GREEN)
+  // 💾 HARDENED READ-MODIFY-WRITE SAVE HANDLER WITH OBJECT NORMALIZATION
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
     const targetPersona = activePersona;
     const answersToSave = personaAnswers || { status: "completed_via_wizard", completed_at: new Date().toISOString() };
+    const targetAuditId = activeAuditId || activeAuditIdRef.current;
 
-    // 1) Optimistically update local UI state
-    setTriangulation(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        completions: { ...prev.completions, [targetPersona]: true },
-        responses: { ...prev.responses, [targetPersona]: answersToSave }
-      };
-    });
+    const normalizeObj = (v: any): Record<string, string> => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
 
-    // 2) Determine targets & resolve activeAuditId if missing from stateless URL
-    const aliases = QUAD_PERSONA_TYPES[targetPersona];
-    let targetAuditId = activeAuditId || activeAuditIdRef.current;
-    const currentOrg = companyNameRef.current ? sanitizeOrgKey(companyNameRef.current) : '';
-
-    try {
-      if (!targetAuditId && currentOrg) {
-        const { data: auditRow } = await supabase
+    if (targetAuditId) {
+      try {
+        // 1) Read latest raw_responses object from DB
+        const { data: auditRow, error: auditErr } = await supabase
           .from('audits')
-          .select('id')
-          .eq('org_name', currentOrg)
-          .order('created_at', { ascending: false })
-          .limit(1)
+          .select('raw_responses')
+          .eq('id', targetAuditId)
           .maybeSingle();
 
-        if (auditRow?.id) targetAuditId = auditRow.id;
-      }
+        if (auditErr) throw auditErr;
 
-      // 3) Two-tier completion update: prefer 'quad_node', fallback to any flow_type for the audit
-      if (targetAuditId) {
-        const { data: updatedQuad } = await supabase
-          .from('operators')
+        const dbResponses = (auditRow?.raw_responses as Record<string, any>) || {};
+
+        // 2) Merge with defensive object normalization
+        const mergedResponses: Record<PersonaKey, Record<string, string>> = {
+          EXECUTIVE: normalizeObj(dbResponses.EXECUTIVE),
+          TECH_MGMT: normalizeObj(dbResponses.TECH_MGMT),
+          OPS_MGMT: normalizeObj(dbResponses.OPS_MGMT),
+          SYSTEM_USER: normalizeObj(dbResponses.SYSTEM_USER),
+          [targetPersona]: answersToSave,
+        };
+
+        // 3) Persist merged object to Supabase
+        await supabase
+          .from('audits')
           .update({
-            survey_completed: true,
-            status: 'COMPLETED',
-            raw_responses: answersToSave,
-            updated_at: new Date().toISOString()
+            raw_responses: mergedResponses,
+            status: 'IN_PROGRESS',
+            updated_at: new Date().toISOString(),
           })
-          .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
-          .eq('flow_type', 'quad_node')
-          .in('persona_type', aliases)
-          .select('id');
+          .eq('id', targetAuditId);
 
-        if (!updatedQuad || updatedQuad.length === 0) {
-          await supabase
-            .from('operators')
-            .update({
-              survey_completed: true,
-              status: 'COMPLETED',
-              raw_responses: answersToSave,
-              updated_at: new Date().toISOString()
-            })
-            .or(`audit_id.eq.${targetAuditId},group_id.eq.${targetAuditId}`)
-            .in('persona_type', aliases);
-        }
+        // 4) Update local state
+        setTriangulation(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            completions: {
+              ...prev.completions,
+              [targetPersona]: true
+            },
+            responses: mergedResponses
+          };
+        });
+      } catch (dbErr) {
+        console.error('[Save Handler] Audit payload sync exception:', dbErr);
       }
-    } catch (dbErr) {
-      console.error('[Save Handler] DB sync exception:', dbErr);
+    } else {
+      setTriangulation(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          completions: { ...prev.completions, [targetPersona]: true },
+          responses: { ...prev.responses, [targetPersona]: answersToSave }
+        };
+      });
     }
 
     setActivePersona(null); 
@@ -439,7 +353,8 @@ export default function ForensicEngineRoot() {
         .insert({
           org_name: sanitizedInput,
           sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
-          status: 'IN_PROGRESS'
+          status: 'IN_PROGRESS',
+          raw_responses: {}
         })
         .select('id')
         .single();
@@ -448,20 +363,6 @@ export default function ForensicEngineRoot() {
 
       const parentAuditId = newAudit.id;
       setActiveAuditId(parentAuditId);
-
-      const rowsToInsert = (Object.keys(emails) as PersonaKey[]).map(pKey => ({
-        audit_id: parentAuditId,
-        group_id: parentAuditId,
-        flow_type: 'quad_node',
-        persona_type: pKey,
-        email: emails[pKey],
-        survey_completed: false,
-        status: 'PENDING',
-        raw_responses: {},
-        updated_at: new Date().toISOString()
-      }));
-
-      await supabase.from('operators').insert(rowsToInsert);
 
       const initialTriangulation = { 
         companyName: sanitizedInput, 
@@ -478,6 +379,7 @@ export default function ForensicEngineRoot() {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
+          auditId: parentAuditId,
           companyName: sanitizedInput, 
           endpoints: emails, 
           originUrl: `${window.location.origin}${window.location.pathname}` 
@@ -491,7 +393,12 @@ export default function ForensicEngineRoot() {
   const handleTriggerNudge = async (persona: PersonaKey) => {
     if (!triangulation) return;
     const email = triangulation.emails[persona];
-    if (!email) return;
+    const currentAuditId = activeAuditId || activeAuditIdRef.current;
+
+    if (!email || !currentAuditId) {
+      console.warn('[Nudge Warning]: Missing required email address or active Audit ID.');
+      return;
+    }
 
     try {
       setSendingNudgeRole(persona);
@@ -499,6 +406,7 @@ export default function ForensicEngineRoot() {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({
+          auditId: currentAuditId,
           companyName: triangulation.companyName,
           endpoints: { [persona]: email },
           originUrl: `${window.location.origin}${window.location.pathname}`
