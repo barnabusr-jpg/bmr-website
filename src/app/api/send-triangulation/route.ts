@@ -36,9 +36,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing required parameters' }, { status: 400 });
     }
 
-    const appOrigin = originUrl || process.env.NEXT_PUBLIC_APP_URL || 'https://www.bmradvisory.co';
-    const activeFlow = flowType || 'quad_node';
+    // SANITIZED BASE URL: Extract pure protocol + domain, stripping extra path duplication
+    let baseUrl = 'https://www.bmradvisory.co';
+    if (originUrl) {
+      try {
+        baseUrl = new URL(originUrl).origin;
+      } catch (e) {
+        baseUrl = (process.env.NEXT_PUBLIC_APP_URL || 'https://www.bmradvisory.co').replace(/\/$/, '');
+      }
+    } else if (process.env.NEXT_PUBLIC_APP_URL) {
+      baseUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, '');
+    }
 
+    const activeFlow = flowType || 'quad_node';
     let parentAuditId = auditId;
 
     // Resolve or verify audit record in Supabase
@@ -110,8 +120,8 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Generate Clean Baseline Link (Role & Org Driven)
-      const participantUrl = `${appOrigin}/diagnostic/forensic?role=${encodeURIComponent(pKey)}&org=${encodeURIComponent(companyName)}&email=${encodeURIComponent(email)}&code=${encodeURIComponent(accessCode)}&flow=${activeFlow}`;
+      // CLEAN UNIFORM URL STRUCTURE: Outputs directly to /forensic
+      const participantUrl = `${baseUrl}/forensic?role=${encodeURIComponent(pKey)}&org=${encodeURIComponent(companyName)}&email=${encodeURIComponent(email)}&code=${encodeURIComponent(accessCode)}&flow=${activeFlow}`;
 
       const mailPayload = {
         to: email,
