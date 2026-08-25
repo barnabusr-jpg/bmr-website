@@ -70,7 +70,7 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // 📡 BASELINE BOOT & HYDRATION (NO OPERATORS RENDER GATE)
+  // 📡 BASELINE BOOT & HYDRATION
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -272,12 +272,14 @@ export default function ForensicEngineRoot() {
     }
   }, [synchronizeEngineDataMatrix]); 
 
+  // 💾 AUDIT-RESOLVED ANSWER SAVE HANDLER (FLIPS MONITOR CHECKMARKS GREEN)
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
     const targetPersona = activePersona;
     const answersToSave = personaAnswers || { status: "completed_via_wizard", completed_at: new Date().toISOString() };
 
+    // 1) Optimistically update local UI state
     setTriangulation(prev => {
       if (!prev) return prev;
       return {
@@ -287,10 +289,26 @@ export default function ForensicEngineRoot() {
       };
     });
 
-    const targetAuditId = activeAuditId || activeAuditIdRef.current;
+    // 2) Determine which operator rows to mark complete
     const aliases = QUAD_PERSONA_TYPES[targetPersona];
+    let targetAuditId = activeAuditId || activeAuditIdRef.current;
+    const currentOrg = companyNameRef.current ? sanitizeOrgKey(companyNameRef.current) : '';
 
     try {
+      // 3) Fallback: resolve audit_id by sanitized org_name when targetAuditId is missing
+      if (!targetAuditId && currentOrg) {
+        const { data: auditRow } = await supabase
+          .from('audits')
+          .select('id')
+          .ilike('org_name', currentOrg)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (auditRow?.id) targetAuditId = auditRow.id;
+      }
+
+      // 4) Persist completion to operators table
       if (targetAuditId) {
         await supabase
           .from('operators')
