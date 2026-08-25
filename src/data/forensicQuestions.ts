@@ -19,7 +19,7 @@ export const forensicQuestions: Record<string, LocalQuestion> = {
       C: { key: 'C', text: "High Unmonitored Exposure: AI agents operate as black boxes." },
       D: { key: 'D', text: "Total Compliance Gap: Autonomous choices execute with zero records." }
     }
-  }
+  },
   // === KEEP ALL YOUR EXISTING 940+ LINES OF QUESTIONS HERE ===
   "IGF-02-EXEC": {
     id: "IGF-02-EXEC", pillar: "IGF", subarea: "Vendor Concentration Risk", target_node: "EXECUTIVE",
