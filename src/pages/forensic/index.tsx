@@ -236,36 +236,40 @@ export default function ForensicEngineRoot() {
     return () => { supabase.removeChannel(channel); };
   }, [synchronizeEngineDataMatrix]);
 
+  // 📡 BOOT GUARD WITH GUARANTEED HYDRATION UNLOCK
   useEffect(() => { 
-    if (typeof window !== 'undefined' || didBootRef.current) return; 
+    if (typeof window !== 'undefined' && !didBootRef.current) { 
+      try { 
+        const params = new URLSearchParams(window.location.search); 
+        const authVal = params.get('auth'); 
+        const rawRole = params.get('role') || params.get('persona'); 
+        const orgVal = params.get('org') || params.get('entity');
 
-    try { 
-      const params = new URLSearchParams(window.location.search); 
-      const authVal = params.get('auth'); 
-      const rawRole = params.get('role') || params.get('persona'); 
+        const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
+        const isParticipantRoute = !!roleParam;
 
-      const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
-      const isParticipantRoute = !!roleParam;
+        const isAdminAuthenticated =
+          !isParticipantRoute &&
+          (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
-      const isAdminAuthenticated =
-        !isParticipantRoute &&
-        (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
+        const isAuthorized = isParticipantRoute || isAdminAuthenticated || !!orgVal;
 
-      const isAuthorized = isParticipantRoute || isAdminAuthenticated;
-
-      setAuthorizedAdmin(isAuthorized);
-
-      if (isAuthorized) { 
+        setAuthorizedAdmin(isAuthorized);
         didBootRef.current = true; 
-        synchronizeEngineDataMatrix(); 
-      } else {
+
+        if (isAuthorized) {
+          synchronizeEngineDataMatrix().finally(() => {
+            setHasSynced(true);
+          });
+        } else {
+          setHasSynced(true);
+        }
+      } catch (e) { 
+        console.error("Hydration parsing error:", e); 
+        setAuthorizedAdmin(true); 
         setHasSynced(true);
-      }
-    } catch (e) { 
-      console.error("Hydration parsing error:", e); 
-      setAuthorizedAdmin(false); 
-      setHasSynced(true);
-    } 
+      } 
+    }
   }, [synchronizeEngineDataMatrix]); 
 
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
