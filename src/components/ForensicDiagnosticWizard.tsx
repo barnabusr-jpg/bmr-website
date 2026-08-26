@@ -12,6 +12,34 @@ interface ForensicDiagnosticWizardProps {
   onComplete: (answers: Record<string, string>) => void;
 }
 
+// 🎯 ALIAS NORMALIZER FOR WIZARD TRACK RESOLUTION
+export const normalizeTrackRole = (raw?: string): 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER' => {
+  const r = String(raw || '').toUpperCase().trim();
+
+  // 1. Executive Track Aliases
+  if (r.includes('EXEC') || r.includes('STRATEGIC') || r === 'IGF') {
+    return 'EXECUTIVE';
+  }
+
+  // 2. Technical Track Aliases
+  if (r.includes('TECH') || r.includes('DEVOPS') || r === 'AVS') {
+    return 'TECH_MGMT';
+  }
+
+  // 3. Operations / Managerial Track Aliases
+  if (r.includes('OPS') || r.includes('MANAG') || r.includes('MGR') || r === 'HAI') {
+    return 'OPS_MGMT';
+  }
+
+  // 4. System User / Operator Track Aliases
+  if (r.includes('USER') || r.includes('SYS') || r.includes('OPERAT') || r.includes('TERMINAL')) {
+    return 'SYSTEM_USER';
+  }
+
+  // Baseline Safeguard
+  return 'EXECUTIVE';
+};
+
 export default function ForensicDiagnosticWizard({
   companyName,
   activePillar,
@@ -23,19 +51,22 @@ export default function ForensicDiagnosticWizard({
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [currentStep, setCurrentStep] = useState(0);
 
-  // 📥 GLOBAL MOUNT HYDRATION & SECURE PAIRING
+  // 📥 GLOBAL MOUNT HYDRATION & SECURE PAIRING (PROPS/URL PRECEDENCE OVER SESSION CACHE)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const emailParam = params.get('email');
-      const roleParam = params.get('role') || persona || role;
+      
+      // 🎯 STRICT PRECEDENCE: Explicit props/URL params win over stale session cache
+      const explicitRole = persona || role || params.get('role') || params.get('persona');
 
       if (emailParam) {
         window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
       }
-      if (roleParam) {
-        window.sessionStorage.setItem('stakeholder_runtime_role', roleParam);
-        setActiveRole(roleParam);
+
+      if (explicitRole) {
+        window.sessionStorage.setItem('stakeholder_runtime_role', explicitRole);
+        setActiveRole(explicitRole);
       } else {
         const cachedRole = window.sessionStorage.getItem('stakeholder_runtime_role');
         if (cachedRole) setActiveRole(cachedRole);
@@ -56,29 +87,29 @@ export default function ForensicDiagnosticWizard({
     }
   }, [activePillar, persona, role]);
 
-  // 📡 ROLE-BASED VECTOR ROUTER FILTER (BASELINE LOGIC)
+  // 📡 ACCURATE ROLE-BASED VECTOR ROUTER FILTER (CANONICAL BRANCHING)
   const activeQuestions = useMemo(() => {
     const rawList = Object.values(forensicQuestions);
-    const normalizedRole = activeRole?.toUpperCase() || '';
+    const canonicalKey = normalizeTrackRole(activeRole);
 
     let filtered: typeof rawList = [];
 
-    if (normalizedRole.includes('TECH') || normalizedRole.includes('MGMT')) {
+    if (canonicalKey === 'TECH_MGMT') {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
-        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('MANAGE') || q.target_node?.toUpperCase().includes('TECH'))
+        (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('TECH'))
       );
-    } else if (normalizedRole.includes('USER') || normalizedRole.includes('SYS')) {
+    } else if (canonicalKey === 'SYSTEM_USER') {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'AVS' && 
-        (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('SYS') || q.target_node?.toUpperCase().includes('TECH'))
+        (q.target_node?.toUpperCase().includes('USER') || q.target_node?.toUpperCase().includes('SYS'))
       );
-    } else if (normalizedRole.includes('OPS')) {
+    } else if (canonicalKey === 'OPS_MGMT') {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'HAI' && 
         (q.target_node?.toUpperCase().includes('MGMT') || q.target_node?.toUpperCase().includes('OPS'))
       );
-    } else if (normalizedRole.includes('EXEC')) {
+    } else if (canonicalKey === 'EXECUTIVE') {
       filtered = rawList.filter(q => 
         q.pillar?.toUpperCase() === 'IGF' && 
         (q.target_node?.toUpperCase().includes('EXEC') || q.target_node?.toUpperCase().includes('STRATEGIC'))
@@ -139,12 +170,14 @@ export default function ForensicDiagnosticWizard({
     );
   }
 
+  const trackDisplayLabel = normalizeTrackRole(activeRole).replace('_', ' ');
+
   return (
     <div className="w-full max-w-3xl border border-slate-200 bg-white p-8 md:p-10 text-left rounded-lg shadow-sm">
       <div className="border-b border-slate-100 pb-5 mb-8 flex justify-between items-center">
         <div>
           <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-widest block mb-1">
-            QUAD NODE DIAGNOSTIC // {activeRole.replace('_', ' ')} TRACK
+            QUAD NODE DIAGNOSTIC // {trackDisplayLabel} TRACK
           </span>
           <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">{companyName}</h2>
         </div>
