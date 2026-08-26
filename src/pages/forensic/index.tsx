@@ -79,6 +79,7 @@ export default function ForensicEngineRoot() {
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null); 
   const [sendingNudgeRole, setSendingNudgeRole] = useState<PersonaKey | null>(null);
+  const [isDispatchingBatch, setIsDispatchingBatch] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeAuditId, setActiveAuditId] = useState<string | null>(null);
 
@@ -356,44 +357,96 @@ export default function ForensicEngineRoot() {
 
       setTriangulation(initialTriangulation); 
       setViewState('HUB'); 
-
-      await fetch('/api/send-triangulation', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' }, 
-        body: JSON.stringify({ 
-          auditId: parentAuditId,
-          companyName: sanitizedInput, 
-          endpoints: emails, 
-          originUrl: `${window.location.origin}${window.location.pathname}` 
-        }), 
-      }); 
     } catch (error) { 
-      console.error("Quad Node dispatch exception:", error); 
+      console.error("Quad Node setup exception:", error); 
     } 
   }; 
 
+  // ✉️ INDIVIDUAL NUDGE / REMINDER TRIGGER
   const handleTriggerNudge = async (persona: PersonaKey) => {
     if (!triangulation) return;
     const email = triangulation.emails[persona];
-    if (!email) return;
+    if (!email || !email.trim()) {
+      alert(`Please enter a valid email for the ${persona.replace('_', ' ')} track.`);
+      return;
+    }
 
     try {
       setSendingNudgeRole(persona);
-      await fetch('/api/send-triangulation', {
+      const res = await fetch('/api/send-triangulation', {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({
           auditId: activeAuditId,
           companyName: triangulation.companyName,
           endpoints: { [persona]: email },
-          originUrl: `${window.location.origin}${window.location.pathname}`
+          originUrl: `${window.location.origin}${window.location.pathname}`,
+          isNudge: true,
+          flowType: 'quad_node'
         })
       });
-      alert(`Reminder sent to ${persona.replace('_', ' ')} (${email}).`);
+
+      if (res.ok) {
+        alert(`Reminder email sent to ${persona.replace('_', ' ')} (${email}).`);
+      } else {
+        const err = await res.json();
+        alert(`Failed to send reminder: ${err.details || err.error || 'Server error'}`);
+      }
     } catch (err: any) {
-      console.error("Nudge API exception:", err);
+      console.error("Reminder dispatch exception:", err);
+      alert(`Dispatch error: ${err.message}`);
     } finally {
       setSendingNudgeRole(null);
+    }
+  };
+
+  // ✉️ BATCH EMAIL DISPATCH HANDLER (TRIGGERED FROM HUB WITH AUDIT ID SAFETY GUARD)
+  const handleDispatchBatchEmails = async () => {
+    if (!triangulation) return;
+
+    if (!activeAuditId) {
+      alert("Audit ID is missing. Please refresh the monitor and try again.");
+      return;
+    }
+
+    const currentEmails = triangulation.emails;
+
+    if (
+      !currentEmails.EXECUTIVE?.trim() || 
+      !currentEmails.TECH_MGMT?.trim() || 
+      !currentEmails.OPS_MGMT?.trim() || 
+      !currentEmails.SYSTEM_USER?.trim()
+    ) {
+      alert("All 4 Quad Node stakeholder emails are required before dispatching.");
+      return;
+    }
+
+    try {
+      setIsDispatchingBatch(true);
+      const res = await fetch('/api/send-triangulation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auditId: activeAuditId,
+          companyName: triangulation.companyName,
+          endpoints: currentEmails,
+          originUrl: `${window.location.origin}${window.location.pathname}`,
+          isNudge: false,
+          flowType: 'quad_node'
+        })
+      });
+
+      if (res.ok) {
+        alert(`Templated assessment emails successfully sent to all 4 stakeholders.`);
+      } else {
+        const err = await res.json();
+        alert(`Dispatch failed: ${err.details || err.error || 'Server error'}`);
+      }
+    } catch (err: any) {
+      console.error("Batch email dispatch exception:", err);
+      alert(`Dispatch error: ${err.message}`);
+    } finally {
+      setIsDispatchingBatch(false);
     }
   };
 
@@ -561,7 +614,7 @@ export default function ForensicEngineRoot() {
                 type="submit" 
                 className="w-full bg-slate-900 text-white font-bold text-xs py-3.5 uppercase tracking-wider rounded-md hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm" 
               > 
-                Dispatch Quad Node Invites <ArrowRight size={14}/> 
+                Proceed to Stakeholder Monitor <ArrowRight size={14}/> 
               </button> 
             </div> 
           </form> 
@@ -652,36 +705,63 @@ export default function ForensicEngineRoot() {
             })} 
           </div> 
 
-          <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
-            <div className="text-left"> 
-              <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-bold block">Consolidated Results Compilation</span> 
-              {!allPersonasComplete && ( 
-                <button 
-                  type="button" 
-                  onClick={() => { 
-                    if (window.confirm("Compile diagnostic metrics using currently available response data?")) { 
-                      setViewState('COCKPIT'); 
-                    } 
-                  }} 
-                  className="text-xs text-red-600 font-mono font-bold uppercase tracking-wider hover:underline bg-transparent border-0 p-0 mt-1 cursor-pointer block" 
-                > 
-                  Compile Partial Results 
-                </button> 
-              )} 
-            </div> 
+          {/* 🎯 ACTION BUTTONS BLOCK: SEND EMAILS + COMPILE DIAGNOSTIC MATRIX */}
+          {(() => {
+            const hasAllEmails = triangulation?.emails && 
+              Boolean(triangulation.emails.EXECUTIVE?.trim()) &&
+              Boolean(triangulation.emails.TECH_MGMT?.trim()) &&
+              Boolean(triangulation.emails.OPS_MGMT?.trim()) &&
+              Boolean(triangulation.emails.SYSTEM_USER?.trim());
 
-            <button 
-              onClick={() => setViewState('COCKPIT')} 
-              disabled={!allPersonasComplete} 
-              className={`w-full sm:w-auto px-6 py-3.5 font-bold uppercase tracking-wider rounded-md transition-colors text-xs ${ 
-                allPersonasComplete 
-                  ? 'bg-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-sm' 
-                  : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' 
-              }`} 
-            > 
-              Compile Diagnostic Matrix 
-            </button> 
-          </div> 
+            return (
+              <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
+                <div className="text-left"> 
+                  <span className="text-[11px] font-mono text-slate-500 uppercase tracking-wider font-bold block">Consolidated Results Compilation</span> 
+                  {!allPersonasComplete && ( 
+                    <button 
+                      type="button" 
+                      onClick={() => { 
+                        if (window.confirm("Compile diagnostic metrics using currently available response data?")) { 
+                          setViewState('COCKPIT'); 
+                        } 
+                      }} 
+                      className="text-xs text-red-600 font-mono font-bold uppercase tracking-wider hover:underline bg-transparent border-0 p-0 mt-1 cursor-pointer block" 
+                    > 
+                      Compile Partial Results 
+                    </button> 
+                  )} 
+                </div> 
+
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                  <button 
+                    type="button"
+                    onClick={handleDispatchBatchEmails} 
+                    disabled={!hasAllEmails || isDispatchingBatch}
+                    className={`w-full sm:w-auto px-5 py-3.5 font-bold uppercase tracking-wider rounded-md transition-colors text-xs flex items-center justify-center gap-2 ${
+                      hasAllEmails && !isDispatchingBatch
+                        ? 'bg-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-sm'
+                        : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
+                    }`} 
+                  > 
+                    {isDispatchingBatch ? <Loader2 size={14} className="animate-spin text-slate-400" /> : <Mail size={14} />}
+                    Send Emails
+                  </button> 
+
+                  <button 
+                    onClick={() => setViewState('COCKPIT')} 
+                    disabled={!allPersonasComplete} 
+                    className={`w-full sm:w-auto px-6 py-3.5 font-bold uppercase tracking-wider rounded-md transition-colors text-xs ${ 
+                      allPersonasComplete 
+                        ? 'bg-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-sm' 
+                        : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed' 
+                    }`} 
+                  > 
+                    Compile Diagnostic Matrix 
+                  </button> 
+                </div>
+              </div>
+            );
+          })()}
         </div> 
       )} 
 
