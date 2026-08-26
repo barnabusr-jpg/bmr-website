@@ -20,8 +20,22 @@ const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF', 'STRATEGIC'],
   TECH_MGMT: ['TECH_MGMT', 'TECH', 'TECHNICAL', 'AVS', 'DEVOPS'],
-  OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'HAI', 'OPERATIONS'],
+  OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'MGR', 'HAI', 'OPERATIONS'],
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR', 'CORE_SYSTEM', 'TERMINAL', 'SYSTEM'],
+};
+
+// 🎯 ALIAS NORMALIZATION HELPER
+const normalizePersonaRole = (rawRole: string | null): PersonaKey | null => {
+  if (!rawRole) return null;
+  const r = String(rawRole).toUpperCase().trim();
+
+  if (r in QUAD_PERSONA_TYPES) return r as PersonaKey;
+
+  for (const [personaKey, aliases] of Object.entries(QUAD_PERSONA_TYPES)) {
+    if (aliases.includes(r)) return personaKey as PersonaKey;
+  }
+
+  return null;
 };
 
 const FRESH_EMPTY_EMAILS: Record<PersonaKey, string> = {
@@ -88,7 +102,8 @@ export default function ForensicEngineRoot() {
     let targetCompanyName = sanitizeOrgKey(orgParam || '');
 
     try {
-      const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
+      // 🎯 NORMALIZED ROLE RESOLUTION
+      const roleParam = normalizePersonaRole(rawRole);
       const isParticipantRoute = !!roleParam;
 
       const isAdminSession = 
@@ -170,7 +185,7 @@ export default function ForensicEngineRoot() {
         const mergedCompletions: Record<PersonaKey, boolean> = {
           EXECUTIVE: Object.keys(auditResponses.EXECUTIVE || {}).length > 0,
           TECH_MGMT: Object.keys(auditResponses.TECH_MGMT || {}).length > 0,
-          OPS_MGMT: Object.keys(auditResponses.OPS_MGMT || {}).length > 0,
+          OPS_MGMT: Object.keys(auditResponses.OPS_MGMT || auditResponses.MANAGERIAL || {}).length > 0,
           SYSTEM_USER: Object.keys(auditResponses.SYSTEM_USER || {}).length > 0,
         };
 
@@ -182,7 +197,7 @@ export default function ForensicEngineRoot() {
           responses: {
             EXECUTIVE: auditResponses.EXECUTIVE || prev?.responses?.EXECUTIVE || {},
             TECH_MGMT: auditResponses.TECH_MGMT || prev?.responses?.TECH_MGMT || {},
-            OPS_MGMT: auditResponses.OPS_MGMT || prev?.responses?.OPS_MGMT || {},
+            OPS_MGMT: auditResponses.OPS_MGMT || auditResponses.MANAGERIAL || prev?.responses?.OPS_MGMT || {},
             SYSTEM_USER: auditResponses.SYSTEM_USER || prev?.responses?.SYSTEM_USER || {},
           }
         }));
@@ -221,7 +236,8 @@ export default function ForensicEngineRoot() {
         const rawRole = params.get('role') || params.get('persona'); 
         const orgVal = params.get('org') || params.get('entity');
 
-        const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
+        // 🎯 NORMALIZED ROLE RESOLUTION
+        const roleParam = normalizePersonaRole(rawRole);
         const isParticipantRoute = !!roleParam;
 
         const isAdminAuthenticated =
@@ -287,7 +303,7 @@ export default function ForensicEngineRoot() {
         const mergedResponses: Record<PersonaKey, Record<string, string>> = {
           EXECUTIVE: normalizeObj(dbResponses.EXECUTIVE),
           TECH_MGMT: normalizeObj(dbResponses.TECH_MGMT),
-          OPS_MGMT: normalizeObj(dbResponses.OPS_MGMT),
+          OPS_MGMT: normalizeObj(dbResponses.OPS_MGMT || dbResponses.MANAGERIAL),
           SYSTEM_USER: normalizeObj(dbResponses.SYSTEM_USER),
           [targetPersona]: answersToSave,
         };
