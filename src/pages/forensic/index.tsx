@@ -41,12 +41,10 @@ const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
   if (!rawRole) return null;
   const clean = rawRole.toUpperCase().trim();
 
-  // 1. Instant O(1) Dictionary Match
   if (clean in PERSONA_ALIAS_MAP) {
     return PERSONA_ALIAS_MAP[clean];
   }
 
-  // 2. Fallback Partial Substring Matching
   if (clean.includes('MANAG') || clean.includes('MGR') || clean.includes('OPS')) return 'OPS_MGMT';
   if (clean.includes('TECH') || clean.includes('DEVOPS')) return 'TECH_MGMT';
   if (clean.includes('EXEC') || clean.includes('STRATEGIC')) return 'EXECUTIVE';
@@ -101,7 +99,7 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // 📡 BASELINE BOOT & HYDRATION (AUDITS TABLE ONLY - NO OPERATORS TABLE)
+  // 📡 BASELINE BOOT & HYDRATION
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -120,7 +118,6 @@ export default function ForensicEngineRoot() {
     let targetCompanyName = sanitizeOrgKey(orgParam || '');
 
     try {
-      // 🎯 RESOLVE ROLE PARAMETER VIA O(1) ALIAS MATCHING
       const roleParam = resolvePersonaKey(rawRole);
       const isParticipantRoute = !!roleParam;
 
@@ -128,7 +125,6 @@ export default function ForensicEngineRoot() {
         !isParticipantRoute && 
         (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
-      // PARTICIPANT DIRECT MOUNT
       if (isParticipantRoute && roleParam) {
         if (targetCompanyName) {
           setCompanyName(targetCompanyName);
@@ -136,8 +132,6 @@ export default function ForensicEngineRoot() {
         }
 
         setActivePersona(roleParam);
-        
-        // Auto-assign pillar based on resolved persona
         const resolvedPillar: FunnelPillar = roleParam === 'OPS_MGMT' ? 'HAI' : roleParam === 'TECH_MGMT' ? 'AVS' : 'IGF';
         setActivePillar(resolvedPillar);
 
@@ -161,7 +155,6 @@ export default function ForensicEngineRoot() {
         return;
       }
 
-      // ADMIN / HUB RESOLUTION FROM AUDITS TABLE
       let activeAudit: any = null;
 
       if (idParam) {
@@ -269,7 +262,6 @@ export default function ForensicEngineRoot() {
     }
   }, [synchronizeEngineDataMatrix]); 
 
-  // ✏️ IN-MEMORY LOCAL EMAIL UPDATE HANDLER (NO OPERATORS TABLE DEPENDENCY)
   const handleUpdateEmailEntry = (persona: PersonaKey, newEmail: string) => {
     setEmails(prev => ({ ...prev, [persona]: newEmail }));
     setTriangulation(prev => {
@@ -281,7 +273,6 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // 💾 SAVES RESPONSES TO TRIANGULATION LOCAL STATE & AUDITS TABLE
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
@@ -324,10 +315,6 @@ export default function ForensicEngineRoot() {
       setInputError('Organization name is required.'); 
       return; 
     } 
-    if (!emails.EXECUTIVE || !emails.TECH_MGMT || !emails.OPS_MGMT || !emails.SYSTEM_USER) { 
-      setInputError('All 4 Quad Node stakeholder emails are required.'); 
-      return; 
-    } 
           
     setInputError(''); 
 
@@ -362,10 +349,12 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  // ✉️ INDIVIDUAL NUDGE / REMINDER TRIGGER
+  // ✉️ INDIVIDUAL REMINDER DISPATCH
   const handleTriggerNudge = async (persona: PersonaKey) => {
-    if (!triangulation) return;
-    const email = triangulation.emails[persona];
+    const targetAudit = activeAuditId || activeAuditIdRef.current;
+    const currentEmails = triangulation?.emails || emails;
+    const email = currentEmails[persona];
+
     if (!email || !email.trim()) {
       alert(`Please enter a valid email for the ${persona.replace('_', ' ')} track.`);
       return;
@@ -377,8 +366,8 @@ export default function ForensicEngineRoot() {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({
-          auditId: activeAuditId,
-          companyName: triangulation.companyName,
+          auditId: targetAudit,
+          companyName: triangulation?.companyName || companyName,
           endpoints: { [persona]: email },
           originUrl: `${window.location.origin}${window.location.pathname}`,
           isNudge: true,
@@ -400,26 +389,42 @@ export default function ForensicEngineRoot() {
     }
   };
 
-  // ✉️ BATCH EMAIL DISPATCH HANDLER (TRIGGERED FROM HUB WITH AUDIT ID SAFETY GUARD)
+  // ✉️ HARDENED BATCH DISPATCH WITH PRE-FETCH PROOF LOG & AUDIT ID GUARD
   const handleDispatchBatchEmails = async () => {
-    if (!triangulation) return;
+    console.log("🚀 [SEND EMAILS CLICKED]:", { 
+      activeAuditId: activeAuditId || activeAuditIdRef.current, 
+      triangulation 
+    });
 
-    if (!activeAuditId) {
-      alert("Audit ID is missing. Please refresh the monitor and try again.");
+    const targetAudit = activeAuditId || activeAuditIdRef.current;
+    if (!targetAudit) {
+      alert("Audit record reference is missing. Please re-enter organization name or refresh.");
+      console.error("❌ Dispatch halted: targetAudit is null/undefined");
       return;
     }
 
-    const currentEmails = triangulation.emails;
+    const currentEmails = triangulation?.emails || emails;
 
-    if (
-      !currentEmails.EXECUTIVE?.trim() || 
-      !currentEmails.TECH_MGMT?.trim() || 
-      !currentEmails.OPS_MGMT?.trim() || 
-      !currentEmails.SYSTEM_USER?.trim()
-    ) {
-      alert("All 4 Quad Node stakeholder emails are required before dispatching.");
+    const missingRoles = [];
+    if (!currentEmails.EXECUTIVE?.trim()) missingRoles.push("Executive");
+    if (!currentEmails.TECH_MGMT?.trim()) missingRoles.push("Tech Management");
+    if (!currentEmails.OPS_MGMT?.trim()) missingRoles.push("Ops Management");
+    if (!currentEmails.SYSTEM_USER?.trim()) missingRoles.push("System User");
+
+    if (missingRoles.length > 0) {
+      alert(`Please enter emails for all 4 tracks before dispatching. Missing: ${missingRoles.join(", ")}`);
+      console.error("❌ Dispatch halted: Missing required emails", missingRoles);
       return;
     }
+
+    // 📤 PRE-FETCH PROOF LOG
+    console.log("📤 [SEND EMAILS PAYLOAD]:", {
+      url: "/api/send-triangulation",
+      auditId: targetAudit,
+      companyName: triangulation?.companyName || companyName,
+      endpointsKeys: Object.keys(currentEmails || {}),
+      endpoints: currentEmails
+    });
 
     try {
       setIsDispatchingBatch(true);
@@ -427,8 +432,8 @@ export default function ForensicEngineRoot() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          auditId: activeAuditId,
-          companyName: triangulation.companyName,
+          auditId: targetAudit,
+          companyName: triangulation?.companyName || companyName,
           endpoints: currentEmails,
           originUrl: `${window.location.origin}${window.location.pathname}`,
           isNudge: false,
@@ -436,11 +441,13 @@ export default function ForensicEngineRoot() {
         })
       });
 
-      if (res.ok) {
-        alert(`Templated assessment emails successfully sent to all 4 stakeholders.`);
+      const data = await res.json();
+      console.log("📡 [DISPATCH API RESPONSE]:", data);
+
+      if (res.ok && data.success) {
+        alert(`Templated assessment emails successfully dispatched to all 4 stakeholders.`);
       } else {
-        const err = await res.json();
-        alert(`Dispatch failed: ${err.details || err.error || 'Server error'}`);
+        alert(`Dispatch failed: ${data.details || data.error || 'Server error'}`);
       }
     } catch (err: any) {
       console.error("Batch email dispatch exception:", err);
@@ -705,13 +712,13 @@ export default function ForensicEngineRoot() {
             })} 
           </div> 
 
-          {/* 🎯 ACTION BUTTONS BLOCK: SEND EMAILS + COMPILE DIAGNOSTIC MATRIX */}
+          {/* 🎯 ACTION BUTTONS BLOCK WITH STRICT GATING & PRE-FETCH PROOF */}
           {(() => {
-            const hasAllEmails = triangulation?.emails && 
-              Boolean(triangulation.emails.EXECUTIVE?.trim()) &&
-              Boolean(triangulation.emails.TECH_MGMT?.trim()) &&
-              Boolean(triangulation.emails.OPS_MGMT?.trim()) &&
-              Boolean(triangulation.emails.SYSTEM_USER?.trim());
+            const currentEmails = triangulation?.emails || emails;
+            const hasAllEmails = Boolean(currentEmails?.EXECUTIVE?.trim()) &&
+              Boolean(currentEmails?.TECH_MGMT?.trim()) &&
+              Boolean(currentEmails?.OPS_MGMT?.trim()) &&
+              Boolean(currentEmails?.SYSTEM_USER?.trim());
 
             return (
               <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"> 
@@ -736,7 +743,7 @@ export default function ForensicEngineRoot() {
                   <button 
                     type="button"
                     onClick={handleDispatchBatchEmails} 
-                    disabled={!hasAllEmails || isDispatchingBatch}
+                    disabled={isDispatchingBatch || !hasAllEmails}
                     className={`w-full sm:w-auto px-5 py-3.5 font-bold uppercase tracking-wider rounded-md transition-colors text-xs flex items-center justify-center gap-2 ${
                       hasAllEmails && !isDispatchingBatch
                         ? 'bg-slate-900 text-white hover:bg-slate-800 cursor-pointer shadow-sm'
