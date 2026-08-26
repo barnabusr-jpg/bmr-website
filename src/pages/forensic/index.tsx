@@ -431,6 +431,7 @@ export default function ForensicEngineRoot() {
     setTriangulation(null); 
     setActivePersona(null); 
     setActiveAuditId(null);
+    setDossierTab('METRICS');
 
     if (typeof window !== 'undefined') {
       const cleanUrl = `${window.location.pathname}?flow=quad_node&auth=admin_verified_secure`;
@@ -487,7 +488,7 @@ export default function ForensicEngineRoot() {
   }), [alignedCockpitMetrics.complianceScore]);
 
   const sowShareLink = useMemo(() => {
-    if (typeof window !== 'undefined' || !triangulation) return '';
+    if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
       org: triangulation.companyName,
       pillar: triangulation.pillar,
@@ -832,7 +833,7 @@ export default function ForensicEngineRoot() {
             )} 
 
             {dossierTab === 'REMEDIATION' && ( 
-              <div className="space-y-8 font-sans"> 
+              <div id="sow-section" className="space-y-8 font-sans scroll-mt-8"> 
                 <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4"> 
                   <div> 
                     <span className="font-mono text-[10px] text-emerald-400 block font-bold uppercase tracking-wider"> 
