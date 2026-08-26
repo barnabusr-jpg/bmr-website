@@ -20,22 +20,8 @@ const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF', 'STRATEGIC'],
   TECH_MGMT: ['TECH_MGMT', 'TECH', 'TECHNICAL', 'AVS', 'DEVOPS'],
-  OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'MGR', 'HAI', 'OPERATIONS'],
+  OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'HAI', 'OPERATIONS'],
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR', 'CORE_SYSTEM', 'TERMINAL', 'SYSTEM'],
-};
-
-// 🎯 ALIAS NORMALIZATION HELPER
-const normalizePersonaRole = (rawRole: string | null): PersonaKey | null => {
-  if (!rawRole) return null;
-  const r = String(rawRole).toUpperCase().trim();
-
-  if (r in QUAD_PERSONA_TYPES) return r as PersonaKey;
-
-  for (const [personaKey, aliases] of Object.entries(QUAD_PERSONA_TYPES)) {
-    if (aliases.includes(r)) return personaKey as PersonaKey;
-  }
-
-  return null;
 };
 
 const FRESH_EMPTY_EMAILS: Record<PersonaKey, string> = {
@@ -83,7 +69,7 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // 📡 BASELINE BOOT & HYDRATION (AUDITS TABLE PAYLOAD MODEL)
+  // 📡 BASELINE BOOT & HYDRATION (AUDITS TABLE ONLY - NO OPERATORS TABLE)
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -102,8 +88,7 @@ export default function ForensicEngineRoot() {
     let targetCompanyName = sanitizeOrgKey(orgParam || '');
 
     try {
-      // 🎯 NORMALIZED ROLE RESOLUTION
-      const roleParam = normalizePersonaRole(rawRole);
+      const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
       const isParticipantRoute = !!roleParam;
 
       const isAdminSession = 
@@ -146,14 +131,14 @@ export default function ForensicEngineRoot() {
       if (idParam) {
         const { data } = await supabase
           .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses')
+          .select('id, org_name, sfi_score, decay_pct, sector, status')
           .eq('id', idParam)
           .maybeSingle();
         activeAudit = data;
       } else if (targetCompanyName) {
         const { data } = await supabase
           .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses')
+          .select('id, org_name, sfi_score, decay_pct, sector, status')
           .ilike('org_name', targetCompanyName)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -179,27 +164,12 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(calculatedPillar);
 
-        // HYDRATE RESPONSES & COMPLETIONS FROM AUDITS.RAW_RESPONSES
-        const auditResponses = (activeAudit.raw_responses as Record<string, any>) || {};
-
-        const mergedCompletions: Record<PersonaKey, boolean> = {
-          EXECUTIVE: Object.keys(auditResponses.EXECUTIVE || {}).length > 0,
-          TECH_MGMT: Object.keys(auditResponses.TECH_MGMT || {}).length > 0,
-          OPS_MGMT: Object.keys(auditResponses.OPS_MGMT || auditResponses.MANAGERIAL || {}).length > 0,
-          SYSTEM_USER: Object.keys(auditResponses.SYSTEM_USER || {}).length > 0,
-        };
-
         setTriangulation(prev => ({
           companyName: activeAudit.org_name,
           pillar: calculatedPillar,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
-          completions: mergedCompletions,
-          responses: {
-            EXECUTIVE: auditResponses.EXECUTIVE || prev?.responses?.EXECUTIVE || {},
-            TECH_MGMT: auditResponses.TECH_MGMT || prev?.responses?.TECH_MGMT || {},
-            OPS_MGMT: auditResponses.OPS_MGMT || auditResponses.MANAGERIAL || prev?.responses?.OPS_MGMT || {},
-            SYSTEM_USER: auditResponses.SYSTEM_USER || prev?.responses?.SYSTEM_USER || {},
-          }
+          completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
+          responses: prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
         }));
 
         if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
@@ -236,8 +206,7 @@ export default function ForensicEngineRoot() {
         const rawRole = params.get('role') || params.get('persona'); 
         const orgVal = params.get('org') || params.get('entity');
 
-        // 🎯 NORMALIZED ROLE RESOLUTION
-        const roleParam = normalizePersonaRole(rawRole);
+        const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
         const isParticipantRoute = !!roleParam;
 
         const isAdminAuthenticated =
@@ -264,7 +233,7 @@ export default function ForensicEngineRoot() {
     }
   }, [synchronizeEngineDataMatrix]); 
 
-  // ✏️ IN-MEMORY LOCAL EMAIL UPDATE HANDLER
+  // ✏️ IN-MEMORY LOCAL EMAIL UPDATE HANDLER (NO OPERATORS TABLE DEPENDENCY)
   const handleUpdateEmailEntry = (persona: PersonaKey, newEmail: string) => {
     setEmails(prev => ({ ...prev, [persona]: newEmail }));
     setTriangulation(prev => {
@@ -276,72 +245,35 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // 💾 HARDENED READ-MODIFY-WRITE SAVE HANDLER WITH OBJECT NORMALIZATION
+  // 💾 SAVES RESPONSES TO TRIANGULATION LOCAL STATE & AUDITS TABLE
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
     const targetPersona = activePersona;
     const answersToSave = personaAnswers || { status: "completed_via_wizard", completed_at: new Date().toISOString() };
+
+    setTriangulation(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        completions: { ...prev.completions, [targetPersona]: true },
+        responses: { ...prev.responses, [targetPersona]: answersToSave }
+      };
+    });
+
     const targetAuditId = activeAuditId || activeAuditIdRef.current;
-
-    const normalizeObj = (v: any): Record<string, string> => (v && typeof v === 'object' && !Array.isArray(v) ? v : {});
-
     if (targetAuditId) {
       try {
-        // 1) Read latest raw_responses object from DB
-        const { data: auditRow, error: auditErr } = await supabase
-          .from('audits')
-          .select('raw_responses')
-          .eq('id', targetAuditId)
-          .maybeSingle();
-
-        if (auditErr) throw auditErr;
-
-        const dbResponses = (auditRow?.raw_responses as Record<string, any>) || {};
-
-        // 2) Merge with defensive object normalization
-        const mergedResponses: Record<PersonaKey, Record<string, string>> = {
-          EXECUTIVE: normalizeObj(dbResponses.EXECUTIVE),
-          TECH_MGMT: normalizeObj(dbResponses.TECH_MGMT),
-          OPS_MGMT: normalizeObj(dbResponses.OPS_MGMT || dbResponses.MANAGERIAL),
-          SYSTEM_USER: normalizeObj(dbResponses.SYSTEM_USER),
-          [targetPersona]: answersToSave,
-        };
-
-        // 3) Persist merged object to Supabase
         await supabase
           .from('audits')
           .update({
-            raw_responses: mergedResponses,
             status: 'IN_PROGRESS',
-            updated_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           })
           .eq('id', targetAuditId);
-
-        // 4) Update local state
-        setTriangulation(prev => {
-          if (!prev) return prev;
-          return {
-            ...prev,
-            completions: {
-              ...prev.completions,
-              [targetPersona]: true
-            },
-            responses: mergedResponses
-          };
-        });
       } catch (dbErr) {
-        console.error('[Save Handler] Audit payload sync exception:', dbErr);
+        console.error('[Save Handler] Audit status sync exception:', dbErr);
       }
-    } else {
-      setTriangulation(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          completions: { ...prev.completions, [targetPersona]: true },
-          responses: { ...prev.responses, [targetPersona]: answersToSave }
-        };
-      });
     }
 
     setActivePersona(null); 
@@ -369,8 +301,7 @@ export default function ForensicEngineRoot() {
         .insert({
           org_name: sanitizedInput,
           sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
-          status: 'IN_PROGRESS',
-          raw_responses: {}
+          status: 'IN_PROGRESS'
         })
         .select('id')
         .single();
@@ -409,12 +340,7 @@ export default function ForensicEngineRoot() {
   const handleTriggerNudge = async (persona: PersonaKey) => {
     if (!triangulation) return;
     const email = triangulation.emails[persona];
-    const currentAuditId = activeAuditId || activeAuditIdRef.current;
-
-    if (!email || !currentAuditId) {
-      console.warn('[Nudge Warning]: Missing required email address or active Audit ID.');
-      return;
-    }
+    if (!email) return;
 
     try {
       setSendingNudgeRole(persona);
@@ -422,7 +348,7 @@ export default function ForensicEngineRoot() {
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({
-          auditId: currentAuditId,
+          auditId: activeAuditId,
           companyName: triangulation.companyName,
           endpoints: { [persona]: email },
           originUrl: `${window.location.origin}${window.location.pathname}`
@@ -447,7 +373,6 @@ export default function ForensicEngineRoot() {
     setTriangulation(null); 
     setActivePersona(null); 
     setActiveAuditId(null);
-    setDossierTab('METRICS');
 
     if (typeof window !== 'undefined') {
       const cleanUrl = `${window.location.pathname}?flow=quad_node&auth=admin_verified_secure`;
@@ -504,7 +429,7 @@ export default function ForensicEngineRoot() {
   }), [alignedCockpitMetrics.complianceScore]);
 
   const sowShareLink = useMemo(() => {
-    if (typeof window === 'undefined' || !triangulation) return '';
+    if (typeof window !== 'undefined' || !triangulation) return '';
     const payload = {
       org: triangulation.companyName,
       pillar: triangulation.pillar,
@@ -849,7 +774,7 @@ export default function ForensicEngineRoot() {
             )} 
 
             {dossierTab === 'REMEDIATION' && ( 
-              <div id="sow-section" className="space-y-8 font-sans scroll-mt-8"> 
+              <div className="space-y-8 font-sans"> 
                 <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4"> 
                   <div> 
                     <span className="font-mono text-[10px] text-emerald-400 block font-bold uppercase tracking-wider"> 
