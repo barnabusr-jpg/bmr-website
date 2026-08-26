@@ -137,7 +137,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 4. PARALLEL SENDGRID V3 DISPATCH WITH DYNAMIC ROUTE ANCHORING
+    // 4. PARALLEL SENDGRID V3 DISPATCH WITH CLEAN ROUTE ANCHORING
     const apiKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
     const senderEmail = "hello@bmradvisory.co";
 
@@ -171,8 +171,10 @@ export async function POST(req: NextRequest) {
       const cleanToEmail = String(op.email).trim().toLowerCase();
       const personaKey = String(op.persona_type || "SYSTEM_USER").toUpperCase().trim();
       
-      // ✅ DYNAMIC PATH RESOLUTION: 360 routes to /diagnostic, Quad Node routes to /forensic
-      const routePath = targetFlowType === "360_triangulation" ? "/diagnostic" : "/forensic";
+      // 🎯 DIRECT PATH RESOLUTION
+      // 360_triangulation → /triangulation
+      // quad_node → /forensic
+      const routePath = targetFlowType === "360_triangulation" ? "/triangulation" : "/forensic";
       const inviteUrl = `${baseUrl}${routePath}?id=${cleanAuditId}&role=${encodeURIComponent(personaKey)}&org=${encodeURIComponent(formattedOrg)}&email=${encodeURIComponent(cleanToEmail)}&code=${encodeURIComponent(op.access_code)}&flow=${targetFlowType}`;
       
       const roleName = roleLabels[personaKey] || personaKey.replace(/_/g, " ");
