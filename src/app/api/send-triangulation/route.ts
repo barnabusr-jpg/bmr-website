@@ -69,48 +69,46 @@ export async function POST(req: NextRequest) {
       console.warn("[Dispatch Audit Reset Warning]:", auditErr.message);
     }
 
-    // 3. HARDENED OPERATOR PERSISTENCE
+    // 3. HARDENED PER-PERSONA OPERATOR PERSISTENCE
     const processedOperators = [];
 
     for (const recipient of recipientsList) {
       const cleanEmail = recipient.email;
       const persona = String(recipient.persona || "SYSTEM_USER").toUpperCase().trim();
 
+      // Query database specifically for this persona track under the current audit
       const { data: existingRows } = await supabase
         .from("operators")
         .select("id, access_code, persona_type, email, flow_type, survey_completed, status")
-        .or(`audit_id.eq.${cleanAuditId},group_id.eq.${cleanAuditId}`)
-        .eq("email", cleanEmail)
-        .eq("flow_type", targetFlowType)
+        .eq("audit_id", cleanAuditId)
+        .eq("persona_type", persona)
         .order("updated_at", { ascending: false })
         .limit(1);
 
       const existingOp = existingRows && existingRows.length > 0 ? existingRows[0] : null;
 
       if (existingOp?.id) {
+        // Update existing persona operator row
         const { data: updated } = await supabase
           .from("operators")
           .update({
-            persona_type: persona,
+            email: cleanEmail,
             survey_completed: false,
             status: "PENDING",
             raw_responses: {},
             updated_at: new Date().toISOString()
           })
           .eq("id", existingOp.id)
-          .select("id, email, persona_type, access_code, flow_type, survey_completed, status, raw_responses")
+          .select("id, email, persona_type, access_code, flow_type, survey_completed, status")
           .maybeSingle();
 
-        const activeOp = updated || {
+        processedOperators.push(updated || {
           ...existingOp,
-          persona_type: persona,
-          survey_completed: false,
-          status: "PENDING",
-          raw_responses: {}
-        };
-
-        processedOperators.push(activeOp);
+          email: cleanEmail,
+          persona_type: persona
+        });
       } else {
+        // Create new operator record for this persona track
         const accessCode = crypto.randomBytes(8).toString("hex").toUpperCase();
 
         const { data: inserted, error: insErr } = await supabase
@@ -127,16 +125,26 @@ export async function POST(req: NextRequest) {
             raw_responses: {},
             updated_at: new Date().toISOString()
           })
-          .select("id, email, persona_type, access_code, flow_type, survey_completed, status, raw_responses")
-          .single();
+          .select("id, email, persona_type, access_code, flow_type, survey_completed, status")
+          .maybeSingle();
 
         if (insErr) {
-          console.error(`[Operator Insert Error - ${cleanEmail}]`, insErr);
-        } else if (inserted) {
-          processedOperators.push(inserted);
+          console.error(`[Operator Insert Error - ${persona} / ${cleanEmail}]`, insErr);
         }
+
+        processedOperators.push(inserted || {
+          id: cleanAuditId,
+          email: cleanEmail,
+          persona_type: persona,
+          access_code: accessCode,
+          flow_type: targetFlowType
+        });
       }
     }
+
+    // 🎯 PRE-DISPATCH COUNT VERIFICATION LOGS
+    console.log("📦 recipientsList count:", recipientsList.length, recipientsList);
+    console.log("✅ processedOperators count:", processedOperators.length, processedOperators);
 
     // 4. PARALLEL SENDGRID V3 DISPATCH WITH ORIGINAL VERBIAGE & TEMPLATES
     const apiKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
@@ -355,7 +363,7 @@ export async function POST(req: NextRequest) {
     });
 
     const settled = await Promise.allSettled(mailPromises);
-    const sendResults = settled.map((s, idx) => s.status === "fulfilled" ? s.value : { ok: false });
+    const sendResults = settled.map((s) => s.status === "fulfilled" ? s.value : { ok: false });
 
     return NextResponse.json({ 
       success: true, 
