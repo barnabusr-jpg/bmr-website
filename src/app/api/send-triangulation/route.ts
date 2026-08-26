@@ -24,7 +24,6 @@ export async function POST(req: NextRequest) {
       endpoints, 
       flowType, 
       companyName, 
-      activePillar, 
       isNudge, 
       originUrl 
     } = body;
@@ -67,11 +66,9 @@ export async function POST(req: NextRequest) {
 
     if (auditErr) {
       console.warn("[Dispatch Audit Reset Warning]:", auditErr.message);
-    } else {
-      console.log("[Dispatch Audit Reset OK]:", auditRow);
     }
 
-    // 3. HARDENED OPERATOR PERSISTENCE & SYMMETRICAL RESET
+    // 3. HARDENED OPERATOR PERSISTENCE
     const processedOperators = [];
 
     for (const recipient of recipientsList) {
@@ -140,13 +137,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    console.log(`[Dispatch] Processed operators count: ${processedOperators.length}`);
-
-    // 4. PARALLEL SENDGRID V3 DIRECT DISPATCH WITH SANITIZED ROUTE ANCHORING
+    // 4. PARALLEL SENDGRID V3 DISPATCH WITH DYNAMIC ROUTE ANCHORING
     const apiKey = process.env.SENDGRID_API_KEY || process.env.BMR_SENDGRID_KEY;
     const senderEmail = "hello@bmradvisory.co";
 
-    // Extract pure base domain safely
     let baseUrl = "https://www.bmradvisory.co";
     if (originUrl) {
       try {
@@ -158,10 +152,15 @@ export async function POST(req: NextRequest) {
       baseUrl = process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
     }
 
+    // EXPANDED ROLE LABELS SUPPORTING BOTH 360 AND QUAD NODE KEYS
     const roleLabels: Record<string, string> = {
       EXECUTIVE: 'Executive Leadership (Strategic Oversight Track)',
+      EXEC: 'Executive Leadership (Strategic Oversight Track)',
       TECH_MGMT: 'Technical Management (Infrastructure & DevOps Track)',
+      TECHNICAL: 'Technical Management (Infrastructure & DevOps Track)',
       OPS_MGMT: 'Operations Management (Workflow & Process Track)',
+      MANAGERIAL: 'Managerial & Operational Leadership Track',
+      MGR: 'Managerial & Operational Leadership Track',
       SYSTEM_USER: 'Core System Operator (Terminal Execution Track)'
     };
 
@@ -172,8 +171,9 @@ export async function POST(req: NextRequest) {
       const cleanToEmail = String(op.email).trim().toLowerCase();
       const personaKey = String(op.persona_type || "SYSTEM_USER").toUpperCase().trim();
       
-      // Clean participant URL matching Next.js page route (/forensic)
-      const inviteUrl = `${baseUrl}/forensic?role=${encodeURIComponent(personaKey)}&org=${encodeURIComponent(formattedOrg)}&email=${encodeURIComponent(cleanToEmail)}&code=${encodeURIComponent(op.access_code)}&flow=quad_node`;
+      // ✅ DYNAMIC PATH RESOLUTION: 360 routes to /diagnostic, Quad Node routes to /forensic
+      const routePath = targetFlowType === "360_triangulation" ? "/diagnostic" : "/forensic";
+      const inviteUrl = `${baseUrl}${routePath}?id=${cleanAuditId}&role=${encodeURIComponent(personaKey)}&org=${encodeURIComponent(formattedOrg)}&email=${encodeURIComponent(cleanToEmail)}&code=${encodeURIComponent(op.access_code)}&flow=${targetFlowType}`;
       
       const roleName = roleLabels[personaKey] || personaKey.replace(/_/g, " ");
 
@@ -181,7 +181,6 @@ export async function POST(req: NextRequest) {
         ? `REMINDER: Operational Assessment Gateway // ${formattedOrg}`
         : `ACTION REQUIRED: Operational Assessment Authorized // ${formattedOrg}`;
 
-      // UPDATED RESTRUCTURED EMAIL TEMPLATE
       const emailHtmlValue = `
         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
           <tr>
@@ -261,7 +260,7 @@ export async function POST(req: NextRequest) {
         });
 
         if (sgRes.ok) {
-          console.log(`[SendGrid v3 Direct OK - ${cleanToEmail}] Status ${sgRes.status}`);
+          console.log(`[SendGrid Direct OK - ${cleanToEmail}] Status ${sgRes.status}`);
           return {
             email: cleanToEmail,
             persona_type: op.persona_type,
@@ -271,7 +270,7 @@ export async function POST(req: NextRequest) {
           };
         } else {
           const errText = await sgRes.text();
-          console.error(`[SendGrid v3 Direct FAIL - ${cleanToEmail}]`, errText);
+          console.error(`[SendGrid Direct FAIL - ${cleanToEmail}]`, errText);
           return {
             email: cleanToEmail,
             persona_type: op.persona_type,
@@ -282,7 +281,7 @@ export async function POST(req: NextRequest) {
           };
         }
       } catch (err: any) {
-        console.error(`[SendGrid v3 Direct Exception - ${cleanToEmail}]`, err.message);
+        console.error(`[SendGrid Direct Exception - ${cleanToEmail}]`, err.message);
         return {
           email: cleanToEmail,
           persona_type: op.persona_type,
@@ -310,11 +309,6 @@ export async function POST(req: NextRequest) {
         reason: s.reason?.message ? String(s.reason.message) : String(s.reason)
       };
     });
-
-    const successfulSends = sendResults.filter(r => r.ok).length;
-    const failedSends = sendResults.filter(r => !r.ok).length;
-
-    console.log(`[Dispatch Complete Summary] Total: ${sendResults.length} | OK: ${successfulSends} | Failed: ${failedSends}`);
 
     return NextResponse.json({ 
       success: true, 
