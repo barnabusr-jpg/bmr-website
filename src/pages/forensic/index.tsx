@@ -20,8 +20,39 @@ const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF', 'STRATEGIC'],
   TECH_MGMT: ['TECH_MGMT', 'TECH', 'TECHNICAL', 'AVS', 'DEVOPS'],
-  OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'HAI', 'OPERATIONS'],
+  OPS_MGMT: ['OPS_MGMT', 'OPS', 'MANAGERIAL', 'MGR', 'HAI', 'OPERATIONS'],
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR', 'CORE_SYSTEM', 'TERMINAL', 'SYSTEM'],
+};
+
+// ⚡ PRECOMPUTED O(1) REVERSE ALIAS MAP
+const PERSONA_ALIAS_MAP: Record<string, PersonaKey> = Object.entries(QUAD_PERSONA_TYPES).reduce(
+  (acc, [canonicalKey, aliases]) => {
+    acc[canonicalKey] = canonicalKey as PersonaKey;
+    aliases.forEach(alias => {
+      acc[alias.toUpperCase()] = canonicalKey as PersonaKey;
+    });
+    return acc;
+  },
+  {} as Record<string, PersonaKey>
+);
+
+// 🎯 O(1) PERSONA ALIAS RESOLVER
+const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
+  if (!rawRole) return null;
+  const clean = rawRole.toUpperCase().trim();
+
+  // 1. Instant O(1) Dictionary Match
+  if (clean in PERSONA_ALIAS_MAP) {
+    return PERSONA_ALIAS_MAP[clean];
+  }
+
+  // 2. Fallback Partial Substring Matching
+  if (clean.includes('MANAG') || clean.includes('MGR') || clean.includes('OPS')) return 'OPS_MGMT';
+  if (clean.includes('TECH') || clean.includes('DEVOPS')) return 'TECH_MGMT';
+  if (clean.includes('EXEC') || clean.includes('STRATEGIC')) return 'EXECUTIVE';
+  if (clean.includes('USER') || clean.includes('SYS')) return 'SYSTEM_USER';
+
+  return null;
 };
 
 const FRESH_EMPTY_EMAILS: Record<PersonaKey, string> = {
@@ -88,7 +119,8 @@ export default function ForensicEngineRoot() {
     let targetCompanyName = sanitizeOrgKey(orgParam || '');
 
     try {
-      const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
+      // 🎯 RESOLVE ROLE PARAMETER VIA O(1) ALIAS MATCHING
+      const roleParam = resolvePersonaKey(rawRole);
       const isParticipantRoute = !!roleParam;
 
       const isAdminSession = 
@@ -103,11 +135,14 @@ export default function ForensicEngineRoot() {
         }
 
         setActivePersona(roleParam);
-        setActivePillar(activePillarRef.current);
+        
+        // Auto-assign pillar based on resolved persona
+        const resolvedPillar: FunnelPillar = roleParam === 'OPS_MGMT' ? 'HAI' : roleParam === 'TECH_MGMT' ? 'AVS' : 'IGF';
+        setActivePillar(resolvedPillar);
 
         setTriangulation(prev => ({
           companyName: targetCompanyName || prev?.companyName || "Quad Node Client System",
-          pillar: prev?.pillar || activePillarRef.current,
+          pillar: resolvedPillar,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
           completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
           responses: prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
@@ -206,7 +241,7 @@ export default function ForensicEngineRoot() {
         const rawRole = params.get('role') || params.get('persona'); 
         const orgVal = params.get('org') || params.get('entity');
 
-        const roleParam = rawRole && (rawRole in QUAD_PERSONA_TYPES) ? (rawRole as PersonaKey) : null;
+        const roleParam = resolvePersonaKey(rawRole);
         const isParticipantRoute = !!roleParam;
 
         const isAdminAuthenticated =
@@ -656,6 +691,7 @@ export default function ForensicEngineRoot() {
           companyName={triangulation.companyName} 
           activePillar={triangulation.pillar} 
           persona={activePersona} 
+          role={activePersona}
           onComplete={handlePersonaAnswersSaved} 
         /> 
       )} 
