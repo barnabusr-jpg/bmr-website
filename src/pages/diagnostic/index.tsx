@@ -8,17 +8,24 @@ export default function DiagnosticIndexRedirect() {
   useEffect(() => {
     if (!router.isReady) return;
 
-    // Grab incoming query parameters (e.g. ?code=RLIMOQ58 or ?id=...)
-    const { code, id, ...otherQuery } = router.query;
+    const { code, id, flow, ...otherQuery } = router.query;
+    const flowStr = Array.isArray(flow) ? flow[0] : flow;
 
-    // Forward seamlessly to active forensic route
+    // 🎯 DYNAMIC ROUTING BASE
+    // 360 Triangulation routes to /triangulation, Quad Node routes to /forensic
+    const destinationPath = 
+      flowStr === "360_triangulation" 
+        ? "/triangulation" 
+        : "/forensic";
+
     router.replace({
-      pathname: "/forensic",
+      pathname: destinationPath,
       query: { 
         ...otherQuery, 
         ...(id ? { id } : {}),
         ...(code ? { org: code } : {}),
-        auth: "admin_verified_secure" 
+        auth: "admin_verified_secure",
+        ...(flowStr ? { flow: flowStr } : {})
       },
     });
   }, [router.isReady, router]);
