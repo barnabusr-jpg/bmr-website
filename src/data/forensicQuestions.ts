@@ -1,22 +1,26 @@
-// src/data/forensicQuestions.ts
 import { LocalQuestion } from '../types/forensicRuntime';
 
+// Clean single-shape dataset dictionary
 export const forensicQuestions: Record<string, LocalQuestion> = {
-  // ===========================================================================
-  // PILLAR 1: INSTITUTIONAL GOVERNANCE/FIDELITY [IGF] (QUESTIONS 01-30)
-  // ===========================================================================
-  
+  // ====================================================================
+  // PILLAR 1: INSTITUTIONAL GOVERNANCE/FIDELITY [IGF] (QUESTIONS 01–30)
+  // ====================================================================
+
   // --- IGF: EXECUTIVE NODE (GOVERNANCE & STRATEGY) ---
   "IGF-01-EXEC": {
-    id: "IGF-01-EXEC", pillar: "IGF", subarea: "Regulatory Black-Box Exposure", target_node: "EXECUTIVE",
-    symptomatic_scenario: "An automated AI agent makes independent customer evaluation choices. How does corporate governance verify model decision transparency and safety rules?",
+    id: "IGF-01-EXEC",
+    pillar: "IGF",
+    subarea: "Regulatory Black-Box Exposure",
+    target_node: "EXECUTIVE",
+    symptomatic_scenario: "An automated AI agent makes independent customer evaluation choices.",
     choices: {
-      A: { key: 'A', text: "Full Governance Rules: Platform policies enforce data safety rules and clear, searchable activity logging.", symptom_weight: 0.0, bandwidth_multiplier: 0.0 },
-      B: { key: 'B', text: "Contractual Vendor Trust: Leadership relies on vendor promises, assuming standard software guardrails ensure transparency.", symptom_weight: 0.6, bandwidth_multiplier: 1.2 },
-      C: { key: 'C', text: "High Unmonitored Exposure: AI agents operate as black boxes; leadership tracks zero intermediate decisions during reviews.", symptom_weight: 1.6, bandwidth_multiplier: 2.6, regulatory_tag: "GDPR Article 22 Infraction Exposure" },
-      D: { key: 'D', text: "Total Compliance Gap: Autonomous choices execute with zero record history saved, exposing the firm to statutory fines.", symptom_weight: 2.0, bandwidth_multiplier: 4.0, regulatory_tag: "EU AI Act Non-Compliance Threat Vector" }
+      A: { key: 'A', text: "Full Governance Rules: Platform policies enforce data safety rules." },
+      B: { key: 'B', text: "Contractual Vendor Trust: Leadership relies on vendor promises." },
+      C: { key: 'C', text: "High Unmonitored Exposure: AI agents operate as black boxes." },
+      D: { key: 'D', text: "Total Compliance Gap: Autonomous choices execute with zero records." }
     }
   },
+  // === KEEP ALL YOUR EXISTING 940+ LINES OF QUESTIONS HERE ===
   "IGF-02-EXEC": {
     id: "IGF-02-EXEC", pillar: "IGF", subarea: "Vendor Concentration Risk", target_node: "EXECUTIVE",
     symptomatic_scenario: "Evaluate the corporate strategy managing operational risks when core automated workflows depend entirely on a single AI provider.",
