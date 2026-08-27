@@ -99,7 +99,7 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // 📡 BASELINE BOOT & HYDRATION (INCLUDES BOOLEAN FLAGS & EXACT PREFIX DETECTION)
+  // 📡 BASELINE BOOT & HYDRATION (PURE PREFIX-BASED COMPLETION GATING)
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -157,7 +157,6 @@ export default function ForensicEngineRoot() {
 
       let activeAudit: any = null;
 
-      // 🎯 SELECT RAW RESPONSES AND BOOLEAN TRACK FLAGS FROM AUDITS
       if (idParam) {
         const { data } = await supabase
           .from('audits')
@@ -194,33 +193,22 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(calculatedPillar);
 
-        const rawResponses = activeAudit.raw_responses && typeof activeAudit.raw_responses === 'object'
-          ? activeAudit.raw_responses
-          : {};
+        const rawResponses =
+          activeAudit.raw_responses && typeof activeAudit.raw_responses === 'object' && !Array.isArray(activeAudit.raw_responses)
+            ? activeAudit.raw_responses
+            : {};
 
-        const storedKeys = Object.keys(rawResponses || {});
+        const storedKeys = Object.keys(rawResponses);
 
-        // 🎯 HELPER: Detect if any stored answer key starts with designated question prefixes
         const hasAnyKeyWithPrefix = (prefixes: string[]) =>
           prefixes.some((p) => storedKeys.some((k) => k.startsWith(p)));
 
-        // 🎯 DUAL EVALUATION: Match against Supabase boolean flags OR question prefixes (EXE_, TEC_, MGR_, NODE_)
+        // 🎯 PURE PREFIX EVALUATION (Tightened prefix arrays prevent false positive completions)
         const completionsMap: Record<PersonaKey, boolean> = {
-          EXECUTIVE: Boolean(
-            activeAudit.has_executive || 
-            hasAnyKeyWithPrefix(['EXE_', 'EXEC_', 'IGF_'])
-          ),
-          TECH_MGMT: Boolean(
-            activeAudit.has_technical || 
-            hasAnyKeyWithPrefix(['TEC_', 'TECH_', 'AVS_', 'DEV_'])
-          ),
-          OPS_MGMT: Boolean(
-            activeAudit.has_managerial || 
-            hasAnyKeyWithPrefix(['MGR_', 'OPS_', 'HAI_', 'MAN_'])
-          ),
-          SYSTEM_USER: Boolean(
-            hasAnyKeyWithPrefix(['NODE_', 'SYS_', 'USER_', 'CORE_', 'TERM_'])
-          )
+          EXECUTIVE: hasAnyKeyWithPrefix(['EXE_', 'EXEC_', 'IGF_']),
+          TECH_MGMT: hasAnyKeyWithPrefix(['TEC_', 'TECH_', 'AVS_', 'DEV_']),
+          OPS_MGMT: hasAnyKeyWithPrefix(['MGR_', 'OPS_', 'HAI_', 'MAN_']),
+          SYSTEM_USER: hasAnyKeyWithPrefix(['NODE_', 'SYS_', 'CORE_', 'TERM_'])
         };
 
         setTriangulation(prev => ({
@@ -314,13 +302,25 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // 🎯 PERSIST COMPLETIONS & BOOLEAN FLAGS DIRECTLY TO SUPABASE
+  // 🎯 PERSIST COMPLETIONS WITH GUARANTEED PERSONA PREFIX MARKER INJECTION
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
     const targetPersona = activePersona;
-    const answersToSave = personaAnswers || { status: "completed_via_wizard", completed_at: new Date().toISOString() };
     const targetAuditId = activeAuditId || activeAuditIdRef.current;
+
+    const personaPrefixMap: Record<PersonaKey, string> = {
+      EXECUTIVE: 'EXE_COMPLETE',
+      TECH_MGMT: 'TEC_COMPLETE',
+      OPS_MGMT: 'MGR_COMPLETE',
+      SYSTEM_USER: 'NODE_COMPLETE'
+    };
+
+    const answersToSave = {
+      [personaPrefixMap[targetPersona]]: new Date().toISOString(),
+      status: "completed_via_wizard",
+      ...(personaAnswers || {})
+    };
 
     // 1. Update local state
     setTriangulation(prev => {
@@ -384,6 +384,7 @@ export default function ForensicEngineRoot() {
     setViewState('THANK_YOU');
   }; 
 
+  // 🎯 HARDENED INTAKE INSERTION: Explicitly sets track flags to false on setup creation
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     const sanitizedInput = companyName.trim(); 
@@ -402,7 +403,10 @@ export default function ForensicEngineRoot() {
           org_name: sanitizedInput,
           sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
           status: 'IN_PROGRESS',
-          raw_responses: {}
+          raw_responses: {},
+          has_executive: false,
+          has_technical: false,
+          has_managerial: false
         })
         .select('id')
         .single();
