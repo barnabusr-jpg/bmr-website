@@ -99,7 +99,7 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // 📡 BASELINE BOOT & HYDRATION
+  // 📡 BASELINE BOOT & HYDRATION (INCLUDES BOOLEAN FLAGS & EXACT PREFIX DETECTION)
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -157,17 +157,18 @@ export default function ForensicEngineRoot() {
 
       let activeAudit: any = null;
 
+      // 🎯 SELECT RAW RESPONSES AND BOOLEAN TRACK FLAGS FROM AUDITS
       if (idParam) {
         const { data } = await supabase
           .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status')
+          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses, has_executive, has_managerial, has_technical')
           .eq('id', idParam)
           .maybeSingle();
         activeAudit = data;
       } else if (targetCompanyName) {
         const { data } = await supabase
           .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status')
+          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses, has_executive, has_managerial, has_technical')
           .ilike('org_name', targetCompanyName)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -193,12 +194,41 @@ export default function ForensicEngineRoot() {
         }
         setActivePillar(calculatedPillar);
 
+        const rawResponses = activeAudit.raw_responses && typeof activeAudit.raw_responses === 'object'
+          ? activeAudit.raw_responses
+          : {};
+
+        const storedKeys = Object.keys(rawResponses || {});
+
+        // 🎯 HELPER: Detect if any stored answer key starts with designated question prefixes
+        const hasAnyKeyWithPrefix = (prefixes: string[]) =>
+          prefixes.some((p) => storedKeys.some((k) => k.startsWith(p)));
+
+        // 🎯 DUAL EVALUATION: Match against Supabase boolean flags OR question prefixes (EXE_, TEC_, MGR_, NODE_)
+        const completionsMap: Record<PersonaKey, boolean> = {
+          EXECUTIVE: Boolean(
+            activeAudit.has_executive || 
+            hasAnyKeyWithPrefix(['EXE_', 'EXEC_', 'IGF_'])
+          ),
+          TECH_MGMT: Boolean(
+            activeAudit.has_technical || 
+            hasAnyKeyWithPrefix(['TEC_', 'TECH_', 'AVS_', 'DEV_'])
+          ),
+          OPS_MGMT: Boolean(
+            activeAudit.has_managerial || 
+            hasAnyKeyWithPrefix(['MGR_', 'OPS_', 'HAI_', 'MAN_'])
+          ),
+          SYSTEM_USER: Boolean(
+            hasAnyKeyWithPrefix(['NODE_', 'SYS_', 'USER_', 'CORE_', 'TERM_'])
+          )
+        };
+
         setTriangulation(prev => ({
           companyName: activeAudit.org_name,
           pillar: calculatedPillar,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
-          completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
-          responses: prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
+          completions: completionsMap,
+          responses: rawResponses
         }));
 
         if (viewParam === 'cockpit' || viewParam === 'results' || flowParam === 'results') {
@@ -262,6 +292,17 @@ export default function ForensicEngineRoot() {
     }
   }, [synchronizeEngineDataMatrix]); 
 
+  // 🎯 5-SECOND HUB AUTO-POLLING FOR LIVE CHECKMARK UPDATES
+  useEffect(() => {
+    if (viewState !== 'HUB' || !activeAuditId) return;
+
+    const intervalId = window.setInterval(() => {
+      synchronizeEngineDataMatrix(true);
+    }, 5000);
+
+    return () => window.clearInterval(intervalId);
+  }, [viewState, activeAuditId, synchronizeEngineDataMatrix]);
+
   const handleUpdateEmailEntry = (persona: PersonaKey, newEmail: string) => {
     setEmails(prev => ({ ...prev, [persona]: newEmail }));
     setTriangulation(prev => {
@@ -273,12 +314,15 @@ export default function ForensicEngineRoot() {
     });
   };
 
+  // 🎯 PERSIST COMPLETIONS & BOOLEAN FLAGS DIRECTLY TO SUPABASE
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
     const targetPersona = activePersona;
     const answersToSave = personaAnswers || { status: "completed_via_wizard", completed_at: new Date().toISOString() };
+    const targetAuditId = activeAuditId || activeAuditIdRef.current;
 
+    // 1. Update local state
     setTriangulation(prev => {
       if (!prev) return prev;
       return {
@@ -288,19 +332,52 @@ export default function ForensicEngineRoot() {
       };
     });
 
-    const targetAuditId = activeAuditId || activeAuditIdRef.current;
-    if (targetAuditId) {
-      try {
-        await supabase
-          .from('audits')
-          .update({
-            status: 'IN_PROGRESS',
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', targetAuditId);
-      } catch (dbErr) {
-        console.error('[Save Handler] Audit status sync exception:', dbErr);
+    if (!targetAuditId) {
+      console.warn('[Save Handler] Missing targetAuditId; saving locally only.');
+      setActivePersona(null);
+      setViewState('THANK_YOU');
+      return;
+    }
+
+    // 2. Read-Modify-Write into audits.raw_responses & update boolean flag columns
+    try {
+      const { data: auditRow } = await supabase
+        .from('audits')
+        .select('raw_responses')
+        .eq('id', targetAuditId)
+        .maybeSingle();
+
+      const currentRaw = auditRow?.raw_responses && typeof auditRow.raw_responses === 'object' && !Array.isArray(auditRow.raw_responses)
+        ? auditRow.raw_responses
+        : {};
+
+      const updatedRaw = {
+        ...currentRaw,
+        ...answersToSave
+      };
+
+      const updatePayload: Record<string, any> = {
+        raw_responses: updatedRaw,
+        status: 'IN_PROGRESS',
+        updated_at: new Date().toISOString()
+      };
+
+      if (targetPersona === 'EXECUTIVE') updatePayload.has_executive = true;
+      if (targetPersona === 'TECH_MGMT') updatePayload.has_technical = true;
+      if (targetPersona === 'OPS_MGMT') updatePayload.has_managerial = true;
+
+      const { error: updateErr } = await supabase
+        .from('audits')
+        .update(updatePayload)
+        .eq('id', targetAuditId);
+
+      if (updateErr) {
+        console.error('[Save Handler] Failed updating audit responses:', updateErr.message);
+      } else {
+        console.log(`✅ Successfully persisted completion for ${targetPersona} into audit ${targetAuditId}`);
       }
+    } catch (dbErr) {
+      console.error('[Save Handler] Audit completion persistence exception:', dbErr);
     }
 
     setActivePersona(null); 
@@ -324,7 +401,8 @@ export default function ForensicEngineRoot() {
         .insert({
           org_name: sanitizedInput,
           sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
-          status: 'IN_PROGRESS'
+          status: 'IN_PROGRESS',
+          raw_responses: {}
         })
         .select('id')
         .single();
@@ -349,7 +427,6 @@ export default function ForensicEngineRoot() {
     } 
   }; 
 
-  // ✉️ INDIVIDUAL REMINDER DISPATCH
   const handleTriggerNudge = async (persona: PersonaKey) => {
     const targetAudit = activeAuditId || activeAuditIdRef.current;
     const currentEmails = triangulation?.emails || emails;
@@ -389,17 +466,10 @@ export default function ForensicEngineRoot() {
     }
   };
 
-  // ✉️ HARDENED BATCH DISPATCH WITH PRE-FETCH PROOF LOG & AUDIT ID GUARD
   const handleDispatchBatchEmails = async () => {
-    console.log("🚀 [SEND EMAILS CLICKED]:", { 
-      activeAuditId: activeAuditId || activeAuditIdRef.current, 
-      triangulation 
-    });
-
     const targetAudit = activeAuditId || activeAuditIdRef.current;
     if (!targetAudit) {
       alert("Audit record reference is missing. Please re-enter organization name or refresh.");
-      console.error("❌ Dispatch halted: targetAudit is null/undefined");
       return;
     }
 
@@ -413,18 +483,8 @@ export default function ForensicEngineRoot() {
 
     if (missingRoles.length > 0) {
       alert(`Please enter emails for all 4 tracks before dispatching. Missing: ${missingRoles.join(", ")}`);
-      console.error("❌ Dispatch halted: Missing required emails", missingRoles);
       return;
     }
-
-    // 📤 PRE-FETCH PROOF LOG
-    console.log("📤 [SEND EMAILS PAYLOAD]:", {
-      url: "/api/send-triangulation",
-      auditId: targetAudit,
-      companyName: triangulation?.companyName || companyName,
-      endpointsKeys: Object.keys(currentEmails || {}),
-      endpoints: currentEmails
-    });
 
     try {
       setIsDispatchingBatch(true);
@@ -442,7 +502,6 @@ export default function ForensicEngineRoot() {
       });
 
       const data = await res.json();
-      console.log("📡 [DISPATCH API RESPONSE]:", data);
 
       if (res.ok && data.success) {
         alert(`Templated assessment emails successfully dispatched to all 4 stakeholders.`);
@@ -712,7 +771,7 @@ export default function ForensicEngineRoot() {
             })} 
           </div> 
 
-          {/* 🎯 ACTION BUTTONS BLOCK WITH STRICT GATING & PRE-FETCH PROOF */}
+          {/* 🎯 ACTION BUTTONS BLOCK WITH STRICT GATING */}
           {(() => {
             const currentEmails = triangulation?.emails || emails;
             const hasAllEmails = Boolean(currentEmails?.EXECUTIVE?.trim()) &&
