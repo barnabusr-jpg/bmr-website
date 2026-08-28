@@ -637,9 +637,8 @@ export default function ForensicEngineRoot() {
       </div> 
     ); 
   } 
-
-  return ( 
-    <div className="bg-slate-50 min-h-screen text-slate-900 font-sans text-left overflow-x-hidden flex flex-col justify-center items-center py-12 px-4"> 
+return (
+  <div className="bg-slate-50 min-h-screen text-slate-900 font-sans text-left overflow-x-hidden flex flex-col justify-center items-center py-12 px-4"> 
                   
       {/* INTAKE SETUP VIEW */}
       {viewState === 'INTAKE' && ( 
