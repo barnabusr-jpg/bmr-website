@@ -147,6 +147,12 @@ export default function ForensicEngineRoot() {
       }
 
       if (isParticipantRoute && roleParam) {
+        // 🎯 BIND AUDIT ID FROM URL PARAMETER IMMEDIATELY
+        if (idParam) {
+          setActiveAuditId(idParam);
+          activeAuditIdRef.current = idParam;
+        }
+
         if (targetCompanyName) {
           setCompanyName(targetCompanyName);
           setIsCompanyFromDB(true);
@@ -168,7 +174,7 @@ export default function ForensicEngineRoot() {
         setHasSynced(true);
         return;
       }
-
+      
       if (isAdminSession && flowParam === 'quad_node' && !idParam && !targetCompanyName) {
         setEmails(FRESH_EMPTY_EMAILS);
         setViewState('INTAKE');
@@ -778,18 +784,30 @@ export default function ForensicEngineRoot() {
                     )} 
 
                     <button 
-                      onClick={() => { setActivePersona(persona); setViewState('WIZARD'); }} 
-                      className={`px-4 py-2 text-xs uppercase tracking-wider font-bold rounded-md transition-colors flex items-center gap-2 cursor-pointer ${ 
-                        isDone ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-slate-900 text-white hover:bg-slate-800' 
-                      }`} 
-                    > 
-                      {isDone ? 'Review Track' : 'Open Track'} 
-                    </button> 
-                  </div> 
-                </div> 
-              ); 
-            })} 
-          </div> 
+  onClick={async () => { 
+    if ((!activeAuditId || !activeAuditIdRef.current) && triangulation?.companyName) {
+      const { data: matched } = await supabase
+        .from('audits')
+        .select('id')
+        .ilike('org_name', sanitizeOrgKey(triangulation.companyName))
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (matched?.id) {
+        setActiveAuditId(matched.id);
+        activeAuditIdRef.current = matched.id;
+      }
+    }
+    setActivePersona(persona); 
+    setViewState('WIZARD'); 
+  }} 
+  className={`px-4 py-2 text-xs uppercase tracking-wider font-bold rounded-md transition-colors flex items-center gap-2 cursor-pointer ${ 
+    isDone ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-slate-900 text-white hover:bg-slate-800' 
+  }`} 
+> 
+  {isDone ? 'Review Track' : 'Open Track'} 
+</button> 
 
           {/* 🎯 ACTION BUTTONS BLOCK WITH STRICT SERVER MARKER GATING */}
           {(() => {
