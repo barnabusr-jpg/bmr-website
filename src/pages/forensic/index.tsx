@@ -65,7 +65,7 @@ interface TriangulationState {
   pillar: FunnelPillar; 
   emails: Record<PersonaKey, string>; 
   completions: Record<PersonaKey, boolean>; 
-  responses: Record<PersonaKey, Record<string, string>>; 
+  responses: Record<string, any>; 
 } 
 
 export default function ForensicEngineRoot() { 
@@ -99,7 +99,7 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // 📡 BASELINE BOOT & HYDRATION (PURE PREFIX-BASED COMPLETION GATING)
+  // 📡 BASELINE BOOT & HYDRATION (PURE MARKER-PRESENCE EVALUATION)
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -140,7 +140,7 @@ export default function ForensicEngineRoot() {
           pillar: resolvedPillar,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
           completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
-          responses: prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
+          responses: prev?.responses || {}
         }));
 
         setViewState('WIZARD');
@@ -160,14 +160,14 @@ export default function ForensicEngineRoot() {
       if (idParam) {
         const { data } = await supabase
           .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses, has_executive, has_managerial, has_technical')
+          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses')
           .eq('id', idParam)
           .maybeSingle();
         activeAudit = data;
       } else if (targetCompanyName) {
         const { data } = await supabase
           .from('audits')
-          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses, has_executive, has_managerial, has_technical')
+          .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses')
           .ilike('org_name', targetCompanyName)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -198,17 +198,12 @@ export default function ForensicEngineRoot() {
             ? activeAudit.raw_responses
             : {};
 
-        const storedKeys = Object.keys(rawResponses);
-
-        const hasAnyKeyWithPrefix = (prefixes: string[]) =>
-          prefixes.some((p) => storedKeys.some((k) => k.startsWith(p)));
-
-        // 🎯 PURE PREFIX EVALUATION (Tightened prefix arrays prevent false positive completions)
+        // 🎯 PURE MARKER-PRESENCE EVALUATION (Immune to metadata/legacy key false positives)
         const completionsMap: Record<PersonaKey, boolean> = {
-          EXECUTIVE: hasAnyKeyWithPrefix(['EXE_', 'EXEC_', 'IGF_']),
-          TECH_MGMT: hasAnyKeyWithPrefix(['TEC_', 'TECH_', 'AVS_', 'DEV_']),
-          OPS_MGMT: hasAnyKeyWithPrefix(['MGR_', 'OPS_', 'HAI_', 'MAN_']),
-          SYSTEM_USER: hasAnyKeyWithPrefix(['NODE_', 'SYS_', 'CORE_', 'TERM_'])
+          EXECUTIVE: Boolean(rawResponses['QUAD_EXE_COMPLETE']),
+          TECH_MGMT: Boolean(rawResponses['QUAD_TEC_COMPLETE']),
+          OPS_MGMT: Boolean(rawResponses['QUAD_MGR_COMPLETE']),
+          SYSTEM_USER: Boolean(rawResponses['QUAD_SYS_COMPLETE'])
         };
 
         setTriangulation(prev => ({
@@ -230,7 +225,7 @@ export default function ForensicEngineRoot() {
           pillar: calculatedPillar,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
           completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
-          responses: prev?.responses || { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} }
+          responses: prev?.responses || {}
         }));
         setViewState('HUB');
       } else {
@@ -302,33 +297,33 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // 🎯 PERSIST COMPLETIONS WITH GUARANTEED PERSONA PREFIX MARKER INJECTION
+  // 🎯 ATOMIC RPC PERSISTENCE WITH CLEAN PAYLOAD
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
     const targetPersona = activePersona;
     const targetAuditId = activeAuditId || activeAuditIdRef.current;
 
-    const personaPrefixMap: Record<PersonaKey, string> = {
-      EXECUTIVE: 'EXE_COMPLETE',
-      TECH_MGMT: 'TEC_COMPLETE',
-      OPS_MGMT: 'MGR_COMPLETE',
-      SYSTEM_USER: 'NODE_COMPLETE'
+    const quadMarkerMap: Record<PersonaKey, string> = {
+      EXECUTIVE: 'QUAD_EXE_COMPLETE',
+      TECH_MGMT: 'QUAD_TEC_COMPLETE',
+      OPS_MGMT: 'QUAD_MGR_COMPLETE',
+      SYSTEM_USER: 'QUAD_SYS_COMPLETE'
     };
 
+    // Clean payload without status property pollution
     const answersToSave = {
-      [personaPrefixMap[targetPersona]]: new Date().toISOString(),
-      status: "completed_via_wizard",
+      [quadMarkerMap[targetPersona]]: new Date().toISOString(),
       ...(personaAnswers || {})
     };
 
-    // 1. Update local state
+    // Optimistic local UI feedback
     setTriangulation(prev => {
       if (!prev) return prev;
       return {
         ...prev,
         completions: { ...prev.completions, [targetPersona]: true },
-        responses: { ...prev.responses, [targetPersona]: answersToSave }
+        responses: { ...prev.responses, ...answersToSave }
       };
     });
 
@@ -339,52 +334,25 @@ export default function ForensicEngineRoot() {
       return;
     }
 
-    // 2. Read-Modify-Write into audits.raw_responses & update boolean flag columns
     try {
-      const { data: auditRow } = await supabase
-        .from('audits')
-        .select('raw_responses')
-        .eq('id', targetAuditId)
-        .maybeSingle();
+      const { data: updatedRaw, error: rpcErr } = await supabase.rpc('save_quad_node_response', {
+        target_audit_id: targetAuditId,
+        new_responses: answersToSave
+      });
 
-      const currentRaw = auditRow?.raw_responses && typeof auditRow.raw_responses === 'object' && !Array.isArray(auditRow.raw_responses)
-        ? auditRow.raw_responses
-        : {};
-
-      const updatedRaw = {
-        ...currentRaw,
-        ...answersToSave
-      };
-
-      const updatePayload: Record<string, any> = {
-        raw_responses: updatedRaw,
-        status: 'IN_PROGRESS',
-        updated_at: new Date().toISOString()
-      };
-
-      if (targetPersona === 'EXECUTIVE') updatePayload.has_executive = true;
-      if (targetPersona === 'TECH_MGMT') updatePayload.has_technical = true;
-      if (targetPersona === 'OPS_MGMT') updatePayload.has_managerial = true;
-
-      const { error: updateErr } = await supabase
-        .from('audits')
-        .update(updatePayload)
-        .eq('id', targetAuditId);
-
-      if (updateErr) {
-        console.error('[Save Handler] Failed updating audit responses:', updateErr.message);
+      if (rpcErr || !updatedRaw) {
+        console.error('[Save Handler] RPC execution failed:', rpcErr?.message || 'Returned null payload');
       } else {
-        console.log(`✅ Successfully persisted completion for ${targetPersona} into audit ${targetAuditId}`);
+        console.log(`✅ Atomic Quad-Node completion saved for ${targetPersona} in audit ${targetAuditId}`);
       }
-    } catch (dbErr) {
-      console.error('[Save Handler] Audit completion persistence exception:', dbErr);
+    } catch (err) {
+      console.error('[Save Handler] Persistence exception:', err);
     }
 
     setActivePersona(null); 
     setViewState('THANK_YOU');
   }; 
 
-  // 🎯 HARDENED INTAKE INSERTION: Explicitly sets track flags to false on setup creation
   const handleInitializeTriangulation = async (e: React.FormEvent) => { 
     e.preventDefault(); 
     const sanitizedInput = companyName.trim(); 
@@ -403,10 +371,7 @@ export default function ForensicEngineRoot() {
           org_name: sanitizedInput,
           sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
           status: 'IN_PROGRESS',
-          raw_responses: {},
-          has_executive: false,
-          has_technical: false,
-          has_managerial: false
+          raw_responses: {}
         })
         .select('id')
         .single();
@@ -421,7 +386,7 @@ export default function ForensicEngineRoot() {
         pillar: activePillar, 
         emails: { ...emails }, 
         completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false }, 
-        responses: { EXECUTIVE: {}, TECH_MGMT: {}, OPS_MGMT: {}, SYSTEM_USER: {} } 
+        responses: {} 
       };
 
       setTriangulation(initialTriangulation); 
@@ -506,7 +471,6 @@ export default function ForensicEngineRoot() {
       });
 
       const data = await res.json();
-
       if (res.ok && data.success) {
         alert(`Templated assessment emails successfully dispatched to all 4 stakeholders.`);
       } else {
@@ -541,23 +505,27 @@ export default function ForensicEngineRoot() {
     setTimeout(() => { synchronizeEngineDataMatrix(true); }, 0);
   }; 
 
-  const allPersonasComplete = triangulation       
-    ? Object.values(triangulation.completions).every(status => status === true) 
-    : false; 
+  // 🎯 STRICT SERVER-MARKER TRUTH EVALUATION FOR MATRIX GATING
+  const allPersonasComplete = useMemo(() => {
+    if (!triangulation?.responses) return false;
+    const resp = triangulation.responses;
+    
+    return Boolean(
+      resp['QUAD_EXE_COMPLETE'] &&
+      resp['QUAD_TEC_COMPLETE'] &&
+      resp['QUAD_MGR_COMPLETE'] &&
+      resp['QUAD_SYS_COMPLETE']
+    );
+  }, [triangulation?.responses]);
 
   const alignedCockpitMetrics = useMemo(() => { 
     if (!triangulation) {
       return { multiplier: 1.0, complianceScore: 100, annualSalaryLeakage: 0, unhedgedLegalExposure: 0, isTierThreeExposure: false, regulatoryAlertActive: false };
     }
 
-    const consolidatedResponses: Record<string, string> = {};
-    Object.values(triangulation.responses).forEach(personaAnswers => {
-      Object.assign(consolidatedResponses, personaAnswers);
-    });
-
     const calculated = calculateForensicMetrics(
       triangulation.companyName, 
-      consolidatedResponses, 
+      triangulation.responses, 
       activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE'
     );
 
@@ -775,7 +743,7 @@ export default function ForensicEngineRoot() {
             })} 
           </div> 
 
-          {/* 🎯 ACTION BUTTONS BLOCK WITH STRICT GATING */}
+          {/* 🎯 ACTION BUTTONS BLOCK WITH STRICT SERVER MARKER GATING */}
           {(() => {
             const currentEmails = triangulation?.emails || emails;
             const hasAllEmails = Boolean(currentEmails?.EXECUTIVE?.trim()) &&
