@@ -219,7 +219,7 @@ export default function ForensicEngineRoot() {
             ? activeAudit.raw_responses
             : {};
 
-        // 🎯 PURE MARKER-PRESENCE EVALUATION (Immune to metadata/legacy key false positives)
+        // 🎯 PURE MARKER-PRESENCE EVALUATION
         const completionsMap: Record<PersonaKey, boolean> = {
           EXECUTIVE: Boolean(rawResponses['QUAD_EXE_COMPLETE']),
           TECH_MGMT: Boolean(rawResponses['QUAD_TEC_COMPLETE']),
@@ -318,12 +318,11 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // 🎯 ATOMIC RPC PERSISTENCE WITH CANONICAL PERSONA KEY MAPPING & PAYLOAD SANITIZATION
+  // 🎯 ATOMIC RPC PERSISTENCE WITH ENFORCED TIMESTAMP PRECEDENCE & RETURNED PAYLOAD HYDRATION
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
-    // Normalize persona to strict canonical key
-    const targetPersona = resolvePersonaKey(activePersona) || activePersona;
+    const targetPersona = activePersona;
     const targetAuditId = activeAuditId || activeAuditIdRef.current;
 
     const quadMarkerMap: Record<PersonaKey, string> = {
@@ -341,9 +340,10 @@ export default function ForensicEngineRoot() {
       return;
     }
 
+    // 🎯 ENFORCED ORDER: Spread personaAnswers FIRST so markerKey timestamp wins
     const answersToSave = {
-      [markerKey]: new Date().toISOString(),
-      ...(personaAnswers || {})
+      ...(personaAnswers || {}),
+      [markerKey]: new Date().toISOString()
     };
 
     // Optimistic local UI update
@@ -373,6 +373,18 @@ export default function ForensicEngineRoot() {
         console.error('[Save Handler] RPC execution failed:', rpcErr?.message || 'Null payload returned');
       } else {
         console.log(`✅ Quad Node marker ${markerKey} saved for ${targetPersona} in audit ${targetAuditId}`);
+        
+        // 🎯 DIRECT DB TRUTH HYDRATION: Synchronize state directly from RPC output
+        setTriangulation(prev => prev ? ({
+          ...prev,
+          completions: {
+            EXECUTIVE: Boolean(updatedRaw['QUAD_EXE_COMPLETE']),
+            TECH_MGMT: Boolean(updatedRaw['QUAD_TEC_COMPLETE']),
+            OPS_MGMT: Boolean(updatedRaw['QUAD_MGR_COMPLETE']),
+            SYSTEM_USER: Boolean(updatedRaw['QUAD_SYS_COMPLETE'])
+          },
+          responses: updatedRaw
+        }) : prev);
       }
     } catch (err) {
       console.error('[Save Handler] Persistence exception:', err);
@@ -409,6 +421,12 @@ export default function ForensicEngineRoot() {
 
       const parentAuditId = newAudit.id;
       setActiveAuditId(parentAuditId);
+      activeAuditIdRef.current = parentAuditId;
+
+      if (typeof window !== 'undefined') {
+        const newUrl = `${window.location.pathname}?id=${parentAuditId}&org=${encodeURIComponent(sanitizedInput)}&flow=quad_node&auth=admin_verified_secure`;
+        window.history.pushState({}, '', newUrl);
+      }
 
       const initialTriangulation = { 
         companyName: sanitizedInput, 
@@ -583,8 +601,9 @@ export default function ForensicEngineRoot() {
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
+  // 🎯 SOW LINK GENERATOR WITH SSR GUARD FIX (typeof window === 'undefined')
   const sowShareLink = useMemo(() => {
-    if (typeof window !== 'undefined' || !triangulation) return '';
+    if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
       org: triangulation.companyName,
       pillar: triangulation.pillar,
