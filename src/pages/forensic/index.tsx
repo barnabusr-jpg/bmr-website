@@ -637,8 +637,9 @@ export default function ForensicEngineRoot() {
       </div> 
     ); 
   } 
-return (
-  <div className="bg-slate-50 min-h-screen text-slate-900 font-sans text-left overflow-x-hidden flex flex-col justify-center items-center py-12 px-4"> 
+
+  return ( 
+    <div className="bg-slate-50 min-h-screen text-slate-900 font-sans text-left overflow-x-hidden flex flex-col justify-center items-center py-12 px-4"> 
                   
       {/* INTAKE SETUP VIEW */}
       {viewState === 'INTAKE' && ( 
@@ -783,30 +784,35 @@ return (
                     )} 
 
                     <button 
-  onClick={async () => { 
-    if ((!activeAuditId || !activeAuditIdRef.current) && triangulation?.companyName) {
-      const { data: matched } = await supabase
-        .from('audits')
-        .select('id')
-        .ilike('org_name', sanitizeOrgKey(triangulation.companyName))
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+                      onClick={async () => { 
+                        if ((!activeAuditId || !activeAuditIdRef.current) && triangulation?.companyName) {
+                          const { data: matched } = await supabase
+                            .from('audits')
+                            .select('id')
+                            .ilike('org_name', sanitizeOrgKey(triangulation.companyName))
+                            .order('created_at', { ascending: false })
+                            .limit(1)
+                            .maybeSingle();
 
-      if (matched?.id) {
-        setActiveAuditId(matched.id);
-        activeAuditIdRef.current = matched.id;
-      }
-    }
-    setActivePersona(persona); 
-    setViewState('WIZARD'); 
-  }} 
-  className={`px-4 py-2 text-xs uppercase tracking-wider font-bold rounded-md transition-colors flex items-center gap-2 cursor-pointer ${ 
-    isDone ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-slate-900 text-white hover:bg-slate-800' 
-  }`} 
-> 
-  {isDone ? 'Review Track' : 'Open Track'} 
-</button> 
+                          if (matched?.id) {
+                            setActiveAuditId(matched.id);
+                            activeAuditIdRef.current = matched.id;
+                          }
+                        }
+                        setActivePersona(persona); 
+                        setViewState('WIZARD'); 
+                      }} 
+                      className={`px-4 py-2 text-xs uppercase tracking-wider font-bold rounded-md transition-colors flex items-center gap-2 cursor-pointer ${ 
+                        isDone ? 'bg-emerald-700 text-white hover:bg-emerald-800' : 'bg-slate-900 text-white hover:bg-slate-800' 
+                      }`} 
+                    > 
+                      {isDone ? 'Review Track' : 'Open Track'} 
+                    </button> 
+                  </div> 
+                </div> 
+              ); 
+            })} 
+          </div> 
 
           {/* 🎯 ACTION BUTTONS BLOCK WITH STRICT SERVER MARKER GATING */}
           {(() => {
