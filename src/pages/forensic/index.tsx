@@ -17,6 +17,10 @@ type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
+// Lightweight UUID validator to prevent malformed API queries
+const isValidUuid = (val?: string | null): boolean => 
+  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF', 'STRATEGIC'],
   TECH_MGMT: ['TECH_MGMT', 'TECH', 'TECHNICAL', 'AVS', 'DEVOPS'],
@@ -108,7 +112,7 @@ export default function ForensicEngineRoot() {
       ? new URLSearchParams(window.location.search) 
       : new URLSearchParams();
 
-    const idParam = params.get('id') || activeAuditIdRef.current;
+    let idParam = params.get('id') || activeAuditIdRef.current;
     const orgParam = params.get('org') || params.get('entity') || params.get('entity_code') || companyNameRef.current;
     const rawRole = params.get('role') || params.get('persona');
     const authVal = params.get('auth');
@@ -124,6 +128,23 @@ export default function ForensicEngineRoot() {
       const isAdminSession = 
         !isParticipantRoute && 
         (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
+
+      // 🎯 AUDIT ID RESOLVER FALLBACK: If missing on participant route, resolve from DB via org_name
+      if (!idParam && targetCompanyName) {
+        const { data: matchedAudit } = await supabase
+          .from('audits')
+          .select('id')
+          .ilike('org_name', targetCompanyName)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (matchedAudit?.id) {
+          idParam = matchedAudit.id;
+          setActiveAuditId(matchedAudit.id);
+          activeAuditIdRef.current = matchedAudit.id;
+        }
+      }
 
       if (isParticipantRoute && roleParam) {
         if (targetCompanyName) {
@@ -157,7 +178,7 @@ export default function ForensicEngineRoot() {
 
       let activeAudit: any = null;
 
-      if (idParam) {
+      if (idParam && isValidUuid(idParam)) {
         const { data } = await supabase
           .from('audits')
           .select('id, org_name, sfi_score, decay_pct, sector, status, raw_responses')
@@ -297,11 +318,12 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // 🎯 ATOMIC RPC PERSISTENCE WITH CLEAN PAYLOAD
+  // 🎯 ATOMIC RPC PERSISTENCE WITH CANONICAL PERSONA KEY MAPPING & PAYLOAD SANITIZATION
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => { 
     if (!activePersona) return;
 
-    const targetPersona = activePersona;
+    // Normalize persona to strict canonical key
+    const targetPersona = resolvePersonaKey(activePersona) || activePersona;
     const targetAuditId = activeAuditId || activeAuditIdRef.current;
 
     const quadMarkerMap: Record<PersonaKey, string> = {
@@ -311,13 +333,20 @@ export default function ForensicEngineRoot() {
       SYSTEM_USER: 'QUAD_SYS_COMPLETE'
     };
 
-    // Clean payload without status property pollution
+    const markerKey = quadMarkerMap[targetPersona];
+    if (!markerKey) {
+      console.error(`[Save Handler] Failed to resolve quad marker key for persona: ${activePersona}`);
+      setActivePersona(null);
+      setViewState('THANK_YOU');
+      return;
+    }
+
     const answersToSave = {
-      [quadMarkerMap[targetPersona]]: new Date().toISOString(),
+      [markerKey]: new Date().toISOString(),
       ...(personaAnswers || {})
     };
 
-    // Optimistic local UI feedback
+    // Optimistic local UI update
     setTriangulation(prev => {
       if (!prev) return prev;
       return {
@@ -327,8 +356,8 @@ export default function ForensicEngineRoot() {
       };
     });
 
-    if (!targetAuditId) {
-      console.warn('[Save Handler] Missing targetAuditId; saving locally only.');
+    if (!targetAuditId || !isValidUuid(targetAuditId)) {
+      console.warn('[Save Handler] Missing or invalid targetAuditId; skipping database save.', targetAuditId);
       setActivePersona(null);
       setViewState('THANK_YOU');
       return;
@@ -341,9 +370,9 @@ export default function ForensicEngineRoot() {
       });
 
       if (rpcErr || !updatedRaw) {
-        console.error('[Save Handler] RPC execution failed:', rpcErr?.message || 'Returned null payload');
+        console.error('[Save Handler] RPC execution failed:', rpcErr?.message || 'Null payload returned');
       } else {
-        console.log(`✅ Atomic Quad-Node completion saved for ${targetPersona} in audit ${targetAuditId}`);
+        console.log(`✅ Quad Node marker ${markerKey} saved for ${targetPersona} in audit ${targetAuditId}`);
       }
     } catch (err) {
       console.error('[Save Handler] Persistence exception:', err);
