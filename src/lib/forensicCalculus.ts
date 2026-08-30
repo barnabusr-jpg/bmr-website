@@ -70,8 +70,9 @@ function sanitizeSector(sector: any): string {
 }
 
 /**
- * 🔒 AUTHORITATIVE FINANCIAL CALCULATOR (Server-Truth)
- * Sourced directly from audit row & admin trued-up sliders.
+ * 🔒 AUTHORITATIVE FINANCIAL CALCULATOR (Phase 1 Refactored)
+ * Semantics: dbDecay = Waste/Decay Rate (Higher = Worse).
+ * UI Presentation: Readiness = (100 - dbDecay)%.
  */
 export function calculateAuditFinancialMetrics(
   auditRow: AuditRowLike,
@@ -79,31 +80,45 @@ export function calculateAuditFinancialMetrics(
 ): AuditFinancialMetrics {
   const companyName = auditRow.org_name || "Evaluation Client System";
 
+  // 1. DIRECTIONALITY & BOUNDING (dbDecay = Waste/Decay Rate)
   const dbDecay = Math.min(Math.max(coerceNumber(auditRow.decay_pct) ?? FINANCIAL_DEFAULTS.dbDecay, 0), 100);
   const spend = Math.max(coerceNumber(auditRow.ai_spend) ?? FINANCIAL_DEFAULTS.spend, 0.1);
 
+  // 2. NORMALIZED FTE COUNT
   const fteCount =
     auditRow.roi_pct != null && auditRow.roi_pct !== ""
       ? Math.max(0, Math.round(coerceNumber(auditRow.roi_pct) ?? 0))
       : Math.max(0, Math.round((spend * 1_000_000) / 200_000) || FINANCIAL_DEFAULTS.fteFallback);
 
+  // 3. DETERMINISTIC TIME DRIFT
   const rawCreatedAtMs = auditRow.created_at ? new Date(auditRow.created_at).getTime() : NaN;
   const historicalAnchorTimeMs = Number.isFinite(rawCreatedAtMs) ? rawCreatedAtMs : Date.now();
   
-  // Deterministic time: Use provided timestamp, DB updated_at, or anchor time
   const rawUpdatedAtMs = auditRow.updated_at ? new Date(auditRow.updated_at).getTime() : NaN;
   const fallbackCurrentMs = Number.isFinite(rawUpdatedAtMs) ? rawUpdatedAtMs : historicalAnchorTimeMs;
   const currentRealTimeMs = asOfTimestampMs && Number.isFinite(asOfTimestampMs) ? asOfTimestampMs : fallbackCurrentMs;
   
   const elapsedSeconds = Math.max(0, (currentRealTimeMs - historicalAnchorTimeMs) / 1000);
 
+  // 4. SECTOR MULTIPLIER & STANDARDIZED LABOR POOL
   const sector = sanitizeSector(auditRow.sector);
   const laborMultiplier = getLaborMultiplier(sector);
+  
+  // Standardized $160k base fully burdened salary with labor multiplier scaling
+  const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160_000);
 
-  const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160_000 * 1.3);
-  const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1_000_000)) * 1.15;
-  const totalErosion = (exposure / 31_536_000) * elapsedSeconds;
+  // 5. CONTINUOUS CAPITAL RISK EXPOSURE (Eliminates >60 step-function jump)
+  // Exposure Rate smoothly scales from 12% to 35% based on dbDecay
+  const continuousExposureRate = 0.12 + (0.23 * (dbDecay / 100));
+  const exposure = continuousExposureRate * (spend * 1_000_000);
 
+  // 6. AMORTIZED & HARD-BOUNDED EROSION (Prevents infinite loss creep)
+  // Amortizes annual risk over 1 year (31,536,000s) and caps total erosion at 95% of total capital risk
+  const uncappedErosion = (exposure / 31_536_000) * elapsedSeconds;
+  const maxErosionCap = exposure * 0.95;
+  const totalErosion = Math.min(uncappedErosion, maxErosionCap);
+
+  // 7. FINDINGS IMPACT DISTRIBUTION
   const findingsImpacts = [0.35, 0.28, 0.22, 0.15].map(p => totalLaborTaxPool * p);
 
   return {
