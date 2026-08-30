@@ -7,7 +7,7 @@ import {
   VisibilityState 
 } from './forensicInference';
 
-export const CALCULUS_VERSION = "2026.1.0";
+export const CALCULUS_VERSION = "2026.2.0";
 
 // ============================================================================
 // 1. FINANCIAL CALCULATOR TYPES & DEFAULTS
@@ -80,17 +80,17 @@ export function calculateAuditFinancialMetrics(
 ): AuditFinancialMetrics {
   const companyName = auditRow.org_name || "Evaluation Client System";
 
-  // 1. DIRECTIONALITY & BOUNDING (dbDecay = Waste/Decay Rate)
+  // 1. Directionality & Bounding (dbDecay = Waste/Decay Rate)
   const dbDecay = Math.min(Math.max(coerceNumber(auditRow.decay_pct) ?? FINANCIAL_DEFAULTS.dbDecay, 0), 100);
   const spend = Math.max(coerceNumber(auditRow.ai_spend) ?? FINANCIAL_DEFAULTS.spend, 0.1);
 
-  // 2. NORMALIZED FTE COUNT
+  // 2. Normalized FTE Count
   const fteCount =
     auditRow.roi_pct != null && auditRow.roi_pct !== ""
       ? Math.max(0, Math.round(coerceNumber(auditRow.roi_pct) ?? 0))
       : Math.max(0, Math.round((spend * 1_000_000) / 200_000) || FINANCIAL_DEFAULTS.fteFallback);
 
-  // 3. DETERMINISTIC TIME DRIFT
+  // 3. Deterministic Time Drift
   const rawCreatedAtMs = auditRow.created_at ? new Date(auditRow.created_at).getTime() : NaN;
   const historicalAnchorTimeMs = Number.isFinite(rawCreatedAtMs) ? rawCreatedAtMs : Date.now();
   
@@ -100,25 +100,25 @@ export function calculateAuditFinancialMetrics(
   
   const elapsedSeconds = Math.max(0, (currentRealTimeMs - historicalAnchorTimeMs) / 1000);
 
-  // 4. SECTOR MULTIPLIER & STANDARDIZED LABOR POOL
+  // 4. Sector Multiplier & Standardized Labor Pool
   const sector = sanitizeSector(auditRow.sector);
   const laborMultiplier = getLaborMultiplier(sector);
   
   // Standardized $160k base fully burdened salary with labor multiplier scaling
   const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160_000);
 
-  // 5. CONTINUOUS CAPITAL RISK EXPOSURE (Eliminates >60 step-function jump)
+  // 5. Continuous Capital Risk Exposure (Eliminates >60 step-function jump)
   // Exposure Rate smoothly scales from 12% to 35% based on dbDecay
   const continuousExposureRate = 0.12 + (0.23 * (dbDecay / 100));
   const exposure = continuousExposureRate * (spend * 1_000_000);
 
-  // 6. AMORTIZED & HARD-BOUNDED EROSION (Prevents infinite loss creep)
+  // 6. Amortized & Hard-Bounded Erosion (Prevents infinite loss creep)
   // Amortizes annual risk over 1 year (31,536,000s) and caps total erosion at 95% of total capital risk
   const uncappedErosion = (exposure / 31_536_000) * elapsedSeconds;
   const maxErosionCap = exposure * 0.95;
   const totalErosion = Math.min(uncappedErosion, maxErosionCap);
 
-  // 7. FINDINGS IMPACT DISTRIBUTION
+  // 7. Findings Impact Distribution
   const findingsImpacts = [0.35, 0.28, 0.22, 0.15].map(p => totalLaborTaxPool * p);
 
   return {
@@ -163,10 +163,6 @@ function isValidCompletionMarker(val: any): boolean {
   return false;
 }
 
-/**
- * 🛡️ STAGE-GATING AUDITOR
- * Validates completion markers and strict choice predicates before releasing assertions.
- */
 export function getPdfEvidenceStatus(
   rawResponses: Record<string, any> | null | undefined,
   minSampleThreshold = 10
@@ -210,7 +206,7 @@ export function getPdfEvidenceStatus(
 }
 
 // ============================================================================
-// 3. AUTHORITATIVE FORENSIC CALCULATOR
+// 3. AUTHORITATIVE FORENSIC CALCULATOR (Phase 2 Refactored)
 // ============================================================================
 
 export interface CalculatedMetrics {
@@ -263,25 +259,31 @@ export function calculateForensicMetrics(
   const igfAnswers = quadKeys.filter(k => k.toUpperCase().includes('IGF') || responses[k] === 'IGF');
   const haiAnswers = quadKeys.filter(k => k.toUpperCase().includes('HAI') || responses[k] === 'HAI');
 
-  let frictionPenaltyCount = 0;
+  // 1. Normalized Deficiency Counting (Replaces arbitrary compounding multipliers)
+  let totalDeficiencyWeight = 0;
   quadKeys.forEach(key => {
-    const answerValue = responses[key];
-    if (answerValue === 'C' || answerValue === 'D') {
-      frictionPenaltyCount += 1.5;
-    } else if (answerValue === 'B') {
-      frictionPenaltyCount += 0.5;
+    const val = String(responses[key] ?? '').trim().toUpperCase();
+    if (val === 'D' || val === 'C') {
+      totalDeficiencyWeight += 1.0;
+    } else if (val === 'B') {
+      totalDeficiencyWeight += 0.5;
     }
   });
 
-  const baseDeficiencyImpact = frictionPenaltyCount * 4.5;
-  const rawComplianceScore = 90 - baseDeficiencyImpact;
-  
-  const infrastructureLossWeight = avsAnswers.length + haiAnswers.length;
-  const salaryLeakageBase = 85000 + (infrastructureLossWeight * 15000) + (frictionPenaltyCount * 45000);
-  
-  const complianceRiskWeight = igfAnswers.length * 2.0;
-  const legalExposureBase = 450000 + (complianceRiskWeight * 75000) + (frictionPenaltyCount * 115000);
+  // 2. Bounded Compliance Score (Linear penalty normalized over sample size)
+  const sampleCount = Math.max(quadKeys.length, 1);
+  const deficiencyRatio = totalDeficiencyWeight / sampleCount;
+  const rawComplianceScore = 100 - (deficiencyRatio * 75);
+  const complianceScore = Math.max(15, Math.min(100, Math.round(rawComplianceScore)));
 
+  // 3. Qualitative Liability Pools (Clean sector scaling without double-counted multipliers)
+  const infrastructureLossWeight = avsAnswers.length + haiAnswers.length;
+  const salaryLeakageBase = 85_000 + (infrastructureLossWeight * 12_000) + (totalDeficiencyWeight * 15_000);
+  
+  const complianceRiskWeight = igfAnswers.length * 1.5;
+  const legalExposureBase = 450_000 + (complianceRiskWeight * 50_000) + (totalDeficiencyWeight * 35_000);
+
+  // 4. Evidence & Driver Vector Distribution
   const evidenceDistribution: Record<EvidenceBasis, number> = { AUDITED_ARTIFACT: 0, DASHBOARD_TELEMETRY: 0, TRIBAL_KNOWLEDGE: 0, COMPLETE_OPACITY: 0 };
   const driverDistribution: Record<FailureDriver, number> = { GOVERNANCE_GAP: 0, ENGINEERING_ARCH: 0, PROCESS_STRAIN: 0, TOOLING_VOID: 0 };
   const visibilityDistribution: Record<VisibilityState, number> = { AWARE: 0, FATIGUED: 0, BLIND: 0 };
@@ -291,11 +293,7 @@ export function calculateForensicMetrics(
 
   quadKeys.forEach(key => {
     const chosenOptionLetter = responses[key]; 
-    
-    const normalizedTargetId = key
-      .replace(/^quad_/, '')
-      .toUpperCase()
-      .replace(/_/g, '-'); 
+    const normalizedTargetId = key.replace(/^quad_/, '').toUpperCase().replace(/_/g, '-'); 
     
     const masterQuestionKey = Object.keys(forensicQuestions || {}).find(
       k => k.toUpperCase().replace(/_/g, '-') === normalizedTargetId
@@ -321,10 +319,15 @@ export function calculateForensicMetrics(
     }
   });
 
+  // 5. Sample-Size Weighted Reliability Index
   const maxPossibleWeightScore = activeValidInferencesCount * 100;
-  const computedReliabilityIndex = maxPossibleWeightScore > 0 
-    ? Math.round((totalWeightedBasisSum / maxPossibleWeightScore) * 100) 
+  const rawReliability = maxPossibleWeightScore > 0 
+    ? (totalWeightedBasisSum / maxPossibleWeightScore) * 100 
     : 0;
+  
+  // Dampen reliability index if total sample size is below recommended 10 responses
+  const sampleDampener = Math.min(activeValidInferencesCount / 10, 1.0);
+  const computedReliabilityIndex = Math.round(rawReliability * sampleDampener);
 
   const getDominantVector = <T extends string>(distribution: Record<T, number>): T | "NONE" => {
     if (activeValidInferencesCount === 0) return "NONE";
@@ -335,7 +338,7 @@ export function calculateForensicMetrics(
   return {
     companyName,
     multiplier,
-    complianceScore: Math.max(15, Math.min(100, Math.round(rawComplianceScore))),
+    complianceScore,
     annualSalaryLeakage: Math.round(salaryLeakageBase * multiplier),
     forensicInactionLiability: Math.round(legalExposureBase * multiplier), 
     isTierThreeExposure: multiplier >= 1.35, 
