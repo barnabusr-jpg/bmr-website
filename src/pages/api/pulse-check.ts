@@ -88,13 +88,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (auditErr) throw auditErr;
     if (!auditData?.id) throw new Error('Audit creation failed to return a valid ID');
 
-    // 5. Insert Operator (100% schema-aligned to active columns)
+    // 5. Insert Operator (Uniquely prefixed access_code to pass UNIQUE constraint)
     const { data: opData, error: opErr } = await supabaseAdmin
       .from('operators')
       .insert([
         {
           email: formattedEmail,
-          access_code: 'PULSE_CHECK_AUTO',
+          access_code: `PULSE_CHECK_AUTO_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
           audit_id: auditData.id,
           persona_type: personaType,
           status: 'COMPLETED',
