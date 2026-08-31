@@ -135,14 +135,14 @@ export default function PulseCheck() {
     return operatorName.length > 1 && entityName.length > 1 && email.includes('@') && email === confirmEmail;
   };
 
-  const getLiveMetrics = () => {
-    const totalSum = Object.values(answers).reduce((a, b) => a + parseInt(b || "0"), 0);
+  const getLiveMetrics = (finalAnswers: Record<string, string>) => {
+    const totalSum = Object.values(finalAnswers).reduce((a, b) => a + parseInt(b || "0"), 0);
     const scaledTotal = (totalSum * 0.04);
     const decayRaw = Math.round((1 - (1 / (1 + (totalSum * 0.05) / 10))) * 100);
     return { decay: Math.min(decayRaw, 98), rework: scaledTotal.toFixed(2) };
   };
 
-  const logToDatabase = async (metrics: any) => {
+  const logToDatabase = async (metrics: any, finalAnswers: Record<string, string>) => {
     try {
       const { data: ent } = await supabase
         .from('entities')
@@ -158,7 +158,10 @@ export default function PulseCheck() {
           sector: sector,
           decay_pct: metrics.decay,
           rework_tax: parseFloat(metrics.rework),
-          raw_responses: answers,
+          raw_responses: {
+            ...finalAnswers,
+            PULSE_CHECK_COMPLETE: "true" // Exact string match for RLS
+          },
           status: 'COMPLETED',
           roi_pct: 6,
           ai_spend: 1.2
@@ -321,15 +324,33 @@ export default function PulseCheck() {
                     key={i} 
                     className="p-6 border border-slate-200 bg-white hover:border-red-700 hover:bg-slate-50 transition-all text-left font-semibold text-base sm:text-lg flex justify-between items-center group cursor-pointer text-slate-800 rounded-sm shadow-sm"
                     onClick={async () => {
-                      const updatedAnswers = { ...answers, [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() };
+                      const updatedAnswers = { 
+                        ...answers, 
+                        [LOCAL_QUESTIONS[currentDimension].id]: opt.weight.toString() 
+                      };
                       setAnswers(updatedAnswers);
                       
                       if (currentDimension < LOCAL_QUESTIONS.length - 1) {
                         setCurrentDimension(currentDimension + 1);
                       } else {
                         setIsLoading(true);
-                        const metrics = getLiveMetrics();
-                        const auditId = await logToDatabase(metrics);
+
+                        // 🔒 Pre-flight assertion: Guarantee all 10 keys exist before triggering insert
+                        const requiredKeys = LOCAL_QUESTIONS.map(q => q.id);
+                        const hasAllKeys = requiredKeys.every(k => Object.prototype.hasOwnProperty.call(updatedAnswers, k));
+
+                        if (!hasAllKeys) {
+                          console.warn(
+                            "⚠️ Intake payload incomplete. Missing keys:", 
+                            requiredKeys.filter(k => !Object.prototype.hasOwnProperty.call(updatedAnswers, k))
+                          );
+                          setIsLoading(false);
+                          alert("Intake incomplete: Please answer all 10 questions before submitting.");
+                          return;
+                        }
+
+                        const metrics = getLiveMetrics(updatedAnswers);
+                        const auditId = await logToDatabase(metrics, updatedAnswers);
                         
                         if (auditId) {
                           fetch('/api/send-vault-link', {
