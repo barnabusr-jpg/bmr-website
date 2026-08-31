@@ -89,18 +89,19 @@ export default function ForensicDiagnostic() {
         const { op, audit } = await res.json();
         console.log("VERIFY_CODE_RESULT:", { op, audit });
 
-        const isOpComplete =
-          String(op?.status).trim().toUpperCase() === "COMPLETED" || String(op?.status).trim().toLowerCase() === "completed";
-        const isAuditComplete =
-          audit?.status === "COMPLETE" || audit?.status === "COMPLETED";
 
-        if (!audit || isAuditComplete || isOpComplete) {
-          console.log("NODE_ACCESS: Assessment link completed or deactivated.");
-          setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
-          setStep("finalized");
-          return;
-        }
+const isOpComplete =
+  op?.survey_completed === true ||
+  String(op?.status).trim().toUpperCase() === "COMPLETED" || 
+  String(op?.status).trim().toLowerCase() === "completed";
 
+// Ignore parent audit.status so snapshot completion doesn't block stakeholder tracks
+if (!audit || isOpComplete) {
+  console.log("NODE_ACCESS: Assessment link completed or deactivated.");
+  setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
+  setStep("finalized");
+  return;
+}
         const filtered = FORENSIC_MATRIX.filter((q) => {
           const lens = String(q.lens ?? "").trim().toUpperCase();
           const persona = String(op.persona_type ?? "").trim().toUpperCase();
