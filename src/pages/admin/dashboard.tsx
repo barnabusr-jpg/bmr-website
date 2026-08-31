@@ -121,7 +121,8 @@ export default function AdminDashboard() {
     const { data: nodes } = await supabase
       .from('operators')
       .select('persona_type, status, email, survey_completed, access_code')
-      .or(`group_id.eq.${auditId},audit_id.eq.${auditId}`);
+      .or(`group_id.eq.${auditId},audit_id.eq.${auditId}`)
+      .neq('access_code', 'PULSE_CHECK_AUTO'); // Exclude pulse check rows from 360 triangulation
       
     if (nodes) {
       setNodeDetails(nodes);
@@ -188,13 +189,11 @@ export default function AdminDashboard() {
         throw new Error(errData.message || errData.error || "Email dispatch failed.");
       }
 
-      // Close modal state and reset flags immediately
       setSelectedAudit(null);
       setEmails({ exec: "", mgr: "", tech: "" });
       setIsUpdating(false);
       fetchLedger();
 
-      // Defer blocking alert to allow React to flush DOM unmount of modal
       setTimeout(() => {
         alert("Access links successfully dispatched!");
       }, 50);
@@ -304,15 +303,24 @@ export default function AdminDashboard() {
     setIsUpdating(true);
     const targetNewReleaseState = !audit.is_released;
     try {
-      const { error } = await supabase
-        .from('audits')
-        .update({ is_released: targetNewReleaseState })
-        .eq('id', audit.id);
-        
-      if (error) throw error;
+      const res = await fetch("/api/admin/update-audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          auditId: audit.id,
+          updates: { is_released: targetNewReleaseState },
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to update release status");
+      }
+
       await fetchLedger();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Access toggle error:", err);
+      alert(err.message || "Could not update release status.");
     } finally {
       setIsUpdating(false);
     }
@@ -328,14 +336,25 @@ export default function AdminDashboard() {
 
     debounceTimersRef.current[targetTimerKey] = setTimeout(async () => {
       try {
-        await supabase
-          .from('audits')
-          .update({ [field]: value })
-          .eq('id', auditId);
-        
+        const res = await fetch("/api/admin/update-audit", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            auditId,
+            updates: { [field]: value },
+          }),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.error || `Slider update failed (${res.status})`);
+        }
+
         delete debounceTimersRef.current[targetTimerKey];
+        await fetchLedger();
       } catch (err) {
         console.error("Live slider sync error:", err);
+        delete debounceTimersRef.current[targetTimerKey];
       }
     }, 120);
   };
@@ -820,7 +839,11 @@ export default function AdminDashboard() {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     const updatedState = !audit.sow_sent;
-                                    await supabase.from('audits').update({ sow_sent: updatedState }).eq('id', audit.id);
+                                    await fetch("/api/admin/update-audit", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ auditId: audit.id, updates: { sow_sent: updatedState } })
+                                    });
                                     fetchLedger();
                                   }}
                                   className={`flex-1 py-1.5 border rounded transition-colors ${audit.sow_sent ? 'bg-blue-700 text-white border-blue-700' : 'text-slate-600 border-slate-300 hover:text-slate-900 bg-white'}`}
@@ -833,7 +856,11 @@ export default function AdminDashboard() {
                                   onClick={async (e) => {
                                     e.stopPropagation();
                                     const updatedState = !audit.is_paid;
-                                    await supabase.from('audits').update({ is_paid: updatedState }).eq('id', audit.id);
+                                    await fetch("/api/admin/update-audit", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ auditId: audit.id, updates: { is_paid: updatedState } })
+                                    });
                                     fetchLedger();
                                   }}
                                   className={`flex-1 py-1.5 border rounded transition-colors ${audit.is_paid ? 'bg-emerald-700 text-white border-emerald-700' : 'text-slate-600 border-slate-300 hover:text-slate-900 bg-white'}`}
@@ -855,12 +882,13 @@ export default function AdminDashboard() {
 
                                     setIsUpdating(true);
                                     try {
-                                      const { error } = await supabase
-                                        .from('audits')
-                                        .update({ status: nextStatusState })
-                                        .eq('id', audit.id);
+                                      const res = await fetch("/api/admin/update-audit", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ auditId: audit.id, updates: { status: nextStatusState } })
+                                      });
 
-                                      if (error) throw error;
+                                      if (!res.ok) throw new Error("Status update failed");
                                       if (nextStatusState === 'ARCHIVED') setExpandedRow(null);
                                       await fetchLedger();
                                     } catch (err) {
