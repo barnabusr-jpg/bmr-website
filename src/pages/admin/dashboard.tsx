@@ -122,7 +122,7 @@ export default function AdminDashboard() {
       .from('operators')
       .select('persona_type, status, email, survey_completed, access_code')
       .or(`group_id.eq.${auditId},audit_id.eq.${auditId}`)
-      .neq('access_code', 'PULSE_CHECK_AUTO'); // Exclude pulse check rows from 360 triangulation
+      .not('access_code', 'ilike', 'PULSE_CHECK_AUTO%'); // Ignore all pulse-check auto rows
       
     if (nodes) {
       setNodeDetails(nodes);
