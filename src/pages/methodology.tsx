@@ -85,7 +85,7 @@ export default function Methodology() {
 
             <div className="space-y-6">
               <p className="text-lg sm:text-2xl text-slate-950 max-w-4xl leading-relaxed font-bold">
-                Promise Gap risk is not limited to software bugs. It is structural. We identify hidden process and data gaps that turn good intentions into unreliable execution—unmonitored manual fixes, shifting data formats, outdated records, missing verification checks, and fragile workflow ownership.
+                The Promise Gap™ risk is not limited to software bugs. It is structural. We identify hidden process and data gaps that turn good intentions into unreliable execution: unmonitored manual fixes, shifting data formats, outdated records, missing verification checks, and fragile workflow ownership.
               </p>
 
               <p className="text-base sm:text-lg text-slate-600 max-w-4xl leading-relaxed font-normal border-l-2 border-slate-300 pl-4">
@@ -104,15 +104,15 @@ export default function Methodology() {
                 <span className="text-slate-600">Quantifying capital loss and model governance friction.</span>
               </div>
               <div className="bg-white border border-slate-200 p-3 rounded-sm shadow-sm">
-                <span className="text-red-700 font-bold block uppercase">// HEALTHCARE & LIFE SCIENCES</span>
+                <span className="text-red-700 font-bold block uppercase">// HEALTHCARE AND LIFE SCIENCES</span>
                 <span className="text-slate-600">Aligning outputs with HIPAA, BAA, and health privacy mandates.</span>
               </div>
               <div className="bg-white border border-slate-200 p-3 rounded-sm shadow-sm">
-                <span className="text-red-700 font-bold block uppercase">// INDUSTRIAL & SUPPLY CHAIN</span>
+                <span className="text-red-700 font-bold block uppercase">// INDUSTRIAL AND SUPPLY CHAIN</span>
                 <span className="text-slate-600">Eliminating operational downtime and unmapped bottlenecks.</span>
               </div>
               <div className="bg-white border border-slate-200 p-3 rounded-sm shadow-sm">
-                <span className="text-red-700 font-bold block uppercase">// SERVICES & ENTERPRISE IT</span>
+                <span className="text-red-700 font-bold block uppercase">// SERVICES AND ENTERPRISE IT</span>
                 <span className="text-slate-600">Restoring billable margin efficiency and stopping validation fatigue.</span>
               </div>
             </div>
@@ -123,7 +123,7 @@ export default function Methodology() {
               <h2 className="text-red-700 font-mono text-xs font-bold mb-4 tracking-widest uppercase">// ORIGIN AND LEADERSHIP</h2>
               <div className="space-y-4 text-slate-700 text-base leading-relaxed font-normal">
                 <p>
-                  BMR is built on more than twenty years of technology leadership, including over a decade at Microsoft supporting secure intelligence operations and delivering solutions across healthcare, manufacturing, SLGE, and education in protected network environments. After handling over six hundred system recoveries, we developed this framework to close the Promise Gap™ and establish guardrails before automation impacts production.
+                  BMR is built on more than twenty years of technology leadership, including over a decade at Microsoft supporting secure intelligence operations and delivering solutions across healthcare, manufacturing, State and Local Government and Education, and protected network environments. After handling over six hundred system recoveries, we developed this framework to close the Promise Gap™ and establish guardrails before automation impacts production.
                 </p>
                 <p>
                   This practical hands-on experience is supported by formal advanced training in organizational leadership, management, and organizational design. That expertise strengthens our ability to map governance responsibilities, clarify decision rights, and establish the operating controls that make automation reliable, predictable, and safe in production.
@@ -139,7 +139,7 @@ export default function Methodology() {
                 <Shield className="text-red-700 shrink-0" size={28} />
                 <div>
                   <div className="text-slate-950 font-bold text-base uppercase tracking-tight">GOVERNMENT-GRADE SECURITY</div>
-                  <p className="text-slate-500 text-xs font-mono uppercase tracking-wider font-semibold">EXPERIENCE IN SECURE CLOUD & AIR-GAPPED NETWORKS</p>
+                  <p className="text-slate-500 text-xs font-mono uppercase tracking-wider font-semibold">EXPERIENCE IN SECURE CLOUD AND AIR-GAPPED NETWORKS</p>
                 </div>
               </div>
 
@@ -181,21 +181,21 @@ export default function Methodology() {
               </thead>
               <tbody className="divide-y divide-slate-200 text-slate-700">
                 <tr className="hover:bg-slate-50/80">
-                  <td className="p-4 font-bold text-slate-950 font-mono text-xs">NODE 01 // Executive & Governance</td>
-                  <td className="p-4 font-mono text-xs text-slate-500">Fiduciary & Risk Alignment</td>
-                  <td className="p-4"><strong>Board Risk Audits</strong> & Process Waste Tax Calculation</td>
+                  <td className="p-4 font-bold text-slate-950 font-mono text-xs">NODE 01 // Executive and Governance</td>
+                  <td className="p-4 font-mono text-xs text-slate-500">Fiduciary and Risk Alignment</td>
+                  <td className="p-4"><strong>Board Risk Audits</strong> and Process Waste Tax Calculation</td>
                   <td className="p-4">Eliminates unplanned recovery cycles and protects board-level AI goals.</td>
                 </tr>
                 <tr className="hover:bg-slate-50/80">
-                  <td className="p-4 font-bold text-slate-950 font-mono text-xs">NODE 02 // Engineering & Infrastructure</td>
-                  <td className="p-4 font-mono text-xs text-slate-500">Delivery & Pipeline Safety</td>
-                  <td className="p-4"><strong>Track 01 Integration Protocols</strong> & Format Checks</td>
+                  <td className="p-4 font-bold text-slate-950 font-mono text-xs">NODE 02 // Engineering and Infrastructure</td>
+                  <td className="p-4 font-mono text-xs text-slate-500">Delivery and Pipeline Safety</td>
+                  <td className="p-4"><strong>Track 01 Integration Protocols</strong> and Format Checks</td>
                   <td className="p-4">Prevents unmonitored schema mutation and silent data drift failures.</td>
                 </tr>
                 <tr className="hover:bg-slate-50/80">
-                  <td className="p-4 font-bold text-slate-950 font-mono text-xs">NODE 03 // Operations & Management</td>
-                  <td className="p-4 font-mono text-xs text-slate-500">Alert & Rework Optimization</td>
-                  <td className="p-4"><strong>Track 02 Dependency Isolation</strong> & Execution Runbooks</td>
+                  <td className="p-4 font-bold text-slate-950 font-mono text-xs">NODE 03 // Operations and Management</td>
+                  <td className="p-4 font-mono text-xs text-slate-500">Alert and Rework Optimization</td>
+                  <td className="p-4"><strong>Track 02 Dependency Isolation</strong> and Execution Runbooks</td>
                   <td className="p-4">Eliminates manual validation fatigue and cuts operational downtime.</td>
                 </tr>
               </tbody>
@@ -277,11 +277,11 @@ export default function Methodology() {
         <section className="mb-20 sm:mb-24 bg-slate-950 text-slate-100 p-6 sm:p-8 rounded-sm font-mono border border-slate-800 space-y-4 text-left shadow-sm">
           <div className="flex items-center justify-between text-xs text-red-500 font-bold uppercase tracking-wider border-b border-slate-800 pb-3">
             <span className="flex items-center gap-2"><FileText size={16} /> SAMPLE DIAGNOSTIC BLUEPRINT OUTPUT</span>
-            <span>SECURE PREVIEW // NODE 01-03</span>
+            <span>SECURE PREVIEW // NODE 01 TO 03</span>
           </div>
           <div className="text-[11px] sm:text-xs leading-relaxed space-y-1 text-slate-300">
             <p className="text-slate-500">// AUDIT RESULT METRICS SUMMARY</p>
-            <p><span className="text-slate-400">REWORK TAX ESTIMATE:</span>       <strong className="text-emerald-400">$240,000 / ANNUALLY</strong> (32% REPEAT REWORK)</p>
+            <p><span className="text-slate-400">REWORK TAX ESTIMATE:</span>       <strong className="text-emerald-400">$240,000 / ANNUALLY</strong> (32 PERCENT REPEAT REWORK)</p>
             <p><span className="text-slate-400">SYSTEMIC FRICTION LAYER:</span>   LEVEL 2 PIPELINE UNMONITORED WORKFLOW DRIFT</p>
             <p><span className="text-slate-400">DEPLOYMENT GATE MANDATE:</span>   ENFORCE INPUT FORMAT VALIDATION (NODE 02)</p>
             <p><span className="text-slate-400">COMPLIANCE VERIFICATION:</span>   ZERO SECURITY FOOTPRINT CONFIRMED (SOC 2 / HIPAA / ISO 27001)</p>
