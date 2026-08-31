@@ -117,33 +117,32 @@ export default function AdminDashboard() {
   }, [statusFilter, searchTerm, currentPage, isUpdating]);
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
-    if (isUpdating) return;
-    const { data: nodes } = await supabase
-      .from('operators')
-      .select('persona_type, status, email, survey_completed, access_code')
-      .or(`group_id.eq.${auditId},audit_id.eq.${auditId}`)
-      .not('access_code', 'ilike', 'PULSE_CHECK_AUTO%'); // Ignore all pulse-check auto rows
-      
-    if (nodes) {
-      setNodeDetails(nodes);
+  if (isUpdating) return;
+  const { data: nodes } = await supabase
+    .from('operators')
+    .select('persona_type, status, email, survey_completed, access_code')
+    .or(`group_id.eq.${auditId},audit_id.eq.${auditId}`);
+    
+  if (nodes) {
+    setNodeDetails(nodes);
 
-      const completed360Count = nodes.filter(n => {
-        const isDone = n.survey_completed === true || 
-                       String(n.status).toUpperCase() === 'COMPLETED' || 
-                       String(n.status).toUpperCase() === 'COMPLETE';
-        return isDone;
-      }).length;
+    const completed360Count = nodes.filter(n => {
+      const isDone = n.survey_completed === true || 
+                     String(n.status).toUpperCase() === 'COMPLETED' || 
+                     String(n.status).toUpperCase() === 'COMPLETE';
+      return isDone;
+    }).length;
 
-      if (completed360Count >= 3) {
-        await supabase
-          .from('audits')
-          .update({ status: 'COMPLETE' })
-          .eq('id', auditId);
+    if (completed360Count >= 3) {
+      await supabase
+        .from('audits')
+        .update({ status: 'COMPLETE' })
+        .eq('id', auditId);
 
-        fetchLedger();
-      }
+      fetchLedger();
     }
-  }, [isUpdating, fetchLedger]);
+  }
+}, [isUpdating, fetchLedger]);
 
   const toggleRow = async (auditId: string) => {
     if (expandedRow === auditId) { setExpandedRow(null); return; }
