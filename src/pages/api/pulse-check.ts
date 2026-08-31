@@ -66,7 +66,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (entErr) throw entErr;
     if (!ent?.id) throw new Error('Entity upsert failed to return a valid ID');
 
-    // 4. Insert Audit (populates flow_type on creation)
+    // Step 4: Insert Snapshot Audit
 const { data: auditData, error: auditErr } = await supabaseAdmin
   .from('audits')
   .insert([
@@ -80,7 +80,6 @@ const { data: auditData, error: auditErr } = await supabaseAdmin
       status: 'COMPLETED',
       roi_pct: 6,
       ai_spend: 1.2,
-      flow_type: 'pulse_check', // Identifies this record as a standalone snapshot intake
     },
   ])
   .select('id')
@@ -88,26 +87,6 @@ const { data: auditData, error: auditErr } = await supabaseAdmin
 
 if (auditErr) throw auditErr;
 if (!auditData?.id) throw new Error('Audit creation failed to return a valid ID');
-
-    // 5. Insert Operator (Uniquely prefixed access_code to pass UNIQUE constraint)
-    const { data: opData, error: opErr } = await supabaseAdmin
-      .from('operators')
-      .insert([
-        {
-          email: formattedEmail,
-          access_code: `PULSE_CHECK_AUTO_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-          audit_id: auditData.id,
-          persona_type: personaType,
-          status: 'COMPLETED',
-          raw_responses: enrichedResponses,
-        },
-      ])
-      .select('id')
-      .maybeSingle();
-
-    if (opErr) throw opErr;
-    if (!opData?.id) throw new Error('Operator insert failed to confirm record creation');
-
     return res.status(200).json({ success: true, auditId: auditData.id });
   } catch (error: any) {
     console.error('API Route Execution Error:', error?.message || error);
