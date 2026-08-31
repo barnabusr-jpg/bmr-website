@@ -84,17 +84,20 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (auditErr) throw auditErr;
     if (!auditData?.id) throw new Error('Audit creation failed to return a valid ID');
 
-    // 5. Upsert Operator
+    // 5. Upsert Operator (access_code, audit_id, persona_type, email, raw_responses)
     const { data: opData, error: opErr } = await supabaseAdmin
       .from('operators')
       .upsert(
         {
           email: formattedEmail,
-          full_name: formattedOperator,
-          entity_id: ent.id,
+          access_code: 'PULSE_CHECK_AUTO',
           audit_id: auditData.id,
           persona_type: personaType,
           status: 'COMPLETED',
+          raw_responses: {
+            ...safeAnswers,
+            PULSE_CHECK_COMPLETE: 'true',
+          },
         },
         { onConflict: 'email' }
       )
