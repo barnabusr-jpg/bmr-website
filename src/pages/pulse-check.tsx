@@ -4,7 +4,6 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { motion, AnimatePresence } from "framer-motion";
 import { Banknote, Stethoscope, Factory, ShoppingCart, Activity, ChevronRight } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
 
 const LOCAL_QUESTIONS = [
   { 
@@ -142,48 +141,33 @@ export default function PulseCheck() {
     return { decay: Math.min(decayRaw, 98), rework: scaledTotal.toFixed(2) };
   };
 
+  // 🔒 Cleaned: All direct client-side DB writes removed and delegated to the server route
   const logToDatabase = async (metrics: any, finalAnswers: Record<string, string>) => {
     try {
-      const { data: ent } = await supabase
-        .from('entities')
-        .upsert({ name: entityName.toUpperCase() }, { onConflict: 'name' })
-        .select()
-        .single();
-      
-      const { data: auditData, error: auditError } = await supabase
-        .from('audits')
-        .insert([{ 
-          org_name: entityName.toUpperCase(),
-          lead_email: email.toLowerCase().trim(),
-          sector: sector,
-          decay_pct: metrics.decay,
-          rework_tax: parseFloat(metrics.rework),
-          raw_responses: {
-            ...finalAnswers,
-            PULSE_CHECK_COMPLETE: "true" // Exact string match for RLS
-          },
-          status: 'COMPLETED',
-          roi_pct: 6,
-          ai_spend: 1.2
-        }])
-        .select('id')
-        .single();
-
-      if (auditError) throw auditError;
-
-      await supabase.from('operators').upsert({ 
-        email: email.toLowerCase().trim(), 
-        full_name: operatorName.toUpperCase().trim(), 
-        entity_id: ent?.id,
-        audit_id: auditData.id,
-        persona_type: selectedLens,
-        status: 'COMPLETED'
+      const response = await fetch('/api/pulse-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operatorName,
+          entityName,
+          email,
+          sector,
+          selectedLens,
+          metrics,
+          answers: finalAnswers,
+        }),
       });
 
-      return auditData.id;
-    } catch (e) { 
-      console.error("Database Log Failure:", e);
-      return null; 
+      const result = await response.json();
+
+      if (!response.ok || result.error) {
+        throw new Error(result.error || 'Database submission failed');
+      }
+
+      return result.auditId;
+    } catch (e: any) {
+      console.error("Database Log Failure:", e?.message || e);
+      return null;
     }
   };
 
@@ -335,7 +319,7 @@ export default function PulseCheck() {
                       } else {
                         setIsLoading(true);
 
-                        // 🔒 Pre-flight assertion: Guarantee all 10 keys exist before triggering insert
+                        // Pre-flight assertion: Guarantee all 10 keys exist before triggering submission
                         const requiredKeys = LOCAL_QUESTIONS.map(q => q.id);
                         const hasAllKeys = requiredKeys.every(k => Object.prototype.hasOwnProperty.call(updatedAnswers, k));
 
