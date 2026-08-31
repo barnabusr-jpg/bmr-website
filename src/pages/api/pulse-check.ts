@@ -66,27 +66,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (entErr) throw entErr;
     if (!ent?.id) throw new Error('Entity upsert failed to return a valid ID');
 
-    // 4. Insert Audit
-    const { data: auditData, error: auditErr } = await supabaseAdmin
-      .from('audits')
-      .insert([
-        {
-          org_name: formattedEntity,
-          lead_email: formattedEmail,
-          sector: sectorType,
-          decay_pct: decayPct,
-          rework_tax: reworkTax,
-          raw_responses: enrichedResponses,
-          status: 'COMPLETED',
-          roi_pct: 6,
-          ai_spend: 1.2,
-        },
-      ])
-      .select('id')
-      .maybeSingle();
+    // 4. Insert Audit (populates flow_type on creation)
+const { data: auditData, error: auditErr } = await supabaseAdmin
+  .from('audits')
+  .insert([
+    {
+      org_name: formattedEntity,
+      lead_email: formattedEmail,
+      sector: sectorType,
+      decay_pct: decayPct,
+      rework_tax: reworkTax,
+      raw_responses: enrichedResponses,
+      status: 'COMPLETED',
+      roi_pct: 6,
+      ai_spend: 1.2,
+      flow_type: 'pulse_check', // Identifies this record as a standalone snapshot intake
+    },
+  ])
+  .select('id')
+  .maybeSingle();
 
-    if (auditErr) throw auditErr;
-    if (!auditData?.id) throw new Error('Audit creation failed to return a valid ID');
+if (auditErr) throw auditErr;
+if (!auditData?.id) throw new Error('Audit creation failed to return a valid ID');
 
     // 5. Insert Operator (Uniquely prefixed access_code to pass UNIQUE constraint)
     const { data: opData, error: opErr } = await supabaseAdmin
