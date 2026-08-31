@@ -59,35 +59,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (entErr) throw entErr;
     if (!ent?.id) throw new Error('Entity upsert failed to return a valid ID');
 
-    // 4. Insert Audit (removed non-existent entity_id)
+    // 4. Insert Audit
     const { data: auditData, error: auditErr } = await supabaseAdmin
       .from('audits')
       .insert([
         {
-          org_name: formattedEntity,
-          lead_email: formattedEmail,
-          sector: sectorType,
-          decay_pct: decayPct,
-          rework_tax: reworkTax,
-          raw_responses: {
-            ...safeAnswers,
-            PULSE_CHECK_COMPLETE: 'true',
-          },
-          status: 'COMPLETED',
-          roi_pct: 6,
-          ai_spend: 1.2,
-        },
-      ])
-      .select('id')
-      .maybeSingle();
-
-    if (auditErr) throw auditErr;
-    if (!auditData?.id) throw new Error('Audit creation failed to return a valid ID');// 4. Insert Audit
-    const { data: auditData, error: auditErr } = await supabaseAdmin
-      .from('audits')
-      .insert([
-        {
-          entity_id: ent.id,
           org_name: formattedEntity,
           lead_email: formattedEmail,
           sector: sectorType,
