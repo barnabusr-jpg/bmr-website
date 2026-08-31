@@ -451,9 +451,8 @@ export async function POST(request: Request) {
     const logicDecayCoefficient = totalPaths > 0 ? unsubmittedPaths / totalPaths : 0.0;
 
     await supabaseAdmin
-      .from("audits")
-      .update({ status: "TRIANGULATING", compiled_at: new Date().toISOString() })
-      .eq("id", parentAuditId);
+  .from("audits")
+  .update({ status: "TRIANGULATING", compiled_at: new Date().toISOString() })
 
     if (emailPromises.length > 0) {
       try {
