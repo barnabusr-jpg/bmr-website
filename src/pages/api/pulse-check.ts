@@ -49,6 +49,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(400).json({ error: 'Invalid numeric values in audit metrics payload.' });
     }
 
+    // Attach metadata to raw_responses JSONB block
+    const enrichedResponses = {
+      ...safeAnswers,
+      OPERATOR_NAME: formattedOperator,
+      PULSE_CHECK_COMPLETE: 'true',
+    };
+
     // 3. Upsert Entity
     const { data: ent, error: entErr } = await supabaseAdmin
       .from('entities')
@@ -69,10 +76,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           sector: sectorType,
           decay_pct: decayPct,
           rework_tax: reworkTax,
-          raw_responses: {
-            ...safeAnswers,
-            PULSE_CHECK_COMPLETE: 'true',
-          },
+          raw_responses: enrichedResponses,
           status: 'COMPLETED',
           roi_pct: 6,
           ai_spend: 1.2,
@@ -84,28 +88,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (auditErr) throw auditErr;
     if (!auditData?.id) throw new Error('Audit creation failed to return a valid ID');
 
-    // 5. Upsert Operator (access_code, audit_id, persona_type, email, raw_responses)
+    // 5. Insert Operator (100% schema-aligned to active columns)
     const { data: opData, error: opErr } = await supabaseAdmin
       .from('operators')
-      .upsert(
+      .insert([
         {
           email: formattedEmail,
           access_code: 'PULSE_CHECK_AUTO',
           audit_id: auditData.id,
           persona_type: personaType,
           status: 'COMPLETED',
-          raw_responses: {
-            ...safeAnswers,
-            PULSE_CHECK_COMPLETE: 'true',
-          },
+          raw_responses: enrichedResponses,
         },
-        { onConflict: 'email' }
-      )
+      ])
       .select('id')
       .maybeSingle();
 
     if (opErr) throw opErr;
-    if (!opData?.id) throw new Error('Operator upsert failed to confirm record creation');
+    if (!opData?.id) throw new Error('Operator insert failed to confirm record creation');
 
     return res.status(200).json({ success: true, auditId: auditData.id });
   } catch (error: any) {
