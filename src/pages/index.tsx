@@ -125,7 +125,7 @@ export default function LandingPage() {
               <p className="text-xs text-slate-600 leading-snug">Annually per operational business unit in capital leakages.</p>
             </div>
             <div className="border-l-2 border-red-700 pl-4 space-y-1">
-              <span className="font-mono text-lg font-black text-slate-950 block">48-HR PROCUREMENT</span>
+              <span className="font-mono text-lg font-black text-slate-950 block">EXPEDITED PROCUREMENT:</span>
               <p className="text-xs text-slate-600 leading-snug">Zero-footprint audit model bypasses InfoSec delays completely.</p>
             </div>
             <div className="border-l-2 border-slate-950 pl-4 space-y-1">
