@@ -3,7 +3,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Activity, Target, Shield, LayoutGrid, Layers, Cpu, Milestone, CheckCircle2, ArrowRight, Zap, FileText, ClipboardCheck } from 'lucide-react';
+import { Activity, Target, Shield, LayoutGrid, Layers, Cpu, Milestone, CheckCircle2, ArrowRight, FileText, ClipboardCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LandingPage() {
@@ -103,8 +103,8 @@ export default function LandingPage() {
                 // INDEPENDENT ADVISORY POSTURE
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl">
-              <strong>BMR Solutions operates strictly as an independent Digital Building Inspector.</strong> We do not sell software licenses or bill for code implementation hours. Our sole fiduciary mandate is to audit operational readiness, protect enterprise capital, and enforce process sovereignty before automated execution touches production databases.
+            <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl font-sans">
+              <strong>BMR Solutions serves as an independent Digital Building Inspector:</strong> verifying system readiness for deployment and auditing process stability to guarantee ongoing, zero-defect ROI.
             </p>
           </div>
         </div>
@@ -165,7 +165,7 @@ export default function LandingPage() {
                   <div className="mx-auto flex items-center space-x-2 font-mono text-[11px] font-bold text-red-700 uppercase">
                     <span className="text-slate-400">➔ ➔</span>
                     <span>↓ INCOMING CUSTOMER PAYLOAD (Forms, Emails, Triage Data)</span>
-                    <span class="text-slate-400">➔ ➔</span>
+                    <span className="text-slate-400">➔ ➔</span>
                   </div>
                   <div className="hidden sm:flex items-center text-emerald-600">
                     <CheckCircle2 size={18} />
