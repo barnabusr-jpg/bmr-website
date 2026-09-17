@@ -3,7 +3,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Activity, Target, Shield, LayoutGrid, Layers, Cpu, Milestone } from 'lucide-react';
+import { Activity, Target, Shield, LayoutGrid, Layers, Cpu, Milestone, CheckCircle2, ArrowRight, Zap, FileText, ClipboardCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LandingPage() {
@@ -94,8 +94,23 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* --- SECTION 1: THE THREE ENTERPRISE LEVELS --- */}
-        <div className="mt-24 sm:mt-32 pt-16 border-t border-slate-200">
+        {/* --- SECTION 1.5: THE DIGITAL BUILDING INSPECTOR POSTURE BANNER --- */}
+        <div className="mt-16 bg-slate-100 border-y border-slate-200/90 py-6 px-6 sm:px-8 rounded-sm shadow-xs">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <ClipboardCheck className="text-red-700 shrink-0" size={24} />
+              <span className="text-red-700 font-mono text-xs font-bold uppercase tracking-widest block">
+                // INDEPENDENT ADVISORY POSTURE
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl">
+              <strong>BMR Solutions operates strictly as an independent Digital Building Inspector.</strong> We do not sell software licenses or bill for code implementation hours. Our sole fiduciary mandate is to audit operational readiness, protect enterprise capital, and enforce process sovereignty before automated execution touches production databases.
+            </p>
+          </div>
+        </div>
+
+        {/* --- SECTION 2: THE THREE ENTERPRISE LEVELS --- */}
+        <div className="mt-20 sm:mt-28 pt-16 border-t border-slate-200">
           <div className="max-w-4xl">
             <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-3">
               // CORE OPERATIONAL REALITY MODEL
@@ -108,7 +123,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 font-mono text-xs mt-8">
+          <div className="grid grid-cols-1 gap-6 font-mono text-xs mt-8">
             {/* LEVEL 1 */}
             <div className="border border-slate-200 bg-white p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-sm shadow-sm">
               <div className="flex items-start sm:items-center gap-4">
@@ -126,19 +141,73 @@ export default function LandingPage() {
               <span className="text-[10px] tracking-wider font-bold uppercase">WARNING: EXPECTATIONS DIVERGE FROM RUNTIME REALITY</span>
             </div>
 
-            {/* LEVEL 2 */}
-            <div className="border border-red-300 bg-red-50/50 p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden rounded-sm shadow-sm">
-              <div className="absolute top-0 right-0 bg-red-700 text-white text-[9px] font-bold px-3 py-0.5 tracking-wider uppercase">
-                FRICTION LAYER
+            {/* LEVEL 2 (EMBEDDED PRE-AUTOMATION CONTROL PLANE) */}
+            <div className="border-2 border-red-700 bg-white p-6 sm:p-8 relative rounded-sm shadow-md space-y-6">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-red-200 pb-4">
+                <div className="flex items-start sm:items-center gap-4">
+                  <div className="p-3 bg-red-700 text-white shrink-0"><Layers size={20} /></div>
+                  <div>
+                    <span className="bg-red-700 text-white text-[9px] font-bold px-2 py-0.5 tracking-wider uppercase inline-block mb-1">FRICTION LAYER CONTROL GATE</span>
+                    <h3 className="text-red-800 font-black text-sm sm:text-base tracking-wider uppercase">// LEVEL 2: THE OPERATIONAL AND DELIVERY INTERFACE</h3>
+                    <p className="text-slate-700 font-sans mt-1 text-xs font-normal max-w-3xl">Where teams translate business directives into automated workflows, reliable data delivery, and dependable system behavior. BMR deploys the <strong>Pre-Automation Control Plane</strong> here to eliminate silent process failure and stop validation fatigue.</p>
+                  </div>
+                </div>
+                <span className="text-red-700 font-bold tracking-wider text-[10px] shrink-0 uppercase bg-red-50 px-3 py-1 border border-red-200">RISK: CAPITAL LOSS & CAPACITY EROSION</span>
               </div>
-              <div className="flex items-start sm:items-center gap-4 pt-2 sm:pt-0">
-                <div className="p-3 bg-red-100 border border-red-200 text-red-700 shrink-0"><Layers size={20} /></div>
-                <div>
-                  <h3 className="text-red-800 font-bold text-xs sm:text-sm tracking-wider uppercase">// LEVEL 2: THE OPERATIONAL AND DELIVERY INTERFACE</h3>
-                  <p className="text-slate-800 font-sans mt-1 text-xs font-normal max-w-2xl">Where teams translate business directives into automated workflows, reliable data delivery, and dependable system behavior. Manual intervention here causes silent process failure and drains high-value staff capacity.</p>
+
+              {/* VISUAL CONTROL PLANE ENGINE EMBEDDED */}
+              <div className="space-y-4 font-sans">
+                {/* PIPELINE INGESTION CONDUIT */}
+                <div className="bg-slate-50 border border-slate-300 rounded-sm p-3 flex items-center justify-between">
+                  <div className="hidden sm:flex items-center space-x-1 text-slate-400">
+                    <FileText size={18} />
+                  </div>
+                  <div className="mx-auto flex items-center space-x-2 font-mono text-[11px] font-bold text-red-700 uppercase">
+                    <span className="text-slate-400">➔ ➔</span>
+                    <span>↓ INCOMING CUSTOMER PAYLOAD (Forms, Emails, Triage Data)</span>
+                    <span class="text-slate-400">➔ ➔</span>
+                  </div>
+                  <div className="hidden sm:flex items-center text-emerald-600">
+                    <CheckCircle2 size={18} />
+                  </div>
+                </div>
+
+                {/* 4 PILLARS GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div className="bg-white border border-slate-200 border-t-2 border-t-red-700 p-4 space-y-2 text-left">
+                    <span className="font-mono text-[10px] font-bold text-red-700 uppercase block">// 01 // MAP IT</span>
+                    <h4 className="font-black text-xs uppercase text-slate-950">Process Maturity</h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">Explicit process logic mapped on paper before automation.</p>
+                  </div>
+                  <div className="bg-white border border-slate-200 border-t-2 border-t-slate-950 p-4 space-y-2 text-left">
+                    <span className="font-mono text-[10px] font-bold text-slate-500 uppercase block">// 02 // FILTER IT</span>
+                    <h4 className="font-black text-xs uppercase text-slate-950">Data Contracts</h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">Strict schema validation; zero raw ingestion into memory.</p>
+                  </div>
+                  <div className="bg-white border border-slate-200 border-t-2 border-t-red-700 p-4 space-y-2 text-left">
+                    <span className="font-mono text-[10px] font-bold text-red-700 uppercase block">// 03 // GUARD IT</span>
+                    <h4 className="font-black text-xs uppercase text-slate-950">Policy Ceilings</h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">Hardcoded proxy limits. Policy cannot be prompt-driven.</p>
+                  </div>
+                  <div className="bg-white border border-slate-200 border-t-2 border-t-slate-950 p-4 space-y-2 text-left">
+                    <span className="font-mono text-[10px] font-bold text-slate-500 uppercase block">// 04 // STAGE IT</span>
+                    <h4 className="font-black text-xs uppercase text-slate-950">Risk Control</h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">Draft shadow queues decouple reasoning from execution.</p>
+                  </div>
+                </div>
+
+                {/* GRADUATED AUTONOMY TIMELINE */}
+                <div className="bg-slate-50 border border-slate-200 p-3 flex flex-col md:flex-row items-center justify-between gap-2 font-mono text-[11px]">
+                  <span className="text-red-700 font-bold uppercase">// GRADUATED TIMELINE:</span>
+                  <div className="flex items-center space-x-2 text-slate-700">
+                    <span className="bg-white px-2 py-0.5 border border-slate-200">1. Shadow Queue (98%+ Target)</span>
+                    <ArrowRight size={14} className="text-slate-400" />
+                    <span className="bg-white px-2 py-0.5 border border-slate-200">2. Low-Risk Auto-Write</span>
+                    <ArrowRight size={14} className="text-slate-400" />
+                    <span className="bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 border border-emerald-200">3. Verified Autonomy</span>
+                  </div>
                 </div>
               </div>
-              <span className="text-red-700 font-bold tracking-wider text-[10px] hidden md:inline shrink-0 uppercase">RISK: CAPITAL LOSS AND CAPACITY EROSION</span>
             </div>
 
             <div className="flex items-center gap-3 px-4 py-1 text-red-700 font-mono">
@@ -160,7 +229,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* --- SECTION 2: THE INFRASTRUCTURE GAP --- */}
+        {/* --- SECTION 3: THE INFRASTRUCTURE GAP --- */}
         <div className="mt-20 sm:mt-28 border border-slate-200 bg-white p-6 sm:p-10 relative overflow-hidden rounded-sm shadow-sm">
           <div className="absolute top-0 right-0 bg-slate-950 text-white font-mono text-[9px] font-bold px-3 py-1 tracking-wider uppercase">
             FLEET IT BENCHMARK TELEMETRY
@@ -198,7 +267,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* --- SECTION 3: THREE STEPS TO CLOSE THE GAP --- */}
+        {/* --- SECTION 4: THREE STEPS TO CLOSE THE GAP --- */}
         <div className="mt-24 sm:mt-32 pt-16 border-t border-slate-200">
           <span className="text-red-700 font-mono text-xs font-bold tracking-widest block mb-3 uppercase">
             // RECOVERY FRAMEWORK
