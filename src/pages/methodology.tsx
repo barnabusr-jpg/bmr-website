@@ -2,7 +2,7 @@
 import React from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { Shield, Activity, Scale, Target, AlertCircle, Briefcase, Lock, ShieldAlert, FileText, Zap } from "lucide-react";
+import { Shield, Activity, Scale, Target, AlertCircle, Briefcase, Lock, ShieldAlert, FileText, Zap, ArrowRight, CheckCircle2 } from "lucide-react";
 
 export default function Methodology() {
   const nodes = [
@@ -71,9 +71,10 @@ export default function Methodology() {
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-red-100 selection:text-red-900 overflow-x-hidden">
       <Header />
 
-      <main className="pt-32 sm:pt-44 pb-16 sm:pb-24 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto">
+      <main className="pt-32 sm:pt-44 pb-16 sm:pb-24 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto space-y-24 sm:space-y-32">
+        
         {/* --- SECTION I: FORENSIC PHILOSOPHY & ORIGIN --- */}
-        <section className="mb-24 sm:mb-32">
+        <section>
           <div className="border-l-4 border-red-700 pl-4 sm:pl-8 mb-12 sm:mb-16 text-left">
             <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-3">
               BMR SOLUTIONS // METHODOLOGY AND CONTROL PLANE
@@ -162,8 +163,171 @@ export default function Methodology() {
           </div>
         </section>
 
-        {/* --- CONTROL PLANE MATRIX (CAPABILITY TABLE) --- */}
-        <section className="mb-24 sm:mb-32 text-left">
+        {/* --- SECTION II: THE PRE-AUTOMATION CONTROL PLANE (FRAMEWORK ENGINE) --- */}
+        <section className="space-y-6 text-left">
+          <div className="text-center py-2 space-y-1">
+            <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-1">
+              OPERATIONAL GOVERNANCE ENGINE
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-950 leading-none">
+              THE PRE-AUTOMATION <span className="text-red-700">CONTROL PLANE</span>
+            </h2>
+            <p className="text-slate-700 text-sm font-semibold mt-1.5 max-w-2xl mx-auto">
+              Architectural Guardrails for Time-to-Reliability over Time-to-Market.
+            </p>
+          </div>
+
+          {/* PIPELINE INGESTION CONDUIT */}
+          <div className="relative bg-white border border-slate-300 rounded-sm p-3.5 flex items-center justify-between shadow-sm overflow-hidden">
+            <div className="hidden sm:flex items-center space-x-1 border-r border-slate-300 pr-3 text-slate-400">
+              <FileText size={20} className="text-slate-500" />
+            </div>
+
+            <div className="mx-auto flex items-center space-x-3 font-mono text-xs font-bold text-red-700 tracking-wider uppercase">
+              <span className="text-slate-400">➔ ➔ ➔</span>
+              <span>↓ INCOMING CUSTOMER PAYLOAD (Forms, Emails, Triage Data)</span>
+              <span class="text-slate-400">➔ ➔ ➔</span>
+            </div>
+
+            <div className="hidden sm:flex items-center border-l border-slate-300 pl-3 text-slate-400">
+              <CheckCircle2 size={20} className="text-emerald-600" />
+            </div>
+          </div>
+
+          {/* 4 PILLARS GRID */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* PILLAR 1 */}
+            <div className="bg-white border border-slate-200 border-t-4 border-t-red-700 rounded-sm p-5 flex flex-col justify-between shadow-sm space-y-4">
+              <div className="space-y-2">
+                <span className="font-mono text-[11px] font-bold text-red-700 uppercase tracking-wider block">// 01 // PROCESS MATURITY</span>
+                <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight">MAP IT</h3>
+                <span class="text-xs font-bold text-slate-800 block">Explicit Process Logic</span>
+                <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                  Document all decision trees, sentiment rules, and escalation limits on paper. <em className="text-slate-800 font-medium">Tribal knowledge is an automation blocker.</em>
+                </p>
+              </div>
+              <div className="bg-slate-100 border-l-2 border-red-700 p-3 text-xs font-semibold text-slate-950">
+                If a person cannot follow the process, AI will always fail.
+              </div>
+            </div>
+
+            {/* PILLAR 2 */}
+            <div className="bg-white border border-slate-200 border-t-4 border-t-slate-950 rounded-sm p-5 flex flex-col justify-between shadow-sm space-y-4">
+              <div className="space-y-2">
+                <span className="font-mono text-[11px] font-bold text-slate-500 uppercase tracking-wider block">// 02 // CONTEXT ISOLATION</span>
+                <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight">FILTER IT</h3>
+                <span className="text-xs font-bold text-slate-800 block">Zero Raw Ingestion</span>
+                <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                  Enforce strict schema validation and intake contracts (e.g., Pydantic models). <em className="text-slate-800 font-medium">Sanitize context to prevent poisoning.</em>
+                </p>
+              </div>
+              <div className="bg-slate-100 border-l-2 border-slate-950 p-3 text-xs font-semibold text-slate-950">
+                Don't allow raw or unchecked text to go straight into RAG memory.
+              </div>
+            </div>
+
+            {/* PILLAR 3 */}
+            <div className="bg-white border border-slate-200 border-t-4 border-t-red-700 rounded-sm p-5 flex flex-col justify-between shadow-sm space-y-4">
+              <div className="space-y-2">
+                <span className="font-mono text-[11px] font-bold text-red-700 uppercase tracking-wider block">// 03 // LIABILITY CONTROL</span>
+                <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight">GUARD IT</h3>
+                <span className="text-xs font-bold text-slate-800 block">Programmatic Governance</span>
+                <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                  Set up Non-Human Identities (NHIs) and enforce strict, infrastructure-level API proxy limits. <em className="text-slate-800 font-medium">Policy cannot be enforced by prompts.</em>
+                </p>
+              </div>
+              <div className="bg-slate-100 border-l-2 border-red-700 p-3 text-xs font-semibold text-slate-950">
+                The network proxy physically blocks actions that exceed set policy limits, regardless of LLM intent.
+              </div>
+            </div>
+
+            {/* PILLAR 4 */}
+            <div className="bg-white border border-slate-200 border-t-4 border-t-slate-950 rounded-sm p-5 flex flex-col justify-between shadow-sm space-y-4">
+              <div className="space-y-2">
+                <span className="font-mono text-[11px] font-bold text-slate-500 uppercase tracking-wider block">// 04 // SYSTEM INTEGRITY</span>
+                <h3 className="text-xl font-black text-slate-950 uppercase tracking-tight">STAGE IT</h3>
+                <span className="text-xs font-bold text-slate-800 block">Graduated Autonomy</span>
+                <p className="text-xs text-slate-600 leading-relaxed font-normal">
+                  Decouple task reasoning from execution. Route all automated writes into draft shadow queues for durable state persistence. <em className="text-slate-800 font-medium">Staging unlocks safe auto-execution.</em>
+                </p>
+              </div>
+              <div className="bg-slate-100 border-l-2 border-slate-950 p-3 text-xs font-semibold text-slate-950">
+                Write to the system of record only when the state is clearly defined.
+              </div>
+            </div>
+          </div>
+
+          {/* GRADUATED AUTONOMY TIMELINE */}
+          <div className="bg-white border border-slate-200 rounded-sm p-5 space-y-3 shadow-sm">
+            <div className="text-center font-mono text-xs font-bold text-red-700 uppercase tracking-widest">// GRADUATED AUTONOMY TIMELINE</div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-11 gap-2 items-center text-center">
+              {/* Phase 1 */}
+              <div className="md:col-span-3 bg-slate-50 border border-slate-200 p-4 rounded-sm flex items-center space-x-3 text-left">
+                <div className="p-2 bg-red-100 text-red-700 rounded-full shrink-0">
+                  <Shield size={20} />
+                </div>
+                <div>
+                  <span className="font-mono text-[10px] font-bold text-red-700 uppercase block">PHASE 01</span>
+                  <div className="font-black text-slate-950 text-xs uppercase">1. Human-in-the-Loop Shadow Queue</div>
+                  <div className="text-[11px] text-slate-600 font-semibold">98%+ verification target</div>
+                </div>
+              </div>
+
+              {/* Arrow Chevron 1 */}
+              <div className="hidden md:flex justify-center text-slate-400 font-mono text-xl font-bold">
+                <ArrowRight size={20} />
+              </div>
+
+              {/* Phase 2 */}
+              <div className="md:col-span-3 bg-slate-50 border border-slate-200 p-4 rounded-sm flex items-center space-x-3 text-left">
+                <div className="p-2 bg-slate-200 text-slate-700 rounded-full shrink-0">
+                  <Zap size={20} />
+                </div>
+                <div>
+                  <span className="font-mono text-[10px] font-bold text-slate-500 uppercase block">PHASE 02</span>
+                  <div className="font-black text-slate-950 text-xs uppercase">2. Confidence-Based Auto-Execution</div>
+                  <div className="text-[11px] text-slate-600 font-semibold">Low-dollar / Low-risk automated</div>
+                </div>
+              </div>
+
+              {/* Arrow Chevron 2 */}
+              <div className="hidden md:flex justify-center text-slate-400 font-mono text-xl font-bold">
+                <ArrowRight size={20} />
+              </div>
+
+              {/* Phase 3 */}
+              <div className="md:col-span-3 bg-slate-50 border border-slate-200 p-4 rounded-sm flex items-center space-x-3 text-left">
+                <div className="p-2 bg-emerald-100 text-emerald-700 rounded-full shrink-0">
+                  <CheckCircle2 size={20} />
+                </div>
+                <div>
+                  <span className="font-mono text-[10px] font-bold text-emerald-700 uppercase block">PHASE 03</span>
+                  <div className="font-black text-slate-950 text-xs uppercase">3. Verified Autonomous Action</div>
+                  <div className="text-[11px] text-slate-600 font-semibold">High-confidence automated writes</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* EXECUTIVE SUMMARY BANNER */}
+          <div className="bg-red-50/80 border border-red-200 rounded-sm p-4 space-y-1">
+            <span className="font-mono text-xs font-bold text-red-700 uppercase tracking-wider block">// EXECUTIVE TAKEAWAY: REFRAME AI EXECUTION</span>
+            <p className="text-xs text-slate-800 leading-relaxed font-medium">
+              Treat AI as an intelligent assistant, not an unsupervised decision-maker. Let standard code handle 90% of predictable workflow rules (sorting, routing, and data cleaning), while reserving AI strictly for bounded tasks operating under clear safety limits. Establishing operational guardrails upfront stops costly, unmonitored runtime errors before they scale.
+            </p>
+          </div>
+
+          {/* SYSTEM OF RECORD TARGET CONDUIT */}
+          <div className="bg-slate-950 text-white rounded-sm p-3.5 text-center font-mono text-xs font-bold tracking-wider uppercase shadow-sm flex items-center justify-center space-x-3">
+            <CheckCircle2 size={16} className="text-emerald-400" />
+            <span>↓ SYSTEM OF RECORD (CRM, Ticketing, Core Databases)</span>
+            <CheckCircle2 size={16} className="text-emerald-400" />
+          </div>
+        </section>
+
+        {/* --- SECTION III: CONTROL PLANE MATRIX (CAPABILITY TABLE) --- */}
+        <section className="text-left">
           <div className="mb-6 space-y-1">
             <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block">// CONTROL PLANE MATRIX</span>
             <h2 className="text-2xl sm:text-3xl font-black uppercase text-slate-950 tracking-tight">OPERATIONAL NODE CAPABILITY MATRIX</h2>
@@ -231,7 +395,7 @@ export default function Methodology() {
         </section>
 
         {/* --- THE INFRASTRUCTURE GAP BANNER --- */}
-        <section className="mb-20 sm:mb-24 max-w-7xl mx-auto">
+        <section className="max-w-7xl mx-auto">
           <div className="bg-amber-50/60 border-l-4 border-amber-600 p-6 sm:p-8 font-mono text-xs text-left space-y-3 shadow-sm rounded-sm border border-amber-200/60">
             <div className="flex items-center gap-2 text-amber-800 font-bold tracking-wider text-xs uppercase">
               <ShieldAlert size={16} className="shrink-0" />
@@ -248,8 +412,8 @@ export default function Methodology() {
           </div>
         </section>
 
-        {/* --- SECTION III: THE FOUR-PHASE DIAGNOSTIC PROCESS --- */}
-        <section className="mb-20 sm:mb-24 bg-white border border-slate-200 p-6 sm:p-12 md:p-16 rounded-sm shadow-sm text-left">
+        {/* --- SECTION IV: THE FOUR-PHASE DIAGNOSTIC PROCESS --- */}
+        <section className="bg-white border border-slate-200 p-6 sm:p-12 md:p-16 rounded-sm shadow-sm text-left">
           <div className="max-w-4xl">
             <h2 className="text-3xl sm:text-5xl font-black uppercase tracking-tight mb-6 text-slate-950 leading-tight">
               THE FOUR-PHASE <span className="text-red-700">DIAGNOSTIC PROCESS.</span>
@@ -274,7 +438,7 @@ export default function Methodology() {
         </section>
 
         {/* --- INPUT-OUTPUT ARTIFACT PREVIEW --- */}
-        <section className="mb-20 sm:mb-24 bg-slate-950 text-slate-100 p-6 sm:p-8 rounded-sm font-mono border border-slate-800 space-y-4 text-left shadow-sm">
+        <section className="bg-slate-950 text-slate-100 p-6 sm:p-8 rounded-sm font-mono border border-slate-800 space-y-4 text-left shadow-sm">
           <div className="flex items-center justify-between text-xs text-red-500 font-bold uppercase tracking-wider border-b border-slate-800 pb-3">
             <span className="flex items-center gap-2"><FileText size={16} /> SAMPLE DIAGNOSTIC BLUEPRINT OUTPUT</span>
             <span>SECURE PREVIEW // NODE 01 TO 03</span>
@@ -289,7 +453,7 @@ export default function Methodology() {
         </section>
 
         {/* --- COMPLIANCE & PROCUREMENT HIGHLIGHT --- */}
-        <section className="mb-24 sm:mb-32 max-w-7xl mx-auto text-left">
+        <section className="max-w-7xl mx-auto text-left">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 font-mono">
             <div className="lg:col-span-8 bg-slate-900 text-white p-6 sm:p-8 border-l-4 border-red-600 space-y-4 rounded-sm shadow-sm border border-slate-800">
               <div className="flex items-center gap-2 text-red-400 font-bold text-xs tracking-wider uppercase">
@@ -317,7 +481,7 @@ export default function Methodology() {
           </div>
         </section>
 
-        {/* --- SECTION IV: THE COST OF INACTION --- */}
+        {/* --- SECTION V: THE COST OF INACTION --- */}
         <section className="max-w-4xl mx-auto text-center border border-slate-200 p-8 sm:p-16 bg-white rounded-sm shadow-sm">
           <AlertCircle className="text-red-700 mx-auto mb-6" size={40} />
           <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-6 text-slate-950 leading-none">THE COST OF INACTION</h2>
@@ -340,6 +504,7 @@ export default function Methodology() {
             </div>
           </div>
         </section>
+
       </main>
 
       <Footer />
