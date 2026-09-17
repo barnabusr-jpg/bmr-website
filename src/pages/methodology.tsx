@@ -127,10 +127,10 @@ export default function Methodology() {
               <h3 className="text-lg font-black uppercase text-slate-950">MAP IT</h3>
               <span className="text-xs font-bold text-slate-700 block uppercase">Explicit Process Logic</span>
               <p className="text-xs text-slate-600 font-sans leading-relaxed">
-                Document all decision trees, sentiment rules, and escalation limits on paper. Tribal knowledge is an automation blocker.
+                Document all decision trees, sentiment rules, and escalation limits. Tribal knowledge blocks automation.
               </p>
               <div className="bg-slate-50 p-3 border-l-2 border-red-700 text-[11px] font-sans text-slate-800">
-                Rule: If a person cannot follow the process, AI will always fail.
+                Rule: If a person cannot follow the process flow from beginning to end, automated execution will always fail.
               </div>
             </div>
 
@@ -140,10 +140,10 @@ export default function Methodology() {
               <h3 className="text-lg font-black uppercase text-slate-950">FILTER IT</h3>
               <span className="text-xs font-bold text-slate-700 block uppercase">Zero Raw Ingestion</span>
               <p className="text-xs text-slate-600 font-sans leading-relaxed">
-                Audit intake contracts to specify strict schema validation (e.g., Pydantic models). Sanitize context to prevent contamination.
+                Audit intake contracts to enforce strict schema validation. Sanitize inputs at entry to prevent context contamination before executing the payload.
               </p>
               <div className="bg-slate-50 p-3 border-l-2 border-slate-900 text-[11px] font-sans text-slate-800">
-                Rule: Do not allow raw or unchecked text to enter RAG memory directly.
+                Rule: Never allow unvalidated text or unstructured inputs to enter your business context memory directly.
               </div>
             </div>
 
@@ -153,10 +153,10 @@ export default function Methodology() {
               <h3 className="text-lg font-black uppercase text-slate-950">GUARD IT</h3>
               <span className="text-xs font-bold text-slate-700 block uppercase">Programmatic Governance</span>
               <p className="text-xs text-slate-600 font-sans leading-relaxed">
-                We specify Non-Human Identity (NHI) roles and define strict, infrastructure-level API proxy limits. Prompts cannot enforce policy.
+                Specify Non-Human Identity (NHI) roles and define hard infrastructure-level API proxy limits. Natural language instructions cannot enforce corporate policy.
               </p>
               <div className="bg-slate-50 p-3 border-l-2 border-red-700 text-[11px] font-sans text-slate-800">
-                Rule: Mandate proxy specifications that block actions exceeding set policy limits, regardless of LLM intent.
+                Rule: Mandate hardcoded proxy specifications that physically block unauthorized actions regardless of model intent.
               </div>
             </div>
 
@@ -166,10 +166,10 @@ export default function Methodology() {
               <h3 className="text-lg font-black uppercase text-slate-950">STAGE IT</h3>
               <span className="text-xs font-bold text-slate-700 block uppercase">Graduated Autonomy</span>
               <p className="text-xs text-slate-600 font-sans leading-relaxed">
-                Audit and decouple task reasoning from execution. We deliver the blueprint for draft shadow queues to ensure durable state persistence before automated writes trigger.
+                Audit and decouple reasoning from live execution. Route actions into draft shadow queues to verify stability against operational variance before granting system writes.
               </p>
               <div className="bg-slate-50 p-3 border-l-2 border-slate-900 text-[11px] font-sans text-slate-800">
-                Rule: Write to the system of record only when the state is clearly defined.
+                Rule: Write to the system of record only when the operational state is fully verified.
               </div>
             </div>
           </div>
@@ -199,14 +199,15 @@ export default function Methodology() {
           </div>
 
           {/* EXECUTIVE TAKEAWAY BANNER */}
-<div className="bg-slate-950 text-white p-6 sm:p-8 font-mono space-y-3 rounded-sm">
-  <span className="text-red-500 font-bold text-xs tracking-widest uppercase block">
-    // EXECUTIVE TAKEAWAY: REFRAME AI EXECUTION
-  </span>
-  <p className="text-xs sm:text-sm leading-relaxed text-slate-300 font-sans">
-    View AI as a bounded operational resource, not an unsupervised decision-maker. Set governance rules before automating, impose strict liability limits, and add mandatory verification checkpoints before expanding system use. BMR turns systemic friction into practical risk matrices, financial calculations, and deployment runbooks your teams can use directly, protecting your operating margin with no vendor lock-in.
-  </p>
-</div>
+          <div className="bg-slate-950 text-white p-6 sm:p-8 font-mono space-y-3 rounded-sm">
+            <span className="text-red-500 font-bold text-xs tracking-widest uppercase block">
+              // EXECUTIVE TAKEAWAY: REFRAME AI EXECUTION
+            </span>
+            <p className="text-xs sm:text-sm leading-relaxed text-slate-300 font-sans">
+              View AI as a bounded operational resource, not an unsupervised decision-maker. Set governance rules before automating, impose strict liability limits, and add mandatory verification checkpoints before expanding system use. BMR turns systemic friction into practical risk matrices, financial calculations, and deployment runbooks your teams can use directly, protecting your operating margin with no vendor lock-in.
+            </p>
+          </div>
+
           <div className="text-center font-mono text-xs text-slate-500 uppercase tracking-widest py-2">
             ↓ SYSTEM OF RECORD (CRM, TICKETING, CORE DATABASES)
           </div>
