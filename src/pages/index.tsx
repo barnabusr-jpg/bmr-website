@@ -94,17 +94,17 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* --- SECTION 1.5: THE DIGITAL BUILDING INSPECTOR POSTURE BANNER --- */}
-        <div className="mt-16 bg-slate-100 border-y border-slate-200/90 py-6 px-6 sm:px-8 rounded-sm shadow-xs">
+        {/* --- SECTION 1.5: TERMINAL ADVISORY POSTURE BANNER --- */}
+        <div className="mt-16 bg-slate-100 border-y border-slate-200/90 py-6 px-6 sm:px-8 rounded-sm shadow-xs font-mono">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <ClipboardCheck className="text-red-700 shrink-0" size={24} />
-              <span className="text-red-700 font-mono text-xs font-bold uppercase tracking-widest block">
+              <ClipboardCheck className="text-red-700 shrink-0" size={22} />
+              <span className="text-red-700 text-xs font-bold uppercase tracking-widest block">
                 // INDEPENDENT ADVISORY POSTURE
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl font-sans">
-              <strong>BMR Solutions serves as an independent Digital Building Inspector:</strong> verifying system readiness for deployment and auditing process stability to guarantee ongoing, zero-defect ROI.
+              <strong>BMR Solutions works as an independent Digital Building Inspector:</strong> checking that systems are ready for launch and auditing process stability to maintain steady ROI and avoid defects.
             </p>
           </div>
         </div>
