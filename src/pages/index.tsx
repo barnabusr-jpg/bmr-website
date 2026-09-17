@@ -3,7 +3,7 @@ import React from 'react';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Activity, Target, Shield, LayoutGrid, Layers, Cpu, Milestone, CheckCircle2, ArrowRight, FileText, ClipboardCheck } from 'lucide-react';
+import { Activity, Target, Shield, LayoutGrid, Layers, Cpu, Milestone, CheckCircle2, ArrowRight, FileText, ClipboardCheck, DollarSign, Clock, Lock } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function LandingPage() {
@@ -29,7 +29,7 @@ export default function LandingPage() {
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl font-sans">
-              <strong>BMR Solutions works as an independent Digital Building Inspector:</strong> checking that systems are ready for launch and auditing process stability to maintain steady ROI and avoid defects.
+              <strong>BMR Solutions operates as an independent Digital Building Inspector.</strong> We assess your systems, quantify financial risk, and deliver outcome-focused blueprints to help protect operating margins, preserve brand credibility, and prevent operational defects.
             </p>
           </div>
         </div>
@@ -53,11 +53,11 @@ export default function LandingPage() {
 
             <div className="space-y-6">
               <p className="text-lg sm:text-xl text-slate-800 max-w-2xl leading-relaxed font-normal">
-                Many organizations expected AI systems and automated workflows to deliver instant operational scale. Instead, leadership teams face the Promise Gap™: a widening rift between board-level AI goals and the reality of runtime errors, fragmented data, and continuous operational friction.
+                Many organizations expected AI and automation to deliver instant operational scale. Instead, leadership teams face the Promise Gap™: the widening rift between board-level 2026 AI delivery goals and the reality of errors, scattered data, and ongoing operational friction during runtime.
               </p>
               
               <p className="text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed font-normal border-l-2 border-slate-300 pl-4">
-                For example, a multi-site enterprise recently struggled with inconsistent automated recommendations across its core operations. By systematically mapping their workflows and identifying root causes, they eliminated 30% of repetitive technical rework and stabilized their mission-critical tools within weeks. We pinpoint structural failure points, calculate your Process Waste Tax, and deliver clear, execution-ready directives your team can deploy immediately.
+                For example, a multi-site enterprise struggled with inconsistent automated recommendations across core operations. By mapping workflows and identifying root causes, they eliminated 30% of repetitive technical rework and stabilized key tools in weeks. This secured their operational mandate ahead of schedule. We help pinpoint structural failure points, calculate your Process Waste Tax, and give your team clear, execution-ready directives to fix them immediately.
               </p>
             </div>
 
@@ -66,7 +66,7 @@ export default function LandingPage() {
                 onClick={() => router.push('/pulse-check')} 
                 className="group relative w-full sm:w-auto bg-slate-950 text-white px-8 sm:px-12 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-700 transition-all shadow-md border border-slate-950 cursor-pointer text-center"
               >
-                EXECUTE STRATEGY
+                CALCULATE YOUR PROCESS WASTE TAX
                 <Target className="hidden sm:block absolute -top-3 -right-3 text-red-600 group-hover:text-white transition-all" size={24} />
               </button>
 
@@ -76,7 +76,7 @@ export default function LandingPage() {
                   10-QUESTION ASSESSMENT // 3-MINUTE DIAGNOSTIC
                 </div>
                 <p className="text-red-700 font-mono text-[9px] tracking-wider font-semibold uppercase">
-                  INSTANT RECOVERY BLUEPRINT GENERATED
+                  PRELIMINARY DIAGNOSTIC RESULTS
                 </p>
               </div>
             </div>
@@ -93,11 +93,11 @@ export default function LandingPage() {
 
               <div className="space-y-6 border-l-2 border-red-700/30 pl-4 sm:pl-6">
                 <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-normal">
-                  Your organization is likely absorbing thousands in hidden capital loss by repeatedly fixing the same operational failures. This fiscal bleed stems from automated execution running on incomplete processes, changing inputs, and alerts that do not drive the right action.
+                  Your organization is likely absorbing thousands in hidden capital loss by repeatedly fixing the same operational failures. This fiscal bleed comes from automated execution running on incomplete processes, changing inputs, and alerts that do not lead to the right actions.
                 </p>
 
                 <p className="text-slate-800 text-xs sm:text-sm leading-relaxed font-normal bg-slate-100/80 p-4 border border-slate-200">
-                  On average, our clients reduce repeat operational rework by 25% to 40% within the first quarter, yielding typical annual savings of $150,000 to $350,000 depending on organizational scale and process complexity. We show you exactly where capital is leaking and provide a clear, step-by-step plan to recover lost speed.
+                  On average, our clients reduce repeat operational rework by 25% to 40% within the first quarter. This yields typical annual savings of $150,000 to $350,000 depending on organizational scale and process complexity. We pinpoint exactly where capital is leaking and deliver execution-ready blueprints to recover lost speed.
                 </p>
                 
                 <div className="pt-2">
@@ -106,6 +106,31 @@ export default function LandingPage() {
                   </span>
                 </div>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* --- VERIFIED EXECUTIVE OUTCOMES STRIP --- */}
+        <div className="mt-16 bg-white border border-slate-200 p-6 sm:p-8 rounded-sm shadow-xs font-mono">
+          <span className="text-red-700 text-xs font-bold uppercase tracking-widest block mb-6">
+            // VERIFIED EXECUTIVE OUTCOMES
+          </span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-sans">
+            <div className="border-l-2 border-red-700 pl-4 space-y-1">
+              <span className="font-mono text-lg font-black text-slate-950 block">30%–45% REDUCTION</span>
+              <p className="text-xs text-slate-600 leading-snug">In repeat technical rework within 90 days of execution.</p>
+            </div>
+            <div className="border-l-2 border-slate-950 pl-4 space-y-1">
+              <span className="font-mono text-lg font-black text-slate-950 block">$150K–$350K RECOVERED</span>
+              <p className="text-xs text-slate-600 leading-snug">Annually per operational business unit in capital leakages.</p>
+            </div>
+            <div className="border-l-2 border-red-700 pl-4 space-y-1">
+              <span className="font-mono text-lg font-black text-slate-950 block">48-HR PROCUREMENT</span>
+              <p className="text-xs text-slate-600 leading-snug">Zero-footprint audit model bypasses InfoSec delays completely.</p>
+            </div>
+            <div className="border-l-2 border-slate-950 pl-4 space-y-1">
+              <span className="font-mono text-lg font-black text-slate-950 block">100% OBJECTIVE ADVISORY</span>
+              <p className="text-xs text-slate-600 leading-snug">Zero software vendor commissions or hidden implementation fees.</p>
             </div>
           </div>
         </div>
@@ -120,7 +145,7 @@ export default function LandingPage() {
               THE CORE OPERATIONAL REALITY:<br />THE THREE <span className="text-red-700">ENTERPRISE LEVELS.</span>
             </h2>
             <p className="text-base sm:text-lg text-slate-700 max-w-3xl leading-relaxed mb-10 font-normal">
-              Executive leadership often assumes operational friction and fragile AI deployments are an unavoidable cost of modernizing. Capital loss actually occurs in the unmapped middle layer between executive strategy and daily machine execution.
+              Executive leadership often assumes operational friction and fragile AI deployments are unavoidable costs of modernizing. Capital loss happens in the unmapped middle layer between executive strategy and daily machine execution.
             </p>
           </div>
 
@@ -142,30 +167,29 @@ export default function LandingPage() {
               <span className="text-[10px] tracking-wider font-bold uppercase">WARNING: EXPECTATIONS DIVERGE FROM RUNTIME REALITY</span>
             </div>
 
-            {/* LEVEL 2 (EMBEDDED PRE-AUTOMATION CONTROL PLANE) */}
+            {/* LEVEL 2 */}
             <div className="border-2 border-red-700 bg-white p-6 sm:p-8 relative rounded-sm shadow-md space-y-6">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-red-200 pb-4">
                 <div className="flex items-start sm:items-center gap-4">
                   <div className="p-3 bg-red-700 text-white shrink-0"><Layers size={20} /></div>
                   <div>
-                    <span className="bg-red-700 text-white text-[9px] font-bold px-2 py-0.5 tracking-wider uppercase inline-block mb-1">FRICTION LAYER CONTROL GATE</span>
+                    <span className="bg-red-700 text-white text-[9px] font-bold px-2 py-0.5 tracking-wider uppercase inline-block mb-1">FRICTION LAYER DIAGNOSTIC GATE</span>
                     <h3 className="text-red-800 font-black text-sm sm:text-base tracking-wider uppercase">// LEVEL 2: THE OPERATIONAL AND DELIVERY INTERFACE</h3>
-                    <p className="text-slate-700 font-sans mt-1 text-xs font-normal max-w-3xl">Where teams translate business directives into automated workflows, reliable data delivery, and dependable system behavior. BMR deploys the <strong>Pre-Automation Control Plane</strong> here to eliminate silent process failure and stop validation fatigue.</p>
+                    <p className="text-slate-700 font-sans mt-1 text-xs font-normal max-w-3xl">This is where teams translate business directives into automated workflows, reliable data, and stable systems. BMR audits this layer using the <strong>Pre-Automation Control Plane</strong> framework to find hidden process failures, calculate your Process Waste Tax, and provide clear execution runbooks.</p>
                   </div>
                 </div>
                 <span className="text-red-700 font-bold tracking-wider text-[10px] shrink-0 uppercase bg-red-50 px-3 py-1 border border-red-200">RISK: CAPITAL LOSS & CAPACITY EROSION</span>
               </div>
 
-              {/* VISUAL CONTROL PLANE ENGINE EMBEDDED */}
+              {/* VISUAL CONTROL PLANE ENGINE */}
               <div className="space-y-4 font-sans">
-                {/* PIPELINE INGESTION CONDUIT */}
                 <div className="bg-slate-50 border border-slate-300 rounded-sm p-3 flex items-center justify-between">
                   <div className="hidden sm:flex items-center space-x-1 text-slate-400">
                     <FileText size={18} />
                   </div>
                   <div className="mx-auto flex items-center space-x-2 font-mono text-[11px] font-bold text-red-700 uppercase">
                     <span className="text-slate-400">➔ ➔</span>
-                    <span>↓ INCOMING CUSTOMER PAYLOAD (Forms, Emails, Triage Data)</span>
+                    <span>↓ DIAGNOSTIC INPUT BOUNDARY // INGESTION RISK REVIEW LAYER</span>
                     <span className="text-slate-400">➔ ➔</span>
                   </div>
                   <div className="hidden sm:flex items-center text-emerald-600">
@@ -173,33 +197,33 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                {/* 4 PILLARS GRID */}
+                {/* THE FOUR EXECUTIVE PROTECTIONS */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
                   <div className="bg-white border border-slate-200 border-t-2 border-t-red-700 p-4 space-y-2 text-left">
-                    <span className="font-mono text-[10px] font-bold text-red-700 uppercase block">// 01 // MAP IT</span>
+                    <span className="font-mono text-[10px] font-bold text-red-700 uppercase block">// 01 // MARGIN DEFENSE</span>
                     <h4 className="font-black text-xs uppercase text-slate-950">Process Maturity</h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">Explicit process logic mapped on paper before automation.</p>
+                    <p className="text-[11px] text-slate-600 leading-snug">Develop process logic mapping on paper before code is written to avoid paying technical debt tax on manual workarounds.</p>
                   </div>
                   <div className="bg-white border border-slate-200 border-t-2 border-t-slate-950 p-4 space-y-2 text-left">
-                    <span className="font-mono text-[10px] font-bold text-slate-500 uppercase block">// 02 // FILTER IT</span>
-                    <h4 className="font-black text-xs uppercase text-slate-950">Data Contracts</h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">Strict schema validation; zero raw ingestion into memory.</p>
+                    <span className="font-mono text-[10px] font-bold text-slate-500 uppercase block">// 02 // DATA INTEGRITY SHIELD</span>
+                    <h4 className="font-black text-xs uppercase text-slate-950">Intake Contracts</h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">Audit schema rules to prevent raw context ingestion before memory pollution degrades business data.</p>
                   </div>
                   <div className="bg-white border border-slate-200 border-t-2 border-t-red-700 p-4 space-y-2 text-left">
-                    <span className="font-mono text-[10px] font-bold text-red-700 uppercase block">// 03 // GUARD IT</span>
+                    <span className="font-mono text-[10px] font-bold text-red-700 uppercase block">// 03 // LIABILITY CEILING</span>
                     <h4 className="font-black text-xs uppercase text-slate-950">Policy Ceilings</h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">Hardcoded proxy limits. Policy cannot be prompt-driven.</p>
+                    <p className="text-[11px] text-slate-600 leading-snug">Audit prompt risks and specify hard proxy ceilings so automated systems do not exceed financial or regulatory bounds.</p>
                   </div>
                   <div className="bg-white border border-slate-200 border-t-2 border-t-slate-950 p-4 space-y-2 text-left">
-                    <span className="font-mono text-[10px] font-bold text-slate-500 uppercase block">// 04 // STAGE IT</span>
-                    <h4 className="font-black text-xs uppercase text-slate-950">Risk Control</h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">Draft shadow queues decouple reasoning from execution.</p>
+                    <span className="font-mono text-[10px] font-bold text-slate-500 uppercase block">// 04 // CAPITAL EXPOSURE SAFETY GATE</span>
+                    <h4 className="font-black text-xs uppercase text-slate-950">Staging Blueprints</h4>
+                    <p className="text-[11px] text-slate-600 leading-snug">Evaluate task decoupling and specify shadow queues so no unmonitored machine actions reach live customers.</p>
                   </div>
                 </div>
 
-                {/* GRADUATED AUTONOMY TIMELINE */}
+                {/* GRADUATED TIMELINE */}
                 <div className="bg-slate-50 border border-slate-200 p-3 flex flex-col md:flex-row items-center justify-between gap-2 font-mono text-[11px]">
-                  <span className="text-red-700 font-bold uppercase">// GRADUATED TIMELINE:</span>
+                  <span className="text-red-700 font-bold uppercase">// GRADUATED TIMELINE BLUEPRINT:</span>
                   <div className="flex items-center space-x-2 text-slate-700">
                     <span className="bg-white px-2 py-0.5 border border-slate-200">1. Shadow Queue (98%+ Target)</span>
                     <ArrowRight size={14} className="text-slate-400" />
@@ -222,10 +246,54 @@ export default function LandingPage() {
                 <div className="p-3 bg-slate-100 border border-slate-200 text-slate-700 shrink-0"><Cpu size={20} /></div>
                 <div>
                   <h3 className="text-slate-950 font-bold text-xs sm:text-sm tracking-wider uppercase">// LEVEL 3: OPERATIONAL RUNTIME (LIVE EXECUTION LAYER)</h3>
-                  <p className="text-slate-600 font-sans mt-1 text-xs font-normal">Handles live databases, automated transactions, core analytics, and automated decision workflows. The goal is predictable runtime reliability, incident containment, and stable execution under real operational variability.</p>
+                  <p className="text-slate-600 font-sans mt-1 text-xs font-normal">Handles live databases, automated transactions, analytics, and decision workflows. The goal is to keep operations reliable, contain incidents, and ensure stable performance despite operational variability.</p>
                 </div>
               </div>
               <span className="text-slate-500 tracking-wider text-[10px] hidden md:inline shrink-0 uppercase font-bold">MACHINE EXECUTION LAYER</span>
+            </div>
+          </div>
+        </div>
+
+        {/* --- EXECUTIVE OUTCOME TRANSFORM MATRIX --- */}
+        <div className="mt-20 sm:mt-28 border border-slate-200 bg-white p-6 sm:p-10 rounded-sm shadow-sm">
+          <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-3">
+            // EXECUTIVE OUTCOME TRANSFORM
+          </span>
+          <h3 className="text-2xl sm:text-3xl font-black uppercase text-slate-950 mb-8">
+            OPERATIONAL STATE <span className="text-red-700">TRANSFORMATION.</span>
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-sans text-xs">
+            <div className="border border-slate-200 p-5 bg-slate-50 space-y-2">
+              <span className="font-mono text-[10px] text-red-700 font-bold uppercase block">// STATUS QUO: VALIDATION FATIGUE</span>
+              <p className="text-slate-700">Senior engineers spend 15+ hours/week manually double-checking AI outputs.</p>
+              <div className="pt-2 border-t border-slate-200 font-bold text-slate-950">
+                ➔ INSPECTED STATE: Engineering capacity is fully restored to revenue-generating development.
+              </div>
+            </div>
+
+            <div className="border border-slate-200 p-5 bg-slate-50 space-y-2">
+              <span className="font-mono text-[10px] text-red-700 font-bold uppercase block">// STATUS QUO: BUDGET VOLATILITY</span>
+              <p className="text-slate-700">Unchecked rework and unmonitored agent loops create unexpected cost shocks.</p>
+              <div className="pt-2 border-t border-slate-200 font-bold text-slate-950">
+                ➔ INSPECTED STATE: Execution runs under strict, pre-calculated cost boundaries.
+              </div>
+            </div>
+
+            <div className="border border-slate-200 p-5 bg-slate-50 space-y-2">
+              <span className="font-mono text-[10px] text-red-700 font-bold uppercase block">// STATUS QUO: REPUTATIONAL EXPOSURE</span>
+              <p className="text-slate-700">Unverified machine actions risk customer trust and regulatory penalties.</p>
+              <div className="pt-2 border-t border-slate-200 font-bold text-slate-950">
+                ➔ INSPECTED STATE: Every automated workflow maintains an explicit compliance and safety trail.
+              </div>
+            </div>
+
+            <div className="border border-slate-200 p-5 bg-slate-50 space-y-2">
+              <span className="font-mono text-[10px] text-red-700 font-bold uppercase block">// STATUS QUO: THE 2026 PROMISE GAP™</span>
+              <p className="text-slate-700">High-budget AI initiatives stall before delivering production value.</p>
+              <div className="pt-2 border-t border-slate-200 font-bold text-slate-950">
+                ➔ INSPECTED STATE: Measurable ROI achieved within weeks, fully protecting leadership's strategic timeline.
+              </div>
             </div>
           </div>
         </div>
@@ -244,7 +312,7 @@ export default function LandingPage() {
               THE INFRASTRUCTURE GAP: <span className="text-red-700">WHY AUTOMATION FAILS IN PRODUCTION.</span>
             </h3>
             <p className="text-slate-700 text-sm font-sans normal-case leading-relaxed font-normal">
-              Benchmark data from over 500 enterprise organizations reveals why automated systems destabilize in production. Corporate automation goals evolve nearly twice as fast as the operational guardrails built to guide them. Scaling automation without clear operating rules creates compounding operational risk.
+              Data from over 500 enterprise organizations reveals why automated systems destabilize in production. Corporate automation goals evolve nearly twice as fast as the operational guardrails that guide them. Scaling automation without clear operating rules creates compounding risk.
             </p>
           </div>
 
@@ -285,7 +353,7 @@ export default function LandingPage() {
               <div className="text-red-700 font-mono text-xs font-bold tracking-wider">// 01 // STEP ONE</div>
               <h4 className="text-lg font-bold text-slate-950 uppercase tracking-tight">QUANTIFY THE WASTE</h4>
               <p className="text-xs sm:text-sm text-slate-700 font-sans leading-relaxed">
-                <strong className="text-slate-950">The Process Waste Tax Ledger:</strong> We eliminate guesswork by calculating the financial exposure and wasted labor caused by recurring operational failures.
+                <strong className="text-slate-950">The Process Waste Tax Ledger:</strong> We eliminate guesswork by calculating financial exposure and labor wasted due to recurring operational failures.
               </p>
             </div>
 
@@ -294,7 +362,7 @@ export default function LandingPage() {
                 <div className="text-red-700 font-mono text-xs font-bold tracking-wider">// 02 // STEP TWO</div>
                 <h4 className="text-lg font-bold text-slate-950 uppercase tracking-tight">CLEAR DIRECTIVES</h4>
                 <p className="text-xs sm:text-sm text-slate-700 font-sans leading-relaxed">
-                  <strong className="text-slate-950">Execution Runbooks:</strong> We translate operational friction into standardized, practical instructions your teams can apply to reduce errors, lower rework, and stop validation fatigue.
+                  <strong className="text-slate-950">Execution Runbooks:</strong> We translate operational friction into standardized, practical instructions your teams can use to reduce errors, cut rework, and stop validation fatigue.
                 </p>
               </div>
               
@@ -310,7 +378,7 @@ export default function LandingPage() {
               <div className="text-red-700 font-mono text-xs font-bold tracking-wider">// 03 // STEP THREE</div>
               <h4 className="text-lg font-bold text-slate-950 uppercase tracking-tight">DEPLOYMENT GATES</h4>
               <p className="text-xs sm:text-sm text-slate-700 font-sans leading-relaxed">
-                <strong className="text-slate-950">Governance and Compliance:</strong> We establish mandatory verification rules before automation scales, ensuring systems execute only verified actions and do not compromise sensitive data. In regulated environments, we focus on verified access, audit-ready controls, and protection of sensitive information. For healthcare teams, we align verification and access controls with health privacy regulations and audit-ready documentation.
+                <strong className="text-slate-950">Governance and Compliance:</strong> We establish mandatory verification rules before automation scales, ensuring systems execute only verified actions and do not compromise sensitive data.
               </p>
             </div>
           </div>
