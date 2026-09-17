@@ -17,8 +17,24 @@ export default function LandingPage() {
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-red-100 selection:text-red-900 overflow-x-hidden relative flex flex-col">
       <Header />
       
-      {/* --- HERO / HOOK SECTION --- */}
-      <main className="flex-grow pt-32 sm:pt-44 pb-16 sm:pb-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto relative w-full">
+      <main className="flex-grow pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto relative w-full">
+        
+        {/* --- TOP BANNER: INDEPENDENT ADVISORY POSTURE --- */}
+        <div className="mb-12 bg-slate-100 border-y border-slate-200/90 py-5 px-6 sm:px-8 rounded-sm shadow-xs font-mono">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <ClipboardCheck className="text-red-700 shrink-0" size={22} />
+              <span className="text-red-700 text-xs font-bold uppercase tracking-widest block">
+                // INDEPENDENT ADVISORY POSTURE
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl font-sans">
+              <strong>BMR Solutions works as an independent Digital Building Inspector:</strong> checking that systems are ready for launch and auditing process stability to maintain steady ROI and avoid defects.
+            </p>
+          </div>
+        </div>
+
+        {/* --- HERO / HOOK SECTION --- */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-16 items-start">
           
           {/* LEFT COLUMN: THE HOOK */}
@@ -91,21 +107,6 @@ export default function LandingPage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* --- SECTION 1.5: TERMINAL ADVISORY POSTURE BANNER --- */}
-        <div className="mt-16 bg-slate-100 border-y border-slate-200/90 py-6 px-6 sm:px-8 rounded-sm shadow-xs font-mono">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="flex items-center gap-3">
-              <ClipboardCheck className="text-red-700 shrink-0" size={22} />
-              <span className="text-red-700 text-xs font-bold uppercase tracking-widest block">
-                // INDEPENDENT ADVISORY POSTURE
-              </span>
-            </div>
-            <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl font-sans">
-              <strong>BMR Solutions works as an independent Digital Building Inspector:</strong> checking that systems are ready for launch and auditing process stability to maintain steady ROI and avoid defects.
-            </p>
           </div>
         </div>
 
