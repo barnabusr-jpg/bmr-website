@@ -202,22 +202,22 @@ export default function LandingPage() {
                   <div className="bg-white border border-slate-200 border-t-2 border-t-red-700 p-4 space-y-2 text-left">
                     <span className="font-mono text-[10px] font-bold text-red-700 uppercase block">// 01 // MARGIN DEFENSE</span>
                     <h4 className="font-black text-xs uppercase text-slate-950">Process Maturity</h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">Develop process logic mapping on paper before code is written to avoid paying technical debt tax on manual workarounds.</p>
+                    <p className="text-[11px] text-slate-600 leading-snug">Document all decision trees, sentiment rules, and escalation limits. Tribal knowledge blocks automation.</p>
                   </div>
                   <div className="bg-white border border-slate-200 border-t-2 border-t-slate-950 p-4 space-y-2 text-left">
                     <span className="font-mono text-[10px] font-bold text-slate-500 uppercase block">// 02 // DATA INTEGRITY SHIELD</span>
                     <h4 className="font-black text-xs uppercase text-slate-950">Intake Contracts</h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">Audit schema rules to prevent raw context ingestion before memory pollution degrades business data.</p>
+                    <p className="text-[11px] text-slate-600 leading-snug">Audit intake contracts to enforce strict schema validation. Sanitize inputs at entry to prevent context contamination before executing the payload.</p>
                   </div>
                   <div className="bg-white border border-slate-200 border-t-2 border-t-red-700 p-4 space-y-2 text-left">
                     <span className="font-mono text-[10px] font-bold text-red-700 uppercase block">// 03 // LIABILITY CEILING</span>
                     <h4 className="font-black text-xs uppercase text-slate-950">Policy Ceilings</h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">Audit prompt risks and specify hard proxy ceilings so automated systems do not exceed financial or regulatory bounds.</p>
+                    <p className="text-[11px] text-slate-600 leading-snug">Specify Non-Human Identity (NHI) roles and define hard infrastructure-level API proxy limits. Natural language instructions cannot enforce corporate policy.</p>
                   </div>
                   <div className="bg-white border border-slate-200 border-t-2 border-t-slate-950 p-4 space-y-2 text-left">
                     <span className="font-mono text-[10px] font-bold text-slate-500 uppercase block">// 04 // CAPITAL EXPOSURE SAFETY GATE</span>
                     <h4 className="font-black text-xs uppercase text-slate-950">Staging Blueprints</h4>
-                    <p className="text-[11px] text-slate-600 leading-snug">Evaluate task decoupling and specify shadow queues so no unmonitored machine actions reach live customers.</p>
+                    <p className="text-[11px] text-slate-600 leading-snug">Audit and decouple reasoning from live execution. Route actions into draft shadow queues to verify stability against operational variance before granting system writes.</p>
                   </div>
                 </div>
 
