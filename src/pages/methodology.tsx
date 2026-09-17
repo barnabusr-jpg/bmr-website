@@ -385,9 +385,9 @@ export default function Methodology() {
         {/* --- COMPLIANCE AND PROCUREMENT ACCELERATOR --- */}
         <div className="mt-16 grid grid-cols-1 md:grid-cols-2 gap-8 font-mono text-xs">
           <div className="border border-slate-200 bg-white p-6 space-y-3 rounded-sm shadow-sm">
-            <span className="text-red-700 font-bold uppercase block">// ZERO SECURITY FOOTPRINT & PROCUREMENT ACCELERATOR</span>
+            <span className="text-red-700 font-bold uppercase block">// ZERO SECURITY FOOTPRINT & EXPEDITED PROCUREMENT</span>
             <p className="text-slate-700 font-sans leading-relaxed">
-              Our assessment runs completely separate from your active networks and never accesses confidential data. Since BMR uses only structured diagnostic inputs, our engagement bypasses lengthy InfoSec reviews. Most legal and risk teams approve our audit framework within 48 hours.
+              Our assessment runs completely separate from your active networks and never accesses confidential data. Since BMR uses only structured diagnostic inputs, our engagement bypasses lengthy InfoSec reviews for expedited procurement.
             </p>
           </div>
 
