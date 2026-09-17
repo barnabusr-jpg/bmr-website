@@ -199,13 +199,14 @@ export default function Methodology() {
           </div>
 
           {/* EXECUTIVE TAKEAWAY BANNER */}
-          <div className="bg-slate-950 text-white p-6 sm:p-8 font-mono space-y-3 rounded-sm">
-            <span className="text-red-500 font-bold text-xs tracking-widest uppercase block">// EXECUTIVE TAKEAWAY: REFRAME AI EXECUTION</span>
-            <p className="text-xs sm:text-sm leading-relaxed text-slate-300 font-sans">
-              Treat AI as an intelligent assistant, not an unsupervised decision-maker. Let standard code handle 90% of predictable workflow rules (sorting, routing, and data cleaning) while reserving AI for bounded tasks under clear safety limits. BMR translates systemic friction into clear, code-backed rules and deployment gates your engineering teams implement without vendor lock-in.
-            </p>
-          </div>
-
+<div className="bg-slate-950 text-white p-6 sm:p-8 font-mono space-y-3 rounded-sm">
+  <span className="text-red-500 font-bold text-xs tracking-widest uppercase block">
+    // EXECUTIVE TAKEAWAY: REFRAME AI EXECUTION
+  </span>
+  <p className="text-xs sm:text-sm leading-relaxed text-slate-300 font-sans">
+    View AI as a bounded operational resource, not an unsupervised decision-maker. Set governance rules before automating, impose strict liability limits, and add mandatory verification checkpoints before expanding system use. BMR turns systemic friction into practical risk matrices, financial calculations, and deployment runbooks your teams can use directly, protecting your operating margin with no vendor lock-in.
+  </p>
+</div>
           <div className="text-center font-mono text-xs text-slate-500 uppercase tracking-widest py-2">
             ↓ SYSTEM OF RECORD (CRM, TICKETING, CORE DATABASES)
           </div>
