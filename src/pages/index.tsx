@@ -29,7 +29,7 @@ export default function LandingPage() {
               </span>
             </div>
             <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl font-sans">
-              <strong>BMR Solutions operates as an independent Digital Building Inspector.</strong> We assess your systems, quantify financial risk, and deliver outcome-focused blueprints to help protect operating margins, preserve brand credibility, and prevent operational defects.
+              <strong>BMR Solutions operates as an independent Digital Building Inspector.</strong> We assess your operational processes, quantify financial risk, and deliver outcome-focused blueprints to help protect operating margins, preserve brand credibility, and prevent operational defects.
             </p>
           </div>
         </div>
