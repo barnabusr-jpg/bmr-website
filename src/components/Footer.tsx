@@ -7,10 +7,10 @@ export default function Footer() {
 
   return (
     <footer className="bg-slate-50 border-t border-slate-200 pt-16 pb-12 px-6 md:px-12 text-left text-slate-700 font-sans">
-      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-16 mb-16">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-16 mb-16">
         
         {/* BRAND SUMMARY */}
-        <div className="space-y-4">
+        <div className="space-y-4 md:col-span-1">
           <div className="flex items-center gap-3">
             <div className="w-6 h-[2px] bg-red-600" />
             <span className="text-slate-900 font-extrabold text-xl tracking-tight">
@@ -22,10 +22,26 @@ export default function Footer() {
           </p>
         </div>
 
+        {/* SYSTEM DIRECTORY */}
+        <div className="space-y-4">
+          <h4 className="text-slate-900 font-mono font-bold text-xs tracking-wider uppercase">// ARCHIVE & DIRECTORY</h4>
+          <ul className="space-y-2 font-mono text-xs text-slate-600 uppercase tracking-wider font-medium list-none p-0">
+            <li>
+              <Link href="/briefings" className="hover:text-red-700 transition-colors no-underline">EVIDENCE & BRIEFING VAULT</Link>
+            </li>
+            <li>
+              <Link href="/methodology" className="hover:text-red-700 transition-colors no-underline">THE AUDIT FRAMEWORK</Link>
+            </li>
+            <li>
+              <Link href="/pulse-check" className="hover:text-red-700 transition-colors no-underline">DIAGNOSTIC ASSESSMENT</Link>
+            </li>
+          </ul>
+        </div>
+
         {/* VERTICALS */}
         <div className="space-y-4">
           <h4 className="text-slate-900 font-mono font-bold text-xs tracking-wider uppercase">// FORENSIC VERTICALS</h4>
-          <ul className="space-y-2 font-mono text-xs text-slate-600 uppercase tracking-wider font-medium">
+          <ul className="space-y-2 font-mono text-xs text-slate-600 uppercase tracking-wider font-medium list-none p-0">
             <li className="hover:text-slate-900 cursor-default transition-colors">PRE-AUTOMATION CONTROL PLANES</li>
             <li className="hover:text-slate-900 cursor-default transition-colors">PIPELINE HARDENING</li>
             <li className="hover:text-slate-900 cursor-default transition-colors">TELEMETRY DECOUPLING</li>
