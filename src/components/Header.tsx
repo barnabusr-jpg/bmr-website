@@ -10,13 +10,12 @@ export default function Header() {
 
   const navLinks = [
     { name: 'THE FRAMEWORK', href: '/methodology' },
-    { name: 'BRIEFING VAULT', href: '/briefings' },
+    { name: 'EVIDENCE VAULT', href: '/briefings' },
   ];
 
   return (
     <>
       <header className="fixed top-0 left-0 right-0 h-20 md:h-24 bg-white/90 backdrop-blur-md border-b border-slate-200 z-[1000] flex items-center justify-between px-6 md:px-12">
-        
         {/* BRAND LOGO */}
         <Link href="/" className="flex items-center gap-3 no-underline group shrink-0">
           <ShieldAlert size={24} className="text-red-700 group-hover:scale-105 transition-transform" />
@@ -32,15 +31,20 @@ export default function Header() {
 
         {/* DESKTOP NAVIGATION */}
         <nav className="hidden md:flex items-center gap-8 font-mono">
-          {navLinks.map((link) => (
-            <Link 
-              key={link.name} 
-              href={link.href} 
-              className="text-xs font-bold tracking-wider text-slate-600 hover:text-red-700 transition-colors no-underline uppercase"
-            >
-              {link.name}
-            </Link>
-          ))}
+          {navLinks.map((link) => {
+            const isActive = router.pathname === link.href;
+            return (
+              <Link 
+                key={link.name} 
+                href={link.href} 
+                className={`text-xs font-bold tracking-wider transition-colors no-underline uppercase ${
+                  isActive ? 'text-red-700 border-b-2 border-red-700 pb-1' : 'text-slate-600 hover:text-red-700'
+                }`}
+              >
+                {link.name}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* ACTIONS */}
@@ -80,6 +84,14 @@ export default function Header() {
             {link.name}
           </Link>
         ))}
+        
+        <Link 
+          href="/pulse-check" 
+          onClick={() => setIsMenuOpen(false)}
+          className="text-xl font-mono font-bold tracking-wider text-red-500 hover:text-white transition-colors no-underline uppercase border border-red-500/40 px-6 py-3 rounded-sm"
+        >
+          EXECUTE STRATEGY
+        </Link>
         
         <div className="absolute bottom-12 flex flex-col items-center gap-2">
           <ShieldAlert size={32} className="text-red-500 opacity-40" />
