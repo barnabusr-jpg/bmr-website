@@ -23,8 +23,9 @@ export default function LandingPage() {
     "@type": "ProfessionalService",
     "name": "BMR Solutions",
     "url": "https://bmradvisory.co",
-    "description": "Independent Digital Building Inspector and Level 2 Control Plane Audit Firm for C-Suite and Enterprise Risk Executives.",
+    "description": "Independent Digital Building Inspector and Level 2 Control Plane Audit Firm bridging the Promise Gap, a proprietary trademarked framework identifying the rift between strategic AI goals and runtime execution errors.",
     "knowsAbout": [
+      "Promise Gap Framework",
       "Pre-Automation Control Planes",
       "Level 2 Interface Auditing",
       "Schema Drift Insulation",
@@ -56,11 +57,11 @@ export default function LandingPage() {
   return (
     <>
       <Head>
-        <title>BMR Solutions | Enterprise Control Plane Inspectorate</title>
-        <meta name="description" content="Independent Level 2 interface audits, schema insulation, and vendor SOW verification for C-suite risk executives. Audit automation before scaling." />
+        <title>BMR Solutions | Enterprise Control Plane Inspectorate & Promise Gap™ Audit</title>
+        <meta name="description" content="Bridge the Promise Gap™. Independent Level 2 interface audits, schema insulation, and vendor SOW verification for C-suite risk executives." />
         <link rel="canonical" href="https://bmradvisory.co/" />
         <meta property="og:title" content="BMR Solutions | Enterprise Control Plane Inspectorate" />
-        <meta property="og:description" content="Independent operational audit firm establishing pre-automation control planes and continuous governance guardrails for enterprise systems." />
+        <meta property="og:description" content="Independent operational audit firm establishing pre-automation control planes and bridging the Promise Gap™ for enterprise systems." />
         <meta property="og:url" content="https://bmradvisory.co/" />
         <meta property="og:type" content="website" />
         
@@ -101,8 +102,8 @@ export default function LandingPage() {
                   NODE ACCESS: BMR SOLUTIONS PRE-AUTOMATION CONTROL PLANE
                 </span>
                 <h1 className="text-[clamp(2.2rem,6vw,4.2rem)] font-black uppercase tracking-tight leading-none text-slate-950">
-                  ENTERPRISE CONTROL PLANE<br />
-                  <span className="text-red-700">INSPECTORATE.</span><br />
+                  BRIDGE THE<br />
+                  <span className="text-red-700">PROMISE GAP™.</span><br />
                   AUDIT AUTOMATION<br />
                   BEFORE SCALING.
                 </h1>
@@ -110,11 +111,11 @@ export default function LandingPage() {
 
               <div className="space-y-6">
                 <p className="text-lg sm:text-xl text-slate-800 max-w-2xl leading-relaxed font-normal">
-                  Independent Level 2 interface audits, schema insulation, and vendor SOW verification for C-suite risk executives. We pinpoint systemic logic fractures before capital is deployed.
+                  Many organizations expected AI and automation to deliver instant operational scale. Instead, leadership teams face the <strong>Promise Gap™</strong>: the widening rift between board-level AI delivery goals and runtime execution friction, errors, and uninsulated vendor systems.
                 </p>
                 
                 <p className="text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed font-normal border-l-2 border-slate-300 pl-4">
-                  For example, a major enterprise design pipeline suffered catastrophic collapse from uninsulated schema drift across 350+ nodes. BMR audits map ingestion failure points, calculate your Process Waste Tax, and enforce non-negotiable operational policy ceilings.
+                  For example, a major enterprise design pipeline suffered catastrophic collapse from uninsulated schema drift across 350+ nodes. BMR Level 2 interface audits map ingestion failure points, calculate your Process Waste Tax, and enforce non-negotiable operational policy ceilings to close the Promise Gap™.
                 </p>
               </div>
 
@@ -460,7 +461,7 @@ export default function LandingPage() {
               // RECOVERY FRAMEWORK
             </span>
             <h3 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-4 text-slate-950 leading-tight">
-              THREE STEPS TO <span className="text-red-700">CLOSE THE GAP.</span>
+              THREE STEPS TO <span className="text-red-700">CLOSE THE PROMISE GAP™.</span>
             </h3>
             <p className="text-base text-slate-700 font-normal max-w-3xl leading-relaxed mb-10">
               Restoring execution speed requires more than surface-level dashboards. True operational stabilization relies on three foundational steps:
