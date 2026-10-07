@@ -15,9 +15,16 @@ export default function Methodology() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TechArticle",
-    "headline": "The Pre-Automation Control Plane Methodology",
-    "description": "Architectural audit methodology establishing Level 2 interface insulation, intake contract verification, and policy ceilings for enterprise AI automation.",
+    "headline": "The Pre-Automation Control Plane Methodology to Bridge the Promise Gap",
+    "description": "Architectural audit methodology bridging the Promise Gap, a proprietary trademarked framework establishing Level 2 interface insulation and policy ceilings for enterprise AI automation.",
     "articleSection": "OPERATIONAL DIAGNOSTIC FRAMEWORK",
+    "about": [
+      {
+        "@type": "DefinedTerm",
+        "name": "Promise Gap",
+        "description": "Proprietary trademarked operational audit framework identifying the rift between board-level AI goals and runtime execution friction."
+      }
+    ],
     "url": "https://bmradvisory.co/methodology",
     "publisher": {
       "@type": "Organization",
@@ -67,7 +74,7 @@ export default function Methodology() {
               FORENSIC <span className="text-red-700">PHILOSOPHY.</span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-800 leading-relaxed font-normal">
-              The Promise Gap™ is not just about software bugs. It is a structural issue. We identify hidden process and data gaps that turn good plans into unreliable execution: untracked manual fixes, shifting data formats, outdated records, missing verification, and fragile workflow ownership.
+              The <strong>Promise Gap™</strong> is not just about software bugs. It is a structural issue. We identify hidden process and data gaps that turn good plans into unreliable execution: untracked manual fixes, shifting data formats, outdated records, missing verification, and fragile workflow ownership.
             </p>
             <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal border-l-2 border-slate-300 pl-4">
               When these gaps are unmanaged, automated systems fail in real use. Fixing them becomes costly, teams lose momentum, and operational waste compounds.
@@ -115,7 +122,7 @@ export default function Methodology() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
               <div className="lg:col-span-8 space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed">
                 <p>
-                  BMR is built on over twenty years of technology leadership, including more than a decade at Microsoft supporting secure intelligence operations and delivering solutions across healthcare, manufacturing, government, education, and protected network environments. After handling over six hundred system recoveries, we developed this framework to close the Promise Gap™ and establish safeguards before automation affects your operations.
+                  BMR is built on over twenty years of technology leadership, including more than a decade at Microsoft supporting secure intelligence operations and delivering solutions across healthcare, manufacturing, government, education, and protected network environments. After handling over six hundred system recoveries, we developed this framework to close the <strong>Promise Gap™</strong> and establish safeguards before automation affects your operations.
                 </p>
                 <p>
                   Our hands-on experience is supported by formal advanced training in organizational leadership, management, and organizational design. This expertise strengthens our ability to map governance responsibilities, clarify decision rights, and establish operating controls that make automation reliable, predictable, and safe in production.
@@ -334,7 +341,7 @@ export default function Methodology() {
               <h3 className="font-black text-lg text-slate-950 uppercase tracking-tight">EXECUTIVE AND LEADERSHIP</h3>
               <span className="font-mono text-xs text-slate-500 uppercase block font-bold">FIDUCIARY AND GOVERNANCE RISK</span>
               <p className="text-xs text-slate-600 leading-relaxed">
-                We find the specific process gaps and unmanaged governance risks that lead to the Promise Gap™. Our diagnostic protects executive governance by pinpointing your Process Waste Tax before automation failures trigger delays, escalations, or unplanned recovery cycles.
+                We find the specific process gaps and unmanaged governance risks that lead to the <strong>Promise Gap™</strong>. Our diagnostic protects executive governance by pinpointing your Process Waste Tax before automation failures trigger delays, escalations, or unplanned recovery cycles.
               </p>
 
               <div className="pt-2 border-t border-slate-100 space-y-2 font-mono text-xs">
@@ -466,7 +473,7 @@ export default function Methodology() {
             <div className="border border-slate-200 bg-white p-6 space-y-3 rounded-sm shadow-sm">
               <span className="text-red-700 font-bold uppercase block">// THE COST OF INACTION</span>
               <p className="text-slate-700 font-sans leading-relaxed">
-                For every million dollars spent on automation, unmapped workflow breaks can cost hundreds of thousands each year in Process Waste Tax. Closing the Promise Gap™ protects your corporate technology investments.
+                For every million dollars spent on automation, unmapped workflow breaks can cost hundreds of thousands each year in Process Waste Tax. Closing the <strong>Promise Gap™</strong> protects your corporate technology investments.
               </p>
               <span className="text-emerald-700 font-bold block pt-2">// ZERO INFOSEC DELAY</span>
             </div>
@@ -478,7 +485,7 @@ export default function Methodology() {
               THE COST OF INACTION
             </h3>
             <p className="text-slate-700 font-sans max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-              For every million dollars spent on automation, unmapped workflow breaks can cost hundreds of thousands each year in Process Waste Tax. Closing the Promise Gap™ protects your corporate technology investments.
+              For every million dollars spent on automation, unmapped workflow breaks can cost hundreds of thousands each year in Process Waste Tax. Closing the <strong>Promise Gap™</strong> protects your corporate technology investments.
             </p>
 
             <div className="pt-4 flex flex-col items-center gap-3">
