@@ -1,4 +1,3 @@
-"use client";
 import React from 'react';
 import Link from 'next/link';
 import Head from 'next/head';
@@ -65,7 +64,6 @@ export default function LandingPage() {
         <meta property="og:url" content="https://bmradvisory.co/" />
         <meta property="og:type" content="website" />
         
-        {/* Head-enclosed JSON-LD for immediate crawler execution */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -77,17 +75,18 @@ export default function LandingPage() {
         
         <main className="flex-grow pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto relative w-full text-left">
           
-          {/* --- TOP BANNER: INDEPENDENT ADVISORY POSTURE --- */}
-          <div className="mb-12 bg-slate-100 border-y border-slate-200/90 py-5 px-6 sm:px-8 rounded-sm shadow-xs font-mono">
+          {/* --- TOP BANNER: ZERO SECURITY FOOTPRINT AUDIT --- */}
+          <div className="mb-12 bg-slate-100 border-y border-slate-200/90 py-5 px-6 sm:px-8 rounded-sm shadow-sm font-mono">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <ClipboardCheck className="text-red-700 shrink-0" size={22} />
                 <span className="text-red-700 text-xs font-bold uppercase tracking-widest block">
-                  // INDEPENDENT ADVISORY POSTURE
+                  // ZERO SECURITY FOOTPRINT AUDIT
                 </span>
               </div>
+
               <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl font-sans">
-                <strong>BMR Solutions operates as an independent Digital Building Inspector.</strong> We assess your operational processes, quantify financial risk, and deliver outcome-focused blueprints to help protect operating margins, preserve brand credibility, and prevent operational defects.
+                <strong>Stop absorbing hidden operational rework.</strong> <span className="font-semibold">You receive</span>: Process Waste Tax quantification + execution-ready Level 2 runbooks—with <strong>zero infrastructure connections</strong>, <strong>zero live data ingestion</strong>, and <strong>zero InfoSec procurement delays</strong>.
               </p>
             </div>
           </div>
@@ -95,12 +94,13 @@ export default function LandingPage() {
           {/* --- HERO / HOOK SECTION --- */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 sm:gap-16 items-start">
             
-            {/* LEFT COLUMN: THE HOOK */}
+            {/* LEFT COLUMN: HERO HOOK */}
             <div className="lg:col-span-7 space-y-8 sm:space-y-10">
               <div className="border-l-4 border-red-700 pl-4 sm:pl-8">
                 <span className="text-red-700 font-mono text-[10px] sm:text-xs font-bold tracking-widest uppercase block mb-3">
-                  NODE ACCESS: BMR SOLUTIONS PRE-AUTOMATION CONTROL PLANE
+                  NODE ACCESS: PRE-AUTOMATION CONTROL PLANE DIAGNOSTIC
                 </span>
+
                 <h1 className="text-[clamp(2.2rem,6vw,4.2rem)] font-black uppercase tracking-tight leading-none text-slate-950">
                   BRIDGE THE<br />
                   <span className="text-red-700">PROMISE GAP™.</span><br />
@@ -111,18 +111,21 @@ export default function LandingPage() {
 
               <div className="space-y-6">
                 <p className="text-lg sm:text-xl text-slate-800 max-w-2xl leading-relaxed font-normal">
-                  Many organizations expected AI and automation to deliver instant operational scale. Instead, leadership teams face the <strong>Promise Gap™</strong>: the widening rift between board-level AI delivery goals and runtime execution friction, errors, and uninsulated vendor systems.
+                  Board-level AI directives fail when uninsulated Level 2 interfaces meet runtime execution variance. We audit your ingestion boundaries, quantify your <strong>Process Waste Tax</strong>, and enforce non-negotiable policy ceilings before capital is deployed.
                 </p>
-                
-                <p className="text-sm sm:text-base text-slate-600 max-w-2xl leading-relaxed font-normal border-l-2 border-slate-300 pl-4">
-                  For example, a major enterprise design pipeline suffered catastrophic collapse from uninsulated schema drift across 350+ nodes. BMR Level 2 interface audits map ingestion failure points, calculate your Process Waste Tax, and enforce non-negotiable operational policy ceilings to close the Promise Gap™.
-                </p>
+
+                <div className="border-l-2 border-slate-300 pl-4 max-w-2xl">
+                  <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal font-mono">
+                    <strong>10-QUESTION ASSESSMENT</strong> // <strong>3-MINUTE DIAGNOSTIC</strong> // <strong>PRELIMINARY FINANCIAL LEDGER</strong>
+                  </p>
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 pt-4 w-full">
-                <button 
-                  onClick={() => router.push('/pulse-check')} 
-                  className="group relative w-full sm:w-auto bg-slate-950 text-white px-8 sm:px-12 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-700 transition-all shadow-md border border-slate-950 cursor-pointer text-center"
+                <button
+                  type="button"
+                  onClick={() => router.push('/pulse-check')}
+                  className="group relative w-full sm:w-auto bg-slate-950 text-white px-8 sm:px-12 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-700 transition-all shadow-md border border-slate-950 cursor-pointer text-center focus:outline-none focus:ring-2 focus:ring-red-700/60 focus:ring-offset-2"
                 >
                   CALCULATE YOUR PROCESS WASTE TAX
                   <Target className="hidden sm:block absolute -top-3 -right-3 text-red-600 group-hover:text-white transition-all" size={24} />
@@ -131,33 +134,41 @@ export default function LandingPage() {
                 <div className="flex flex-col gap-1">
                   <div className="flex items-center gap-2 text-slate-600 font-mono text-[10px] tracking-wider font-bold uppercase">
                     <Activity size={14} className="animate-pulse text-red-700 shrink-0" />
-                    10-QUESTION ASSESSMENT // 3-MINUTE DIAGNOSTIC
+                    3-MINUTE DIAGNOSTIC
                   </div>
                   <p className="text-red-700 font-mono text-[9px] tracking-wider font-semibold uppercase">
-                    PRELIMINARY DIAGNOSTIC RESULTS
+                    ZERO INFRASTRUCTURE CONNECTIONS
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT COLUMN: THE REWORK TAX SUMMARY */}
+            {/* RIGHT COLUMN: THE PROCESS WASTE TAX CALLOUT */}
             <div className="lg:col-span-5">
               <div className="bg-white border border-slate-200/90 p-6 sm:p-10 shadow-sm rounded-sm relative group">
                 <div className="absolute top-0 right-0 w-16 h-16 border-t-2 border-r-2 border-red-700/30 group-hover:border-red-700 transition-colors" />
-                
+
                 <h2 className="text-3xl sm:text-4xl font-black text-slate-950 uppercase tracking-tight leading-none mb-6">
-                  THE PROCESS<br /><span className="text-red-700">WASTE TAX.</span>
+                  THE PROCESS<br />
+                  <span className="text-red-700">WASTE TAX.</span>
                 </h2>
 
                 <div className="space-y-6 border-l-2 border-red-700/30 pl-4 sm:pl-6">
                   <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-normal">
-                    Your organization is likely absorbing thousands in hidden capital loss by repeatedly fixing the same operational failures. This fiscal bleed comes from automated execution running on incomplete processes, changing inputs, and alerts that do not lead to the right actions.
+                    Your organization is likely absorbing <strong>$150,000 to $350,000 annually per operational unit</strong> in hidden capital loss by repeatedly fixing the same system breakdowns.
                   </p>
 
-                  <p className="text-slate-800 text-xs sm:text-sm leading-relaxed font-normal bg-slate-100/80 p-4 border border-slate-200">
-                    On average, our clients reduce repeat operational rework by 25% to 40% within the first quarter. This yields typical annual savings of $150,000 to $350,000 depending on organizational scale and process complexity. We pinpoint exactly where capital is leaking and deliver execution-ready blueprints to recover lost speed.
-                  </p>
-                  
+                  <ul className="space-y-2 text-xs sm:text-sm text-slate-800 font-mono">
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-700 font-bold">➔</span>
+                      <span><strong>25%–40% average reduction</strong> in repeat technical rework within 90 days.</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-red-700 font-bold">➔</span>
+                      <span><strong>Zero software vendor commissions</strong>, proxy downloads, or hidden implementation fees.</span>
+                    </li>
+                  </ul>
+
                   <div className="pt-2">
                     <span className="text-slate-950 font-bold text-lg uppercase tracking-wide block">
                       YOU CAN <span className="text-red-700 underline decoration-2 underline-offset-4">REGAIN LOST SPEED.</span>
@@ -168,27 +179,119 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* --- VERIFIED EXECUTIVE OUTCOMES STRIP --- */}
-          <div className="mt-16 bg-white border border-slate-200 p-6 sm:p-8 rounded-sm shadow-xs font-mono">
-            <span className="text-red-700 text-xs font-bold uppercase tracking-widest block mb-6">
-              // VERIFIED EXECUTIVE OUTCOMES
-            </span>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 font-sans">
-              <div className="border-l-2 border-red-700 pl-4 space-y-1">
-                <span className="font-mono text-lg font-black text-slate-950 block">30%–45% REDUCTION</span>
-                <p className="text-xs text-slate-600 leading-snug">In repeat technical rework within 90 days of execution.</p>
+          {/* --- FIRST SCROLL: 3 CONCRETE DELIVERABLES BLOCK --- */}
+          <div className="mt-20 sm:mt-28 border-t border-slate-200 pt-16">
+            <div className="mb-10">
+              <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-3">
+                // CORE AUDIT OUTPUTS
+              </span>
+
+              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-950 leading-tight">
+                THREE CONCRETE <span className="text-red-700">DIAGNOSTIC ARTIFACTS.</span>
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
+              {/* ARTIFACT 01 */}
+              <div className="border border-slate-200 bg-white p-6 sm:p-8 space-y-3 rounded-sm shadow-sm flex flex-col justify-between">
+                <div className="space-y-3">
+                  <span className="text-red-700 font-bold block text-sm">// 01 // FISCAL ASSESSMENT</span>
+                  <h3 className="text-lg font-black uppercase text-slate-950">THE PROCESS WASTE TAX LEDGER</h3>
+                  <p className="text-xs text-slate-600 font-sans leading-relaxed">
+                    A dollar-quantified fiscal assessment pinpointing exact capital leakages caused by <strong>manual validation fatigue</strong>, <strong>bad ingestion data</strong>, and <strong>unmonitored workflow drift</strong>.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-100 text-[10px] text-slate-500 uppercase">
+                  DELIVERABLE: AUDIT-READY FINANCIAL SUMMARY
+                </div>
               </div>
-              <div className="border-l-2 border-slate-950 pl-4 space-y-1">
-                <span className="font-mono text-lg font-black text-slate-950 block">$150K–$350K RECOVERED</span>
-                <p className="text-xs text-slate-600 leading-snug">Annually per operational business unit in capital leakages.</p>
+
+              {/* ARTIFACT 02 */}
+              <div className="border border-slate-200 bg-white p-6 sm:p-8 space-y-3 rounded-sm shadow-sm flex flex-col justify-between">
+                <div className="space-y-3">
+                  <span className="text-slate-500 font-bold block text-sm">// 02 // TECHNICAL DIRECTIVES</span>
+                  <h3 className="text-lg font-black uppercase text-slate-950">LEVEL 2 EXECUTION RUNBOOKS</h3>
+                  <p className="text-xs text-slate-600 font-sans leading-relaxed">
+                    Standardized, code-ready logic directives that your existing engineering teams drop directly into <strong>API gateways</strong>, <strong>IAM policies</strong>, and <strong>staging queues</strong>.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-100 text-[10px] text-slate-500 uppercase">
+                  DELIVERABLE: ENGINEERING IMPLEMENTATION BLUEPRINT
+                </div>
               </div>
-              <div className="border-l-2 border-red-700 pl-4 space-y-1">
-                <span className="font-mono text-lg font-black text-slate-950 block">EXPEDITED PROCUREMENT:</span>
-                <p className="text-xs text-slate-600 leading-snug">Zero-footprint audit model bypasses InfoSec delays completely.</p>
+
+              {/* ARTIFACT 03 */}
+              <div className="border border-slate-200 bg-white p-6 sm:p-8 space-y-3 rounded-sm shadow-sm flex flex-col justify-between">
+                <div className="space-y-3">
+                  <span className="text-red-700 font-bold block text-sm">// 03 // GOVERNANCE CONTROLS</span>
+                  <h3 className="text-lg font-black uppercase text-slate-950">DEPLOYMENT GATE SPECIFICATIONS</h3>
+                  <p className="text-xs text-slate-600 font-sans leading-relaxed">
+                    Hard infrastructure policy ceilings that physically block unauthorized autonomous actions <strong>before</strong> system writes reach live production databases.
+                  </p>
+                </div>
+                <div className="pt-4 border-t border-slate-100 text-[10px] text-slate-500 uppercase">
+                  DELIVERABLE: NON-NEGOTIABLE POLICY CEILINGS
+                </div>
               </div>
-              <div className="border-l-2 border-slate-950 pl-4 space-y-1">
-                <span className="font-mono text-lg font-black text-slate-950 block">100% OBJECTIVE ADVISORY</span>
-                <p className="text-xs text-slate-600 leading-snug">Zero software vendor commissions or hidden implementation fees.</p>
+            </div>
+
+            {/* --- COMPACT PROOF ROW --- */}
+            <div className="mt-10 bg-white border border-slate-200 p-6 sm:p-8 rounded-sm shadow-sm font-mono">
+              <span className="text-red-700 text-xs font-bold uppercase tracking-widest block mb-6">
+                // EXECUTIVE PROOF POINTS
+              </span>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans">
+                <div className="border-l-2 border-red-700 pl-4 space-y-1">
+                  <span className="font-mono text-lg font-black text-slate-950 block">30%–45%</span>
+                  <p className="text-xs text-slate-600 leading-snug">Reduction in repeat technical rework within 90 days.</p>
+                </div>
+
+                <div className="border-l-2 border-slate-950 pl-4 space-y-1">
+                  <span className="font-mono text-lg font-black text-slate-950 block">$150K–$350K</span>
+                  <p className="text-xs text-slate-600 leading-snug">Recovered annually per operational business unit.</p>
+                </div>
+
+                <div className="border-l-2 border-red-700 pl-4 space-y-1">
+                  <span className="font-mono text-lg font-black text-slate-950 block">ZERO FOOTPRINT</span>
+                  <p className="text-xs text-slate-600 leading-snug">Bypasses InfoSec procurement delays; zero vendor commissions.</p>
+                </div>
+              </div>
+            </div>
+
+            {/* --- WHY BMR: POSITIONING DELTA BLOCK --- */}
+            <div className="mt-8 bg-slate-950 text-white p-6 sm:p-8 rounded-sm shadow-md font-mono border-l-4 border-red-700">
+              <span className="text-red-500 text-xs font-bold uppercase tracking-widest block mb-4">
+                // WHY BMR (NOT GENERIC CONSULTING OR INVASIVE SOFTWARE)
+              </span>
+              
+              <p className="font-sans text-sm sm:text-base text-slate-200 leading-relaxed mb-6 font-normal">
+                BMR is not a software vendor, an inline proxy, or a generic advisory firm. We operate as an independent <strong>Digital Building Inspector</strong>, executing a Level 2 Pre-Automation Control Plane diagnostic that delivers concrete, audit-ready artifacts without touching live infrastructure or confidential payloads.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-xs border-t border-slate-800 pt-6">
+                <div className="space-y-1">
+                  <span className="font-mono text-red-400 font-bold uppercase block">// 01 // OPERATIONAL BOUNDARY</span>
+                  <h4 className="font-bold text-white text-xs uppercase">Zero Live-Data Access</h4>
+                  <p className="text-slate-400 leading-relaxed">Runs entirely on process architecture inputs. No network installation, zero latency risk, and zero InfoSec procurement delays.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="font-mono text-red-400 font-bold uppercase block">// 02 // CODE-READY ARTIFACTS</span>
+                  <h4 className="font-bold text-white text-xs uppercase">Level 2 Control Plane Runbooks</h4>
+                  <p className="text-slate-400 leading-relaxed">Not 200-page strategy decks. We hand your engineering teams code-ready rules, IAM policies, and deployment gate specifications.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="font-mono text-red-400 font-bold uppercase block">// 03 // STRUCTURAL ISOLATION</span>
+                  <h4 className="font-bold text-white text-xs uppercase">Promise Gap™ Insulation</h4>
+                  <p className="text-slate-400 leading-relaxed">Fixes the structural rift between board-level AI goals and runtime execution errors—preventing unverified autonomy from writing to core systems.</p>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-900 text-[10px] text-slate-400 font-mono uppercase tracking-wider flex items-center justify-between">
+                <span>FRAMEWORK ORIGIN: REFINED ACROSS 600+ SYSTEM RECOVERIES IN SECURE CLOUD & AIR-GAPPED DEPLOYMENTS</span>
+                <span className="text-red-400 font-bold hidden sm:inline">// EVIDENCE-BASED INSPECTION</span>
               </div>
             </div>
           </div>
@@ -499,6 +602,31 @@ export default function LandingPage() {
                 <p className="text-xs sm:text-sm text-slate-700 font-sans leading-relaxed">
                   <strong className="text-slate-950">Governance and Compliance:</strong> We establish mandatory verification rules before automation scales, ensuring systems execute only verified actions and do not compromise sensitive data.
                 </p>
+              </div>
+            </div>
+
+            {/* --- FINAL CONVERSION CALLOUT --- */}
+            <div className="mt-16 bg-slate-950 text-white p-8 sm:p-12 rounded-sm shadow-md text-center space-y-6">
+              <span className="text-red-500 font-mono text-xs font-bold uppercase tracking-widest block">
+                // IMMEDIATE OPERATIONAL ACTION
+              </span>
+              <h4 className="text-2xl sm:text-4xl font-black uppercase text-white tracking-tight">
+                STOP ABSORBING REPEAT <span className="text-red-500">TECHNICAL REWORK.</span>
+              </h4>
+              <p className="text-slate-300 font-sans text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+                Quantify your Process Waste Tax in 3 minutes—with zero infrastructure access, zero live data ingestion, and zero InfoSec procurement delays.
+              </p>
+              <div className="pt-2 flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push('/pulse-check')}
+                  className="bg-red-700 text-white px-10 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-600 transition-all shadow-md cursor-pointer border border-red-600"
+                >
+                  CALCULATE YOUR PROCESS WASTE TAX
+                </button>
+                <span className="text-slate-400 font-mono text-[10px] uppercase tracking-wider">
+                  10-QUESTION ASSESSMENT // 3-MINUTE DIAGNOSTIC // PRELIMINARY FINANCIAL LEDGER
+                </span>
               </div>
             </div>
           </div>
