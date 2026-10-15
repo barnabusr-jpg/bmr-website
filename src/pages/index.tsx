@@ -64,7 +64,6 @@ export default function LandingPage() {
         <meta property="og:url" content="https://bmradvisory.co/" />
         <meta property="og:type" content="website" />
         
-        {/* Head-enclosed JSON-LD for immediate crawler execution */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -257,6 +256,42 @@ export default function LandingPage() {
                   <span className="font-mono text-lg font-black text-slate-950 block">ZERO FOOTPRINT</span>
                   <p className="text-xs text-slate-600 leading-snug">Bypasses InfoSec procurement delays; zero vendor commissions.</p>
                 </div>
+              </div>
+            </div>
+
+            {/* --- WHY BMR: POSITIONING DELTA BLOCK --- */}
+            <div className="mt-8 bg-slate-950 text-white p-6 sm:p-8 rounded-sm shadow-md font-mono border-l-4 border-red-700">
+              <span className="text-red-500 text-xs font-bold uppercase tracking-widest block mb-4">
+                // WHY BMR (NOT GENERIC CONSULTING OR INVASIVE SOFTWARE)
+              </span>
+              
+              <p className="font-sans text-sm sm:text-base text-slate-200 leading-relaxed mb-6 font-normal">
+                BMR is not a software vendor, an inline proxy, or a generic advisory firm. We operate as an independent <strong>Digital Building Inspector</strong>, executing a Level 2 Pre-Automation Control Plane diagnostic that delivers concrete, audit-ready artifacts without touching live infrastructure or confidential payloads.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-xs border-t border-slate-800 pt-6">
+                <div className="space-y-1">
+                  <span className="font-mono text-red-400 font-bold uppercase block">// 01 // OPERATIONAL BOUNDARY</span>
+                  <h4 className="font-bold text-white text-xs uppercase">Zero Live-Data Access</h4>
+                  <p className="text-slate-400 leading-relaxed">Runs entirely on process architecture inputs. No network installation, zero latency risk, and zero InfoSec procurement delays.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="font-mono text-red-400 font-bold uppercase block">// 02 // CODE-READY ARTIFACTS</span>
+                  <h4 className="font-bold text-white text-xs uppercase">Level 2 Control Plane Runbooks</h4>
+                  <p className="text-slate-400 leading-relaxed">Not 200-page strategy decks. We hand your engineering teams code-ready rules, IAM policies, and deployment gate specifications.</p>
+                </div>
+
+                <div className="space-y-1">
+                  <span className="font-mono text-red-400 font-bold uppercase block">// 03 // STRUCTURAL ISOLATION</span>
+                  <h4 className="font-bold text-white text-xs uppercase">Promise Gap™ Insulation</h4>
+                  <p className="text-slate-400 leading-relaxed">Fixes the structural rift between board-level AI goals and runtime execution errors—preventing unverified autonomy from writing to core systems.</p>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-900 text-[10px] text-slate-400 font-mono uppercase tracking-wider flex items-center justify-between">
+                <span>FRAMEWORK ORIGIN: REFINED ACROSS 600+ SYSTEM RECOVERIES IN SECURE CLOUD & AIR-GAPPED DEPLOYMENTS</span>
+                <span className="text-red-400 font-bold hidden sm:inline">// EVIDENCE-BASED INSPECTION</span>
               </div>
             </div>
           </div>
@@ -567,6 +602,31 @@ export default function LandingPage() {
                 <p className="text-xs sm:text-sm text-slate-700 font-sans leading-relaxed">
                   <strong className="text-slate-950">Governance and Compliance:</strong> We establish mandatory verification rules before automation scales, ensuring systems execute only verified actions and do not compromise sensitive data.
                 </p>
+              </div>
+            </div>
+
+            {/* --- FINAL CONVERSION CALLOUT --- */}
+            <div className="mt-16 bg-slate-950 text-white p-8 sm:p-12 rounded-sm shadow-md text-center space-y-6">
+              <span className="text-red-500 font-mono text-xs font-bold uppercase tracking-widest block">
+                // IMMEDIATE OPERATIONAL ACTION
+              </span>
+              <h4 className="text-2xl sm:text-4xl font-black uppercase text-white tracking-tight">
+                STOP ABSORBING REPEAT <span className="text-red-500">TECHNICAL REWORK.</span>
+              </h4>
+              <p className="text-slate-300 font-sans text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
+                Quantify your Process Waste Tax in 3 minutes—with zero infrastructure access, zero live data ingestion, and zero InfoSec procurement delays.
+              </p>
+              <div className="pt-2 flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push('/pulse-check')}
+                  className="bg-red-700 text-white px-10 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-600 transition-all shadow-md cursor-pointer border border-red-600"
+                >
+                  CALCULATE YOUR PROCESS WASTE TAX
+                </button>
+                <span className="text-slate-400 font-mono text-[10px] uppercase tracking-wider">
+                  10-QUESTION ASSESSMENT // 3-MINUTE DIAGNOSTIC // PRELIMINARY FINANCIAL LEDGER
+                </span>
               </div>
             </div>
           </div>
