@@ -52,7 +52,6 @@ export default function Methodology() {
         <meta property="og:url" content="https://bmradvisory.co/methodology" />
         <meta property="og:type" content="website" />
         
-        {/* Head-enclosed JSON-LD */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -207,7 +206,7 @@ export default function Methodology() {
 
           {/* --- 4. FOUR PHASE DIAGNOSTIC PROCESS --- */}
           <div className="mt-20 pt-16 border-t border-slate-200 space-y-8">
-            <div className="space-y-2">
+            <div className="space-y-4">
               <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block">
                 VERIFIED TELEMETRY ANCHOR // FLEET IT RESEARCH BENCHMARK // 500+ ENTERPRISE LEADERS AUDITED
               </span>
@@ -221,6 +220,19 @@ export default function Methodology() {
               {/* CROSS-PAGE DELIVERABLE ALIGNMENT BRIDGE */}
               <div className="bg-slate-100 border-l-2 border-red-700 p-4 font-mono text-xs text-slate-800">
                 <strong>DELIVERED DIAGNOSTIC ARTIFACTS:</strong> Every evaluation produces an audit-ready <strong>Process Waste Tax Ledger</strong>, execution-ready <strong>Level 2 Runbooks</strong>, and <strong>Deployment Gate Specifications</strong>—delivered with zero infrastructure access and zero live data ingestion.
+              </div>
+
+              {/* POSITIONING DELTA: WHY BMR */}
+              <div className="bg-slate-950 text-white p-6 rounded-sm shadow-sm font-mono border-l-4 border-red-700 space-y-3">
+                <span className="text-red-500 text-xs font-bold uppercase tracking-widest block">
+                  // WHY BMR (POSITIONING DELTA VS. GENERIC CONSULTING)
+                </span>
+                <p className="font-sans text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
+                  BMR runs a Level 2 Pre-Automation Control Plane diagnostic that produces audit-ready artifacts—Process Waste Tax Ledger, execution-ready Level 2 runbooks, and Deployment Gate Specifications—without live system access, enforcing governance constraints that prevent unverified actions from reaching production.
+                </p>
+                <div className="text-[10px] text-slate-400 uppercase tracking-wider pt-1 border-t border-slate-800">
+                  REFINED ACROSS 600+ RECOVERIES IN SECURE CLOUD & AIR-GAPPED DEPLOYMENTS.
+                </div>
               </div>
             </div>
 
@@ -392,10 +404,13 @@ export default function Methodology() {
             </div>
           </div>
 
-          {/* --- 9. COST OF INACTION / CTA --- */}
+          {/* --- 9. COST OF INACTION / FINAL CTA --- */}
           <div className="mt-20 pt-16 border-t border-slate-200 text-center space-y-6">
+            <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block">
+              // IMMEDIATE OPERATIONAL ACTION
+            </span>
             <h3 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-slate-950">
-              THE COST OF INACTION
+              THE COST OF <span className="text-red-700">INACTION.</span>
             </h3>
             <p className="text-slate-700 font-sans max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
               For every million dollars spent on automation, unmapped workflow breaks can cost hundreds of thousands each year in Process Waste Tax. Closing the <strong>Promise Gap™</strong> protects your corporate technology investments.
@@ -403,6 +418,7 @@ export default function Methodology() {
 
             <div className="pt-4 flex flex-col items-center gap-3">
               <button
+                type="button"
                 onClick={() => router.push('/pulse-check')}
                 className="bg-slate-950 text-white px-10 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-700 transition-all shadow-md cursor-pointer"
               >
