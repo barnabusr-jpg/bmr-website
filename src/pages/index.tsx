@@ -81,7 +81,7 @@ export default function LandingPage() {
               <div className="flex items-center gap-3">
                 <ClipboardCheck className="text-red-700 shrink-0" size={22} />
                 <span className="text-red-700 text-xs font-bold uppercase tracking-widest block">
-                  OPERATIONAL RISK TRIAGE // QUANTIFYING GOVERNANCE AND PROCESS WASTE TAX BEFORE DEPLOYMENT
+                  OPERATIONAL RISK TRIAGE // QUANTIFYING GOVERNANCE AND PROCESS WASTE TAX ACROSS THE LIFECYCLE
                 </span>
               </div>
 
