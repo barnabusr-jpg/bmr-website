@@ -22,18 +22,18 @@ export default function LandingPage() {
     "@type": "ProfessionalService",
     "name": "BMR Solutions",
     "url": "https://bmradvisory.co",
-    "description": "Independent Digital Building Inspector and Level 2 Control Plane Audit Firm bridging the Promise Gap, a proprietary trademarked framework identifying the rift between strategic AI goals and runtime execution errors.",
+    "description": "Independent Operational Risk Triage and Level 2 Control Plane Governance Firm bridging the Promise Gap™, identifying and eliminating the rift between strategic AI goals and runtime execution errors.",
     "knowsAbout": [
       "Promise Gap Framework",
       "Pre-Automation Control Planes",
-      "Level 2 Interface Auditing",
+      "Operational Risk Triage",
       "Schema Drift Insulation",
       "Process Waste Tax Calculation",
-      "Vendor SOW Verification"
+      "Capital Exposure Defense"
     ],
     "hasOfferCatalog": {
       "@type": "OfferCatalog",
-      "name": "Forensic Inspection Services",
+      "name": "Operational Risk Triage Services",
       "itemListElement": [
         {
           "@type": "Offer",
@@ -46,7 +46,7 @@ export default function LandingPage() {
           "@type": "Offer",
           "itemOffered": {
             "@type": "Service",
-            "name": "Level 2 Interface Forensic Audit"
+            "name": "Level 2 Interface Risk Triage"
           }
         }
       ]
@@ -56,11 +56,11 @@ export default function LandingPage() {
   return (
     <>
       <Head>
-        <title>BMR Solutions | Enterprise Control Plane Inspectorate & Promise Gap™ Audit</title>
-        <meta name="description" content="Bridge the Promise Gap™. Independent Level 2 interface audits, schema insulation, and vendor SOW verification for C-suite risk executives." />
+        <title>BMR Solutions | Enterprise Operational Risk Triage & Promise Gap™ Governance</title>
+        <meta name="description" content="Bridge the Promise Gap™. Independent Level 2 interface risk triage, schema insulation, and capital exposure defense for C-suite risk executives." />
         <link rel="canonical" href="https://bmradvisory.co/" />
-        <meta property="og:title" content="BMR Solutions | Enterprise Control Plane Inspectorate" />
-        <meta property="og:description" content="Independent operational audit firm establishing pre-automation control planes and bridging the Promise Gap™ for enterprise systems." />
+        <meta property="og:title" content="BMR Solutions | Enterprise Operational Risk Triage" />
+        <meta property="og:description" content="Independent operational risk triage firm establishing pre-automation control planes and bridging the Promise Gap™ for enterprise systems." />
         <meta property="og:url" content="https://bmradvisory.co/" />
         <meta property="og:type" content="website" />
         
@@ -75,18 +75,18 @@ export default function LandingPage() {
         
         <main className="flex-grow pt-28 sm:pt-36 pb-16 sm:pb-20 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto relative w-full text-left">
           
-          {/* --- TOP BANNER: ZERO SECURITY FOOTPRINT AUDIT --- */}
+          {/* --- TOP BANNER: ZERO SECURITY FOOTPRINT RISK TRIAGE --- */}
           <div className="mb-12 bg-slate-100 border-y border-slate-200/90 py-5 px-6 sm:px-8 rounded-sm shadow-sm font-mono">
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <ClipboardCheck className="text-red-700 shrink-0" size={22} />
                 <span className="text-red-700 text-xs font-bold uppercase tracking-widest block">
-                  // ZERO SECURITY FOOTPRINT AUDIT
+                  // ZERO SECURITY FOOTPRINT RISK TRIAGE
                 </span>
               </div>
 
               <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl font-sans">
-                <strong>Stop absorbing hidden operational rework.</strong> <span className="font-semibold">You receive</span>: Process Waste Tax quantification + execution-ready Level 2 runbooks—with <strong>zero infrastructure connections</strong>, <strong>zero live data ingestion</strong>, and <strong>zero InfoSec procurement delays</strong>.
+                <strong>Stop absorbing hidden operational liability.</strong> <span className="font-semibold">You receive</span>: Process Waste Tax quantification + execution-ready Level 2 runbooks—with <strong>zero infrastructure connections</strong>, <strong>zero live data ingestion</strong>, and <strong>zero InfoSec procurement delays</strong>.
               </p>
             </div>
           </div>
@@ -98,20 +98,20 @@ export default function LandingPage() {
             <div className="lg:col-span-7 space-y-8 sm:space-y-10">
               <div className="border-l-4 border-red-700 pl-4 sm:pl-8">
                 <span className="text-red-700 font-mono text-[10px] sm:text-xs font-bold tracking-widest uppercase block mb-3">
-                  NODE ACCESS: PRE-AUTOMATION CONTROL PLANE DIAGNOSTIC
+                  OPERATIONAL RISK TRIAGE ACCESS: PRE-AUTOMATION CONTROL PLANE DIAGNOSTIC
                 </span>
 
                 <h1 className="text-[clamp(2.2rem,6vw,4.2rem)] font-black uppercase tracking-tight leading-none text-slate-950">
                   BRIDGE THE<br />
                   <span className="text-red-700">PROMISE GAP™.</span><br />
-                  AUDIT AUTOMATION<br />
+                  TRIAGE AUTOMATION<br />
                   BEFORE SCALING.
                 </h1>
               </div>
 
               <div className="space-y-6">
                 <p className="text-lg sm:text-xl text-slate-800 max-w-2xl leading-relaxed font-normal">
-                  Board-level AI directives fail when uninsulated Level 2 interfaces meet runtime execution variance. We audit your ingestion boundaries, quantify your <strong>Process Waste Tax</strong>, and enforce non-negotiable policy ceilings before capital is deployed.
+                  Board-level AI directives fail when uninsulated Level 2 interfaces meet runtime execution variance. We triage your ingestion boundaries, quantify your <strong>Process Waste Tax</strong>, and enforce non-negotiable policy ceilings before capital is deployed.
                 </p>
 
                 <div className="border-l-2 border-slate-300 pl-4 max-w-2xl">
@@ -155,13 +155,13 @@ export default function LandingPage() {
 
                 <div className="space-y-6 border-l-2 border-red-700/30 pl-4 sm:pl-6">
                   <p className="text-slate-700 text-sm sm:text-base leading-relaxed font-normal">
-                    Your organization is likely absorbing <strong>$150,000 to $350,000 annually per operational unit</strong> in hidden capital loss by repeatedly fixing the same system breakdowns.
+                    Your organization is likely absorbing <strong>$150,000 to $350,000 annually per operational unit</strong> in hidden capital loss—because unmonitored workflow drift forces repeated rework and operational liability.
                   </p>
 
                   <ul className="space-y-2 text-xs sm:text-sm text-slate-800 font-mono">
                     <li className="flex items-start gap-2">
                       <span className="text-red-700 font-bold">➔</span>
-                      <span><strong>25%–40% average reduction</strong> in repeat technical rework within 90 days.</span>
+                      <span><strong>30%–45% average reduction</strong> in repeat technical rework within 90 days.</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-red-700 font-bold">➔</span>
@@ -183,7 +183,7 @@ export default function LandingPage() {
           <div className="mt-20 sm:mt-28 border-t border-slate-200 pt-16">
             <div className="mb-10">
               <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-3">
-                // CORE AUDIT OUTPUTS
+                // CORE TRIAGE OUTPUTS
               </span>
 
               <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-950 leading-tight">
@@ -198,11 +198,11 @@ export default function LandingPage() {
                   <span className="text-red-700 font-bold block text-sm">// 01 // FISCAL ASSESSMENT</span>
                   <h3 className="text-lg font-black uppercase text-slate-950">THE PROCESS WASTE TAX LEDGER</h3>
                   <p className="text-xs text-slate-600 font-sans leading-relaxed">
-                    A dollar-quantified fiscal assessment pinpointing exact capital leakages caused by <strong>manual validation fatigue</strong>, <strong>bad ingestion data</strong>, and <strong>unmonitored workflow drift</strong>.
+                    A dollar-quantified fiscal ledger pinpointing exact capital leakages caused by <strong>manual validation fatigue</strong>, <strong>bad ingestion data</strong>, and <strong>unmonitored workflow drift</strong>.
                   </p>
                 </div>
                 <div className="pt-4 border-t border-slate-100 text-[10px] text-slate-500 uppercase">
-                  DELIVERABLE: AUDIT-READY FINANCIAL SUMMARY
+                  DELIVERABLE: CFO-READY FINANCIAL SUMMARY
                 </div>
               </div>
 
@@ -262,11 +262,11 @@ export default function LandingPage() {
             {/* --- WHY BMR: POSITIONING DELTA BLOCK --- */}
             <div className="mt-8 bg-slate-950 text-white p-6 sm:p-8 rounded-sm shadow-md font-mono border-l-4 border-red-700">
               <span className="text-red-500 text-xs font-bold uppercase tracking-widest block mb-4">
-                // WHY BMR (NOT GENERIC CONSULTING OR INVASIVE SOFTWARE)
+                // WHY BMR (INDEPENDENT OPERATIONAL RISK TRIAGE LAYER)
               </span>
               
               <p className="font-sans text-sm sm:text-base text-slate-200 leading-relaxed mb-6 font-normal">
-                BMR is not a software vendor, an inline proxy, or a generic advisory firm. We operate as an independent <strong>Digital Building Inspector</strong>, executing a Level 2 Pre-Automation Control Plane diagnostic that delivers concrete, audit-ready artifacts without touching live infrastructure or confidential payloads.
+                BMR is not a software vendor, an inline proxy, or a generic advisory firm. We operate as an independent <strong>Operational Diagnostic Risk Triage Layer</strong>, executing a Level 2 Pre-Automation Control Plane diagnostic that delivers concrete, audit-ready artifacts without touching live infrastructure or confidential payloads.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-sans text-xs border-t border-slate-800 pt-6">
@@ -284,14 +284,14 @@ export default function LandingPage() {
 
                 <div className="space-y-1">
                   <span className="font-mono text-red-400 font-bold uppercase block">// 03 // STRUCTURAL ISOLATION</span>
-                  <h4 className="font-bold text-white text-xs uppercase">Promise Gap™ Insulation</h4>
+                  <h4 className="font-bold text-white text-xs uppercase">Promise Gap™ Prevention Layer</h4>
                   <p className="text-slate-400 leading-relaxed">Fixes the structural rift between board-level AI goals and runtime execution errors—preventing unverified autonomy from writing to core systems.</p>
                 </div>
               </div>
 
               <div className="mt-6 pt-4 border-t border-slate-900 text-[10px] text-slate-400 font-mono uppercase tracking-wider flex items-center justify-between">
                 <span>FRAMEWORK ORIGIN: REFINED ACROSS 600+ SYSTEM RECOVERIES IN SECURE CLOUD & AIR-GAPPED DEPLOYMENTS</span>
-                <span className="text-red-400 font-bold hidden sm:inline">// EVIDENCE-BASED INSPECTION</span>
+                <span className="text-red-400 font-bold hidden sm:inline">// EVIDENCE-BASED TRIAGE</span>
               </div>
             </div>
           </div>
@@ -336,7 +336,7 @@ export default function LandingPage() {
                     <div>
                       <span className="bg-red-700 text-white text-[9px] font-bold px-2 py-0.5 tracking-wider uppercase inline-block mb-1">FRICTION LAYER DIAGNOSTIC GATE</span>
                       <h3 className="text-red-800 font-black text-sm sm:text-base tracking-wider uppercase">// LEVEL 2: THE OPERATIONAL AND DELIVERY INTERFACE</h3>
-                      <p className="text-slate-700 font-sans mt-1 text-xs font-normal max-w-3xl">This is where teams translate business directives into automated workflows, reliable data, and stable systems. BMR audits this layer using the <strong>Pre-Automation Control Plane</strong> framework to find hidden process failures, calculate your Process Waste Tax, and provide clear execution runbooks.</p>
+                      <p className="text-slate-700 font-sans mt-1 text-xs font-normal max-w-3xl">This is where teams translate business directives into automated workflows, reliable data, and stable systems. BMR triages this layer using the <strong>Pre-Automation Control Plane</strong> framework to find hidden process failures, calculate your Process Waste Tax, and provide clear execution runbooks.</p>
                     </div>
                   </div>
                   <span className="text-red-700 font-bold tracking-wider text-[10px] shrink-0 uppercase bg-red-50 px-3 py-1 border border-red-200">RISK: CAPITAL LOSS & CAPACITY EROSION</span>
@@ -444,7 +444,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <Link href="/briefings/case-study/fiduciary-regret" className="text-xs font-mono font-bold text-slate-950 hover:text-red-700 inline-flex items-center gap-1 pt-4 border-t border-slate-100 no-underline">
-                  VIEW AUTOPSY REPORT <ExternalLink size={12} />
+                  VIEW RISK BRIEF <ExternalLink size={12} />
                 </Link>
               </div>
 
@@ -457,7 +457,7 @@ export default function LandingPage() {
                   </p>
                 </div>
                 <Link href="/briefings/case-study/schema-drift" className="text-xs font-mono font-bold text-slate-950 hover:text-red-700 inline-flex items-center gap-1 pt-4 border-t border-slate-100 no-underline">
-                  VIEW AUTOPSY REPORT <ExternalLink size={12} />
+                  VIEW RISK BRIEF <ExternalLink size={12} />
                 </Link>
               </div>
 
@@ -466,11 +466,11 @@ export default function LandingPage() {
                   <span className="text-red-700 font-mono text-xs font-bold uppercase tracking-wider block">// MANAGERIAL NODE</span>
                   <h3 className="text-xl font-bold uppercase text-slate-950 leading-tight">Fractured Retention Logic</h3>
                   <p className="text-xs text-slate-600 leading-relaxed font-sans">
-                    Operational audit of conversational AI customer service rollout that degraded retention logic due to unmapped exception queues.
+                    Operational triage of conversational AI customer service rollout that degraded retention logic due to unmapped exception queues.
                   </p>
                 </div>
                 <Link href="/briefings/case-study/fractured-retention" className="text-xs font-mono font-bold text-slate-950 hover:text-red-700 inline-flex items-center gap-1 pt-4 border-t border-slate-100 no-underline">
-                  VIEW AUTOPSY REPORT <ExternalLink size={12} />
+                  VIEW RISK BRIEF <ExternalLink size={12} />
                 </Link>
               </div>
             </div>
@@ -490,7 +490,7 @@ export default function LandingPage() {
                 <span className="font-mono text-[10px] text-red-700 font-bold uppercase block">// STATUS QUO: VALIDATION FATIGUE</span>
                 <p className="text-slate-700">Senior engineers spend 15+ hours/week manually double-checking AI outputs.</p>
                 <div className="pt-2 border-t border-slate-200 font-bold text-slate-950">
-                  ➔ INSPECTED STATE: Engineering capacity is fully restored to revenue-generating development.
+                  ➔ TRIAGED STATE: Engineering capacity is fully restored to revenue-generating development.
                 </div>
               </div>
 
@@ -498,7 +498,7 @@ export default function LandingPage() {
                 <span className="font-mono text-[10px] text-red-700 font-bold uppercase block">// STATUS QUO: BUDGET VOLATILITY</span>
                 <p className="text-slate-700">Unchecked rework and unmonitored agent loops create unexpected cost shocks.</p>
                 <div className="pt-2 border-t border-slate-200 font-bold text-slate-950">
-                  ➔ INSPECTED STATE: Execution runs under strict, pre-calculated cost boundaries.
+                  ➔ TRIAGED STATE: Execution runs under strict, pre-calculated cost boundaries.
                 </div>
               </div>
 
@@ -506,7 +506,7 @@ export default function LandingPage() {
                 <span className="font-mono text-[10px] text-red-700 font-bold uppercase block">// STATUS QUO: REPUTATIONAL EXPOSURE</span>
                 <p className="text-slate-700">Unverified machine actions risk customer trust and regulatory penalties.</p>
                 <div className="pt-2 border-t border-slate-200 font-bold text-slate-950">
-                  ➔ INSPECTED STATE: Every automated workflow maintains an explicit compliance and safety trail.
+                  ➔ TRIAGED STATE: Every automated workflow maintains an explicit compliance and safety trail.
                 </div>
               </div>
 
@@ -514,7 +514,7 @@ export default function LandingPage() {
                 <span className="font-mono text-[10px] text-red-700 font-bold uppercase block">// STATUS QUO: THE PROMISE GAP™</span>
                 <p className="text-slate-700">High-budget AI initiatives stall before delivering production value.</p>
                 <div className="pt-2 border-t border-slate-200 font-bold text-slate-950">
-                  ➔ INSPECTED STATE: Measurable ROI achieved within weeks, fully protecting leadership's strategic timeline.
+                  ➔ TRIAGED STATE: Measurable ROI achieved within weeks, fully protecting leadership's strategic timeline.
                 </div>
               </div>
             </div>
