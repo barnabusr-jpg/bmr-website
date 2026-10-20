@@ -15,13 +15,13 @@ export default function Methodology() {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "The Pre-Automation Control Plane Methodology to Bridge the Promise Gap",
-    "description": "Architectural audit methodology bridging the Promise Gap, a proprietary trademarked framework establishing Level 2 interface insulation and policy ceilings for enterprise AI automation.",
+    "description": "Architectural risk triage methodology bridging the Promise Gap™, a proprietary trademarked framework establishing Level 2 interface insulation and policy ceilings for enterprise AI automation.",
     "articleSection": "OPERATIONAL DIAGNOSTIC FRAMEWORK",
     "about": [
       {
         "@type": "DefinedTerm",
         "name": "Promise Gap",
-        "description": "Proprietary trademarked operational audit framework identifying the rift between board-level AI goals and runtime execution friction."
+        "description": "Proprietary trademarked operational risk triage framework identifying the rift between board-level AI goals and runtime execution friction."
       }
     ],
     "url": "https://bmradvisory.co/methodology",
@@ -32,7 +32,7 @@ export default function Methodology() {
     },
     "author": {
       "@type": "Organization",
-      "name": "BMR Solutions Forensic Unit",
+      "name": "BMR Solutions Risk Brief Unit",
       "url": "https://bmradvisory.co"
     },
     "mainEntityOfPage": {
@@ -45,7 +45,7 @@ export default function Methodology() {
     <>
       <Head>
         <title>Pre-Automation Control Plane Methodology | BMR Solutions</title>
-        <meta name="description" content="Architectural guardrails prioritizing time to reliability over time to market. Audit Level 2 interfaces and calculate Process Waste Tax." />
+        <meta name="description" content="Architectural guardrails prioritizing time to reliability over time to market. Triage Level 2 interfaces and calculate Process Waste Tax." />
         <link rel="canonical" href="https://bmradvisory.co/methodology" />
         <meta property="og:title" content="Pre-Automation Control Plane Methodology | BMR Solutions" />
         <meta property="og:description" content="Architectural guardrails prioritizing time to reliability over time to market." />
@@ -66,7 +66,7 @@ export default function Methodology() {
           {/* --- 1. HERO SECTION: DIAGNOSTIC CONTROL PLANE ENGINE --- */}
           <div className="space-y-6 max-w-4xl">
             <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block">
-              OPERATIONAL DIAGNOSTIC FRAMEWORK // LEVEL 2 AUDIT
+              OPERATIONAL DIAGNOSTIC FRAMEWORK // LEVEL 2 RISK TRIAGE
             </span>
             <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tight text-slate-950 leading-none">
               THE PRE-AUTOMATION <span className="text-red-700">CONTROL PLANE.</span>
@@ -100,7 +100,7 @@ export default function Methodology() {
                   </div>
                 </div>
                 <Link href="/briefings/case-study/fiduciary-regret" className="text-[10px] font-mono font-bold text-red-700 hover:text-slate-950 block pt-3 border-t border-slate-100 no-underline">
-                  SEE AUTOPSY: FIDUCIARY REGRET →
+                  VIEW DOSSIER RISK BRIEF EVIDENCE: FIDUCIARY REGRET →
                 </Link>
               </div>
 
@@ -118,7 +118,7 @@ export default function Methodology() {
                   </div>
                 </div>
                 <Link href="/briefings/case-study/schema-drift" className="text-[10px] font-mono font-bold text-red-700 hover:text-slate-950 block pt-3 border-t border-slate-100 no-underline">
-                  SEE AUTOPSY: SCHEMA DRIFT →
+                  VIEW DOSSIER RISK BRIEF EVIDENCE: SCHEMA DRIFT →
                 </Link>
               </div>
 
@@ -136,7 +136,7 @@ export default function Methodology() {
                   </div>
                 </div>
                 <Link href="/briefings/case-study/autonomous-boundary-breach" className="text-[10px] font-mono font-bold text-red-700 hover:text-slate-950 block pt-3 border-t border-slate-100 no-underline">
-                  SEE AUTOPSY: BOUNDARY BREACH →
+                  VIEW DOSSIER RISK BRIEF EVIDENCE: BOUNDARY BREACH →
                 </Link>
               </div>
 
@@ -154,7 +154,7 @@ export default function Methodology() {
                   </div>
                 </div>
                 <Link href="/briefings/case-study/validation-fatigue" className="text-[10px] font-mono font-bold text-red-700 hover:text-slate-950 block pt-3 border-t border-slate-100 no-underline">
-                  SEE AUTOPSY: VALIDATION FATIGUE →
+                  VIEW DOSSIER RISK BRIEF EVIDENCE: VALIDATION FATIGUE →
                 </Link>
               </div>
             </div>
@@ -308,7 +308,7 @@ export default function Methodology() {
                     href="/briefings" 
                     className="w-full inline-flex items-center justify-between p-3 bg-slate-950 text-white font-mono text-xs font-bold uppercase tracking-wider hover:bg-red-700 transition-colors no-underline"
                   >
-                    <span>EXPLORE EVIDENCE VAULT</span>
+                    <span>EXPLORE RISK BRIEF EVIDENCE VAULT</span>
                     <ChevronRight size={14} />
                   </Link>
                 </div>

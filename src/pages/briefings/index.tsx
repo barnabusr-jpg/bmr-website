@@ -27,7 +27,7 @@ export default function EvidenceVault() {
           slug: "system-overestimation",
           subtitle: "CRITICAL VULNERABILITIES FROM UNMAPPED DEPENDENCY NETWORKS",
           summary:
-            "Forensic autopsy of severe outage cascades caused by over-reliance on unverified vendor SOW performance metrics. The elimination of domain-expert personnel exposed deep, unmapped system interdependencies across pre-automation layers.",
+            "Forensic risk evaluation of severe outage cascades caused by over-reliance on unverified vendor SOW performance metrics. The elimination of domain-expert personnel exposed deep, unmapped system interdependencies across pre-automation layers.",
           takeaway:
             "Policy ceilings must be established before technical talent bridges are severed.",
         },
@@ -43,7 +43,7 @@ export default function EvidenceVault() {
           slug: "schema-drift",
           subtitle: "CATASTROPHIC PIPELINE COLLAPSE VIA UNINSULATED DATA INTERFACES",
           summary:
-            "Technical post-mortem on an enterprise design pipeline collapse resulting from uninsulated schema drift across legacy interfaces. Without independent Level 2 interface auditing, silent data corruption propagated across 350+ engineering nodes.",
+            "Technical post-mortem on an enterprise design pipeline collapse resulting from uninsulated schema drift across legacy interfaces. Without independent Level 2 interface risk triage, silent data corruption propagated across 350+ engineering nodes.",
           takeaway:
             "Interface insulation is mandatory prior to scaling automated data pipelines.",
         },
@@ -89,7 +89,7 @@ export default function EvidenceVault() {
           slug: "validation-fatigue",
           subtitle: "CONVERSATIONAL INTAKE FAILURE AND QUEUE VOLUME SURGES",
           summary:
-            "Operational audit of a conversational voice bot roll-out that caused downstream validation fatigue and catastrophic queue volume spikes. Inadequate pre-procurement SOW scoping resulted in artificial escalation loops.",
+            "Operational triage of a conversational voice bot roll-out that caused downstream validation fatigue and catastrophic queue volume spikes. Inadequate pre-procurement SOW scoping resulted in artificial escalation loops.",
           takeaway:
             "Procurement triggers must require independent verification of exception-handling capacity.",
         },
@@ -122,9 +122,9 @@ export default function EvidenceVault() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "Briefing Vault & Forensic Case Autopsies | BMR Solutions",
+    name: "Briefing Vault & Forensic Risk Briefs | BMR Solutions",
     description:
-      "Forensic industry autopsies and technical audits of enterprise control plane failures, process waste, and autonomous model boundaries.",
+      "Forensic risk briefs and technical audits of enterprise control plane failures, process waste, and autonomous model boundaries.",
     url: `${baseUrl}/briefings`,
     publisher: {
       "@type": "Organization",
@@ -145,7 +145,7 @@ export default function EvidenceVault() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 sm:mb-16 border-b border-slate-200 pb-8 sm:pb-12 gap-4">
           <div className="border-l-4 border-red-700 pl-4 sm:pl-8">
             <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-2">
-              EVIDENCE & FORENSIC AUTOPSIES
+              EVIDENCE & FORENSIC RISK BRIEFS
             </span>
             <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-black uppercase tracking-tight leading-none text-slate-950">
               BRIEFING <span className="text-red-700">VAULT.</span>
@@ -187,14 +187,14 @@ export default function EvidenceVault() {
 
                       <div className="border-t border-slate-100 pt-3 mt-2">
                         <p className="text-xs font-mono text-slate-600 italic">
-                          <strong className="text-slate-900 not-italic font-bold uppercase text-[10px] block mb-0.5">Inspector's Takeaway:</strong>
+                          <strong className="text-slate-900 not-italic font-bold uppercase text-[10px] block mb-0.5">Triage Takeaway:</strong>
                           "{item.takeaway}"
                         </p>
                       </div>
                     </div>
 
                     <div className="inline-flex items-center gap-2 text-slate-950 font-mono font-bold uppercase text-xs tracking-wider group-hover:text-red-700 transition-colors mt-6 relative z-10">
-                      <span>ACCESS CASE AUTOPSY</span>
+                      <span>ACCESS CASE RISK BRIEF</span>
                       <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform shrink-0 text-red-700" />
                     </div>
                   </div>
