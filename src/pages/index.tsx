@@ -81,12 +81,12 @@ export default function LandingPage() {
               <div className="flex items-center gap-3">
                 <ClipboardCheck className="text-red-700 shrink-0" size={22} />
                 <span className="text-red-700 text-xs font-bold uppercase tracking-widest block">
-                  // ZERO SECURITY FOOTPRINT RISK TRIAGE
+                  OPERATIONAL RISK TRIAGE // QUANTIFYING GOVERNANCE AND PROCESS WASTE TAX ACROSS THE LIFECYCLE
                 </span>
               </div>
 
               <p className="text-xs sm:text-sm text-slate-800 font-medium leading-relaxed max-w-4xl font-sans">
-                <strong>Stop absorbing hidden operational liability.</strong> <span className="font-semibold">You receive</span>: Process Waste Tax quantification + execution-ready Level 2 runbooks—with <strong>zero infrastructure connections</strong>, <strong>zero live data ingestion</strong>, and <strong>zero InfoSec procurement delays</strong>.
+                You receive Process Waste Tax quantification plus execution-ready Level 2 runbooks with zero infrastructure connections, zero live data ingestion, and zero InfoSec procurement delays.
               </p>
             </div>
           </div>
@@ -111,7 +111,7 @@ export default function LandingPage() {
 
               <div className="space-y-6">
                 <p className="text-lg sm:text-xl text-slate-800 max-w-2xl leading-relaxed font-normal">
-                  Board-level AI directives fail when uninsulated Level 2 interfaces meet runtime execution variance. We triage your ingestion boundaries, quantify your <strong>Process Waste Tax</strong>, and enforce non-negotiable policy ceilings before capital is deployed.
+                  BMR Solutions quantifies operational and governance risk in enterprise AI workflows before downtime, compliance exposure, or measurable capital waste hits.
                 </p>
 
                 <div className="border-l-2 border-slate-300 pl-4 max-w-2xl">
