@@ -496,7 +496,7 @@ export default function UnifiedResultsPortal() {
                 </p>
 
                 <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
-                  <strong>Includes:</strong> peer variance benchmarking, true burn rate, cross-persona disconnects, and governance thresholds (circuit-breakers) that unlock the Final Active SOW.
+                  <strong>Includes:</strong> Peer variance benchmarking, true burn rate, cross-persona disconnects, and governance thresholds (circuit-breakers) that unlock the Final Active SOW.
                 </p>
               </div>
 
