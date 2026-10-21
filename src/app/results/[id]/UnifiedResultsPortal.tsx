@@ -4,7 +4,27 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Lock, Unlock, Activity, FileText } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
-import { AnomalyNode, AuditRecord } from "@/types/database.types";
+import { AuditRecord } from "@/types/database.types";
+
+interface DisplayAnomaly {
+  id: string;
+  description: string;
+  severity: string;
+  directive: string;
+}
+
+interface AuditAnomalyRaw {
+  node_id?: string;
+  dimension_node_id?: string;
+  id?: string;
+  title?: string;
+  anomaly_id?: string;
+  description?: string;
+  impact_narrative?: string;
+  severity?: string;
+  directive?: string;
+  remediation_directive?: string;
+}
 
 interface LossTickerProps { 
   diagnosticCompletedAt?: string; 
@@ -181,21 +201,53 @@ export default function UnifiedResultsPortal() {
       operationalDragTax: totalLaborTaxPool * 0.40,
       exposure: totalExposure
     };
-  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector, querySector, live_sync, tax]);
+  }, [
+    dbDecay, 
+    spend, 
+    audit?.roi_pct, 
+    audit?.ai_spend, 
+    (audit as any)?.sector, 
+    (audit as any)?.sector_multiplier, 
+    querySector, 
+    live_sync, 
+    tax
+  ]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-700" : "text-emerald-700";
   const borderAccentClass = isPhaseTwoActive ? "border-red-700" : "border-slate-900";
 
-  const genericAnomalies: AnomalyNode[] = useMemo(() => [
-    { id: `Data Safety Rules // Impact $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: "Baseline evaluation complete. Outside vendor data rules and safety verification controls are held under evaluation protocol.", severity: "High Priority", directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." },
-    { id: `Vendor Change Response // Impact $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: "Baseline evaluation complete. System response mechanisms for outside vendor API changes are held under evaluation protocol.", severity: "High Priority", directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." },
-    { id: `Staff Memory Dependency // Impact $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: "Baseline evaluation complete. Daily operational reliance on employee memory for broken system hand-offs is held under evaluation protocol.", severity: "Medium Priority", directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." },
-    { id: `Emergency Playbooks // Impact $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: "Baseline evaluation complete. Automated fallback guides and team playbooks for workflow failures are held under evaluation protocol.", severity: "Medium Priority", directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." }
-  ], [metrics.totalLaborTaxPool]);
+  const genericAnomalies: DisplayAnomaly[] = useMemo(() => {
+    return [
+      { 
+        id: `Data Safety Rules // Impact $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Baseline evaluation complete. Outside vendor data rules and safety verification controls are held under evaluation protocol.", 
+        severity: "High Priority", 
+        directive: "Stage 02 calibration will validate ingestion isolation requirements before remediation is finalized." 
+      },
+      { 
+        id: `Vendor Change Response // Impact $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Baseline evaluation complete. System response mechanisms for outside vendor API changes are held under evaluation protocol.", 
+        severity: "High Priority", 
+        directive: "Stage 02 calibration will confirm interface-change safeguards required to prevent runtime degradation." 
+      },
+      { 
+        id: `Staff Memory Dependency // Impact $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Baseline evaluation complete. Daily operational reliance on employee memory for broken system hand-offs is held under evaluation protocol.", 
+        severity: "Medium Priority", 
+        directive: "Stage 02 calibration will define fallback and escalation gates based on operational handoff risk." 
+      },
+      { 
+        id: `Emergency Playbooks // Impact $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Baseline evaluation complete. Automated fallback guides and team playbooks for workflow failures are held under evaluation protocol.", 
+        severity: "Medium Priority", 
+        directive: "Stage 02 calibration will establish governance and telemetry thresholds for secure scaling." 
+      }
+    ];
+  }, [metrics.totalLaborTaxPool]);
 
-  const activeAnomaliesList = useMemo(() => {
+  const activeAnomaliesList = useMemo<DisplayAnomaly[]>(() => {
     if (isPaidGateUnlocked && audit?.anomalies && audit.anomalies.length > 0) {
-      return audit.anomalies.map((anom: any) => {
+      return (audit.anomalies as AuditAnomalyRaw[]).map((anom) => {
         const key = anom.node_id ?? anom.dimension_node_id ?? anom.id;
         const mappedDimension = key ? DIMENSION_TITLES[key] : undefined;
         let displaySeverity = "Action Required";
@@ -338,7 +390,7 @@ export default function UnifiedResultsPortal() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {activeAnomaliesList.map((frac: any, index: number) => (
+            {activeAnomaliesList.map((frac, index) => (
               <div 
                 key={frac.id || index} 
                 className={`border p-6 rounded-sm flex flex-col justify-between relative min-h-[260px] shadow-sm transition-all ${
