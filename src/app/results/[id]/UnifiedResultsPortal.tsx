@@ -366,6 +366,139 @@ export default function UnifiedResultsPortal() {
             ))}
           </div>
         </div>
+
+        {/* ENGAGEMENT ROADMAP & FORENSIC MILESTONES */}
+        <div className="mt-12 border border-slate-200 bg-white p-8 rounded-sm shadow-sm font-sans">
+          
+          {/* SECTION HEADER & CONTEXT */}
+          <div className="border-b border-slate-200 pb-4 mb-6">
+            <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-1">
+              // ENGAGEMENT ROADMAP & FORENSIC MILESTONES
+            </span>
+            <h3 className="text-2xl font-black uppercase text-slate-950">
+              HOW YOUR DIAGNOSTIC VERDICT IS PROCESSED
+            </h3>
+          </div>
+
+          <p className="text-sm text-slate-700 leading-relaxed mb-8">
+            Next, we convert your directional score into a comprehensive enterprise baseline by gathering input from key roles and preparing your final, board-ready <strong>Statement of Work (SOW)</strong>.
+          </p>
+
+          {/* 3 LIFECYCLE ROADMAP CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs mb-8">
+
+            {/* STAGE 01 */}
+            <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3 relative">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-emerald-700 font-bold block">// STAGE 01 // COMPLETE</span>
+                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-xs">CURRENT</span>
+                </div>
+
+                <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
+                  Initial Pulse Check (Directional Diagnostic Baseline)
+                </h4>
+
+                <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
+                  Converts your start state into directional baselining (e.g., <strong>$118K waste</strong>, <strong>81% readiness</strong>) and identifies the top operational flags that must be validated next.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
+                OUTPUT: DIRECTIONAL DIAGNOSTIC BASELINE (PRELIMINARY LEDGER)
+              </div>
+            </div>
+
+            {/* STAGE 02 */}
+            <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3">
+              <div>
+                <span className="text-red-700 font-bold block mb-2">// STAGE 02 // NEXT STEP</span>
+                <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
+                  Triangulation (3-Track Survey → Workforce Scale Lock-In)
+                </h4>
+
+                <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
+                  Conducts a 3-person survey across <strong>Executive</strong>, <strong>Managerial</strong>, and <strong>Technical</strong> tracks to lock workforce scale and software run-rates (e.g., <strong>$3.2M spend</strong> / <strong>35 FTEs</strong>).
+                </p>
+
+                <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
+                  <strong>Why numbers evolve:</strong> Stage 02 turns baseline assumptions into calibrated run-rate reality.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
+                OUTPUT: TRIANGULATED RUN-RATE METRICS LEDGER
+              </div>
+            </div>
+
+            {/* STAGE 03 */}
+            <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3">
+              <div>
+                <span className="text-slate-500 font-bold block mb-2">// STAGE 03 // FINAL VERDICT</span>
+                <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
+                  QuadNode Forensic Cockpit (4-Persona Quad-Calibrated Analysis)
+                </h4>
+
+                <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
+                  Expands into the 4-persona matrix by adding the <strong>System User</strong> track alongside Executive, Tech Mgmt, and Ops Mgmt—then produces the Final Diagnostic Verdict.
+                </p>
+
+                <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
+                  <strong>Includes:</strong> peer variance benchmarking, true burn rate, cross-persona disconnects, and governance thresholds (circuit-breakers) that unlock the Final Active SOW.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
+                OUTPUT: FINAL ACTIVE SOW + VERIFICATION CERTIFICATE
+              </div>
+            </div>
+          </div>
+
+          {/* DELIVERABLE HIGHLIGHT GRID */}
+          <div className="bg-slate-50 border border-slate-200 p-5 rounded-sm mb-8">
+            <span className="text-red-700 font-mono text-xs font-bold uppercase tracking-wider block mb-3">
+              // FINAL QUADNODE DELIVERABLES INCLUDED UPON COMPLETION:
+            </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[11px] text-slate-700">
+              <div className="bg-white p-3 border border-slate-200">
+                <strong className="text-slate-950 block mb-1">1. Sector Variance Index</strong>
+                Re-indexes AI readiness vs. peer sector benchmarks (e.g., <em>Score 56</em> vs. <em>Benchmark 76</em>).
+              </div>
+              <div className="bg-white p-3 border border-slate-200">
+                <strong className="text-slate-950 block mb-1">2. True Financial Burn Rate</strong>
+                Quantifies annual capacity waste, weekly burn rate, and a recovery ROI multiplier.
+              </div>
+              <div className="bg-white p-3 border border-slate-200">
+                <strong className="text-slate-950 block mb-1">3. Cross-Persona Alignment Matrix</strong>
+                Pins down exact disconnects across Executive, Tech Mgmt, Ops Mgmt, and System User layers.
+              </div>
+              <div className="bg-white p-3 border border-slate-200">
+                <strong className="text-slate-950 block mb-1">4. Governance & Compliance Supplement</strong>
+                Generates circuit-breaker thresholds: DLP exposure ceilings, API schema mutation gates, and max drift tolerance.
+              </div>
+            </div>
+          </div>
+
+          {/* ADMIN-DRIVEN BAR (NO USER ACTION) */}
+          <div className="bg-slate-950 text-white p-6 rounded-sm flex flex-col md:flex-row items-center justify-between gap-6 border-l-4 border-red-700">
+            <div className="space-y-1">
+              <span className="text-red-500 font-mono text-[10px] font-bold uppercase tracking-wider block">
+                // STAGE 01 COMPLETE — ADMIN PROCEEDS TO TRIANGULATION
+              </span>
+              <h4 className="font-bold text-lg uppercase tracking-tight text-white">
+                NEXT: THREE-TRACK TRIANGULATION (ADMIN-TRIGGERED)
+              </h4>
+              <p className="text-slate-400 text-xs font-sans">
+                Your report is queued for Stage 02 calibration. After admin approval, QuadNode will expand into the 4-persona cockpit and unlock the Final Active SOW.
+              </p>
+            </div>
+
+            <div className="text-xs text-slate-300 font-mono text-left md:text-right shrink-0">
+              No action required by the user.
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );
