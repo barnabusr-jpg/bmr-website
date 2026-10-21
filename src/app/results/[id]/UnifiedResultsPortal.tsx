@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Lock, Unlock, Activity, FileText } from "lucide-react";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import { AuditRecord } from "@/types/database.types";
 
@@ -11,19 +12,6 @@ interface DisplayAnomaly {
   description: string;
   severity: string;
   directive: string;
-}
-
-interface AuditAnomalyRaw {
-  node_id?: string;
-  dimension_node_id?: string;
-  id?: string;
-  title?: string;
-  anomaly_id?: string;
-  description?: string;
-  impact_narrative?: string;
-  severity?: string;
-  directive?: string;
-  remediation_directive?: string;
 }
 
 interface LossTickerProps { 
@@ -117,7 +105,9 @@ export default function UnifiedResultsPortal() {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const id = params?.id as string;
+  const rawId = params?.id;
+  const resolvedId = typeof rawId === "string" ? rawId : null;
+
   const live_sync = searchParams?.get("live_sync");
   const unblurred = searchParams?.get("unblurred");
   const decay = searchParams?.get("decay");
@@ -129,38 +119,75 @@ export default function UnifiedResultsPortal() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!resolvedId) return;
+
+    let cancelled = false;
+
+    // Aligned 1:1 with PostgreSQL information_schema NOT NULL constraints
+    const isAuditRecord = (x: unknown): x is AuditRecord => {
+      if (typeof x !== "object" || x === null) return false;
+
+      return (
+        "id" in x && typeof x.id === "string" &&
+        "created_at" in x && typeof x.created_at === "string" &&
+        "org_name" in x && typeof x.org_name === "string"
+      );
+    };
 
     const fetchInitialAudit = async () => {
       try {
-        const { data, error } = await supabase.from("audits").select("*").eq("id", id).single();
+        const { data, error } = await supabase
+          .from("audits")
+          .select("*")
+          .eq("id", resolvedId)
+          .single();
+
         if (error) throw error;
-        if (data) setAudit(data as AuditRecord);
+
+        if (!cancelled && data && isAuditRecord(data)) {
+          setAudit(data);
+        }
       } catch (err) {
         console.error("Audit state fetch failure:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchInitialAudit();
 
-    let channel: any;
+    let channel: RealtimeChannel | null = null;
+
     try {
       channel = supabase
-        .channel(`live-workshop-${id}`)
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` }, (payload) => {
-          if (payload?.new) setAudit(payload.new as AuditRecord);
-        });
+        .channel(`live-workshop-${resolvedId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "audits",
+            filter: `id=eq.${resolvedId}`,
+          },
+          (payload) => {
+            const next = payload?.new;
+
+            if (!cancelled && next && isAuditRecord(next)) {
+              setAudit((prev) => (prev ? { ...prev, ...next } : next));
+            }
+          }
+        );
+
       channel.subscribe();
     } catch (wsErr) {
       console.warn("Realtime WebSocket connection bypassed:", wsErr);
     }
 
     return () => {
+      cancelled = true;
       if (channel) supabase.removeChannel(channel);
     };
-  }, [id]);
+  }, [resolvedId]);
 
   const dbDecay = useMemo(() => {
     if (live_sync === "true" && decay) return parseInt(decay);
@@ -181,8 +208,8 @@ export default function UnifiedResultsPortal() {
   const metrics = useMemo(() => {
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
     const baseLaborTaxPool = (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
-    const selectedSectorKey = ((querySector as string) || (audit as any)?.sector || "SERVICES").toUpperCase().trim().replace(/\s+/g, "_");
-    const activeSectorMultiplier = (audit as any)?.sector_multiplier || SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
+    const selectedSectorKey = (querySector ?? audit?.sector ?? "SERVICES").toUpperCase().trim().replace(/\s+/g, "_");
+    const activeSectorMultiplier = audit?.sector_multiplier || SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
 
     let totalLaborTaxPool = baseLaborTaxPool;
     let totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
@@ -206,8 +233,8 @@ export default function UnifiedResultsPortal() {
     spend, 
     audit?.roi_pct, 
     audit?.ai_spend, 
-    (audit as any)?.sector, 
-    (audit as any)?.sector_multiplier, 
+    audit?.sector, 
+    audit?.sector_multiplier, 
     querySector, 
     live_sync, 
     tax
@@ -246,8 +273,11 @@ export default function UnifiedResultsPortal() {
   }, [metrics.totalLaborTaxPool]);
 
   const activeAnomaliesList = useMemo<DisplayAnomaly[]>(() => {
-    if (isPaidGateUnlocked && audit?.anomalies && audit.anomalies.length > 0) {
-      return (audit.anomalies as AuditAnomalyRaw[]).map((anom) => {
+    // Falls back seamlessly between anomalies and fractures
+    const rawAnomalies = audit?.anomalies && audit.anomalies.length > 0 ? audit.anomalies : audit?.fractures;
+    
+    if (isPaidGateUnlocked && rawAnomalies && rawAnomalies.length > 0) {
+      return rawAnomalies.map((anom) => {
         const key = anom.node_id ?? anom.dimension_node_id ?? anom.id;
         const mappedDimension = key ? DIMENSION_TITLES[key] : undefined;
         let displaySeverity = "Action Required";
@@ -264,7 +294,7 @@ export default function UnifiedResultsPortal() {
       });
     }
     return genericAnomalies;
-  }, [isPaidGateUnlocked, audit?.anomalies, genericAnomalies]);
+  }, [isPaidGateUnlocked, audit?.anomalies, audit?.fractures, genericAnomalies]);
 
   if (loading || !audit) {
     return (
@@ -294,7 +324,7 @@ export default function UnifiedResultsPortal() {
         </div>
         {isPhaseTwoActive && (
           <button 
-            onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} 
+            onClick={() => resolvedId && window.open(`/api/generate-pdf?id=${resolvedId}`, "_blank")} 
             className="flex items-center gap-2 bg-slate-950 hover:bg-red-700 text-white text-xs px-5 py-2.5 font-bold uppercase tracking-wider rounded-sm transition-colors shadow-sm cursor-pointer"
           >
             <FileText size={14} />
@@ -359,7 +389,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] shrink-0">
             <span className="text-xs font-mono font-bold text-slate-500 block uppercase tracking-wider">Estimated Ongoing Capital Loss</span>
             <RealTimeLossTicker 
-              diagnosticCompletedAt={(audit as any)?.compiled_at || audit?.created_at || (audit as any)?.updated_at} 
+              diagnosticCompletedAt={audit?.compiled_at || audit?.created_at || audit?.updated_at || undefined} 
               exposure={safeExposureSum} 
               anomalies={activeAnomaliesList}
               isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
@@ -496,7 +526,7 @@ export default function UnifiedResultsPortal() {
                 </p>
 
                 <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
-                  <strong>Includes:</strong> Peer variance benchmarking, true burn rate, cross-persona disconnects, and governance thresholds (circuit-breakers) that unlock the Final Active SOW.
+                  <strong>Includes:</strong> peer variance benchmarking, true burn rate, cross-persona disconnects, and governance thresholds (circuit-breakers) that unlock the Final Active SOW.
                 </p>
               </div>
 
