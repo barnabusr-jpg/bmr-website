@@ -3,8 +3,16 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { Lock, Unlock, Activity, FileText } from "lucide-react";
+import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
-import { AnomalyNode, AuditRecord } from "@/types/database.types";
+import { AuditRecord } from "@/types/database.types";
+
+interface DisplayAnomaly {
+  id: string;
+  description: string;
+  severity: string;
+  directive: string;
+}
 
 interface LossTickerProps { 
   diagnosticCompletedAt?: string; 
@@ -97,7 +105,9 @@ export default function UnifiedResultsPortal() {
   const params = useParams();
   const searchParams = useSearchParams();
 
-  const id = params?.id as string;
+  const rawId = params?.id;
+  const resolvedId = typeof rawId === "string" ? rawId : null;
+
   const live_sync = searchParams?.get("live_sync");
   const unblurred = searchParams?.get("unblurred");
   const decay = searchParams?.get("decay");
@@ -109,38 +119,75 @@ export default function UnifiedResultsPortal() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!resolvedId) return;
+
+    let cancelled = false;
+
+    // Aligned 1:1 with PostgreSQL information_schema NOT NULL constraints
+    const isAuditRecord = (x: unknown): x is AuditRecord => {
+      if (typeof x !== "object" || x === null) return false;
+
+      return (
+        "id" in x && typeof x.id === "string" &&
+        "created_at" in x && typeof x.created_at === "string" &&
+        "org_name" in x && typeof x.org_name === "string"
+      );
+    };
 
     const fetchInitialAudit = async () => {
       try {
-        const { data, error } = await supabase.from("audits").select("*").eq("id", id).single();
+        const { data, error } = await supabase
+          .from("audits")
+          .select("*")
+          .eq("id", resolvedId)
+          .single();
+
         if (error) throw error;
-        if (data) setAudit(data as AuditRecord);
+
+        if (!cancelled && data && isAuditRecord(data)) {
+          setAudit(data);
+        }
       } catch (err) {
         console.error("Audit state fetch failure:", err);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     fetchInitialAudit();
 
-    let channel: any;
+    let channel: RealtimeChannel | null = null;
+
     try {
       channel = supabase
-        .channel(`live-workshop-${id}`)
-        .on("postgres_changes", { event: "UPDATE", schema: "public", table: "audits", filter: `id=eq.${id}` }, (payload) => {
-          if (payload?.new) setAudit(payload.new as AuditRecord);
-        });
+        .channel(`live-workshop-${resolvedId}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "audits",
+            filter: `id=eq.${resolvedId}`,
+          },
+          (payload) => {
+            const next = payload?.new;
+
+            if (!cancelled && next && isAuditRecord(next)) {
+              setAudit((prev) => (prev ? { ...prev, ...next } : next));
+            }
+          }
+        );
+
       channel.subscribe();
     } catch (wsErr) {
       console.warn("Realtime WebSocket connection bypassed:", wsErr);
     }
 
     return () => {
+      cancelled = true;
       if (channel) supabase.removeChannel(channel);
     };
-  }, [id]);
+  }, [resolvedId]);
 
   const dbDecay = useMemo(() => {
     if (live_sync === "true" && decay) return parseInt(decay);
@@ -161,8 +208,8 @@ export default function UnifiedResultsPortal() {
   const metrics = useMemo(() => {
     const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
     const baseLaborTaxPool = (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
-    const selectedSectorKey = ((querySector as string) || (audit as any)?.sector || "SERVICES").toUpperCase().trim().replace(/\s+/g, "_");
-    const activeSectorMultiplier = (audit as any)?.sector_multiplier || SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
+    const selectedSectorKey = (querySector ?? audit?.sector ?? "SERVICES").toUpperCase().trim().replace(/\s+/g, "_");
+    const activeSectorMultiplier = audit?.sector_multiplier || SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
 
     let totalLaborTaxPool = baseLaborTaxPool;
     let totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
@@ -181,21 +228,56 @@ export default function UnifiedResultsPortal() {
       operationalDragTax: totalLaborTaxPool * 0.40,
       exposure: totalExposure
     };
-  }, [dbDecay, spend, audit?.roi_pct, (audit as any)?.sector, querySector, live_sync, tax]);
+  }, [
+    dbDecay, 
+    spend, 
+    audit?.roi_pct, 
+    audit?.ai_spend, 
+    audit?.sector, 
+    audit?.sector_multiplier, 
+    querySector, 
+    live_sync, 
+    tax
+  ]);
 
   const accentColorClass = isPhaseTwoActive ? "text-red-700" : "text-emerald-700";
   const borderAccentClass = isPhaseTwoActive ? "border-red-700" : "border-slate-900";
 
-  const genericAnomalies: AnomalyNode[] = useMemo(() => [
-    { id: `Data Safety Rules // Impact $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: "Baseline evaluation complete. Outside vendor data rules and safety verification controls are held under evaluation protocol.", severity: "High Priority", directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." },
-    { id: `Vendor Change Response // Impact $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: "Baseline evaluation complete. System response mechanisms for outside vendor API changes are held under evaluation protocol.", severity: "High Priority", directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." },
-    { id: `Staff Memory Dependency // Impact $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: "Baseline evaluation complete. Daily operational reliance on employee memory for broken system hand-offs is held under evaluation protocol.", severity: "Medium Priority", directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." },
-    { id: `Emergency Playbooks // Impact $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, description: "Baseline evaluation complete. Automated fallback guides and team playbooks for workflow failures are held under evaluation protocol.", severity: "Medium Priority", directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." }
-  ], [metrics.totalLaborTaxPool]);
+  const genericAnomalies: DisplayAnomaly[] = useMemo(() => {
+    return [
+      { 
+        id: `Data Safety Rules // Impact $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Baseline evaluation complete. Outside vendor data rules and safety verification controls are held under evaluation protocol.", 
+        severity: "High Priority", 
+        directive: "Stage 02 calibration will validate ingestion isolation requirements before remediation is finalized." 
+      },
+      { 
+        id: `Vendor Change Response // Impact $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Baseline evaluation complete. System response mechanisms for outside vendor API changes are held under evaluation protocol.", 
+        severity: "High Priority", 
+        directive: "Stage 02 calibration will confirm interface-change safeguards required to prevent runtime degradation." 
+      },
+      { 
+        id: `Staff Memory Dependency // Impact $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Baseline evaluation complete. Daily operational reliance on employee memory for broken system hand-offs is held under evaluation protocol.", 
+        severity: "Medium Priority", 
+        directive: "Stage 02 calibration will define fallback and escalation gates based on operational handoff risk." 
+      },
+      { 
+        id: `Emergency Playbooks // Impact $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        description: "Baseline evaluation complete. Automated fallback guides and team playbooks for workflow failures are held under evaluation protocol.", 
+        severity: "Medium Priority", 
+        directive: "Stage 02 calibration will establish governance and telemetry thresholds for secure scaling." 
+      }
+    ];
+  }, [metrics.totalLaborTaxPool]);
 
-  const activeAnomaliesList = useMemo(() => {
-    if (isPaidGateUnlocked && audit?.anomalies && audit.anomalies.length > 0) {
-      return audit.anomalies.map((anom: any) => {
+  const activeAnomaliesList = useMemo<DisplayAnomaly[]>(() => {
+    // Falls back seamlessly between anomalies and fractures
+    const rawAnomalies = audit?.anomalies && audit.anomalies.length > 0 ? audit.anomalies : audit?.fractures;
+    
+    if (isPaidGateUnlocked && rawAnomalies && rawAnomalies.length > 0) {
+      return rawAnomalies.map((anom) => {
         const key = anom.node_id ?? anom.dimension_node_id ?? anom.id;
         const mappedDimension = key ? DIMENSION_TITLES[key] : undefined;
         let displaySeverity = "Action Required";
@@ -212,7 +294,7 @@ export default function UnifiedResultsPortal() {
       });
     }
     return genericAnomalies;
-  }, [isPaidGateUnlocked, audit?.anomalies, genericAnomalies]);
+  }, [isPaidGateUnlocked, audit?.anomalies, audit?.fractures, genericAnomalies]);
 
   if (loading || !audit) {
     return (
@@ -242,7 +324,7 @@ export default function UnifiedResultsPortal() {
         </div>
         {isPhaseTwoActive && (
           <button 
-            onClick={() => window.open(`/api/generate-pdf?id=${id}`, "_blank")} 
+            onClick={() => resolvedId && window.open(`/api/generate-pdf?id=${resolvedId}`, "_blank")} 
             className="flex items-center gap-2 bg-slate-950 hover:bg-red-700 text-white text-xs px-5 py-2.5 font-bold uppercase tracking-wider rounded-sm transition-colors shadow-sm cursor-pointer"
           >
             <FileText size={14} />
@@ -307,7 +389,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] shrink-0">
             <span className="text-xs font-mono font-bold text-slate-500 block uppercase tracking-wider">Estimated Ongoing Capital Loss</span>
             <RealTimeLossTicker 
-              diagnosticCompletedAt={(audit as any)?.compiled_at || audit?.created_at || (audit as any)?.updated_at} 
+              diagnosticCompletedAt={audit?.compiled_at || audit?.created_at || audit?.updated_at || undefined} 
               exposure={safeExposureSum} 
               anomalies={activeAnomaliesList}
               isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
@@ -338,7 +420,7 @@ export default function UnifiedResultsPortal() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {activeAnomaliesList.map((frac: any, index: number) => (
+            {activeAnomaliesList.map((frac, index) => (
               <div 
                 key={frac.id || index} 
                 className={`border p-6 rounded-sm flex flex-col justify-between relative min-h-[260px] shadow-sm transition-all ${
@@ -364,6 +446,139 @@ export default function UnifiedResultsPortal() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ENGAGEMENT ROADMAP & FORENSIC MILESTONES */}
+        <div className="mt-12 border border-slate-200 bg-white p-8 rounded-sm shadow-sm font-sans">
+          
+          {/* SECTION HEADER & CONTEXT */}
+          <div className="border-b border-slate-200 pb-4 mb-6">
+            <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-1">
+              // ENGAGEMENT ROADMAP & FORENSIC MILESTONES
+            </span>
+            <h3 className="text-2xl font-black uppercase text-slate-950">
+              HOW YOUR DIAGNOSTIC VERDICT IS PROCESSED
+            </h3>
+          </div>
+
+          <p className="text-sm text-slate-700 leading-relaxed mb-8">
+            Next, we convert your directional score into a comprehensive enterprise baseline by gathering input from key roles and preparing your final, board-ready <strong>Statement of Work (SOW)</strong>.
+          </p>
+
+          {/* 3 LIFECYCLE ROADMAP CARDS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs mb-8">
+
+            {/* STAGE 01 */}
+            <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3 relative">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-emerald-700 font-bold block">// STAGE 01 // COMPLETE</span>
+                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-xs">CURRENT</span>
+                </div>
+
+                <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
+                  Initial Pulse Check (Directional Diagnostic Baseline)
+                </h4>
+
+                <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
+                  Converts your start state into directional baselining (e.g., <strong>$118K waste</strong>, <strong>81% readiness</strong>) and identifies the top operational flags that must be validated next.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
+                OUTPUT: DIRECTIONAL DIAGNOSTIC BASELINE (PRELIMINARY LEDGER)
+              </div>
+            </div>
+
+            {/* STAGE 02 */}
+            <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3">
+              <div>
+                <span className="text-red-700 font-bold block mb-2">// STAGE 02 // NEXT STEP</span>
+                <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
+                  Triangulation (3-Track Survey → Workforce Scale Lock-In)
+                </h4>
+
+                <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
+                  Conducts a 3-person survey across <strong>Executive</strong>, <strong>Managerial</strong>, and <strong>Technical</strong> tracks to lock workforce scale and software run-rates (e.g., <strong>$3.2M spend</strong> / <strong>35 FTEs</strong>).
+                </p>
+
+                <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
+                  <strong>Why numbers evolve:</strong> Stage 02 turns baseline assumptions into calibrated run-rate reality.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
+                OUTPUT: TRIANGULATED RUN-RATE METRICS LEDGER
+              </div>
+            </div>
+
+            {/* STAGE 03 */}
+            <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3">
+              <div>
+                <span className="text-slate-500 font-bold block mb-2">// STAGE 03 // FINAL VERDICT</span>
+                <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
+                  QuadNode Forensic Cockpit (4-Persona Quad-Calibrated Analysis)
+                </h4>
+
+                <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
+                  Expands into the 4-persona matrix by adding the <strong>System User</strong> track alongside Executive, Tech Mgmt, and Ops Mgmt—then produces the Final Diagnostic Verdict.
+                </p>
+
+                <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
+                  <strong>Includes:</strong> peer variance benchmarking, true burn rate, cross-persona disconnects, and governance thresholds (circuit-breakers) that unlock the Final Active SOW.
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
+                OUTPUT: FINAL ACTIVE SOW + VERIFICATION CERTIFICATE
+              </div>
+            </div>
+          </div>
+
+          {/* DELIVERABLE HIGHLIGHT GRID */}
+          <div className="bg-slate-50 border border-slate-200 p-5 rounded-sm mb-8">
+            <span className="text-red-700 font-mono text-xs font-bold uppercase tracking-wider block mb-3">
+              // FINAL QUADNODE DELIVERABLES INCLUDED UPON COMPLETION:
+            </span>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[11px] text-slate-700">
+              <div className="bg-white p-3 border border-slate-200">
+                <strong className="text-slate-950 block mb-1">1. Sector Variance Index</strong>
+                Re-indexes AI readiness vs. peer sector benchmarks (e.g., <em>Score 56</em> vs. <em>Benchmark 76</em>).
+              </div>
+              <div className="bg-white p-3 border border-slate-200">
+                <strong className="text-slate-950 block mb-1">2. True Financial Burn Rate</strong>
+                Quantifies annual capacity waste, weekly burn rate, and a recovery ROI multiplier.
+              </div>
+              <div className="bg-white p-3 border border-slate-200">
+                <strong className="text-slate-950 block mb-1">3. Cross-Persona Alignment Matrix</strong>
+                Pins down exact disconnects across Executive, Tech Mgmt, Ops Mgmt, and System User layers.
+              </div>
+              <div className="bg-white p-3 border border-slate-200">
+                <strong className="text-slate-950 block mb-1">4. Governance & Compliance Supplement</strong>
+                Generates circuit-breaker thresholds: DLP exposure ceilings, API schema mutation gates, and max drift tolerance.
+              </div>
+            </div>
+          </div>
+
+          {/* ADMIN-DRIVEN BAR (NO USER ACTION) */}
+          <div className="bg-slate-950 text-white p-6 rounded-sm flex flex-col md:flex-row items-center justify-between gap-6 border-l-4 border-red-700">
+            <div className="space-y-1">
+              <span className="text-red-500 font-mono text-[10px] font-bold uppercase tracking-wider block">
+                // STAGE 01 COMPLETE — ADMIN PROCEEDS TO TRIANGULATION
+              </span>
+              <h4 className="font-bold text-lg uppercase tracking-tight text-white">
+                NEXT: THREE-TRACK TRIANGULATION (ADMIN-TRIGGERED)
+              </h4>
+              <p className="text-slate-400 text-xs font-sans">
+                Your report is queued for Stage 02 calibration. After admin approval, QuadNode will expand into the 4-persona cockpit and unlock the Final Active SOW.
+              </p>
+            </div>
+
+            <div className="text-xs text-slate-300 font-mono text-left md:text-right shrink-0">
+              No action required by the user.
+            </div>
           </div>
         </div>
       </main>

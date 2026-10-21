@@ -116,7 +116,7 @@ export default function LandingPage() {
 
                 <div className="border-l-2 border-slate-300 pl-4 max-w-2xl">
                   <p className="text-sm sm:text-base text-slate-600 leading-relaxed font-normal font-mono">
-                    <strong>10-QUESTION ASSESSMENT</strong> // <strong>3-MINUTE DIAGNOSTIC</strong> // <strong>PRELIMINARY FINANCIAL LEDGER</strong>
+                    <strong>PRELIMINARY FINANCIAL LEDGER</strong> // <strong>10-QUESTION ASSESSMENT</strong> // <strong>3-MINUTE DIAGNOSTIC</strong>
                   </p>
                 </div>
               </div>
