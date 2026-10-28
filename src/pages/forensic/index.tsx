@@ -12,6 +12,13 @@ import { supabase } from '../../lib/supabaseClient';
 import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
 
+// Diagnostic Dossier Components & Context
+import { DiagnosticProvider } from '../../context/DiagnosticContext';
+import HeaderScopeBlock from '../../components/diagnostic/HeaderScopeBlock';
+import MetricRelationshipHierarchyLine from '../../components/diagnostic/MetricRelationshipHierarchyLine';
+import BoardExecutiveBriefingBlock from '../../components/diagnostic/BoardExecutiveBriefingBlock';
+import QuadNodeSummaryMatrixTable from '../../components/diagnostic/QuadNodeSummaryMatrixTable';
+
 type FunnelPillar = 'IGF' | 'AVS' | 'HAI'; 
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER'; 
 
@@ -75,7 +82,7 @@ interface TriangulationState {
 export default function ForensicEngineRoot() { 
   const [viewState, setViewState] = useState<'INTAKE' | 'HUB' | 'WIZARD' | 'COCKPIT' | 'THANK_YOU'>('HUB'); 
   const [hasSynced, setHasSynced] = useState(false);
-  const [dossierTab, setDossierTab] = useState<'METRICS' | 'REMEDIATION'>('METRICS');
+  const [dossierTab, setDossierTab] = useState<'METRICS' | 'REMEDIATION' | 'INSPECTORATE'>('METRICS');
   const [companyName, setCompanyName] = useState(''); 
   const [isCompanyFromDB, setIsCompanyFromDB] = useState(false);
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF'); 
@@ -147,7 +154,6 @@ export default function ForensicEngineRoot() {
       }
 
       if (isParticipantRoute && roleParam) {
-        // 🎯 BIND AUDIT ID FROM URL PARAMETER IMMEDIATELY
         if (idParam) {
           setActiveAuditId(idParam);
           activeAuditIdRef.current = idParam;
@@ -346,13 +352,11 @@ export default function ForensicEngineRoot() {
       return;
     }
 
-    // 🎯 ENFORCED ORDER: Spread personaAnswers FIRST so markerKey timestamp wins
     const answersToSave = {
       ...(personaAnswers || {}),
       [markerKey]: new Date().toISOString()
     };
 
-    // Optimistic local UI update
     setTriangulation(prev => {
       if (!prev) return prev;
       return {
@@ -380,7 +384,6 @@ export default function ForensicEngineRoot() {
       } else {
         console.log(`✅ Quad Node marker ${markerKey} saved for ${targetPersona} in audit ${targetAuditId}`);
         
-        // 🎯 DIRECT DB TRUTH HYDRATION: Synchronize state directly from RPC output
         setTriangulation(prev => prev ? ({
           ...prev,
           completions: {
@@ -511,8 +514,8 @@ export default function ForensicEngineRoot() {
     try {
       setIsDispatchingBatch(true);
       const res = await fetch('/api/send-triangulation', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({
           auditId: targetAudit,
           companyName: triangulation?.companyName || companyName,
@@ -607,7 +610,7 @@ export default function ForensicEngineRoot() {
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
-  // 🎯 SOW LINK GENERATOR WITH SSR GUARD FIX (typeof window === 'undefined')
+  // 🎯 SOW LINK GENERATOR WITH SSR GUARD FIX
   const sowShareLink = useMemo(() => {
     if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
@@ -958,6 +961,12 @@ export default function ForensicEngineRoot() {
                 > 
                   02 // Alignment Track SOW 
                 </button> 
+                <button  
+                  onClick={() => setDossierTab('INSPECTORATE')} 
+                  className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'INSPECTORATE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`} 
+                > 
+                  03 // Quad Inspectorate Dossier 
+                </button> 
               </div> 
             </div> 
 
@@ -1133,6 +1142,18 @@ export default function ForensicEngineRoot() {
 
               </div> 
             )} 
+
+            {/* TAB 03: FULL PAID QUAD INSPECTORATE DOSSIER */}
+            {dossierTab === 'INSPECTORATE' && (
+              <DiagnosticProvider>
+                <div className="space-y-8 font-sans">
+                  <HeaderScopeBlock />
+                  <MetricRelationshipHierarchyLine />
+                  <BoardExecutiveBriefingBlock />
+                  <QuadNodeSummaryMatrixTable />
+                </div>
+              </DiagnosticProvider>
+            )}
 
             <div className="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider"> 
               <span>BMR Solutions © 2026 // Independent Operational Governance</span> 
