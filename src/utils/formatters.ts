@@ -19,7 +19,7 @@ export const formatBMRMultiplier = (multiplier: number): string => {
   return `${safeMultiplier.toFixed(2)}x`;
 };
 
-export const formatBMRExpactation = (hours: number): string => {
+export const formatBMRExpectation = (hours: number): string => {
   const safeHours = isFiniteNumber(hours) ? hours : 0;
   return safeHours > 0
     ? `+${roundToInt(safeHours).toLocaleString("en-US")} hrs`
