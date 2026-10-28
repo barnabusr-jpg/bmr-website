@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback, type FormEvent } from 'react';
 import ForensicDiagnosticWizard from '../../components/ForensicDiagnosticWizard';
 import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
@@ -62,6 +62,30 @@ const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
   if (clean.includes('USER') || clean.includes('SYS')) return 'SYSTEM_USER';
 
   return null;
+};
+
+// METHODOLOGY NODE CAPABILITY ALIGNMENT LABELS
+const PERSONA_DISPLAY_LABELS: Record<PersonaKey, { node: string; title: string; subtitle: string }> = {
+  EXECUTIVE: {
+    node: 'NODE 01',
+    title: 'Executive & Governance',
+    subtitle: 'Fiduciary & Policy Ceilings',
+  },
+  TECH_MGMT: {
+    node: 'NODE 02',
+    title: 'Engineering & Infrastructure',
+    subtitle: 'Delivery, Workflow Safety & Schema Drift',
+  },
+  OPS_MGMT: {
+    node: 'NODE 03',
+    title: 'Operations & Management',
+    subtitle: 'Alert Noise & Validation Fatigue',
+  },
+  SYSTEM_USER: {
+    node: 'NODE 04',
+    title: 'Frontline System Execution',
+    subtitle: 'Human-in-the-Loop Runtime Realities',
+  },
 };
 
 const FRESH_EMPTY_EMAILS: Record<PersonaKey, string> = {
@@ -403,7 +427,7 @@ export default function ForensicEngineRoot() {
     setViewState('THANK_YOU');
   };
 
-  const handleInitializeTriangulation = async (e: React.FormEvent) => {
+  const handleInitializeTriangulation = async (e: FormEvent) => {
     e.preventDefault();
     const sanitizedInput = companyName.trim();
 
@@ -458,7 +482,7 @@ export default function ForensicEngineRoot() {
     const email = currentEmails[persona];
 
     if (!email || !email.trim()) {
-      alert(`Please enter a valid email for the ${persona.replace('_', ' ')} track.`);
+      alert(`Please enter a valid email for ${PERSONA_DISPLAY_LABELS[persona].node}: ${PERSONA_DISPLAY_LABELS[persona].title}.`);
       return;
     }
 
@@ -478,7 +502,7 @@ export default function ForensicEngineRoot() {
       });
 
       if (res.ok) {
-        alert(`Reminder email sent to ${persona.replace('_', ' ')} (${email}).`);
+        alert(`Reminder email sent to ${PERSONA_DISPLAY_LABELS[persona].title} (${email}).`);
       } else {
         const err = await res.json();
         alert(`Failed to send reminder: ${err.details || err.error || 'Server error'}`);
@@ -501,10 +525,10 @@ export default function ForensicEngineRoot() {
     const currentEmails = triangulation?.emails || emails;
 
     const missingRoles = [];
-    if (!currentEmails.EXECUTIVE?.trim()) missingRoles.push("Executive");
-    if (!currentEmails.TECH_MGMT?.trim()) missingRoles.push("Tech Management");
-    if (!currentEmails.OPS_MGMT?.trim()) missingRoles.push("Ops Management");
-    if (!currentEmails.SYSTEM_USER?.trim()) missingRoles.push("System User");
+    if (!currentEmails.EXECUTIVE?.trim()) missingRoles.push(PERSONA_DISPLAY_LABELS.EXECUTIVE.title);
+    if (!currentEmails.TECH_MGMT?.trim()) missingRoles.push(PERSONA_DISPLAY_LABELS.TECH_MGMT.title);
+    if (!currentEmails.OPS_MGMT?.trim()) missingRoles.push(PERSONA_DISPLAY_LABELS.OPS_MGMT.title);
+    if (!currentEmails.SYSTEM_USER?.trim()) missingRoles.push(PERSONA_DISPLAY_LABELS.SYSTEM_USER.title);
 
     if (missingRoles.length > 0) {
       alert(`Please enter emails for all 4 tracks before dispatching. Missing: ${missingRoles.join(", ")}`);
@@ -687,7 +711,14 @@ export default function ForensicEngineRoot() {
 
               {(Object.keys(emails) as PersonaKey[]).map((role) => (
                 <div key={role}>
-                  <span className="text-[11px] text-slate-500 block mb-1 font-mono font-bold uppercase tracking-wider">{role.replace('_', ' ')} Track Email</span>
+                  <div className="flex justify-between items-baseline mb-1 font-mono">
+                    <span className="text-[11px] text-slate-700 font-bold uppercase tracking-wider">
+                      {PERSONA_DISPLAY_LABELS[role].node} // {PERSONA_DISPLAY_LABELS[role].title}
+                    </span>
+                    <span className="text-[10px] text-slate-400 uppercase">
+                      {PERSONA_DISPLAY_LABELS[role].subtitle}
+                    </span>
+                  </div>
                   <input
                     type="email"
                     placeholder={`e.g., ${role.toLowerCase()}@company.com`}
@@ -745,7 +776,12 @@ export default function ForensicEngineRoot() {
                 const completed = triangulation.completions[persona];
                 return (
                   <div key={persona} className="border border-slate-200 bg-white p-4 rounded-md text-center flex flex-col items-center justify-center min-h-[74px]">
-                    <span className="text-[11px] font-mono text-slate-700 uppercase tracking-wider block mb-2 font-bold">{persona.replace('_', ' ')}</span>
+                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block font-bold">
+                      {PERSONA_DISPLAY_LABELS[persona].node}
+                    </span>
+                    <span className="text-xs font-mono text-slate-800 uppercase tracking-tight block mb-2 font-bold truncate max-w-full">
+                      {PERSONA_DISPLAY_LABELS[persona].title}
+                    </span>
                     {completed ? (
                       <CheckCircle size={16} className="text-emerald-600 mt-1" />
                     ) : (
@@ -763,7 +799,10 @@ export default function ForensicEngineRoot() {
               return (
                 <div key={persona} className="border border-slate-200 bg-white p-5 rounded-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                   <div className="flex-1 w-full sm:w-auto">
-                    <span className="text-sm font-bold text-slate-900 uppercase tracking-wider block mb-1">{persona.replace('_', ' ')} Track</span>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-xs font-mono font-bold text-red-700">{PERSONA_DISPLAY_LABELS[persona].node}</span>
+                      <span className="text-sm font-bold text-slate-900 uppercase tracking-wider">{PERSONA_DISPLAY_LABELS[persona].title}</span>
+                    </div>
                     <input
                       type="email"
                       placeholder="Enter stakeholder email..."
@@ -951,19 +990,19 @@ export default function ForensicEngineRoot() {
                   onClick={() => setDossierTab('METRICS')}
                   className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'METRICS' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                 >
-                  01 // Risk Matrix
+                  01 // Process Waste Tax Ledger
                 </button>
                 <button
                   onClick={() => setDossierTab('REMEDIATION')}
                   className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'REMEDIATION' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                 >
-                  02 // Alignment Track SOW
+                  02 // Level 2 Remediation Runbooks
                 </button>
                 <button
                   onClick={() => setDossierTab('INSPECTORATE')}
                   className={`px-4 py-2 transition-colors cursor-pointer rounded-sm ${dossierTab === 'INSPECTORATE' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
                 >
-                  03 // Quad Inspectorate Dossier
+                  03 // Deployment Gate Specifications
                 </button>
               </div>
             </div>
@@ -989,7 +1028,7 @@ export default function ForensicEngineRoot() {
                       Process Waste Tax (${alignedCockpitMetrics.annualSalaryLeakage.toLocaleString()})
                     </span>
                     <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to approximately engineering hours exhausted resolving schema drift and manual firefighting.
+                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to critical recurring engineering hours exhausted resolving schema drift, manual firefighting, and validation fatigue.
                     </p>
                   </div>
 
@@ -1075,7 +1114,7 @@ export default function ForensicEngineRoot() {
                       <tr>
                         <td className="p-4 font-mono font-bold text-slate-900 whitespace-nowrap">PHASE 03</td>
                         <td className="p-4 font-bold text-slate-900">
-                          Autonomous Governance & Deployment Gates
+                          Autonomous Governance & Deployment Gate Enforcement
                         </td>
                         <td className="p-4 text-slate-600 leading-relaxed">
                           Automate Purview data loss prevention policies, continuous model evaluation pipelines, and executive steering dashboards.
@@ -1162,9 +1201,9 @@ export default function ForensicEngineRoot() {
               </DiagnosticProvider>
             )}
 
-            <div className="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
-              <span>BMR Solutions &copy; 2026 // Independent Operational Governance Inspectorate</span>
-              <span>RESTRICTED ACCESS // LEVEL 4</span>
+            <div className="mt-8 pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-2 font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+              <span>BMR Solutions &copy; 2026 // Pre-Automation Control Plane Diagnostic</span>
+              <span>LEVEL 2 CONTROL PLANE // ZERO SYSTEM ACCESS</span>
             </div>
           </div>
         </div>
