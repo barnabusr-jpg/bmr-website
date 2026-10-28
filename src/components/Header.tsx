@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { ShieldAlert, Activity, Menu, X } from 'lucide-react';
+import { Activity, Menu, X } from 'lucide-react';
 
 export default function Header() {
   const router = useRouter();
@@ -15,16 +15,33 @@ export default function Header() {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 h-20 md:h-24 bg-white/90 backdrop-blur-md border-b border-slate-200 z-[1000] flex items-center justify-between px-6 md:px-12">
-        {/* BRAND LOGO */}
-        <Link href="/" className="flex items-center gap-3 no-underline group shrink-0">
-          <ShieldAlert size={24} className="text-red-700 group-hover:scale-105 transition-transform" />
-          <div className="flex flex-col leading-tight">
-            <span className="text-slate-950 font-black text-base md:text-xl tracking-tight uppercase">
+      <header className="fixed top-0 left-0 right-0 h-20 md:h-24 bg-white/95 backdrop-blur-md border-b border-slate-200 z-[1000] flex items-center justify-between px-6 md:px-12">
+        {/* BRAND IDENTITY: DIRECT CARD ALIGNMENT */}
+        <Link href="/" className="flex items-center gap-3.5 no-underline group shrink-0">
+          {/* Node Gauge / Building Inspector Mark */}
+          <div className="h-9 w-9 md:h-10 md:w-10 rounded-xs border border-slate-300 bg-slate-50 flex items-center justify-center p-1.5 md:p-2 shadow-xs group-hover:border-slate-950 transition-colors">
+            <div className="w-full h-full grid grid-cols-2 grid-rows-2 gap-1">
+              <span className="bg-slate-900 rounded-[1px]" />
+              <span className="bg-red-700 rounded-[1px]" />
+              <span className="bg-slate-400 rounded-[1px]" />
+              <span className="bg-slate-900 rounded-[1px]" />
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-center">
+            {/* TOP KICKER */}
+            <span className="text-red-700 font-mono font-bold text-[8px] md:text-[9px] tracking-widest uppercase leading-none mb-1">
+              // PRE-AUTOMATION CONTROL PLANE
+            </span>
+            
+            {/* CORE BRAND */}
+            <span className="text-slate-950 font-black text-base md:text-xl tracking-tight uppercase leading-none">
               BMR <span className="text-red-700">SOLUTIONS</span>
             </span>
-            <span className="text-slate-500 font-mono font-semibold text-[9px] tracking-widest uppercase">
-              FORENSIC UNIT
+
+            {/* INSTITUTIONAL AUTHORITY */}
+            <span className="text-slate-500 font-mono font-semibold text-[7px] md:text-[8px] tracking-wider uppercase leading-none mt-1">
+              ENTERPRISE CONTROL PLANE INSPECTORATE
             </span>
           </div>
         </Link>
@@ -51,7 +68,7 @@ export default function Header() {
         <div className="flex items-center gap-2 md:gap-4">
           <button 
             onClick={() => router.push('/pulse-check')}
-            className="bg-slate-950 text-white px-5 md:px-8 py-2.5 md:py-3 font-bold uppercase tracking-wider text-xs hover:bg-red-700 transition-all flex items-center gap-2 border border-slate-950 shadow-sm cursor-pointer rounded-sm"
+            className="bg-slate-950 text-white px-5 md:px-8 py-2.5 md:py-3 font-bold uppercase tracking-wider text-xs hover:bg-red-700 transition-all flex items-center gap-2 border border-slate-950 shadow-xs cursor-pointer rounded-xs"
           >
             <span className="hidden sm:inline">EXECUTE STRATEGY</span>
             <span className="sm:hidden">EXECUTE</span>
@@ -88,16 +105,24 @@ export default function Header() {
         <Link 
           href="/pulse-check" 
           onClick={() => setIsMenuOpen(false)}
-          className="text-xl font-mono font-bold tracking-wider text-red-500 hover:text-white transition-colors no-underline uppercase border border-red-500/40 px-6 py-3 rounded-sm"
+          className="text-xl font-mono font-bold tracking-wider text-red-500 hover:text-white transition-colors no-underline uppercase border border-red-500/40 px-6 py-3 rounded-xs"
         >
           EXECUTE STRATEGY
         </Link>
         
-        <div className="absolute bottom-12 flex flex-col items-center gap-2">
-          <ShieldAlert size={32} className="text-red-500 opacity-40" />
-          <div className="text-slate-400 font-mono text-xs font-semibold tracking-widest uppercase">
-            SYSTEM ACCESS GRANTED
+        <div className="absolute bottom-12 flex flex-col items-center gap-2 text-center">
+          <div className="h-6 w-6 grid grid-cols-2 grid-rows-2 gap-1 opacity-60 mb-1">
+            <span className="bg-red-500 rounded-[1px]" />
+            <span className="bg-slate-500 rounded-[1px]" />
+            <span className="bg-slate-700 rounded-[1px]" />
+            <span className="bg-red-500 rounded-[1px]" />
           </div>
+          <span className="text-red-500 font-mono text-[9px] tracking-widest uppercase">
+            // PRE-AUTOMATION CONTROL PLANE
+          </span>
+          <span className="text-slate-400 font-mono text-[10px] font-semibold tracking-widest uppercase">
+            ENTERPRISE CONTROL PLANE INSPECTORATE
+          </span>
         </div>
       </div>
     </>
