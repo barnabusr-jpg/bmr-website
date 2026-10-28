@@ -1145,23 +1145,21 @@ export default function ForensicEngineRoot() {
 
             {/* TAB 03: FULL PAID QUAD INSPECTORATE DOSSIER */}
             {dossierTab === 'INSPECTORATE' && (
-              <DiagnosticProvider>
-                <div className="space-y-8 font-sans">
-                  <HeaderScopeBlock />
-                  <MetricRelationshipHierarchyLine />
-                  <BoardExecutiveBriefingBlock />
-                  <QuadNodeSummaryMatrixTable />
-                </div>
-              </DiagnosticProvider>
-            )}
-
-            <div className="mt-8 pt-4 border-t border-slate-100 flex justify-between items-center font-mono text-[10px] font-semibold text-slate-500 uppercase tracking-wider"> 
-              <span>BMR Solutions © 2026 // Independent Operational Governance</span> 
-              <span>Pre-Automation Control Plane</span> 
-            </div> 
-          </div> 
-        </div> 
-      )} 
-    </div> 
-  ); 
-}
+              <DiagnosticProvider
+                initialOverrides={{
+                  organizationName: triangulation.companyName,
+                  sector: triangulation.pillar === 'AVS' 
+                    ? 'INDUSTRIAL' 
+                    : triangulation.pillar === 'HAI' 
+                      ? 'SERVICES' 
+                      : 'FINANCE'
+    }}
+  >
+    <div className="space-y-8 font-sans">
+      <HeaderScopeBlock />
+      <MetricRelationshipHierarchyLine />
+      <BoardExecutiveBriefingBlock />
+      <QuadNodeSummaryMatrixTable />
+    </div>
+  </DiagnosticProvider>
+)}
