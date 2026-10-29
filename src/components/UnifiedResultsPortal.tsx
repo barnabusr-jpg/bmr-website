@@ -2,10 +2,17 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import { Lock, Unlock, Activity, FileText } from "lucide-react";
+import { Lock, Unlock, Activity, FileText, Download } from "lucide-react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import { AuditRecord } from "@/types/database.types";
+import { parseNodeScores, isFiniteNumber } from "@/utils/auditGuards";
+import {
+  formatBMRCurrency,
+  formatBMRMultiplier,
+  formatBMRExpectation,
+} from "@/utils/formatters";
+import { dispatchPDFGeneration } from "@/workers/auditExportWorker";
 
 interface DisplayAnomaly {
   id: string;
@@ -59,8 +66,8 @@ function RealTimeLossTicker({ diagnosticCompletedAt, exposure, anomalies, isArch
 
   useEffect(() => {
     if (isArchived) return;
-    const parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : NaN;
-    if (!isNaN(parsed) && parsed > 0 && parsed < Date.now()) {
+    const parsed = diagnosticCompletedAt ? Date.parse(diagnosticCompletedAt) : Number.NaN;
+    if (!Number.isNaN(parsed) && parsed > 0 && parsed < Date.now()) {
       anchorTimeRef.current = parsed;
       setElapsedSeconds(Math.max(0, (Date.now() - parsed) / 1000));
     } else {
@@ -77,7 +84,7 @@ function RealTimeLossTicker({ diagnosticCompletedAt, exposure, anomalies, isArch
 
   const safeExposure = useMemo(() => {
     const parsed = Number(exposure);
-    return !isNaN(parsed) && parsed > 0 ? parsed : 462528;
+    return isFiniteNumber(parsed) && parsed > 0 ? parsed : 462528;
   }, [exposure]);
 
   let dynamicAccumulatedLoss = (safeExposure / 31536000) * elapsedSeconds * severityVelocityMultiplier;
@@ -117,13 +124,13 @@ export default function UnifiedResultsPortal() {
 
   const [audit, setAudit] = useState<AuditRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     if (!resolvedId) return;
 
     let cancelled = false;
 
-    // Aligned 1:1 with PostgreSQL information_schema NOT NULL constraints
     const isAuditRecord = (x: unknown): x is AuditRecord => {
       if (typeof x !== "object" || x === null) return false;
 
@@ -190,13 +197,19 @@ export default function UnifiedResultsPortal() {
   }, [resolvedId]);
 
   const dbDecay = useMemo(() => {
-    if (live_sync === "true" && decay) return parseInt(decay);
-    return audit?.decay_pct || 24;
+    if (live_sync === "true" && decay) {
+      const parsed = parseInt(decay, 10);
+      return isFiniteNumber(parsed) ? parsed : 24;
+    }
+    return audit?.decay_pct ?? 24;
   }, [live_sync, decay, audit?.decay_pct]);
 
   const spend = useMemo(() => {
-    if (live_sync === "true" && querySpend) return parseFloat(querySpend);
-    return audit?.ai_spend || 1.2;
+    if (live_sync === "true" && querySpend) {
+      const parsed = parseFloat(querySpend);
+      return isFiniteNumber(parsed) ? parsed : 1.2;
+    }
+    return audit?.ai_spend ?? 1.2;
   }, [live_sync, querySpend, audit?.ai_spend]);
 
   const isPhaseTwoActive = useMemo(() => {
@@ -206,39 +219,103 @@ export default function UnifiedResultsPortal() {
   const isPaidGateUnlocked = useMemo(() => audit?.status?.toUpperCase() === 'PAID', [audit?.status]);
 
   const metrics = useMemo(() => {
-    const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
-    const baseLaborTaxPool = (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
-    const selectedSectorKey = (querySector ?? audit?.sector ?? "SERVICES").toUpperCase().trim().replace(/\s+/g, "_");
-    const activeSectorMultiplier = audit?.sector_multiplier || SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
+    const toSafeNumber = (val: unknown, fallback: number): number => {
+      if (isFiniteNumber(val)) return val;
+      if (typeof val === "string") {
+        const parsed = Number(val);
+        if (isFiniteNumber(parsed)) return parsed;
+      }
+      return fallback;
+    };
 
-    let totalLaborTaxPool = baseLaborTaxPool;
-    let totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
+    const safeSpend = Math.max(0, toSafeNumber(spend, 1.2));
+    const safeDecay = Math.max(0, toSafeNumber(dbDecay, 24));
+
+    const rawRoi = audit?.roi_pct;
+    const rawFte = toSafeNumber(rawRoi, 0);
+    const safeFteCount =
+      rawFte > 0
+        ? rawFte
+        : Math.round((safeSpend * 1000000) / 200000) || 6;
+
+    const selectedSectorKey = (querySector ?? audit?.sector ?? "SERVICES")
+      .toUpperCase()
+      .trim()
+      .replace(/\s+/g, "_");
+
+    const auditSectorMult = toSafeNumber(audit?.sector_multiplier, 1.0);
+    const activeSectorMultiplier =
+      auditSectorMult > 0 && auditSectorMult !== 1.0
+        ? auditSectorMult
+        : SECTOR_MULTIPLIERS[selectedSectorKey] ||
+          SECTOR_MULTIPLIERS.DEFAULT ||
+          1.28;
+
+    const fullyLoadedCost = 160000 * 1.3;
+    const baseLaborTaxPool = (safeDecay / 100) * 0.5 * (safeFteCount * fullyLoadedCost);
+
+    const scores = parseNodeScores(audit?.node_scores);
+
+    const effectiveInternalRework = baseLaborTaxPool * 0.60 * scores.internal_rework_multiplier;
+    const effectiveOperationalDrag = baseLaborTaxPool * 0.40 * scores.operational_drag_multiplier;
+    const effectiveTotalProcessWaste = effectiveInternalRework + effectiveOperationalDrag;
+
+    let totalLaborTaxPool = effectiveTotalProcessWaste;
+    let totalExposure = Math.round(0.22 * (safeDecay / 25) * (safeSpend * 1000000) * activeSectorMultiplier);
 
     if (live_sync === "true" && tax) {
       const parsedTax = parseFloat(tax);
-      totalLaborTaxPool = parsedTax < 1000 ? parsedTax * 1000000 : parsedTax;
-      totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
+      if (isFiniteNumber(parsedTax)) {
+        const overriddenBasePool = parsedTax < 1000 ? parsedTax * 1000000 : parsedTax;
+        totalLaborTaxPool = (overriddenBasePool * 0.60 * scores.internal_rework_multiplier) +
+                            (overriddenBasePool * 0.40 * scores.operational_drag_multiplier);
+      }
     }
 
     return {
-      fteCount,
+      fteCount: safeFteCount,
       activeSectorMultiplier,
       totalLaborTaxPool,
       internalReworkTax: totalLaborTaxPool * 0.60,
       operationalDragTax: totalLaborTaxPool * 0.40,
-      exposure: totalExposure
+      verificationDebtPenalty: effectiveInternalRework - (baseLaborTaxPool * 0.60),
+      modelThrashingPenalty: effectiveOperationalDrag - (baseLaborTaxPool * 0.40),
+      exposure: totalExposure,
+      promiseGapIndex: scores.promise_gap_index,
+      isCriticalRisk: scores.promise_gap_index >= 65,
+      scores,
     };
   }, [
     dbDecay, 
     spend, 
     audit?.roi_pct, 
-    audit?.ai_spend, 
     audit?.sector, 
     audit?.sector_multiplier, 
+    audit?.node_scores,
     querySector, 
     live_sync, 
     tax
   ]);
+
+  const handleDownloadPromiseGapPDF = async () => {
+    if (!audit) return;
+    try {
+      setExportingPdf(true);
+      const blob = await dispatchPDFGeneration(audit, metrics);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `BMR-Audit-${audit.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   const accentColorClass = isPhaseTwoActive ? "text-red-700" : "text-emerald-700";
   const borderAccentClass = isPhaseTwoActive ? "border-red-700" : "border-slate-900";
@@ -246,25 +323,25 @@ export default function UnifiedResultsPortal() {
   const genericAnomalies: DisplayAnomaly[] = useMemo(() => {
     return [
       { 
-        id: `Data Safety Rules // Impact $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        id: `Data Safety Rules // Impact ${formatBMRCurrency(metrics.totalLaborTaxPool * 0.35)}`, 
         description: "Baseline evaluation complete. Outside vendor data rules and safety verification controls are held under evaluation protocol.", 
         severity: "High Priority", 
         directive: "Stage 02 calibration will validate ingestion isolation requirements before remediation is finalized." 
       },
       { 
-        id: `Vendor Change Response // Impact $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        id: `Vendor Change Response // Impact ${formatBMRCurrency(metrics.totalLaborTaxPool * 0.28)}`, 
         description: "Baseline evaluation complete. System response mechanisms for outside vendor API changes are held under evaluation protocol.", 
         severity: "High Priority", 
         directive: "Stage 02 calibration will confirm interface-change safeguards required to prevent runtime degradation." 
       },
       { 
-        id: `Staff Memory Dependency // Impact $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        id: `Staff Memory Dependency // Impact ${formatBMRCurrency(metrics.totalLaborTaxPool * 0.22)}`, 
         description: "Baseline evaluation complete. Daily operational reliance on employee memory for broken system hand-offs is held under evaluation protocol.", 
         severity: "Medium Priority", 
         directive: "Stage 02 calibration will define fallback and escalation gates based on operational handoff risk." 
       },
       { 
-        id: `Emergency Playbooks // Impact $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
+        id: `Emergency Playbooks // Impact ${formatBMRCurrency(metrics.totalLaborTaxPool * 0.15)}`, 
         description: "Baseline evaluation complete. Automated fallback guides and team playbooks for workflow failures are held under evaluation protocol.", 
         severity: "Medium Priority", 
         directive: "Stage 02 calibration will establish governance and telemetry thresholds for secure scaling." 
@@ -273,7 +350,6 @@ export default function UnifiedResultsPortal() {
   }, [metrics.totalLaborTaxPool]);
 
   const activeAnomaliesList = useMemo<DisplayAnomaly[]>(() => {
-    // Falls back seamlessly between anomalies and fractures
     const rawAnomalies = audit?.anomalies && audit.anomalies.length > 0 ? audit.anomalies : audit?.fractures;
     
     if (isPaidGateUnlocked && rawAnomalies && rawAnomalies.length > 0) {
@@ -322,15 +398,25 @@ export default function UnifiedResultsPortal() {
             {isPhaseTwoActive ? "Portal Mode // Continuous Governance Control Plane" : "Portal Mode // Diagnostic Baseline"}
           </span>
         </div>
-        {isPhaseTwoActive && (
-          <button 
-            onClick={() => resolvedId && window.open(`/api/generate-pdf?id=${resolvedId}`, "_blank")} 
-            className="flex items-center gap-2 bg-slate-950 hover:bg-red-700 text-white text-xs px-5 py-2.5 font-bold uppercase tracking-wider rounded-sm transition-colors shadow-sm cursor-pointer"
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleDownloadPromiseGapPDF}
+            disabled={exportingPdf}
+            className="flex items-center gap-2 border border-slate-300 hover:border-slate-950 text-slate-900 text-xs px-4 py-2 font-bold uppercase tracking-wider rounded-sm transition-colors cursor-pointer disabled:opacity-50"
           >
-            <FileText size={14} />
-            Generate SteerCo Funding Dossier & SOW
+            <Download size={14} />
+            {exportingPdf ? "Exporting Brief..." : "Export Promise Gap™ PDF"}
           </button>
-        )}
+          {isPhaseTwoActive && (
+            <button 
+              onClick={() => resolvedId && window.open(`/api/generate-pdf?id=${resolvedId}`, "_blank")} 
+              className="flex items-center gap-2 bg-slate-950 hover:bg-red-700 text-white text-xs px-5 py-2.5 font-bold uppercase tracking-wider rounded-sm transition-colors shadow-sm cursor-pointer"
+            >
+              <FileText size={14} />
+              Generate SteerCo Funding Dossier & SOW
+            </button>
+          )}
+        </div>
       </nav>
 
       {/* MAIN BODY */}
@@ -371,14 +457,14 @@ export default function UnifiedResultsPortal() {
               <div className="flex flex-col justify-between">
                 <span className="text-xs text-slate-500 font-medium">Process Waste & Rework</span>
                 <p className="text-sm font-bold mt-1 text-slate-950">
-                  Liability: <span className="font-mono text-slate-950">${metrics.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  Liability: <span className="font-mono text-slate-950">{formatBMRCurrency(metrics.totalLaborTaxPool)}</span>
                 </p>
               </div>
 
               <div className="flex flex-col justify-between">
                 <span className="text-xs text-slate-500 font-medium">Total Risk Exposure</span>
                 <p className="text-sm font-bold mt-1 text-slate-950">
-                  Total Risk: <span className="font-mono text-slate-950">${safeExposureSum.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+                  Total Risk: <span className="font-mono text-slate-950">{formatBMRCurrency(safeExposureSum)}</span>
                 </p>
               </div>
             </div>
@@ -400,14 +486,93 @@ export default function UnifiedResultsPortal() {
           </div>
         </div>
 
+        {/* PROMISE GAP DIAGNOSTIC CARD */}
+        <div className="rounded-sm border border-slate-200 bg-white p-6 md:p-8 text-slate-950 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 pb-4 gap-2">
+            <div>
+              <span className="text-xs font-mono tracking-widest text-slate-500 uppercase">
+                BMR QuadNode Diagnostic
+              </span>
+              <h3 className="text-xl font-bold tracking-tight text-slate-950">
+                Promise Gap™ Index
+              </h3>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-3xl font-mono font-black text-slate-950">
+                {metrics.promiseGapIndex}
+                <span className="text-sm text-slate-400 font-normal">/100</span>
+              </span>
+              {metrics.isCriticalRisk && (
+                <span className="rounded-xs border border-red-200 bg-red-100 px-2.5 py-1 text-xs font-mono font-bold text-red-700">
+                  PROMISE GAP™ RISK: CRITICAL
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-sm border border-emerald-200 bg-emerald-50/50 p-4">
+              <span className="text-xs font-mono text-emerald-800 uppercase tracking-wider font-semibold">
+                Upstream Claim (Visible Speed)
+              </span>
+              <p className="mt-1 text-2xl font-mono font-bold text-emerald-900">
+                {formatBMRExpactation(metrics.scores.upstream_gross_claimed_hrs)}
+              </p>
+              <p className="mt-1 text-xs text-slate-600">
+                Frontier API & Copilot endpoint activity without verification latency adjustment.
+              </p>
+            </div>
+
+            <div className="rounded-sm border border-red-200 bg-red-50/50 p-4">
+              <span className="text-xs font-mono text-red-800 uppercase tracking-wider font-semibold">
+                Submerged Process Waste Tax
+              </span>
+              <p className="mt-1 text-2xl font-mono font-bold text-red-900">
+                {formatBMRCurrency(metrics.totalLaborTaxPool)}
+              </p>
+              <p className="mt-1 text-xs text-slate-600">
+                Unbudgeted Labor Tax Pool absorption across review and curation queues.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-xs font-mono">
+            <div className="flex justify-between text-slate-700">
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                NODE_02_AVS_02: Model Thrashing (Operational Drag Tax)
+              </span>
+              <span className="text-slate-950 font-bold">
+                {formatBMRCurrency(metrics.operationalDragTax)}
+                <span className="ml-1 text-slate-500 font-normal">
+                  ({formatBMRMultiplier(metrics.scores.operational_drag_multiplier)})
+                </span>
+              </span>
+            </div>
+
+            <div className="flex justify-between text-slate-700">
+              <span className="flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-600" />
+                NODE_03_AVS_02: Verification Debt (Internal Rework Tax)
+              </span>
+              <span className="text-slate-950 font-bold">
+                {formatBMRCurrency(metrics.internalReworkTax)}
+                <span className="ml-1 text-slate-500 font-normal">
+                  ({formatBMRMultiplier(metrics.scores.internal_rework_multiplier)})
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* METRICS SPLIT CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white border border-slate-200 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 rounded-sm shadow-sm">
-            <div className="text-4xl md:text-5xl font-black text-slate-950 font-mono tracking-tight">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className="text-4xl md:text-5xl font-black text-slate-950 font-mono tracking-tight">{formatBMRCurrency(metrics.internalReworkTax)}</div>
             <span className="text-xs font-bold text-slate-500 tracking-wider uppercase block">Wasted Engineering & Fix Hours</span>
           </div>
           <div className="bg-white border border-slate-200 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 shadow-sm rounded-sm">
-            <div className={`text-4xl md:text-5xl font-black font-mono tracking-tight ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className={`text-4xl md:text-5xl font-black font-mono tracking-tight ${accentColorClass}`}>{formatBMRCurrency(metrics.operationalDragTax)}</div>
             <span className="text-xs font-bold text-slate-500 tracking-wider uppercase block">Testing & Validation Fatigue</span>
           </div>
         </div>
@@ -451,8 +616,6 @@ export default function UnifiedResultsPortal() {
 
         {/* ENGAGEMENT ROADMAP & FORENSIC MILESTONES */}
         <div className="mt-12 border border-slate-200 bg-white p-8 rounded-sm shadow-sm font-sans">
-          
-          {/* SECTION HEADER & CONTEXT */}
           <div className="border-b border-slate-200 pb-4 mb-6">
             <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-1">
               // ENGAGEMENT ROADMAP & FORENSIC MILESTONES
@@ -466,82 +629,66 @@ export default function UnifiedResultsPortal() {
             Next, we convert your directional score into a comprehensive enterprise baseline by gathering input from key roles and preparing your final, board-ready <strong>Statement of Work (SOW)</strong>.
           </p>
 
-          {/* 3 LIFECYCLE ROADMAP CARDS */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs mb-8">
-
-            {/* STAGE 01 */}
             <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3 relative">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-emerald-700 font-bold block">// STAGE 01 // COMPLETE</span>
                   <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-xs">CURRENT</span>
                 </div>
-
                 <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
                   Initial Pulse Check (Directional Diagnostic Baseline)
                 </h4>
-
                 <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
                   Converts your start state into directional baselining (e.g., <strong>$118K waste</strong>, <strong>81% readiness</strong>) and identifies the top operational flags that must be validated next.
                 </p>
               </div>
-
               <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
                 OUTPUT: DIRECTIONAL DIAGNOSTIC BASELINE (PRELIMINARY LEDGER)
               </div>
             </div>
 
-            {/* STAGE 02 */}
             <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3">
               <div>
                 <span className="text-red-700 font-bold block mb-2">// STAGE 02 // NEXT STEP</span>
                 <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
                   Triangulation (3-Track Survey → Workforce Scale Lock-In)
                 </h4>
-
                 <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
                   Conducts a 3-person survey across <strong>Executive</strong>, <strong>Managerial</strong>, and <strong>Technical</strong> tracks to lock workforce scale and software run-rates (e.g., <strong>$3.2M spend</strong> / <strong>35 FTEs</strong>).
                 </p>
-
                 <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
                   <strong>Why numbers evolve:</strong> Stage 02 turns baseline assumptions into calibrated run-rate reality.
                 </p>
               </div>
-
               <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
                 OUTPUT: TRIANGULATED RUN-RATE METRICS LEDGER
               </div>
             </div>
 
-            {/* STAGE 03 */}
             <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3">
               <div>
                 <span className="text-slate-500 font-bold block mb-2">// STAGE 03 // FINAL VERDICT</span>
                 <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
                   QuadNode Forensic Cockpit (4-Persona Quad-Calibrated Analysis)
                 </h4>
-
                 <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
                   Expands into the 4-persona matrix by adding the <strong>System User</strong> track alongside Executive, Tech Mgmt, and Ops Mgmt—then produces the Final Diagnostic Verdict.
                 </p>
-
                 <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
                   <strong>Includes:</strong> peer variance benchmarking, true burn rate, cross-persona disconnects, and governance thresholds (circuit-breakers) that unlock the Final Active SOW.
                 </p>
               </div>
-
               <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
                 OUTPUT: FINAL ACTIVE SOW + VERIFICATION CERTIFICATE
               </div>
             </div>
           </div>
 
-          {/* DELIVERABLE HIGHLIGHT GRID */}
           <div className="bg-slate-50 border border-slate-200 p-5 rounded-sm mb-8">
             <span className="text-red-700 font-mono text-xs font-bold uppercase tracking-wider block mb-3">
               // FINAL QUADNODE DELIVERABLES INCLUDED UPON COMPLETION:
             </span>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[11px] text-slate-700">
               <div className="bg-white p-3 border border-slate-200">
                 <strong className="text-slate-950 block mb-1">1. Sector Variance Index</strong>
@@ -562,7 +709,6 @@ export default function UnifiedResultsPortal() {
             </div>
           </div>
 
-          {/* ADMIN-DRIVEN BAR (NO USER ACTION) */}
           <div className="bg-slate-950 text-white p-6 rounded-sm flex flex-col md:flex-row items-center justify-between gap-6 border-l-4 border-red-700">
             <div className="space-y-1">
               <span className="text-red-500 font-mono text-[10px] font-bold uppercase tracking-wider block">
@@ -575,7 +721,6 @@ export default function UnifiedResultsPortal() {
                 Your report is queued for Stage 02 calibration. After admin approval, QuadNode will expand into the 4-persona cockpit and unlock the Final Active SOW.
               </p>
             </div>
-
             <div className="text-xs text-slate-300 font-mono text-left md:text-right shrink-0">
               No action required by the user.
             </div>
