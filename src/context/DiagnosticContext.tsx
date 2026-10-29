@@ -57,8 +57,20 @@ interface DiagnosticContextType {
 
 const DiagnosticContext = createContext<DiagnosticContextType | undefined>(undefined);
 
-export function DiagnosticProvider({ children }: { children: ReactNode }) {
-  const [answers, setAnswers] = useState<IntakeAnswers>(initialAnswers);
+export interface DiagnosticProviderProps {
+  children: ReactNode;
+  initialOverrides?: Partial<IntakeAnswers>;
+}
+
+export function DiagnosticProvider({ children, initialOverrides }: DiagnosticProviderProps) {
+  const [answers, setAnswers] = useState<IntakeAnswers>(() => {
+    const base = { ...initialAnswers, ...(initialOverrides || {}) };
+    if (initialOverrides?.organizationName) {
+      base.organizationName = sanitizeOrgName(initialOverrides.organizationName);
+    }
+    return base;
+  });
+
   const [sowSelections, setSowSelections] = useState<SowSelectionsMap>(initialSowSelections);
 
   // LocalStorage hydration with full schema sanitization and enum whitelisting
@@ -76,9 +88,17 @@ export function DiagnosticProvider({ children }: { children: ReactNode }) {
           setAnswers((prev) => ({
             ...prev,
             ...parsed.answers,
-            organizationName: sanitizeOrgName(parsed.answers.organizationName),
-            sector: VALID_SECTORS.includes(rawSec) ? rawSec : "FINANCE",
-            decisionStage: VALID_STAGES.includes(rawStg) ? rawStg : "ACTIVE_STABILIZATION"
+            // Allow explicit initialOverrides from parent to override cached localStorage
+            ...(initialOverrides || {}),
+            organizationName: initialOverrides?.organizationName 
+              ? sanitizeOrgName(initialOverrides.organizationName)
+              : sanitizeOrgName(parsed.answers.organizationName),
+            sector: initialOverrides?.sector 
+              ? initialOverrides.sector 
+              : (VALID_SECTORS.includes(rawSec) ? rawSec : "FINANCE"),
+            decisionStage: initialOverrides?.decisionStage 
+              ? initialOverrides.decisionStage 
+              : (VALID_STAGES.includes(rawStg) ? rawStg : "ACTIVE_STABILIZATION")
           }));
         }
         if (parsed.sowSelections && typeof parsed.sowSelections === "object") {
@@ -93,7 +113,7 @@ export function DiagnosticProvider({ children }: { children: ReactNode }) {
     } catch {
       // Fail-closed
     }
-  }, []);
+  }, [initialOverrides]);
 
   // Sync state to LocalStorage
   useEffect(() => {

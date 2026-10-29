@@ -1,52 +1,46 @@
-import { MongoClient, Db } from 'mongodb';
+import { NodeScoresPayload } from "@/utils/auditGuards";
 
-const MONGODB_URI = process.env.MONGODB_URI!;
-const MONGODB_DB = process.env.MONGODB_DB || 'bmr_forensic';
-
-if (!MONGODB_URI) {
-  throw new Error('PROTOCOL_ERROR: MONGODB_URI_MISSING // CHECK_ENV_VARIABLES');
+export interface AnomalyNode {
+  id?: string;
+  node_id?: string;
+  dimension_node_id?: string;
+  anomaly_id?: string;
+  title?: string;
+  severity?: string;
+  description?: string;
+  impact_narrative?: string;
+  directive?: string;
+  remediation_directive?: string;
 }
 
-/**
- * Global is used here to maintain a cached connection across hot reloads
- * in development and function invocations in production.
- */
-let cachedClient: MongoClient | null = null;
-let cachedDb: Db | null = null;
-
-export async function connectToDatabase() {
-  if (cachedClient && cachedDb) {
-    return { client: cachedClient, db: cachedDb };
-  }
-
-  // Set the connection options for maximum stability
-  const opts = {
-    connectTimeoutMS: 10000,
-    socketTimeoutMS: 45000,
-  };
-
-  const client = new MongoClient(MONGODB_URI, opts);
-  await client.connect();
-  const db = client.db(MONGODB_DB);
-
-  cachedClient = client;
-  cachedDb = db;
-
-  return { client, db };
+export interface AuditRecord {
+  id: string;
+  created_at: string;
+  updated_at?: string | null;
+  compiled_at?: string | null;
+  org_name: string;
+  sector?: string | null;
+  sector_multiplier?: number | null;
+  decay_pct?: number | null;
+  ai_spend?: number | null;
+  status?: string | null;
+  roi_pct?: number | null;
+  is_released?: boolean | null;
+  sow_sent?: boolean | null;
+  is_paid?: boolean | null;
+  sfi_score?: number | null;
+  lead_email?: string | null;
+  rework_tax?: number | null;
+  exposure?: number | null;
+  hai_raw_score?: number | null;
+  avs_raw_score?: number | null;
+  igf_raw_score?: number | null;
+  has_technical?: boolean | null;
+  has_managerial?: boolean | null;
+  has_executive?: boolean | null;
+  fractures?: AnomalyNode[] | null;
+  anomalies?: AnomalyNode[] | null;
+  raw_responses?: Record<string, unknown>[] | null;
+  node_scores?: NodeScoresPayload | null;
 }
 
-export async function saveLead(lead: any): Promise<void> {
-  const { db } = await connectToDatabase();
-  const collection = db.collection('leads');
-  
-  // Forensic validation before insertion
-  if (!lead.email || !lead.transmissionId) {
-    throw new Error('DATA_INTEGRITY_VIOLATION // MALFORMED_LEAD_OBJECT');
-  }
-
-  await collection.insertOne({
-    ...lead,
-    timestamp: new Date().toISOString(),
-    verified: true
-  });
-}
