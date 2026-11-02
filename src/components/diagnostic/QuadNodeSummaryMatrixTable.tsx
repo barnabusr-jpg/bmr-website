@@ -3,10 +3,13 @@
 import React from "react";
 import { useDiagnostic } from "@/context/DiagnosticContext";
 import { SECTOR_COPY_REGISTRY } from "@/config/sectorCopyRegistry";
+import { getStatusProvenanceBadge } from "@/lib/playbookExportAdapter";
+import { getInsulationBandConfig, GateStatus } from "@/types/playbookExport";
 
 export default function QuadNodeSummaryMatrixTable() {
-  const { state } = useDiagnostic();
-  const { answers, nodeSummaries } = state;
+  const { state, getDiagnosticSnapshot } = useDiagnostic();
+  const { answers } = state;
+  const { nodeMatrix } = getDiagnosticSnapshot();
 
   const sectorConfig = SECTOR_COPY_REGISTRY[answers.sector] || SECTOR_COPY_REGISTRY.FINANCE;
 
@@ -30,47 +33,76 @@ export default function QuadNodeSummaryMatrixTable() {
             <tr>
               <th className="p-3.5 border-b border-slate-800 w-1/5">Control Plane Node</th>
               <th className="p-3.5 border-b border-slate-800 w-1/4">Observed Pattern</th>
-              <th className="p-3.5 border-b border-slate-800 w-1/3">Operational Impact ({sectorConfig.label})</th>
+              <th className="p-3.5 border-b border-slate-800 w-1/4">Operational Impact ({sectorConfig.label})</th>
               <th className="p-3.5 border-b border-slate-800">Recommended Gate</th>
-              <th className="p-3.5 border-b border-slate-800 text-center w-28">Status</th>
+              <th className="p-3.5 border-b border-slate-800 text-center w-28">Insulation</th>
+              <th className="p-3.5 border-b border-slate-800 text-right w-36">Status & Provenance</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-200 text-slate-700">
-            {nodeSummaries.map((node) => (
-              <tr key={node.nodeId} className="hover:bg-slate-50/50 print-avoid-break">
-                
-                {/* NODE NAME */}
-                <td className="p-3.5 font-mono font-bold text-slate-950 align-top">
-                  {node.name}
-                  <span className="block text-[10px] text-slate-400 font-normal uppercase mt-0.5">
-                    {node.nodeId}
-                  </span>
-                </td>
+            {nodeMatrix.map((node) => {
+              const badge = getStatusProvenanceBadge(
+                node.status as GateStatus,
+                node.statusSource as "RESPONSE_DERIVED" | "METHODOLOGY_BASELINE"
+              );
+              const insulationConfig = getInsulationBandConfig(node.insulationIntegrityPct);
 
-                {/* OBSERVED PATTERN */}
-                <td className="p-3.5 align-top leading-relaxed text-slate-800">
-                  {node.observedPattern}
-                </td>
+              return (
+                <tr key={node.nodeKey} className="hover:bg-slate-50/50 print-avoid-break">
+                  
+                  {/* NODE NAME */}
+                  <td className="p-3.5 font-mono font-bold text-slate-950 align-top">
+                    {node.nodeLabel}
+                    <span className="block text-[10px] text-slate-400 font-normal uppercase mt-0.5">
+                      {node.nodeKey}
+                    </span>
+                  </td>
 
-                {/* SECTOR OPERATIONAL IMPACT */}
-                <td className="p-3.5 align-top leading-relaxed text-slate-600">
-                  {node.operationalImpact}
-                </td>
+                  {/* OBSERVED PATTERN */}
+                  <td className="p-3.5 align-top leading-relaxed text-slate-800">
+                    {node.observedPattern}
+                  </td>
 
-                {/* RECOMMENDED GATE */}
-                <td className="p-3.5 align-top font-semibold text-slate-900 leading-relaxed">
-                  {node.recommendedGate}
-                </td>
+                  {/* SECTOR OPERATIONAL IMPACT */}
+                  <td className="p-3.5 align-top leading-relaxed text-slate-600">
+                    {node.operationalImpact}
+                  </td>
 
-                {/* STATUS BADGE */}
-                <td className="p-3.5 align-top text-center font-mono">
-                  <span className="inline-block bg-red-100 text-red-800 border border-red-300 px-2 py-0.5 text-[10px] font-bold uppercase">
-                    {node.status}
-                  </span>
-                </td>
+                  {/* RECOMMENDED GATE */}
+                  <td className="p-3.5 align-top font-semibold text-slate-900 leading-relaxed">
+                    {node.recommendedGate}
+                  </td>
 
-              </tr>
-            ))}
+                  {/* INSULATION INTEGRITY METER */}
+                  <td className="p-3.5 align-top text-center font-mono font-bold text-slate-700 whitespace-nowrap">
+                    <div className="inline-flex flex-col items-center gap-1">
+                      <span>{node.insulationIntegrityPct}%</span>
+                      <div className="w-14 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                        <div
+                          className={`h-full ${insulationConfig.twBgClass}`}
+                          style={{ width: `${node.insulationIntegrityPct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* STATUS & PROVENANCE BADGE */}
+                  <td className="p-3.5 align-top text-right whitespace-nowrap font-mono">
+                    <div className="inline-flex flex-col items-end gap-1">
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-xs border ${badge.badgeClass}`}
+                      >
+                        {badge.label}
+                      </span>
+                      <span className="text-[9px] text-slate-400 tracking-tight">
+                        {badge.provenance}
+                      </span>
+                    </div>
+                  </td>
+
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
