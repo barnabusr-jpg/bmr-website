@@ -1,6 +1,31 @@
 import { DiagnosticExportState, TelemetryPreImage, PlaybookProvenance } from '../types/playbookExport';
 import { computeStrictSha256 } from './canonicalHash';
 
+export const REQUIRED_QUAD_NODE_MARKERS = [
+  'QUAD_EXE_COMPLETE',
+  'QUAD_TEC_COMPLETE',
+  'QUAD_MGR_COMPLETE',
+  'QUAD_SYS_COMPLETE',
+] as const;
+
+export function isQuadNodeTriangulationComplete(rawResponses?: Record<string, any> | null): boolean {
+  if (!rawResponses || typeof rawResponses !== 'object') {
+    return false;
+  }
+
+  // Reject preliminary intake funnels / pulse-check data
+  if (
+    rawResponses['flow_source'] === 'pulse_check' ||
+    rawResponses['is_preliminary'] === true ||
+    rawResponses['stage'] === 'pulse_check'
+  ) {
+    return false;
+  }
+
+  // Must have all four authoritative completion markers
+  return REQUIRED_QUAD_NODE_MARKERS.every((marker) => Boolean(rawResponses[marker]));
+}
+
 export interface StructuredCustomerPlaybook {
   provenance: PlaybookProvenance;
   chapter1_executiveBriefing: {
@@ -85,6 +110,14 @@ export async function compileCustomerStory(
   diagState: DiagnosticExportState,
   rawResponses: Record<string, any> = {}
 ): Promise<StructuredCustomerPlaybook> {
+  // Fail-closed gate: Strict rejection of preliminary pulse-check intake data
+  if (!isQuadNodeTriangulationComplete(rawResponses)) {
+    throw new Error(
+      `AUDIT_INTEGRITY_VIOLATION: Cannot compile Control Plane Playbook. ` +
+      `Preliminary pulse-check data rejected. The playbook strictly requires finalized 4-node triangulated telemetry (${REQUIRED_QUAD_NODE_MARKERS.join(', ')}).`
+    );
+  }
+
   const sortedKeys = Object.keys(rawResponses || {}).sort();
 
   const structuralTypeFingerprint = sortedKeys
@@ -99,7 +132,7 @@ export async function compileCustomerStory(
   const preImage: TelemetryPreImage = {
     companyName: (companyName || 'Target Organization').trim(),
     sector: (sector || 'FINANCIAL SERVICES').trim(),
-    telemetryComplete: Boolean(rawResponses?.RAW_VECTORS),
+    telemetryComplete: true,
     readinessScore: assertValidMetric(diagState.readinessIndex?.value, 'readinessIndex'),
     processWasteTaxAmount: assertValidMetric(diagState.processWasteTax?.value, 'processWasteTax'),
     promiseGapExposureAmount: assertValidMetric(diagState.promiseGapRisk?.value, 'promiseGapExposure'),
