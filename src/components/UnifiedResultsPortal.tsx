@@ -123,6 +123,18 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
   const [audit, setAudit] = useState<AuditRecord | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Freeze the initial diagnostic intake metrics so real-time updates do not mutate baseline
+  const intakeBaselineRef = useRef<{ decay: number; spend: number } | null>(null);
+
+  useEffect(() => {
+    if (audit && !intakeBaselineRef.current) {
+      intakeBaselineRef.current = {
+        decay: audit.decay_pct || 24,
+        spend: audit.ai_spend || 1.2,
+      };
+    }
+  }, [audit]);
+
   useEffect(() => {
     if (!resolvedId) return;
 
@@ -189,28 +201,36 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
     };
   }, [resolvedId]);
 
-  // Lock status gate: calibration flips to locked only upon explicit lock commitment
-  const isResultsLocked = useMemo(() => {
+  // Release/Lock status gate: calibration flips only upon explicit admin release or lock commitment
+  const isResultsReleased = useMemo(() => {
     const st = audit?.status?.toUpperCase();
-    return st === "LOCKED" || Boolean((audit as any)?.is_locked);
-  }, [audit?.status, (audit as any)?.is_locked]);
+    return Boolean((audit as any)?.is_released) || st === "LOCKED" || Boolean((audit as any)?.is_locked);
+  }, [audit?.status, (audit as any)?.is_released, (audit as any)?.is_locked]);
 
-  // Decoupled Metrics: Sliders do not overwrite customer metrics until locked
+  // Decoupled Metrics: Workshop sliders do not overwrite diagnostic metrics until released/locked
   const dbDecay = useMemo(() => {
-    if (isResultsLocked && live_sync === "true" && decay) {
+    if (isResultsReleased && live_sync === "true" && decay) {
       const parsed = parseInt(decay, 10);
       return isFiniteNumber(parsed) ? parsed : 24;
     }
+    // While in diagnostic baseline (unreleased), preserve initial intake value
+    if (!isResultsReleased && intakeBaselineRef.current) {
+      return intakeBaselineRef.current.decay;
+    }
     return audit?.decay_pct || 24;
-  }, [isResultsLocked, live_sync, decay, audit?.decay_pct]);
+  }, [isResultsReleased, live_sync, decay, audit?.decay_pct]);
 
   const spend = useMemo(() => {
-    if (isResultsLocked && live_sync === "true" && querySpend) {
+    if (isResultsReleased && live_sync === "true" && querySpend) {
       const parsed = parseFloat(querySpend);
       return isFiniteNumber(parsed) ? parsed : 1.2;
     }
+    // While in diagnostic baseline (unreleased), preserve initial intake value
+    if (!isResultsReleased && intakeBaselineRef.current) {
+      return intakeBaselineRef.current.spend;
+    }
     return audit?.ai_spend || 1.2;
-  }, [isResultsLocked, live_sync, querySpend, audit?.ai_spend]);
+  }, [isResultsReleased, live_sync, querySpend, audit?.ai_spend]);
 
   const isPaidGateUnlocked = useMemo(() => audit?.status?.toUpperCase() === 'PAID', [audit?.status]);
 
@@ -253,7 +273,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
     let totalLaborTaxPool = baseLaborTaxPool;
     let totalExposure = Math.round(0.22 * (safeDecay / 25) * (safeSpend * 1000000) * activeSectorMultiplier);
 
-    if (isResultsLocked && live_sync === "true" && tax) {
+    if (isResultsReleased && live_sync === "true" && tax) {
       const parsedTax = parseFloat(tax);
       if (isFiniteNumber(parsedTax)) {
         totalLaborTaxPool = parsedTax < 1000 ? parsedTax * 1000000 : parsedTax;
@@ -276,13 +296,13 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
     audit?.sector, 
     audit?.sector_multiplier, 
     querySector, 
-    isResultsLocked, 
+    isResultsReleased, 
     live_sync, 
     tax
   ]);
 
-  const accentColorClass = isResultsLocked ? "text-red-700" : "text-emerald-700";
-  const borderAccentClass = isResultsLocked ? "border-red-700" : "border-slate-900";
+  const accentColorClass = isResultsReleased ? "text-red-700" : "text-emerald-700";
+  const borderAccentClass = isResultsReleased ? "border-red-700" : "border-slate-900";
 
   const genericAnomalies: DisplayAnomaly[] = useMemo(() => {
     return [
@@ -359,7 +379,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
             BMR<span className={accentColorClass}>SOLUTIONS</span>
           </div>
           <span className="text-xs text-slate-500 font-mono block mt-0.5">
-            {isResultsLocked
+            {isResultsReleased
               ? "Portal Mode // Continuous Governance Control Plane"
               : "Portal Mode // Diagnostic Baseline"}
           </span>
@@ -371,7 +391,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
         <div className="border-l-2 border-slate-300 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-xs font-bold block">// METHODOLOGY & CALCULATION INPUTS</span>
           <p className="text-slate-700 font-sans text-xs leading-relaxed max-w-4xl">
-            {isResultsLocked
+            {isResultsReleased
               ? `These operational metrics are actively calibrated to your team's real-world footprint of $${spend}M in annual software allocations across ${metrics.fteCount} FTE resources.`
               : `This diagnostic uses standard industry baselines calibrated to your captured AI Readiness Score of ${100 - dbDecay}%. Specific workforce calibration parameters assume default inputs of $${spend}M annual software allocations across ${metrics.fteCount} FTE resources.`}
           </p>
@@ -385,7 +405,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
                 Independent Governance // Zero Security Footprint
               </span>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-slate-950">
-                {isResultsLocked ? "Executive Summary" : "Diagnostic Results"}
+                {isResultsReleased ? "Executive Summary" : "Diagnostic Results"}
               </h1>
               <p className="text-xs font-mono text-slate-500 mt-2">
                 Prepared for: {audit?.org_name || "Evaluation Client System"}
@@ -424,176 +444,4 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
               diagnosticCompletedAt={audit?.compiled_at || audit?.created_at || (audit as any)?.updated_at || undefined} 
               exposure={safeExposureSum} 
               anomalies={activeAnomaliesList}
-              isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
-            />
-            <span className="text-xs text-slate-500 block font-mono mt-2">
-              {audit?.status?.toUpperCase() === 'ARCHIVED' ? "Assessment archived" : "Accumulated financial loss since assessment completed"}
-            </span>
-          </div>
-        </div>
-
-        {/* METRICS SPLIT CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-white border border-slate-200 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 rounded-sm shadow-sm">
-            <div className="text-4xl md:text-5xl font-black text-slate-950 font-mono tracking-tight">${metrics.internalReworkTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-xs font-bold text-slate-500 tracking-wider uppercase block">Wasted Engineering & Fix Hours</span>
-          </div>
-          <div className="bg-white border border-slate-200 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 shadow-sm rounded-sm">
-            <div className={`text-4xl md:text-5xl font-black font-mono tracking-tight ${accentColorClass}`}>${metrics.operationalDragTax.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
-            <span className="text-xs font-bold text-slate-500 tracking-wider uppercase block">Testing & Validation Fatigue</span>
-          </div>
-        </div>
-
-        {/* ANOMALIES MATRIX */}
-        <div className="pt-4 text-left">
-          <div className="border-b border-slate-200 pb-4 mb-6">
-            <span className="text-xs font-mono font-bold text-slate-500 block uppercase tracking-wider">// HIGH-RISK OPERATIONAL AREAS</span>
-            <h3 className="text-2xl font-black tracking-tight mt-1 text-slate-950 uppercase">Key Findings & Integration Risks</h3>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {activeAnomaliesList.map((frac, index) => (
-              <div 
-                key={frac.id || index} 
-                className={`border p-6 rounded-sm flex flex-col justify-between relative min-h-[260px] shadow-sm transition-all ${
-                  isPaidGateUnlocked ? 'border-red-300 bg-red-50/50' : 'border-slate-200 bg-white'
-                }`}
-              >
-                <div className="flex justify-between items-center border-b border-slate-100 pb-3 font-mono">
-                  <span className="text-xs text-slate-500 font-bold uppercase">Finding #{index + 1}</span>
-                  <span className={`text-xs px-2.5 py-0.5 font-bold uppercase flex items-center gap-1.5 border rounded-sm ${
-                    isPaidGateUnlocked ? 'bg-red-100 text-red-700 border-red-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  }`}>
-                    {isPaidGateUnlocked ? <Unlock size={12} /> : <Lock size={12} />} 
-                    {isPaidGateUnlocked ? frac.severity : "Gate Cleared"}
-                  </span>
-                </div>
-                <div className="my-4 space-y-2">
-                  <h4 className="text-base font-bold text-slate-950">{String(frac.id || 'Identified Risk Area')}</h4>
-                  <p className="text-xs text-slate-600 leading-relaxed font-normal">{frac.description}</p>
-                </div>
-                <div className="border-t border-slate-100 pt-3">
-                  <div className="text-xs text-slate-500 font-bold uppercase mb-1">Recommended Action:</div>
-                  <div className="text-xs text-slate-800 font-medium">{frac.directive}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ENGAGEMENT ROADMAP & FORENSIC MILESTONES */}
-        <div className="mt-12 border border-slate-200 bg-white p-8 rounded-sm shadow-sm font-sans">
-          <div className="border-b border-slate-200 pb-4 mb-6">
-            <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-1">
-              // ENGAGEMENT ROADMAP & FORENSIC MILESTONES
-            </span>
-            <h3 className="text-2xl font-black uppercase text-slate-950">
-              HOW YOUR DIAGNOSTIC VERDICT IS PROCESSED
-            </h3>
-          </div>
-
-          <p className="text-sm text-slate-700 leading-relaxed mb-8">
-            Next, we convert your directional score into a comprehensive enterprise baseline by gathering input from key roles and preparing your final, board-ready <strong>Statement of Work (SOW)</strong>.
-          </p>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs mb-8">
-            <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3 relative">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-emerald-700 font-bold block">// STAGE 01 // COMPLETE</span>
-                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-2 py-0.5 rounded-xs">CURRENT</span>
-                </div>
-                <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
-                  Initial Pulse Check (Directional Diagnostic Baseline)
-                </h4>
-                <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
-                  Converts your start state into directional baselining (e.g., <strong>$118K waste</strong>, <strong>81% readiness</strong>) and identifies the top operational flags that must be validated next.
-                </p>
-              </div>
-              <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
-                OUTPUT: DIRECTIONAL DIAGNOSTIC BASELINE (PRELIMINARY LEDGER)
-              </div>
-            </div>
-
-            <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3">
-              <div>
-                <span className="text-red-700 font-bold block mb-2">// STAGE 02 // NEXT STEP</span>
-                <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
-                  Triangulation (3-Track Survey → Workforce Scale Lock-In)
-                </h4>
-                <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
-                  Conducts a 3-person survey across <strong>Executive</strong>, <strong>Managerial</strong>, and <strong>Technical</strong> tracks to lock workforce scale and software run-rates (e.g., <strong>$3.2M spend</strong> / <strong>35 FTEs</strong>).
-                </p>
-                <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
-                  <strong>Why numbers evolve:</strong> Stage 02 turns baseline assumptions into calibrated run-rate reality.
-                </p>
-              </div>
-              <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
-                OUTPUT: TRIANGULATED RUN-RATE METRICS LEDGER
-              </div>
-            </div>
-
-            <div className="border border-slate-200 bg-slate-50 p-5 rounded-sm flex flex-col justify-between space-y-3">
-              <div>
-                <span className="text-slate-500 font-bold block mb-2">// STAGE 03 // FINAL VERDICT</span>
-                <h4 className="font-bold text-slate-950 uppercase text-sm font-sans">
-                  QuadNode Forensic Cockpit (4-Persona Quad-Calibrated Analysis)
-                </h4>
-                <p className="text-slate-600 font-sans mt-2 text-xs leading-normal">
-                  Expands into the 4-persona matrix by adding the <strong>System User</strong> track alongside Executive, Tech Mgmt, and Ops Mgmt—then produces the Final Diagnostic Verdict.
-                </p>
-                <p className="text-slate-600 font-sans mt-2 text-[11px] leading-normal">
-                  <strong>Includes:</strong> peer variance benchmarking, true burn rate, cross-persona disconnects, and governance thresholds (circuit-breakers) that unlock the Final Active SOW.
-                </p>
-              </div>
-              <div className="pt-3 border-t border-slate-200 text-[10px] text-slate-500 uppercase font-mono">
-                OUTPUT: FINAL ACTIVE SOW + VERIFICATION CERTIFICATE
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200 p-5 rounded-sm mb-8">
-            <span className="text-red-700 font-mono text-xs font-bold uppercase tracking-wider block mb-3">
-              // FINAL QUADNODE DELIVERABLES INCLUDED UPON COMPLETION:
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 font-mono text-[11px] text-slate-700">
-              <div className="bg-white p-3 border border-slate-200">
-                <strong className="text-slate-950 block mb-1">1. Sector Variance Index</strong>
-                Re-indexes AI readiness vs. peer sector benchmarks (e.g., <em>Score 56</em> vs. <em>Benchmark 76</em>).
-              </div>
-              <div className="bg-white p-3 border border-slate-200">
-                <strong className="text-slate-950 block mb-1">2. True Financial Burn Rate</strong>
-                Quantifies annual capacity waste, weekly burn rate, and a recovery ROI multiplier.
-              </div>
-              <div className="bg-white p-3 border border-slate-200">
-                <strong className="text-slate-950 block mb-1">3. Cross-Persona Alignment Matrix</strong>
-                Pins down exact disconnects across Executive, Tech Mgmt, Ops Mgmt, and System User layers.
-              </div>
-              <div className="bg-white p-3 border border-slate-200">
-                <strong className="text-slate-950 block mb-1">4. Governance & Compliance Supplement</strong>
-                Generates circuit-breaker thresholds: DLP exposure ceilings, API schema mutation gates, and max drift tolerance.
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-950 text-white p-6 rounded-sm flex flex-col md:flex-row items-center justify-between gap-6 border-l-4 border-red-700">
-            <div className="space-y-1">
-              <span className="text-red-500 font-mono text-[10px] font-bold uppercase tracking-wider block">
-                // STAGE 01 COMPLETE — ADMIN PROCEEDS TO TRIANGULATION
-              </span>
-              <h4 className="font-bold text-lg uppercase tracking-tight text-white">
-                NEXT: THREE-TRACK TRIANGULATION (ADMIN-TRIGGERED)
-              </h4>
-              <p className="text-slate-400 text-xs font-sans">
-                Your report is queued for Stage 02 calibration. After admin approval, QuadNode will expand into the 4-persona cockpit and unlock the Final Active SOW.
-              </p>
-            </div>
-            <div className="text-xs text-slate-300 font-mono text-left md:text-right shrink-0">
-              No action required by the user.
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
+              isArchived={audit?.status?.toUpperCase()
