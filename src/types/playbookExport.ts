@@ -111,6 +111,7 @@ export interface DiagnosticExportState {
 export interface TelemetryPreImage {
   companyName: string;
   sector: string;
+  telemetryComplete: boolean;
   readinessScore: number;
   processWasteTaxAmount: number;
   promiseGapExposureAmount: number;
