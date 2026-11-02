@@ -26,7 +26,29 @@ import {
   sanitizeOrgName 
 } from "@/lib/tokenCodec";
 
+// Control Plane Export Pipeline Imports
+import { deriveDynamicDiagnosticSnapshot } from "@/lib/playbookExportAdapter";
+import { DiagnosticExportState } from "@/types/playbookExport";
+
 const STORAGE_KEY = "bmr_diagnostic_state_v2";
+
+const REQUIRED_VECTOR_KEYS = [
+  "v01", "v02", "v03", "v04", "v05",
+  "v06", "v07", "v08", "v09", "v10"
+] as const;
+
+// Strict Type guard: vector scores must be valid integers 1 to 5
+function isValidVectorScore(score: unknown): score is number {
+  return typeof score === "number" && Number.isInteger(score) && score >= 1 && score <= 5;
+}
+
+// Strict Fail-closed gate: both vectors must be valid and >= 3
+function isVectorGatePassed(vA: unknown, vB: unknown): boolean {
+  if (!isValidVectorScore(vA) || !isValidVectorScore(vB)) {
+    return false; // Fail-closed: missing/corrupted telemetry never passes an audit gate
+  }
+  return vA >= 3 && vB >= 3;
+}
 
 const initialAnswers: IntakeAnswers = {
   organizationName: "ACME ENTERPRISE",
@@ -44,7 +66,8 @@ const initialSowSelections: SowSelectionsMap = {
   PHASE_03: "OPTION_B"
 };
 
-interface DiagnosticContextType {
+export interface DiagnosticContextType {
+  // Existing state & dispatchers
   state: DiagnosticState;
   setSector: (sector: SectorKey) => void;
   setDecisionStage: (stage: DecisionStage) => void;
@@ -53,13 +76,31 @@ interface DiagnosticContextType {
   loadFromToken: (token: string) => Promise<boolean>;
   generateShareToken: () => string;
   resetDiagnostic: () => void;
+
+  // Export pipeline adapters
+  organizationName: string;
+  sector: string;
+  readinessIndex: number;
+  processWasteTax: number;
+  promiseGapRisk: number;
+  activeStabilizationFocus: string;
+  unmanagedDriftImpact: string;
+  rawResponses: Record<string, any>;
+  getDiagnosticSnapshot: () => DiagnosticExportState;
 }
 
 const DiagnosticContext = createContext<DiagnosticContextType | undefined>(undefined);
 
 export interface DiagnosticProviderProps {
   children: ReactNode;
-  initialOverrides?: Partial<IntakeAnswers>;
+  initialOverrides?: Partial<IntakeAnswers> & {
+    rawResponses?: Record<string, any>;
+    readinessScoreOverride?: number;
+    processWasteTaxOverride?: number;
+    promiseGapExposureOverride?: number;
+    /** @deprecated Use promiseGapExposureOverride */
+    promiseGapRiskOverride?: number;
+  };
 }
 
 export function DiagnosticProvider({ children, initialOverrides }: DiagnosticProviderProps) {
@@ -88,7 +129,6 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
           setAnswers((prev) => ({
             ...prev,
             ...parsed.answers,
-            // Allow explicit initialOverrides from parent to override cached localStorage
             ...(initialOverrides || {}),
             organizationName: initialOverrides?.organizationName 
               ? sanitizeOrgName(initialOverrides.organizationName)
@@ -126,6 +166,7 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
 
   const calculations = useMemo(() => calculateDiagnosticMetrics(answers), [answers]);
 
+  // Maintain existing sector registry integration for UI compatibility
   const nodeSummaries: NodeStatus[] = useMemo(() => {
     const sectorConfig = SECTOR_COPY_REGISTRY[answers.sector] || SECTOR_COPY_REGISTRY.FINANCE;
 
@@ -165,12 +206,19 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
     ];
   }, [answers.sector]);
 
+  // Strict fail-closed telemetry completion check: all 10 vectors must be valid integers 1-5
+  const isComplete = useMemo(() => {
+    const v = answers.vectorScores;
+    if (!v || typeof v !== "object") return false;
+    return REQUIRED_VECTOR_KEYS.every((k) => isValidVectorScore(v[k as keyof typeof v]));
+  }, [answers.vectorScores]);
+
   const state: DiagnosticState = {
     answers,
     calculations,
     nodeSummaries,
     sowSelections,
-    isComplete: true
+    isComplete
   };
 
   const setSector = useCallback((sector: SectorKey) => {
@@ -199,10 +247,6 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
     return encodeDiagnosticToken(answers, sowSelections);
   }, [answers, sowSelections]);
 
-  /**
-   * Async Server-Gated Restoration.
-   * State mutates ONLY when POST /api/verify-token confirms HMAC signature and TTL.
-   */
   const loadFromToken = useCallback(async (token: string): Promise<boolean> => {
     try {
       if (!token || typeof token !== "string") return false;
@@ -222,7 +266,7 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
       setSowSelections(data.sowSelections);
       return true;
     } catch {
-      return false; // Silent fail-closed: retain current state
+      return false;
     }
   }, []);
 
@@ -236,28 +280,121 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
     }
   }, []);
 
-  return (
-    <DiagnosticContext.Provider
-      value={{
-        state,
-        setSector,
-        setDecisionStage,
-        setOrganizationName,
-        updateSowOption,
-        loadFromToken,
-        generateShareToken,
-        resetDiagnostic
-      }}
-    >
-      {children}
-    </DiagnosticContext.Provider>
+  // -------------------------------------------------------------
+  // Control Plane Export Pipeline Adapters (Strict Fail-Closed Mode)
+  // -------------------------------------------------------------
+  const organizationName = answers.organizationName;
+  const sector = answers.sector;
+
+  // 1. Direct binding to engine calculations with explicit overrides (zero synthetic defaults)
+  const readinessIndex =
+    initialOverrides?.readinessScoreOverride ?? calculations.readinessIndex;
+
+  const processWasteTax =
+    initialOverrides?.processWasteTaxOverride ?? calculations.processWasteTax;
+
+  const promiseGapRisk =
+    initialOverrides?.promiseGapExposureOverride ??
+    initialOverrides?.promiseGapRiskOverride ??
+    calculations.promiseGapExposure;
+
+  // 2. Fail-closed vector derivation: missing or out-of-range vectors never pass audit gates.
+  // RAW_VECTORS is strictly emitted into rawResponseKeys only when isComplete is verified true.
+  const rawResponses = useMemo(() => {
+    if (initialOverrides?.rawResponses) {
+      return initialOverrides.rawResponses;
+    }
+
+    const v = answers.vectorScores;
+
+    return {
+      QUAD_EXE_COMPLETE: isVectorGatePassed(v?.v01, v?.v02),
+      QUAD_TEC_COMPLETE: isVectorGatePassed(v?.v03, v?.v04),
+      QUAD_MGR_COMPLETE: isVectorGatePassed(v?.v05, v?.v06),
+      QUAD_SYS_COMPLETE: isVectorGatePassed(v?.v07, v?.v08),
+      RUNTIME_SHADOW_QUEUE_ACTIVE: isValidVectorScore(v?.v07) && (v?.v07 as number) >= 3,
+      ...(isComplete && v ? { RAW_VECTORS: v } : {})
+    };
+  }, [initialOverrides?.rawResponses, answers.vectorScores, isComplete]);
+
+  const activeStabilizationFocus =
+    "Active Stabilization [Primary focus: containment of repeat operational rework]";
+
+  const unmanagedDriftImpact =
+    "Without verification gates and workflow stabilization criteria, Phase 02 automation may increase the probability of repeat rework and downstream reporting inconsistency during the initial rollout period... impacting reconciliations and risk reporting consistency.";
+
+  const getDiagnosticSnapshot = useCallback((): DiagnosticExportState => {
+    return deriveDynamicDiagnosticSnapshot({
+      companyName: organizationName,
+      sector,
+      rawResponses,
+      readinessValue: readinessIndex,
+      wasteTaxValue: processWasteTax,
+      promiseGapValue: promiseGapRisk,
+      activeStabilizationFocus,
+      unmanagedDriftImpact
+    });
+  }, [
+    organizationName,
+    sector,
+    rawResponses,
+    readinessIndex,
+    processWasteTax,
+    promiseGapRisk,
+    activeStabilizationFocus,
+    unmanagedDriftImpact
+  ]);
+
+  const value = useMemo(
+    () => ({
+      state,
+      setSector,
+      setDecisionStage,
+      setOrganizationName,
+      updateSowOption,
+      loadFromToken,
+      generateShareToken,
+      resetDiagnostic,
+      organizationName,
+      sector,
+      readinessIndex,
+      processWasteTax,
+      promiseGapRisk,
+      activeStabilizationFocus,
+      unmanagedDriftImpact,
+      rawResponses,
+      getDiagnosticSnapshot
+    }),
+    [
+      state,
+      setSector,
+      setDecisionStage,
+      setOrganizationName,
+      updateSowOption,
+      loadFromToken,
+      generateShareToken,
+      resetDiagnostic,
+      organizationName,
+      sector,
+      readinessIndex,
+      processWasteTax,
+      promiseGapRisk,
+      activeStabilizationFocus,
+      unmanagedDriftImpact,
+      rawResponses,
+      getDiagnosticSnapshot
+    ]
   );
+
+  return <DiagnosticContext.Provider value={value}>{children}</DiagnosticContext.Provider>;
 }
 
-export function useDiagnostic() {
+export function useDiagnostic(): DiagnosticContextType {
   const context = useContext(DiagnosticContext);
   if (!context) {
     throw new Error("useDiagnostic must be used within a DiagnosticProvider");
   }
   return context;
 }
+
+export const useDiagnosticContext = useDiagnostic;
