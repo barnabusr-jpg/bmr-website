@@ -61,6 +61,19 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fecdd3",
   },
+  calibrationCallout: {
+    backgroundColor: "#18181b",
+    borderWidth: 1,
+    borderColor: "#27272a",
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 16,
+  },
+  calibrationText: {
+    fontSize: 8,
+    color: "#d4d4d8",
+    fontFamily: "Helvetica-Oblique",
+  },
   grid: {
     flexDirection: "row",
     gap: 12,
@@ -151,14 +164,40 @@ const styles = StyleSheet.create({
   },
 });
 
+export interface ExtendedPDFExportPayload extends AuditReportExportPayload {
+  status?: string;
+  is_locked?: boolean;
+  sliderAdjustments?: {
+    spend?: number;
+    decay?: number;
+    tax?: number;
+  };
+}
+
 interface PDFPromiseGapDocumentProps {
-  data: AuditReportExportPayload;
+  data: ExtendedPDFExportPayload;
 }
 
 export const PDFPromiseGapDocument: React.FC<PDFPromiseGapDocumentProps> = ({
   data,
 }) => {
-  const { headlineMetrics, nodeBreakdown, auditId, timestamp, sector } = data;
+  const { 
+    headlineMetrics, 
+    nodeBreakdown, 
+    auditId, 
+    timestamp, 
+    sector,
+    status,
+    is_locked,
+    sliderAdjustments,
+  } = data;
+
+  const isLocked = Boolean(
+    is_locked ||
+    status?.toUpperCase() === "LOCKED" ||
+    status?.toUpperCase() === "PAID" ||
+    status?.toUpperCase() === "COMMITTED"
+  );
 
   return (
     <Document>
@@ -182,6 +221,15 @@ export const PDFPromiseGapDocument: React.FC<PDFPromiseGapDocumentProps> = ({
             )}
           </View>
         </View>
+
+        {isLocked && sliderAdjustments && (
+          <View style={styles.calibrationCallout}>
+            <Text style={styles.kicker}>// COMMITTED WORKFORCE RECALIBRATION</Text>
+            <Text style={styles.calibrationText}>
+              Parameters locked: ${sliderAdjustments.spend ?? "—"}M annual software spend | {sliderAdjustments.decay ?? "—"}% operational decay rate.
+            </Text>
+          </View>
+        )}
 
         <View style={styles.grid}>
           <View style={styles.cardGreen}>
@@ -239,6 +287,7 @@ export const PDFPromiseGapDocument: React.FC<PDFPromiseGapDocumentProps> = ({
 
         <View style={styles.footer} fixed>
           <Text>Audit ID: {auditId}</Text>
+          <Text>Status: {isLocked ? "LOCKED & VERIFIED" : "INITIAL BASELINE"}</Text>
           <Text>Generated: {timestamp}</Text>
         </View>
       </Page>
