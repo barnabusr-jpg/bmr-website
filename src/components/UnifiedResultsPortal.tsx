@@ -3,13 +3,12 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import { useRouter } from "next/router";
-import { Lock, Activity, Download } from "lucide-react";
+import { Lock, Activity } from "lucide-react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import { AuditRecord } from "@/types/database.types";
 import { isFiniteNumber } from "@/utils/auditGuards";
 import { formatBMRCurrency } from "@/utils/formatters";
-import { dispatchPDFGeneration } from "@/workers/auditExportWorker";
 import ExportPlaybookButton from "@/components/diagnostic/ExportPlaybookButton";
 
 interface DisplayAnomaly {
@@ -112,7 +111,6 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
 
   const [audit, setAudit] = useState<AuditRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [exportingPdf, setExportingPdf] = useState(false);
 
   useEffect(() => {
     if (!resolvedId) return;
@@ -250,26 +248,6 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
     };
   }, [dbDecay, spend, audit?.roi_pct, audit?.sector, audit?.sector_multiplier, querySector, live_sync, tax]);
 
-  const handleDownloadPreliminaryBrief = async () => {
-    if (!audit) return;
-    try {
-      setExportingPdf(true);
-      const blob = await dispatchPDFGeneration(audit, metrics);
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `BMR-Diagnostic-Brief-${audit.id}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (err) {
-      console.error("PDF generation failed:", err);
-    } finally {
-      setExportingPdf(false);
-    }
-  };
-
   const anomaliesList: DisplayAnomaly[] = useMemo(() => {
     return [
       { 
@@ -323,14 +301,6 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
         </div>
         <div className="flex items-center gap-3">
           <ExportPlaybookButton />
-          <button
-            onClick={handleDownloadPreliminaryBrief}
-            disabled={exportingPdf}
-            className="flex items-center gap-2 border border-slate-300 hover:border-slate-950 text-slate-900 text-xs px-4 py-2 font-bold uppercase tracking-wider rounded-sm transition-colors cursor-pointer disabled:opacity-50"
-          >
-            <Download size={14} />
-            {exportingPdf ? "Exporting Brief..." : "Export Promise Gap™ PDF"}
-          </button>
         </div>
       </nav>
 
@@ -340,7 +310,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
           <span className="text-slate-500 font-mono text-xs font-bold block">// METHODOLOGY & CALCULATION INPUTS</span>
           <p className="text-slate-700 font-sans text-xs leading-relaxed max-w-4xl">
             This diagnostic uses standard industry baselines calibrated to your captured AI Readiness Score of {100 - dbDecay}%.
-            Specific workforce calibration parameters assume default inputs of $${spend}M annual software allocations across {metrics.fteCount} FTE resources.
+            Specific workforce calibration parameters assume default inputs of ${spend}M annual software allocations across {metrics.fteCount} FTE resources.
           </p>
         </div>
 
@@ -398,7 +368,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
           </div>
         </div>
 
-        {/* METRICS SPLIT CARDS (Matches Screenshot Exactly) */}
+        {/* METRICS SPLIT CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-white border border-slate-200 p-8 md:p-12 flex flex-col items-center justify-center text-center space-y-2 rounded-sm shadow-sm">
             <div className="text-4xl md:text-5xl font-black text-slate-950 font-mono tracking-tight">{formatBMRCurrency(metrics.internalReworkTax)}</div>
@@ -410,7 +380,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
           </div>
         </div>
 
-        {/* ANOMALIES MATRIX (Matches Screenshot Exactly) */}
+        {/* ANOMALIES MATRIX */}
         <div className="pt-4 text-left">
           <div className="border-b border-slate-200 pb-4 mb-6">
             <span className="text-xs font-mono font-bold text-slate-500 block uppercase tracking-wider">// HIGH-RISK OPERATIONAL AREAS</span>
@@ -443,7 +413,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
           </div>
         </div>
 
-        {/* ENGAGEMENT ROADMAP & FORENSIC MILESTONES (NEXT STEPS PRESERVED) */}
+        {/* ENGAGEMENT ROADMAP & FORENSIC MILESTONES */}
         <div className="mt-12 border border-slate-200 bg-white p-8 rounded-sm shadow-sm font-sans">
           <div className="border-b border-slate-200 pb-4 mb-6">
             <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-1">
