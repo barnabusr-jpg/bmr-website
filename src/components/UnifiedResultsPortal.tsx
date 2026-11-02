@@ -1,13 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { useParams, useSearchParams } from "next/navigation";
-import { Lock, Unlock, Activity, FileText } from "lucide-react";
+import { useRouter } from "next/router";
+import { useSearchParams } from "next/navigation";
+import { Lock, Unlock, Activity } from "lucide-react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import { AuditRecord } from "@/types/database.types";
 import { isFiniteNumber } from "@/utils/auditGuards";
 import { formatBMRCurrency } from "@/utils/formatters";
+
+interface UnifiedResultsPortalProps {
+  auditId?: string;
+}
 
 interface DisplayAnomaly {
   id: string;
@@ -103,15 +108,13 @@ function RealTimeLossTicker({ diagnosticCompletedAt, exposure, anomalies, isArch
   );
 }
 
-export default function UnifiedResultsPortal() {
-  const params = useParams();
+export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalProps) {
+  const router = useRouter();
   const searchParams = useSearchParams();
 
-  const rawId = params?.id;
-  const resolvedId = typeof rawId === "string" ? rawId : null;
+  const resolvedId = auditId || (typeof router?.query?.id === "string" ? router.query.id : null);
 
   const live_sync = searchParams?.get("live_sync");
-  const unblurred = searchParams?.get("unblurred");
   const decay = searchParams?.get("decay");
   const querySpend = searchParams?.get("spend");
   const tax = searchParams?.get("tax");
@@ -127,7 +130,6 @@ export default function UnifiedResultsPortal() {
 
     const isAuditRecord = (x: unknown): x is AuditRecord => {
       if (typeof x !== "object" || x === null) return false;
-
       return (
         "id" in x && typeof x.id === "string" &&
         "created_at" in x && typeof x.created_at === "string" &&
@@ -158,7 +160,6 @@ export default function UnifiedResultsPortal() {
     fetchInitialAudit();
 
     let channel: RealtimeChannel | null = null;
-
     try {
       channel = supabase
         .channel(`live-workshop-${resolvedId}`)
@@ -172,13 +173,11 @@ export default function UnifiedResultsPortal() {
           },
           (payload) => {
             const next = payload?.new;
-
             if (!cancelled && next && isAuditRecord(next)) {
               setAudit((prev) => (prev ? { ...prev, ...next } : next));
             }
           }
         );
-
       channel.subscribe();
     } catch (wsErr) {
       console.warn("Realtime WebSocket connection bypassed:", wsErr);
@@ -190,12 +189,13 @@ export default function UnifiedResultsPortal() {
     };
   }, [resolvedId]);
 
-  // Lock status gate: Slider changes are ONLY applied if Results are locked/committed
+  // Lock status gate: calibration flips to locked only upon explicit lock commitment
   const isResultsLocked = useMemo(() => {
     const st = audit?.status?.toUpperCase();
-    return st === "LOCKED" || st === "PAID" || Boolean(audit?.is_released) || Boolean((audit as any)?.is_locked);
-  }, [audit?.status, audit?.is_released, (audit as any)?.is_locked]);
+    return st === "LOCKED" || Boolean((audit as any)?.is_locked);
+  }, [audit?.status, (audit as any)?.is_locked]);
 
+  // Decoupled Metrics: Sliders do not overwrite customer metrics until locked
   const dbDecay = useMemo(() => {
     if (isResultsLocked && live_sync === "true" && decay) {
       const parsed = parseInt(decay, 10);
@@ -212,36 +212,62 @@ export default function UnifiedResultsPortal() {
     return audit?.ai_spend || 1.2;
   }, [isResultsLocked, live_sync, querySpend, audit?.ai_spend]);
 
-  const isPhaseTwoActive = useMemo(() => {
-    return !!audit?.is_released || unblurred === "true" || audit?.status?.toUpperCase() === 'PAID' || audit?.status?.toUpperCase() === 'UNBLURRED';
-  }, [audit?.is_released, unblurred, audit?.status]);
-
   const isPaidGateUnlocked = useMemo(() => audit?.status?.toUpperCase() === 'PAID', [audit?.status]);
 
   const metrics = useMemo(() => {
-    const fteCount = audit?.roi_pct ? audit.roi_pct : Math.round((spend * 1000000) / 200000) || 6;
-    const baseLaborTaxPool = (dbDecay / 100) * 0.5 * (fteCount * 160000 * 1.3);
-    const selectedSectorKey = (querySector ?? audit?.sector ?? "SERVICES").toUpperCase().trim().replace(/\s+/g, "_");
-    const activeSectorMultiplier = audit?.sector_multiplier || SECTOR_MULTIPLIERS[selectedSectorKey] || SECTOR_MULTIPLIERS.DEFAULT;
+    const toSafeNumber = (val: unknown, fallback: number): number => {
+      if (isFiniteNumber(val)) return val;
+      if (typeof val === "string") {
+        const parsed = Number(val);
+        if (isFiniteNumber(parsed)) return parsed;
+      }
+      return fallback;
+    };
+
+    const safeSpend = Math.max(0, toSafeNumber(spend, 1.2));
+    const safeDecay = Math.max(0, toSafeNumber(dbDecay, 24));
+
+    const rawRoi = audit?.roi_pct;
+    const rawFte = toSafeNumber(rawRoi, 0);
+    const safeFteCount =
+      rawFte > 0
+        ? rawFte
+        : Math.round((safeSpend * 1000000) / 200000) || 6;
+
+    const selectedSectorKey = (querySector ?? audit?.sector ?? "SERVICES")
+      .toUpperCase()
+      .trim()
+      .replace(/\s+/g, "_");
+
+    const auditSectorMult = toSafeNumber(audit?.sector_multiplier, 1.0);
+    const activeSectorMultiplier =
+      auditSectorMult > 0 && auditSectorMult !== 1.0
+        ? auditSectorMult
+        : SECTOR_MULTIPLIERS[selectedSectorKey] ||
+          SECTOR_MULTIPLIERS.DEFAULT ||
+          1.28;
+
+    const fullyLoadedCost = 160000 * 1.3;
+    const baseLaborTaxPool = (safeDecay / 100) * 0.5 * (safeFteCount * fullyLoadedCost);
 
     let totalLaborTaxPool = baseLaborTaxPool;
-    let totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
+    let totalExposure = Math.round(0.22 * (safeDecay / 25) * (safeSpend * 1000000) * activeSectorMultiplier);
 
     if (isResultsLocked && live_sync === "true" && tax) {
       const parsedTax = parseFloat(tax);
       if (isFiniteNumber(parsedTax)) {
         totalLaborTaxPool = parsedTax < 1000 ? parsedTax * 1000000 : parsedTax;
-        totalExposure = Math.round(0.22 * (dbDecay / 25) * (spend * 1000000) * activeSectorMultiplier);
+        totalExposure = Math.round(0.22 * (safeDecay / 25) * (safeSpend * 1000000) * activeSectorMultiplier);
       }
     }
 
     return {
-      fteCount,
+      fteCount: safeFteCount,
       activeSectorMultiplier,
       totalLaborTaxPool,
       internalReworkTax: totalLaborTaxPool * 0.60,
       operationalDragTax: totalLaborTaxPool * 0.40,
-      exposure: totalExposure
+      exposure: totalExposure,
     };
   }, [
     dbDecay, 
@@ -250,13 +276,13 @@ export default function UnifiedResultsPortal() {
     audit?.sector, 
     audit?.sector_multiplier, 
     querySector, 
-    isResultsLocked,
+    isResultsLocked, 
     live_sync, 
     tax
   ]);
 
-  const accentColorClass = isPhaseTwoActive ? "text-red-700" : "text-emerald-700";
-  const borderAccentClass = isPhaseTwoActive ? "border-red-700" : "border-slate-900";
+  const accentColorClass = isResultsLocked ? "text-red-700" : "text-emerald-700";
+  const borderAccentClass = isResultsLocked ? "border-red-700" : "border-slate-900";
 
   const genericAnomalies: DisplayAnomaly[] = useMemo(() => {
     return [
@@ -264,25 +290,25 @@ export default function UnifiedResultsPortal() {
         id: `Data Safety Rules // Impact $${(metrics.totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
         description: "Baseline evaluation complete. Outside vendor data rules and safety verification controls are held under evaluation protocol.", 
         severity: "High Priority", 
-        directive: "Stage 02 calibration will validate ingestion isolation requirements before remediation is finalized." 
+        directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." 
       },
       { 
         id: `Vendor Change Response // Impact $${(metrics.totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
         description: "Baseline evaluation complete. System response mechanisms for outside vendor API changes are held under evaluation protocol.", 
         severity: "High Priority", 
-        directive: "Stage 02 calibration will confirm interface-change safeguards required to prevent runtime degradation." 
+        directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." 
       },
       { 
         id: `Staff Memory Dependency // Impact $${(metrics.totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
         description: "Baseline evaluation complete. Daily operational reliance on employee memory for broken system hand-offs is held under evaluation protocol.", 
         severity: "Medium Priority", 
-        directive: "Stage 02 calibration will define fallback and escalation gates based on operational handoff risk." 
+        directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." 
       },
       { 
         id: `Emergency Playbooks // Impact $${(metrics.totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
         description: "Baseline evaluation complete. Automated fallback guides and team playbooks for workflow failures are held under evaluation protocol.", 
         severity: "Medium Priority", 
-        directive: "Stage 02 calibration will establish governance and telemetry thresholds for secure scaling." 
+        directive: "Compile your SteerCo Funding Dossier and book an executive briefing to reveal full remediation steps." 
       }
     ];
   }, [metrics.totalLaborTaxPool]);
@@ -326,25 +352,18 @@ export default function UnifiedResultsPortal() {
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans selection:bg-red-100 selection:text-red-900 overflow-x-hidden text-left antialiased">
       <div className="h-1 bg-slate-950 w-full" />
 
-      {/* HEADER: Clean layout matching original design, zero grey box */}
+      {/* HEADER: Clean layout, no grey boxes or SteerCo buttons */}
       <nav className="h-20 bg-white border-b border-slate-200 px-6 md:px-12 flex items-center justify-between shadow-sm">
         <div>
           <div className="text-slate-950 text-xl font-extrabold tracking-tight">
             BMR<span className={accentColorClass}>SOLUTIONS</span>
           </div>
           <span className="text-xs text-slate-500 font-mono block mt-0.5">
-            {isPhaseTwoActive ? "Portal Mode // Continuous Governance Control Plane" : "Portal Mode // Diagnostic Baseline"}
+            {isResultsLocked
+              ? "Portal Mode // Continuous Governance Control Plane"
+              : "Portal Mode // Diagnostic Baseline"}
           </span>
         </div>
-        {isPhaseTwoActive && (
-          <button 
-            onClick={() => resolvedId && window.open(`/api/generate-pdf?id=${resolvedId}`, "_blank")} 
-            className="flex items-center gap-2 bg-slate-950 hover:bg-red-700 text-white text-xs px-5 py-2.5 font-bold uppercase tracking-wider rounded-sm transition-colors shadow-sm cursor-pointer"
-          >
-            <FileText size={14} />
-            Generate SteerCo Funding Dossier & SOW
-          </button>
-        )}
       </nav>
 
       {/* MAIN BODY */}
@@ -352,14 +371,13 @@ export default function UnifiedResultsPortal() {
         <div className="border-l-2 border-slate-300 pl-4 py-1 space-y-1">
           <span className="text-slate-500 font-mono text-xs font-bold block">// METHODOLOGY & CALCULATION INPUTS</span>
           <p className="text-slate-700 font-sans text-xs leading-relaxed max-w-4xl">
-            {isPhaseTwoActive 
-              ? `These operational metrics are actively calibrated to your team's real-world footprint of $${spend}M in annual software allocations across ${metrics.fteCount} FTE resources.` 
-              : `This diagnostic uses standard industry baselines calibrated to your captured AI Readiness Score of ${100 - dbDecay}%. Specific workforce calibration parameters assume default inputs of $${spend}M annual software allocations across ${metrics.fteCount} FTE resources.`
-            }
+            {isResultsLocked
+              ? `These operational metrics are actively calibrated to your team's real-world footprint of $${spend}M in annual software allocations across ${metrics.fteCount} FTE resources.`
+              : `This diagnostic uses standard industry baselines calibrated to your captured AI Readiness Score of ${100 - dbDecay}%. Specific workforce calibration parameters assume default inputs of $${spend}M annual software allocations across ${metrics.fteCount} FTE resources.`}
           </p>
         </div>
 
-        {/* HERO EXECUTIVE CARD */}
+        {/* HERO EXECUTIVE CARD: Flips to Executive Summary once calibrated & locked */}
         <div className={`bg-white text-slate-950 p-8 md:p-12 border-l-8 md:border-l-[12px] grid grid-cols-1 md:grid-cols-12 gap-8 items-center border-y border-r border-slate-200 shadow-sm ${borderAccentClass}`}>
           <div className="md:col-span-7 flex flex-col justify-between space-y-6">
             <div>
@@ -367,7 +385,7 @@ export default function UnifiedResultsPortal() {
                 Independent Governance // Zero Security Footprint
               </span>
               <h1 className="text-3xl sm:text-4xl md:text-5xl font-black uppercase tracking-tight text-slate-950">
-                {isPhaseTwoActive ? "Executive Summary" : "Diagnostic Results"}
+                {isResultsLocked ? "Executive Summary" : "Diagnostic Results"}
               </h1>
               <p className="text-xs font-mono text-slate-500 mt-2">
                 Prepared for: {audit?.org_name || "Evaluation Client System"}
@@ -403,7 +421,7 @@ export default function UnifiedResultsPortal() {
           <div className="md:col-span-4 flex flex-col justify-center items-start md:items-end text-left md:text-right pt-4 md:pt-0 min-w-[240px] shrink-0">
             <span className="text-xs font-mono font-bold text-slate-500 block uppercase tracking-wider">Estimated Ongoing Capital Loss</span>
             <RealTimeLossTicker 
-              diagnosticCompletedAt={audit?.compiled_at || audit?.created_at || audit?.updated_at || undefined} 
+              diagnosticCompletedAt={audit?.compiled_at || audit?.created_at || (audit as any)?.updated_at || undefined} 
               exposure={safeExposureSum} 
               anomalies={activeAnomaliesList}
               isArchived={audit?.status?.toUpperCase() === 'ARCHIVED'}
