@@ -10,7 +10,7 @@ import type { AuditReportExportPayload } from "@/workers/auditExportWorker";
 import {
   formatBMRCurrency,
   formatBMRMultiplier,
-  formatBMRExpactation,
+  formatBMRExpectation,
 } from "@/utils/formatters";
 
 const styles = StyleSheet.create({
@@ -189,7 +189,7 @@ export const PDFPromiseGapDocument: React.FC<PDFPromiseGapDocumentProps> = ({
               Upstream Claim (Visible Speed)
             </Text>
             <Text style={styles.metricLargeGreen}>
-              {formatBMRExpactation(headlineMetrics.grossUpstreamHours)}
+              {formatBMRExpectation(headlineMetrics.grossUpstreamHours)}
             </Text>
             <Text style={styles.cardSubtext}>
               Reported gross efficiency and seat adoption prior to downstream rework modulation.
