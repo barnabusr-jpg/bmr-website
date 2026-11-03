@@ -117,6 +117,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
   const live_sync = searchParams?.get("live_sync");
   const decay = searchParams?.get("decay");
   const querySpend = searchParams?.get("spend");
+  const queryFte = searchParams?.get("fte");
   const tax = searchParams?.get("tax");
   const querySector = searchParams?.get("sector");
 
@@ -124,16 +125,24 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
   const [loading, setLoading] = useState(true);
 
   // Freeze the initial diagnostic intake metrics so real-time updates do not mutate baseline
-  const intakeBaselineRef = useRef<{ decay: number; spend: number } | null>(null);
+  const intakeBaselineRef = useRef<{ decay: number; spend: number; fte: number }>({
+    decay: 24,
+    spend: 1.2,
+    fte: 6,
+  });
+
+  const [hasCapturedBaseline, setHasCapturedBaseline] = useState(false);
 
   useEffect(() => {
-    if (audit && !intakeBaselineRef.current) {
+    if (audit && !hasCapturedBaseline) {
       intakeBaselineRef.current = {
-        decay: audit.decay_pct || 24,
-        spend: audit.ai_spend || 1.2,
+        decay: audit.decay_pct ?? 24,
+        spend: audit.ai_spend ?? 1.2,
+        fte: (audit.roi_pct && audit.roi_pct > 0) ? audit.roi_pct : 6,
       };
+      setHasCapturedBaseline(true);
     }
-  }, [audit]);
+  }, [audit, hasCapturedBaseline]);
 
   useEffect(() => {
     if (!resolvedId) return;
@@ -214,10 +223,10 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
       return isFiniteNumber(parsed) ? parsed : 24;
     }
     // While in diagnostic baseline (unreleased), preserve initial intake value
-    if (!isResultsReleased && intakeBaselineRef.current) {
+    if (!isResultsReleased) {
       return intakeBaselineRef.current.decay;
     }
-    return audit?.decay_pct || 24;
+    return audit?.decay_pct ?? intakeBaselineRef.current.decay;
   }, [isResultsReleased, live_sync, decay, audit?.decay_pct]);
 
   const spend = useMemo(() => {
@@ -226,11 +235,23 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
       return isFiniteNumber(parsed) ? parsed : 1.2;
     }
     // While in diagnostic baseline (unreleased), preserve initial intake value
-    if (!isResultsReleased && intakeBaselineRef.current) {
+    if (!isResultsReleased) {
       return intakeBaselineRef.current.spend;
     }
-    return audit?.ai_spend || 1.2;
+    return audit?.ai_spend ?? intakeBaselineRef.current.spend;
   }, [isResultsReleased, live_sync, querySpend, audit?.ai_spend]);
+
+  const fte = useMemo(() => {
+    if (isResultsReleased && live_sync === "true" && queryFte) {
+      const parsed = parseInt(queryFte, 10);
+      if (isFiniteNumber(parsed) && parsed > 0) return parsed;
+    }
+    // While in diagnostic baseline (unreleased), preserve initial intake value
+    if (!isResultsReleased) {
+      return intakeBaselineRef.current.fte;
+    }
+    return (audit?.roi_pct && audit.roi_pct > 0) ? audit.roi_pct : intakeBaselineRef.current.fte;
+  }, [isResultsReleased, live_sync, queryFte, audit?.roi_pct]);
 
   const isPaidGateUnlocked = useMemo(() => audit?.status?.toUpperCase() === 'PAID', [audit?.status]);
 
@@ -246,13 +267,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
 
     const safeSpend = Math.max(0, toSafeNumber(spend, 1.2));
     const safeDecay = Math.max(0, toSafeNumber(dbDecay, 24));
-
-    const rawRoi = audit?.roi_pct;
-    const rawFte = toSafeNumber(rawRoi, 0);
-    const safeFteCount =
-      rawFte > 0
-        ? rawFte
-        : Math.round((safeSpend * 1000000) / 200000) || 6;
+    const safeFteCount = Math.max(1, toSafeNumber(fte, 6));
 
     const selectedSectorKey = (querySector ?? audit?.sector ?? "SERVICES")
       .toUpperCase()
@@ -292,7 +307,7 @@ export default function UnifiedResultsPortal({ auditId }: UnifiedResultsPortalPr
   }, [
     dbDecay, 
     spend, 
-    audit?.roi_pct, 
+    fte,
     audit?.sector, 
     audit?.sector_multiplier, 
     querySector, 
