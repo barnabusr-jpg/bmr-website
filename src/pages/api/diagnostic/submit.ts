@@ -6,62 +6,77 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { accessCode, responses, rawResponses, orgName } = req.body;
+  const { accessCode, responses, rawResponses } = req.body;
   const answers = responses || rawResponses;
 
   if (!accessCode) {
     return res.status(400).json({ error: 'INVALID_ACCESS_CODE', message: 'Missing access code.' });
   }
 
+  const cleanCode = String(accessCode).trim().toUpperCase();
+
   try {
-    // 1. Find operator to verify existence and fetch group_id / org
+    // 1. Locate operator by access_code and verify existence
     const { data: op, error: lookupError } = await supabase
       .from('operators')
-      .select('*')
-      .eq('access_code', accessCode)
+      .select('id, audit_id, status')
+      .ilike('access_code', cleanCode)
       .maybeSingle();
 
-    if (lookupError || !op) {
-      return res.status(401).json({ error: 'INVALID_ACCESS_CODE', message: 'Operator not found.' });
+    if (lookupError) {
+      console.error('OPERATOR_LOOKUP_ERROR:', lookupError);
+      return res.status(500).json({ error: 'DB_LOOKUP_ERROR', message: lookupError.message });
     }
 
-    if (op.status === 'completed' || op.survey_completed === true) {
-      return res.status(409).json({ error: 'ALREADY_COMPLETED', message: 'Assessment already completed.' });
+    if (!op) {
+      return res.status(404).json({ error: 'INVALID_ACCESS_CODE', message: 'Operator not found.' });
     }
 
-    // 2. Record the individual signal
+    if (op.status === 'completed') {
+      return res.status(200).json({
+        success: true,
+        message: 'ALREADY_COMPLETED',
+        isFinished: true,
+      });
+    }
+
+    // 2. Persist responses and mark status as completed
     const { error: opError } = await supabase
       .from('operators')
       .update({
         raw_responses: answers,
         status: 'completed',
-        survey_completed: true,
-        is_authorized: false,
       })
-      .eq('access_code', accessCode);
+      .eq('id', op.id);
 
-    if (opError) throw opError;
+    if (opError) {
+      console.error('OPERATOR_UPDATE_ERROR:', opError);
+      return res.status(500).json({ error: 'DB_UPDATE_ERROR', message: opError.message });
+    }
 
-    // 3. Check triangulation status
-    const targetGroup = op.group_id || orgName;
-    const { data: activeNodes } = await supabase
-      .from('operators')
-      .select('status')
-      .eq('group_id', targetGroup);
+    // 3. Evaluate triangulation node count using audit_id
+    if (op.audit_id) {
+      const { data: activeNodes, error: counterError } = await supabase
+        .from('operators')
+        .select('status')
+        .eq('audit_id', op.audit_id);
 
-    const completedCount = activeNodes?.filter((n) => n.status === 'completed').length || 0;
+      if (!counterError && activeNodes) {
+        const completedCount = activeNodes.filter((n) => n.status === 'completed').length;
 
-    if (completedCount >= 3) {
-      await supabase
-        .from('audits')
-        .update({ status: 'COMPLETE' })
-        .eq('org_name', targetGroup);
+        if (completedCount >= 3) {
+          await supabase
+            .from('audits')
+            .update({ status: 'COMPLETE' })
+            .eq('id', op.audit_id);
 
-      return res.status(200).json({
-        success: true,
-        message: 'TRIANGULATION_COMPLETE',
-        isFinished: true,
-      });
+          return res.status(200).json({
+            success: true,
+            message: 'TRIANGULATION_COMPLETE',
+            isFinished: true,
+          });
+        }
+      }
     }
 
     return res.status(200).json({
@@ -70,7 +85,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       isFinished: false,
     });
   } catch (error: any) {
-    console.error('SUBMISSION_ERROR:', error);
+    console.error('SUBMISSION_EXCEPTION:', error);
     return res.status(500).json({ error: 'PROCESSING_FAILURE', message: error.message });
   }
 }
