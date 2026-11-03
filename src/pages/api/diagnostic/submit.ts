@@ -19,7 +19,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // 1. Locate operator by access_code and verify existence
     const { data: op, error: lookupError } = await supabase
       .from('operators')
-      .select('id, audit_id, status')
+      .select('id, audit_id, status, persona_type, survey_completed')
       .ilike('access_code', cleanCode)
       .maybeSingle();
 
@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: 'INVALID_ACCESS_CODE', message: 'Operator not found.' });
     }
 
-    if (op.status === 'completed') {
+    if (op.status === 'completed' || op.survey_completed === true) {
       return res.status(200).json({
         success: true,
         message: 'ALREADY_COMPLETED',
@@ -40,12 +40,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       });
     }
 
-    // 2. Persist responses and mark status as completed
+    // 2. Persist responses and mark status completed
     const { error: opError } = await supabase
       .from('operators')
       .update({
         raw_responses: answers,
         status: 'completed',
+        survey_completed: true,
+        updated_at: new Date().toISOString(),
       })
       .eq('id', op.id);
 
@@ -54,29 +56,45 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: 'DB_UPDATE_ERROR', message: opError.message });
     }
 
-    // 3. Evaluate triangulation node count using audit_id
+    // 3. Update Audit track flag and evaluate triangulation
     if (op.audit_id) {
-      const { data: activeNodes, error: counterError } = await supabase
+      const persona = String(op.persona_type || '').toUpperCase();
+      const auditPatch: Record<string, any> = {
+        updated_at: new Date().toISOString(),
+      };
+
+      if (persona.includes('TECH')) auditPatch.has_technical = true;
+      else if (persona.includes('MANAGE')) auditPatch.has_managerial = true;
+      else if (persona.includes('EXEC')) auditPatch.has_executive = true;
+
+      const { data: activeNodes } = await supabase
         .from('operators')
-        .select('status')
+        .select('persona_type, status')
         .eq('audit_id', op.audit_id);
 
-      if (!counterError && activeNodes) {
-        const completedCount = activeNodes.filter((n) => n.status === 'completed').length;
+      const completedPersonas = new Set(
+        activeNodes?.filter((n) => n.status === 'completed' || n.persona_type === op.persona_type).map((n) => String(n.persona_type).toUpperCase())
+      );
 
-        if (completedCount >= 3) {
-          await supabase
-            .from('audits')
-            .update({ status: 'COMPLETE' })
-            .eq('id', op.audit_id);
+      const isComplete =
+        completedPersonas.has('TECHNICAL') &&
+        completedPersonas.has('MANAGERIAL') &&
+        completedPersonas.has('EXECUTIVE');
 
-          return res.status(200).json({
-            success: true,
-            message: 'TRIANGULATION_COMPLETE',
-            isFinished: true,
-          });
-        }
+      if (isComplete || (activeNodes && activeNodes.filter((n) => n.status === 'completed').length >= 3)) {
+        auditPatch.status = 'COMPLETE';
       }
+
+      await supabase
+        .from('audits')
+        .update(auditPatch)
+        .eq('id', op.audit_id);
+
+      return res.status(200).json({
+        success: true,
+        message: isComplete ? 'TRIANGULATION_COMPLETE' : 'SIGNAL_RECORDED',
+        isFinished: isComplete,
+      });
     }
 
     return res.status(200).json({
