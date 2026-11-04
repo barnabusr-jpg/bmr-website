@@ -1,23 +1,50 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { accessCode, responses, rawResponses } = req.body;
-  const answers = responses || rawResponses;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  // Fail-fast: ensure service role key is present to bypass RLS safely
+  if (!supabaseUrl || !serviceRoleKey) {
+    console.error('CRITICAL_ENV_ERROR: Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL');
+    return res.status(500).json({ error: 'SERVER_CONFIG_ERROR', message: 'Service role key not configured.' });
+  }
+
+  const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+    auth: { persistSession: false },
+  });
+
+  const { accessCode, responses, rawResponses } = req.body ?? {};
 
   if (!accessCode) {
     return res.status(400).json({ error: 'INVALID_ACCESS_CODE', message: 'Missing access code.' });
   }
 
+  // Defensive JSON normalization to guarantee valid JSONB persistence
+  const rawPayload = responses ?? rawResponses ?? {};
+  let answers: Record<string, any> = {};
+
+  if (typeof rawPayload === 'string') {
+    try {
+      answers = JSON.parse(rawPayload);
+    } catch (e) {
+      console.warn('WARN: rawResponses string was not valid JSON, storing as empty object', e);
+      answers = {};
+    }
+  } else if (typeof rawPayload === 'object' && rawPayload !== null) {
+    answers = rawPayload;
+  }
+
   const cleanCode = String(accessCode).trim().toUpperCase();
 
   try {
-    // 1. Locate operator by access_code and verify existence
-    const { data: op, error: lookupError } = await supabase
+    // 1. Locate operator by access_code via Service Role (bypasses RLS)
+    const { data: op, error: lookupError } = await supabaseAdmin
       .from('operators')
       .select('id, audit_id, status, persona_type, survey_completed')
       .ilike('access_code', cleanCode)
@@ -37,11 +64,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         success: true,
         message: 'ALREADY_COMPLETED',
         isFinished: true,
+        auditId: op.audit_id || null,
       });
     }
 
-    // 2. Persist responses and mark status completed
-    const { error: opError } = await supabase
+    // 2. Persist answers into operators.raw_responses JSONB & mark complete
+    const { error: opError } = await supabaseAdmin
       .from('operators')
       .update({
         raw_responses: answers,
@@ -53,13 +81,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (opError) {
       console.error('OPERATOR_UPDATE_ERROR:', opError);
-      return res.status(500).json({ error: 'DB_UPDATE_ERROR', message: opError.message });
+      return res.status(500).json({ error: 'OPERATOR_UPDATE_ERROR', message: opError.message });
     }
 
-    // 3. Update Audit track flag and evaluate triangulation
+    // 3. Update Audit track flag and copy responses to audits.raw_responses
     if (op.audit_id) {
       const persona = String(op.persona_type || '').toUpperCase();
       const auditPatch: Record<string, any> = {
+        raw_responses: answers,
         updated_at: new Date().toISOString(),
       };
 
@@ -67,13 +96,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       else if (persona.includes('MANAGE')) auditPatch.has_managerial = true;
       else if (persona.includes('EXEC')) auditPatch.has_executive = true;
 
-      const { data: activeNodes } = await supabase
+      const { data: activeNodes } = await supabaseAdmin
         .from('operators')
         .select('persona_type, status')
         .eq('audit_id', op.audit_id);
 
       const completedPersonas = new Set(
-        activeNodes?.filter((n) => n.status === 'completed' || n.persona_type === op.persona_type).map((n) => String(n.persona_type).toUpperCase())
+        activeNodes
+          ?.filter((n) => n.status === 'completed' || n.persona_type === op.persona_type)
+          .map((n) => String(n.persona_type).toUpperCase())
       );
 
       const isComplete =
@@ -82,10 +113,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         completedPersonas.has('EXECUTIVE');
 
       if (isComplete || (activeNodes && activeNodes.filter((n) => n.status === 'completed').length >= 3)) {
-        auditPatch.status = 'COMPLETE';
+        auditPatch.status = 'PENDING_RELEASE';
       }
 
-      await supabase
+      await supabaseAdmin
         .from('audits')
         .update(auditPatch)
         .eq('id', op.audit_id);
@@ -94,6 +125,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         success: true,
         message: isComplete ? 'TRIANGULATION_COMPLETE' : 'SIGNAL_RECORDED',
         isFinished: isComplete,
+        auditId: op.audit_id,
       });
     }
 
@@ -101,6 +133,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
       message: 'SIGNAL_RECORDED',
       isFinished: false,
+      auditId: null,
     });
   } catch (error: any) {
     console.error('SUBMISSION_EXCEPTION:', error);
