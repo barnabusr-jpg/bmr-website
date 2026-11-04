@@ -26,7 +26,7 @@ const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
 // Lightweight UUID validator to prevent malformed API queries
 const isValidUuid = (val?: string | null): boolean =>
-  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
 
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF', 'STRATEGIC'],
@@ -456,7 +456,7 @@ export default function ForensicEngineRoot() {
       setActiveAuditId(parentAuditId);
       activeAuditIdRef.current = parentAuditId;
 
-      if (typeof window !== 'undefined') {
+      if (typeof window !== 'undefined' && parentAuditId && isValidUuid(parentAuditId)) {
         const newUrl = `${window.location.pathname}?id=${parentAuditId}&org=${encodeURIComponent(sanitizedInput)}&flow=quad_node&auth=admin_verified_secure`;
         window.history.pushState({}, '', newUrl);
       }
@@ -488,28 +488,31 @@ export default function ForensicEngineRoot() {
 
     try {
       setSendingNudgeRole(persona);
-      const res = await fetch('/api/send-triangulation', {
+      const res = await fetch('/api/dispatch-directives', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          auditId: targetAudit,
-          companyName: triangulation?.companyName || companyName,
-          endpoints: { [persona]: email },
-          originUrl: `${window.location.origin}${window.location.pathname}`,
+          groupId: targetAudit,
+          orgName: triangulation?.companyName || companyName,
+          emails: { [persona]: email },
+          parentAuditId: targetAudit,
           isNudge: true,
           flowType: 'quad_node'
         })
       });
 
-      if (res.ok) {
-        alert(`Reminder email sent to ${PERSONA_DISPLAY_LABELS[persona].title} (${email}).`);
-      } else {
-        const err = await res.json();
-        alert(`Failed to send reminder: ${err.details || err.error || 'Server error'}`);
+      const contentType = res.headers.get('content-type') || '';
+      const raw = await res.text();
+      const data = contentType.includes('application/json') ? JSON.parse(raw) : { error: raw };
+
+      if (!res.ok) {
+        throw new Error(data?.message || data?.error || `HTTP ${res.status}`);
       }
+
+      alert(`Reminder email sent to ${PERSONA_DISPLAY_LABELS[persona].title} (${email}).`);
     } catch (err: any) {
       console.error("Reminder dispatch exception:", err);
-      alert(`Dispatch error: ${err.message}`);
+      alert(`Dispatch error: ${err?.message || String(err)}`);
     } finally {
       setSendingNudgeRole(null);
     }
@@ -537,28 +540,35 @@ export default function ForensicEngineRoot() {
 
     try {
       setIsDispatchingBatch(true);
-      const res = await fetch('/api/send-triangulation', {
+      const res = await fetch('/api/dispatch-directives', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          auditId: targetAudit,
-          companyName: triangulation?.companyName || companyName,
-          endpoints: currentEmails,
-          originUrl: `${window.location.origin}${window.location.pathname}`,
+          groupId: targetAudit,
+          orgName: triangulation?.companyName || companyName,
+          emails: currentEmails,
+          parentAuditId: targetAudit,
           isNudge: false,
           flowType: 'quad_node'
         })
       });
 
-      const data = await res.json();
-      if (res.ok && data.success) {
-        alert(`Templated assessment emails successfully dispatched to all 4 stakeholders.`);
+      const contentType = res.headers.get('content-type') || '';
+      const raw = await res.text();
+      const data = contentType.includes('application/json') ? JSON.parse(raw) : { error: raw };
+
+      if (!res.ok) {
+        throw new Error(data?.message || data?.error || `HTTP ${res.status}`);
+      }
+
+      if (data.success || !data.error) {
+        alert('Templated assessment emails successfully dispatched to all 4 stakeholders.');
       } else {
-        alert(`Dispatch failed: ${data.details || data.error || 'Server error'}`);
+        alert(`Dispatch failed: ${data.details || data.message || data.error || 'Server error'}`);
       }
     } catch (err: any) {
       console.error("Batch email dispatch exception:", err);
-      alert(`Dispatch error: ${err.message}`);
+      alert(`Dispatch error: ${err?.message || String(err)}`);
     } finally {
       setIsDispatchingBatch(false);
     }
