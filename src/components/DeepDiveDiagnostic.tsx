@@ -1,66 +1,118 @@
-"use client";
-import React, { useState, useEffect } from "react";
-import { BookOpen, Activity, ChevronRight } from "lucide-react";
-import { supabase } from "@/lib/supabaseClient";
-import { DEEP_DIVE_QUESTIONS } from "@/data/DeepDiveMatrix";
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Activity, ChevronRight } from 'lucide-react';
+import { DEEP_DIVE_QUESTIONS } from '@/data/deepDiveQuestions';
 
-export default function DeepDiveDiagnostic({ operatorId, userLens }: { operatorId: string, userLens: string }) {
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+interface DeepDiveDiagnosticProps {
+  operatorId: string;
+  userLens?: string;
+}
+
+export default function DeepDiveDiagnostic({ operatorId, userLens }: DeepDiveDiagnosticProps) {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const LENS_SIGNAL = (userLens || "EXECUTIVE").toUpperCase();
   const lensQuestions = DEEP_DIVE_QUESTIONS.filter((q) => q.lens === LENS_SIGNAL);
 
   useEffect(() => {
     async function validate() {
-      const { data } = await supabase.from('operators').select('is_authorized').eq('id', operatorId).single();
-      if (data?.is_authorized) setIsAuthorized(true);
-      setIsLoading(false);
+      if (!operatorId) {
+        setIsAuthorized(false);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const res = await fetch('/api/validate-operator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ operatorId }),
+        });
+
+        if (res.ok) {
+          const result = await res.json();
+          setIsAuthorized(Boolean(result.is_authorized));
+        } else {
+          setIsAuthorized(false);
+        }
+      } catch (err) {
+        console.error('Failed to validate operator:', err);
+        setIsAuthorized(false);
+      } finally {
+        setIsLoading(false);
+      }
     }
+
     validate();
   }, [operatorId]);
 
   const handleNext = async (answer: string) => {
-    if (!lensQuestions[currentIdx]) return;
+    if (!lensQuestions[currentIdx] || isSubmitting) return;
 
-    // Log individual response
-    await supabase.from('audit_responses').insert([{
-      operator_id: operatorId,
-      question_id: lensQuestions[currentIdx].id,
-      value: answer,
-      lens: LENS_SIGNAL
-    }]);
+    if (!isAuthorized) {
+      alert("Unauthorized session. Please refresh or verify your access code.");
+      return;
+    }
 
-    if (currentIdx < lensQuestions.length - 1) {
-      setCurrentIdx(currentIdx + 1);
-    } else {
-      // 🚨 THE ATOMIC HANDSHAKE
-      const finalReworkTax = 1.3; 
+    setIsSubmitting(true);
+    try {
+      // 1. Record response into operator's raw_responses JSONB via server route
+      const recordRes = await fetch('/api/record-response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          operatorId,
+          questionId: lensQuestions[currentIdx].id,
+          value: answer,
+          lens: LENS_SIGNAL,
+        }),
+      });
 
-      // 1. Force the Operator (Parent) to exist first
-      await supabase.from('operators').upsert({
-        id: operatorId,
-        is_authorized: true,
-        lens: LENS_SIGNAL
-      }, { onConflict: 'id' });
-
-      // 2. Insert the Audit (Child) and AWAIT confirmation
-      const { error } = await supabase.from('audits').insert([{
-        operator_id: operatorId,
-        rework_tax: finalReworkTax,
-        status: 'PENDING_RELEASE',
-        lens: LENS_SIGNAL
-      }]);
-
-      if (error) {
-        alert(`DATABASE_REJECTION: ${error.message}`);
+      if (!recordRes.ok) {
+        const errorData = await recordRes.json().catch(() => ({}));
+        alert(`Failed to save response: ${errorData.error || 'Server error'}`);
         return;
       }
 
-      // 3. Only redirect once Step 2 is confirmed
-      localStorage.setItem("bmr_active_lens", LENS_SIGNAL);
-      window.location.href = '/forensic-verdict';
+      // 2. Advance index or execute final completion handshake
+      if (currentIdx < lensQuestions.length - 1) {
+        setCurrentIdx((prev) => prev + 1);
+      } else {
+        const finalReworkTax = 1.3;
+
+        const completeRes = await fetch('/api/complete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            operatorId,
+            lens: LENS_SIGNAL,
+            reworkTax: finalReworkTax,
+          }),
+        });
+
+        if (!completeRes.ok) {
+          const errorData = await completeRes.json().catch(() => ({}));
+          alert(`DATABASE_REJECTION: ${errorData.error || 'Completion handshake failed'}`);
+          return;
+        }
+
+        const data = await completeRes.json();
+
+        // Redirect directly to the results dynamic page
+        if (data.auditId) {
+          window.location.href = `/results/${data.auditId}`;
+        } else {
+          window.location.href = '/results';
+        }
+      }
+    } catch (err: any) {
+      console.error('Submission pipeline error:', err);
+      alert(`NETWORK_ERROR: ${err.message || 'Request failed'}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -72,19 +124,9 @@ export default function DeepDiveDiagnostic({ operatorId, userLens }: { operatorI
     );
   }
 
-  if (!isAuthorized) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-900 font-mono text-xs font-bold uppercase tracking-wider">
-        Node Locked // Authorization Required
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row font-sans antialiased">
-      
-      {/* SIDEBAR NAVIGATION / FIELD GUIDE */}
-      <aside className="w-full md:w-80 bg-white border-b md:border-b-0 md:border-r border-slate-200 p-8 md:p-10 space-y-8 shadow-sm">
+    <div className="min-h-screen bg-white text-slate-900 flex flex-col md:flex-row">
+      <aside className="w-full md:w-80 border-b md:border-r border-slate-200 p-8 md:p-10 space-y-8 shadow-sm">
         <div className="flex items-center gap-2.5 text-slate-900 font-mono font-bold uppercase text-xs tracking-wider">
           <BookOpen size={18} className="text-slate-900" /> BMR Field Guide V3
         </div>
@@ -99,10 +141,8 @@ export default function DeepDiveDiagnostic({ operatorId, userLens }: { operatorI
         </div>
       </aside>
 
-      {/* MAIN QUESTION WORKBENCH */}
       <main className="flex-1 p-8 md:p-16 overflow-y-auto">
         <div className="max-w-3xl space-y-8">
-          
           <div className="flex items-center gap-2 text-slate-500 font-mono text-xs font-bold uppercase tracking-wider border-b border-slate-200 pb-4">
             <Activity size={16} className="text-slate-900 animate-pulse" /> Zone {lensQuestions[currentIdx]?.zone} // Lens: {LENS_SIGNAL}
           </div>
@@ -116,18 +156,17 @@ export default function DeepDiveDiagnostic({ operatorId, userLens }: { operatorI
               <button
                 key={opt}
                 type="button"
+                disabled={isSubmitting}
                 onClick={() => handleNext(opt)}
-                className="w-full p-5 bg-white border border-slate-200 text-slate-800 text-left hover:border-slate-900 hover:bg-slate-50 transition-all flex justify-between items-center group font-sans font-semibold text-xs md:text-sm rounded-md shadow-sm cursor-pointer"
+                className="w-full p-5 bg-white border border-slate-200 text-slate-800 text-left hover:border-slate-900 hover:bg-slate-50 transition-all flex justify-between items-center group font-sans font-semibold text-xs md:text-sm rounded-md shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span>{opt}</span>
                 <ChevronRight size={18} className="text-slate-400 group-hover:text-slate-900 transition-colors" />
               </button>
             ))}
           </div>
-
         </div>
       </main>
-
     </div>
   );
 }
