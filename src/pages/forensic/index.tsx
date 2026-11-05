@@ -35,6 +35,14 @@ const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR', 'CORE_SYSTEM', 'TERMINAL', 'SYSTEM'],
 };
 
+// Map database persona_type back to internal canonical PersonaKey
+const DB_PERSONA_TO_KEY: Record<string, PersonaKey> = {
+  EXECUTIVE: 'EXECUTIVE',
+  TECHNICAL: 'TECH_MGMT',
+  MANAGERIAL: 'OPS_MGMT',
+  SYSTEM: 'SYSTEM_USER'
+};
+
 // PRECOMPUTED O(1) REVERSE ALIAS MAP
 const PERSONA_ALIAS_MAP: Record<string, PersonaKey> = Object.entries(QUAD_PERSONA_TYPES).reduce(
   (acc, [canonicalKey, aliases]) => {
@@ -51,6 +59,10 @@ const PERSONA_ALIAS_MAP: Record<string, PersonaKey> = Object.entries(QUAD_PERSON
 const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
   if (!rawRole) return null;
   const clean = rawRole.toUpperCase().trim();
+
+  if (clean in DB_PERSONA_TO_KEY) {
+    return DB_PERSONA_TO_KEY[clean];
+  }
 
   if (clean in PERSONA_ALIAS_MAP) {
     return PERSONA_ALIAS_MAP[clean];
@@ -134,15 +146,20 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // BASELINE BOOT & HYDRATION (PURE MARKER-PRESENCE EVALUATION)
+  // BASELINE BOOT & HYDRATION WITH STRICT DUAL VERIFICATION (CODE + ROLE)
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
+
+    // Reset to verifying state to avoid the denial flash while preventing sticky state
+    setAuthorizedAdmin(null);
+    setHasSynced(false);
 
     const params = typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search)
       : new URLSearchParams();
 
+    const codeParam = params.get('code')?.trim().toUpperCase();
     let idParam = params.get('id') || activeAuditIdRef.current;
     const orgParam = params.get('org') || params.get('entity') || params.get('entity_code') || companyNameRef.current;
     const rawRole = params.get('role') || params.get('persona');
@@ -154,58 +171,91 @@ export default function ForensicEngineRoot() {
 
     try {
       const roleParam = resolvePersonaKey(rawRole);
-      const isParticipantRoute = !!roleParam;
 
-      const isAdminSession =
-        !isParticipantRoute &&
-        (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
+      // 1) PARTICIPANT MAGIC LINK PATH: Strict dual requirement (code + role)
+      if (codeParam || roleParam) {
+        // Disallow access if either parameter is missing
+        if (!codeParam || !roleParam) {
+          console.error("ACCESS_DENIED: Participant route requires both code and role parameters.");
+          setAuthorizedAdmin(false);
+          setHasSynced(true);
+          return;
+        }
 
-      // AUDIT ID RESOLVER FALLBACK: If missing on participant route, resolve from DB via org_name
-      if (!idParam && targetCompanyName) {
-        const { data: matchedAudit } = await supabase
-          .from('audits')
-          .select('id')
-          .ilike('org_name', targetCompanyName)
-          .order('created_at', { ascending: false })
-          .limit(1)
+        // Validate token against operators table
+        const { data: operatorRecord, error: opErr } = await supabase
+          .from('operators')
+          .select('id, audit_id, persona_type, is_authorized, survey_completed')
+          .eq('access_code', codeParam)
           .maybeSingle();
 
-        if (matchedAudit?.id) {
-          idParam = matchedAudit.id;
-          setActiveAuditId(matchedAudit.id);
-          activeAuditIdRef.current = matchedAudit.id;
-        }
-      }
-
-      if (isParticipantRoute && roleParam) {
-        if (idParam) {
-          setActiveAuditId(idParam);
-          activeAuditIdRef.current = idParam;
+        if (opErr || !operatorRecord || !operatorRecord.is_authorized) {
+          console.error("ACCESS_DENIED: Invalid or unauthorized magic access code.", opErr);
+          setAuthorizedAdmin(false);
+          setHasSynced(true);
+          return;
         }
 
-        if (targetCompanyName) {
-          setCompanyName(targetCompanyName);
-          setIsCompanyFromDB(true);
+        // Enforce strict track-matching: DB persona must match the URL role
+        const dbCanonicalPersona = DB_PERSONA_TO_KEY[operatorRecord.persona_type] || resolvePersonaKey(operatorRecord.persona_type);
+        if (roleParam !== dbCanonicalPersona) {
+          console.error(`CROSSOVER_BLOCKED: Token is locked to ${dbCanonicalPersona}, cannot access ${roleParam}.`);
+          setAuthorizedAdmin(false);
+          setHasSynced(true);
+          return;
         }
 
-        setActivePersona(roleParam);
-        const resolvedPillar: FunnelPillar = roleParam === 'OPS_MGMT' ? 'HAI' : roleParam === 'TECH_MGMT' ? 'AVS' : 'IGF';
+        // Successfully authorized participant
+        const verifiedTrack = dbCanonicalPersona;
+        const parentAuditId = operatorRecord.audit_id;
+
+        setActiveAuditId(parentAuditId);
+        activeAuditIdRef.current = parentAuditId;
+        setActivePersona(verifiedTrack);
+
+        const resolvedPillar: FunnelPillar =
+          verifiedTrack === 'OPS_MGMT' ? 'HAI' : verifiedTrack === 'TECH_MGMT' ? 'AVS' : 'IGF';
         setActivePillar(resolvedPillar);
 
+        // Fetch parent audit configuration
+        const { data: parentAudit } = await supabase
+          .from('audits')
+          .select('org_name, raw_responses')
+          .eq('id', parentAuditId)
+          .maybeSingle();
+
+        const orgName = parentAudit?.org_name || targetCompanyName || "Quad Node Client System";
+        setCompanyName(orgName);
+        setIsCompanyFromDB(true);
+
         setTriangulation(prev => ({
-          companyName: targetCompanyName || prev?.companyName || "Quad Node Client System",
+          companyName: orgName,
           pillar: resolvedPillar,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
           completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
-          responses: prev?.responses || {}
+          responses: parentAudit?.raw_responses || {}
         }));
 
+        setAuthorizedAdmin(true);
         setViewState('WIZARD');
         setHasSynced(true);
         return;
       }
 
-      if (isAdminSession && flowParam === 'quad_node' && !idParam && !targetCompanyName) {
+      // 2) ADMIN COCKPIT / INTAKE MANAGEMENT PATH
+      const isAdminAuthenticated =
+        authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true';
+
+      if (!isAdminAuthenticated) {
+        setAuthorizedAdmin(false);
+        setHasSynced(true);
+        return;
+      }
+
+      setAuthorizedAdmin(true);
+
+      // New Intake Initialization
+      if (flowParam === 'quad_node' && !idParam && !targetCompanyName) {
         setEmails(FRESH_EMPTY_EMAILS);
         setViewState('INTAKE');
         setHasSynced(true);
@@ -255,7 +305,6 @@ export default function ForensicEngineRoot() {
             ? activeAudit.raw_responses
             : {};
 
-        // PURE MARKER-PRESENCE EVALUATION
         const completionsMap: Record<PersonaKey, boolean> = {
           EXECUTIVE: Boolean(rawResponses['QUAD_EXE_COMPLETE']),
           TECH_MGMT: Boolean(rawResponses['QUAD_TEC_COMPLETE']),
@@ -291,30 +340,35 @@ export default function ForensicEngineRoot() {
       }
     } catch (err) {
       console.error("QUAD_NODE_SYNC_ERROR:", err);
+      setAuthorizedAdmin(false);
     } finally {
       isSyncingRef.current = false;
       setHasSynced(true);
     }
   }, []);
 
+  // INITIAL BOOT & STRICT SECURITY GATE EVALUATION
   useEffect(() => {
     if (typeof window !== 'undefined' && !didBootRef.current) {
       try {
         const params = new URLSearchParams(window.location.search);
-        const authVal = params.get('auth');
+        const codeVal = params.get('code')?.trim();
         const rawRole = params.get('role') || params.get('persona');
-        const orgVal = params.get('org') || params.get('entity');
+        const authVal = params.get('auth');
 
         const roleParam = resolvePersonaKey(rawRole);
-        const isParticipantRoute = !!roleParam;
 
+        // Participant entry STRICTLY requires both code AND role
+        const isParticipantRoute = Boolean(roleParam && codeVal);
+
+        // Admin entry strictly requires valid authentication tokens
         const isAdminAuthenticated =
-          !isParticipantRoute &&
-          (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
+          authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true';
 
-        const isAuthorized = isParticipantRoute || isAdminAuthenticated || !!orgVal;
+        // Disallow arbitrary access based merely on org name or naked role
+        const isAuthorized = isParticipantRoute || isAdminAuthenticated;
 
-        setAuthorizedAdmin(isAuthorized);
+        setAuthorizedAdmin(isAuthorized ? null : false);
         didBootRef.current = true;
 
         if (isAuthorized) {
@@ -326,7 +380,7 @@ export default function ForensicEngineRoot() {
         }
       } catch (e) {
         console.error("Hydration parsing error:", e);
-        setAuthorizedAdmin(true);
+        setAuthorizedAdmin(false);
         setHasSynced(true);
       }
     }
@@ -354,7 +408,7 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // ATOMIC RPC PERSISTENCE WITH ENFORCED TIMESTAMP PRECEDENCE & RETURNED PAYLOAD HYDRATION
+  // ATOMIC RPC PERSISTENCE WITH ENFORCED TIMESTAMP PRECEDENCE
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => {
     if (!activePersona) return;
 
@@ -595,7 +649,6 @@ export default function ForensicEngineRoot() {
     setTimeout(() => { synchronizeEngineDataMatrix(true); }, 0);
   };
 
-  // STRICT SERVER-MARKER TRUTH EVALUATION FOR MATRIX GATING
   const allPersonasComplete = useMemo(() => {
     if (!triangulation?.responses) return false;
     const resp = triangulation.responses;
@@ -644,7 +697,6 @@ export default function ForensicEngineRoot() {
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
-  // SOW LINK GENERATOR WITH SSR GUARD FIX
   const sowShareLink = useMemo(() => {
     if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
@@ -666,6 +718,18 @@ export default function ForensicEngineRoot() {
       console.error('Clipboard write exception:', err);
     }
   };
+
+  if (authorizedAdmin === false) {
+    return (
+      <div className="bg-slate-50 min-h-screen text-slate-800 font-mono flex flex-col items-center justify-center p-6 text-center">
+        <ShieldAlert size={36} className="text-red-600 mb-4" />
+        <h2 className="text-lg font-bold uppercase tracking-wider text-slate-900">Access Denied // Unauthorized Token</h2>
+        <p className="text-xs text-slate-500 mt-2 max-w-md">
+          This participant magic link is either expired, invalid, or assigned to a different stakeholder track. Contact your diagnostic administrator for a fresh link.
+        </p>
+      </div>
+    );
+  }
 
   if (authorizedAdmin === null || !hasSynced) {
     return (
@@ -864,7 +928,7 @@ export default function ForensicEngineRoot() {
             })}
           </div>
 
-          {/* ACTION BUTTONS BLOCK WITH STRICT SERVER MARKER GATING */}
+          {/* ACTION BUTTONS BLOCK */}
           {(() => {
             const currentEmails = triangulation?.emails || emails;
             const hasAllEmails = Boolean(currentEmails?.EXECUTIVE?.trim()) &&
