@@ -349,10 +349,10 @@ export default function ForensicEngineRoot() {
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => {
     if (!activePersona) return;
 
-    const targetPersona = activePersona;
+    // 1. Normalize persona to canonical key
+    const canonicalPersona: PersonaKey = (resolvePersonaKey(activePersona) || activePersona) as PersonaKey;
     const targetAuditId = activeAuditId || activeAuditIdRef.current;
 
-    // Strict alignment with completionsMap & save_quad_node_response keys
     const quadMarkerMap: Record<PersonaKey, string> = {
       EXECUTIVE: 'QUAD_EXE_COMPLETE',
       TECH_MGMT: 'QUAD_TEC_COMPLETE',
@@ -360,118 +360,85 @@ export default function ForensicEngineRoot() {
       SYSTEM_USER: 'QUAD_SYS_COMPLETE'
     };
 
-    const markerKey = quadMarkerMap[targetPersona];
+    const markerKey = quadMarkerMap[canonicalPersona];
     if (!markerKey) {
-      console.error(`[Save Handler] Failed to resolve quad marker key for persona: ${activePersona}`);
+      console.error(`[Save Handler] Failed to resolve quad marker key for persona: "${activePersona}" (canonical: "${canonicalPersona}")`);
+      setActivePersona(null);
+      setViewState('HUB');
+      return;
+    }
+
+    if (!targetAuditId || !isValidUuid(targetAuditId)) {
+      console.warn('[Save Handler] Missing or invalid targetAuditId; database write bypassed:', targetAuditId);
       setActivePersona(null);
       setViewState('HUB');
       return;
     }
 
     const timestamp = new Date().toISOString();
-
-    // Pin marker after spread so answers cannot overwrite completion status
     const answersToSave = {
       ...(personaAnswers || {}),
       [markerKey]: timestamp
     };
 
-    // Bridge UI PersonaKey to canonical and legacy DB operators.persona_type values
-    const DB_PERSONA_TYPE_MAP: Record<PersonaKey, string[]> = {
-      EXECUTIVE: ['EXECUTIVE'],
-      TECH_MGMT: ['TECHNICAL', 'TECH', 'TECH_MGMT', 'TECHNICAL_NODE'],
-      OPS_MGMT: ['MANAGERIAL', 'OPS', 'OPS_MGMT', 'MANAGERIAL_NODE'],
-      SYSTEM_USER: ['SYSTEM', 'SYSTEM_USER', 'SYSTEM_USE', 'USER', 'OPERATOR']
-    };
-    const validDbRoles = DB_PERSONA_TYPE_MAP[targetPersona] ?? [targetPersona];
+    try {
+      // 2. Atomic server-side merge via Postgres RPC
+      const { data: updatedRaw, error: rpcErr } = await supabase.rpc('save_quad_node_response', {
+        target_audit_id: targetAuditId,
+        new_responses: answersToSave
+      });
 
-    // Optimistic local state update
-    setTriangulation(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        completions: { ...prev.completions, [targetPersona]: true },
-        responses: { ...prev.responses, ...answersToSave }
-      };
-    });
+      if (rpcErr || !updatedRaw || typeof updatedRaw !== 'object') {
+        console.error('[Save Handler] RPC failed, executing direct table fallback:', rpcErr?.message || updatedRaw);
 
-    // Database persistence layer
-    if (targetAuditId && isValidUuid(targetAuditId)) {
-      try {
-        let persistenceCommitted = false;
+        const { data: currentAudit } = await supabase
+          .from('audits')
+          .select('raw_responses')
+          .eq('id', targetAuditId)
+          .single();
 
-        // Primary: Server-side atomic merge via save_quad_node_response
-        try {
-          const { data: rpcData, error: rpcErr } = await supabase.rpc('save_quad_node_response', {
-            target_audit_id: targetAuditId,
-            new_responses: answersToSave
-          });
+        if (currentAudit) {
+          const merged = { ...((currentAudit.raw_responses as Record<string, any>) || {}), ...answersToSave };
+          await supabase.from('audits').update({ raw_responses: merged }).eq('id', targetAuditId);
 
-          if (!rpcErr && rpcData && typeof rpcData === 'object') {
-            persistenceCommitted = true;
-          } else if (rpcErr) {
-            console.warn('[Save Handler] RPC failed, falling back to direct merge:', rpcErr.message);
-          }
-        } catch (rpcEx) {
-          console.warn('[Save Handler] RPC threw exception, falling back to direct merge:', rpcEx);
+          setTriangulation(prev => prev ? ({
+            ...prev,
+            completions: {
+              EXECUTIVE: Boolean(merged['QUAD_EXE_COMPLETE']),
+              TECH_MGMT: Boolean(merged['QUAD_TEC_COMPLETE']),
+              OPS_MGMT: Boolean(merged['QUAD_MGR_COMPLETE']),
+              SYSTEM_USER: Boolean(merged['QUAD_SYS_COMPLETE'])
+            },
+            responses: merged
+          }) : prev);
         }
-
-        // Secondary fallback: Guarded read-modify-write
-        if (!persistenceCommitted) {
-          const { data: currentAudit, error: fetchErr } = await supabase
-            .from('audits')
-            .select('raw_responses')
-            .eq('id', targetAuditId)
-            .single();
-
-          if (fetchErr || !currentAudit) {
-            console.error('[Save Handler] Aborting raw_responses update to prevent clobbering:', fetchErr?.message);
-          } else {
-            const existingResponses = (currentAudit.raw_responses as Record<string, any>) || {};
-            const mergedResponses = {
-              ...existingResponses,
-              ...answersToSave
-            };
-
-            const { error: updateAuditErr } = await supabase
-              .from('audits')
-              .update({ raw_responses: mergedResponses })
-              .eq('id', targetAuditId);
-
-            if (updateAuditErr) {
-              console.error('[Save Handler] Failed to update audits.raw_responses:', updateAuditErr.message);
-            } else {
-              persistenceCommitted = true;
-            }
-          }
-        }
-
-        // Mark operator record complete only if persistence was committed
-        if (persistenceCommitted) {
-          const { error: updateOpErr } = await supabase
-            .from('operators')
-            .update({ survey_completed: true, status: 'COMPLETED' })
-            .eq('audit_id', targetAuditId)
-            .in('persona_type', validDbRoles);
-
-          if (updateOpErr) {
-            console.error('[Save Handler] Failed to update operators completion state:', updateOpErr.message);
-          }
-        } else {
-          console.warn('[Save Handler] Skipped operator completion update due to uncommitted persistence.');
-        }
-
-      } catch (err) {
-        console.error('[Save Handler] Critical persistence exception:', err);
+      } else {
+        // 3. Direct state hydration from authoritative PostgreSQL return
+        setTriangulation(prev => prev ? ({
+          ...prev,
+          completions: {
+            EXECUTIVE: Boolean(updatedRaw['QUAD_EXE_COMPLETE']),
+            TECH_MGMT: Boolean(updatedRaw['QUAD_TEC_COMPLETE']),
+            OPS_MGMT: Boolean(updatedRaw['QUAD_MGR_COMPLETE']),
+            SYSTEM_USER: Boolean(updatedRaw['QUAD_SYS_COMPLETE'])
+          },
+          responses: updatedRaw
+        }) : prev);
       }
-    } else {
-      console.warn('[Save Handler] Missing or invalid targetAuditId; database write bypassed:', targetAuditId);
+    } catch (err) {
+      console.error('[Save Handler] Persistence exception:', err);
     }
 
-    // Return to HUB view and re-sync authoritative DB state
+    // 4. Pin the audit ID into the URL address bar permanently
+    if (typeof window !== 'undefined' && targetAuditId) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('id', targetAuditId);
+      window.history.replaceState({}, '', url.toString());
+    }
+
+    // 5. Cleanly transition back to the Monitor view
     setActivePersona(null);
     setViewState('HUB');
-    await synchronizeEngineDataMatrix(true);
   };
 
   const handleInitializeTriangulation = async (e: FormEvent) => {
@@ -642,7 +609,6 @@ export default function ForensicEngineRoot() {
     setTimeout(() => { synchronizeEngineDataMatrix(true); }, 0);
   };
 
-  // Shared single source of truth for completions & compile gating
   const allPersonasComplete = useMemo(() => {
     if (!triangulation?.completions) return false;
     const c = triangulation.completions;
