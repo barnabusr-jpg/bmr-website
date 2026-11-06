@@ -24,7 +24,6 @@ type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
-// Lightweight UUID validator to prevent malformed API queries
 const isValidUuid = (val?: string | null): boolean =>
   Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
 
@@ -35,7 +34,6 @@ const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR', 'CORE_SYSTEM', 'TERMINAL', 'SYSTEM'],
 };
 
-// PRECOMPUTED O(1) REVERSE ALIAS MAP
 const PERSONA_ALIAS_MAP: Record<string, PersonaKey> = Object.entries(QUAD_PERSONA_TYPES).reduce(
   (acc, [canonicalKey, aliases]) => {
     acc[canonicalKey] = canonicalKey as PersonaKey;
@@ -47,7 +45,6 @@ const PERSONA_ALIAS_MAP: Record<string, PersonaKey> = Object.entries(QUAD_PERSON
   {} as Record<string, PersonaKey>
 );
 
-// O(1) PERSONA ALIAS RESOLVER
 const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
   if (!rawRole) return null;
   const clean = rawRole.toUpperCase().trim();
@@ -64,7 +61,6 @@ const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
   return null;
 };
 
-// METHODOLOGY NODE CAPABILITY ALIGNMENT LABELS
 const PERSONA_DISPLAY_LABELS: Record<PersonaKey, { node: string; title: string; subtitle: string }> = {
   EXECUTIVE: {
     node: 'NODE 01',
@@ -134,7 +130,6 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // BASELINE BOOT & HYDRATION (PURE MARKER-PRESENCE EVALUATION)
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -160,7 +155,6 @@ export default function ForensicEngineRoot() {
         !isParticipantRoute &&
         (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
-      // AUDIT ID RESOLVER FALLBACK: If missing on participant route, resolve from DB via org_name
       if (!idParam && targetCompanyName) {
         const { data: matchedAudit } = await supabase
           .from('audits')
@@ -255,7 +249,6 @@ export default function ForensicEngineRoot() {
             ? activeAudit.raw_responses
             : {};
 
-        // PURE MARKER-PRESENCE EVALUATION
         const completionsMap: Record<PersonaKey, boolean> = {
           EXECUTIVE: Boolean(rawResponses['QUAD_EXE_COMPLETE']),
           TECH_MGMT: Boolean(rawResponses['QUAD_TEC_COMPLETE']),
@@ -332,7 +325,6 @@ export default function ForensicEngineRoot() {
     }
   }, [synchronizeEngineDataMatrix]);
 
-  // 5-SECOND HUB AUTO-POLLING FOR LIVE CHECKMARK UPDATES
   useEffect(() => {
     if (viewState !== 'HUB' || !activeAuditId) return;
 
@@ -354,13 +346,13 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // ATOMIC RPC PERSISTENCE WITH ENFORCED TIMESTAMP PRECEDENCE & RETURNED PAYLOAD HYDRATION
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => {
     if (!activePersona) return;
 
     const targetPersona = activePersona;
     const targetAuditId = activeAuditId || activeAuditIdRef.current;
 
+    // Strict alignment with completionsMap & save_quad_node_response keys
     const quadMarkerMap: Record<PersonaKey, string> = {
       EXECUTIVE: 'QUAD_EXE_COMPLETE',
       TECH_MGMT: 'QUAD_TEC_COMPLETE',
@@ -372,15 +364,28 @@ export default function ForensicEngineRoot() {
     if (!markerKey) {
       console.error(`[Save Handler] Failed to resolve quad marker key for persona: ${activePersona}`);
       setActivePersona(null);
-      setViewState('THANK_YOU');
+      setViewState('HUB');
       return;
     }
 
+    const timestamp = new Date().toISOString();
+
+    // Pin marker after spread so answers cannot overwrite completion status
     const answersToSave = {
       ...(personaAnswers || {}),
-      [markerKey]: new Date().toISOString()
+      [markerKey]: timestamp
     };
 
+    // Bridge UI PersonaKey to canonical and legacy DB operators.persona_type values
+    const DB_PERSONA_TYPE_MAP: Record<PersonaKey, string[]> = {
+      EXECUTIVE: ['EXECUTIVE'],
+      TECH_MGMT: ['TECHNICAL', 'TECH', 'TECH_MGMT', 'TECHNICAL_NODE'],
+      OPS_MGMT: ['MANAGERIAL', 'OPS', 'OPS_MGMT', 'MANAGERIAL_NODE'],
+      SYSTEM_USER: ['SYSTEM', 'SYSTEM_USER', 'SYSTEM_USE', 'USER', 'OPERATOR']
+    };
+    const validDbRoles = DB_PERSONA_TYPE_MAP[targetPersona] ?? [targetPersona];
+
+    // Optimistic local state update
     setTriangulation(prev => {
       if (!prev) return prev;
       return {
@@ -390,41 +395,83 @@ export default function ForensicEngineRoot() {
       };
     });
 
-    if (!targetAuditId || !isValidUuid(targetAuditId)) {
-      console.warn('[Save Handler] Missing or invalid targetAuditId; skipping database save.', targetAuditId);
-      setActivePersona(null);
-      setViewState('THANK_YOU');
-      return;
-    }
+    // Database persistence layer
+    if (targetAuditId && isValidUuid(targetAuditId)) {
+      try {
+        let persistenceCommitted = false;
 
-    try {
-      const { data: updatedRaw, error: rpcErr } = await supabase.rpc('save_quad_node_response', {
-        target_audit_id: targetAuditId,
-        new_responses: answersToSave
-      });
+        // Primary: Server-side atomic merge via save_quad_node_response
+        try {
+          const { data: rpcData, error: rpcErr } = await supabase.rpc('save_quad_node_response', {
+            target_audit_id: targetAuditId,
+            new_responses: answersToSave
+          });
 
-      if (rpcErr || !updatedRaw) {
-        console.error('[Save Handler] RPC execution failed:', rpcErr?.message || 'Null payload returned');
-      } else {
-        console.log(`Quad Node marker ${markerKey} saved for ${targetPersona} in audit ${targetAuditId}`);
+          if (!rpcErr && rpcData && typeof rpcData === 'object') {
+            persistenceCommitted = true;
+          } else if (rpcErr) {
+            console.warn('[Save Handler] RPC failed, falling back to direct merge:', rpcErr.message);
+          }
+        } catch (rpcEx) {
+          console.warn('[Save Handler] RPC threw exception, falling back to direct merge:', rpcEx);
+        }
 
-        setTriangulation(prev => prev ? ({
-          ...prev,
-          completions: {
-            EXECUTIVE: Boolean(updatedRaw['QUAD_EXE_COMPLETE']),
-            TECH_MGMT: Boolean(updatedRaw['QUAD_TEC_COMPLETE']),
-            OPS_MGMT: Boolean(updatedRaw['QUAD_MGR_COMPLETE']),
-            SYSTEM_USER: Boolean(updatedRaw['QUAD_SYS_COMPLETE'])
-          },
-          responses: updatedRaw
-        }) : prev);
+        // Secondary fallback: Guarded read-modify-write
+        if (!persistenceCommitted) {
+          const { data: currentAudit, error: fetchErr } = await supabase
+            .from('audits')
+            .select('raw_responses')
+            .eq('id', targetAuditId)
+            .single();
+
+          if (fetchErr || !currentAudit) {
+            console.error('[Save Handler] Aborting raw_responses update to prevent clobbering:', fetchErr?.message);
+          } else {
+            const existingResponses = (currentAudit.raw_responses as Record<string, any>) || {};
+            const mergedResponses = {
+              ...existingResponses,
+              ...answersToSave
+            };
+
+            const { error: updateAuditErr } = await supabase
+              .from('audits')
+              .update({ raw_responses: mergedResponses })
+              .eq('id', targetAuditId);
+
+            if (updateAuditErr) {
+              console.error('[Save Handler] Failed to update audits.raw_responses:', updateAuditErr.message);
+            } else {
+              persistenceCommitted = true;
+            }
+          }
+        }
+
+        // Mark operator record complete only if persistence was committed
+        if (persistenceCommitted) {
+          const { error: updateOpErr } = await supabase
+            .from('operators')
+            .update({ survey_completed: true, status: 'COMPLETED' })
+            .eq('audit_id', targetAuditId)
+            .in('persona_type', validDbRoles);
+
+          if (updateOpErr) {
+            console.error('[Save Handler] Failed to update operators completion state:', updateOpErr.message);
+          }
+        } else {
+          console.warn('[Save Handler] Skipped operator completion update due to uncommitted persistence.');
+        }
+
+      } catch (err) {
+        console.error('[Save Handler] Critical persistence exception:', err);
       }
-    } catch (err) {
-      console.error('[Save Handler] Persistence exception:', err);
+    } else {
+      console.warn('[Save Handler] Missing or invalid targetAuditId; database write bypassed:', targetAuditId);
     }
 
+    // Return to HUB view and re-sync authoritative DB state
     setActivePersona(null);
-    setViewState('THANK_YOU');
+    setViewState('HUB');
+    await synchronizeEngineDataMatrix(true);
   };
 
   const handleInitializeTriangulation = async (e: FormEvent) => {
@@ -595,18 +642,12 @@ export default function ForensicEngineRoot() {
     setTimeout(() => { synchronizeEngineDataMatrix(true); }, 0);
   };
 
-  // STRICT SERVER-MARKER TRUTH EVALUATION FOR MATRIX GATING
+  // Shared single source of truth for completions & compile gating
   const allPersonasComplete = useMemo(() => {
-    if (!triangulation?.responses) return false;
-    const resp = triangulation.responses;
-
-    return Boolean(
-      resp['QUAD_EXE_COMPLETE'] &&
-      resp['QUAD_TEC_COMPLETE'] &&
-      resp['QUAD_MGR_COMPLETE'] &&
-      resp['QUAD_SYS_COMPLETE']
-    );
-  }, [triangulation?.responses]);
+    if (!triangulation?.completions) return false;
+    const c = triangulation.completions;
+    return Boolean(c.EXECUTIVE && c.TECH_MGMT && c.OPS_MGMT && c.SYSTEM_USER);
+  }, [triangulation?.completions]);
 
   const alignedCockpitMetrics = useMemo(() => {
     if (!triangulation) {
@@ -644,7 +685,6 @@ export default function ForensicEngineRoot() {
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
-  // SOW LINK GENERATOR WITH SSR GUARD FIX
   const sowShareLink = useMemo(() => {
     if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
@@ -864,7 +904,7 @@ export default function ForensicEngineRoot() {
             })}
           </div>
 
-          {/* ACTION BUTTONS BLOCK WITH STRICT SERVER MARKER GATING */}
+          {/* ACTION BUTTONS BLOCK */}
           {(() => {
             const currentEmails = triangulation?.emails || emails;
             const hasAllEmails = Boolean(currentEmails?.EXECUTIVE?.trim()) &&
@@ -948,7 +988,7 @@ export default function ForensicEngineRoot() {
             </p>
           </div>
           <div className="bg-slate-50 border border-slate-200 p-4 rounded text-left text-xs font-mono text-slate-500 leading-relaxed">
-            // You may now close this browser tab. Your organization's diagnostic administrator will receive the consolidated readiness assessment upon completion of all stakeholder tracks.
+            // You may now close this browser tab. Your organization&apos;s diagnostic administrator will receive the consolidated readiness assessment upon completion of all stakeholder tracks.
           </div>
         </div>
       )}
@@ -1190,7 +1230,6 @@ export default function ForensicEngineRoot() {
               </div>
             )}
 
-            {/* TAB 03: FULL PAID QUAD INSPECTORATE DOSSIER */}
             {dossierTab === 'INSPECTORATE' && (
               <DiagnosticProvider
                 initialOverrides={{
