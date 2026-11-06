@@ -24,9 +24,16 @@ type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
-// Lightweight UUID validator to prevent malformed API queries
-const isValidUuid = (val?: string | null): boolean =>
-  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+// Robust UUID sanitizer and validator to prevent malformed API queries
+const cleanUuid = (val?: string | null): string => {
+  if (!val || typeof val !== 'string') return '';
+  return val.trim().replace(/^["']|["']$/g, '');
+};
+
+const isValidUuid = (val?: string | null): boolean => {
+  const sanitized = cleanUuid(val);
+  return Boolean(sanitized && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sanitized));
+};
 
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF', 'STRATEGIC'],
@@ -35,7 +42,6 @@ const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR', 'CORE_SYSTEM', 'TERMINAL', 'SYSTEM'],
 };
 
-// PRECOMPUTED O(1) REVERSE ALIAS MAP
 const PERSONA_ALIAS_MAP: Record<string, PersonaKey> = Object.entries(QUAD_PERSONA_TYPES).reduce(
   (acc, [canonicalKey, aliases]) => {
     acc[canonicalKey] = canonicalKey as PersonaKey;
@@ -47,7 +53,6 @@ const PERSONA_ALIAS_MAP: Record<string, PersonaKey> = Object.entries(QUAD_PERSON
   {} as Record<string, PersonaKey>
 );
 
-// O(1) PERSONA ALIAS RESOLVER
 const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
   if (!rawRole) return null;
   const clean = rawRole.toUpperCase().trim();
@@ -64,7 +69,6 @@ const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
   return null;
 };
 
-// METHODOLOGY NODE CAPABILITY ALIGNMENT LABELS
 const PERSONA_DISPLAY_LABELS: Record<PersonaKey, { node: string; title: string; subtitle: string }> = {
   EXECUTIVE: {
     node: 'NODE 01',
@@ -134,7 +138,6 @@ export default function ForensicEngineRoot() {
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
 
-  // BASELINE BOOT & HYDRATION (PURE MARKER-PRESENCE EVALUATION)
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -143,7 +146,7 @@ export default function ForensicEngineRoot() {
       ? new URLSearchParams(window.location.search)
       : new URLSearchParams();
 
-    let idParam = params.get('id') || activeAuditIdRef.current;
+    let idParam = cleanUuid(params.get('id') || activeAuditIdRef.current);
     const orgParam = params.get('org') || params.get('entity') || params.get('entity_code') || companyNameRef.current;
     const rawRole = params.get('role') || params.get('persona');
     const authVal = params.get('auth');
@@ -160,7 +163,6 @@ export default function ForensicEngineRoot() {
         !isParticipantRoute &&
         (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
-      // AUDIT ID RESOLVER FALLBACK: If missing on participant route, resolve from DB via org_name
       if (!idParam && targetCompanyName) {
         const { data: matchedAudit } = await supabase
           .from('audits')
@@ -171,9 +173,10 @@ export default function ForensicEngineRoot() {
           .maybeSingle();
 
         if (matchedAudit?.id) {
-          idParam = matchedAudit.id;
-          setActiveAuditId(matchedAudit.id);
-          activeAuditIdRef.current = matchedAudit.id;
+          const resolvedCleanId = cleanUuid(matchedAudit.id);
+          idParam = resolvedCleanId;
+          setActiveAuditId(resolvedCleanId);
+          activeAuditIdRef.current = resolvedCleanId;
         }
       }
 
@@ -235,8 +238,9 @@ export default function ForensicEngineRoot() {
       let calculatedPillar: FunnelPillar = activePillarRef.current;
 
       if (activeAudit) {
-        setActiveAuditId(activeAudit.id);
-        activeAuditIdRef.current = activeAudit.id;
+        const cleanAuditId = cleanUuid(activeAudit.id);
+        setActiveAuditId(cleanAuditId);
+        activeAuditIdRef.current = cleanAuditId;
         setCompanyName(activeAudit.org_name);
         setIsCompanyFromDB(true);
 
@@ -255,7 +259,6 @@ export default function ForensicEngineRoot() {
             ? activeAudit.raw_responses
             : {};
 
-        // PURE MARKER-PRESENCE EVALUATION
         const completionsMap: Record<PersonaKey, boolean> = {
           EXECUTIVE: Boolean(rawResponses['QUAD_EXE_COMPLETE']),
           TECH_MGMT: Boolean(rawResponses['QUAD_TEC_COMPLETE']),
@@ -332,7 +335,6 @@ export default function ForensicEngineRoot() {
     }
   }, [synchronizeEngineDataMatrix]);
 
-  // 5-SECOND HUB AUTO-POLLING FOR LIVE CHECKMARK UPDATES
   useEffect(() => {
     if (viewState !== 'HUB' || !activeAuditId) return;
 
@@ -354,12 +356,13 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // ATOMIC RPC PERSISTENCE WITH ENFORCED TIMESTAMP PRECEDENCE & RETURNED PAYLOAD HYDRATION
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => {
     if (!activePersona) return;
 
-    const targetPersona = activePersona;
-    const targetAuditId = activeAuditId || activeAuditIdRef.current;
+    // 1. Normalize persona to canonical PersonaKey
+    const canonicalPersona: PersonaKey = (resolvePersonaKey(activePersona) || activePersona) as PersonaKey;
+    const rawTargetId = activeAuditId || activeAuditIdRef.current;
+    const targetAuditId = cleanUuid(rawTargetId);
 
     const quadMarkerMap: Record<PersonaKey, string> = {
       EXECUTIVE: 'QUAD_EXE_COMPLETE',
@@ -368,46 +371,60 @@ export default function ForensicEngineRoot() {
       SYSTEM_USER: 'QUAD_SYS_COMPLETE'
     };
 
-    const markerKey = quadMarkerMap[targetPersona];
+    const markerKey = quadMarkerMap[canonicalPersona];
     if (!markerKey) {
-      console.error(`[Save Handler] Failed to resolve quad marker key for persona: ${activePersona}`);
+      console.error(`[Save Handler] Failed to resolve quad marker key for persona: "${activePersona}" (canonical: "${canonicalPersona}")`);
       setActivePersona(null);
-      setViewState('THANK_YOU');
+      setViewState('HUB');
       return;
     }
-
-    const answersToSave = {
-      ...(personaAnswers || {}),
-      [markerKey]: new Date().toISOString()
-    };
-
-    setTriangulation(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        completions: { ...prev.completions, [targetPersona]: true },
-        responses: { ...prev.responses, ...answersToSave }
-      };
-    });
 
     if (!targetAuditId || !isValidUuid(targetAuditId)) {
-      console.warn('[Save Handler] Missing or invalid targetAuditId; skipping database save.', targetAuditId);
+      console.warn('[Save Handler] Missing or invalid targetAuditId; database write bypassed:', targetAuditId);
       setActivePersona(null);
-      setViewState('THANK_YOU');
+      setViewState('HUB');
       return;
     }
 
+    const timestamp = new Date().toISOString();
+    const answersToSave = {
+      ...(personaAnswers || {}),
+      [markerKey]: timestamp
+    };
+
     try {
+      // 2. Atomic server-side merge via Postgres RPC
       const { data: updatedRaw, error: rpcErr } = await supabase.rpc('save_quad_node_response', {
         target_audit_id: targetAuditId,
         new_responses: answersToSave
       });
 
-      if (rpcErr || !updatedRaw) {
-        console.error('[Save Handler] RPC execution failed:', rpcErr?.message || 'Null payload returned');
-      } else {
-        console.log(`Quad Node marker ${markerKey} saved for ${targetPersona} in audit ${targetAuditId}`);
+      if (rpcErr || !updatedRaw || typeof updatedRaw !== 'object') {
+        console.error('[Save Handler] RPC failed, executing direct table fallback:', rpcErr?.message || updatedRaw);
 
+        const { data: currentAudit } = await supabase
+          .from('audits')
+          .select('raw_responses')
+          .eq('id', targetAuditId)
+          .single();
+
+        if (currentAudit) {
+          const merged = { ...((currentAudit.raw_responses as Record<string, any>) || {}), ...answersToSave };
+          await supabase.from('audits').update({ raw_responses: merged }).eq('id', targetAuditId);
+
+          setTriangulation(prev => prev ? ({
+            ...prev,
+            completions: {
+              EXECUTIVE: Boolean(merged['QUAD_EXE_COMPLETE']),
+              TECH_MGMT: Boolean(merged['QUAD_TEC_COMPLETE']),
+              OPS_MGMT: Boolean(merged['QUAD_MGR_COMPLETE']),
+              SYSTEM_USER: Boolean(merged['QUAD_SYS_COMPLETE'])
+            },
+            responses: merged
+          }) : prev);
+        }
+      } else {
+        // 3. Direct state hydration from authoritative PostgreSQL return
         setTriangulation(prev => prev ? ({
           ...prev,
           completions: {
@@ -423,8 +440,16 @@ export default function ForensicEngineRoot() {
       console.error('[Save Handler] Persistence exception:', err);
     }
 
+    // 4. Pin the audit ID into the URL address bar permanently
+    if (typeof window !== 'undefined' && targetAuditId) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('id', targetAuditId);
+      window.history.replaceState({}, '', url.toString());
+    }
+
+    // 5. Cleanly transition back to the Monitor view
     setActivePersona(null);
-    setViewState('THANK_YOU');
+    setViewState('HUB');
   };
 
   const handleInitializeTriangulation = async (e: FormEvent) => {
@@ -452,7 +477,7 @@ export default function ForensicEngineRoot() {
 
       if (createErr) throw createErr;
 
-      const parentAuditId = newAudit.id;
+      const parentAuditId = cleanUuid(newAudit.id);
       setActiveAuditId(parentAuditId);
       activeAuditIdRef.current = parentAuditId;
 
@@ -477,7 +502,7 @@ export default function ForensicEngineRoot() {
   };
 
   const handleTriggerNudge = async (persona: PersonaKey) => {
-    const targetAudit = activeAuditId || activeAuditIdRef.current;
+    const targetAudit = cleanUuid(activeAuditId || activeAuditIdRef.current);
     const currentEmails = triangulation?.emails || emails;
     const email = currentEmails[persona];
 
@@ -519,7 +544,7 @@ export default function ForensicEngineRoot() {
   };
 
   const handleDispatchBatchEmails = async () => {
-    const targetAudit = activeAuditId || activeAuditIdRef.current;
+    const targetAudit = cleanUuid(activeAuditId || activeAuditIdRef.current);
     if (!targetAudit) {
       alert("Audit record reference is missing. Please re-enter organization name or refresh.");
       return;
@@ -595,18 +620,11 @@ export default function ForensicEngineRoot() {
     setTimeout(() => { synchronizeEngineDataMatrix(true); }, 0);
   };
 
-  // STRICT SERVER-MARKER TRUTH EVALUATION FOR MATRIX GATING
   const allPersonasComplete = useMemo(() => {
-    if (!triangulation?.responses) return false;
-    const resp = triangulation.responses;
-
-    return Boolean(
-      resp['QUAD_EXE_COMPLETE'] &&
-      resp['QUAD_TEC_COMPLETE'] &&
-      resp['QUAD_MGR_COMPLETE'] &&
-      resp['QUAD_SYS_COMPLETE']
-    );
-  }, [triangulation?.responses]);
+    if (!triangulation?.completions) return false;
+    const c = triangulation.completions;
+    return Boolean(c.EXECUTIVE && c.TECH_MGMT && c.OPS_MGMT && c.SYSTEM_USER);
+  }, [triangulation?.completions]);
 
   const alignedCockpitMetrics = useMemo(() => {
     if (!triangulation) {
@@ -644,7 +662,6 @@ export default function ForensicEngineRoot() {
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
-  // SOW LINK GENERATOR WITH SSR GUARD FIX
   const sowShareLink = useMemo(() => {
     if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
@@ -835,7 +852,10 @@ export default function ForensicEngineRoot() {
 
                     <button
                       onClick={async () => {
-                        if ((!activeAuditId || !activeAuditIdRef.current) && triangulation?.companyName) {
+                        const rawId = activeAuditId || activeAuditIdRef.current;
+                        let cleanTargetId = cleanUuid(rawId);
+
+                        if (!cleanTargetId && triangulation?.companyName) {
                           const { data: matched } = await supabase
                             .from('audits')
                             .select('id')
@@ -845,8 +865,9 @@ export default function ForensicEngineRoot() {
                             .maybeSingle();
 
                           if (matched?.id) {
-                            setActiveAuditId(matched.id);
-                            activeAuditIdRef.current = matched.id;
+                            cleanTargetId = cleanUuid(matched.id);
+                            setActiveAuditId(cleanTargetId);
+                            activeAuditIdRef.current = cleanTargetId;
                           }
                         }
                         setActivePersona(persona);
@@ -864,7 +885,7 @@ export default function ForensicEngineRoot() {
             })}
           </div>
 
-          {/* ACTION BUTTONS BLOCK WITH STRICT SERVER MARKER GATING */}
+          {/* ACTION BUTTONS BLOCK */}
           {(() => {
             const currentEmails = triangulation?.emails || emails;
             const hasAllEmails = Boolean(currentEmails?.EXECUTIVE?.trim()) &&
@@ -948,7 +969,7 @@ export default function ForensicEngineRoot() {
             </p>
           </div>
           <div className="bg-slate-50 border border-slate-200 p-4 rounded text-left text-xs font-mono text-slate-500 leading-relaxed">
-            // You may now close this browser tab. Your organization's diagnostic administrator will receive the consolidated readiness assessment upon completion of all stakeholder tracks.
+            // You may now close this browser tab. Your organization&apos;s diagnostic administrator will receive the consolidated readiness assessment upon completion of all stakeholder tracks.
           </div>
         </div>
       )}
@@ -1190,7 +1211,6 @@ export default function ForensicEngineRoot() {
               </div>
             )}
 
-            {/* TAB 03: FULL PAID QUAD INSPECTORATE DOSSIER */}
             {dossierTab === 'INSPECTORATE' && (
               <DiagnosticProvider
                 initialOverrides={{
