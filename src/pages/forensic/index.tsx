@@ -24,8 +24,16 @@ type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
-const isValidUuid = (val?: string | null): boolean =>
-  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+// Robust UUID sanitizer and validator to prevent malformed API queries
+const cleanUuid = (val?: string | null): string => {
+  if (!val || typeof val !== 'string') return '';
+  return val.trim().replace(/^["']|["']$/g, '');
+};
+
+const isValidUuid = (val?: string | null): boolean => {
+  const sanitized = cleanUuid(val);
+  return Boolean(sanitized && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sanitized));
+};
 
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF', 'STRATEGIC'],
@@ -138,7 +146,7 @@ export default function ForensicEngineRoot() {
       ? new URLSearchParams(window.location.search)
       : new URLSearchParams();
 
-    let idParam = params.get('id') || activeAuditIdRef.current;
+    let idParam = cleanUuid(params.get('id') || activeAuditIdRef.current);
     const orgParam = params.get('org') || params.get('entity') || params.get('entity_code') || companyNameRef.current;
     const rawRole = params.get('role') || params.get('persona');
     const authVal = params.get('auth');
@@ -165,9 +173,10 @@ export default function ForensicEngineRoot() {
           .maybeSingle();
 
         if (matchedAudit?.id) {
-          idParam = matchedAudit.id;
-          setActiveAuditId(matchedAudit.id);
-          activeAuditIdRef.current = matchedAudit.id;
+          const resolvedCleanId = cleanUuid(matchedAudit.id);
+          idParam = resolvedCleanId;
+          setActiveAuditId(resolvedCleanId);
+          activeAuditIdRef.current = resolvedCleanId;
         }
       }
 
@@ -229,8 +238,9 @@ export default function ForensicEngineRoot() {
       let calculatedPillar: FunnelPillar = activePillarRef.current;
 
       if (activeAudit) {
-        setActiveAuditId(activeAudit.id);
-        activeAuditIdRef.current = activeAudit.id;
+        const cleanAuditId = cleanUuid(activeAudit.id);
+        setActiveAuditId(cleanAuditId);
+        activeAuditIdRef.current = cleanAuditId;
         setCompanyName(activeAudit.org_name);
         setIsCompanyFromDB(true);
 
@@ -349,9 +359,10 @@ export default function ForensicEngineRoot() {
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => {
     if (!activePersona) return;
 
-    // 1. Normalize persona to canonical key
+    // 1. Normalize persona to canonical PersonaKey
     const canonicalPersona: PersonaKey = (resolvePersonaKey(activePersona) || activePersona) as PersonaKey;
-    const targetAuditId = activeAuditId || activeAuditIdRef.current;
+    const rawTargetId = activeAuditId || activeAuditIdRef.current;
+    const targetAuditId = cleanUuid(rawTargetId);
 
     const quadMarkerMap: Record<PersonaKey, string> = {
       EXECUTIVE: 'QUAD_EXE_COMPLETE',
@@ -466,7 +477,7 @@ export default function ForensicEngineRoot() {
 
       if (createErr) throw createErr;
 
-      const parentAuditId = newAudit.id;
+      const parentAuditId = cleanUuid(newAudit.id);
       setActiveAuditId(parentAuditId);
       activeAuditIdRef.current = parentAuditId;
 
@@ -491,7 +502,7 @@ export default function ForensicEngineRoot() {
   };
 
   const handleTriggerNudge = async (persona: PersonaKey) => {
-    const targetAudit = activeAuditId || activeAuditIdRef.current;
+    const targetAudit = cleanUuid(activeAuditId || activeAuditIdRef.current);
     const currentEmails = triangulation?.emails || emails;
     const email = currentEmails[persona];
 
@@ -533,7 +544,7 @@ export default function ForensicEngineRoot() {
   };
 
   const handleDispatchBatchEmails = async () => {
-    const targetAudit = activeAuditId || activeAuditIdRef.current;
+    const targetAudit = cleanUuid(activeAuditId || activeAuditIdRef.current);
     if (!targetAudit) {
       alert("Audit record reference is missing. Please re-enter organization name or refresh.");
       return;
@@ -841,7 +852,10 @@ export default function ForensicEngineRoot() {
 
                     <button
                       onClick={async () => {
-                        if ((!activeAuditId || !activeAuditIdRef.current) && triangulation?.companyName) {
+                        const rawId = activeAuditId || activeAuditIdRef.current;
+                        let cleanTargetId = cleanUuid(rawId);
+
+                        if (!cleanTargetId && triangulation?.companyName) {
                           const { data: matched } = await supabase
                             .from('audits')
                             .select('id')
@@ -851,8 +865,9 @@ export default function ForensicEngineRoot() {
                             .maybeSingle();
 
                           if (matched?.id) {
-                            setActiveAuditId(matched.id);
-                            activeAuditIdRef.current = matched.id;
+                            cleanTargetId = cleanUuid(matched.id);
+                            setActiveAuditId(cleanTargetId);
+                            activeAuditIdRef.current = cleanTargetId;
                           }
                         }
                         setActivePersona(persona);
