@@ -2,6 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { ShieldCheck, Printer, FileText, Download, TrendingDown, Layers, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { computeRegulatoryAuditItems, type FunnelPillar } from '@/lib/forensicRegulatoryCalculus';
 
 export interface ForensicMetricsPayload {
   complianceScore?: number;
@@ -78,6 +79,8 @@ export default function ForensicCommandCockpit({
       completions?.SYSTEM_USER
     );
 
+    const safeResponses = (responses || {}) as Record<string, any>;
+
     const rows: string[][] = [
       ["BMR SOLUTIONS // FORENSIC DIAGNOSTIC AUDIT REPORT", ""],
       ["Generated Timestamp", timestamp],
@@ -104,10 +107,43 @@ export default function ForensicCommandCockpit({
       ["NODE 02", "Engineering & Infrastructure", completions?.TECH_MGMT ? "COMPLETED" : "PENDING"],
       ["NODE 03", "Operations & Management", completions?.OPS_MGMT ? "COMPLETED" : "PENDING"],
       ["NODE 04", "Frontline System Execution", completions?.SYSTEM_USER ? "COMPLETED" : "PENDING"],
+    ];
+
+    // DYNAMIC SECTOR REGULATORY AUDIT
+    const resolvedPillar: FunnelPillar =
+      sector.includes('INDUSTRIAL') || sector.includes('AVS')
+        ? 'AVS'
+        : sector.includes('SERVICES') || sector.includes('HAI')
+        ? 'HAI'
+        : 'IGF';
+
+    const regulatoryItems = computeRegulatoryAuditItems({
+      pillar: resolvedPillar,
+      responses: safeResponses,
+      isTierThreeExposure: metrics?.isTierThreeExposure,
+      regulatoryAlertActive: metrics?.regulatoryAlertActive,
+    });
+
+    rows.push(
+      ["", ""],
+      ["SECTOR REGULATORY COMPLIANCE AUDIT", ""],
+      ["Framework", "Governing Clause / Statutory Basis", "Observed Compliance Finding", "Mandatory SOW Remediation", "Target Phase"]
+    );
+
+    if (regulatoryItems.length === 0) {
+      rows.push(["N/A", "N/A", "No statutory non-compliance violations triggered under current responses.", "Baseline validation maintained.", "N/A"]);
+    } else {
+      regulatoryItems.forEach((it) => {
+        rows.push([it.standard, it.clause, it.finding, it.statutoryRemedy, it.remediationPhase]);
+      });
+    }
+
+    // RECORDED DIAGNOSTIC RESPONSES & QUESTION BREAKDOWN
+    rows.push(
       ["", ""],
       ["RECORDED DIAGNOSTIC RESPONSES & QUESTION BREAKDOWN", ""],
       ["Question / Field ID", "Recorded Value"]
-    ];
+    );
 
     const markerKeys = new Set([
       'QUAD_EXE_COMPLETE',
@@ -116,7 +152,6 @@ export default function ForensicCommandCockpit({
       'QUAD_SYS_COMPLETE'
     ]);
 
-    const safeResponses = (responses || {}) as Record<string, any>;
     const responseKeys = Object.keys(safeResponses).sort((a, b) => a.localeCompare(b));
 
     responseKeys.forEach((key) => {
