@@ -6,11 +6,12 @@ import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
 import {
   ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock,
-  FileText, ChevronRight, Copy, Check, Printer, RotateCcw
+  FileText, ChevronRight, Copy, Check, Printer, RotateCcw, AlertTriangle
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
+import { computeRegulatoryAuditItems, type FunnelPillar } from '@/lib/forensicRegulatoryCalculus';
 
 // Diagnostic Dossier Components & Context
 import { DiagnosticProvider } from '../../context/DiagnosticContext';
@@ -19,7 +20,6 @@ import MetricRelationshipHierarchyLine from '../../components/diagnostic/MetricR
 import BoardExecutiveBriefingBlock from '../../components/diagnostic/BoardExecutiveBriefingBlock';
 import QuadNodeSummaryMatrixTable from '../../components/diagnostic/QuadNodeSummaryMatrixTable';
 
-type FunnelPillar = 'IGF' | 'AVS' | 'HAI';
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
@@ -1170,18 +1170,71 @@ export default function ForensicEngineRoot() {
                   </table>
                 </div>
 
-                <div className="border border-slate-200 bg-slate-50 p-6 rounded-md">
-                  <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-3">
-                    // Regulatory Non-Compliance Standards Audit
-                  </span>
+                {/* Dynamic Sector-Tied Regulatory Non-Compliance Standards Audit */}
+                {(() => {
+                  const dynamicAuditItems = computeRegulatoryAuditItems({
+                    pillar: triangulation.pillar,
+                    responses: triangulation.responses,
+                    isTierThreeExposure: alignedCockpitMetrics.isTierThreeExposure,
+                    regulatoryAlertActive: alignedCockpitMetrics.regulatoryAlertActive,
+                  });
 
-                  <div className="space-y-3 font-mono text-xs text-slate-700">
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> ISO 9001:2015 // Clause 8.5.1: Messaging anomalies create unmapped distribution risk.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> HL7 FHIR v4 // Data Conformance: Unstructured drift triggers serialization failures.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> PCI-DSS v4.0 // Req 10.2: Processing delays interrupt automated auditing boundaries.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> SOX Act // Section 404: Telemetry friction degrades financial reporting controls.</span></div>
-                  </div>
-                </div>
+                  return (
+                    <div className="border border-slate-200 bg-slate-50 p-6 rounded-md font-sans">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-slate-200">
+                        <div>
+                          <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider">
+                            // Regulatory Non-Compliance Standards Audit
+                          </span>
+                          <span className="text-[11px] font-mono text-slate-500 uppercase tracking-tight block mt-0.5">
+                            SECTOR REGIME: {triangulation.pillar === 'AVS' ? 'INDUSTRIAL & SUPPLY CHAIN (AVS)' : triangulation.pillar === 'HAI' ? 'HEALTHCARE & HUMAN-CENTRIC AI (HAI)' : 'FINANCIAL GOVERNANCE & SOX (IGF)'} | TARGET: {companyName.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-red-700 bg-red-100 border border-red-200 px-2.5 py-1 rounded font-bold uppercase tracking-wider flex items-center gap-1">
+                            <AlertTriangle size={12} /> {alignedCockpitMetrics.isTierThreeExposure ? 'TIER 3 STATUTORY RISK' : 'ACTIVE FIDUCIARY DEFICIENCIES'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 font-mono text-xs">
+                        {dynamicAuditItems.length === 0 ? (
+                          <div className="text-slate-500 font-sans italic p-4 bg-white border border-slate-200 rounded">
+                            No critical statutory non-compliance violations detected based on current assessment responses.
+                          </div>
+                        ) : (
+                          dynamicAuditItems.map((item) => (
+                            <div key={item.id} className="bg-white border border-slate-200 p-4 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                              <div className="space-y-1 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="inline-block bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                    NON-COMPLIANT
+                                  </span>
+                                  <span className="text-slate-900 font-bold tracking-tight">
+                                    {item.standard}
+                                  </span>
+                                  <span className="text-slate-400 text-[11px]">
+                                    // {item.clause}
+                                  </span>
+                                </div>
+                                <p className="text-slate-600 font-sans text-xs pt-1 leading-relaxed">
+                                  {item.finding}
+                                </p>
+                              </div>
+
+                              <div className="md:text-right shrink-0 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded text-[11px] font-sans text-slate-700 w-full md:w-auto">
+                                <span className="font-mono text-[9px] font-bold text-slate-500 uppercase block mb-0.5 md:text-right">
+                                  {item.remediationPhase} REMEDY GATE
+                                </span>
+                                <span className="font-medium text-slate-900">{item.statutoryRemedy}</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="bg-slate-900 text-white p-6 rounded-md space-y-3 font-sans no-print">
                   <div>
