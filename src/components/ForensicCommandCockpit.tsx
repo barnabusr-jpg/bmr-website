@@ -45,12 +45,10 @@ export default function ForensicCommandCockpit({
 }: ForensicCommandCockpitProps) {
   const router = useRouter();
 
-  // Resolve live metrics from passed object or fallback to flat props
   const score = metrics?.complianceScore ?? flatScore;
   const leakage = metrics?.annualSalaryLeakage ?? flatLeakage;
   const exposure = metrics?.unhedgedLegalExposure ?? flatExposure;
 
-  // Dynamic Sector Variance Calculations
   const taxVariancePct = peerWasteTaxBaseline > 0 
     ? Math.round(((leakage - peerWasteTaxBaseline) / peerWasteTaxBaseline) * 100) 
     : 0;
@@ -59,7 +57,6 @@ export default function ForensicCommandCockpit({
     : 0;
   const readinessVariance = Math.round(score - peerReadinessBaseline);
 
-  // Derived Financial Itemizations
   const wastedHoursPerYr = Math.round(leakage / 85);
   const weeklyLoss = Math.round(leakage / 52);
 
@@ -68,20 +65,9 @@ export default function ForensicCommandCockpit({
 
     const escapeCsv = (val: any) => {
       if (val === null || val === undefined) return '""';
-
-      let str: string;
-      if (typeof val === 'object') {
-        str = JSON.stringify(val);
-      } else {
-        str = String(val);
-      }
-
-      // Truncate excessively long values to maintain clean CSV boundaries
+      let str = typeof val === 'object' ? JSON.stringify(val) : String(val);
       const MAX_LEN = 6000;
-      if (str.length > MAX_LEN) {
-        str = str.slice(0, MAX_LEN) + '...';
-      }
-
+      if (str.length > MAX_LEN) str = str.slice(0, MAX_LEN) + '...';
       return `"${str.replace(/"/g, '""')}"`;
     };
 
@@ -98,6 +84,9 @@ export default function ForensicCommandCockpit({
       ["Target Organization", companyName],
       ["Diagnostic Sector", sector],
       ["", ""],
+      ["OVERALL ASSESSMENT COMPLETION", allDone ? "COMPLETED" : "INCOMPLETE"],
+      ["Overall Note", allDone ? "All 4 stakeholder tracks recorded." : "One or more tracks remain pending."],
+      ["", ""],
       ["EXECUTIVE SUMMARY & SFI COMPLIANCE METRICS", ""],
       ["AI Readiness Index", `${score.toFixed(0)}/100`],
       ["Readiness Variance vs Sector Benchmark", `${readinessVariance >= 0 ? `+${readinessVariance}` : readinessVariance} pts (Sector Median: ${peerReadinessBaseline})`],
@@ -108,9 +97,6 @@ export default function ForensicCommandCockpit({
       ["Estimated Capacity Loss", `~${wastedHoursPerYr.toLocaleString()} Engineering Hours/Yr`],
       ["Weekly Burn Rate", `$${weeklyLoss.toLocaleString()} / Week`],
       ["Target Remediation Recovery Multiplier", "3.4x ROI"],
-      ["", ""],
-      ["OVERALL ASSESSMENT COMPLETION", allDone ? "COMPLETED" : "INCOMPLETE"],
-      ["Overall Note", allDone ? "All 4 stakeholder tracks recorded." : "One or more tracks remain pending."],
       ["", ""],
       ["QUAD NODE STAKEHOLDER COMPLETION STATUS", ""],
       ["Track", "Persona Role", "Status"],
@@ -130,7 +116,6 @@ export default function ForensicCommandCockpit({
       'QUAD_SYS_COMPLETE'
     ]);
 
-    // Stable alphabetical sort ensures deterministic CSV output
     const safeResponses = (responses || {}) as Record<string, any>;
     const responseKeys = Object.keys(safeResponses).sort((a, b) => a.localeCompare(b));
 
@@ -151,10 +136,7 @@ export default function ForensicCommandCockpit({
   };
 
   const handleSOWClick = () => {
-    if (onSelectSOW) {
-      onSelectSOW();
-    }
-    
+    if (onSelectSOW) onSelectSOW();
     setTimeout(() => {
       const sowElement = document.getElementById('sow-section');
       if (sowElement) {
@@ -166,8 +148,8 @@ export default function ForensicCommandCockpit({
   return (
     <div className="bg-white text-slate-900 border border-slate-200 p-8 md:p-10 rounded-lg shadow-sm space-y-10 font-sans max-w-[1200px] mx-auto text-left">
       
-      {/* HEADER BAR & EXECUTIVE ACTIONS */}
-      <div className="border-b border-slate-200 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      {/* HEADER BAR & EXECUTIVE TOOLBAR */}
+      <div className="border-b border-slate-200 pb-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div>
           <span className="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider block">
             // Pre-Automation Control Plane Forensic Cockpit // {sector} SECTOR
@@ -177,30 +159,29 @@ export default function ForensicCommandCockpit({
           </h1>
         </div>
 
-        {/* Executive Action Buttons */}
-        <div className="flex flex-wrap items-center gap-3 no-print">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 no-print w-full xl:w-auto">
           <button
             type="button"
             onClick={handleExportCSV}
-            className="bg-white text-slate-700 border border-slate-300 text-xs font-mono font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-slate-50 transition-colors cursor-pointer rounded-md flex items-center gap-2"
+            className="flex-1 sm:flex-none bg-white text-slate-700 border border-slate-300 text-xs font-mono font-bold px-3.5 py-2.5 uppercase tracking-wider hover:bg-slate-50 transition-colors cursor-pointer rounded-md flex items-center justify-center gap-1.5 whitespace-nowrap shadow-xs"
           >
-            <Download size={14} /> Export CSV
+            <Download size={13} /> Export CSV
           </button>
 
           <button
             type="button"
             onClick={() => typeof window !== 'undefined' && window.print()}
-            className="bg-slate-100 text-slate-800 border border-slate-300 text-xs font-mono font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-slate-200 transition-colors cursor-pointer rounded-md flex items-center gap-2"
+            className="flex-1 sm:flex-none bg-slate-100 text-slate-800 border border-slate-300 text-xs font-mono font-bold px-3.5 py-2.5 uppercase tracking-wider hover:bg-slate-200 transition-colors cursor-pointer rounded-md flex items-center justify-center gap-1.5 whitespace-nowrap shadow-xs"
           >
-            <Printer size={14} /> Generate PDF
+            <Printer size={13} /> Generate PDF
           </button>
 
           <button
             type="button"
             onClick={handleSOWClick}
-            className="bg-slate-900 text-white text-xs font-mono font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer rounded-md flex items-center gap-2 shadow-sm"
+            className="flex-1 sm:flex-none bg-slate-900 text-white text-xs font-mono font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer rounded-md flex items-center justify-center gap-1.5 whitespace-nowrap shadow-sm"
           >
-            <FileText size={14} /> Final SOW
+            <FileText size={13} /> Final SOW
           </button>
 
           <button
@@ -209,17 +190,15 @@ export default function ForensicCommandCockpit({
               const company = encodeURIComponent(companyName || 'Target Organization');
               router.push(`/certificate?org=${company}`);
             }}
-            className="bg-emerald-700 text-white text-xs font-mono font-bold px-5 py-2.5 uppercase tracking-wider hover:bg-emerald-800 transition-colors cursor-pointer rounded-md shadow-sm flex items-center gap-2"
+            className="w-full sm:w-auto bg-emerald-700 text-white text-xs font-mono font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-emerald-800 transition-colors cursor-pointer rounded-md shadow-sm flex items-center justify-center gap-1.5 whitespace-nowrap"
           >
-            <ShieldCheck size={16} /> View Verification Certificate
+            <ShieldCheck size={14} /> Certificate
           </button>
         </div>
       </div>
 
       {/* KPI METRIC CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        {/* Metric 1: AI Readiness Index */}
         <div className="border border-slate-200 bg-slate-50 p-6 rounded-md space-y-2">
           <span className="text-[10px] font-mono text-slate-500 font-bold uppercase block">
             AI Readiness Index
@@ -232,7 +211,6 @@ export default function ForensicCommandCockpit({
           </div>
         </div>
 
-        {/* Metric 2: Process Waste Tax */}
         <div className="border border-slate-200 bg-slate-50 p-6 rounded-md space-y-2">
           <span className="text-[10px] font-mono text-slate-500 font-bold uppercase block">
             Process Waste Tax
@@ -245,7 +223,6 @@ export default function ForensicCommandCockpit({
           </div>
         </div>
 
-        {/* Metric 3: Total Promise Gap Exposure */}
         <div className="border border-slate-200 bg-slate-50 p-6 rounded-md space-y-2">
           <span className="text-[10px] font-mono text-slate-500 font-bold uppercase block">
             Total Promise Gap™ Exposure
@@ -257,7 +234,6 @@ export default function ForensicCommandCockpit({
             +{exposureVariancePct}% Risk Exposure vs Sector Median (${peerExposureBaseline.toLocaleString()})
           </div>
         </div>
-
       </div>
 
       {/* DETAILED FINANCIAL LEAKAGE BREAKDOWN */}
