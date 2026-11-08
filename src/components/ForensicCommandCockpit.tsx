@@ -2,7 +2,7 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { ShieldCheck, Printer, FileText, Download, TrendingDown, Layers, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { computeRegulatoryAuditItems, type FunnelPillar } from '@/lib/forensicRegulatoryCalculus';
+import { computeRegulatoryAuditItems, resolveClientIndustry, CLIENT_INDUSTRY_OPTIONS, type ClientIndustry } from '@/lib/forensicRegulatoryCalculus';
 
 export interface ForensicMetricsPayload {
   complianceScore?: number;
@@ -17,7 +17,7 @@ type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 
 interface ForensicCommandCockpitProps {
   companyName?: string;
-  sector?: string;
+  sector?: ClientIndustry | string;
   metrics?: ForensicMetricsPayload;
   completions?: Record<PersonaKey, boolean>;
   responses?: Record<string, any>;
@@ -32,7 +32,7 @@ interface ForensicCommandCockpitProps {
 
 export default function ForensicCommandCockpit({
   companyName = "TARGET SPECIFICATION",
-  sector = "FINANCE",
+  sector = "CROSS_SECTOR_ENTERPRISE",
   metrics,
   completions,
   responses = {},
@@ -45,6 +45,10 @@ export default function ForensicCommandCockpit({
   peerReadinessBaseline = 76
 }: ForensicCommandCockpitProps) {
   const router = useRouter();
+
+  const resolvedIndustry = resolveClientIndustry(sector);
+  const matchedIndustryOption = CLIENT_INDUSTRY_OPTIONS.find(o => o.value === resolvedIndustry);
+  const displayIndustryLabel = matchedIndustryOption?.label || "Cross-Sector Enterprise";
 
   const score = metrics?.complianceScore ?? flatScore;
   const leakage = metrics?.annualSalaryLeakage ?? flatLeakage;
@@ -85,7 +89,7 @@ export default function ForensicCommandCockpit({
       ["BMR SOLUTIONS // FORENSIC DIAGNOSTIC AUDIT REPORT", ""],
       ["Generated Timestamp", timestamp],
       ["Target Organization", companyName],
-      ["Diagnostic Sector", sector],
+      ["Client Industry Vertical", displayIndustryLabel],
       ["", ""],
       ["OVERALL ASSESSMENT COMPLETION", allDone ? "COMPLETED" : "INCOMPLETE"],
       ["Overall Note", allDone ? "All 4 stakeholder tracks recorded." : "One or more tracks remain pending."],
@@ -109,16 +113,9 @@ export default function ForensicCommandCockpit({
       ["NODE 04", "Frontline System Execution", completions?.SYSTEM_USER ? "COMPLETED" : "PENDING"],
     ];
 
-    // DYNAMIC SECTOR REGULATORY AUDIT
-    const resolvedPillar: FunnelPillar =
-      sector.includes('INDUSTRIAL') || sector.includes('AVS')
-        ? 'AVS'
-        : sector.includes('SERVICES') || sector.includes('HAI')
-        ? 'HAI'
-        : 'IGF';
-
+    // DYNAMIC CLIENT INDUSTRY REGULATORY AUDIT
     const regulatoryItems = computeRegulatoryAuditItems({
-      pillar: resolvedPillar,
+      industry: resolvedIndustry,
       responses: safeResponses,
       isTierThreeExposure: metrics?.isTierThreeExposure,
       regulatoryAlertActive: metrics?.regulatoryAlertActive,
@@ -126,7 +123,7 @@ export default function ForensicCommandCockpit({
 
     rows.push(
       ["", ""],
-      ["SECTOR REGULATORY COMPLIANCE AUDIT", ""],
+      ["CLIENT INDUSTRY REGULATORY COMPLIANCE AUDIT", ""],
       ["Framework", "Governing Clause / Statutory Basis", "Observed Compliance Finding", "Mandatory SOW Remediation", "Target Phase"]
     );
 
@@ -187,7 +184,7 @@ export default function ForensicCommandCockpit({
       <div className="border-b border-slate-200 pb-6 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
         <div>
           <span className="text-[10px] font-mono text-slate-500 font-bold uppercase tracking-wider block">
-            // Pre-Automation Control Plane Forensic Cockpit // {sector} SECTOR
+            // Pre-Automation Control Plane Forensic Cockpit // {displayIndustryLabel}
           </span>
           <h1 className="text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 mt-1">
             Diagnostic Verdict: {companyName}
@@ -242,7 +239,7 @@ export default function ForensicCommandCockpit({
             {score.toFixed(0)}<span className="text-base font-normal text-slate-500">/100</span>
           </div>
           <div className={`text-xs font-mono font-bold pt-1 ${readinessVariance >= 0 ? 'text-emerald-700' : 'text-amber-700'}`}>
-            {readinessVariance >= 0 ? `+${readinessVariance}` : readinessVariance} Variance vs Peer Sector Benchmark ({peerReadinessBaseline})
+            {readinessVariance >= 0 ? `+${readinessVariance}` : readinessVariance} Variance vs Sector Benchmark ({peerReadinessBaseline})
           </div>
         </div>
 
