@@ -1,4 +1,9 @@
-export type FunnelPillar = 'IGF' | 'AVS' | 'HAI';
+export type ClientIndustry = 
+  | 'HEALTHCARE_LIFE_SCIENCES' 
+  | 'FINANCIAL_SERVICES' 
+  | 'INDUSTRIAL_MANUFACTURING'
+  | 'CROSS_SECTOR_ENTERPRISE';
+
 export type RegulatoryViolationType = 'CRITICAL_BREACH' | 'DRIFT_RISK' | 'GOVERNANCE_GAP';
 export type FrictionVectorType = 'SCHEMA_DRIFT' | 'ALERT_FATIGUE' | 'CONTEXT_INTEGRITY' | 'FIDUCIARY_GAP';
 
@@ -22,9 +27,8 @@ export interface FrictionProfile {
 }
 
 /**
- * Evaluates responses from quad_{SECTOR}-{INDEX}-{NODE} questions.
+ * Evaluates responses from quad diagnostic questions.
  * Options "C" and "D" indicate friction / degradation.
- * Baseline threshold: >= 1 degraded response activates vector detection.
  */
 export function analyzeFrictionProfile(responses: Record<string, any> = {}): FrictionProfile {
   let techScore = 0;
@@ -65,12 +69,118 @@ export function analyzeFrictionProfile(responses: Record<string, any> = {}): Fri
 }
 
 /**
- * Master catalog: US Primary + GDPR Privacy/Security Overlay
+ * Master Statutory Catalog: Keyed strictly by Client Industry Sector
  */
-const REGULATORY_MASTER_CATALOG: Record<FunnelPillar, RegulatoryAuditItem[]> = {
-  AVS: [
+const INDUSTRY_REGULATORY_CATALOG: Record<ClientIndustry, RegulatoryAuditItem[]> = {
+  HEALTHCARE_LIFE_SCIENCES: [
     {
-      id: 'AVS-ISO-01',
+      id: 'HLTH-FHIR-01',
+      standard: 'HL7 FHIR v4',
+      clause: 'US Core Implementation Guide § 3.1',
+      violationType: 'CRITICAL_BREACH',
+      frictionVector: 'SCHEMA_DRIFT',
+      finding: 'Unstructured context drift corrupts patient observational and clinical diagnostic schemas.',
+      statutoryRemedy: 'Enforce strict schema-conformance validation adapters prior to EHR persistence.',
+      remediationPhase: 'PHASE 01',
+    },
+    {
+      id: 'HLTH-HIPAA-02',
+      standard: 'HIPAA Security Rule / HITECH Act',
+      clause: '45 CFR § 164.312(b) // Sec 13402',
+      violationType: 'CRITICAL_BREACH',
+      frictionVector: 'CONTEXT_INTEGRITY',
+      finding: 'Clinical operator interactions record unmasked ePHI and diagnostic prompts into uninspected context buffers.',
+      statutoryRemedy: 'Deploy automated PII/ePHI redaction and cryptographic audit trail logging for all agent queries.',
+      remediationPhase: 'PHASE 02',
+    },
+    {
+      id: 'HLTH-GDPR-03',
+      standard: 'GDPR / ISO 27701:2019',
+      clause: 'Art. 5(1)(c) (Data Minimization) & Art. 32 (Security)',
+      violationType: 'CRITICAL_BREACH',
+      frictionVector: 'CONTEXT_INTEGRITY',
+      finding: 'Patient telemetry retention exceeds statutory purpose limitation across downstream inference pipelines.',
+      statutoryRemedy: 'Enforce tenant-isolated sovereign context boundaries and automated data-expiry runbooks.',
+      remediationPhase: 'PHASE 02',
+    },
+    {
+      id: 'HLTH-FDA-04',
+      standard: 'FDA Guidance on SaMD / NIST CSF 2.0',
+      clause: 'Good Machine Learning Practice (GMLP) Principle 7',
+      violationType: 'DRIFT_RISK',
+      frictionVector: 'ALERT_FATIGUE',
+      finding: 'Alarm fatigue from uncalibrated diagnostic warnings leads triage teams to bypass manual validation barriers.',
+      statutoryRemedy: 'Deploy automated sensitivity thresholds and rate-limited clinical alert runbooks.',
+      remediationPhase: 'PHASE 02',
+    },
+    {
+      id: 'HLTH-GOV-05',
+      standard: 'NIST AI RMF 1.0 / HIPAA Admin Simplification',
+      clause: 'GOVERN 2.1 // 45 CFR § 164.308',
+      violationType: 'GOVERNANCE_GAP',
+      frictionVector: 'FIDUCIARY_GAP',
+      finding: 'Clinical governance oversight operates without verifiable telemetry feedback for automated agent decisions.',
+      statutoryRemedy: 'Establish formal algorithmic governance committees with immutable sign-off gates.',
+      remediationPhase: 'PHASE 03',
+    },
+  ],
+
+  FINANCIAL_SERVICES: [
+    {
+      id: 'FIN-SOX-01',
+      standard: 'Sarbanes-Oxley Act (SOX)',
+      clause: 'Section 404 (Management Assessment of Internal Controls)',
+      violationType: 'CRITICAL_BREACH',
+      frictionVector: 'SCHEMA_DRIFT',
+      finding: 'Autonomous orchestration pipelines mutate general ledger transaction schemas without an immutable audit trail.',
+      statutoryRemedy: 'Install cryptographically signed audit logs and schema mutation circuit breakers.',
+      remediationPhase: 'PHASE 01',
+    },
+    {
+      id: 'FIN-PCI-02',
+      standard: 'PCI-DSS v4.0 / GLBA Safeguards Rule',
+      clause: 'Req 10.2 // 16 CFR Part 314',
+      violationType: 'CRITICAL_BREACH',
+      frictionVector: 'CONTEXT_INTEGRITY',
+      finding: 'Cardholder metadata and non-public personal financial records pass through uninspected model endpoints.',
+      statutoryRemedy: 'Isolate sensitive transaction clusters and implement zero-trust egress proxies.',
+      remediationPhase: 'PHASE 02',
+    },
+    {
+      id: 'FIN-GDPR-03',
+      standard: 'GDPR / ISO 27001:2022',
+      clause: 'Art. 25 (Privacy by Design) & Art. 32 (Security of Processing)',
+      violationType: 'CRITICAL_BREACH',
+      frictionVector: 'CONTEXT_INTEGRITY',
+      finding: 'Customer account context strings and transaction records are ingested into external inference caches.',
+      statutoryRemedy: 'Deploy tenant-isolated contextual redaction adapters before external API payload transmission.',
+      remediationPhase: 'PHASE 02',
+    },
+    {
+      id: 'FIN-NIST-04',
+      standard: 'NIST CSF 2.0 / FFIEC Guidelines',
+      clause: 'DE.AE-02 (Anomaly Detection) // Appendix J',
+      violationType: 'DRIFT_RISK',
+      frictionVector: 'ALERT_FATIGUE',
+      finding: 'Repetitive false-positive risk warnings desensitize compliance desks to genuine fraudulent anomaly flags.',
+      statutoryRemedy: 'Calibrate anomaly detection sensitivity thresholds and automate tier-1 event reconciliation.',
+      remediationPhase: 'PHASE 02',
+    },
+    {
+      id: 'FIN-SEC-05',
+      standard: 'SEC Rule 17a-4 / FINRA Rule 4511',
+      clause: 'WORM Compliance (Books and Records Preservation)',
+      violationType: 'GOVERNANCE_GAP',
+      frictionVector: 'FIDUCIARY_GAP',
+      finding: 'Ephemeral agent trading directives and risk calculations lack statutory write-once-read-many immutable storage.',
+      statutoryRemedy: 'Mandate WORM storage adapters for all runtime automated decisioning pipelines.',
+      remediationPhase: 'PHASE 03',
+    },
+  ],
+
+  INDUSTRIAL_MANUFACTURING: [
+    {
+      id: 'IND-ISO-01',
       standard: 'ISO 9001:2015',
       clause: 'Clause 8.5.1 (Control of Production & Service Provision)',
       violationType: 'CRITICAL_BREACH',
@@ -80,7 +190,7 @@ const REGULATORY_MASTER_CATALOG: Record<FunnelPillar, RegulatoryAuditItem[]> = {
       remediationPhase: 'PHASE 01',
     },
     {
-      id: 'AVS-IEC-02',
+      id: 'IND-IEC-02',
       standard: 'IEC 62443-3-3 / NIST SP 800-82r3',
       clause: 'Security Requirements SR 5.2 (Zone Boundary Protection)',
       violationType: 'CRITICAL_BREACH',
@@ -90,7 +200,7 @@ const REGULATORY_MASTER_CATALOG: Record<FunnelPillar, RegulatoryAuditItem[]> = {
       remediationPhase: 'PHASE 01',
     },
     {
-      id: 'AVS-GDPR-03',
+      id: 'IND-GDPR-03',
       standard: 'GDPR / ISO 27001:2022',
       clause: 'GDPR Art. 25 & 32 // ISO Control A.8.28',
       violationType: 'CRITICAL_BREACH',
@@ -100,7 +210,7 @@ const REGULATORY_MASTER_CATALOG: Record<FunnelPillar, RegulatoryAuditItem[]> = {
       remediationPhase: 'PHASE 02',
     },
     {
-      id: 'AVS-NIST-04',
+      id: 'IND-NIST-04',
       standard: 'NIST CSF 2.0 / NIST AI RMF 1.0',
       clause: 'DE.CM-01 (Continuous Monitoring) // MEASURE 2.6',
       violationType: 'DRIFT_RISK',
@@ -110,7 +220,7 @@ const REGULATORY_MASTER_CATALOG: Record<FunnelPillar, RegulatoryAuditItem[]> = {
       remediationPhase: 'PHASE 02',
     },
     {
-      id: 'AVS-GOV-05',
+      id: 'IND-GOV-05',
       standard: 'NIST AI RMF 1.0',
       clause: 'GOVERN 1.2 (Accountability & Fiduciary Structures)',
       violationType: 'GOVERNANCE_GAP',
@@ -121,137 +231,147 @@ const REGULATORY_MASTER_CATALOG: Record<FunnelPillar, RegulatoryAuditItem[]> = {
     },
   ],
 
-  HAI: [
+  CROSS_SECTOR_ENTERPRISE: [
     {
-      id: 'HAI-FHIR-01',
-      standard: 'HL7 FHIR v4',
-      clause: 'US Core Implementation Guide § 3.1',
+      id: 'ENT-ISO-01',
+      standard: 'ISO/IEC 27001:2022',
+      clause: 'Control A.8.28 (Secure Coding) & Control A.8.8',
       violationType: 'CRITICAL_BREACH',
       frictionVector: 'SCHEMA_DRIFT',
-      finding: 'Unstructured model drift corrupts patient observational and clinical demographic schemas.',
-      statutoryRemedy: 'Enforce strict JSON-schema conformance adapters before electronic health record ingestion.',
+      finding: 'Unmanaged API pipeline drift and unversioned runtime dependencies violate technical vulnerability management policies.',
+      statutoryRemedy: 'Deploy automated OpenAPI schema gateways and release gate regression suites.',
       remediationPhase: 'PHASE 01',
     },
     {
-      id: 'HAI-HIPAA-02',
-      standard: 'HIPAA Security Rule / HITECH Act',
-      clause: '45 CFR § 164.312(b) // Sec 13402',
+      id: 'ENT-GDPR-02',
+      standard: 'GDPR / CCPA / CPRA',
+      clause: 'Art. 5 (Data Minimization) // Cal. Civ. Code § 1798.100',
       violationType: 'CRITICAL_BREACH',
       frictionVector: 'CONTEXT_INTEGRITY',
-      finding: 'Clinical operator interactions record unmasked ePHI and diagnostic queries into uninspected context buffers.',
-      statutoryRemedy: 'Deploy automated DLP sanitization and cryptographic audit trail logging for all agent transactions.',
+      finding: 'Unsanitized user and employee prompts ingest confidential and personal data into third-party inference perimeters.',
+      statutoryRemedy: 'Implement tenant-isolated boundary proxies and automated DLP redaction.',
       remediationPhase: 'PHASE 02',
     },
     {
-      id: 'HAI-GDPR-03',
-      standard: 'GDPR / ISO 27701:2019',
-      clause: 'Art. 5(1)(c) (Data Minimization) & Art. 32 (Security)',
-      violationType: 'CRITICAL_BREACH',
-      frictionVector: 'CONTEXT_INTEGRITY',
-      finding: 'Cross-border patient processing retains unredacted personal health data beyond statutory residency parameters.',
-      statutoryRemedy: 'Enforce tenant-isolated sovereign context boundaries and automated data-expiry runbooks.',
-      remediationPhase: 'PHASE 02',
-    },
-    {
-      id: 'HAI-FDA-04',
-      standard: 'FDA SaMD Guidance / NIST CSF 2.0',
-      clause: 'GMLP Principle 7 // PR.DS-01',
+      id: 'ENT-NIST-03',
+      standard: 'NIST CSF 2.0',
+      clause: 'PR.DS-01 (Data Security) & DE.AE-02 (Analysis)',
       violationType: 'DRIFT_RISK',
       frictionVector: 'ALERT_FATIGUE',
-      finding: 'Alarm fatigue from uncalibrated diagnostic warnings leads clinical triage teams to override automated validation steps.',
-      statutoryRemedy: 'Implement sensitivity dampening and multi-tier triage escalation hierarchies.',
+      finding: 'Operational monitoring noise causes operators to ignore anomalous pipeline dispatch events.',
+      statutoryRemedy: 'Deploy automated alarm suppression and consolidated event aggregation.',
       remediationPhase: 'PHASE 02',
     },
     {
-      id: 'HAI-GOV-05',
-      standard: 'NIST AI RMF 1.0 / HIPAA Admin Simplification',
-      clause: 'GOVERN 2.1 // 45 CFR § 164.308',
+      id: 'ENT-NIST-04',
+      standard: 'NIST AI RMF 1.0',
+      clause: 'GOVERN 1.1 / MAP 1.5',
       violationType: 'GOVERNANCE_GAP',
       frictionVector: 'FIDUCIARY_GAP',
-      finding: 'Executive oversight operates without verified risk metrics for downstream AI medical workflow delegation.',
-      statutoryRemedy: 'Establish formal algorithmic governance committees with immutable sign-off gates.',
+      finding: 'Executive oversight lacks verified telemetry mapping organizational AI risk exposure ceilings.',
+      statutoryRemedy: 'Institute continuous telemetry dashboards linked directly to executive risk reporting.',
       remediationPhase: 'PHASE 03',
     },
-  ],
-
-  IGF: [
-    {
-      id: 'IGF-SOX-01',
-      standard: 'Sarbanes-Oxley Act (SOX)',
-      clause: 'Section 404 (Internal Financial Reporting Controls)',
-      violationType: 'CRITICAL_BREACH',
-      frictionVector: 'SCHEMA_DRIFT',
-      finding: 'Autonomous orchestration pipelines mutate general ledger transaction schemas without an immutable audit trail.',
-      statutoryRemedy: 'Install cryptographically signed audit logs and schema mutation circuit breakers.',
-      remediationPhase: 'PHASE 01',
-    },
-    {
-      id: 'IGF-PCI-02',
-      standard: 'PCI-DSS v4.0 / GLBA Safeguards Rule',
-      clause: 'Req 10.2 // 16 CFR Part 314',
-      violationType: 'CRITICAL_BREACH',
-      frictionVector: 'CONTEXT_INTEGRITY',
-      finding: 'Cardholder metadata and non-public personal financial assets transit uninspected inference workflows.',
-      statutoryRemedy: 'Isolate sensitive transaction clusters and implement zero-trust egress proxies.',
-      remediationPhase: 'PHASE 02',
-    },
-    {
-      id: 'IGF-GDPR-03',
-      standard: 'GDPR / ISO 27001:2022',
-      clause: 'Art. 25 (Privacy by Design) & Art. 32 (Security of Processing)',
-      violationType: 'CRITICAL_BREACH',
-      frictionVector: 'CONTEXT_INTEGRITY',
-      finding: 'Customer banking context strings and transaction records are ingested into external foundation model caches.',
-      statutoryRemedy: 'Deploy tenant-isolated contextual redaction adapters before external API payload transmission.',
-      remediationPhase: 'PHASE 02',
-    },
-    {
-      id: 'IGF-NIST-04',
-      standard: 'NIST CSF 2.0 / FFIEC Guidelines',
-      clause: 'DE.AE-02 (Anomaly Detection) // Appendix J',
-      violationType: 'DRIFT_RISK',
-      frictionVector: 'ALERT_FATIGUE',
-      finding: 'Repetitive false-positive risk warnings desensitize compliance desks to genuine fraudulent anomaly flags.',
-      statutoryRemedy: 'Calibrate anomaly detection sensitivity thresholds and automate tier-1 event reconciliation.',
-      remediationPhase: 'PHASE 02',
-    },
-    {
-      id: 'IGF-SEC-05',
-      standard: 'SEC Rule 17a-4 / FINRA Rule 4511',
-      clause: 'WORM Compliance (Books and Records Preservation)',
-      violationType: 'GOVERNANCE_GAP',
-      frictionVector: 'FIDUCIARY_GAP',
-      finding: 'Ephemeral agent trading directives and risk calculations lack statutory write-once-read-many immutable storage.',
-      statutoryRemedy: 'Mandate WORM storage adapters for all runtime automated decisioning pipelines.',
-      remediationPhase: 'PHASE 03',
-    },
-  ],
+  ]
 };
 
+export const CLIENT_INDUSTRY_OPTIONS: Array<{ value: ClientIndustry; label: string; description: string }> = [
+  {
+    value: 'HEALTHCARE_LIFE_SCIENCES',
+    label: 'Healthcare & Life Sciences',
+    description: 'HIPAA, HL7 FHIR v4, FDA SaMD, and HITECH data protection boundaries'
+  },
+  {
+    value: 'FINANCIAL_SERVICES',
+    label: 'Financial Services & Banking',
+    description: 'SOX 404, PCI-DSS v4.0, GLBA Safeguards, and SEC/FINRA WORM controls'
+  },
+  {
+    value: 'INDUSTRIAL_MANUFACTURING',
+    label: 'Industrial & Supply Chain',
+    description: 'ISO 9001, IEC 62443, NIST SP 800-82, and OT production boundaries'
+  },
+  {
+    value: 'CROSS_SECTOR_ENTERPRISE',
+    label: 'Cross-Sector Enterprise',
+    description: 'ISO/IEC 27001:2022, NIST CSF 2.0, NIST AI RMF, and GDPR/CCPA'
+  }
+];
+
 /**
- * Selects standards based on:
- * 1. Sector Pillar (AVS / HAI / IGF)
- * 2. Active survey friction vectors (Schema, Noise, Context, Fiduciary)
- * 3. Exposure Severity / Alerts (Tier 3 includes full regime; alerts guarantee Criticals)
+ * Normalizes values stored in audits.sector into a valid ClientIndustry enum value.
  */
+export function resolveClientIndustry(rawSector?: string | null): ClientIndustry {
+  if (!rawSector) return 'CROSS_SECTOR_ENTERPRISE';
+  const clean = rawSector.toUpperCase().trim();
+
+  // 1. Direct enum matches
+  if (clean === 'HEALTHCARE_LIFE_SCIENCES') return 'HEALTHCARE_LIFE_SCIENCES';
+  if (clean === 'FINANCIAL_SERVICES') return 'FINANCIAL_SERVICES';
+  if (clean === 'INDUSTRIAL_MANUFACTURING') return 'INDUSTRIAL_MANUFACTURING';
+  if (clean === 'CROSS_SECTOR_ENTERPRISE') return 'CROSS_SECTOR_ENTERPRISE';
+
+  // 2. Healthcare & Clinical Indicators
+  if (
+    clean.includes('HEALTH') || 
+    clean.includes('HOSPITAL') || 
+    clean.includes('CLINIC') || 
+    clean.includes('PHARMA') || 
+    clean.includes('BIOTECH') || 
+    clean.includes('LIFE_SCIENCE') ||
+    clean === 'HAI_HEALTHCARE'
+  ) {
+    return 'HEALTHCARE_LIFE_SCIENCES';
+  }
+
+  // 3. Banking, Capital Markets & Insurance Indicators
+  if (
+    clean.includes('FINANC') || 
+    clean.includes('BANK') || 
+    clean.includes('CAPITAL') || 
+    clean.includes('INSUR') || 
+    clean.includes('WEALTH') || 
+    clean.includes('INVEST') ||
+    clean === 'FINANCE' ||
+    clean === 'IGF_FINANCE'
+  ) {
+    return 'FINANCIAL_SERVICES';
+  }
+
+  // 4. Industrial, Automotive & Supply Chain Indicators
+  if (
+    clean.includes('INDUST') || 
+    clean.includes('MANUF') || 
+    clean.includes('SUPPLY') || 
+    clean.includes('AUTO') || 
+    clean.includes('LOGIST') ||
+    clean === 'INDUSTRIAL' ||
+    clean === 'AVS_INDUSTRIAL'
+  ) {
+    return 'INDUSTRIAL_MANUFACTURING';
+  }
+
+  // Default safely to cross-sector enterprise
+  return 'CROSS_SECTOR_ENTERPRISE';
+}
+
 export function computeRegulatoryAuditItems(params: {
-  pillar: FunnelPillar;
+  industry?: ClientIndustry | string;
   responses?: Record<string, any>;
   isTierThreeExposure?: boolean;
   regulatoryAlertActive?: boolean;
 }): RegulatoryAuditItem[] {
-  const { pillar, responses = {}, isTierThreeExposure, regulatoryAlertActive } = params;
-  const catalog = REGULATORY_MASTER_CATALOG[pillar] || REGULATORY_MASTER_CATALOG.AVS;
+  const { industry, responses = {}, isTierThreeExposure, regulatoryAlertActive } = params;
+  const resolved = resolveClientIndustry(typeof industry === 'string' ? industry : undefined);
+  const catalog = INDUSTRY_REGULATORY_CATALOG[resolved] || INDUSTRY_REGULATORY_CATALOG.CROSS_SECTOR_ENTERPRISE;
   const friction = analyzeFrictionProfile(responses);
 
   return catalog.filter((item) => {
-    // 1. Friction Node Vector Trigger
     if (item.frictionVector === 'SCHEMA_DRIFT' && friction.hasSchemaDrift) return true;
     if (item.frictionVector === 'ALERT_FATIGUE' && friction.hasAlertFatigue) return true;
     if (item.frictionVector === 'CONTEXT_INTEGRITY' && friction.hasContextIntegrityGap) return true;
     if (item.frictionVector === 'FIDUCIARY_GAP' && friction.hasFiduciaryGap) return true;
 
-    // 2. Severity Overrides
     if (isTierThreeExposure) return true;
     if (regulatoryAlertActive && item.violationType === 'CRITICAL_BREACH') return true;
 
