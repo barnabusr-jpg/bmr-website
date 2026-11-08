@@ -6,11 +6,17 @@ import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
 import {
   ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock,
-  FileText, ChevronRight, Copy, Check, Printer, RotateCcw
+  FileText, ChevronRight, Copy, Check, Printer, RotateCcw, AlertTriangle, Building2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
+import {
+  computeRegulatoryAuditItems,
+  resolveClientIndustry,
+  CLIENT_INDUSTRY_OPTIONS,
+  type ClientIndustry
+} from '@/lib/forensicRegulatoryCalculus';
 
 // Diagnostic Dossier Components & Context
 import { DiagnosticProvider } from '../../context/DiagnosticContext';
@@ -24,9 +30,15 @@ type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
-// Lightweight UUID validator to prevent malformed API queries
-const isValidUuid = (val?: string | null): boolean =>
-  Boolean(val && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val));
+const cleanUuid = (val?: string | null): string => {
+  if (!val || typeof val !== 'string') return '';
+  return val.trim().replace(/^["']|["']$/g, '');
+};
+
+const isValidUuid = (val?: string | null): boolean => {
+  const sanitized = cleanUuid(val);
+  return Boolean(sanitized && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sanitized));
+};
 
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   EXECUTIVE: ['EXECUTIVE', 'EXEC', 'IGF', 'STRATEGIC'],
@@ -35,7 +47,6 @@ const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
   SYSTEM_USER: ['SYSTEM_USER', 'SYS', 'USER', 'OPERATOR', 'CORE_SYSTEM', 'TERMINAL', 'SYSTEM'],
 };
 
-// PRECOMPUTED O(1) REVERSE ALIAS MAP
 const PERSONA_ALIAS_MAP: Record<string, PersonaKey> = Object.entries(QUAD_PERSONA_TYPES).reduce(
   (acc, [canonicalKey, aliases]) => {
     acc[canonicalKey] = canonicalKey as PersonaKey;
@@ -47,7 +58,6 @@ const PERSONA_ALIAS_MAP: Record<string, PersonaKey> = Object.entries(QUAD_PERSON
   {} as Record<string, PersonaKey>
 );
 
-// O(1) PERSONA ALIAS RESOLVER
 const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
   if (!rawRole) return null;
   const clean = rawRole.toUpperCase().trim();
@@ -64,7 +74,6 @@ const resolvePersonaKey = (rawRole?: string | null): PersonaKey | null => {
   return null;
 };
 
-// METHODOLOGY NODE CAPABILITY ALIGNMENT LABELS
 const PERSONA_DISPLAY_LABELS: Record<PersonaKey, { node: string; title: string; subtitle: string }> = {
   EXECUTIVE: {
     node: 'NODE 01',
@@ -98,6 +107,7 @@ const FRESH_EMPTY_EMAILS: Record<PersonaKey, string> = {
 interface TriangulationState {
   companyName: string;
   pillar: FunnelPillar;
+  industry: ClientIndustry;
   emails: Record<PersonaKey, string>;
   completions: Record<PersonaKey, boolean>;
   responses: Record<string, any>;
@@ -108,6 +118,7 @@ export default function ForensicEngineRoot() {
   const [hasSynced, setHasSynced] = useState(false);
   const [dossierTab, setDossierTab] = useState<'METRICS' | 'REMEDIATION' | 'INSPECTORATE'>('METRICS');
   const [companyName, setCompanyName] = useState('');
+  const [clientIndustry, setClientIndustry] = useState<ClientIndustry>('CROSS_SECTOR_ENTERPRISE');
   const [isCompanyFromDB, setIsCompanyFromDB] = useState(false);
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF');
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null);
@@ -125,16 +136,19 @@ export default function ForensicEngineRoot() {
   const [inputError, setInputError] = useState('');
 
   const companyNameRef = useRef(companyName);
+  const clientIndustryRef = useRef(clientIndustry);
   const activePillarRef = useRef(activePillar);
   const emailsRef = useRef(emails);
   const activeAuditIdRef = useRef(activeAuditId);
+  const triangulationRef = useRef(triangulation);
 
   useEffect(() => { companyNameRef.current = companyName; }, [companyName]);
+  useEffect(() => { clientIndustryRef.current = clientIndustry; }, [clientIndustry]);
   useEffect(() => { activePillarRef.current = activePillar; }, [activePillar]);
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
+  useEffect(() => { triangulationRef.current = triangulation; }, [triangulation]);
 
-  // BASELINE BOOT & HYDRATION (PURE MARKER-PRESENCE EVALUATION)
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
     isSyncingRef.current = true;
@@ -143,12 +157,13 @@ export default function ForensicEngineRoot() {
       ? new URLSearchParams(window.location.search)
       : new URLSearchParams();
 
-    let idParam = params.get('id') || activeAuditIdRef.current;
+    let idParam = cleanUuid(params.get('id') || activeAuditIdRef.current);
     const orgParam = params.get('org') || params.get('entity') || params.get('entity_code') || companyNameRef.current;
     const rawRole = params.get('role') || params.get('persona');
     const authVal = params.get('auth');
     const viewParam = params.get('view');
     const flowParam = params.get('flow');
+    const sectorParam = params.get('sector') || params.get('industry');
 
     let targetCompanyName = sanitizeOrgKey(orgParam || '');
 
@@ -160,7 +175,6 @@ export default function ForensicEngineRoot() {
         !isParticipantRoute &&
         (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
-      // AUDIT ID RESOLVER FALLBACK: If missing on participant route, resolve from DB via org_name
       if (!idParam && targetCompanyName) {
         const { data: matchedAudit } = await supabase
           .from('audits')
@@ -171,33 +185,67 @@ export default function ForensicEngineRoot() {
           .maybeSingle();
 
         if (matchedAudit?.id) {
-          idParam = matchedAudit.id;
-          setActiveAuditId(matchedAudit.id);
-          activeAuditIdRef.current = matchedAudit.id;
+          const resolvedCleanId = cleanUuid(matchedAudit.id);
+          idParam = resolvedCleanId;
+          setActiveAuditId(resolvedCleanId);
+          activeAuditIdRef.current = resolvedCleanId;
         }
       }
 
       if (isParticipantRoute && roleParam) {
-        if (idParam) {
+        let fetchedOrg = targetCompanyName;
+        let fetchedSector = sectorParam || clientIndustryRef.current;
+        let fetchedResponses: Record<string, any> = {};
+
+        if (idParam && isValidUuid(idParam)) {
           setActiveAuditId(idParam);
           activeAuditIdRef.current = idParam;
+
+          const { data: participantAudit } = await supabase
+            .from('audits')
+            .select('org_name, sector, raw_responses')
+            .eq('id', idParam)
+            .maybeSingle();
+
+          if (participantAudit) {
+            if (participantAudit.org_name) fetchedOrg = participantAudit.org_name;
+            if (participantAudit.sector) fetchedSector = participantAudit.sector;
+            if (participantAudit.raw_responses && typeof participantAudit.raw_responses === 'object' && !Array.isArray(participantAudit.raw_responses)) {
+              fetchedResponses = participantAudit.raw_responses;
+            }
+          }
         }
 
-        if (targetCompanyName) {
-          setCompanyName(targetCompanyName);
+        if (fetchedOrg) {
+          setCompanyName(fetchedOrg);
           setIsCompanyFromDB(true);
         }
+
+        const canonicalIndustry = resolveClientIndustry(fetchedSector);
+        setClientIndustry(canonicalIndustry);
 
         setActivePersona(roleParam);
         const resolvedPillar: FunnelPillar = roleParam === 'OPS_MGMT' ? 'HAI' : roleParam === 'TECH_MGMT' ? 'AVS' : 'IGF';
         setActivePillar(resolvedPillar);
 
+        const effectiveResponses = Object.keys(fetchedResponses).length > 0 
+          ? fetchedResponses 
+          : (triangulationRef.current?.responses || {});
+
+        const completionsMap: Record<PersonaKey, boolean> = {
+          EXECUTIVE: Boolean(effectiveResponses['QUAD_EXE_COMPLETE']),
+          TECH_MGMT: Boolean(effectiveResponses['QUAD_TEC_COMPLETE']),
+          OPS_MGMT: Boolean(effectiveResponses['QUAD_MGR_COMPLETE']),
+          SYSTEM_USER: Boolean(effectiveResponses['QUAD_SYS_COMPLETE'])
+        };
+
         setTriangulation(prev => ({
-          companyName: targetCompanyName || prev?.companyName || "Quad Node Client System",
+          companyName: fetchedOrg || prev?.companyName || "Quad Node Client System",
           pillar: resolvedPillar,
+          industry: canonicalIndustry,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
-          completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
-          responses: prev?.responses || {}
+          completions: completionsMap,
+          responses: Object.keys(fetchedResponses).length > 0 ? fetchedResponses : (prev?.responses || {})
         }));
 
         setViewState('WIZARD');
@@ -233,29 +281,23 @@ export default function ForensicEngineRoot() {
       }
 
       let calculatedPillar: FunnelPillar = activePillarRef.current;
+      let calculatedIndustry: ClientIndustry = clientIndustryRef.current;
 
       if (activeAudit) {
-        setActiveAuditId(activeAudit.id);
-        activeAuditIdRef.current = activeAudit.id;
+        const cleanAuditId = cleanUuid(activeAudit.id);
+        setActiveAuditId(cleanAuditId);
+        activeAuditIdRef.current = cleanAuditId;
         setCompanyName(activeAudit.org_name);
         setIsCompanyFromDB(true);
 
-        const sectorStr = String(activeAudit.sector || '').toUpperCase();
-        if (sectorStr.includes('AVS') || sectorStr.includes('INDUSTRIAL')) {
-          calculatedPillar = 'AVS';
-        } else if (sectorStr.includes('HAI') || sectorStr.includes('SERVICES')) {
-          calculatedPillar = 'HAI';
-        } else {
-          calculatedPillar = 'IGF';
-        }
-        setActivePillar(calculatedPillar);
+        calculatedIndustry = resolveClientIndustry(activeAudit.sector || sectorParam);
+        setClientIndustry(calculatedIndustry);
 
         const rawResponses =
           activeAudit.raw_responses && typeof activeAudit.raw_responses === 'object' && !Array.isArray(activeAudit.raw_responses)
             ? activeAudit.raw_responses
             : {};
 
-        // PURE MARKER-PRESENCE EVALUATION
         const completionsMap: Record<PersonaKey, boolean> = {
           EXECUTIVE: Boolean(rawResponses['QUAD_EXE_COMPLETE']),
           TECH_MGMT: Boolean(rawResponses['QUAD_TEC_COMPLETE']),
@@ -266,6 +308,7 @@ export default function ForensicEngineRoot() {
         setTriangulation(prev => ({
           companyName: activeAudit.org_name,
           pillar: calculatedPillar,
+          industry: calculatedIndustry,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
           completions: completionsMap,
           responses: rawResponses
@@ -280,6 +323,7 @@ export default function ForensicEngineRoot() {
         setTriangulation(prev => ({
           companyName: targetCompanyName,
           pillar: calculatedPillar,
+          industry: calculatedIndustry,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
           completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
           responses: prev?.responses || {}
@@ -332,7 +376,6 @@ export default function ForensicEngineRoot() {
     }
   }, [synchronizeEngineDataMatrix]);
 
-  // 5-SECOND HUB AUTO-POLLING FOR LIVE CHECKMARK UPDATES
   useEffect(() => {
     if (viewState !== 'HUB' || !activeAuditId) return;
 
@@ -354,12 +397,12 @@ export default function ForensicEngineRoot() {
     });
   };
 
-  // ATOMIC RPC PERSISTENCE WITH ENFORCED TIMESTAMP PRECEDENCE & RETURNED PAYLOAD HYDRATION
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => {
     if (!activePersona) return;
 
-    const targetPersona = activePersona;
-    const targetAuditId = activeAuditId || activeAuditIdRef.current;
+    const canonicalPersona: PersonaKey = (resolvePersonaKey(activePersona) || activePersona) as PersonaKey;
+    const rawTargetId = activeAuditId || activeAuditIdRef.current;
+    const targetAuditId = cleanUuid(rawTargetId);
 
     const quadMarkerMap: Record<PersonaKey, string> = {
       EXECUTIVE: 'QUAD_EXE_COMPLETE',
@@ -368,34 +411,26 @@ export default function ForensicEngineRoot() {
       SYSTEM_USER: 'QUAD_SYS_COMPLETE'
     };
 
-    const markerKey = quadMarkerMap[targetPersona];
+    const markerKey = quadMarkerMap[canonicalPersona];
     if (!markerKey) {
-      console.error(`[Save Handler] Failed to resolve quad marker key for persona: ${activePersona}`);
+      console.error(`[Save Handler] Failed to resolve quad marker key for persona: "${activePersona}" (canonical: "${canonicalPersona}")`);
       setActivePersona(null);
-      setViewState('THANK_YOU');
+      setViewState('HUB');
       return;
     }
-
-    const answersToSave = {
-      ...(personaAnswers || {}),
-      [markerKey]: new Date().toISOString()
-    };
-
-    setTriangulation(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        completions: { ...prev.completions, [targetPersona]: true },
-        responses: { ...prev.responses, ...answersToSave }
-      };
-    });
 
     if (!targetAuditId || !isValidUuid(targetAuditId)) {
-      console.warn('[Save Handler] Missing or invalid targetAuditId; skipping database save.', targetAuditId);
+      console.warn('[Save Handler] Missing or invalid targetAuditId; database write bypassed:', targetAuditId);
       setActivePersona(null);
-      setViewState('THANK_YOU');
+      setViewState('HUB');
       return;
     }
+
+    const timestamp = new Date().toISOString();
+    const answersToSave = {
+      ...(personaAnswers || {}),
+      [markerKey]: timestamp
+    };
 
     try {
       const { data: updatedRaw, error: rpcErr } = await supabase.rpc('save_quad_node_response', {
@@ -403,11 +438,31 @@ export default function ForensicEngineRoot() {
         new_responses: answersToSave
       });
 
-      if (rpcErr || !updatedRaw) {
-        console.error('[Save Handler] RPC execution failed:', rpcErr?.message || 'Null payload returned');
-      } else {
-        console.log(`Quad Node marker ${markerKey} saved for ${targetPersona} in audit ${targetAuditId}`);
+      if (rpcErr || !updatedRaw || typeof updatedRaw !== 'object') {
+        console.error('[Save Handler] RPC failed, executing direct table fallback:', rpcErr?.message || updatedRaw);
 
+        const { data: currentAudit } = await supabase
+          .from('audits')
+          .select('raw_responses')
+          .eq('id', targetAuditId)
+          .single();
+
+        if (currentAudit) {
+          const merged = { ...((currentAudit.raw_responses as Record<string, any>) || {}), ...answersToSave };
+          await supabase.from('audits').update({ raw_responses: merged }).eq('id', targetAuditId);
+
+          setTriangulation(prev => prev ? ({
+            ...prev,
+            completions: {
+              EXECUTIVE: Boolean(merged['QUAD_EXE_COMPLETE']),
+              TECH_MGMT: Boolean(merged['QUAD_TEC_COMPLETE']),
+              OPS_MGMT: Boolean(merged['QUAD_MGR_COMPLETE']),
+              SYSTEM_USER: Boolean(merged['QUAD_SYS_COMPLETE'])
+            },
+            responses: merged
+          }) : prev);
+        }
+      } else {
         setTriangulation(prev => prev ? ({
           ...prev,
           completions: {
@@ -423,8 +478,14 @@ export default function ForensicEngineRoot() {
       console.error('[Save Handler] Persistence exception:', err);
     }
 
+    if (typeof window !== 'undefined' && targetAuditId) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('id', targetAuditId);
+      window.history.replaceState({}, '', url.toString());
+    }
+
     setActivePersona(null);
-    setViewState('THANK_YOU');
+    setViewState('HUB');
   };
 
   const handleInitializeTriangulation = async (e: FormEvent) => {
@@ -443,7 +504,7 @@ export default function ForensicEngineRoot() {
         .from('audits')
         .insert({
           org_name: sanitizedInput,
-          sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
+          sector: clientIndustry,
           status: 'IN_PROGRESS',
           raw_responses: {}
         })
@@ -452,18 +513,19 @@ export default function ForensicEngineRoot() {
 
       if (createErr) throw createErr;
 
-      const parentAuditId = newAudit.id;
+      const parentAuditId = cleanUuid(newAudit.id);
       setActiveAuditId(parentAuditId);
       activeAuditIdRef.current = parentAuditId;
 
       if (typeof window !== 'undefined' && parentAuditId && isValidUuid(parentAuditId)) {
-        const newUrl = `${window.location.pathname}?id=${parentAuditId}&org=${encodeURIComponent(sanitizedInput)}&flow=quad_node&auth=admin_verified_secure`;
+        const newUrl = `${window.location.pathname}?id=${parentAuditId}&org=${encodeURIComponent(sanitizedInput)}&sector=${encodeURIComponent(clientIndustry)}&flow=quad_node&auth=admin_verified_secure`;
         window.history.pushState({}, '', newUrl);
       }
 
       const initialTriangulation = {
         companyName: sanitizedInput,
         pillar: activePillar,
+        industry: clientIndustry,
         emails: { ...emails },
         completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
         responses: {}
@@ -477,7 +539,7 @@ export default function ForensicEngineRoot() {
   };
 
   const handleTriggerNudge = async (persona: PersonaKey) => {
-    const targetAudit = activeAuditId || activeAuditIdRef.current;
+    const targetAudit = cleanUuid(activeAuditId || activeAuditIdRef.current);
     const currentEmails = triangulation?.emails || emails;
     const email = currentEmails[persona];
 
@@ -519,7 +581,7 @@ export default function ForensicEngineRoot() {
   };
 
   const handleDispatchBatchEmails = async () => {
-    const targetAudit = activeAuditId || activeAuditIdRef.current;
+    const targetAudit = cleanUuid(activeAuditId || activeAuditIdRef.current);
     if (!targetAudit) {
       alert("Audit record reference is missing. Please re-enter organization name or refresh.");
       return;
@@ -580,6 +642,7 @@ export default function ForensicEngineRoot() {
     setHasSynced(false);
 
     setCompanyName('');
+    setClientIndustry('CROSS_SECTOR_ENTERPRISE');
     setIsCompanyFromDB(false);
     setEmails(FRESH_EMPTY_EMAILS);
     setTriangulation(null);
@@ -595,28 +658,27 @@ export default function ForensicEngineRoot() {
     setTimeout(() => { synchronizeEngineDataMatrix(true); }, 0);
   };
 
-  // STRICT SERVER-MARKER TRUTH EVALUATION FOR MATRIX GATING
   const allPersonasComplete = useMemo(() => {
-    if (!triangulation?.responses) return false;
-    const resp = triangulation.responses;
-
-    return Boolean(
-      resp['QUAD_EXE_COMPLETE'] &&
-      resp['QUAD_TEC_COMPLETE'] &&
-      resp['QUAD_MGR_COMPLETE'] &&
-      resp['QUAD_SYS_COMPLETE']
-    );
-  }, [triangulation?.responses]);
+    if (!triangulation?.completions) return false;
+    const c = triangulation.completions;
+    return Boolean(c.EXECUTIVE && c.TECH_MGMT && c.OPS_MGMT && c.SYSTEM_USER);
+  }, [triangulation?.completions]);
 
   const alignedCockpitMetrics = useMemo(() => {
     if (!triangulation) {
       return { multiplier: 1.0, complianceScore: 100, annualSalaryLeakage: 0, unhedgedLegalExposure: 0, isTierThreeExposure: false, regulatoryAlertActive: false };
     }
 
+    const calculusSectorToken = 
+      triangulation.industry === 'HEALTHCARE_LIFE_SCIENCES' ? 'SERVICES' :
+      triangulation.industry === 'INDUSTRIAL_MANUFACTURING' ? 'INDUSTRIAL' :
+      triangulation.industry === 'FINANCIAL_SERVICES' ? 'FINANCE' :
+      'SERVICES';
+
     const calculated = calculateForensicMetrics(
       triangulation.companyName,
       triangulation.responses,
-      activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE'
+      calculusSectorToken
     );
 
     return {
@@ -627,7 +689,7 @@ export default function ForensicEngineRoot() {
       isTierThreeExposure: calculated.isTierThreeExposure,
       regulatoryAlertActive: calculated.regulatoryAlertActive
     };
-  }, [triangulation, activePillar]);
+  }, [triangulation]);
 
   const governanceMetrics = useMemo(() => ({
     totalLaborTaxPool: alignedCockpitMetrics.annualSalaryLeakage,
@@ -638,18 +700,18 @@ export default function ForensicEngineRoot() {
 
   const governanceAnalytics = useMemo(() => ({
     reliabilityIndex: alignedCockpitMetrics.complianceScore,
-    dominantBasis: "TECHNICAL_DEBT_AVS",
+    dominantBasis: "TECHNICAL_DEBT",
     dominantDriver: "PIPELINE_DRIFT",
     dominantVisibility: "PARTIAL",
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
-  // SOW LINK GENERATOR WITH SSR GUARD FIX
   const sowShareLink = useMemo(() => {
     if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
       org: triangulation.companyName,
       pillar: triangulation.pillar,
+      industry: triangulation.industry,
       ans: triangulation.responses,
       expires: Date.now() + 86400000
     };
@@ -677,7 +739,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-900 font-sans text-left overflow-x-hidden flex flex-col justify-center items-center py-12 px-4">
-      {/* INTAKE SETUP VIEW */}
+      {/* INTAKE SETUP VIEW WITH INDUSTRY SELECTOR */}
       {viewState === 'INTAKE' && (
         <div className="w-full max-w-lg border border-slate-200 bg-white p-8 md:p-10 text-left rounded-lg shadow-sm">
           <div className="border-b border-slate-100 pb-5 mb-8 flex items-center justify-between">
@@ -685,7 +747,7 @@ export default function ForensicEngineRoot() {
               <ShieldAlert size={24} className="text-slate-900 shrink-0" />
               <div>
                 <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 leading-none">Quad Node Diagnostic Setup</h2>
-                <span className="text-[11px] font-mono text-slate-500 font-medium block mt-1.5 uppercase tracking-wider">Configure Stakeholder Routing</span>
+                <span className="text-[11px] font-mono text-slate-500 font-medium block mt-1.5 uppercase tracking-wider">Configure Client & Sector Routing</span>
               </div>
             </div>
           </div>
@@ -711,6 +773,27 @@ export default function ForensicEngineRoot() {
                   isCompanyFromDB ? 'bg-slate-100 border-slate-300 text-slate-700 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:border-slate-900'
                 }`}
               />
+            </div>
+
+            {/* CLIENT INDUSTRY DROPDOWN */}
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-mono font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 size={13} className="text-slate-500" /> Client Industry Vertical
+                </label>
+                <span className="text-[10px] font-mono text-slate-400 font-bold uppercase">Governs Statutory Catalog</span>
+              </div>
+              <select
+                value={clientIndustry}
+                onChange={(e) => setClientIndustry(e.target.value as ClientIndustry)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-md p-3.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-slate-900 transition-colors cursor-pointer"
+              >
+                {CLIENT_INDUSTRY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label} — {opt.description}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-4 pt-4 border-t border-slate-100">
@@ -765,7 +848,7 @@ export default function ForensicEngineRoot() {
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Stakeholder Assessment Monitor</h2>
                 <span className="text-[11px] font-mono text-slate-500 block mt-1 uppercase tracking-wider">
-                  ORGANIZATION: {triangulation.companyName} | TRACK: {triangulation.pillar}
+                  ORGANIZATION: {triangulation.companyName} | SECTOR: {CLIENT_INDUSTRY_OPTIONS.find(o => o.value === triangulation.industry)?.label || triangulation.industry}
                 </span>
               </div>
             </div>
@@ -835,7 +918,10 @@ export default function ForensicEngineRoot() {
 
                     <button
                       onClick={async () => {
-                        if ((!activeAuditId || !activeAuditIdRef.current) && triangulation?.companyName) {
+                        const rawId = activeAuditId || activeAuditIdRef.current;
+                        let cleanTargetId = cleanUuid(rawId);
+
+                        if (!cleanTargetId && triangulation?.companyName) {
                           const { data: matched } = await supabase
                             .from('audits')
                             .select('id')
@@ -845,8 +931,9 @@ export default function ForensicEngineRoot() {
                             .maybeSingle();
 
                           if (matched?.id) {
-                            setActiveAuditId(matched.id);
-                            activeAuditIdRef.current = matched.id;
+                            cleanTargetId = cleanUuid(matched.id);
+                            setActiveAuditId(cleanTargetId);
+                            activeAuditIdRef.current = cleanTargetId;
                           }
                         }
                         setActivePersona(persona);
@@ -864,7 +951,7 @@ export default function ForensicEngineRoot() {
             })}
           </div>
 
-          {/* ACTION BUTTONS BLOCK WITH STRICT SERVER MARKER GATING */}
+          {/* ACTION BUTTONS BLOCK */}
           {(() => {
             const currentEmails = triangulation?.emails || emails;
             const hasAllEmails = Boolean(currentEmails?.EXECUTIVE?.trim()) &&
@@ -948,7 +1035,7 @@ export default function ForensicEngineRoot() {
             </p>
           </div>
           <div className="bg-slate-50 border border-slate-200 p-4 rounded text-left text-xs font-mono text-slate-500 leading-relaxed">
-            // You may now close this browser tab. Your organization's diagnostic administrator will receive the consolidated readiness assessment upon completion of all stakeholder tracks.
+            // You may now close this browser tab. Your organization&apos;s diagnostic administrator will receive the consolidated readiness assessment upon completion of all stakeholder tracks.
           </div>
         </div>
       )}
@@ -968,8 +1055,10 @@ export default function ForensicEngineRoot() {
 
           <ForensicCommandCockpit
             companyName={triangulation.companyName}
-            sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'}
+            sector={triangulation.industry}
             metrics={alignedCockpitMetrics}
+            completions={triangulation.completions}
+            responses={triangulation.responses}
             onSelectSOW={() => setDossierTab('REMEDIATION')}
           />
 
@@ -1017,45 +1106,57 @@ export default function ForensicEngineRoot() {
               </div>
             </div>
 
+            {/* TAB 01: Process Waste Tax Ledger */}
             {dossierTab === 'METRICS' && (
               <div className="space-y-6">
                 <p className="text-sm text-slate-600 font-sans leading-relaxed">
-                  This framework maps live cross-persona diagnostic responses to identify risk vectors across engineering pipelines for <strong className="text-slate-900 font-bold">{companyName.replace(/_/g, ' ')}</strong>. Below is the tactical summary of your current operational posture.
+                  This framework maps live cross-persona diagnostic responses to identify risk vectors across engineering pipelines for <strong className="text-slate-900 font-bold">{companyName.replace(/_/g, ' ')}</strong>. Below is the itemized cost ledger of your operational waste profile.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
-                    <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-2">
-                      Integrity Index ({alignedCockpitMetrics.complianceScore}/100)
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Measures the alignment gap between governance mandate and operational velocity. A rating of {alignedCockpitMetrics.complianceScore} highlights where technical environments lack automated policy guardrails.
-                    </p>
-                  </div>
-
-                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
-                    <span className="font-mono text-xs text-amber-600 block font-bold uppercase tracking-wider mb-2">
-                      Process Waste Tax (${alignedCockpitMetrics.annualSalaryLeakage.toLocaleString()})
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to critical recurring engineering hours exhausted resolving schema drift, manual firefighting, and validation fatigue.
-                    </p>
-                  </div>
-
-                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
-                    <span className="font-mono text-xs text-red-600 block font-bold uppercase tracking-wider mb-2">
-                      Total Promise Gap™ Exposure (${alignedCockpitMetrics.unhedgedLegalExposure.toLocaleString()})
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Projects total compliance fines and operational risk incurred if data pipelines remain uninsulated prior to expanding AI automation.
-                    </p>
-                  </div>
+                <div className="border border-slate-200 rounded-md overflow-hidden font-mono text-xs">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-100 text-slate-700 uppercase tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="p-4 font-bold">Cost Vector Category</th>
+                        <th className="p-4 font-bold">Operational Friction Root Cause</th>
+                        <th className="p-4 font-bold">Engineering Drag</th>
+                        <th className="p-4 font-bold text-right">Annual Impact</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      <tr>
+                        <td className="p-4 font-bold text-slate-900">API Architecture & Pipeline Drift</td>
+                        <td className="p-4 text-slate-600">Schema mutations without contract testing cause downstream failures.</td>
+                        <td className="p-4 text-amber-700 font-bold">~4,800 Hrs/Yr</td>
+                        <td className="p-4 text-right font-bold text-slate-900">${Math.round(alignedCockpitMetrics.annualSalaryLeakage * 0.45).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-4 font-bold text-slate-900">Alert Fatigue & Manual Triage</td>
+                        <td className="p-4 text-slate-600">Noisy telemetry and false positive alerts consume daily engineering cycles.</td>
+                        <td className="p-4 text-amber-700 font-bold">~3,400 Hrs/Yr</td>
+                        <td className="p-4 text-right font-bold text-slate-900">${Math.round(alignedCockpitMetrics.annualSalaryLeakage * 0.35).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-4 font-bold text-slate-900">Governance & Context Integrity Drift</td>
+                        <td className="p-4 text-slate-600">Unmonitored prompt and payload ingestion creates repetitive compliance rework.</td>
+                        <td className="p-4 text-amber-700 font-bold">~2,441 Hrs/Yr</td>
+                        <td className="p-4 text-right font-bold text-slate-900">${Math.round(alignedCockpitMetrics.annualSalaryLeakage * 0.20).toLocaleString()}</td>
+                      </tr>
+                    </tbody>
+                    <tfoot className="bg-slate-50 border-t-2 border-slate-300 font-bold">
+                      <tr>
+                        <td colSpan={3} className="p-4 text-slate-900 uppercase">Total Consolidated Process Waste Tax</td>
+                        <td className="p-4 text-right text-red-700 text-sm">${Math.round(alignedCockpitMetrics.annualSalaryLeakage).toLocaleString()}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               </div>
             )}
 
+            {/* TAB 02: Remediation Runbooks & Final SOW */}
             {dossierTab === 'REMEDIATION' && (
-              <div className="space-y-8 font-sans">
+              <div id="sow-section" className="space-y-8 font-sans scroll-mt-6">
                 <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
                     <span className="font-mono text-[10px] text-emerald-400 block font-bold uppercase tracking-wider">
@@ -1065,11 +1166,11 @@ export default function ForensicEngineRoot() {
                       Target Implementation SOW: {companyName.replace(/_/g, ' ')}
                     </h4>
                   </div>
-                  <div className="flex items-center gap-3 font-mono text-xs">
+                  <div className="flex items-center gap-3 font-mono text-xs no-print">
                     <button
                       type="button"
                       onClick={() => typeof window !== 'undefined' && window.print()}
-                      className="bg-white text-slate-900 px-4 py-2 font-bold uppercase tracking-wider rounded hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer"
+                      className="bg-white text-slate-900 px-4 py-2 font-bold uppercase tracking-wider rounded hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
                     >
                       <Printer size={14} /> Print SOW Contract
                     </button>
@@ -1095,13 +1196,13 @@ export default function ForensicEngineRoot() {
                           Pipeline Hardening & Schema Abstraction
                         </td>
                         <td className="p-4 text-slate-600 leading-relaxed">
-                          Deploy strict GraphQL/OpenAPI schema validation gates, microservice adapter decoupling, and circuit breakers.
+                          Deploy strict OpenAPI schema validation gates and microservice circuit breakers across {companyName.replace(/_/g, ' ')} core systems.
                         </td>
                         <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 1 – 3</td>
                         <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Senior Data Eng + SecOps</td>
                         <td className="p-4 text-right whitespace-nowrap">
-                          <span className="bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
-                            Pending Approval
+                          <span className="bg-red-50 text-red-800 border border-red-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
+                            CRITICAL PRIORITY
                           </span>
                         </td>
                       </tr>
@@ -1111,7 +1212,7 @@ export default function ForensicEngineRoot() {
                           Telemetry Decoupling & Alarm Filtering
                         </td>
                         <td className="p-4 text-slate-600 leading-relaxed">
-                          Implement Purview/DLP sensitivity tagging, suppress alert fatigue loops, and install audit trail logging.
+                          Implement Purview/DLP sensitivity tagging, suppress alert fatigue loops, and install audit trail logging for {companyName.replace(/_/g, ' ')}.
                         </td>
                         <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 4 – 6</td>
                         <td className="p-4 font-mono text-slate-700 whitespace-nowrap">DevOps + Platform Lead</td>
@@ -1141,18 +1242,75 @@ export default function ForensicEngineRoot() {
                   </table>
                 </div>
 
-                <div className="border border-slate-200 bg-slate-50 p-6 rounded-md">
-                  <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-3">
-                    // Regulatory Non-Compliance Standards Audit
-                  </span>
+                {/* Dynamic Client Industry Regulatory Non-Compliance Standards Audit */}
+                {(() => {
+                  const resolvedInd = triangulation.industry;
+                  const matchedOption = CLIENT_INDUSTRY_OPTIONS.find(o => o.value === resolvedInd);
+                  const activeIndustryTitle = matchedOption?.label || "CROSS-SECTOR ENTERPRISE";
 
-                  <div className="space-y-3 font-mono text-xs text-slate-700">
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> ISO 9001:2015 // Clause 8.5.1: Messaging anomalies create unmapped distribution risk.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> HL7 FHIR v4 // Data Conformance: Unstructured drift triggers serialization failures.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> PCI-DSS v4.0 // Req 10.2: Processing delays interrupt automated auditing boundaries.</span></div>
-                    <div className="flex gap-2 items-start"><ChevronRight size={14} className="text-red-600 shrink-0 mt-0.5" /> <span><strong className="text-red-600">[NON-COMPLIANT]</strong> SOX Act // Section 404: Telemetry friction degrades financial reporting controls.</span></div>
-                  </div>
-                </div>
+                  const dynamicAuditItems = computeRegulatoryAuditItems({
+                    industry: resolvedInd,
+                    responses: triangulation.responses,
+                    isTierThreeExposure: alignedCockpitMetrics.isTierThreeExposure,
+                    regulatoryAlertActive: alignedCockpitMetrics.regulatoryAlertActive,
+                  });
+
+                  return (
+                    <div className="border border-slate-200 bg-slate-50 p-6 rounded-md font-sans">
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4 pb-3 border-b border-slate-200">
+                        <div>
+                          <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider">
+                            // Regulatory Non-Compliance Standards Audit
+                          </span>
+                          <span className="text-[11px] font-mono text-slate-500 uppercase tracking-tight block mt-0.5">
+                            CLIENT INDUSTRY VERTICAL: {activeIndustryTitle.toUpperCase()} | TARGET: {companyName.replace(/_/g, ' ')}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-mono text-red-700 bg-red-100 border border-red-200 px-2.5 py-1 rounded font-bold uppercase tracking-wider flex items-center gap-1">
+                            <AlertTriangle size={12} /> {alignedCockpitMetrics.isTierThreeExposure ? 'TIER 3 STATUTORY RISK' : 'ACTIVE FIDUCIARY DEFICIENCIES'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="space-y-3 font-mono text-xs">
+                        {dynamicAuditItems.length === 0 ? (
+                          <div className="text-slate-500 font-sans italic p-4 bg-white border border-slate-200 rounded">
+                            No critical statutory non-compliance violations detected based on current assessment responses.
+                          </div>
+                        ) : (
+                          dynamicAuditItems.map((item) => (
+                            <div key={item.id} className="bg-white border border-slate-200 p-4 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                              <div className="space-y-1 flex-1">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="inline-block bg-red-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">
+                                    NON-COMPLIANT
+                                  </span>
+                                  <span className="text-slate-900 font-bold tracking-tight">
+                                    {item.standard}
+                                  </span>
+                                  <span className="text-slate-400 text-[11px]">
+                                    // {item.clause}
+                                  </span>
+                                </div>
+                                <p className="text-slate-600 font-sans text-xs pt-1 leading-relaxed">
+                                  {item.finding}
+                                </p>
+                              </div>
+
+                              <div className="md:text-right shrink-0 bg-slate-50 border border-slate-200 px-3.5 py-2 rounded text-[11px] font-sans text-slate-700 w-full md:w-auto">
+                                <span className="font-mono text-[9px] font-bold text-slate-500 uppercase block mb-0.5 md:text-right">
+                                  {item.remediationPhase} REMEDY GATE
+                                </span>
+                                <span className="font-medium text-slate-900">{item.statutoryRemedy}</span>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <div className="bg-slate-900 text-white p-6 rounded-md space-y-3 font-sans no-print">
                   <div>
@@ -1190,16 +1348,15 @@ export default function ForensicEngineRoot() {
               </div>
             )}
 
-            {/* TAB 03: FULL PAID QUAD INSPECTORATE DOSSIER */}
+            {/* TAB 03: Inspectorate Dossier */}
             {dossierTab === 'INSPECTORATE' && (
               <DiagnosticProvider
                 initialOverrides={{
                   organizationName: triangulation.companyName,
-                  sector: triangulation.pillar === 'AVS'
-                    ? 'INDUSTRIAL'
-                    : triangulation.pillar === 'HAI'
-                      ? 'SERVICES'
-                      : 'FINANCE'
+                  sector: triangulation.industry,
+                  complianceScore: alignedCockpitMetrics.complianceScore,
+                  annualSalaryLeakage: alignedCockpitMetrics.annualSalaryLeakage,
+                  unhedgedLegalExposure: alignedCockpitMetrics.unhedgedLegalExposure
                 }}
               >
                 <div className="space-y-8 font-sans">
