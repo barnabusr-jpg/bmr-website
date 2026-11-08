@@ -12,10 +12,14 @@ export interface ForensicMetricsPayload {
   regulatoryAlertActive?: boolean;
 }
 
+type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
+
 interface ForensicCommandCockpitProps {
   companyName?: string;
   sector?: string;
   metrics?: ForensicMetricsPayload;
+  completions?: Record<PersonaKey, boolean>;
+  responses?: Record<string, any>;
   onSelectSOW?: () => void;
   complianceScore?: number;
   annualSalaryLeakage?: number;
@@ -29,6 +33,8 @@ export default function ForensicCommandCockpit({
   companyName = "TARGET SPECIFICATION",
   sector = "FINANCE",
   metrics,
+  completions,
+  responses = {},
   onSelectSOW,
   complianceScore: flatScore = 62,
   annualSalaryLeakage: flatLeakage = 114750,
@@ -58,35 +64,103 @@ export default function ForensicCommandCockpit({
   const weeklyLoss = Math.round(leakage / 52);
 
   const handleExportCSV = () => {
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + "Metric,Value\n"
-      + `Organization,${companyName}\n`
-      + `AI Readiness Index,${score}/100\n`
-      + `Process Waste Tax,$${leakage}\n`
-      + `Total Promise Gap Exposure,$${exposure}\n`
-      + `Estimated Engineering Loss Hours,${wastedHoursPerYr} hrs/yr\n`;
+    const timestamp = new Date().toISOString();
+
+    const escapeCsv = (val: any) => {
+      if (val === null || val === undefined) return '""';
+
+      let str: string;
+      if (typeof val === 'object') {
+        str = JSON.stringify(val);
+      } else {
+        str = String(val);
+      }
+
+      // Truncate excessively long values to maintain clean CSV boundaries
+      const MAX_LEN = 6000;
+      if (str.length > MAX_LEN) {
+        str = str.slice(0, MAX_LEN) + '...';
+      }
+
+      return `"${str.replace(/"/g, '""')}"`;
+    };
+
+    const allDone = Boolean(
+      completions?.EXECUTIVE &&
+      completions?.TECH_MGMT &&
+      completions?.OPS_MGMT &&
+      completions?.SYSTEM_USER
+    );
+
+    const rows: string[][] = [
+      ["BMR SOLUTIONS // FORENSIC DIAGNOSTIC AUDIT REPORT", ""],
+      ["Generated Timestamp", timestamp],
+      ["Target Organization", companyName],
+      ["Diagnostic Sector", sector],
+      ["", ""],
+      ["EXECUTIVE SUMMARY & SFI COMPLIANCE METRICS", ""],
+      ["AI Readiness Index", `${score.toFixed(0)}/100`],
+      ["Readiness Variance vs Sector Benchmark", `${readinessVariance >= 0 ? `+${readinessVariance}` : readinessVariance} pts (Sector Median: ${peerReadinessBaseline})`],
+      ["Process Waste Tax (Annual Leakage)", `$${Math.round(leakage).toLocaleString()}`],
+      ["Waste Tax Variance vs Sector Benchmark", `+${taxVariancePct}% (Sector Median: $${peerWasteTaxBaseline.toLocaleString()})`],
+      ["Total Promise Gap Exposure (Unhedged Liability)", `$${Math.round(exposure).toLocaleString()}`],
+      ["Liability Variance vs Sector Benchmark", `+${exposureVariancePct}% (Sector Median: $${peerExposureBaseline.toLocaleString()})`],
+      ["Estimated Capacity Loss", `~${wastedHoursPerYr.toLocaleString()} Engineering Hours/Yr`],
+      ["Weekly Burn Rate", `$${weeklyLoss.toLocaleString()} / Week`],
+      ["Target Remediation Recovery Multiplier", "3.4x ROI"],
+      ["", ""],
+      ["OVERALL ASSESSMENT COMPLETION", allDone ? "COMPLETED" : "INCOMPLETE"],
+      ["Overall Note", allDone ? "All 4 stakeholder tracks recorded." : "One or more tracks remain pending."],
+      ["", ""],
+      ["QUAD NODE STAKEHOLDER COMPLETION STATUS", ""],
+      ["Track", "Persona Role", "Status"],
+      ["NODE 01", "Executive & Governance", completions?.EXECUTIVE ? "COMPLETED" : "PENDING"],
+      ["NODE 02", "Engineering & Infrastructure", completions?.TECH_MGMT ? "COMPLETED" : "PENDING"],
+      ["NODE 03", "Operations & Management", completions?.OPS_MGMT ? "COMPLETED" : "PENDING"],
+      ["NODE 04", "Frontline System Execution", completions?.SYSTEM_USER ? "COMPLETED" : "PENDING"],
+      ["", ""],
+      ["RECORDED DIAGNOSTIC RESPONSES & QUESTION BREAKDOWN", ""],
+      ["Question / Field ID", "Recorded Value"]
+    ];
+
+    const markerKeys = new Set([
+      'QUAD_EXE_COMPLETE',
+      'QUAD_TEC_COMPLETE',
+      'QUAD_MGR_COMPLETE',
+      'QUAD_SYS_COMPLETE'
+    ]);
+
+    // Stable alphabetical sort ensures deterministic CSV output
+    const safeResponses = (responses || {}) as Record<string, any>;
+    const responseKeys = Object.keys(safeResponses).sort((a, b) => a.localeCompare(b));
+
+    responseKeys.forEach((key) => {
+      if (!markerKeys.has(key)) {
+        rows.push([key, safeResponses[key]]);
+      }
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map(r => r.map(escapeCsv).join(",")).join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `BMR_Diagnostic_${companyName.replace(/\s+/g, '_')}.csv`);
+    link.setAttribute("download", `BMR_Diagnostic_${companyName.replace(/\s+/g, '_')}_Dossier.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const handleSOWClick = () => {
-    // 1. Activate the REMEDIATION / SOW tab
     if (onSelectSOW) {
       onSelectSOW();
     }
     
-    // 2. Smoothly scroll down to bring the active SOW table into focus
     setTimeout(() => {
       const sowElement = document.getElementById('sow-section');
       if (sowElement) {
-        sowElement.scrollIntoView({ behavior: 'smooth' });
+        sowElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-    }, 50);
+    }, 250);
   };
 
   return (
@@ -124,7 +198,7 @@ export default function ForensicCommandCockpit({
           <button
             type="button"
             onClick={handleSOWClick}
-            className="bg-slate-900 text-white text-xs font-mono font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer rounded-md flex items-center gap-2"
+            className="bg-slate-900 text-white text-xs font-mono font-bold px-4 py-2.5 uppercase tracking-wider hover:bg-slate-800 transition-colors cursor-pointer rounded-md flex items-center gap-2 shadow-sm"
           >
             <FileText size={14} /> Final SOW
           </button>
@@ -234,25 +308,25 @@ export default function ForensicCommandCockpit({
             </thead>
             <tbody className="divide-y divide-slate-100">
               <tr>
-                <td className="py-3 font-bold text-slate-900 font-mono">EXECUTIVE</td>
+                <td className="py-3 font-bold text-slate-900 font-mono">NODE 01: EXECUTIVE</td>
                 <td className="py-3 text-slate-600">Governance Mandate & Legal Hedging</td>
                 <td className="py-3 text-slate-700">Policy established; enforcement lacks runtime telemetry.</td>
                 <td className="py-3 text-right"><span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold uppercase"><AlertTriangle size={12}/> Discrepancy</span></td>
               </tr>
               <tr>
-                <td className="py-3 font-bold text-slate-900 font-mono">TECH_MGMT</td>
+                <td className="py-3 font-bold text-slate-900 font-mono">NODE 02: TECH_MGMT</td>
                 <td className="py-3 text-slate-600">API Architecture & Pipeline Drift</td>
                 <td className="py-3 text-slate-700">High schema drift risk; manual firefighting active.</td>
                 <td className="py-3 text-right"><span className="inline-flex items-center gap-1 font-mono text-[10px] text-red-700 bg-red-50 px-2 py-0.5 rounded font-bold uppercase"><AlertTriangle size={12}/> High Friction</span></td>
               </tr>
               <tr>
-                <td className="py-3 font-bold text-slate-900 font-mono">OPS_MGMT</td>
+                <td className="py-3 font-bold text-slate-900 font-mono">NODE 03: OPS_MGMT</td>
                 <td className="py-3 text-slate-600">Workflow Velocity & Alarm Sensitivity</td>
                 <td className="py-3 text-slate-700">Alert fatigue suppresses response times across active queues.</td>
                 <td className="py-3 text-right"><span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold uppercase"><AlertTriangle size={12}/> Desensitized</span></td>
               </tr>
               <tr>
-                <td className="py-3 font-bold text-slate-900 font-mono">SYSTEM_USER</td>
+                <td className="py-3 font-bold text-slate-900 font-mono">NODE 04: SYSTEM_USER</td>
                 <td className="py-3 text-slate-600">Runtime Utility & Context Integrity</td>
                 <td className="py-3 text-slate-700">Unmonitored prompt/data ingestion at operator level.</td>
                 <td className="py-3 text-right"><span className="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold uppercase"><CheckCircle2 size={12}/> Verified</span></td>
@@ -264,4 +338,4 @@ export default function ForensicCommandCockpit({
 
     </div>
   );
-} 
+}
