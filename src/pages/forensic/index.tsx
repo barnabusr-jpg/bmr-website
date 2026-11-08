@@ -359,7 +359,6 @@ export default function ForensicEngineRoot() {
   const handlePersonaAnswersSaved = async (personaAnswers?: Record<string, string>) => {
     if (!activePersona) return;
 
-    // 1. Normalize persona to canonical PersonaKey
     const canonicalPersona: PersonaKey = (resolvePersonaKey(activePersona) || activePersona) as PersonaKey;
     const rawTargetId = activeAuditId || activeAuditIdRef.current;
     const targetAuditId = cleanUuid(rawTargetId);
@@ -393,7 +392,6 @@ export default function ForensicEngineRoot() {
     };
 
     try {
-      // 2. Atomic server-side merge via Postgres RPC
       const { data: updatedRaw, error: rpcErr } = await supabase.rpc('save_quad_node_response', {
         target_audit_id: targetAuditId,
         new_responses: answersToSave
@@ -424,7 +422,6 @@ export default function ForensicEngineRoot() {
           }) : prev);
         }
       } else {
-        // 3. Direct state hydration from authoritative PostgreSQL return
         setTriangulation(prev => prev ? ({
           ...prev,
           completions: {
@@ -440,14 +437,12 @@ export default function ForensicEngineRoot() {
       console.error('[Save Handler] Persistence exception:', err);
     }
 
-    // 4. Pin the audit ID into the URL address bar permanently
     if (typeof window !== 'undefined' && targetAuditId) {
       const url = new URL(window.location.href);
       url.searchParams.set('id', targetAuditId);
       window.history.replaceState({}, '', url.toString());
     }
 
-    // 5. Cleanly transition back to the Monitor view
     setActivePersona(null);
     setViewState('HUB');
   };
@@ -991,6 +986,8 @@ export default function ForensicEngineRoot() {
             companyName={triangulation.companyName}
             sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'}
             metrics={alignedCockpitMetrics}
+            completions={triangulation.completions}
+            responses={triangulation.responses}
             onSelectSOW={() => setDossierTab('REMEDIATION')}
           />
 
@@ -1076,7 +1073,7 @@ export default function ForensicEngineRoot() {
             )}
 
             {dossierTab === 'REMEDIATION' && (
-              <div className="space-y-8 font-sans">
+              <div id="sow-section" className="space-y-8 font-sans scroll-mt-6">
                 <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                   <div>
                     <span className="font-mono text-[10px] text-emerald-400 block font-bold uppercase tracking-wider">
