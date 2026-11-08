@@ -6,12 +6,17 @@ import ForensicCommandCockpit from '../../components/ForensicCommandCockpit';
 import { GovernanceSupplementView } from '../../components/GovernanceSupplementView';
 import {
   ShieldAlert, ArrowRight, Users, CheckCircle, Mail, Loader2, Lock,
-  FileText, ChevronRight, Copy, Check, Printer, RotateCcw, AlertTriangle
+  FileText, ChevronRight, Copy, Check, Printer, RotateCcw, AlertTriangle, Building2
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 import { compressToEncodedURIComponent } from 'lz-string';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
-import { computeRegulatoryAuditItems, type FunnelPillar } from '@/lib/forensicRegulatoryCalculus';
+import {
+  computeRegulatoryAuditItems,
+  resolveClientIndustry,
+  CLIENT_INDUSTRY_OPTIONS,
+  type ClientIndustry
+} from '@/lib/forensicRegulatoryCalculus';
 
 // Diagnostic Dossier Components & Context
 import { DiagnosticProvider } from '../../context/DiagnosticContext';
@@ -20,6 +25,7 @@ import MetricRelationshipHierarchyLine from '../../components/diagnostic/MetricR
 import BoardExecutiveBriefingBlock from '../../components/diagnostic/BoardExecutiveBriefingBlock';
 import QuadNodeSummaryMatrixTable from '../../components/diagnostic/QuadNodeSummaryMatrixTable';
 
+type FunnelPillar = 'IGF' | 'AVS' | 'HAI';
 type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
@@ -101,6 +107,7 @@ const FRESH_EMPTY_EMAILS: Record<PersonaKey, string> = {
 interface TriangulationState {
   companyName: string;
   pillar: FunnelPillar;
+  industry: ClientIndustry;
   emails: Record<PersonaKey, string>;
   completions: Record<PersonaKey, boolean>;
   responses: Record<string, any>;
@@ -111,6 +118,7 @@ export default function ForensicEngineRoot() {
   const [hasSynced, setHasSynced] = useState(false);
   const [dossierTab, setDossierTab] = useState<'METRICS' | 'REMEDIATION' | 'INSPECTORATE'>('METRICS');
   const [companyName, setCompanyName] = useState('');
+  const [clientIndustry, setClientIndustry] = useState<ClientIndustry>('CROSS_SECTOR_ENTERPRISE');
   const [isCompanyFromDB, setIsCompanyFromDB] = useState(false);
   const [activePillar, setActivePillar] = useState<FunnelPillar>('IGF');
   const [authorizedAdmin, setAuthorizedAdmin] = useState<boolean | null>(null);
@@ -128,14 +136,18 @@ export default function ForensicEngineRoot() {
   const [inputError, setInputError] = useState('');
 
   const companyNameRef = useRef(companyName);
+  const clientIndustryRef = useRef(clientIndustry);
   const activePillarRef = useRef(activePillar);
   const emailsRef = useRef(emails);
   const activeAuditIdRef = useRef(activeAuditId);
+  const triangulationRef = useRef(triangulation);
 
   useEffect(() => { companyNameRef.current = companyName; }, [companyName]);
+  useEffect(() => { clientIndustryRef.current = clientIndustry; }, [clientIndustry]);
   useEffect(() => { activePillarRef.current = activePillar; }, [activePillar]);
   useEffect(() => { emailsRef.current = emails; }, [emails]);
   useEffect(() => { activeAuditIdRef.current = activeAuditId; }, [activeAuditId]);
+  useEffect(() => { triangulationRef.current = triangulation; }, [triangulation]);
 
   const synchronizeEngineDataMatrix = useCallback(async (force = false) => {
     if (isSyncingRef.current && !force) return;
@@ -151,6 +163,7 @@ export default function ForensicEngineRoot() {
     const authVal = params.get('auth');
     const viewParam = params.get('view');
     const flowParam = params.get('flow');
+    const sectorParam = params.get('sector') || params.get('industry');
 
     let targetCompanyName = sanitizeOrgKey(orgParam || '');
 
@@ -180,26 +193,59 @@ export default function ForensicEngineRoot() {
       }
 
       if (isParticipantRoute && roleParam) {
-        if (idParam) {
+        let fetchedOrg = targetCompanyName;
+        let fetchedSector = sectorParam || clientIndustryRef.current;
+        let fetchedResponses: Record<string, any> = {};
+
+        if (idParam && isValidUuid(idParam)) {
           setActiveAuditId(idParam);
           activeAuditIdRef.current = idParam;
+
+          const { data: participantAudit } = await supabase
+            .from('audits')
+            .select('org_name, sector, raw_responses')
+            .eq('id', idParam)
+            .maybeSingle();
+
+          if (participantAudit) {
+            if (participantAudit.org_name) fetchedOrg = participantAudit.org_name;
+            if (participantAudit.sector) fetchedSector = participantAudit.sector;
+            if (participantAudit.raw_responses && typeof participantAudit.raw_responses === 'object' && !Array.isArray(participantAudit.raw_responses)) {
+              fetchedResponses = participantAudit.raw_responses;
+            }
+          }
         }
 
-        if (targetCompanyName) {
-          setCompanyName(targetCompanyName);
+        if (fetchedOrg) {
+          setCompanyName(fetchedOrg);
           setIsCompanyFromDB(true);
         }
+
+        const canonicalIndustry = resolveClientIndustry(fetchedSector);
+        setClientIndustry(canonicalIndustry);
 
         setActivePersona(roleParam);
         const resolvedPillar: FunnelPillar = roleParam === 'OPS_MGMT' ? 'HAI' : roleParam === 'TECH_MGMT' ? 'AVS' : 'IGF';
         setActivePillar(resolvedPillar);
 
+        const effectiveResponses = Object.keys(fetchedResponses).length > 0 
+          ? fetchedResponses 
+          : (triangulationRef.current?.responses || {});
+
+        const completionsMap: Record<PersonaKey, boolean> = {
+          EXECUTIVE: Boolean(effectiveResponses['QUAD_EXE_COMPLETE']),
+          TECH_MGMT: Boolean(effectiveResponses['QUAD_TEC_COMPLETE']),
+          OPS_MGMT: Boolean(effectiveResponses['QUAD_MGR_COMPLETE']),
+          SYSTEM_USER: Boolean(effectiveResponses['QUAD_SYS_COMPLETE'])
+        };
+
         setTriangulation(prev => ({
-          companyName: targetCompanyName || prev?.companyName || "Quad Node Client System",
+          companyName: fetchedOrg || prev?.companyName || "Quad Node Client System",
           pillar: resolvedPillar,
+          industry: canonicalIndustry,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
-          completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
-          responses: prev?.responses || {}
+          completions: completionsMap,
+          responses: Object.keys(fetchedResponses).length > 0 ? fetchedResponses : (prev?.responses || {})
         }));
 
         setViewState('WIZARD');
@@ -235,6 +281,7 @@ export default function ForensicEngineRoot() {
       }
 
       let calculatedPillar: FunnelPillar = activePillarRef.current;
+      let calculatedIndustry: ClientIndustry = clientIndustryRef.current;
 
       if (activeAudit) {
         const cleanAuditId = cleanUuid(activeAudit.id);
@@ -243,15 +290,8 @@ export default function ForensicEngineRoot() {
         setCompanyName(activeAudit.org_name);
         setIsCompanyFromDB(true);
 
-        const sectorStr = String(activeAudit.sector || '').toUpperCase();
-        if (sectorStr.includes('AVS') || sectorStr.includes('INDUSTRIAL')) {
-          calculatedPillar = 'AVS';
-        } else if (sectorStr.includes('HAI') || sectorStr.includes('SERVICES')) {
-          calculatedPillar = 'HAI';
-        } else {
-          calculatedPillar = 'IGF';
-        }
-        setActivePillar(calculatedPillar);
+        calculatedIndustry = resolveClientIndustry(activeAudit.sector || sectorParam);
+        setClientIndustry(calculatedIndustry);
 
         const rawResponses =
           activeAudit.raw_responses && typeof activeAudit.raw_responses === 'object' && !Array.isArray(activeAudit.raw_responses)
@@ -268,6 +308,7 @@ export default function ForensicEngineRoot() {
         setTriangulation(prev => ({
           companyName: activeAudit.org_name,
           pillar: calculatedPillar,
+          industry: calculatedIndustry,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
           completions: completionsMap,
           responses: rawResponses
@@ -282,6 +323,7 @@ export default function ForensicEngineRoot() {
         setTriangulation(prev => ({
           companyName: targetCompanyName,
           pillar: calculatedPillar,
+          industry: calculatedIndustry,
           emails: prev?.emails || FRESH_EMPTY_EMAILS,
           completions: prev?.completions || { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
           responses: prev?.responses || {}
@@ -462,7 +504,7 @@ export default function ForensicEngineRoot() {
         .from('audits')
         .insert({
           org_name: sanitizedInput,
-          sector: activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE',
+          sector: clientIndustry,
           status: 'IN_PROGRESS',
           raw_responses: {}
         })
@@ -476,13 +518,14 @@ export default function ForensicEngineRoot() {
       activeAuditIdRef.current = parentAuditId;
 
       if (typeof window !== 'undefined' && parentAuditId && isValidUuid(parentAuditId)) {
-        const newUrl = `${window.location.pathname}?id=${parentAuditId}&org=${encodeURIComponent(sanitizedInput)}&flow=quad_node&auth=admin_verified_secure`;
+        const newUrl = `${window.location.pathname}?id=${parentAuditId}&org=${encodeURIComponent(sanitizedInput)}&sector=${encodeURIComponent(clientIndustry)}&flow=quad_node&auth=admin_verified_secure`;
         window.history.pushState({}, '', newUrl);
       }
 
       const initialTriangulation = {
         companyName: sanitizedInput,
         pillar: activePillar,
+        industry: clientIndustry,
         emails: { ...emails },
         completions: { EXECUTIVE: false, TECH_MGMT: false, OPS_MGMT: false, SYSTEM_USER: false },
         responses: {}
@@ -599,6 +642,7 @@ export default function ForensicEngineRoot() {
     setHasSynced(false);
 
     setCompanyName('');
+    setClientIndustry('CROSS_SECTOR_ENTERPRISE');
     setIsCompanyFromDB(false);
     setEmails(FRESH_EMPTY_EMAILS);
     setTriangulation(null);
@@ -625,10 +669,16 @@ export default function ForensicEngineRoot() {
       return { multiplier: 1.0, complianceScore: 100, annualSalaryLeakage: 0, unhedgedLegalExposure: 0, isTierThreeExposure: false, regulatoryAlertActive: false };
     }
 
+    const calculusSectorToken = 
+      triangulation.industry === 'HEALTHCARE_LIFE_SCIENCES' ? 'SERVICES' :
+      triangulation.industry === 'INDUSTRIAL_MANUFACTURING' ? 'INDUSTRIAL' :
+      triangulation.industry === 'FINANCIAL_SERVICES' ? 'FINANCE' :
+      'SERVICES';
+
     const calculated = calculateForensicMetrics(
       triangulation.companyName,
       triangulation.responses,
-      activePillar === 'AVS' ? 'INDUSTRIAL' : activePillar === 'HAI' ? 'SERVICES' : 'FINANCE'
+      calculusSectorToken
     );
 
     return {
@@ -639,7 +689,7 @@ export default function ForensicEngineRoot() {
       isTierThreeExposure: calculated.isTierThreeExposure,
       regulatoryAlertActive: calculated.regulatoryAlertActive
     };
-  }, [triangulation, activePillar]);
+  }, [triangulation]);
 
   const governanceMetrics = useMemo(() => ({
     totalLaborTaxPool: alignedCockpitMetrics.annualSalaryLeakage,
@@ -650,7 +700,7 @@ export default function ForensicEngineRoot() {
 
   const governanceAnalytics = useMemo(() => ({
     reliabilityIndex: alignedCockpitMetrics.complianceScore,
-    dominantBasis: "TECHNICAL_DEBT_AVS",
+    dominantBasis: "TECHNICAL_DEBT",
     dominantDriver: "PIPELINE_DRIFT",
     dominantVisibility: "PARTIAL",
     sampleSize: 10000
@@ -661,6 +711,7 @@ export default function ForensicEngineRoot() {
     const payload = {
       org: triangulation.companyName,
       pillar: triangulation.pillar,
+      industry: triangulation.industry,
       ans: triangulation.responses,
       expires: Date.now() + 86400000
     };
@@ -688,7 +739,7 @@ export default function ForensicEngineRoot() {
 
   return (
     <div className="bg-slate-50 min-h-screen text-slate-900 font-sans text-left overflow-x-hidden flex flex-col justify-center items-center py-12 px-4">
-      {/* INTAKE SETUP VIEW */}
+      {/* INTAKE SETUP VIEW WITH INDUSTRY SELECTOR */}
       {viewState === 'INTAKE' && (
         <div className="w-full max-w-lg border border-slate-200 bg-white p-8 md:p-10 text-left rounded-lg shadow-sm">
           <div className="border-b border-slate-100 pb-5 mb-8 flex items-center justify-between">
@@ -696,7 +747,7 @@ export default function ForensicEngineRoot() {
               <ShieldAlert size={24} className="text-slate-900 shrink-0" />
               <div>
                 <h2 className="text-2xl font-extrabold tracking-tight text-slate-900 leading-none">Quad Node Diagnostic Setup</h2>
-                <span className="text-[11px] font-mono text-slate-500 font-medium block mt-1.5 uppercase tracking-wider">Configure Stakeholder Routing</span>
+                <span className="text-[11px] font-mono text-slate-500 font-medium block mt-1.5 uppercase tracking-wider">Configure Client & Sector Routing</span>
               </div>
             </div>
           </div>
@@ -722,6 +773,27 @@ export default function ForensicEngineRoot() {
                   isCompanyFromDB ? 'bg-slate-100 border-slate-300 text-slate-700 cursor-not-allowed' : 'bg-slate-50 border-slate-200 focus:border-slate-900'
                 }`}
               />
+            </div>
+
+            {/* CLIENT INDUSTRY DROPDOWN */}
+            <div>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-mono font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 size={13} className="text-slate-500" /> Client Industry Vertical
+                </label>
+                <span className="text-[10px] font-mono text-slate-400 font-bold uppercase">Governs Statutory Catalog</span>
+              </div>
+              <select
+                value={clientIndustry}
+                onChange={(e) => setClientIndustry(e.target.value as ClientIndustry)}
+                className="w-full bg-slate-50 border border-slate-200 rounded-md p-3.5 text-xs text-slate-900 font-medium focus:outline-none focus:border-slate-900 transition-colors cursor-pointer"
+              >
+                {CLIENT_INDUSTRY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label} — {opt.description}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div className="space-y-4 pt-4 border-t border-slate-100">
@@ -776,7 +848,7 @@ export default function ForensicEngineRoot() {
               <div>
                 <h2 className="text-xl font-extrabold text-slate-900 tracking-tight">Stakeholder Assessment Monitor</h2>
                 <span className="text-[11px] font-mono text-slate-500 block mt-1 uppercase tracking-wider">
-                  ORGANIZATION: {triangulation.companyName} | TRACK: {triangulation.pillar}
+                  ORGANIZATION: {triangulation.companyName} | SECTOR: {CLIENT_INDUSTRY_OPTIONS.find(o => o.value === triangulation.industry)?.label || triangulation.industry}
                 </span>
               </div>
             </div>
@@ -983,7 +1055,7 @@ export default function ForensicEngineRoot() {
 
           <ForensicCommandCockpit
             companyName={triangulation.companyName}
-            sector={triangulation.pillar === 'AVS' ? 'INDUSTRIAL' : triangulation.pillar === 'HAI' ? 'SERVICES' : 'FINANCE'}
+            sector={triangulation.industry}
             metrics={alignedCockpitMetrics}
             completions={triangulation.completions}
             responses={triangulation.responses}
@@ -1034,7 +1106,7 @@ export default function ForensicEngineRoot() {
               </div>
             </div>
 
-            {/* TAB 01: Process Waste Tax Ledger (Itemized Breakdown) */}
+            {/* TAB 01: Process Waste Tax Ledger */}
             {dossierTab === 'METRICS' && (
               <div className="space-y-6">
                 <p className="text-sm text-slate-600 font-sans leading-relaxed">
@@ -1170,10 +1242,14 @@ export default function ForensicEngineRoot() {
                   </table>
                 </div>
 
-                {/* Dynamic Sector-Tied Regulatory Non-Compliance Standards Audit */}
+                {/* Dynamic Client Industry Regulatory Non-Compliance Standards Audit */}
                 {(() => {
+                  const resolvedInd = triangulation.industry;
+                  const matchedOption = CLIENT_INDUSTRY_OPTIONS.find(o => o.value === resolvedInd);
+                  const activeIndustryTitle = matchedOption?.label || "CROSS-SECTOR ENTERPRISE";
+
                   const dynamicAuditItems = computeRegulatoryAuditItems({
-                    pillar: triangulation.pillar,
+                    industry: resolvedInd,
                     responses: triangulation.responses,
                     isTierThreeExposure: alignedCockpitMetrics.isTierThreeExposure,
                     regulatoryAlertActive: alignedCockpitMetrics.regulatoryAlertActive,
@@ -1187,7 +1263,7 @@ export default function ForensicEngineRoot() {
                             // Regulatory Non-Compliance Standards Audit
                           </span>
                           <span className="text-[11px] font-mono text-slate-500 uppercase tracking-tight block mt-0.5">
-                            SECTOR REGIME: {triangulation.pillar === 'AVS' ? 'INDUSTRIAL & SUPPLY CHAIN (AVS)' : triangulation.pillar === 'HAI' ? 'HEALTHCARE & HUMAN-CENTRIC AI (HAI)' : 'FINANCIAL GOVERNANCE & SOX (IGF)'} | TARGET: {companyName.replace(/_/g, ' ')}
+                            CLIENT INDUSTRY VERTICAL: {activeIndustryTitle.toUpperCase()} | TARGET: {companyName.replace(/_/g, ' ')}
                           </span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -1272,16 +1348,12 @@ export default function ForensicEngineRoot() {
               </div>
             )}
 
-            {/* TAB 03: Inspectorate Dossier (Synced directly with live computed metrics) */}
+            {/* TAB 03: Inspectorate Dossier */}
             {dossierTab === 'INSPECTORATE' && (
               <DiagnosticProvider
                 initialOverrides={{
                   organizationName: triangulation.companyName,
-                  sector: triangulation.pillar === 'AVS'
-                    ? 'INDUSTRIAL'
-                    : triangulation.pillar === 'HAI'
-                      ? 'SERVICES'
-                      : 'FINANCE',
+                  sector: triangulation.industry,
                   complianceScore: alignedCockpitMetrics.complianceScore,
                   annualSalaryLeakage: alignedCockpitMetrics.annualSalaryLeakage,
                   unhedgedLegalExposure: alignedCockpitMetrics.unhedgedLegalExposure
