@@ -1,3 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 4%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 6%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 4%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 0 72% 51%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 25% 27%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 0 72% 51%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 0 72% 51%;
+    --radius: 0rem;
+  }
+}
+
+@layer base {
+  * { 
+    border-color: hsl(var(--border)); 
+    box-sizing: border-box;
+  }
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "ss01", "ss03", "cv08", "cv11";
+    overflow-x: hidden;
+    width: 100%;
+    position: relative;
+  }
+}
+
+@layer utilities {
+  .animate-forensic-pulse {
+    animation: forensic-pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  @keyframes forensic-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+}
+
+/* 🚨 FORENSIC MOBILE ENFORCEMENT */
+@media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden !important;
+    width: 100vw !important;
+    position: relative;
+  }
+
+  h1, h2, h3, p, span {
+    overflow-wrap: break-word !important;
+    word-wrap: break-word !important;
+  }
+
+  .container, section, main {
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+}
+
 /* 🛡️ BOARD REVIEW EXPORT PRINT OVERRIDES (SOW-ONLY ISOLATION) */
 @media print {
   /* 1. Hide everything on the page by default */
@@ -9,8 +82,6 @@
   #sow-section,
   #sow-section * {
     visibility: visible !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
   }
 
   /* 3. Pull SOW to top-left origin to eliminate preceding blank page space */
