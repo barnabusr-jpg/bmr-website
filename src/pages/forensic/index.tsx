@@ -24,7 +24,6 @@ type PersonaKey = 'EXECUTIVE' | 'TECH_MGMT' | 'OPS_MGMT' | 'SYSTEM_USER';
 
 const sanitizeOrgKey = (org: string): string => org.trim().replace(/\s+/g, ' ');
 
-// Robust UUID sanitizer and validator to prevent malformed API queries
 const cleanUuid = (val?: string | null): string => {
   if (!val || typeof val !== 'string') return '';
   return val.trim().replace(/^["']|["']$/g, '');
@@ -32,7 +31,7 @@ const cleanUuid = (val?: string | null): string => {
 
 const isValidUuid = (val?: string | null): boolean => {
   const sanitized = cleanUuid(val);
-  return Boolean(sanitized && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sanitized));
+  return Boolean(sanitized && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sanitized));
 };
 
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
@@ -1035,43 +1034,55 @@ export default function ForensicEngineRoot() {
               </div>
             </div>
 
+            {/* TAB 01: Process Waste Tax Ledger (Itemized Breakdown) */}
             {dossierTab === 'METRICS' && (
               <div className="space-y-6">
                 <p className="text-sm text-slate-600 font-sans leading-relaxed">
-                  This framework maps live cross-persona diagnostic responses to identify risk vectors across engineering pipelines for <strong className="text-slate-900 font-bold">{companyName.replace(/_/g, ' ')}</strong>. Below is the tactical summary of your current operational posture.
+                  This framework maps live cross-persona diagnostic responses to identify risk vectors across engineering pipelines for <strong className="text-slate-900 font-bold">{companyName.replace(/_/g, ' ')}</strong>. Below is the itemized cost ledger of your operational waste profile.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
-                    <span className="font-mono text-xs text-slate-900 block font-bold uppercase tracking-wider mb-2">
-                      Integrity Index ({alignedCockpitMetrics.complianceScore}/100)
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Measures the alignment gap between governance mandate and operational velocity. A rating of {alignedCockpitMetrics.complianceScore} highlights where technical environments lack automated policy guardrails.
-                    </p>
-                  </div>
-
-                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
-                    <span className="font-mono text-xs text-amber-600 block font-bold uppercase tracking-wider mb-2">
-                      Process Waste Tax (${alignedCockpitMetrics.annualSalaryLeakage.toLocaleString()})
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Quantifies internal capacity run-rate loss due to architectural drift. This translates to critical recurring engineering hours exhausted resolving schema drift, manual firefighting, and validation fatigue.
-                    </p>
-                  </div>
-
-                  <div className="border border-slate-200 bg-slate-50 p-5 rounded-md">
-                    <span className="font-mono text-xs text-red-600 block font-bold uppercase tracking-wider mb-2">
-                      Total Promise Gap™ Exposure (${alignedCockpitMetrics.unhedgedLegalExposure.toLocaleString()})
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed font-normal">
-                      Projects total compliance fines and operational risk incurred if data pipelines remain uninsulated prior to expanding AI automation.
-                    </p>
-                  </div>
+                <div className="border border-slate-200 rounded-md overflow-hidden font-mono text-xs">
+                  <table className="w-full text-left">
+                    <thead className="bg-slate-100 text-slate-700 uppercase tracking-wider border-b border-slate-200">
+                      <tr>
+                        <th className="p-4 font-bold">Cost Vector Category</th>
+                        <th className="p-4 font-bold">Operational Friction Root Cause</th>
+                        <th className="p-4 font-bold">Engineering Drag</th>
+                        <th className="p-4 font-bold text-right">Annual Impact</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      <tr>
+                        <td className="p-4 font-bold text-slate-900">API Architecture & Pipeline Drift</td>
+                        <td className="p-4 text-slate-600">Schema mutations without contract testing cause downstream failures.</td>
+                        <td className="p-4 text-amber-700 font-bold">~4,800 Hrs/Yr</td>
+                        <td className="p-4 text-right font-bold text-slate-900">${Math.round(alignedCockpitMetrics.annualSalaryLeakage * 0.45).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-4 font-bold text-slate-900">Alert Fatigue & Manual Triage</td>
+                        <td className="p-4 text-slate-600">Noisy telemetry and false positive alerts consume daily engineering cycles.</td>
+                        <td className="p-4 text-amber-700 font-bold">~3,400 Hrs/Yr</td>
+                        <td className="p-4 text-right font-bold text-slate-900">${Math.round(alignedCockpitMetrics.annualSalaryLeakage * 0.35).toLocaleString()}</td>
+                      </tr>
+                      <tr>
+                        <td className="p-4 font-bold text-slate-900">Governance & Context Integrity Drift</td>
+                        <td className="p-4 text-slate-600">Unmonitored prompt and payload ingestion creates repetitive compliance rework.</td>
+                        <td className="p-4 text-amber-700 font-bold">~2,441 Hrs/Yr</td>
+                        <td className="p-4 text-right font-bold text-slate-900">${Math.round(alignedCockpitMetrics.annualSalaryLeakage * 0.20).toLocaleString()}</td>
+                      </tr>
+                    </tbody>
+                    <tfoot className="bg-slate-50 border-t-2 border-slate-300 font-bold">
+                      <tr>
+                        <td colSpan={3} className="p-4 text-slate-900 uppercase">Total Consolidated Process Waste Tax</td>
+                        <td className="p-4 text-right text-red-700 text-sm">${Math.round(alignedCockpitMetrics.annualSalaryLeakage).toLocaleString()}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               </div>
             )}
 
+            {/* TAB 02: Remediation Runbooks & Final SOW */}
             {dossierTab === 'REMEDIATION' && (
               <div id="sow-section" className="space-y-8 font-sans scroll-mt-6">
                 <div className="bg-slate-900 text-white p-6 rounded-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1083,11 +1094,11 @@ export default function ForensicEngineRoot() {
                       Target Implementation SOW: {companyName.replace(/_/g, ' ')}
                     </h4>
                   </div>
-                  <div className="flex items-center gap-3 font-mono text-xs">
+                  <div className="flex items-center gap-3 font-mono text-xs no-print">
                     <button
                       type="button"
                       onClick={() => typeof window !== 'undefined' && window.print()}
-                      className="bg-white text-slate-900 px-4 py-2 font-bold uppercase tracking-wider rounded hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer"
+                      className="bg-white text-slate-900 px-4 py-2 font-bold uppercase tracking-wider rounded hover:bg-slate-100 transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
                     >
                       <Printer size={14} /> Print SOW Contract
                     </button>
@@ -1113,13 +1124,13 @@ export default function ForensicEngineRoot() {
                           Pipeline Hardening & Schema Abstraction
                         </td>
                         <td className="p-4 text-slate-600 leading-relaxed">
-                          Deploy strict GraphQL/OpenAPI schema validation gates, microservice adapter decoupling, and circuit breakers.
+                          Deploy strict OpenAPI schema validation gates and microservice circuit breakers across {companyName.replace(/_/g, ' ')} core systems.
                         </td>
                         <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 1 – 3</td>
                         <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Senior Data Eng + SecOps</td>
                         <td className="p-4 text-right whitespace-nowrap">
-                          <span className="bg-amber-50 text-amber-800 border border-amber-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
-                            Pending Approval
+                          <span className="bg-red-50 text-red-800 border border-red-200 font-mono text-[10px] font-bold px-2 py-1 rounded uppercase">
+                            CRITICAL PRIORITY
                           </span>
                         </td>
                       </tr>
@@ -1129,7 +1140,7 @@ export default function ForensicEngineRoot() {
                           Telemetry Decoupling & Alarm Filtering
                         </td>
                         <td className="p-4 text-slate-600 leading-relaxed">
-                          Implement Purview/DLP sensitivity tagging, suppress alert fatigue loops, and install audit trail logging.
+                          Implement Purview/DLP sensitivity tagging, suppress alert fatigue loops, and install audit trail logging for {companyName.replace(/_/g, ' ')}.
                         </td>
                         <td className="p-4 font-mono text-slate-700 whitespace-nowrap">Weeks 4 – 6</td>
                         <td className="p-4 font-mono text-slate-700 whitespace-nowrap">DevOps + Platform Lead</td>
@@ -1208,6 +1219,7 @@ export default function ForensicEngineRoot() {
               </div>
             )}
 
+            {/* TAB 03: Inspectorate Dossier (Synced directly with live computed metrics) */}
             {dossierTab === 'INSPECTORATE' && (
               <DiagnosticProvider
                 initialOverrides={{
@@ -1216,7 +1228,10 @@ export default function ForensicEngineRoot() {
                     ? 'INDUSTRIAL'
                     : triangulation.pillar === 'HAI'
                       ? 'SERVICES'
-                      : 'FINANCE'
+                      : 'FINANCE',
+                  complianceScore: alignedCockpitMetrics.complianceScore,
+                  annualSalaryLeakage: alignedCockpitMetrics.annualSalaryLeakage,
+                  unhedgedLegalExposure: alignedCockpitMetrics.unhedgedLegalExposure
                 }}
               >
                 <div className="space-y-8 font-sans">
