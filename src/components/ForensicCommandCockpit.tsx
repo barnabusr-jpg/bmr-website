@@ -2,7 +2,13 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import { ShieldCheck, Printer, FileText, Download, TrendingDown, Layers, AlertTriangle, CheckCircle2 } from 'lucide-react';
-import { computeRegulatoryAuditItems, resolveClientIndustry, CLIENT_INDUSTRY_OPTIONS, type ClientIndustry } from '@/lib/forensicRegulatoryCalculus';
+import {
+  computeRegulatoryAuditItems,
+  resolveClientIndustry,
+  CLIENT_INDUSTRY_OPTIONS,
+  analyzeFrictionProfile,
+  type ClientIndustry
+} from '@/lib/forensicRegulatoryCalculus';
 
 export interface ForensicMetricsPayload {
   complianceScore?: number;
@@ -65,6 +71,47 @@ export default function ForensicCommandCockpit({
   const wastedHoursPerYr = Math.round(leakage / 85);
   const weeklyLoss = Math.round(leakage / 52);
 
+  // Dynamic friction signal extraction
+  const friction = analyzeFrictionProfile(responses || {});
+
+  const nodeDrivers = {
+    NODE_01: [
+      friction.hasFiduciaryGap ? 'FIDUCIARY_GAP' : null,
+    ].filter(Boolean) as string[],
+    NODE_02: [
+      friction.hasSchemaDrift ? 'SCHEMA_DRIFT' : null,
+    ].filter(Boolean) as string[],
+    NODE_03: [
+      friction.hasAlertFatigue ? 'ALERT_FATIGUE' : null,
+    ].filter(Boolean) as string[],
+    NODE_04: [
+      friction.hasContextIntegrityGap ? 'CONTEXT_INTEGRITY' : null,
+    ].filter(Boolean) as string[],
+  };
+
+  const getNodeStatus = (drivers: string[]) => {
+    if (!drivers.length) {
+      return {
+        badgeText: 'Stable signal',
+        badgeClass: 'inline-flex items-center gap-1 font-mono text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold uppercase',
+        icon: <CheckCircle2 size={12} />,
+        signalText: 'Signal(s): None detected',
+      };
+    }
+
+    return {
+      badgeText: 'Evidence gap',
+      badgeClass: 'inline-flex items-center gap-1 font-mono text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold uppercase',
+      icon: <AlertTriangle size={12} />,
+      signalText: `Signal(s): ${drivers.join(', ')}`,
+    };
+  };
+
+  const node01 = getNodeStatus(nodeDrivers.NODE_01);
+  const node02 = getNodeStatus(nodeDrivers.NODE_02);
+  const node03 = getNodeStatus(nodeDrivers.NODE_03);
+  const node04 = getNodeStatus(nodeDrivers.NODE_04);
+
   const handleExportCSV = () => {
     const timestamp = new Date().toISOString();
 
@@ -105,12 +152,12 @@ export default function ForensicCommandCockpit({
       ["Weekly Burn Rate", `$${weeklyLoss.toLocaleString()} / Week`],
       ["Target Remediation Recovery Multiplier", "3.4x ROI"],
       ["", ""],
-      ["QUAD NODE STAKEHOLDER COMPLETION STATUS", ""],
-      ["Track", "Persona Role", "Status"],
-      ["NODE 01", "Executive & Governance", completions?.EXECUTIVE ? "COMPLETED" : "PENDING"],
-      ["NODE 02", "Engineering & Infrastructure", completions?.TECH_MGMT ? "COMPLETED" : "PENDING"],
-      ["NODE 03", "Operations & Management", completions?.OPS_MGMT ? "COMPLETED" : "PENDING"],
-      ["NODE 04", "Frontline System Execution", completions?.SYSTEM_USER ? "COMPLETED" : "PENDING"],
+      ["CROSS-LAYER SYSTEMIC TRIANGULATION MATRIX", ""],
+      ["Structural Plane", "Vector Scope", "Status", "Observed Signals"],
+      ["NODE 01: EXECUTIVE LAYER", "Governance evidence posture", node01.badgeText, node01.signalText],
+      ["NODE 02: ENGINEERING LAYER", "Pipeline integrity posture", node02.badgeText, node02.signalText],
+      ["NODE 03: OPERATIONS LAYER", "Workflow & alert health posture", node03.badgeText, node03.signalText],
+      ["NODE 04: RUNTIME LAYER", "Context handling posture", node04.badgeText, node04.signalText],
     ];
 
     // DYNAMIC CLIENT INDUSTRY REGULATORY AUDIT
@@ -295,49 +342,77 @@ export default function ForensicCommandCockpit({
         </div>
       </div>
 
-      {/* CROSS-PERSONA TRIANGULATION MATRIX */}
+      {/* CROSS-LAYER SYSTEMIC TRIANGULATION MATRIX */}
       <div className="border border-slate-200 bg-white rounded-lg p-6 space-y-4">
-        <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
-          <Layers size={18} className="text-slate-900" />
-          <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider">
-            Cross-Persona Structural Triangulation Matrix
-          </h3>
+        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div className="flex items-center gap-2">
+            <Layers size={18} className="text-slate-900" />
+            <h3 className="text-xs font-mono font-bold text-slate-900 uppercase tracking-wider">
+              Cross-Layer Systemic Triangulation Matrix
+            </h3>
+          </div>
+          <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
+            // Non-Attributive Telemetry Verification
+          </span>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full text-left font-sans text-xs">
             <thead>
               <tr className="border-b border-slate-200 font-mono text-slate-500 text-[11px] uppercase">
-                <th className="pb-3 font-bold">Stakeholder Track</th>
-                <th className="pb-3 font-bold">Vector Focus</th>
-                <th className="pb-3 font-bold">Alignment Posture</th>
-                <th className="pb-3 font-bold text-right">Status</th>
+                <th className="pb-3 font-bold">Structural Plane</th>
+                <th className="pb-3 font-bold">Vector Scope</th>
+                <th className="pb-3 font-bold">Systemic Observed State</th>
+                <th className="pb-3 font-bold text-right">Signal Assessment</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               <tr>
-                <td className="py-3 font-bold text-slate-900 font-mono">NODE 01: EXECUTIVE</td>
-                <td className="py-3 text-slate-600">Governance Mandate & Legal Hedging</td>
-                <td className="py-3 text-slate-700">Policy established; enforcement lacks runtime telemetry.</td>
-                <td className="py-3 text-right"><span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold uppercase"><AlertTriangle size={12}/> Discrepancy</span></td>
+                <td className="py-3 font-bold text-slate-900 font-mono whitespace-nowrap">NODE 01: EXECUTIVE LAYER</td>
+                <td className="py-3 text-slate-600">Governance evidence posture</td>
+                <td className="py-3 text-slate-700">
+                  <div>{node01.badgeText}</div>
+                  <div className="text-[10px] text-slate-500 font-mono mt-1">{node01.signalText}</div>
+                </td>
+                <td className="py-3 text-right whitespace-nowrap">
+                  <span className={node01.badgeClass}>{node01.icon} {node01.badgeText}</span>
+                </td>
               </tr>
+
               <tr>
-                <td className="py-3 font-bold text-slate-900 font-mono">NODE 02: TECH_MGMT</td>
-                <td className="py-3 text-slate-600">API Architecture & Pipeline Drift</td>
-                <td className="py-3 text-slate-700">High schema drift risk; manual firefighting active.</td>
-                <td className="py-3 text-right"><span className="inline-flex items-center gap-1 font-mono text-[10px] text-red-700 bg-red-50 px-2 py-0.5 rounded font-bold uppercase"><AlertTriangle size={12}/> High Friction</span></td>
+                <td className="py-3 font-bold text-slate-900 font-mono whitespace-nowrap">NODE 02: ENGINEERING LAYER</td>
+                <td className="py-3 text-slate-600">Pipeline integrity posture</td>
+                <td className="py-3 text-slate-700">
+                  <div>{node02.badgeText}</div>
+                  <div className="text-[10px] text-slate-500 font-mono mt-1">{node02.signalText}</div>
+                </td>
+                <td className="py-3 text-right whitespace-nowrap">
+                  <span className={node02.badgeClass}>{node02.icon} {node02.badgeText}</span>
+                </td>
               </tr>
+
               <tr>
-                <td className="py-3 font-bold text-slate-900 font-mono">NODE 03: OPS_MGMT</td>
-                <td className="py-3 text-slate-600">Workflow Velocity & Alarm Sensitivity</td>
-                <td className="py-3 text-slate-700">Alert fatigue suppresses response times across active queues.</td>
-                <td className="py-3 text-right"><span className="inline-flex items-center gap-1 font-mono text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded font-bold uppercase"><AlertTriangle size={12}/> Desensitized</span></td>
+                <td className="py-3 font-bold text-slate-900 font-mono whitespace-nowrap">NODE 03: OPERATIONS LAYER</td>
+                <td className="py-3 text-slate-600">Workflow & alert health posture</td>
+                <td className="py-3 text-slate-700">
+                  <div>{node03.badgeText}</div>
+                  <div className="text-[10px] text-slate-500 font-mono mt-1">{node03.signalText}</div>
+                </td>
+                <td className="py-3 text-right whitespace-nowrap">
+                  <span className={node03.badgeClass}>{node03.icon} {node03.badgeText}</span>
+                </td>
               </tr>
+
               <tr>
-                <td className="py-3 font-bold text-slate-900 font-mono">NODE 04: SYSTEM_USER</td>
-                <td className="py-3 text-slate-600">Runtime Utility & Context Integrity</td>
-                <td className="py-3 text-slate-700">Unmonitored prompt/data ingestion at operator level.</td>
-                <td className="py-3 text-right"><span className="inline-flex items-center gap-1 font-mono text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-bold uppercase"><CheckCircle2 size={12}/> Verified</span></td>
+                <td className="py-3 font-bold text-slate-900 font-mono whitespace-nowrap">NODE 04: RUNTIME LAYER</td>
+                <td className="py-3 text-slate-600">Context handling posture</td>
+                <td className="py-3 text-slate-700">
+                  <div>{node04.badgeText}</div>
+                  <div className="text-[10px] text-slate-500 font-mono mt-1">{node04.signalText}</div>
+                </td>
+                <td className="py-3 text-right whitespace-nowrap">
+                  <span className={node04.badgeClass}>{node04.icon} {node04.badgeText}</span>
+                </td>
               </tr>
             </tbody>
           </table>
