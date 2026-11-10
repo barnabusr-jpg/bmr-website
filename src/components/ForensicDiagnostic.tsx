@@ -1,8 +1,3 @@
-Here is the complete, drop-in replacement for ForensicDiagnostic.tsx integrating all agreed-upon updates:
-The comprehensive NORMALIZE_LENS_MAP covering all aliases for all 4 nodes.
-Enforced mandatory 4-node validation (Executive, Technical, Managerial, and Frontline System) in the initialization handler and form inputs.
-Clean fallback handling that resolves SYSTEM → SYS immediately upon link arrival, preventing the persona_mismatch ("Invalid Configuration") screen.
-TypeScript
 "use client";
 
 import { useState, useEffect, useRef } from "react";
