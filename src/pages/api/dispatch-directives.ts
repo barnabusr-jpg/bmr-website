@@ -16,6 +16,7 @@ function toSentenceCase(str: string): string {
   return clean.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 }
 
+// Canonical inbound slug mapping
 const ROLE_MAP: Record<string, string> = {
   // Track 01: Executive & Governance
   'executive': 'EXECUTIVE',
@@ -30,6 +31,7 @@ const ROLE_MAP: Record<string, string> = {
   'technical': 'TECHNICAL',
   'technicalnode': 'TECHNICAL',
   'techMgmt': 'TECHNICAL',
+  'engineering': 'TECHNICAL',
 
   // Track 03: Operations & Management
   'ops mgmt': 'MANAGERIAL',
@@ -41,8 +43,10 @@ const ROLE_MAP: Record<string, string> = {
   'man': 'MANAGERIAL',
   'managerialnode': 'MANAGERIAL',
   'opsMgmt': 'MANAGERIAL',
+  'operations': 'MANAGERIAL',
 
-  // Track 04: Frontline System Execution (Decoupled from EXECUTIVE)
+  // Track 04: Frontline System Execution
+  'system': 'SYSTEM',
   'system user': 'SYSTEM',
   'system_user': 'SYSTEM',
   'systemuser': 'SYSTEM',
@@ -50,6 +54,41 @@ const ROLE_MAP: Record<string, string> = {
   'sys': 'SYSTEM',
   'core_system': 'SYSTEM',
   'systemUser': 'SYSTEM',
+  'frontline': 'SYSTEM',
+  'frontline_system': 'SYSTEM',
+};
+
+interface NodeConfig {
+  nodeId: string;
+  displayTitle: string;
+  roleExplanation: string;
+}
+
+const NODE_METADATA: Record<string, NodeConfig> = {
+  EXECUTIVE: {
+    nodeId: "NODE 01 // FORENSIC TRIANGULATION",
+    displayTitle: "Executive & Governance",
+    roleExplanation:
+      "You’ve been invited to complete the Executive & Governance portion of the BMR Forensic Diagnostic. Please use the access code below to complete your section."
+  },
+  TECHNICAL: {
+    nodeId: "NODE 02 // FORENSIC TRIANGULATION",
+    displayTitle: "Engineering & Infrastructure",
+    roleExplanation:
+      "You’ve been invited to complete the Engineering & Infrastructure portion of the BMR Forensic Diagnostic. Please use the access code below to complete your section."
+  },
+  MANAGERIAL: {
+    nodeId: "NODE 03 // FORENSIC TRIANGULATION",
+    displayTitle: "Operations & Management",
+    roleExplanation:
+      "You’ve been invited to complete the Operations & Management portion of the BMR Forensic Diagnostic. Please use the access code below to complete your section."
+  },
+  SYSTEM: {
+    nodeId: "NODE 04 // FORENSIC TRIANGULATION",
+    displayTitle: "Frontline System Execution",
+    roleExplanation:
+      "You’ve been invited to complete the Frontline System Execution portion of the BMR Forensic Diagnostic. Please use the access code below to complete your section."
+  }
 };
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
@@ -83,6 +122,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           message: `The provided role identifier "${rawRole}" is incompatible.`
         });
       }
+
+      const meta = NODE_METADATA[standardizedRole] || {
+        nodeId: "DIAGNOSTIC NODE // FORENSIC TRIANGULATION",
+        displayTitle: standardizedRole,
+        roleExplanation: `You’ve been invited to complete the ${standardizedRole} portion of the BMR Forensic Diagnostic. Please use the access code below to complete your section.`
+      };
 
       // Reuse existing access code if already created, otherwise generate once
       const { data: existingOp } = await supabaseAdmin
@@ -119,19 +164,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         sgMail.send({
           to: targetEmail,
           from: { name: "BMR Solutions", email: FROM_EMAIL },
-          subject: `ACTION REQUIRED: ${standardizedRole} Track Assessment Authorized // ${prettyCompany}`,
+          subject: `ACTION REQUIRED: ${meta.displayTitle} Diagnostic — Access Granted // ${prettyCompany}`,
           html: `
-            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 20px; background: #f8fafc;">
-              <div style="max-width: 600px; margin: 0 auto; background: #fff; padding: 30px; border: 1px solid #e2e8f0; border-top: 4px solid #0f172a; border-radius: 6px;">
-                <h3 style="margin-top: 0; color: #0f172a;">BMR Solutions // ${standardizedRole} Diagnostic Node</h3>
-                <p style="font-size: 14px; color: #334155;">Target Organization: <strong>${prettyCompany}</strong></p>
-                <p style="font-size: 14px; color: #334155;">Your assessment link is authorized. Select below to open your evaluation module:</p>
-                <div style="margin: 25px 0;">
-                  <a href="${diagnosticLink}" target="_blank" style="background: #0f172a; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 13px; display: inline-block;">
-                    Open ${standardizedRole} Track →
-                  </a>
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 28px 16px; background-color: #f8fafc; color: #0f172a;">
+              <div style="max-width: 600px; margin: 0 auto; background: #ffffff; border: 1px solid #e2e8f0; border-top: 4px solid #0f172a; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden;">
+                
+                <!-- Header -->
+                <div style="padding: 24px 32px; border-bottom: 1px solid #f1f5f9;">
+                  <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">
+                    ${meta.nodeId}
+                  </div>
+                  <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a; letter-spacing: -0.02em;">
+                    ${meta.displayTitle}
+                  </h2>
                 </div>
-                <p style="font-size: 11px; font-family: monospace; color: #64748b;">Access Code: <strong>${code}</strong></p>
+
+                <!-- Content Body -->
+                <div style="padding: 32px; font-size: 14px; line-height: 1.6; color: #334155;">
+                  <p style="margin-top: 0; margin-bottom: 16px;">
+                    Target Organization: <strong style="color: #0f172a;">${prettyCompany}</strong>
+                  </p>
+                  
+                  <p style="margin-bottom: 16px;">
+                    ${meta.roleExplanation}
+                  </p>
+
+                  <p style="font-size: 13px; color: #475569; background: #f8fafc; padding: 12px 16px; border-left: 3px solid #0f172a; margin: 20px 0;">
+                    Your responses help complete the organization-level diagnostic summary for ${prettyCompany}.
+                  </p>
+
+                  <!-- CTA Button -->
+                  <div style="margin: 28px 0 24px 0;">
+                    <a href="${diagnosticLink}" target="_blank" style="background-color: #0f172a; color: #ffffff; padding: 13px 26px; text-decoration: none; border-radius: 4px; font-weight: 700; font-size: 13px; display: inline-block; letter-spacing: 0.02em;">
+                      Open ${meta.displayTitle} Track →
+                    </a>
+                  </div>
+
+                  <p style="font-size: 12px; color: #64748b; margin-bottom: 0;">
+                    Your access code: <code style="font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #0f172a;">${code}</code>
+                  </p>
+                </div>
+
+                <!-- Footer -->
+                <div style="padding: 16px 32px; background-color: #f8fafc; border-top: 1px solid #f1f5f9; font-size: 11px; color: #94a3b8; font-family: monospace;">
+                  CONFIDENTIAL // Authorized BMR Diagnostic Dispatch
+                </div>
+
               </div>
             </div>
           `

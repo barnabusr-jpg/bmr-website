@@ -5,6 +5,49 @@ import LZString from "lz-string";
 import { FORENSIC_MATRIX } from "@/lib/forensicMatrix";
 import { Lock, CheckCircle, ShieldAlert, Activity, ArrowRight, Mail, Network, FileQuestion } from "lucide-react";
 
+// Canonical normalizer to align URL params, Supabase persona_type, and question matrix lenses across all 4 nodes
+const NORMALIZE_LENS_MAP: Record<string, string> = {
+  // Node 01: Executive & Governance
+  EXECUTIVE: "EXE",
+  EXEC: "EXE",
+  EXE: "EXE",
+  GOVERNANCE: "EXE",
+  EXECUTIVE_GOVERNANCE: "EXE",
+
+  // Node 02: Technical / Engineering / Infrastructure
+  TECHNICAL: "TEC",
+  TECH: "TEC",
+  TEC: "TEC",
+  ENGINEERING: "TEC",
+  INFRASTRUCTURE: "TEC",
+  TECH_MGMT: "TEC",
+
+  // Node 03: Managerial / Operations
+  MANAGERIAL: "MGR",
+  MGR: "MGR",
+  OPERATIONS: "MGR",
+  OPS: "MGR",
+  OPS_MGMT: "MGR",
+  OPERATIONS_MANAGEMENT: "MGR",
+
+  // Node 04: Frontline / System Execution
+  SYSTEM: "SYS",
+  SYSTEM_USER: "SYS",
+  SYS: "SYS",
+  FRONTLINE: "SYS",
+  FRONTLINE_SYSTEM: "SYS",
+  FRONTLINE_SYSTEM_EXECUTION: "SYS",
+  SYSTEMUSER: "SYS",
+  CORE_SYSTEM: "SYS",
+  EXECUTION: "SYS",
+};
+
+const getNormalizedLens = (val?: string | null): string => {
+  if (!val) return "";
+  const cleaned = String(val).trim().toUpperCase();
+  return NORMALIZE_LENS_MAP[cleaned] || cleaned;
+};
+
 export default function ForensicDiagnostic() {
   const [step, setStep] = useState("loading");
   const [operator, setOperator] = useState<any>(null);
@@ -17,29 +60,27 @@ export default function ForensicDiagnostic() {
 
   const [quadEmails, setQuadEmails] = useState({
     executive: "",
-    managerial: "",
     technical: "",
+    managerial: "",
+    system: "",
   });
 
   useEffect(() => {
     const init = async () => {
-      // Robust parameter extractor with window.location.href regex fallback
+      // Robust parameter extractor with address bar regex fallback
       const getParam = (key: string): string | null => {
         if (typeof window === "undefined") return null;
-        
-        // 1. Standard URLSearchParams lookup
+
         const searchParams = new URLSearchParams(window.location.search);
         const val = searchParams.get(key);
         if (val && val.trim().length > 0) return val;
 
-        // 2. Direct regex fallback against address bar string
         const match = window.location.href.match(new RegExp(`[?&]${key}=([^&#]*)`, "i"));
         return match ? decodeURIComponent(match[1]) : null;
       };
 
-      // Resolve access code across aliases (code, access_code, c)
       const rawCode = getParam("code") || getParam("access_code") || getParam("c");
-      
+
       let codeParam = (rawCode ?? "").trim().toUpperCase();
       if (codeParam.startsWith("=3D")) codeParam = codeParam.slice(3);
       if (codeParam.startsWith("3D")) codeParam = codeParam.slice(2);
@@ -56,12 +97,13 @@ export default function ForensicDiagnostic() {
       const auditIdParam = getParam("id");
       const authParam = getParam("auth");
 
-      console.log("DIAGNOSTIC_AUTH_DEBUG:", { 
+      console.log("DIAGNOSTIC_AUTH_DEBUG:", {
         href: typeof window !== "undefined" ? window.location.href : "",
         rawCode,
-        normalizedCode: code, 
-        flow, 
-        hasMatrix: !!matrixToken 
+        normalizedCode: code,
+        flow,
+        trackParam,
+        hasMatrix: !!matrixToken,
       });
 
       let matrixPayload: any = null;
@@ -89,39 +131,31 @@ export default function ForensicDiagnostic() {
         const { op, audit } = await res.json();
         console.log("VERIFY_CODE_RESULT:", { op, audit });
 
+        const isOpComplete =
+          op?.survey_completed === true ||
+          String(op?.status).trim().toUpperCase() === "COMPLETED" ||
+          String(op?.status).trim().toLowerCase() === "completed";
 
-const isOpComplete =
-  op?.survey_completed === true ||
-  String(op?.status).trim().toUpperCase() === "COMPLETED" || 
-  String(op?.status).trim().toLowerCase() === "completed";
+        if (!audit || isOpComplete) {
+          console.log("NODE_ACCESS: Assessment link completed or deactivated.");
+          setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
+          setStep("finalized");
+          return;
+        }
 
-// Ignore parent audit.status so snapshot completion doesn't block stakeholder tracks
-if (!audit || isOpComplete) {
-  console.log("NODE_ACCESS: Assessment link completed or deactivated.");
-  setOperator(op ? { ...op, org_name: audit?.org_name || "Evaluation Node" } : null);
-  setStep("finalized");
-  return;
-}
+        // Canonical lens matching across DB persona_type or URL parameter
+        const targetLens = getNormalizedLens(op.persona_type || trackParam);
+
         const filtered = FORENSIC_MATRIX.filter((q) => {
-          const lens = String(q.lens ?? "").trim().toUpperCase();
-          const persona = String(op.persona_type ?? "").trim().toUpperCase();
-
-          if (!persona) return false;
-
-          if (persona === "EXECUTIVE" && lens === "EXE") return true;
-          if (persona === "MANAGERIAL" && lens === "MGR") return true;
-          if (persona === "TECHNICAL" && lens === "TEC") return true;
-
-          if (lens === persona) return true;
-
-          return false;
+          const qLens = getNormalizedLens(q.lens);
+          return qLens === targetLens;
         });
 
         if (!filtered || filtered.length === 0) {
-          console.error("MATRIX_FILTER_EMPTY: No question mapping found for persona:", { 
+          console.error("MATRIX_FILTER_EMPTY: No question mapping found for persona:", {
             rawPersona: op.persona_type,
-            trimmedPersona: String(op.persona_type ?? "").trim().toUpperCase(),
-            code 
+            targetLens,
+            code,
           });
           setStep("persona_mismatch");
           return;
@@ -149,18 +183,11 @@ if (!audit || isOpComplete) {
 
       if (trackParam || authParam === "admin_verified_secure") {
         const targetOrg = matrixPayload?.org || orgParam || "TARGET SPECIFICATION";
-        const persona = trackParam || "EXECUTIVE";
+        const targetLens = getNormalizedLens(trackParam || "EXECUTIVE");
 
         const filtered = FORENSIC_MATRIX.filter((q) => {
-          const lens = String(q.lens ?? "").trim().toUpperCase();
-          const p = String(persona ?? "").trim().toUpperCase();
-
-          return (
-            lens === p ||
-            (p === "MANAGERIAL" && lens === "MGR") ||
-            (p === "TECHNICAL" && lens === "TEC") ||
-            (p === "EXECUTIVE" && lens === "EXE")
-          );
+          const qLens = getNormalizedLens(q.lens);
+          return qLens === targetLens;
         });
 
         setQuestions(filtered.length > 0 ? filtered : FORENSIC_MATRIX);
@@ -168,7 +195,7 @@ if (!audit || isOpComplete) {
           id: auditIdParam || "admin_preview",
           audit_id: auditIdParam || "admin_audit",
           org_name: targetOrg,
-          persona_type: persona,
+          persona_type: trackParam || "EXECUTIVE",
           access_code: "ADMIN_PREVIEW",
         });
         setStep("intro");
@@ -185,8 +212,14 @@ if (!audit || isOpComplete) {
   const handleStartQuadDiagnostic = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!quadEmails.executive || !quadEmails.managerial || !quadEmails.technical) {
-      alert("Please provide routing emails for all three stakeholder tracks.");
+    // Enforce all 4 stakeholder tracks as mandatory for complete triangulation
+    if (
+      !quadEmails.executive.trim() ||
+      !quadEmails.technical.trim() ||
+      !quadEmails.managerial.trim() ||
+      !quadEmails.system.trim()
+    ) {
+      alert("Please provide routing emails for all four triangulation tracks.");
       return;
     }
 
@@ -203,8 +236,9 @@ if (!audit || isOpComplete) {
             parentAuditId: operator.audit_id,
             emails: {
               EXECUTIVE: quadEmails.executive.trim(),
-              MANAGERIAL: quadEmails.managerial.trim(),
               TECHNICAL: quadEmails.technical.trim(),
+              MANAGERIAL: quadEmails.managerial.trim(),
+              SYSTEM: quadEmails.system.trim(),
             },
           }),
         });
@@ -213,7 +247,7 @@ if (!audit || isOpComplete) {
       }
 
       const filtered = FORENSIC_MATRIX.filter(
-        (q) => q.lens?.toUpperCase() === "EXE" || q.lens?.toUpperCase() === "EXECUTIVE"
+        (q) => getNormalizedLens(q.lens) === "EXE"
       );
       setQuestions(filtered.length > 0 ? filtered : FORENSIC_MATRIX);
       setOperator((prev: any) => ({ ...prev, persona_type: "EXECUTIVE" }));
@@ -375,13 +409,13 @@ if (!audit || isOpComplete) {
             Configure Multi-Track Assessment
           </h1>
           <p className="text-xs text-slate-600 mb-8 leading-relaxed font-sans">
-            Enter target stakeholder email addresses for <strong>{operator?.org_name}</strong> to initialize 360° triangulation and route assessment links across all operational vectors.
+            Enter target stakeholder email addresses for <strong>{operator?.org_name}</strong> to initialize 360° triangulation and route assessment links across all four operational vectors.
           </p>
 
           <form onSubmit={handleStartQuadDiagnostic} className="space-y-4">
             <div>
               <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
-                Executive Stakeholder Email
+                Node 01: Executive & Governance Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
@@ -398,24 +432,7 @@ if (!audit || isOpComplete) {
 
             <div>
               <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
-                Managerial Stakeholder Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                <input
-                  type="email"
-                  required
-                  value={quadEmails.managerial}
-                  onChange={(e) => setQuadEmails({ ...quadEmails, managerial: e.target.value })}
-                  placeholder="managerial@organization.com"
-                  className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
-                Technical Stakeholder Email
+                Node 02: Engineering & Infrastructure Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
@@ -424,7 +441,41 @@ if (!audit || isOpComplete) {
                   required
                   value={quadEmails.technical}
                   onChange={(e) => setQuadEmails({ ...quadEmails, technical: e.target.value })}
-                  placeholder="technical@organization.com"
+                  placeholder="engineering@organization.com"
+                  className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
+                Node 03: Operations & Management Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="email"
+                  required
+                  value={quadEmails.managerial}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, managerial: e.target.value })}
+                  placeholder="operations@organization.com"
+                  className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-mono font-bold uppercase text-slate-500 mb-1.5">
+                Node 04: Frontline System Execution Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <input
+                  type="email"
+                  required
+                  value={quadEmails.system}
+                  onChange={(e) => setQuadEmails({ ...quadEmails, system: e.target.value })}
+                  placeholder="frontline@organization.com"
                   className="w-full bg-slate-50 border border-slate-200 pl-10 pr-4 py-3 text-xs text-slate-900 font-sans rounded outline-none focus:border-slate-900"
                 />
               </div>
