@@ -96,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  const { groupId, orgName, emails, parentAuditId } = req.body;
+  const { groupId, orgName, emails, parentAuditId, flowType } = req.body;
   const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://bmradvisory.co';
   const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'hello@bmradvisory.co';
 
@@ -158,7 +158,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       if (upsertError) throw upsertError;
 
-      const diagnosticLink = `${BASE_URL}/diagnostic/forensic?code=${code}&role=${standardizedRole}&flow=quad_node`;
+      const basePath = flowType === 'quad_node' ? '/forensic' : '/diagnostic/forensic';
+      const diagnosticLink = `${BASE_URL}${basePath}?code=${code}&role=${standardizedRole}&flow=${encodeURIComponent('quad_node')}&org=${encodeURIComponent(orgName || '')}`;
 
       emailPromises.push(
         sgMail.send({
