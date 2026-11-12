@@ -168,7 +168,36 @@ export default function ForensicEngineRoot() {
     let targetCompanyName = sanitizeOrgKey(orgParam || '');
 
     try {
-      const roleParam = resolvePersonaKey(rawRole);
+      let roleParam = resolvePersonaKey(rawRole);
+      const codeParam = (params.get('code') || '').trim();
+
+      // Hydrate audit_id, org_name, and persona fallback when arriving via email code
+      if (codeParam) {
+        const verifyRes = await fetch(`/api/verify-code?code=${encodeURIComponent(codeParam)}`);
+        if (verifyRes.ok) {
+          const { op, audit } = await verifyRes.json();
+
+          const resolvedId = cleanUuid(audit?.id || op?.audit_id);
+          if (resolvedId && !idParam) {
+            idParam = resolvedId;
+            setActiveAuditId(resolvedId);
+            activeAuditIdRef.current = resolvedId;
+          }
+
+          if (audit?.org_name && !targetCompanyName) {
+            targetCompanyName = sanitizeOrgKey(audit.org_name);
+            setCompanyName(audit.org_name);
+            setIsCompanyFromDB(true);
+          }
+
+          // If role was missing in URL, derive from operators.persona_type
+          if (!roleParam && op?.persona_type) {
+            roleParam = resolvePersonaKey(op.persona_type);
+          }
+        }
+      }
+
+      // IMPORTANT: compute after hydration
       const isParticipantRoute = !!roleParam;
 
       const isAdminSession =
@@ -356,7 +385,7 @@ export default function ForensicEngineRoot() {
           !isParticipantRoute &&
           (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
-        const isAuthorized = isParticipantRoute || isAdminAuthenticated || !!orgVal;
+        const isAuthorized = isParticipantRoute || isAdminAuthenticated || !!orgVal || !!params.get('code');
 
         setAuthorizedAdmin(isAuthorized);
         didBootRef.current = true;
