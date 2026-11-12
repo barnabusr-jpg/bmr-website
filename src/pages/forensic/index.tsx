@@ -37,7 +37,7 @@ const cleanUuid = (val?: string | null): string => {
 
 const isValidUuid = (val?: string | null): boolean => {
   const sanitized = cleanUuid(val);
-  return Boolean(sanitized && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sanitized));
+  return Boolean(sanitized && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sanitized));
 };
 
 const QUAD_PERSONA_TYPES: Record<PersonaKey, string[]> = {
