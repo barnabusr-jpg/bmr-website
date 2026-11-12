@@ -56,9 +56,10 @@ export default function ForensicDiagnosticWizard({
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const emailParam = params.get('email');
-      
+
       // 🎯 STRICT PRECEDENCE: Explicit props/URL params win over stale session cache
       const explicitRole = persona || role || params.get('role') || params.get('persona');
+      const resolvedTrack = normalizeTrackRole(explicitRole || 'EXECUTIVE');
 
       if (emailParam) {
         window.sessionStorage.setItem('stakeholder_runtime_email', emailParam);
@@ -72,18 +73,18 @@ export default function ForensicDiagnosticWizard({
         if (cachedRole) setActiveRole(cachedRole);
       }
 
-      const savedAnswers: Record<string, string> = {};
-      ['IGF', 'AVS', 'HAI'].forEach(pillar => {
-        const cached = window.sessionStorage.getItem(`quad_cache_${pillar.toUpperCase()}`);
-        if (cached) {
-          try {
-            Object.assign(savedAnswers, JSON.parse(cached));
-          } catch (e) {
-            console.error(`Failed to combine track cache for ${pillar}:`, e);
-          }
+      setCurrentStep(0);
+
+      const cached = window.sessionStorage.getItem(`quad_cache_${resolvedTrack}`);
+      if (cached) {
+        try {
+          setAnswers(JSON.parse(cached));
+        } catch (e) {
+          setAnswers({});
         }
-      });
-      setAnswers(savedAnswers);
+      } else {
+        setAnswers({});
+      }
     }
   }, [activePillar, persona, role]);
 
@@ -130,25 +131,14 @@ export default function ForensicDiagnosticWizard({
   const handleSelectOption = (choiceKey: 'A' | 'B' | 'C' | 'D') => {
     if (!currentQuestion) return;
 
-    const targetPillar = currentQuestion.pillar || activePillar;
     const questionId = currentQuestion.id;
-
     const prefixedKey = `quad_${questionId}`;
     const updatedAnswers: Record<string, string> = { ...answers, [prefixedKey]: choiceKey };
     setAnswers(updatedAnswers);
 
     if (typeof window !== 'undefined') {
-      const targetPillarAnswers: Record<string, string> = {};
-      Object.keys(updatedAnswers).forEach(key => {
-        const cleanId = key.replace(/^quad_/, '');
-        const qObj = Object.values(forensicQuestions).find(q => q.id === cleanId);
-
-        if (qObj?.pillar?.toUpperCase() === targetPillar.toUpperCase()) {
-          targetPillarAnswers[key] = updatedAnswers[key];
-        }
-      });
-
-      window.sessionStorage.setItem(`quad_cache_${targetPillar.toUpperCase()}`, JSON.stringify(targetPillarAnswers));
+      const trackKey = normalizeTrackRole(activeRole);
+      window.sessionStorage.setItem(`quad_cache_${trackKey}`, JSON.stringify(updatedAnswers));
     }
 
     if (isLastQuestion) {
