@@ -129,6 +129,7 @@ export default function ForensicEngineRoot() {
 
   const isSyncingRef = useRef(false);
   const didBootRef = useRef(false);
+  const completedParticipantRef = useRef<Set<string>>(new Set());
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>(FRESH_EMPTY_EMAILS);
   const [triangulation, setTriangulation] = useState<TriangulationState | null>(null);
@@ -200,6 +201,20 @@ export default function ForensicEngineRoot() {
       // IMPORTANT: compute after hydration
       const isParticipantRoute = !!roleParam;
 
+      const normalizedCode = codeParam.toUpperCase();
+      const participantKey =
+        isParticipantRoute && normalizedCode && roleParam
+          ? `${normalizedCode}:${roleParam}`
+          : null;
+
+      if (participantKey && completedParticipantRef.current.has(participantKey)) {
+        // We already completed this stakeholder track; do not re-open the wizard.
+        isSyncingRef.current = false;
+        setViewState('THANK_YOU');
+        setHasSynced(true);
+        return;
+      }
+
       const isAdminSession =
         !isParticipantRoute &&
         (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
@@ -267,6 +282,14 @@ export default function ForensicEngineRoot() {
           OPS_MGMT: Boolean(effectiveResponses['QUAD_MGR_COMPLETE']),
           SYSTEM_USER: Boolean(effectiveResponses['QUAD_SYS_COMPLETE'])
         };
+
+        // If the participant's track is already completed in the DB, do not re-open WIZARD after refresh.
+        if (codeParam && completionsMap[roleParam]) {
+          setViewState('THANK_YOU');
+          setHasSynced(true);
+          isSyncingRef.current = false;
+          return;
+        }
 
         setTriangulation(prev => ({
           companyName: fetchedOrg || prev?.companyName || "Quad Node Client System",
@@ -430,8 +453,9 @@ export default function ForensicEngineRoot() {
     if (!activePersona) return;
 
     const canonicalPersona: PersonaKey = (resolvePersonaKey(activePersona) || activePersona) as PersonaKey;
-    const rawTargetId = activeAuditId || activeAuditIdRef.current;
-    const targetAuditId = cleanUuid(rawTargetId);
+
+    // Resolve audit id from state/ref
+    const targetAuditId = cleanUuid(activeAuditId || activeAuditIdRef.current);
 
     const quadMarkerMap: Record<PersonaKey, string> = {
       EXECUTIVE: 'QUAD_EXE_COMPLETE',
@@ -442,7 +466,7 @@ export default function ForensicEngineRoot() {
 
     const markerKey = quadMarkerMap[canonicalPersona];
     if (!markerKey) {
-      console.error(`[Save Handler] Failed to resolve quad marker key for persona: "${activePersona}" (canonical: "${canonicalPersona}")`);
+      console.error(`[Save Handler] Failed to resolve quad marker key for persona: "${activePersona}"`);
       setActivePersona(null);
       setViewState('HUB');
       return;
@@ -455,66 +479,78 @@ export default function ForensicEngineRoot() {
       return;
     }
 
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+    const accessCode = params.get('code')?.trim().toUpperCase() || null;
     const timestamp = new Date().toISOString();
+
     const answersToSave = {
       ...(personaAnswers || {}),
       [markerKey]: timestamp
     };
 
     try {
-      const { data: updatedRaw, error: rpcErr } = await supabase.rpc('save_quad_node_response', {
-        target_audit_id: targetAuditId,
-        new_responses: answersToSave
+      const res = await fetch('/api/submit-quad-node', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          auditId: targetAuditId,
+          accessCode,
+          markerKey,
+          personaAnswers: answersToSave
+        }),
       });
 
-      if (rpcErr || !updatedRaw || typeof updatedRaw !== 'object') {
-        console.error('[Save Handler] RPC failed, executing direct table fallback:', rpcErr?.message || updatedRaw);
-
-        const { data: currentAudit } = await supabase
-          .from('audits')
-          .select('raw_responses')
-          .eq('id', targetAuditId)
-          .single();
-
-        if (currentAudit) {
-          const merged = { ...((currentAudit.raw_responses as Record<string, any>) || {}), ...answersToSave };
-          await supabase.from('audits').update({ raw_responses: merged }).eq('id', targetAuditId);
-
-          setTriangulation(prev => prev ? ({
-            ...prev,
-            completions: {
-              EXECUTIVE: Boolean(merged['QUAD_EXE_COMPLETE']),
-              TECH_MGMT: Boolean(merged['QUAD_TEC_COMPLETE']),
-              OPS_MGMT: Boolean(merged['QUAD_MGR_COMPLETE']),
-              SYSTEM_USER: Boolean(merged['QUAD_SYS_COMPLETE'])
-            },
-            responses: merged
-          }) : prev);
-        }
-      } else {
-        setTriangulation(prev => prev ? ({
-          ...prev,
-          completions: {
-            EXECUTIVE: Boolean(updatedRaw['QUAD_EXE_COMPLETE']),
-            TECH_MGMT: Boolean(updatedRaw['QUAD_TEC_COMPLETE']),
-            OPS_MGMT: Boolean(updatedRaw['QUAD_MGR_COMPLETE']),
-            SYSTEM_USER: Boolean(updatedRaw['QUAD_SYS_COMPLETE'])
-          },
-          responses: updatedRaw
-        }) : prev);
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.error || `HTTP ${res.status}`);
       }
-    } catch (err) {
+
+      const updatedRaw = data?.raw_responses || answersToSave;
+
+      // Update UI immediately from authoritative server result
+      setTriangulation(prev => prev ? ({
+        ...prev,
+        completions: {
+          EXECUTIVE: Boolean(updatedRaw['QUAD_EXE_COMPLETE']),
+          TECH_MGMT: Boolean(updatedRaw['QUAD_TEC_COMPLETE']),
+          OPS_MGMT: Boolean(updatedRaw['QUAD_MGR_COMPLETE']),
+          SYSTEM_USER: Boolean(updatedRaw['QUAD_SYS_COMPLETE'])
+        },
+        responses: updatedRaw
+      }) : prev);
+
+      // Mark completion to prevent re-opening wizard on next sync tick
+      if (accessCode) {
+        completedParticipantRef.current.add(`${accessCode}:${canonicalPersona}`);
+      }
+    } catch (err: any) {
       console.error('[Save Handler] Persistence exception:', err);
+      alert(`Failed to save track completion: ${err?.message || 'Unknown error'}`);
+      return;
     }
 
-    if (typeof window !== 'undefined' && targetAuditId) {
-      const url = new URL(window.location.href);
-      url.searchParams.set('id', targetAuditId);
-      window.history.replaceState({}, '', url.toString());
+    if (typeof window !== 'undefined') {
+      window.sessionStorage.removeItem('stakeholder_runtime_role');
+      ['EXECUTIVE', 'TECH_MGMT', 'OPS_MGMT', 'SYSTEM_USER', 'IGF', 'AVS', 'HAI'].forEach(k =>
+        window.sessionStorage.removeItem(`quad_cache_${k}`)
+      );
     }
 
     setActivePersona(null);
-    setViewState('HUB');
+
+    // Route external stakeholders to THANK_YOU, admins back to HUB
+    if (accessCode) setViewState('THANK_YOU');
+    else setViewState('HUB');
+
+    // Optional cleanup: remove role/persona so URL can’t keep forcing participant mode
+    if (typeof window !== 'undefined') {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('role');
+        url.searchParams.delete('persona');
+        window.history.replaceState({}, '', url.toString());
+      } catch {}
+    }
   };
 
   const handleInitializeTriangulation = async (e: FormEvent) => {
@@ -667,6 +703,7 @@ export default function ForensicEngineRoot() {
 
   const handleSystemReset = () => {
     didBootRef.current = false;
+    completedParticipantRef.current.clear();
     setAuthorizedAdmin(true);
     setHasSynced(false);
 
