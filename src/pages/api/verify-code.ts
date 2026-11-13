@@ -35,8 +35,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.warn('OPERATOR_NOT_FOUND:', { cleanCode });
       return res.status(404).json({ error: 'Invalid access code.' });
     }
+
     let audit: any = null;
-    const auditId = op.audit_id || op.group_id;
+
+    // audits.id is the source of truth for routing in the frontend.
+    // group_id is not guaranteed to match audits.id.
+    const auditId = op.audit_id;
 
     if (auditId) {
       const { data: auditData, error: auditError } = await supabaseAdmin
@@ -52,9 +56,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (!audit) {
       audit = {
-        id: op.audit_id || 'unlinked_audit',
+        id: auditId || 'unlinked_audit',
         org_name: op.org_name || 'Organization',
-        status: 'ACTIVE'
+        status: 'ACTIVE',
       };
     }
 
