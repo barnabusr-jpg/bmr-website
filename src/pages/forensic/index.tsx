@@ -130,6 +130,7 @@ export default function ForensicEngineRoot() {
   const isSyncingRef = useRef(false);
   const didBootRef = useRef(false);
   const completedParticipantRef = useRef<Set<string>>(new Set());
+  const accessCodeRef = useRef<string | null>(null);
 
   const [emails, setEmails] = useState<Record<PersonaKey, string>>(FRESH_EMPTY_EMAILS);
   const [triangulation, setTriangulation] = useState<TriangulationState | null>(null);
@@ -172,6 +173,10 @@ export default function ForensicEngineRoot() {
       let roleParam = resolvePersonaKey(rawRole);
       const codeParam = (params.get('code') || '').trim();
 
+      if (codeParam) {
+        accessCodeRef.current = codeParam.toUpperCase();
+      }
+
       // Hydrate audit_id, org_name, and persona fallback when arriving via email code
       if (codeParam) {
         const verifyRes = await fetch(`/api/verify-code?code=${encodeURIComponent(codeParam)}`);
@@ -179,7 +184,7 @@ export default function ForensicEngineRoot() {
           const { op, audit } = await verifyRes.json();
 
           const resolvedId = cleanUuid(audit?.id || op?.audit_id);
-          if (resolvedId && !idParam) {
+          if (resolvedId && isValidUuid(resolvedId) && !idParam) {
             idParam = resolvedId;
             setActiveAuditId(resolvedId);
             activeAuditIdRef.current = resolvedId;
@@ -201,7 +206,7 @@ export default function ForensicEngineRoot() {
       // IMPORTANT: compute after hydration
       const isParticipantRoute = !!roleParam;
 
-      const normalizedCode = codeParam.toUpperCase();
+      const normalizedCode = (accessCodeRef.current || codeParam).toUpperCase();
       const participantKey =
         isParticipantRoute && normalizedCode && roleParam
           ? `${normalizedCode}:${roleParam}`
@@ -284,7 +289,7 @@ export default function ForensicEngineRoot() {
         };
 
         // If the participant's track is already completed in the DB, do not re-open WIZARD after refresh.
-        if (codeParam && completionsMap[roleParam]) {
+        if ((accessCodeRef.current || codeParam) && completionsMap[roleParam]) {
           setViewState('THANK_YOU');
           setHasSynced(true);
           isSyncingRef.current = false;
@@ -400,6 +405,11 @@ export default function ForensicEngineRoot() {
         const authVal = params.get('auth');
         const rawRole = params.get('role') || params.get('persona');
         const orgVal = params.get('org') || params.get('entity');
+        const codeVal = (params.get('code') || '').trim();
+
+        if (codeVal) {
+          accessCodeRef.current = codeVal.toUpperCase();
+        }
 
         const roleParam = resolvePersonaKey(rawRole);
         const isParticipantRoute = !!roleParam;
@@ -408,7 +418,7 @@ export default function ForensicEngineRoot() {
           !isParticipantRoute &&
           (authVal === 'admin_verified_secure' || authVal === 'admin' || authVal === 'true');
 
-        const isAuthorized = isParticipantRoute || isAdminAuthenticated || !!orgVal || !!params.get('code');
+        const isAuthorized = isParticipantRoute || isAdminAuthenticated || !!orgVal || !!codeVal;
 
         setAuthorizedAdmin(isAuthorized);
         didBootRef.current = true;
@@ -480,7 +490,7 @@ export default function ForensicEngineRoot() {
     }
 
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-    const accessCode = params.get('code')?.trim().toUpperCase() || null;
+    const accessCode = accessCodeRef.current || params.get('code')?.trim().toUpperCase() || null;
     const timestamp = new Date().toISOString();
 
     const answersToSave = {
@@ -704,6 +714,7 @@ export default function ForensicEngineRoot() {
   const handleSystemReset = () => {
     didBootRef.current = false;
     completedParticipantRef.current.clear();
+    accessCodeRef.current = null;
     setAuthorizedAdmin(true);
     setHasSynced(false);
 
