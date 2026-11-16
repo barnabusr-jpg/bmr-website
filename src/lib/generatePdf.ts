@@ -1,345 +1,308 @@
-import type { NextApiRequest, NextApiResponse } from "next";
-import { createClient } from "@supabase/supabase-js";
 import {
-  calculateAuditFinancialMetrics,
-  calculateForensicMetrics,
-  getPdfEvidenceStatus
-} from "@/lib/forensicCalculus";
+  NodeEvaluationRecord,
+  GateStatus,
+} from '@/types/playbookExport';
+import { getStatusProvenanceBadge } from '@/lib/playbookExportAdapter';
 
-function escapeHtml(input: any): string {
-  return String(input ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+export interface SOWDirectivePayload {
+  title: string;
+  price: string;
+  scope: string;
+  businessImpact?: string;
 }
 
-function sanitizeHexColor(color: string | undefined | null, fallback = "#dc2626"): string {
-  const clean = String(color ?? "").trim();
-  return /^#[0-9a-fA-F]{6}$/.test(clean) ? clean : fallback;
+export interface GenerateSOWPdfInput {
+  company: string;
+  sector?: string;
+  readinessIndex?: number;
+  processWasteTax?: number;
+  promiseGapExposure?: number;
+  nodeMatrix?: NodeEvaluationRecord[];
+  directives: SOWDirectivePayload[];
+}
+
+function escapePdfText(text: string): string {
+  return String(text ?? '')
+    .replace(/[^\x20-\x7E]/g, ' ')
+    .replace(/\\/g, '\\\\')
+    .replace(/\(/g, '\\(')
+    .replace(/\)/g, '\\)');
+}
+
+function wrapLines(text: string, maxChars: number): string[] {
+  const words = String(text ?? '').split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let current = '';
+
+  for (const word of words) {
+    if (!current) {
+      current = word;
+    } else if (current.length + 1 + word.length <= maxChars) {
+      current += ` ${word}`;
+    } else {
+      lines.push(current);
+      current = word;
+    }
+  }
+  if (current) lines.push(current);
+  return lines.length > 0 ? lines : [''];
+}
+
+function hexToRgbNormalized(hex: string): [number, number, number] {
+  const clean = hex.replace('#', '');
+  if (clean.length !== 6) return [0.06, 0.09, 0.16];
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  return [
+    Number(r.toFixed(3)),
+    Number(g.toFixed(3)),
+    Number(b.toFixed(3)),
+  ];
 }
 
 /**
- * Redacts email addresses for secure server-side logging (PII Protection)
+ * Generates a multi-page, zero-dependency binary PDF Blob containing the
+ * Executive Metrics, Section 6 Quad-Node Control Matrix, and Selected SOW Tracks.
  */
-function maskEmail(email: string | undefined | null): string {
-  if (!email || !email.includes("@")) return "unspecified";
-  const [local, domain] = email.split("@");
-  const maskedLocal = local.length > 3 ? `${local.slice(0, 3)}***` : `${local[0]}***`;
-  return `${maskedLocal}@${domain}`;
-}
+export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
+  const company = (input.company || 'Target Organization').replace(/_/g, ' ');
+  const sectorLabel = (input.sector || 'ENTERPRISE CONTROL PLANE')
+    .replace(/_/g, ' ')
+    .toUpperCase();
+  const readiness = input.readinessIndex ?? 58;
+  const wasteTax = Math.round(input.processWasteTax ?? 0);
+  const promiseGap = Math.round(input.promiseGapExposure ?? 0);
+  const nodes = input.nodeMatrix || [];
+  const directives = input.directives || [];
 
-/**
- * Robust Bearer Token Extractor (Header preferred, cookie fallback)
- */
-function extractBearerToken(req: NextApiRequest): { token: string | null; source: string } {
-  const authHeader = req.headers.authorization;
-  if (authHeader) {
-    const token = authHeader.replace("Bearer ", "")?.trim();
-    if (token) return { token, source: "authorization_header" };
-  }
+  const pages: string[][] = [];
+  let currentPageOps: string[] = [];
+  let y = 740;
 
-  const cookies = req.cookies || {};
-  for (const key of Object.keys(cookies)) {
-    if (key.includes("auth-token") || key.includes("access-token") || key.startsWith("sb-")) {
-      const val = cookies[key];
-      if (val && typeof val === "string" && val.length > 10) {
-        return { token: val.trim(), source: `cookie:${key}` };
-      }
+  // Initialize Page 1 active buffer immediately
+  pages.push(currentPageOps);
+
+  const startNewPage = () => {
+    currentPageOps = [];
+    pages.push(currentPageOps);
+    y = 740;
+  };
+
+  const ensureSpace = (needed: number) => {
+    if (y - needed < 55 && currentPageOps.length > 0) {
+      startNewPage();
     }
-  }
+  };
 
-  return { token: null, source: "none" };
-}
+  const drawText = (
+    text: string,
+    x: number,
+    yPos: number,
+    size = 10,
+    bold = false,
+    rgb: [number, number, number] = [0.06, 0.09, 0.16]
+  ) => {
+    const font = bold ? '/F2' : '/F1';
+    currentPageOps.push(
+      `BT ${rgb[0]} ${rgb[1]} ${rgb[2]} rg ${font} ${size} Tf 1 0 0 1 ${x} ${yPos} Tm (${escapePdfText(text)}) Tj ET`
+    );
+  };
 
-function normalizeRawResponses(raw: any): Record<string, any> {
-  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
-    return raw;
-  }
-  if (typeof raw === "string") {
-    try {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return parsed;
-      }
-    } catch {
-      return {};
+  const drawRect = (
+    x: number,
+    yPos: number,
+    w: number,
+    h: number,
+    fillRgb?: [number, number, number],
+    strokeRgb?: [number, number, number]
+  ) => {
+    if (fillRgb) {
+      currentPageOps.push(`${fillRgb[0]} ${fillRgb[1]} ${fillRgb[2]} rg`);
     }
-  }
-  return {};
-}
-
-function parseValidTimestamp(dateString: string | null | undefined): number | null {
-  if (!dateString) return null;
-  const ms = new Date(dateString).getTime();
-  return Number.isFinite(ms) ? ms : null;
-}
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: "Method Not Allowed" });
-  }
-
-  // 1️⃣ REQUEST-SCOPED CLIENT WITH CALLER'S JWT
-  const { token: bearerToken, source: tokenSource } = extractBearerToken(req);
-
-  if (!bearerToken) {
-    console.warn("[AUTH_WARNING] Request rejected: Missing Authorization header or session cookie.");
-    return res.status(401).json({ error: "Unauthorized // Valid Authentication Session Required" });
-  }
-
-  const supabaseAuth = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      global: {
-        headers: { Authorization: `Bearer ${bearerToken}` }
-      }
+    if (strokeRgb) {
+      currentPageOps.push(`${strokeRgb[0]} ${strokeRgb[1]} ${strokeRgb[2]} RG 0.75 w`);
     }
+    const mode = fillRgb && strokeRgb ? 'B' : fillRgb ? 'f' : 'S';
+    currentPageOps.push(`${x} ${yPos} ${w} ${h} re ${mode}`);
+  };
+
+  // Top Header Banner
+  drawRect(45, 725, 522, 42, [0.06, 0.09, 0.16]);
+  drawText('BMR SOLUTIONS // PRE-AUTOMATION CONTROL PLANE SOW DOSSIER', 58, 749, 11, true, [1, 1, 1]);
+  drawText(`TARGET: ${company.toUpperCase()}  |  SECTOR: ${sectorLabel}`, 58, 735, 8, false, [0.8, 0.85, 0.9]);
+  y = 702;
+
+  // Executive Financial & Readiness Summary Cards
+  drawText('01 // EXECUTIVE DIAGNOSTIC & FINANCIAL SUMMARY', 45, y, 10, true, [0.06, 0.09, 0.16]);
+  y -= 12;
+
+  const cardW = 166;
+  const cardH = 52;
+  const cardY = y - cardH;
+
+  // Card 1: Readiness Index
+  drawRect(45, cardY, cardW, cardH, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
+  drawText('AI READINESS INDEX', 55, cardY + 36, 7.5, true, [0.39, 0.45, 0.55]);
+  drawText(
+    `${readiness} / 100`,
+    55,
+    cardY + 14,
+    16,
+    true,
+    readiness >= 70 ? [0.02, 0.47, 0.34] : [0.73, 0.11, 0.11]
   );
 
-  const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
-  if (authError || !user) {
-    console.warn(`[AUTH_WARNING] Auth token validation failed (Source: ${tokenSource}):`, authError?.message);
-    return res.status(401).json({ error: "Unauthorized // Authentication Token Invalid or Expired" });
-  }
+  // Card 2: Process Waste Tax
+  drawRect(45 + cardW + 12, cardY, cardW, cardH, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
+  drawText('PROCESS WASTE TAX (ANNUAL)', 55 + cardW + 12, cardY + 36, 7.5, true, [0.39, 0.45, 0.55]);
+  drawText(`$${wasteTax.toLocaleString()}`, 55 + cardW + 12, cardY + 14, 15, true, [0.06, 0.09, 0.16]);
 
-  const { id } = req.query;
-  if (!id || typeof id !== "string") {
-    return res.status(400).json({ error: "Bad Request // Missing Target Record ID" });
-  }
+  // Card 3: Promise Gap Exposure
+  drawRect(45 + (cardW + 12) * 2, cardY, cardW, cardH, [0.99, 0.95, 0.95], [0.98, 0.79, 0.79]);
+  drawText('PROMISE GAP ANNUAL RISK', 55 + (cardW + 12) * 2, cardY + 36, 7.5, true, [0.73, 0.11, 0.11]);
+  drawText(`$${promiseGap.toLocaleString()}`, 55 + (cardW + 12) * 2, cardY + 14, 15, true, [0.73, 0.11, 0.11]);
 
-  try {
-    // 2️⃣ QUERY BOUND TO USER JWT (AUTHENTICATED RLS EVALUATED)
-    const { data: audit, error } = await supabaseAuth
-      .from("audits")
-      .select("*")
-      .eq("id", id)
-      .single();
+  y = cardY - 24;
 
-    if (error || !audit) {
-      console.error(`[RLS_DIAGNOSTIC] Access Denied or Missing Record (ID: ${id})`, {
-        userId: user.id,
-        userEmailMasked: maskEmail(user.email),
-        userRole: user.app_metadata?.role || "authenticated",
-        tokenSource,
-        errorCode: error?.code,
+  // Section 6: Quad-Node Control Matrix
+  if (nodes.length > 0) {
+    ensureSpace(180);
+    drawText('02 // SECTION 6: QUAD-NODE CONTROL MATRIX (CONSOLIDATED VIEW)', 45, y, 10, true, [0.06, 0.09, 0.16]);
+    y -= 18;
+
+    drawRect(45, y - 16, 522, 20, [0.06, 0.09, 0.16]);
+    drawText('CONTROL PLANE NODE', 52, y - 10, 7.5, true, [1, 1, 1]);
+    drawText('OBSERVED PATTERN & RECOMMENDED GATE', 195, y - 10, 7.5, true, [1, 1, 1]);
+    drawText('INSULATION', 435, y - 10, 7.5, true, [1, 1, 1]);
+    drawText('STATUS', 495, y - 10, 7.5, true, [1, 1, 1]);
+    y -= 20;
+
+    for (const node of nodes) {
+      const patternLines = wrapLines(node.observedPattern, 44);
+      const gateLines = wrapLines(`Gate: ${node.recommendedGate}`, 44);
+      const rowHeight = Math.max(46, (patternLines.length + gateLines.length) * 10 + 14);
+      ensureSpace(rowHeight + 6);
+
+      const badge = getStatusProvenanceBadge(
+        node.status as GateStatus,
+        node.statusSource
+      );
+      const badgeBg = hexToRgbNormalized(badge.pdfBgHex);
+      const badgeBorder = hexToRgbNormalized(badge.pdfBorderHex);
+      const badgeText = hexToRgbNormalized(badge.pdfTextHex);
+
+      drawRect(45, y - rowHeight, 522, rowHeight, [1, 1, 1], [0.88, 0.91, 0.94]);
+
+      const nodeTitleLines = wrapLines(node.nodeLabel, 24);
+      nodeTitleLines.forEach((line, idx) => {
+        drawText(line, 52, y - 14 - idx * 10, 8, true, [0.06, 0.09, 0.16]);
       });
 
-      // Gate internal debug headers to non-production environments only
-      if (process.env.NODE_ENV !== "production") {
-        res.setHeader("X-Audit-Debug-Code", error?.code || "ROW_NULL");
-      }
+      let textCursor = y - 13;
+      patternLines.forEach((line) => {
+        drawText(line, 195, textCursor, 7.5, false, [0.2, 0.25, 0.33]);
+        textCursor -= 10;
+      });
+      gateLines.forEach((line) => {
+        drawText(line, 195, textCursor, 7.5, true, [0.06, 0.09, 0.16]);
+        textCursor -= 10;
+      });
 
-      return res.status(404).json({ error: "Not Found // Audit Record Missing or Access Denied" });
+      drawText(`${node.insulationIntegrityPct}%`, 443, y - 16, 9, true, [0.06, 0.09, 0.16]);
+
+      drawRect(486, y - 22, 75, 14, badgeBg, badgeBorder);
+      drawText(badge.label, 490, y - 18, 6.5, true, badgeText);
+      drawText(badge.provenance, 486, y - 32, 5.5, false, [0.39, 0.45, 0.55]);
+
+      y -= rowHeight;
     }
 
-    // 3️⃣ DETERMINISTIC AS-OF TIMING WITH HARDENED NaN FALLBACK
-    const updatedMs = parseValidTimestamp(audit.updated_at);
-    const createdMs = parseValidTimestamp(audit.created_at);
-    const snapshotAsOfMs = updatedMs ?? createdMs ?? Date.now();
-
-    const financial = calculateAuditFinancialMetrics(audit, snapshotAsOfMs);
-    const rawResponses = normalizeRawResponses(audit.raw_responses);
-    const forensic = calculateForensicMetrics(financial.companyName, rawResponses, audit.sector);
-    const evidenceStatus = getPdfEvidenceStatus(rawResponses, 10);
-
-    const orgNameSafe = escapeHtml(financial.companyName);
-    const auditIdSafe = escapeHtml(id);
-    const engineVersionSafe = escapeHtml(financial.calculusVersion);
-    const accentColor = sanitizeHexColor(financial.brandHexAccent);
-
-    // 4️⃣ STAGE-GATED TELEMETRY OVERLAY
-    const forensicSectionHtml = evidenceStatus.isFullyHydrated ? `
-      <div style="margin-top:16px; padding-top:12px; border-top:1px solid #f1f5f9; font-size:11px; color:#475569;">
-        <div><b>360 Telemetry Status:</b> <span style="color:#047857; font-weight:700;">Verified 360° Triangulated</span></div>
-        <div><b>Evidence Sample Size:</b> ${escapeHtml(evidenceStatus.validAnsweredCount)} Validated Responses</div>
-        <div><b>Reliability Index:</b> ${escapeHtml(forensic.reliabilityIndex)}%</div>
-        <div><b>Dominant Failure Vector:</b> ${escapeHtml(forensic.dominantDriver)}</div>
-      </div>
-    ` : `
-      <div style="margin-top:16px; padding-top:12px; border-top:1px solid #f1f5f9; font-size:11px; color:#64748b; font-style:italic;">
-        <div><b>360 Telemetry Status:</b> ${evidenceStatus.isPartial ? 'Partial Intake (In Progress)' : 'Provisional Baseline Only'}</div>
-        <div style="margin-top:4px;">Full qualitative findings will hydrate upon 360° stakeholder track completion.</div>
-      </div>
-    `;
-
-    const findingDescription = evidenceStatus.isFullyHydrated
-      ? "Diagnostic parameters verified. Root cause analytics and 360° integration vectors are compiled and locked under completed intake protocols."
-      : "Provisional Impact Allocation Model. Root cause analytics will finalize upon full multi-track assessment completion.";
-
-    const secureAnomalies = [
-      { id: `Finding #1 // Estimated Impact $${escapeHtml(financial.findingsImpacts[0].toLocaleString(undefined, { maximumFractionDigits: 0 }))}`, description: findingDescription },
-      { id: `Finding #2 // Estimated Impact $${escapeHtml(financial.findingsImpacts[1].toLocaleString(undefined, { maximumFractionDigits: 0 }))}`, description: findingDescription },
-      { id: `Finding #3 // Estimated Impact $${escapeHtml(financial.findingsImpacts[2].toLocaleString(undefined, { maximumFractionDigits: 0 }))}`, description: findingDescription },
-      { id: `Finding #4 // Estimated Impact $${escapeHtml(financial.findingsImpacts[3].toLocaleString(undefined, { maximumFractionDigits: 0 }))}`, description: findingDescription }
-    ];
-
-    const htmlCanvasContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>BMR Diagnostic Report ${auditIdSafe}</title>
-        <style>
-          * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { 
-            background-color: #f8fafc; 
-            color: #0f172a; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-            padding: 40px; 
-            margin: 0; 
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
-          }
-          .container { max-width: 900px; margin: 0 auto; }
-          .top-bar { height: 4px; background-color: #0f172a; width: 100%; margin-bottom: 24px; }
-          .header-box { border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 32px; }
-          .title-brand { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a; }
-          .title-brand span { color: ${accentColor}; }
-          .subtitle { font-family: monospace; font-size: 10px; color: #64748b; letter-spacing: 1px; margin-top: 4px; }
-          
-          .placard { 
-            background-color: #ffffff; 
-            color: #0f172a; 
-            padding: 30px; 
-            border-left: 8px solid ${accentColor}; 
-            border-top: 1px solid #e2e8f0;
-            border-right: 1px solid #e2e8f0;
-            border-bottom: 1px solid #e2e8f0;
-            border-radius: 0 4px 4px 0;
-            margin-bottom: 32px; 
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-          }
-          .placard-left { text-align: left; }
-          .placard h2 { margin: 0 0 8px 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; color: #0f172a; }
-          .org-label { font-size: 11px; color: #64748b; margin-bottom: 16px; font-weight: 600; }
-          .metrics-grid { display: flex; gap: 32px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
-          .metric-cell { text-align: left; }
-          .cell-label { font-size: 10px; color: #64748b; font-weight: 600; }
-          .cell-value { font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 4px; }
-          .cell-value span { color: ${accentColor}; }
-          
-          .placard-right { text-align: right; min-width: 220px; }
-          .erosion-label { font-size: 10px; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px; }
-          .erosion-val { font-family: monospace; font-size: 28px; color: ${accentColor}; font-weight: 800; letter-spacing: -0.5px; }
-
-          .section-title { font-size: 12px; color: #64748b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-bottom: 20px; font-weight: 700; text-align: left; }
-          .anomaly-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; }
-          .node-card { border: 1px solid #e2e8f0; background-color: #ffffff; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; min-height: 220px; border-radius: 4px; }
-          .node-top { border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; margin-bottom: 12px; font-size: 10px; color: #64748b; text-align: left; }
-          .node-top span { float: right; background-color: #fef2f2; color: ${accentColor}; padding: 2px 6px; font-size: 9px; font-weight: 700; border: 1px solid #fecaca; border-radius: 2px; }
-          .node-title { font-size: 13px; font-weight: 800; color: #0f172a; margin-bottom: 8px; text-align: left; }
-          .node-desc { font-size: 11px; color: #475569; line-height: 1.5; margin-bottom: 16px; text-align: left; }
-          .directive-label { font-size: 9px; color: #64748b; margin-bottom: 2px; text-align: left; font-weight: 600; }
-          .directive-val { font-size: 11px; font-weight: 600; color: #0f172a; text-align: left; }
-          
-          .governance-box { background-color: #ffffff; padding: 24px; border-left: 6px solid #0f172a; border-radius: 4px; border: 1px solid #e2e8f0; margin-bottom: 32px; }
-          .footer-text { font-size: 10px; color: #94a3b8; text-align: center; margin-top: 40px; }
-          
-          @media print {
-            body { padding: 20px; background-color: #ffffff; }
-            .container { max-width: 100%; }
-            .node-card, .placard { box-shadow: none; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="top-bar"></div>
-          <div class="header-box">
-            <div class="title-brand">BMR<span>SOLUTIONS</span></div>
-            <div class="subtitle">Executive Risk Audit & SOW // Engine v${engineVersionSafe}</div>
-          </div>
-
-          <div class="placard">
-            <div class="placard-left">
-              <h2>Diagnostic Summary</h2>
-              <div class="org-label">Assessment for: ${orgNameSafe}</div>
-              <div class="metrics-grid">
-                <div class="metric-cell">
-                  <div class="cell-label">AI Readiness Gap</div>
-                  <div class="cell-value"><span>${escapeHtml(100 - financial.dbDecay)}%</span> Readiness</div>
-                </div>
-                <div class="metric-cell">
-                  <div class="cell-label">Process Waste Tax</div>
-                  <div class="cell-value"><span>$${escapeHtml(financial.totalLaborTaxPool.toLocaleString(undefined, { maximumFractionDigits: 0 }))}</span> Liability</div>
-                </div>
-                <div class="metric-cell">
-                  <div class="cell-label">Total Promise Gap™ Exposure</div>
-                  <div class="cell-value"><span>$${escapeHtml(financial.exposure.toLocaleString(undefined, { maximumFractionDigits: 0 }))}</span> Capital Risk</div>
-                </div>
-              </div>
-
-              ${forensicSectionHtml}
-            </div>
-
-            <div class="placard-right">
-              <span class="erosion-label">Estimated Loss To Date</span>
-              <div class="erosion-val">$${escapeHtml(financial.totalErosion.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }))}</div>
-              <span class="cell-label" style="display:block; margin-top:4px;">Calculated loss since initial assessment</span>
-            </div>
-          </div>
-
-          <div class="section-title">Key Findings & Integration Risks</div>
-          
-          <div class="anomaly-grid">
-            ${secureAnomalies.map((frac, i) => `
-              <div class="node-card">
-                <div class="node-top">
-                  Finding #${i + 1}
-                  <span>${evidenceStatus.isFullyHydrated ? 'Verified' : 'Provisional'}</span>
-                </div>
-                <div>
-                  <div class="node-title">${escapeHtml(frac.id)}</div>
-                  <div class="node-desc">${escapeHtml(frac.description)}</div>
-                </div>
-                <div>
-                  <div class="directive-label">Recommended Action:</div>
-                  <div class="directive-val">Complete the 30-question operational diagnostic to reveal full remediation steps.</div>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-
-          <div class="section-title">Continuous Forensic Governance Schedule</div>
-
-          <div class="governance-box">
-            <div style="font-size: 11px; font-weight: 800; color: #0f172a; margin-bottom: 6px; text-transform: uppercase;">
-              Quarterly Verification Cadence Mandate:
-            </div>
-            <p style="font-size: 11px; color: #475569; line-height: 1.6; margin-bottom: 12px;">
-              To maintain operational safety and prevent new drift as software environments evolve through ongoing code commits and API updates, this architecture requires quarterly reassessments. BMR Solutions verifies gap closure and ensures system compliance on a 90-day recurring cadence.
-            </p>
-            <div style="font-family: monospace; font-size: 10px; font-weight: 700; color: #64748b;">
-              Next Reassessment Cycle: Scheduled Q4 2026 // [ T1 + 90 Days ]
-            </div>
-          </div>
-
-          <div class="footer-text">Confidential Executive Report // BMR Solutions Independent Governance Framework</div>
-        </div>
-
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-            }, 250);
-          };
-        </script>
-      </body>
-      </html>
-    `;
-
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.setHeader("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline';");
-    return res.status(200).send(htmlCanvasContent);
-
-  } catch (err: any) {
-    console.error("SERVERLESS PRINT GENERATION EXCEPTION:", err);
-    return res.status(500).json({ error: "Internal Server Error", details: escapeHtml(err?.message || String(err)) });
+    y -= 20;
   }
+
+  // Section 03: Authorized Statement of Work Directives
+  ensureSpace(90);
+  drawText('03 // AUTHORIZED STATEMENT OF WORK REMEDIATION TRACKS', 45, y, 10, true, [0.06, 0.09, 0.16]);
+  y -= 16;
+
+  directives.forEach((dir, idx) => {
+    const scopeLines = wrapLines(dir.scope, 88);
+    const impactLines = dir.businessImpact ? wrapLines(`Impact: ${dir.businessImpact}`, 88) : [];
+    const boxH = 34 + (scopeLines.length + impactLines.length) * 11;
+    ensureSpace(boxH + 10);
+
+    drawRect(45, y - boxH, 522, boxH, [0.98, 0.99, 1], [0.85, 0.88, 0.92]);
+    drawText(`0${idx + 1} // ${dir.title}`, 55, y - 15, 9.5, true, [0.06, 0.09, 0.16]);
+    drawText(`[${dir.price.toUpperCase()}]`, 465, y - 15, 8, true, [0.02, 0.47, 0.34]);
+
+    let lineY = y - 28;
+    scopeLines.forEach((line) => {
+      drawText(line, 55, lineY, 8, false, [0.28, 0.33, 0.41]);
+      lineY -= 11;
+    });
+    impactLines.forEach((line) => {
+      drawText(line, 55, lineY, 8, false, [0.2, 0.25, 0.33]);
+      lineY -= 11;
+    });
+
+    y -= boxH + 10;
+  });
+
+  // Footer
+  ensureSpace(35);
+  y -= 6;
+  drawText(
+    'CONFIDENTIAL STATEMENT OF WORK // BMR SOLUTIONS PRE-AUTOMATION CONTROL PLANE GOVERNANCE (2026)',
+    45,
+    y,
+    7.5,
+    true,
+    [0.45, 0.5, 0.58]
+  );
+
+  // Assemble valid PDF 1.4 binary structure
+  const nonEmptyPages = pages.filter((p) => p.length > 0);
+  const objects: string[] = [];
+  const addObj = (body: string): number => {
+    objects.push(body);
+    return objects.length;
+  };
+
+  const catalogId = addObj('');
+  const pagesId = addObj('');
+  const fontRegularId = addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+  const fontBoldId = addObj('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
+
+  const pageIds: number[] = [];
+
+  for (const pageOps of nonEmptyPages) {
+    const stream = pageOps.join('\n');
+    const contentId = addObj(`<< /Length ${stream.length} >>\nstream\n${stream}\nendstream`);
+    const pageId = addObj(
+      `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ${fontRegularId} 0 R /F2 ${fontBoldId} 0 R >> >> /Contents ${contentId} 0 R >>`
+    );
+    pageIds.push(pageId);
+  }
+
+  objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
+  objects[pagesId - 1] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(' ')}] /Count ${pageIds.length} >>`;
+
+  let pdf = '%PDF-1.4\n';
+  const offsets: number[] = [0];
+
+  objects.forEach((obj, idx) => {
+    offsets.push(pdf.length);
+    pdf += `${idx + 1} 0 obj\n${obj}\nendobj\n`;
+  });
+
+  const xrefStart = pdf.length;
+  pdf += `xref\n0 ${objects.length + 1}\n`;
+  pdf += '0000000000 65535 f \n';
+  for (let i = 1; i < offsets.length; i++) {
+    pdf += `${String(offsets[i]).padStart(10, '0')} 00000 n \n`;
+  }
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
+
+  return new Blob([pdf], { type: 'application/pdf' });
 }
