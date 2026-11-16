@@ -1,6 +1,5 @@
 "use client";
 import React, { useState, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/router';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { generatePdf } from '../../lib/generatePdf';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
@@ -28,6 +27,14 @@ const getStableHash = (str: string, max: number = 100): number => {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
   }
   return Math.abs(hash % max);
+};
+
+// Map ClientIndustry or Sector strings to forensicCalculus sector tokens
+const resolveCalculusSectorToken = (rawSector?: unknown): 'SERVICES' | 'INDUSTRIAL' | 'FINANCE' => {
+  const s = String(rawSector || '').toUpperCase().trim();
+  if (s.includes('INDUST') || s.includes('MANUF') || s.includes('ENERGY')) return 'INDUSTRIAL';
+  if (s.includes('FINAN') || s.includes('BANK') || s.includes('INSUR')) return 'FINANCE';
+  return 'SERVICES';
 };
 
 export default function SOWBuilderStandalone() {
@@ -73,13 +80,45 @@ export default function SOWBuilderStandalone() {
     }
   }, []);
 
-  // DYNAMIC METRICS PARSER
+  // AUTHORITATIVE CALCULUS HYDRATION FROM DECODED MATRIX RESPONSES
+  const calculatedForensics = useMemo(() => {
+    if (!diagnosticData) return null;
+
+    const rawAns = diagnosticData.ans;
+    const hasObjectAnswers =
+      rawAns && typeof rawAns === 'object' && !Array.isArray(rawAns) && Object.keys(rawAns).length > 0;
+    const hasArrayAnswers = Array.isArray(rawAns) && rawAns.length > 0;
+
+    if (!hasObjectAnswers && !hasArrayAnswers) return null;
+
+    try {
+      const sectorToken = resolveCalculusSectorToken(diagnosticData.industry || diagnosticData.sector);
+      return calculateForensicMetrics(
+        diagnosticData.org || 'Target Organization',
+        rawAns,
+        sectorToken
+      );
+    } catch (err) {
+      console.warn("Calculus engine exception, applying recovery fallback.", err);
+      return null;
+    }
+  }, [diagnosticData]);
+
+  // DYNAMIC METRICS PARSER (Aligned with Cockpit annualSalaryLeakage & forensicInactionLiability)
   const metrics = useMemo(() => {
     if (!diagnosticData) return null;
 
-    const orgName = (diagnosticData.org || 'Target Organization').replace(/_/g, ' ');
     const dbDecay = urlParams.decay ? parseInt(urlParams.decay) : (diagnosticData.decay_pct || 24);
     const spend = urlParams.spend ? parseFloat(urlParams.spend) : 1.2;
+
+    if (calculatedForensics) {
+      return {
+        totalLaborTaxPool: calculatedForensics.annualSalaryLeakage,
+        exposure: calculatedForensics.forensicInactionLiability,
+        decay: dbDecay,
+        spend
+      };
+    }
 
     if (urlParams.live_sync === "true" && urlParams.tax) {
       const parsedTax = parseFloat(urlParams.tax);
@@ -87,7 +126,7 @@ export default function SOWBuilderStandalone() {
         totalLaborTaxPool: parsedTax,
         exposure: parseFloat(urlParams.leakage || "0") - parsedTax,
         decay: dbDecay,
-        spend: spend
+        spend
       };
     }
 
@@ -99,9 +138,9 @@ export default function SOWBuilderStandalone() {
       totalLaborTaxPool,
       exposure: (0.22 * (dbDecay / 25) * (spend * 1000000)) * 1.15,
       decay: dbDecay,
-      spend: spend
+      spend
     };
-  }, [diagnosticData, urlParams]);
+  }, [diagnosticData, urlParams, calculatedForensics]);
 
   // METRIC PARSER & ESTIMATION PROTOCOL
   const forensicAnalytics = useMemo(() => {
@@ -109,34 +148,29 @@ export default function SOWBuilderStandalone() {
 
     const orgName = (diagnosticData.org || 'Target Organization').replace(/_/g, ' ');
     const stableSeed = getStableHash(orgName, 25);
-    
-    let computed = null;
-    if (diagnosticData.ans && Array.isArray(diagnosticData.ans) && diagnosticData.ans.length > 0) {
-      try {
-        computed = calculateForensicMetrics(
-          diagnosticData.org || 'Target Organization',
-          diagnosticData.ans,
-          diagnosticData.sector
-        );
-      } catch (err) {
-        console.warn("Calculus engine exception, applying recovery fallback.", err);
-      }
-    }
 
     const parsedReliability = urlParams.decay 
       ? Math.max(10, Math.min(99, 100 - parseInt(urlParams.decay))) 
-      : (computed?.reliabilityIndex && computed.reliabilityIndex > 0
-        ? computed.reliabilityIndex
+      : (calculatedForensics?.complianceScore !== undefined
+        ? calculatedForensics.complianceScore
         : (62 + stableSeed));
+
+    const rawAns = diagnosticData.ans;
+    const answeredCount =
+      rawAns && typeof rawAns === 'object' && !Array.isArray(rawAns)
+        ? Object.keys(rawAns).filter((k) => k.startsWith('quad_')).length
+        : Array.isArray(rawAns)
+          ? rawAns.length
+          : 0;
 
     return {
       reliabilityIndex: parsedReliability,
       dominantBasis: 'Schema Instability',
       dominantDriver: 'Third-Party API Mutation',
       dominantVisibility: 'The Promise Gap(TM) Risk',
-      sampleSize: 32
+      sampleSize: answeredCount > 0 ? answeredCount : 28
     };
-  }, [diagnosticData, urlParams]);
+  }, [diagnosticData, urlParams, calculatedForensics]);
 
   // PRE-AUTOMATION AI READINESS TRACKS
   const activeRemediations = useMemo((): AnomalyRemediationNode[] => {
