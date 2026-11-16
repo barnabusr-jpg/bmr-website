@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { decompressFromEncodedURIComponent } from 'lz-string';
 import { generatePdf } from '../../lib/generatePdf';
 import { calculateForensicMetrics } from '../../lib/forensicCalculus';
+import { deriveDynamicDiagnosticSnapshot } from '../../lib/playbookExportAdapter';
 import { 
   Terminal, Briefcase, Download, ShieldAlert, 
   CheckCircle, Eye, EyeOff, BarChart2, Shield, Eye as AwareIcon, FileText, Share2, Monitor
@@ -172,6 +173,28 @@ export default function SOWBuilderStandalone() {
     };
   }, [diagnosticData, urlParams, calculatedForensics]);
 
+  // DYNAMIC SECTION 6 QUAD-NODE MATRIX SNAPSHOT
+  const diagnosticSnapshot = useMemo(() => {
+    if (!diagnosticData || !metrics || !forensicAnalytics) return null;
+
+    const rawResponses =
+      diagnosticData.ans && typeof diagnosticData.ans === 'object' && !Array.isArray(diagnosticData.ans)
+        ? diagnosticData.ans
+        : {};
+
+    return deriveDynamicDiagnosticSnapshot({
+      companyName: (diagnosticData.org || 'Target Organization').replace(/_/g, ' '),
+      sector: String(diagnosticData.industry || diagnosticData.sector || 'SERVICES'),
+      rawResponses,
+      readinessValue: forensicAnalytics.reliabilityIndex,
+      wasteTaxValue: metrics.totalLaborTaxPool,
+      promiseGapValue: metrics.exposure,
+      activeStabilizationFocus: 'Active Stabilization [Primary focus: containment of repeat operational rework]',
+      unmanagedDriftImpact:
+        'Without verification gates and workflow stabilization criteria, Phase 02 automation may increase the probability of repeat rework and downstream reporting inconsistency.',
+    });
+  }, [diagnosticData, metrics, forensicAnalytics]);
+
   // PRE-AUTOMATION AI READINESS TRACKS
   const activeRemediations = useMemo((): AnomalyRemediationNode[] => {
     if (!diagnosticData || !metrics) return [];
@@ -246,7 +269,17 @@ export default function SOWBuilderStandalone() {
     try {
       const blob = await generatePdf({
         company: (diagnosticData.org || 'Target Organization').replace(/_/g, ' '),
-        directives: filteredRemediations.map((r: AnomalyRemediationNode) => ({ title: r.title, price: r.investment_tier, scope: r.scope }))
+        sector: String(diagnosticData.industry || diagnosticData.sector || 'ENTERPRISE CONTROL PLANE'),
+        readinessIndex: forensicAnalytics?.reliabilityIndex,
+        processWasteTax: metrics?.totalLaborTaxPool,
+        promiseGapExposure: metrics?.exposure,
+        nodeMatrix: diagnosticSnapshot?.nodeMatrix,
+        directives: filteredRemediations.map((r: AnomalyRemediationNode) => ({
+          title: r.title,
+          price: r.investment_tier,
+          scope: r.scope,
+          businessImpact: r.business_impact,
+        })),
       });
       const downloadUrl = window.URL.createObjectURL(blob);
       const linkAnchor = document.createElement('a');
@@ -255,6 +288,7 @@ export default function SOWBuilderStandalone() {
       document.body.appendChild(linkAnchor);
       linkAnchor.click();
       linkAnchor.remove();
+      window.URL.revokeObjectURL(downloadUrl);
     } catch (pdfError) {
       console.error(pdfError);
     }
@@ -262,17 +296,22 @@ export default function SOWBuilderStandalone() {
   };
 
   const handleGenerateExecutiveDeck = () => {
-    if (!diagnosticData || !metrics) return;
+    if (!diagnosticData || !metrics || !forensicAnalytics) return;
     
     const orgVal = encodeURIComponent((diagnosticData.org || "Target Organization").replace(/_/g, ' '));
+    const sectorVal = encodeURIComponent(String(diagnosticData.industry || diagnosticData.sector || "ENTERPRISE"));
+    const readinessVal = Math.round(forensicAnalytics.reliabilityIndex);
     const decayVal = metrics.decay || 24;
     const spendVal = metrics.spend || 1.2;
     const fteVal = Math.round((spendVal * 1000000) / 200000) || 6;
     const laborTaxVal = Math.round(metrics.totalLaborTaxPool);
-    const leakageVal = Math.round(metrics.totalLaborTaxPool + metrics.exposure);
+    const exposureVal = Math.round(metrics.exposure);
+    const leakageVal = laborTaxVal + exposureVal;
+    const dlpCeilingVal = Math.max(18000, Math.round(laborTaxVal * 0.12));
+    const mutationGateVal = readinessVal < 65 ? 8 : 4;
 
     window.open(
-      `/api/generate-deck?org=${orgVal}&decay=${decayVal}&spend=${spendVal}&fte=${fteVal}&leakage=${leakageVal}&tax=${laborTaxVal}`,
+      `/api/generate-deck?org=${orgVal}&sector=${sectorVal}&readiness=${readinessVal}&decay=${decayVal}&spend=${spendVal}&fte=${fteVal}&leakage=${leakageVal}&tax=${laborTaxVal}&exposure=${exposureVal}&dlpCeiling=${dlpCeilingVal}&mutationGate=${mutationGateVal}`,
       '_blank'
     );
   };
