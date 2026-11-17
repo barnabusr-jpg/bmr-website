@@ -11,6 +11,21 @@ export interface SOWDirectivePayload {
   businessImpact?: string;
 }
 
+export interface PdfRegulatoryAuditRow {
+  standard: string;
+  clause: string;
+  finding: string;
+  statutoryRemedy: string;
+  remediationPhase: string;
+}
+
+export interface PdfGovernanceGates {
+  dlpCeiling: string;
+  mutationGate: string;
+  driftTolerance: string;
+  signOffTier: string;
+}
+
 export interface GenerateSOWPdfInput {
   company: string;
   sector?: string;
@@ -19,6 +34,8 @@ export interface GenerateSOWPdfInput {
   promiseGapExposure?: number;
   nodeMatrix?: NodeEvaluationRecord[];
   directives: SOWDirectivePayload[];
+  regulatoryItems?: PdfRegulatoryAuditRow[];
+  governanceGates?: PdfGovernanceGates;
 }
 
 function escapePdfText(text: string): string {
@@ -62,38 +79,37 @@ function hexToRgbNormalized(hex: string): [number, number, number] {
 }
 
 /**
- * Generates a multi-page, zero-dependency binary PDF Blob containing the
- * Executive Metrics, Section 6 Quad-Node Control Matrix, and Selected SOW Tracks.
+ * Generates a multi-page, zero-dependency binary PDF Blob containing:
+ * - Page 1: Executive Financial Summary, Section 6 Quad-Node Control Matrix, & Process Waste Ledger
+ * - Page 2+: Client Industry Regulatory Compliance Audit, Control Plane Gates, & SOW Directives
  */
 export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
   const company = (input.company || 'Target Organization').replace(/_/g, ' ');
   const sectorLabel = (input.sector || 'ENTERPRISE CONTROL PLANE')
     .replace(/_/g, ' ')
     .toUpperCase();
-  const readiness = input.readinessIndex ?? 58;
+  const readiness = Math.round(input.readinessIndex ?? 58);
   const wasteTax = Math.round(input.processWasteTax ?? 0);
   const promiseGap = Math.round(input.promiseGapExposure ?? 0);
   const nodes = input.nodeMatrix || [];
   const directives = input.directives || [];
+  const regulatoryItems = input.regulatoryItems || [];
+
+  const readinessGap = Math.max(0, Math.min(100, 100 - readiness));
+  const defaultDlp = `$${(Math.round((wasteTax * 0.12) / 1000) * 1000 || 18000).toLocaleString()}`;
+  const defaultMutation = `${Math.max(1, Math.round(readinessGap / 5))} Mutations / 10k Calls`;
+  const gates: PdfGovernanceGates = input.governanceGates || {
+    dlpCeiling: defaultDlp,
+    mutationGate: defaultMutation,
+    driftTolerance: '10.8%',
+    signOffTier: wasteTax > 250000 ? 'EXECUTIVE BOARD LEVEL (CISO / CTO)' : 'PLATFORM STEERCO',
+  };
 
   const pages: string[][] = [];
   let currentPageOps: string[] = [];
   let y = 740;
 
-  // Initialize Page 1 active buffer immediately
   pages.push(currentPageOps);
-
-  const startNewPage = () => {
-    currentPageOps = [];
-    pages.push(currentPageOps);
-    y = 740;
-  };
-
-  const ensureSpace = (needed: number) => {
-    if (y - needed < 55 && currentPageOps.length > 0) {
-      startNewPage();
-    }
-  };
 
   const drawText = (
     text: string,
@@ -127,13 +143,39 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
     currentPageOps.push(`${x} ${yPos} ${w} ${h} re ${mode}`);
   };
 
-  // Top Header Banner
+  const startNewPage = (subHeader?: string) => {
+    currentPageOps = [];
+    pages.push(currentPageOps);
+    drawRect(45, 742, 522, 26, [0.06, 0.09, 0.16]);
+    drawText(
+      `BMR SOLUTIONS // DIAGNOSTIC & SOW DOSSIER — ${company.toUpperCase()}`,
+      56,
+      751,
+      8.5,
+      true,
+      [1, 1, 1]
+    );
+    if (subHeader) {
+      drawText(subHeader, 435, 751, 7.5, false, [0.8, 0.85, 0.9]);
+    }
+    y = 716;
+  };
+
+  const ensureSpace = (needed: number, continuationHeader?: string) => {
+    if (y - needed < 55 && currentPageOps.length > 0) {
+      startNewPage(continuationHeader);
+    }
+  };
+
+  // =========================================================================
+  // PAGE 1: BANNER + EXECUTIVE METRICS + QUAD-NODE MATRIX + WASTE LEDGER
+  // =========================================================================
   drawRect(45, 725, 522, 42, [0.06, 0.09, 0.16]);
   drawText('BMR SOLUTIONS // PRE-AUTOMATION CONTROL PLANE SOW DOSSIER', 58, 749, 11, true, [1, 1, 1]);
   drawText(`TARGET: ${company.toUpperCase()}  |  SECTOR: ${sectorLabel}`, 58, 735, 8, false, [0.8, 0.85, 0.9]);
   y = 702;
 
-  // Executive Financial & Readiness Summary Cards
+  // Section 01: Executive Diagnostic & Financial Summary
   drawText('01 // EXECUTIVE DIAGNOSTIC & FINANCIAL SUMMARY', 45, y, 10, true, [0.06, 0.09, 0.16]);
   y -= 12;
 
@@ -141,7 +183,6 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
   const cardH = 52;
   const cardY = y - cardH;
 
-  // Card 1: Readiness Index
   drawRect(45, cardY, cardW, cardH, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
   drawText('AI READINESS INDEX', 55, cardY + 36, 7.5, true, [0.39, 0.45, 0.55]);
   drawText(
@@ -153,23 +194,21 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
     readiness >= 70 ? [0.02, 0.47, 0.34] : [0.73, 0.11, 0.11]
   );
 
-  // Card 2: Process Waste Tax
   drawRect(45 + cardW + 12, cardY, cardW, cardH, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
   drawText('PROCESS WASTE TAX (ANNUAL)', 55 + cardW + 12, cardY + 36, 7.5, true, [0.39, 0.45, 0.55]);
   drawText(`$${wasteTax.toLocaleString()}`, 55 + cardW + 12, cardY + 14, 15, true, [0.06, 0.09, 0.16]);
 
-  // Card 3: Promise Gap Exposure
   drawRect(45 + (cardW + 12) * 2, cardY, cardW, cardH, [0.99, 0.95, 0.95], [0.98, 0.79, 0.79]);
   drawText('PROMISE GAP ANNUAL RISK', 55 + (cardW + 12) * 2, cardY + 36, 7.5, true, [0.73, 0.11, 0.11]);
   drawText(`$${promiseGap.toLocaleString()}`, 55 + (cardW + 12) * 2, cardY + 14, 15, true, [0.73, 0.11, 0.11]);
 
-  y = cardY - 24;
+  y = cardY - 22;
 
-  // Section 6: Quad-Node Control Matrix
+  // Section 02: Quad-Node Control Matrix (Consolidated View)
   if (nodes.length > 0) {
-    ensureSpace(180);
+    ensureSpace(170, 'SECTION 6 MATRIX');
     drawText('02 // SECTION 6: QUAD-NODE CONTROL MATRIX (CONSOLIDATED VIEW)', 45, y, 10, true, [0.06, 0.09, 0.16]);
-    y -= 18;
+    y -= 16;
 
     drawRect(45, y - 16, 522, 20, [0.06, 0.09, 0.16]);
     drawText('CONTROL PLANE NODE', 52, y - 10, 7.5, true, [1, 1, 1]);
@@ -181,8 +220,8 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
     for (const node of nodes) {
       const patternLines = wrapLines(node.observedPattern, 44);
       const gateLines = wrapLines(`Gate: ${node.recommendedGate}`, 44);
-      const rowHeight = Math.max(46, (patternLines.length + gateLines.length) * 10 + 14);
-      ensureSpace(rowHeight + 6);
+      const rowHeight = Math.max(44, (patternLines.length + gateLines.length) * 9.5 + 14);
+      ensureSpace(rowHeight + 6, 'SECTION 6 MATRIX');
 
       const badge = getStatusProvenanceBadge(
         node.status as GateStatus,
@@ -202,11 +241,11 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
       let textCursor = y - 13;
       patternLines.forEach((line) => {
         drawText(line, 195, textCursor, 7.5, false, [0.2, 0.25, 0.33]);
-        textCursor -= 10;
+        textCursor -= 9.5;
       });
       gateLines.forEach((line) => {
         drawText(line, 195, textCursor, 7.5, true, [0.06, 0.09, 0.16]);
-        textCursor -= 10;
+        textCursor -= 9.5;
       });
 
       drawText(`${node.insulationIntegrityPct}%`, 443, y - 16, 9, true, [0.06, 0.09, 0.16]);
@@ -221,16 +260,136 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
     y -= 20;
   }
 
-  // Section 03: Authorized Statement of Work Directives
-  ensureSpace(90);
-  drawText('03 // AUTHORIZED STATEMENT OF WORK REMEDIATION TRACKS', 45, y, 10, true, [0.06, 0.09, 0.16]);
+  // Section 03: Process Waste Tax & Capacity Loss Ledger
+  ensureSpace(140, 'WASTE TAX LEDGER');
+  drawText('03 // PROCESS WASTE TAX & CAPACITY LOSS LEDGER', 45, y, 10, true, [0.06, 0.09, 0.16]);
+  y -= 16;
+
+  drawRect(45, y - 16, 522, 20, [0.94, 0.96, 0.98], [0.85, 0.88, 0.92]);
+  drawText('COST VECTOR CATEGORY', 52, y - 10, 7.5, true, [0.2, 0.25, 0.33]);
+  drawText('OPERATIONAL FRICTION ROOT CAUSE', 225, y - 10, 7.5, true, [0.2, 0.25, 0.33]);
+  drawText('ANNUAL IMPACT', 490, y - 10, 7.5, true, [0.2, 0.25, 0.33]);
+  y -= 20;
+
+  const ledgerRows = [
+    {
+      vector: 'API Architecture & Pipeline Drift',
+      cause: 'Schema mutations without contract enforcement trigger downstream breaks.',
+      impact: Math.round(wasteTax * 0.45),
+    },
+    {
+      vector: 'Alert Fatigue & Manual Triage',
+      cause: 'Noisy telemetry and unprioritized alerts consume engineering cycles.',
+      impact: Math.round(wasteTax * 0.35),
+    },
+    {
+      vector: 'Governance & Context Drift',
+      cause: 'Unmonitored payload ingestion creates repetitive compliance rework.',
+      impact: Math.round(wasteTax * 0.20),
+    },
+  ];
+
+  for (const row of ledgerRows) {
+    const rowH = 26;
+    ensureSpace(rowH + 4, 'WASTE TAX LEDGER');
+    drawRect(45, y - rowH, 522, rowH, [1, 1, 1], [0.88, 0.91, 0.94]);
+    drawText(row.vector, 52, y - 16, 8, true, [0.06, 0.09, 0.16]);
+    drawText(row.cause, 225, y - 16, 7.5, false, [0.28, 0.33, 0.41]);
+    drawText(`$${row.impact.toLocaleString()}`, 495, y - 16, 8, true, [0.06, 0.09, 0.16]);
+    y -= rowH;
+  }
+
+  // Total Row
+  drawRect(45, y - 24, 522, 24, [0.97, 0.98, 0.99], [0.75, 0.8, 0.86]);
+  drawText('TOTAL CONSOLIDATED PROCESS WASTE TAX', 52, y - 15, 8, true, [0.06, 0.09, 0.16]);
+  drawText(`$${wasteTax.toLocaleString()}`, 492, y - 15, 8.5, true, [0.73, 0.11, 0.11]);
+  y -= 36;
+
+  // =========================================================================
+  // PAGE 2: REGULATORY AUDIT + CONTROL PLANE GATES + AUTHORIZED SOW TRACKS
+  // =========================================================================
+  startNewPage('GOVERNANCE & SOW SPECIFICATION');
+
+  // Section 04: Client Industry Regulatory Compliance Audit
+  drawText(`04 // REGULATORY NON-COMPLIANCE STANDARDS AUDIT (${sectorLabel})`, 45, y, 10, true, [0.06, 0.09, 0.16]);
+  y -= 16;
+
+  const effectiveRegItems: PdfRegulatoryAuditRow[] =
+    regulatoryItems.length > 0
+      ? regulatoryItems
+      : [
+          {
+            standard: 'ISO 9001:2015',
+            clause: 'Clause 8.5.1',
+            finding: 'Uncontrolled schema alterations in production messaging queues.',
+            statutoryRemedy: 'Enforce strict schema validation contracts prior to execution.',
+            remediationPhase: 'PHASE 01',
+          },
+          {
+            standard: 'SOC 2 Type II',
+            clause: 'CC7.2 / CC8.1',
+            finding: 'Telemetry saturation and alert desensitization obscure anomaly detection.',
+            statutoryRemedy: 'Deploy sliding-window telemetry filtering & escalation thresholds.',
+            remediationPhase: 'PHASE 02',
+          },
+        ];
+
+  for (const reg of effectiveRegItems) {
+    const findingLines = wrapLines(reg.finding, 82);
+    const remedyLines = wrapLines(`Remedy (${reg.remediationPhase}): ${reg.statutoryRemedy}`, 82);
+    const cardHeight = 24 + (findingLines.length + remedyLines.length) * 10;
+    ensureSpace(cardHeight + 8, 'REGULATORY AUDIT');
+
+    drawRect(45, y - cardHeight, 522, cardHeight, [1, 1, 1], [0.88, 0.91, 0.94]);
+    drawRect(52, y - 16, 68, 11, [0.86, 0.15, 0.15]);
+    drawText('NON-COMPLIANT', 55, y - 13, 6, true, [1, 1, 1]);
+    drawText(`${reg.standard} // ${reg.clause}`, 128, y - 14, 8, true, [0.06, 0.09, 0.16]);
+
+    let cursor = y - 27;
+    findingLines.forEach((line) => {
+      drawText(line, 54, cursor, 7.5, false, [0.25, 0.3, 0.38]);
+      cursor -= 10;
+    });
+    remedyLines.forEach((line) => {
+      drawText(line, 54, cursor, 7.5, true, [0.06, 0.09, 0.16]);
+      cursor -= 10;
+    });
+
+    y -= cardHeight + 8;
+  }
+
+  y -= 12;
+
+  // Section 05: Calibrated Pre-Automation Control Plane Gates
+  ensureSpace(95, 'CONTROL PLANE GATES');
+  drawText(`05 // CALIBRATED CONTROL PLANE GATES (${gates.signOffTier})`, 45, y, 10, true, [0.06, 0.09, 0.16]);
+  y -= 14;
+
+  const gateCardY = y - 48;
+  drawRect(45, gateCardY, cardW, 48, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
+  drawText('DLP RISK EXPOSURE CEILING', 54, gateCardY + 33, 7, true, [0.39, 0.45, 0.55]);
+  drawText(gates.dlpCeiling, 54, gateCardY + 14, 12, true, [0.06, 0.09, 0.16]);
+
+  drawRect(45 + cardW + 12, gateCardY, cardW, 48, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
+  drawText('API SCHEMA MUTATION GATE', 54 + cardW + 12, gateCardY + 33, 7, true, [0.39, 0.45, 0.55]);
+  drawText(gates.mutationGate, 54 + cardW + 12, gateCardY + 14, 11, true, [0.06, 0.09, 0.16]);
+
+  drawRect(45 + (cardW + 12) * 2, gateCardY, cardW, 48, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
+  drawText('MAX PROCESS DRIFT TOLERANCE', 54 + (cardW + 12) * 2, gateCardY + 33, 7, true, [0.39, 0.45, 0.55]);
+  drawText(`${gates.driftTolerance} (${readinessGap}% Gap)`, 54 + (cardW + 12) * 2, gateCardY + 14, 11, true, [0.06, 0.09, 0.16]);
+
+  y = gateCardY - 22;
+
+  // Section 06: Authorized Statement of Work Remediation Tracks
+  ensureSpace(90, 'SOW REMEDIATION TRACKS');
+  drawText('06 // AUTHORIZED STATEMENT OF WORK REMEDIATION TRACKS', 45, y, 10, true, [0.06, 0.09, 0.16]);
   y -= 16;
 
   directives.forEach((dir, idx) => {
     const scopeLines = wrapLines(dir.scope, 88);
     const impactLines = dir.businessImpact ? wrapLines(`Impact: ${dir.businessImpact}`, 88) : [];
     const boxH = 34 + (scopeLines.length + impactLines.length) * 11;
-    ensureSpace(boxH + 10);
+    ensureSpace(boxH + 10, 'SOW REMEDIATION TRACKS');
 
     drawRect(45, y - boxH, 522, boxH, [0.98, 0.99, 1], [0.85, 0.88, 0.92]);
     drawText(`0${idx + 1} // ${dir.title}`, 55, y - 15, 9.5, true, [0.06, 0.09, 0.16]);
