@@ -146,23 +146,23 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
   const startNewPage = (subHeader?: string) => {
     currentPageOps = [];
     pages.push(currentPageOps);
-    drawRect(45, 742, 522, 26, [0.06, 0.09, 0.16]);
+    drawRect(45, 744, 522, 24, [0.06, 0.09, 0.16]);
     drawText(
       `BMR SOLUTIONS // DIAGNOSTIC & SOW DOSSIER — ${company.toUpperCase()}`,
       56,
-      751,
+      752,
       8.5,
       true,
       [1, 1, 1]
     );
     if (subHeader) {
-      drawText(subHeader, 435, 751, 7.5, false, [0.8, 0.85, 0.9]);
+      drawText(subHeader, 435, 752, 7.5, false, [0.8, 0.85, 0.9]);
     }
-    y = 716;
+    y = 720;
   };
 
   const ensureSpace = (needed: number, continuationHeader?: string) => {
-    if (y - needed < 55 && currentPageOps.length > 0) {
+    if (y - needed < 48 && currentPageOps.length > 0) {
       startNewPage(continuationHeader);
     }
   };
@@ -312,7 +312,7 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
 
   // Section 04: Client Industry Regulatory Compliance Audit
   drawText(`04 // REGULATORY NON-COMPLIANCE STANDARDS AUDIT (${sectorLabel})`, 45, y, 10, true, [0.06, 0.09, 0.16]);
-  y -= 16;
+  y -= 14;
 
   const effectiveRegItems: PdfRegulatoryAuditRow[] =
     regulatoryItems.length > 0
@@ -335,86 +335,84 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
         ];
 
   for (const reg of effectiveRegItems) {
-    const findingLines = wrapLines(reg.finding, 82);
-    const remedyLines = wrapLines(`Remedy (${reg.remediationPhase}): ${reg.statutoryRemedy}`, 82);
-    const cardHeight = 24 + (findingLines.length + remedyLines.length) * 10;
-    ensureSpace(cardHeight + 8, 'REGULATORY AUDIT');
+    const findingLines = wrapLines(reg.finding, 86);
+    const remedyLines = wrapLines(`Remedy (${reg.remediationPhase}): ${reg.statutoryRemedy}`, 86);
+    const cardHeight = 20 + (findingLines.length + remedyLines.length) * 9.5;
+    ensureSpace(cardHeight + 6, 'REGULATORY AUDIT');
 
     drawRect(45, y - cardHeight, 522, cardHeight, [1, 1, 1], [0.88, 0.91, 0.94]);
-    drawRect(52, y - 16, 68, 11, [0.86, 0.15, 0.15]);
-    drawText('NON-COMPLIANT', 55, y - 13, 6, true, [1, 1, 1]);
-    drawText(`${reg.standard} // ${reg.clause}`, 128, y - 14, 8, true, [0.06, 0.09, 0.16]);
+    drawRect(52, y - 15, 68, 11, [0.86, 0.15, 0.15]);
+    drawText('NON-COMPLIANT', 55, y - 12, 6, true, [1, 1, 1]);
+    drawText(`${reg.standard} // ${reg.clause}`, 128, y - 13, 8, true, [0.06, 0.09, 0.16]);
 
-    let cursor = y - 27;
+    let cursor = y - 24;
     findingLines.forEach((line) => {
       drawText(line, 54, cursor, 7.5, false, [0.25, 0.3, 0.38]);
-      cursor -= 10;
+      cursor -= 9.5;
     });
     remedyLines.forEach((line) => {
       drawText(line, 54, cursor, 7.5, true, [0.06, 0.09, 0.16]);
-      cursor -= 10;
+      cursor -= 9.5;
     });
 
-    y -= cardHeight + 8;
+    y -= cardHeight + 6;
   }
 
-  y -= 12;
+  y -= 10;
 
   // Section 05: Calibrated Pre-Automation Control Plane Gates
-  ensureSpace(95, 'CONTROL PLANE GATES');
+  ensureSpace(85, 'CONTROL PLANE GATES');
   drawText(`05 // CALIBRATED CONTROL PLANE GATES (${gates.signOffTier})`, 45, y, 10, true, [0.06, 0.09, 0.16]);
-  y -= 14;
+  y -= 12;
 
-  const gateCardY = y - 48;
-  drawRect(45, gateCardY, cardW, 48, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
-  drawText('DLP RISK EXPOSURE CEILING', 54, gateCardY + 33, 7, true, [0.39, 0.45, 0.55]);
-  drawText(gates.dlpCeiling, 54, gateCardY + 14, 12, true, [0.06, 0.09, 0.16]);
+  const gateCardY = y - 44;
+  drawRect(45, gateCardY, cardW, 44, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
+  drawText('DLP RISK EXPOSURE CEILING', 54, gateCardY + 30, 7, true, [0.39, 0.45, 0.55]);
+  drawText(gates.dlpCeiling, 54, gateCardY + 12, 12, true, [0.06, 0.09, 0.16]);
 
-  drawRect(45 + cardW + 12, gateCardY, cardW, 48, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
-  drawText('API SCHEMA MUTATION GATE', 54 + cardW + 12, gateCardY + 33, 7, true, [0.39, 0.45, 0.55]);
-  drawText(gates.mutationGate, 54 + cardW + 12, gateCardY + 14, 11, true, [0.06, 0.09, 0.16]);
+  drawRect(45 + cardW + 12, gateCardY, cardW, 44, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
+  drawText('API SCHEMA MUTATION GATE', 54 + cardW + 12, gateCardY + 30, 7, true, [0.39, 0.45, 0.55]);
+  drawText(gates.mutationGate, 54 + cardW + 12, gateCardY + 12, 11, true, [0.06, 0.09, 0.16]);
 
-  drawRect(45 + (cardW + 12) * 2, gateCardY, cardW, 48, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
-  drawText('MAX PROCESS DRIFT TOLERANCE', 54 + (cardW + 12) * 2, gateCardY + 33, 7, true, [0.39, 0.45, 0.55]);
-  drawText(`${gates.driftTolerance} (${readinessGap}% Gap)`, 54 + (cardW + 12) * 2, gateCardY + 14, 11, true, [0.06, 0.09, 0.16]);
+  drawRect(45 + (cardW + 12) * 2, gateCardY, cardW, 44, [0.97, 0.98, 0.99], [0.85, 0.88, 0.92]);
+  drawText('MAX PROCESS DRIFT TOLERANCE', 54 + (cardW + 12) * 2, gateCardY + 30, 7, true, [0.39, 0.45, 0.55]);
+  drawText(`${gates.driftTolerance} (${readinessGap}% Gap)`, 54 + (cardW + 12) * 2, gateCardY + 12, 11, true, [0.06, 0.09, 0.16]);
 
-  y = gateCardY - 22;
+  y = gateCardY - 18;
 
   // Section 06: Authorized Statement of Work Remediation Tracks
-  ensureSpace(90, 'SOW REMEDIATION TRACKS');
+  ensureSpace(80, 'SOW REMEDIATION TRACKS');
   drawText('06 // AUTHORIZED STATEMENT OF WORK REMEDIATION TRACKS', 45, y, 10, true, [0.06, 0.09, 0.16]);
-  y -= 16;
+  y -= 14;
 
   directives.forEach((dir, idx) => {
     const scopeLines = wrapLines(dir.scope, 88);
     const impactLines = dir.businessImpact ? wrapLines(`Impact: ${dir.businessImpact}`, 88) : [];
-    const boxH = 34 + (scopeLines.length + impactLines.length) * 11;
-    ensureSpace(boxH + 10, 'SOW REMEDIATION TRACKS');
+    const boxH = 30 + (scopeLines.length + impactLines.length) * 10;
+    ensureSpace(boxH + 8, 'SOW REMEDIATION TRACKS');
 
     drawRect(45, y - boxH, 522, boxH, [0.98, 0.99, 1], [0.85, 0.88, 0.92]);
-    drawText(`0${idx + 1} // ${dir.title}`, 55, y - 15, 9.5, true, [0.06, 0.09, 0.16]);
-    drawText(`[${dir.price.toUpperCase()}]`, 465, y - 15, 8, true, [0.02, 0.47, 0.34]);
+    drawText(`0${idx + 1} // ${dir.title}`, 55, y - 14, 9.5, true, [0.06, 0.09, 0.16]);
+    drawText(`[${dir.price.toUpperCase()}]`, 465, y - 14, 8, true, [0.02, 0.47, 0.34]);
 
-    let lineY = y - 28;
+    let lineY = y - 26;
     scopeLines.forEach((line) => {
       drawText(line, 55, lineY, 8, false, [0.28, 0.33, 0.41]);
-      lineY -= 11;
+      lineY -= 10;
     });
     impactLines.forEach((line) => {
       drawText(line, 55, lineY, 8, false, [0.2, 0.25, 0.33]);
-      lineY -= 11;
+      lineY -= 10;
     });
 
-    y -= boxH + 10;
+    y -= boxH + 8;
   });
 
-  // Footer
-  ensureSpace(35);
-  y -= 6;
+  // Pin confidentiality footer cleanly into bottom margin of the final page
   drawText(
     'CONFIDENTIAL STATEMENT OF WORK // BMR SOLUTIONS PRE-AUTOMATION CONTROL PLANE GOVERNANCE (2026)',
     45,
-    y,
+    32,
     7.5,
     true,
     [0.45, 0.5, 0.58]
