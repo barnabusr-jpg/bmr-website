@@ -37,6 +37,16 @@ const REQUIRED_VECTOR_KEYS = [
   "v06", "v07", "v08", "v09", "v10"
 ] as const;
 
+// Normalize ClientIndustry or SectorKey strings into canonical SectorKey
+function normalizeDiagnosticSector(rawSector?: unknown): SectorKey {
+  const s = String(rawSector || "").toUpperCase().trim();
+  if (s.includes("HEALTH") || s.includes("LIFE_SCIENCES") || s.includes("CLINICAL")) return "HEALTHCARE";
+  if (s.includes("INDUST") || s.includes("MANUF") || s.includes("ENERGY")) return "INDUSTRIAL";
+  if (s.includes("SERV") || s.includes("ENTERPRISE") || s.includes("CROSS_SECTOR") || s.includes("TECH")) return "SERVICES";
+  if (s.includes("FINAN") || s.includes("BANK") || s.includes("INSUR")) return "FINANCE";
+  return "SERVICES";
+}
+
 // Strict Type guard: vector scores must be valid integers 1 to 5
 function isValidVectorScore(score: unknown): score is number {
   return typeof score === "number" && Number.isInteger(score) && score >= 1 && score <= 5;
@@ -93,7 +103,8 @@ const DiagnosticContext = createContext<DiagnosticContextType | undefined>(undef
 
 export interface DiagnosticProviderProps {
   children: ReactNode;
-  initialOverrides?: Partial<IntakeAnswers> & {
+  initialOverrides?: Partial<Omit<IntakeAnswers, "sector">> & {
+    sector?: SectorKey | string;
     rawResponses?: Record<string, any>;
     readinessScoreOverride?: number;
     processWasteTaxOverride?: number;
@@ -105,7 +116,13 @@ export interface DiagnosticProviderProps {
 
 export function DiagnosticProvider({ children, initialOverrides }: DiagnosticProviderProps) {
   const [answers, setAnswers] = useState<IntakeAnswers>(() => {
-    const base = { ...initialAnswers, ...(initialOverrides || {}) };
+    const base: IntakeAnswers = {
+      ...initialAnswers,
+      ...(initialOverrides || {}),
+      sector: initialOverrides?.sector
+        ? normalizeDiagnosticSector(initialOverrides.sector)
+        : initialAnswers.sector,
+    };
     if (initialOverrides?.organizationName) {
       base.organizationName = sanitizeOrgName(initialOverrides.organizationName);
     }
@@ -114,8 +131,23 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
 
   const [sowSelections, setSowSelections] = useState<SowSelectionsMap>(initialSowSelections);
 
-  // LocalStorage hydration with full schema sanitization and enum whitelisting
+  // Sync live initialOverrides whenever parent updates (e.g., Quad Node Cockpit -> Inspectorate Dossier)
   useEffect(() => {
+    if (initialOverrides) {
+      setAnswers((prev) => ({
+        ...prev,
+        ...initialOverrides,
+        organizationName: initialOverrides.organizationName
+          ? sanitizeOrgName(initialOverrides.organizationName)
+          : prev.organizationName,
+        sector: initialOverrides.sector
+          ? normalizeDiagnosticSector(initialOverrides.sector)
+          : prev.sector,
+        decisionStage: initialOverrides.decisionStage || prev.decisionStage,
+      }));
+      return;
+    }
+
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -123,22 +155,14 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
         if (parsed.answers && typeof parsed.answers === "object") {
           const rawSec = parsed.answers.sector;
           const rawStg = parsed.answers.decisionStage;
-          const VALID_SECTORS: SectorKey[] = ["FINANCE", "HEALTHCARE", "INDUSTRIAL", "SERVICES"];
           const VALID_STAGES: DecisionStage[] = ["ROLLOUT_SAFETY", "ACTIVE_STABILIZATION", "AUDIT_READINESS"];
 
           setAnswers((prev) => ({
             ...prev,
             ...parsed.answers,
-            ...(initialOverrides || {}),
-            organizationName: initialOverrides?.organizationName 
-              ? sanitizeOrgName(initialOverrides.organizationName)
-              : sanitizeOrgName(parsed.answers.organizationName),
-            sector: initialOverrides?.sector 
-              ? initialOverrides.sector 
-              : (VALID_SECTORS.includes(rawSec) ? rawSec : "FINANCE"),
-            decisionStage: initialOverrides?.decisionStage 
-              ? initialOverrides.decisionStage 
-              : (VALID_STAGES.includes(rawStg) ? rawStg : "ACTIVE_STABILIZATION")
+            organizationName: sanitizeOrgName(parsed.answers.organizationName),
+            sector: normalizeDiagnosticSector(rawSec),
+            decisionStage: VALID_STAGES.includes(rawStg) ? rawStg : "ACTIVE_STABILIZATION"
           }));
         }
         if (parsed.sowSelections && typeof parsed.sowSelections === "object") {
@@ -155,20 +179,44 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
     }
   }, [initialOverrides]);
 
-  // Sync state to LocalStorage
+  // Sync state to LocalStorage only when running in standalone interactive mode (not override mode)
   useEffect(() => {
+    if (initialOverrides) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ answers, sowSelections }));
     } catch {
       // Ignore write errors
     }
-  }, [answers, sowSelections]);
+  }, [answers, sowSelections, initialOverrides]);
 
-  const calculations = useMemo(() => calculateDiagnosticMetrics(answers), [answers]);
+  const rawCalculations = useMemo(() => calculateDiagnosticMetrics(answers), [answers]);
+
+  // Apply authoritative overrides onto calculations so all downstream blocks match the Cockpit
+  const calculations = useMemo(() => {
+    const overriddenReadiness = initialOverrides?.readinessScoreOverride ?? rawCalculations.readinessIndex;
+    const overriddenWaste = initialOverrides?.processWasteTaxOverride ?? rawCalculations.processWasteTax;
+    const overriddenPromiseGap =
+      initialOverrides?.promiseGapExposureOverride ??
+      initialOverrides?.promiseGapRiskOverride ??
+      rawCalculations.promiseGapExposure;
+
+    return {
+      ...rawCalculations,
+      readinessIndex: overriddenReadiness,
+      processWasteTax: overriddenWaste,
+      promiseGapExposure: overriddenPromiseGap,
+    };
+  }, [
+    rawCalculations,
+    initialOverrides?.readinessScoreOverride,
+    initialOverrides?.processWasteTaxOverride,
+    initialOverrides?.promiseGapExposureOverride,
+    initialOverrides?.promiseGapRiskOverride,
+  ]);
 
   // Maintain existing sector registry integration for UI compatibility
   const nodeSummaries: NodeStatus[] = useMemo(() => {
-    const sectorConfig = SECTOR_COPY_REGISTRY[answers.sector] || SECTOR_COPY_REGISTRY.FINANCE;
+    const sectorConfig = SECTOR_COPY_REGISTRY[answers.sector] || SECTOR_COPY_REGISTRY.SERVICES;
 
     return [
       {
@@ -208,10 +256,11 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
 
   // Strict fail-closed telemetry completion check: all 10 vectors must be valid integers 1-5
   const isComplete = useMemo(() => {
+    if (initialOverrides?.rawResponses) return true;
     const v = answers.vectorScores;
     if (!v || typeof v !== "object") return false;
     return REQUIRED_VECTOR_KEYS.every((k) => isValidVectorScore(v[k as keyof typeof v]));
-  }, [answers.vectorScores]);
+  }, [answers.vectorScores, initialOverrides?.rawResponses]);
 
   const state: DiagnosticState = {
     answers,
@@ -222,8 +271,7 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
   };
 
   const setSector = useCallback((sector: SectorKey) => {
-    const VALID_SECTORS: SectorKey[] = ["FINANCE", "HEALTHCARE", "INDUSTRIAL", "SERVICES"];
-    const safeSector = VALID_SECTORS.includes(sector) ? sector : "FINANCE";
+    const safeSector = normalizeDiagnosticSector(sector);
     setAnswers((prev) => ({ ...prev, sector: safeSector }));
   }, []);
 
@@ -286,20 +334,10 @@ export function DiagnosticProvider({ children, initialOverrides }: DiagnosticPro
   const organizationName = answers.organizationName;
   const sector = answers.sector;
 
-  // 1. Direct binding to engine calculations with explicit overrides (zero synthetic defaults)
-  const readinessIndex =
-    initialOverrides?.readinessScoreOverride ?? calculations.readinessIndex;
+  const readinessIndex = calculations.readinessIndex;
+  const processWasteTax = calculations.processWasteTax;
+  const promiseGapRisk = calculations.promiseGapExposure;
 
-  const processWasteTax =
-    initialOverrides?.processWasteTaxOverride ?? calculations.processWasteTax;
-
-  const promiseGapRisk =
-    initialOverrides?.promiseGapExposureOverride ??
-    initialOverrides?.promiseGapRiskOverride ??
-    calculations.promiseGapExposure;
-
-  // 2. Fail-closed vector derivation: missing or out-of-range vectors never pass audit gates.
-  // RAW_VECTORS is strictly emitted into rawResponseKeys only when isComplete is verified true.
   const rawResponses = useMemo(() => {
     if (initialOverrides?.rawResponses) {
       return initialOverrides.rawResponses;

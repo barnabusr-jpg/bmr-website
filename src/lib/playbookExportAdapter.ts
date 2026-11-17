@@ -6,6 +6,7 @@ import {
   GovernancePolicyGate,
   GateStatus,
 } from '../types/playbookExport';
+import { forensicQuestions } from '../data/forensicQuestions';
 
 export interface AdapterInput {
   companyName: string;
@@ -68,13 +69,145 @@ export function getStatusProvenanceBadge(
     default:
       return {
         label: 'DISCREPANCY',
-        provenance: '[DATA GAP // UNVERIFIED]',
+        provenance:
+          source === 'RESPONSE_DERIVED'
+            ? '[CRITICAL DRIFT // VERIFIED]'
+            : '[CONTROL GAP // UNVERIFIED IN RUNTIME]',
         badgeClass: 'bg-red-50 text-red-700 border-red-200',
         pdfBgHex: '#fef2f2',
         pdfBorderHex: '#fecaca',
         pdfTextHex: '#b91c1c',
       };
   }
+}
+
+const CHOICE_INSULATION_SCORE: Record<string, number> = {
+  A: 100,
+  B: 72,
+  C: 38,
+  D: 12,
+};
+
+interface NodeTelemetryEvaluation {
+  status: GateStatus;
+  source: 'RESPONSE_DERIVED' | 'METHODOLOGY_BASELINE';
+  insulationPct: number;
+  observedPattern: string;
+}
+
+function evaluateNodeFromResponses(
+  rawResponses: Record<string, any>,
+  isComplete: boolean,
+  fallbackWeight: number,
+  readinessValue: number,
+  nodeKey: 'NODE_01' | 'NODE_02' | 'NODE_03' | 'NODE_04',
+  defaultPattern: string
+): NodeTelemetryEvaluation {
+  const targetMatches = (targetNode?: string): boolean => {
+    const t = String(targetNode || '').toUpperCase();
+    if (nodeKey === 'NODE_01') return t.includes('EXEC');
+    if (nodeKey === 'NODE_02') return t.includes('TECH');
+    if (nodeKey === 'NODE_03') return t.includes('MGMT') || t.includes('MANAG') || t.includes('OPS');
+    if (nodeKey === 'NODE_04') return t.includes('USER') || t.includes('SYS');
+    return false;
+  };
+
+  const matchedAnswers: Array<{
+    choice: string;
+    score: number;
+    subarea: string;
+  }> = [];
+
+  for (const [key, val] of Object.entries(rawResponses || {})) {
+    if (!key.startsWith('quad_')) continue;
+    const questionId = key.replace(/^quad_/, '');
+    const questionMeta = forensicQuestions[questionId];
+    if (!questionMeta || !targetMatches(questionMeta.target_node)) continue;
+
+    const choice = String(val || '').toUpperCase().trim();
+    if (choice in CHOICE_INSULATION_SCORE) {
+      matchedAnswers.push({
+        choice,
+        score: CHOICE_INSULATION_SCORE[choice],
+        subarea: questionMeta.subarea || questionId,
+      });
+    }
+  }
+
+  const noQuadLetters = matchedAnswers.length === 0;
+
+  // Marker-only completion: stakeholder completed the track, derive status from completion + readiness
+  if (noQuadLetters && isComplete) {
+    const derived = Math.round(readinessValue * fallbackWeight);
+    const insulationPct = Math.min(100, Math.max(55, derived));
+
+    let status: GateStatus = 'ACTION_REQUIRED';
+    if (insulationPct >= AUTONOMOUS_ASSURANCE_THRESHOLD) {
+      status = 'VERIFIED';
+    } else if (insulationPct >= 45) {
+      status = nodeKey === 'NODE_04' ? 'MONITORED' : 'ACTION_REQUIRED';
+    }
+
+    return {
+      status,
+      source: 'RESPONSE_DERIVED',
+      insulationPct,
+      observedPattern:
+        nodeKey === 'NODE_04'
+          ? 'Stakeholder track verified; runtime human-in-the-loop staging active pending threshold gate.'
+          : 'Stakeholder track verified; control plane telemetry calibrated against organizational readiness baseline.',
+    };
+  }
+
+  // Incomplete track with no recorded responses: return baseline control-gap state
+  if (noQuadLetters && !isComplete) {
+    return {
+      status: nodeKey === 'NODE_04' ? 'MONITORED' : 'DISCREPANCY',
+      source: 'METHODOLOGY_BASELINE',
+      insulationPct: Math.max(15, Math.min(95, Math.round(readinessValue * fallbackWeight))),
+      observedPattern: defaultPattern,
+    };
+  }
+
+  // Full response-derived calculation from quad_* choice letters (A/B/C/D)
+  const insulationPct = Math.round(
+    matchedAnswers.reduce((sum, item) => sum + item.score, 0) / matchedAnswers.length
+  );
+
+  const severeSubareas = matchedAnswers
+    .filter((a) => a.choice === 'C' || a.choice === 'D')
+    .map((a) => a.subarea);
+
+  const moderateSubareas = matchedAnswers
+    .filter((a) => a.choice === 'B')
+    .map((a) => a.subarea);
+
+  let observedPattern = defaultPattern;
+  if (severeSubareas.length > 0) {
+    const highlighted = Array.from(new Set(severeSubareas)).slice(0, 2).join(', ');
+    observedPattern = `High drift exposure detected across ${highlighted} (${severeSubareas.length} of ${matchedAnswers.length} controls uninsulated).`;
+  } else if (moderateSubareas.length > 0) {
+    const highlighted = Array.from(new Set(moderateSubareas)).slice(0, 2).join(', ');
+    observedPattern = `Manual verification controls active across ${highlighted}; automated enforcement gates absent.`;
+  } else {
+    observedPattern = `Automated control boundaries verified across all ${matchedAnswers.length} assessed node vectors.`;
+  }
+
+  let status: GateStatus = 'ACTION_REQUIRED';
+  if (insulationPct >= AUTONOMOUS_ASSURANCE_THRESHOLD) {
+    status = 'VERIFIED';
+  } else if (insulationPct >= 45) {
+    status = nodeKey === 'NODE_04' ? 'MONITORED' : 'ACTION_REQUIRED';
+  } else {
+    status = 'DISCREPANCY';
+  }
+
+  return {
+    status,
+    source: 'RESPONSE_DERIVED',
+    insulationPct,
+    observedPattern,
+  };
 }
 
 export function deriveDynamicDiagnosticSnapshot(input: AdapterInput): DiagnosticExportState {
@@ -89,58 +222,55 @@ export function deriveDynamicDiagnosticSnapshot(input: AdapterInput): Diagnostic
     unmanagedDriftImpact,
   } = input;
 
-  const node1Complete = Boolean(rawResponses['QUAD_EXE_COMPLETE']);
-  const node2Complete = Boolean(rawResponses['QUAD_TEC_COMPLETE']);
-  const node3Complete = Boolean(rawResponses['QUAD_MGR_COMPLETE']);
+  const raw = rawResponses || {};
+  const hasMarker = (val: unknown): boolean =>
+    val !== undefined && val !== null && val !== false && String(val).trim() !== '';
+
+  const node1Complete = hasMarker(raw['QUAD_EXE_COMPLETE']);
+  const node2Complete = hasMarker(raw['QUAD_TEC_COMPLETE']);
+  const node3Complete = hasMarker(raw['QUAD_MGR_COMPLETE']);
   const node4Complete = Boolean(
-    rawResponses['RUNTIME_SHADOW_QUEUE_ACTIVE'] ?? rawResponses['QUAD_SYS_COMPLETE']
+    raw['RUNTIME_SHADOW_QUEUE_ACTIVE'] ?? hasMarker(raw['QUAD_SYS_COMPLETE'])
   );
 
-  const resolveNodeMetrics = (
-    isComplete: boolean,
-    weightFactor: number,
-    nodeKey: 'NODE_01' | 'NODE_02' | 'NODE_03' | 'NODE_04'
-  ): { status: GateStatus; source: 'RESPONSE_DERIVED' | 'METHODOLOGY_BASELINE'; insulationPct: number } => {
-    if (!isComplete) {
-      return {
-        status: nodeKey === 'NODE_04' ? 'MONITORED' : 'DISCREPANCY',
-        source: 'METHODOLOGY_BASELINE',
-        insulationPct: Math.round(readinessValue * weightFactor),
-      };
-    }
-
-    if (readinessValue < AUTONOMOUS_ASSURANCE_THRESHOLD) {
-      if (nodeKey === 'NODE_04') {
-        return {
-          status: 'VERIFIED',
-          source: 'RESPONSE_DERIVED',
-          insulationPct: Math.min(Math.round(readinessValue * (1 + (1 - weightFactor))), 100),
-        };
-      }
-      return {
-        status: 'ACTION_REQUIRED',
-        source: 'METHODOLOGY_BASELINE',
-        insulationPct: Math.min(Math.round(readinessValue * (1 + (1 - weightFactor))), 100),
-      };
-    }
-
-    return {
-      status: 'VERIFIED',
-      source: 'RESPONSE_DERIVED',
-      insulationPct: Math.min(readinessValue + 10, 100),
-    };
-  };
-
-  const n1 = resolveNodeMetrics(node1Complete, 0.85, 'NODE_01');
-  const n2 = resolveNodeMetrics(node2Complete, 0.70, 'NODE_02');
-  const n3 = resolveNodeMetrics(node3Complete, 0.75, 'NODE_03');
-  const n4 = resolveNodeMetrics(node4Complete, 0.95, 'NODE_04');
+  const n1 = evaluateNodeFromResponses(
+    raw,
+    node1Complete,
+    0.85,
+    readinessValue,
+    'NODE_01',
+    'Board policy established without runtime telemetry verification.'
+  );
+  const n2 = evaluateNodeFromResponses(
+    raw,
+    node2Complete,
+    0.70,
+    readinessValue,
+    'NODE_02',
+    'Unmonitored schema mutations and sliding API payloads trigger integration friction.'
+  );
+  const n3 = evaluateNodeFromResponses(
+    raw,
+    node3Complete,
+    0.75,
+    readinessValue,
+    'NODE_03',
+    'Alert noise proliferation and verification fatigue.'
+  );
+  const n4 = evaluateNodeFromResponses(
+    raw,
+    node4Complete,
+    0.95,
+    readinessValue,
+    'NODE_04',
+    'Manual triage masking pipeline failure; runtime human-in-the-loop fallback staging.'
+  );
 
   const nodeMatrix: NodeEvaluationRecord[] = [
     {
       nodeKey: 'NODE_01',
       nodeLabel: 'Executive Governance (Node 01)',
-      observedPattern: 'Board policy established without runtime telemetry verification.',
+      observedPattern: n1.observedPattern,
       operationalImpact: 'Executive vision diverges from live execution, creating governance friction and audit trail gaps.',
       recommendedGate: 'Enforce runtime telemetry verification before scaling.',
       status: n1.status,
@@ -150,7 +280,7 @@ export function deriveDynamicDiagnosticSnapshot(input: AdapterInput): Diagnostic
     {
       nodeKey: 'NODE_02',
       nodeLabel: 'Engineering & Infrastructure (Node 02)',
-      observedPattern: 'Unmonitored schema mutations and sliding API payloads trigger integration friction.',
+      observedPattern: n2.observedPattern,
       operationalImpact: 'Downstream serialization failures and silent context contamination across pipelines.',
       recommendedGate: 'Deploy GraphQL/OpenAPI schema validation gates and microservice circuit breakers.',
       status: n2.status,
@@ -160,7 +290,7 @@ export function deriveDynamicDiagnosticSnapshot(input: AdapterInput): Diagnostic
     {
       nodeKey: 'NODE_03',
       nodeLabel: 'Operations & Management (Node 03)',
-      observedPattern: 'Alert noise proliferation and verification fatigue.',
+      observedPattern: n3.observedPattern,
       operationalImpact: 'Engineering squads exhaust 25%–40% sprint capacity on repeat manual reconciliations.',
       recommendedGate: 'Enforce Purview sensitivity tagging and dependency isolation runbooks.',
       status: n3.status,
@@ -170,7 +300,7 @@ export function deriveDynamicDiagnosticSnapshot(input: AdapterInput): Diagnostic
     {
       nodeKey: 'NODE_04',
       nodeLabel: 'Frontline System Execution (Node 04)',
-      observedPattern: 'Manual triage masking pipeline failure; runtime human-in-the-loop fallback staging.',
+      observedPattern: n4.observedPattern,
       operationalImpact: 'Unchecked agent writes risk directly mutating core database systems of record.',
       recommendedGate: 'Establish draft shadow queue staging prior to write access.',
       status: n4.status,

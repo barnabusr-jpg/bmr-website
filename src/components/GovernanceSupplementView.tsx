@@ -28,18 +28,20 @@ export function GovernanceSupplementView({
   // DYNAMIC GOVERNANCE TARGETS CALCULATED FROM QUAD MATRIX RESULTS
   const governanceCalibrations = useMemo(() => {
     const taxPool = metrics?.totalLaborTaxPool || 180000;
-    const reliability = forensicAnalytics?.reliabilityIndex || 65;
+    const reliability = forensicAnalytics?.reliabilityIndex ?? (100 - (metrics?.decay || 24));
+    const readinessGap = Math.max(0, Math.min(100, Math.round(100 - reliability)));
     const decay = metrics?.decay || 24;
 
     // Control parameters indexed dynamically to Quad Control Output
     const dlpRiskAllowance = Math.round((taxPool * 0.12) / 1000) * 1000;
-    const apiInvalidationThreshold = Math.max(1, Math.round((100 - reliability) / 5));
+    const apiInvalidationThreshold = Math.max(1, Math.round(readinessGap / 5));
     const processDriftTolerance = (decay * 0.45).toFixed(1);
 
     return {
       dlpRiskAllowance: `$${dlpRiskAllowance.toLocaleString()}`,
       apiInvalidationThreshold: `${apiInvalidationThreshold} Mutations / 10k Calls`,
       processDriftTolerance: `${processDriftTolerance}%`,
+      readinessGap,
       signOffTier: taxPool > 250000 ? "EXECUTIVE BOARD LEVEL (CISO / CTO)" : "PLATFORM STEERCO"
     };
   }, [metrics, forensicAnalytics]);
@@ -83,7 +85,7 @@ export function GovernanceSupplementView({
             <span className="text-[10px] text-slate-500 font-bold uppercase block">Max Process Drift Tolerance</span>
             <strong className="text-slate-900 text-base block font-sans font-bold mt-1">{governanceCalibrations.processDriftTolerance}</strong>
             <span className="text-[10px] text-slate-500 block mt-1">
-              Indexed to {100 - (metrics?.decay || 24)}% AI Readiness Gap
+              Indexed to {governanceCalibrations.readinessGap}% AI Readiness Gap
             </span>
           </div>
         </div>

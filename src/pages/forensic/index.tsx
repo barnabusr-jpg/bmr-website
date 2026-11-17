@@ -783,6 +783,14 @@ export default function ForensicEngineRoot() {
     sampleSize: 10000
   }), [alignedCockpitMetrics.complianceScore]);
 
+  const diagnosticProviderSector = useMemo(() => {
+    if (!triangulation) return 'SERVICES' as const;
+    if (triangulation.industry === 'HEALTHCARE_LIFE_SCIENCES') return 'HEALTHCARE' as const;
+    if (triangulation.industry === 'INDUSTRIAL_MANUFACTURING') return 'INDUSTRIAL' as const;
+    if (triangulation.industry === 'FINANCIAL_SERVICES') return 'FINANCE' as const;
+    return 'SERVICES' as const;
+  }, [triangulation]);
+
   const sowShareLink = useMemo(() => {
     if (typeof window === 'undefined' || !triangulation) return '';
     const payload = {
@@ -1430,10 +1438,11 @@ export default function ForensicEngineRoot() {
               <DiagnosticProvider
                 initialOverrides={{
                   organizationName: triangulation.companyName,
-                  sector: triangulation.industry,
-                  complianceScore: alignedCockpitMetrics.complianceScore,
-                  annualSalaryLeakage: alignedCockpitMetrics.annualSalaryLeakage,
-                  unhedgedLegalExposure: alignedCockpitMetrics.unhedgedLegalExposure
+                  sector: diagnosticProviderSector,
+                  readinessScoreOverride: alignedCockpitMetrics.complianceScore,
+                  processWasteTaxOverride: alignedCockpitMetrics.annualSalaryLeakage,
+                  promiseGapExposureOverride: alignedCockpitMetrics.unhedgedLegalExposure,
+                  rawResponses: triangulation.responses
                 }}
               >
                 <div className="space-y-8 font-sans">
