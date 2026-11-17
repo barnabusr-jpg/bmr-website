@@ -122,26 +122,53 @@ export default function ForensicCommandCockpit({
     try {
       const safeResponses = (responses || {}) as Record<string, any>;
       const cleanCompany = (companyName || 'Target Organization').replace(/_/g, ' ');
+      const roundedReadiness = Math.round(score);
+      const roundedLeakage = Math.round(leakage);
+      const roundedExposure = Math.round(exposure);
 
       const snapshot = deriveDynamicDiagnosticSnapshot({
         companyName: cleanCompany,
         sector: String(sector || 'SERVICES'),
         rawResponses: safeResponses,
-        readinessValue: Math.round(score),
-        wasteTaxValue: Math.round(leakage),
-        promiseGapValue: Math.round(exposure),
+        readinessValue: roundedReadiness,
+        wasteTaxValue: roundedLeakage,
+        promiseGapValue: roundedExposure,
         activeStabilizationFocus: 'Active Stabilization [Primary focus: containment of repeat operational rework]',
         unmanagedDriftImpact:
           'Without verification gates and workflow stabilization criteria, Phase 02 automation may increase the probability of repeat rework and downstream reporting inconsistency.',
       });
 
+      const regulatoryItems = computeRegulatoryAuditItems({
+        industry: resolvedIndustry,
+        responses: safeResponses,
+        isTierThreeExposure: metrics?.isTierThreeExposure,
+        regulatoryAlertActive: metrics?.regulatoryAlertActive,
+      });
+
+      const readinessGap = Math.max(0, Math.min(100, 100 - roundedReadiness));
+      const dlpCeiling = `$${(Math.round((roundedLeakage * 0.12) / 1000) * 1000 || 18000).toLocaleString()}`;
+      const mutationGate = `${Math.max(1, Math.round(readinessGap / 5))} Mutations / 10k Calls`;
+
       const blob = await generatePdf({
         company: cleanCompany,
         sector: displayIndustryLabel,
-        readinessIndex: Math.round(score),
-        processWasteTax: Math.round(leakage),
-        promiseGapExposure: Math.round(exposure),
+        readinessIndex: roundedReadiness,
+        processWasteTax: roundedLeakage,
+        promiseGapExposure: roundedExposure,
         nodeMatrix: snapshot.nodeMatrix,
+        regulatoryItems: regulatoryItems.map((it) => ({
+          standard: it.standard,
+          clause: it.clause,
+          finding: it.finding,
+          statutoryRemedy: it.statutoryRemedy,
+          remediationPhase: it.remediationPhase,
+        })),
+        governanceGates: {
+          dlpCeiling,
+          mutationGate,
+          driftTolerance: '10.8%',
+          signOffTier: roundedLeakage > 250000 ? 'EXECUTIVE BOARD LEVEL (CISO / CTO)' : 'PLATFORM STEERCO',
+        },
         directives: [
           {
             title: 'Track 01: Pipeline Hardening & Schema Drift Insulation',
