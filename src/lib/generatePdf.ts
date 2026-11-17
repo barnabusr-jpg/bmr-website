@@ -156,7 +156,7 @@ export async function generatePdf(input: GenerateSOWPdfInput): Promise<Blob> {
       [1, 1, 1]
     );
     if (subHeader) {
-      const subX = Math.max(340, 556 - Math.round(subHeader.length * 4.3));
+      const subX = Math.max(320, 554 - Math.round(subHeader.length * 5.2));
       drawText(subHeader, subX, 752, 7.5, false, [0.8, 0.85, 0.9]);
     }
     y = 720;
