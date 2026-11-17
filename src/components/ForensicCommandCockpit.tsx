@@ -1,5 +1,5 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { ShieldCheck, Printer, FileText, Download, TrendingDown, Layers, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import {
@@ -9,6 +9,8 @@ import {
   analyzeFrictionProfile,
   type ClientIndustry
 } from '@/lib/forensicRegulatoryCalculus';
+import { generatePdf } from '@/lib/generatePdf';
+import { deriveDynamicDiagnosticSnapshot } from '@/lib/playbookExportAdapter';
 
 export interface ForensicMetricsPayload {
   complianceScore?: number;
@@ -51,6 +53,7 @@ export default function ForensicCommandCockpit({
   peerReadinessBaseline = 76
 }: ForensicCommandCockpitProps) {
   const router = useRouter();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const resolvedIndustry = resolveClientIndustry(sector);
   const matchedIndustryOption = CLIENT_INDUSTRY_OPTIONS.find(o => o.value === resolvedIndustry);
@@ -111,6 +114,70 @@ export default function ForensicCommandCockpit({
   const node02 = getNodeStatus(nodeDrivers.NODE_02);
   const node03 = getNodeStatus(nodeDrivers.NODE_03);
   const node04 = getNodeStatus(nodeDrivers.NODE_04);
+
+  const handleGeneratePdf = async () => {
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+
+    try {
+      const safeResponses = (responses || {}) as Record<string, any>;
+      const cleanCompany = (companyName || 'Target Organization').replace(/_/g, ' ');
+
+      const snapshot = deriveDynamicDiagnosticSnapshot({
+        companyName: cleanCompany,
+        sector: String(sector || 'SERVICES'),
+        rawResponses: safeResponses,
+        readinessValue: Math.round(score),
+        wasteTaxValue: Math.round(leakage),
+        promiseGapValue: Math.round(exposure),
+        activeStabilizationFocus: 'Active Stabilization [Primary focus: containment of repeat operational rework]',
+        unmanagedDriftImpact:
+          'Without verification gates and workflow stabilization criteria, Phase 02 automation may increase the probability of repeat rework and downstream reporting inconsistency.',
+      });
+
+      const blob = await generatePdf({
+        company: cleanCompany,
+        sector: displayIndustryLabel,
+        readinessIndex: Math.round(score),
+        processWasteTax: Math.round(leakage),
+        promiseGapExposure: Math.round(exposure),
+        nodeMatrix: snapshot.nodeMatrix,
+        directives: [
+          {
+            title: 'Track 01: Pipeline Hardening & Schema Drift Insulation',
+            price: 'Phase 01 Alignment',
+            scope: 'Pre-Automation Data Foundation & Context Isolation',
+            businessImpact: 'Prevents model hallucinations and silent pipeline breaks caused by third-party API mutations.',
+          },
+          {
+            title: 'Track 02: Telemetry Decoupling & Oversight Optimization',
+            price: 'Phase 02 Alignment',
+            scope: 'Automation Telemetry Control & Validation Fatigue Suppression',
+            businessImpact: 'Suppresses alert desensitization and ensures executives only sign off on critical exceptions.',
+          },
+        ],
+      });
+
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const safeFilename = `BMR_Diagnostic_${cleanCompany.replace(/\s+/g, '_')}_Dossier.pdf`;
+
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = safeFilename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      setTimeout(() => {
+        window.URL.revokeObjectURL(downloadUrl);
+      }, 5000);
+    } catch (err: any) {
+      console.error('Cockpit PDF generation failed:', err);
+      alert(`PDF generation failed: ${err?.message || String(err)}`);
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const handleExportCSV = () => {
     const timestamp = new Date().toISOString();
@@ -249,10 +316,11 @@ export default function ForensicCommandCockpit({
 
           <button
             type="button"
-            onClick={() => typeof window !== 'undefined' && window.print()}
-            className="flex-1 sm:flex-none bg-slate-100 text-slate-800 border border-slate-300 text-xs font-mono font-bold px-3.5 py-2.5 uppercase tracking-wider hover:bg-slate-200 transition-colors cursor-pointer rounded-md flex items-center justify-center gap-1.5 whitespace-nowrap shadow-xs"
+            onClick={handleGeneratePdf}
+            disabled={isGeneratingPdf}
+            className="flex-1 sm:flex-none bg-slate-100 text-slate-800 border border-slate-300 text-xs font-mono font-bold px-3.5 py-2.5 uppercase tracking-wider hover:bg-slate-200 transition-colors disabled:opacity-50 cursor-pointer rounded-md flex items-center justify-center gap-1.5 whitespace-nowrap shadow-xs"
           >
-            <Printer size={13} /> Generate PDF
+            <Printer size={13} /> {isGeneratingPdf ? 'Generating...' : 'Generate PDF'}
           </button>
 
           <button
