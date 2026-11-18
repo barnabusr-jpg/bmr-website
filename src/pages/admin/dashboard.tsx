@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
+import { DownloadSampleDossierButton } from "@/components/DownloadSampleDossierButton";
 
 const SECTOR_MULTIPLIERS: Record<string, number> = {
   FINANCE: 1.35,
@@ -443,6 +444,13 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Audits Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'frameworks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Frameworks</button>
             
+            <DownloadSampleDossierButton
+              variant="light"
+              label="Sample Dossier (PDF)"
+              sublabel=""
+              className="!px-4 !py-1.5 !rounded shadow-none"
+            />
+
             <button 
               type="button"
               onClick={(e) => {
