@@ -408,15 +408,3 @@ export async function generateRedactedSamplePdf(): Promise<Blob> {
 
   return new Blob([pdf], { type: 'application/pdf' });
 }
-
-export async function downloadRedactedSamplePdf(): Promise<void> {
-  const blob = await generateRedactedSamplePdf();
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = 'BMR_Solutions_Sample_Process_Waste_Tax_Dossier.pdf';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(() => window.URL.revokeObjectURL(url), 5000);
-}
