@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import LZString from "lz-string";
 import { supabase } from "@/lib/supabaseClient";
-import { DownloadSampleDossierButton } from "@/components/DownloadSampleDossierButton";
+import { AdminDownloadSampleDossierButton } from "@/components/AdminDownloadSampleDossierButton";
 
 const SECTOR_MULTIPLIERS: Record<string, number> = {
   FINANCE: 1.35,
@@ -118,32 +118,32 @@ export default function AdminDashboard() {
   }, [statusFilter, searchTerm, currentPage, isUpdating]);
 
   const refreshActiveNodes = useCallback(async (auditId: string) => {
-  if (isUpdating) return;
-  const { data: nodes } = await supabase
-    .from('operators')
-    .select('persona_type, status, email, survey_completed, access_code')
-    .or(`group_id.eq.${auditId},audit_id.eq.${auditId}`);
-    
-  if (nodes) {
-    setNodeDetails(nodes);
+    if (isUpdating) return;
+    const { data: nodes } = await supabase
+      .from('operators')
+      .select('persona_type, status, email, survey_completed, access_code')
+      .or(`group_id.eq.${auditId},audit_id.eq.${auditId}`);
+      
+    if (nodes) {
+      setNodeDetails(nodes);
 
-    const completed360Count = nodes.filter(n => {
-      const isDone = n.survey_completed === true || 
-                     String(n.status).toUpperCase() === 'COMPLETED' || 
-                     String(n.status).toUpperCase() === 'COMPLETE';
-      return isDone;
-    }).length;
+      const completed360Count = nodes.filter(n => {
+        const isDone = n.survey_completed === true || 
+                       String(n.status).toUpperCase() === 'COMPLETED' || 
+                       String(n.status).toUpperCase() === 'COMPLETE';
+        return isDone;
+      }).length;
 
-    if (completed360Count >= 3) {
-      await supabase
-        .from('audits')
-        .update({ status: 'COMPLETE' })
-        .eq('id', auditId);
+      if (completed360Count >= 3) {
+        await supabase
+          .from('audits')
+          .update({ status: 'COMPLETE' })
+          .eq('id', auditId);
 
-      fetchLedger();
+        fetchLedger();
+      }
     }
-  }
-}, [isUpdating, fetchLedger]);
+  }, [isUpdating, fetchLedger]);
 
   const toggleRow = async (auditId: string) => {
     if (expandedRow === auditId) { setExpandedRow(null); return; }
@@ -359,6 +359,52 @@ export default function AdminDashboard() {
     }, 120);
   };
 
+  const handleOpenPrintDossier = async (e: React.MouseEvent, auditId: string) => {
+    e.stopPropagation();
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      let token = sessionData?.session?.access_token;
+
+      if (!token) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        token = refreshed?.session?.access_token;
+      }
+
+      if (!token) {
+        alert("Admin session expired. Please sign in again.");
+        return;
+      }
+
+      let resp = await fetch(`/api/generate-pdf?id=${encodeURIComponent(auditId)}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (resp.status === 401 || resp.status === 403) {
+        const { data: refreshed } = await supabase.auth.refreshSession();
+        if (refreshed?.session?.access_token) {
+          resp = await fetch(`/api/generate-pdf?id=${encodeURIComponent(auditId)}`, {
+            method: "GET",
+            headers: { Authorization: `Bearer ${refreshed.session.access_token}` },
+          });
+        }
+      }
+
+      if (!resp.ok) {
+        throw new Error(`Dossier generation failed (${resp.status})`);
+      }
+
+      const html = await resp.text();
+      const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, "_blank");
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+    } catch (err) {
+      console.error("Print dossier error:", err);
+      alert("Could not generate PDF dossier. Please refresh or sign in again.");
+    }
+  };
+
   useEffect(() => {
     setCurrentPage(0);
   }, [searchTerm, statusFilter]);
@@ -444,12 +490,7 @@ export default function AdminDashboard() {
             <button onClick={() => setActiveTab('ledger')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'ledger' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Audits Ledger</button>
             <button onClick={() => setActiveTab('frameworks')} className={`px-5 py-1.5 text-xs font-bold uppercase tracking-wider rounded transition-colors ${activeTab === 'frameworks' ? 'bg-slate-900 text-white' : 'text-slate-600 hover:text-slate-900'}`}>Frameworks</button>
             
-            <DownloadSampleDossierButton
-              variant="light"
-              label="Sample Dossier (PDF)"
-              sublabel=""
-              className="!px-4 !py-1.5 !rounded shadow-none"
-            />
+            <AdminDownloadSampleDossierButton label="Sample Dossier (PDF)" />
 
             <button 
               type="button"
@@ -952,7 +993,13 @@ export default function AdminDashboard() {
                                 >
                                   <Monitor size={16} /> Open Interactive Report
                                 </button>
-                                <button type="button" onClick={(e) => { e.stopPropagation(); window.open(`/api/generate-pdf?id=${audit.id}`, "_blank"); }} className="w-full bg-slate-900 text-white px-6 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer"><FileText size={16} /> Download PDF Dossier</button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleOpenPrintDossier(e, audit.id)}
+                                  className="w-full bg-slate-900 text-white px-6 py-3 font-bold uppercase text-xs tracking-wider hover:bg-slate-800 transition-colors flex items-center justify-center gap-2 rounded shadow-sm cursor-pointer"
+                                >
+                                  <FileText size={16} /> Download PDF Dossier
+                                </button>
                               </div>
                             </div>
                           </div>
