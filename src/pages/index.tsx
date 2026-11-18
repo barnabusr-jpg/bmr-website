@@ -22,7 +22,7 @@ export default function LandingPage() {
     "@type": "ProfessionalService",
     "name": "BMR Solutions",
     "url": "https://bmradvisory.co",
-    "description": "Independent Operational Risk Triage and Level 2 Control Plane Governance Firm bridging the Promise Gap™, identifying and eliminating the rift between strategic AI goals and runtime execution errors.",
+    "description": "Independent Operational Risk Triage and Level 2 Control Plane Governance Firm bridging The Promise Gap™, identifying and eliminating the rift between strategic AI goals and runtime execution errors.",
     "knowsAbout": [
       "Promise Gap Framework",
       "Pre-Automation Control Planes",
@@ -56,11 +56,11 @@ export default function LandingPage() {
   return (
     <>
       <Head>
-        <title>BMR Solutions | Enterprise Operational Risk Triage & Promise Gap™ Governance</title>
-        <meta name="description" content="Bridge the Promise Gap™. Independent Level 2 interface risk triage, schema insulation, and capital exposure defense for C-suite risk executives." />
+        <title>BMR Solutions | Enterprise Operational Risk Triage & The Promise Gap™ Governance</title>
+        <meta name="description" content="Bridge The Promise Gap™. Independent Level 2 interface risk triage, schema insulation, and capital exposure defense for C-suite risk executives." />
         <link rel="canonical" href="https://bmradvisory.co/" />
         <meta property="og:title" content="BMR Solutions | Enterprise Operational Risk Triage" />
-        <meta property="og:description" content="Independent operational risk triage firm establishing pre-automation control planes and bridging the Promise Gap™ for enterprise systems." />
+        <meta property="og:description" content="Independent operational risk triage firm establishing pre-automation control planes and bridging The Promise Gap™ for enterprise systems." />
         <meta property="og:url" content="https://bmradvisory.co/" />
         <meta property="og:type" content="website" />
         
@@ -284,7 +284,7 @@ export default function LandingPage() {
 
                 <div className="space-y-1">
                   <span className="font-mono text-red-400 font-bold uppercase block">// 03 // STRUCTURAL ISOLATION</span>
-                  <h4 className="font-bold text-white text-xs uppercase">Promise Gap™ Prevention Layer</h4>
+                  <h4 className="font-bold text-white text-xs uppercase">The Promise Gap™ Prevention Layer</h4>
                   <p className="text-slate-400 leading-relaxed">Fixes the structural rift between board-level AI goals and runtime execution errors—preventing unverified autonomy from writing to core systems.</p>
                 </div>
               </div>
@@ -320,7 +320,7 @@ export default function LandingPage() {
                     <p className="text-slate-600 font-sans mt-1 text-xs font-normal">Sets corporate policy, compliance mandates, and board-level automation goals.</p>
                   </div>
                 </div>
-                <span className="text-slate-500 tracking-wider text-[10px] hidden md:inline shrink-0 uppercase font-bold">RISK: PROMISE GAP™ EMERGES HERE</span>
+                <span className="text-slate-500 tracking-wider text-[10px] hidden md:inline shrink-0 uppercase font-bold">RISK: THE PROMISE GAP™ EMERGES HERE</span>
               </div>
 
               <div className="flex items-center gap-3 px-4 py-1 text-red-700 font-mono">
