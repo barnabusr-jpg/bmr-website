@@ -4,7 +4,6 @@ import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { DownloadSampleDossierButton } from '@/components/DownloadSampleDossierButton';
 import { 
   Activity, Target, Shield, LayoutGrid, Layers, Cpu, Milestone, 
   CheckCircle2, ArrowRight, FileText, ClipboardCheck, ChevronRight, ExternalLink 
@@ -23,7 +22,7 @@ export default function LandingPage() {
     "@type": "ProfessionalService",
     "name": "BMR Solutions",
     "url": "https://bmradvisory.co",
-    "description": "Independent Operational Risk Triage and Level 2 Control Plane Governance Firm bridging The Promise Gap™, identifying and eliminating the rift between strategic AI goals and runtime execution errors.",
+    "description": "Independent Operational Risk Triage and Level 2 Control Plane Governance Firm bridging the Promise Gap™, identifying and eliminating the rift between strategic AI goals and runtime execution errors.",
     "knowsAbout": [
       "Promise Gap Framework",
       "Pre-Automation Control Planes",
@@ -57,11 +56,11 @@ export default function LandingPage() {
   return (
     <>
       <Head>
-        <title>BMR Solutions | Enterprise Operational Risk Triage & The Promise Gap™ Governance</title>
-        <meta name="description" content="Bridge The Promise Gap™. Independent Level 2 interface risk triage, schema insulation, and capital exposure defense for C-suite risk executives." />
+        <title>BMR Solutions | Enterprise Operational Risk Triage & Promise Gap™ Governance</title>
+        <meta name="description" content="Bridge the Promise Gap™. Independent Level 2 interface risk triage, schema insulation, and capital exposure defense for C-suite risk executives." />
         <link rel="canonical" href="https://bmradvisory.co/" />
         <meta property="og:title" content="BMR Solutions | Enterprise Operational Risk Triage" />
-        <meta property="og:description" content="Independent operational risk triage firm establishing pre-automation control planes and bridging The Promise Gap™ for enterprise systems." />
+        <meta property="og:description" content="Independent operational risk triage firm establishing pre-automation control planes and bridging the Promise Gap™ for enterprise systems." />
         <meta property="og:url" content="https://bmradvisory.co/" />
         <meta property="og:type" content="website" />
         
@@ -122,36 +121,24 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="space-y-4 pt-2 w-full">
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 w-full">
-                  <button
-                    type="button"
-                    onClick={() => router.push('/pulse-check')}
-                    className="group relative w-full sm:w-auto bg-slate-950 text-white px-8 sm:px-12 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-700 transition-all shadow-md border border-slate-950 cursor-pointer text-center focus:outline-none focus:ring-2 focus:ring-red-700/60 focus:ring-offset-2"
-                  >
-                    CALCULATE YOUR PROCESS WASTE TAX
-                    <Target className="hidden sm:block absolute -top-3 -right-3 text-red-600 group-hover:text-white transition-all" size={24} />
-                  </button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-6 pt-4 w-full">
+                <button
+                  type="button"
+                  onClick={() => router.push('/pulse-check')}
+                  className="group relative w-full sm:w-auto bg-slate-950 text-white px-8 sm:px-12 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-700 transition-all shadow-md border border-slate-950 cursor-pointer text-center focus:outline-none focus:ring-2 focus:ring-red-700/60 focus:ring-offset-2"
+                >
+                  CALCULATE YOUR PROCESS WASTE TAX
+                  <Target className="hidden sm:block absolute -top-3 -right-3 text-red-600 group-hover:text-white transition-all" size={24} />
+                </button>
 
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2 text-slate-600 font-mono text-[10px] tracking-wider font-bold uppercase">
-                      <Activity size={14} className="animate-pulse text-red-700 shrink-0" />
-                      3-MINUTE DIAGNOSTIC
-                    </div>
-                    <p className="text-red-700 font-mono text-[9px] tracking-wider font-semibold uppercase">
-                      ZERO INFRASTRUCTURE CONNECTIONS
-                    </p>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-2 text-slate-600 font-mono text-[10px] tracking-wider font-bold uppercase">
+                    <Activity size={14} className="animate-pulse text-red-700 shrink-0" />
+                    3-MINUTE DIAGNOSTIC
                   </div>
-                </div>
-
-                {/* SECONDARY ARTIFACT PREVIEW CTA */}
-                <div className="pt-1">
-                  <DownloadSampleDossierButton
-                    variant="light"
-                    label="Download Redacted C-Suite Sample (2 Pages)"
-                    sublabel="See the Level 2 control-plane output format (illustrative)"
-                    className="w-full sm:w-auto"
-                  />
+                  <p className="text-red-700 font-mono text-[9px] tracking-wider font-semibold uppercase">
+                    ZERO INFRASTRUCTURE CONNECTIONS
+                  </p>
                 </div>
               </div>
             </div>
@@ -194,22 +181,14 @@ export default function LandingPage() {
 
           {/* --- FIRST SCROLL: 3 CONCRETE DELIVERABLES BLOCK --- */}
           <div className="mt-20 sm:mt-28 border-t border-slate-200 pt-16">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-              <div>
-                <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-3">
-                  // CORE TRIAGE OUTPUTS
-                </span>
+            <div className="mb-10">
+              <span className="text-red-700 font-mono text-xs font-bold tracking-widest uppercase block mb-3">
+                // CORE TRIAGE OUTPUTS
+              </span>
 
-                <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-950 leading-tight">
-                  THREE CONCRETE <span className="text-red-700">DIAGNOSTIC ARTIFACTS.</span>
-                </h2>
-              </div>
-
-              <DownloadSampleDossierButton
-                variant="light"
-                label="Preview Redacted Dossier (PDF)"
-                sublabel="2-page C-suite executive sample"
-              />
+              <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight text-slate-950 leading-tight">
+                THREE CONCRETE <span className="text-red-700">DIAGNOSTIC ARTIFACTS.</span>
+              </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
@@ -305,7 +284,7 @@ export default function LandingPage() {
 
                 <div className="space-y-1">
                   <span className="font-mono text-red-400 font-bold uppercase block">// 03 // STRUCTURAL ISOLATION</span>
-                  <h4 className="font-bold text-white text-xs uppercase">The Promise Gap™ Prevention Layer</h4>
+                  <h4 className="font-bold text-white text-xs uppercase">Promise Gap™ Prevention Layer</h4>
                   <p className="text-slate-400 leading-relaxed">Fixes the structural rift between board-level AI goals and runtime execution errors—preventing unverified autonomy from writing to core systems.</p>
                 </div>
               </div>
@@ -341,7 +320,7 @@ export default function LandingPage() {
                     <p className="text-slate-600 font-sans mt-1 text-xs font-normal">Sets corporate policy, compliance mandates, and board-level automation goals.</p>
                   </div>
                 </div>
-                <span className="text-slate-500 tracking-wider text-[10px] hidden md:inline shrink-0 uppercase font-bold">RISK: THE PROMISE GAP™ EMERGES HERE</span>
+                <span className="text-slate-500 tracking-wider text-[10px] hidden md:inline shrink-0 uppercase font-bold">RISK: PROMISE GAP™ EMERGES HERE</span>
               </div>
 
               <div className="flex items-center gap-3 px-4 py-1 text-red-700 font-mono">
@@ -637,22 +616,14 @@ export default function LandingPage() {
               <p className="text-slate-300 font-sans text-sm sm:text-base max-w-2xl mx-auto leading-relaxed">
                 Quantify your Process Waste Tax in 3 minutes—with zero infrastructure access, zero live data ingestion, and zero InfoSec procurement delays.
               </p>
-              <div className="pt-2 flex flex-col items-center gap-4">
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full">
-                  <button
-                    type="button"
-                    onClick={() => router.push('/pulse-check')}
-                    className="w-full sm:w-auto bg-red-700 text-white px-10 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-600 transition-all shadow-md cursor-pointer border border-red-600"
-                  >
-                    CALCULATE YOUR PROCESS WASTE TAX
-                  </button>
-                  <DownloadSampleDossierButton
-                    variant="dark"
-                    label="Download Redacted C-Suite Sample (2 Pages)"
-                    sublabel="Illustrative Level 2 Control-Plane Output"
-                    className="w-full sm:w-auto py-3.5"
-                  />
-                </div>
+              <div className="pt-2 flex flex-col items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push('/pulse-check')}
+                  className="bg-red-700 text-white px-10 py-5 text-lg font-bold uppercase tracking-wider hover:bg-red-600 transition-all shadow-md cursor-pointer border border-red-600"
+                >
+                  CALCULATE YOUR PROCESS WASTE TAX
+                </button>
                 <span className="text-slate-400 font-mono text-[10px] uppercase tracking-wider">
                   10-QUESTION ASSESSMENT // 3-MINUTE DIAGNOSTIC // PRELIMINARY FINANCIAL LEDGER
                 </span>
