@@ -1,14 +1,74 @@
 import type { NextApiRequest, NextApiResponse } from "next";
-import { supabase } from "@/lib/supabaseClient";
+import { createClient } from "@supabase/supabase-js";
+
+export const config = {
+  runtime: "nodejs",
+};
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+function escapeHtml(unsafe: string): string {
+  return String(unsafe ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+async function isAuthorizedAdmin(req: NextApiRequest): Promise<boolean> {
+  const authHeader = req.headers.authorization || "";
+  const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+
+  if (!token || !supabaseUrl || !supabaseAnonKey) {
+    return false;
+  }
+
+  const supabaseAuthClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+
+  const { data, error } = await supabaseAuthClient.auth.getUser(token);
+  if (error || !data?.user) {
+    return false;
+  }
+
+  const allowlistRaw = process.env.ADMIN_EMAILS || process.env.ADMIN_EMAIL || "";
+  if (allowlistRaw.trim()) {
+    const allowedEmails = allowlistRaw
+      .split(",")
+      .map((e) => e.trim().toLowerCase())
+      .filter(Boolean);
+    const userEmail = (data.user.email || "").toLowerCase();
+    if (!allowedEmails.includes(userEmail)) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { id } = req.query;
+  if (req.method !== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
 
+  const authorized = await isAuthorizedAdmin(req);
+  if (!authorized) {
+    return res.status(403).json({ error: "Forbidden // Admin clearance required" });
+  }
+
+  const { id } = req.query;
   if (!id || typeof id !== "string") {
     return res.status(400).json({ error: "Bad Request // Missing Target Record ID" });
   }
 
   try {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
     const { data: audit, error } = await supabase
       .from("audits")
       .select("*")
@@ -19,39 +79,41 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ error: "Not Found // Specified Record Missing" });
     }
 
-    const orgName = audit.org_name || "Evaluation Client System";
+    const safeOrgName = escapeHtml(audit.org_name || "Evaluation Client System");
     const dbDecay = audit.decay_pct || 24;
     const spend = parseFloat(audit.ai_spend) || 1.2;
-    const fteCount = audit.roi_pct ? parseInt(audit.roi_pct) : Math.round((spend * 1000000) / 200000) || 6;
+    const fteCount = audit.roi_pct
+      ? parseInt(audit.roi_pct, 10)
+      : Math.round((spend * 1000000) / 200000) || 6;
 
     const historicalAnchorTime = new Date(audit.created_at).getTime();
     const currentRealTime = Date.now();
     const elapsedSeconds = Math.max(0, (currentRealTime - historicalAnchorTime) / 1000);
 
-    const sector = audit.sector || 'other';
-    const laborMultiplier = sector === 'finance' ? 0.5 : sector === 'healthcare' ? 0.45 : 0.4;
+    const sector = audit.sector || "other";
+    const laborMultiplier = sector === "finance" ? 0.5 : sector === "healthcare" ? 0.45 : 0.4;
     const brandHexAccent = "#dc2626";
 
     const totalLaborTaxPool = (dbDecay / 100) * laborMultiplier * (fteCount * 160000 * 1.3);
-    const exposure = ((dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000)) * 1.15;
+    const exposure = (dbDecay > 60 ? 0.30 : 0.18) * (spend * 1000000) * 1.15;
     const totalErosion = (exposure / 31536000) * elapsedSeconds;
 
     const secureAnomalies = [
-      { 
-        id: `Finding #1 // Estimated Impact $${(totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-        description: "Diagnostic parameters verified. Root cause analytics and integration vectors are compiled and locked under initial intake protocols." 
+      {
+        id: `Finding #1 // Estimated Impact $${(totalLaborTaxPool * 0.35).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+        description: "Diagnostic parameters verified. Root cause analytics and integration vectors are compiled and locked under initial intake protocols."
       },
-      { 
-        id: `Finding #2 // Estimated Impact $${(totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-        description: "Diagnostic parameters verified. Root cause analytics and integration vectors are compiled and locked under initial intake protocols." 
+      {
+        id: `Finding #2 // Estimated Impact $${(totalLaborTaxPool * 0.28).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+        description: "Diagnostic parameters verified. Root cause analytics and integration vectors are compiled and locked under initial intake protocols."
       },
-      { 
-        id: `Finding #3 // Estimated Impact $${(totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-        description: "Diagnostic parameters verified. Root cause analytics and integration vectors are compiled and locked under initial intake protocols." 
+      {
+        id: `Finding #3 // Estimated Impact $${(totalLaborTaxPool * 0.22).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+        description: "Diagnostic parameters verified. Root cause analytics and integration vectors are compiled and locked under initial intake protocols."
       },
-      { 
-        id: `Finding #4 // Estimated Impact $${(totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`, 
-        description: "Diagnostic parameters verified. Root cause analytics and integration vectors are compiled and locked under initial intake protocols." 
+      {
+        id: `Finding #4 // Estimated Impact $${(totalLaborTaxPool * 0.15).toLocaleString(undefined, { maximumFractionDigits: 0 })}`,
+        description: "Diagnostic parameters verified. Root cause analytics and integration vectors are compiled and locked under initial intake protocols."
       }
     ];
 
@@ -60,7 +122,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       <html>
       <head>
         <meta charset="utf-8">
-        <title>BMR Diagnostic Report ${id}</title>
+        <title>BMR Diagnostic Report ${escapeHtml(id)}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { 
@@ -138,7 +200,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           <div class="placard">
             <div class="placard-left">
               <h2>Diagnostic Summary</h2>
-              <div class="org-label">Assessment for: ${orgName}</div>
+              <div class="org-label">Assessment for: ${safeOrgName}</div>
               <div class="metrics-grid">
                 <div class="metric-cell">
                   <div class="cell-label">AI Readiness Gap</div>
@@ -179,7 +241,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   <div class="directive-val">Complete the 30-question operational diagnostic to reveal full remediation steps.</div>
                 </div>
               </div>
-            `).join('')}
+            `).join("")}
           </div>
 
           <div class="section-title">Continuous Forensic Governance Schedule</div>
@@ -210,9 +272,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       </html>
     `;
 
-    res.setHeader("Content-Type", "text/html");
+    res.setHeader("Content-Type", "text/html; charset=utf-8");
+    res.setHeader("Cache-Control", "no-store, max-age=0");
     return res.status(200).send(htmlCanvasContent);
-
   } catch (err: any) {
     console.error("SERVERLESS PRINT GENERATION EXCEPTION:", err);
     return res.status(500).json({ error: "Internal Server Error", details: err?.message || err });
